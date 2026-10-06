@@ -23,9 +23,9 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{
-    AreaPart, DimensionStyle, Entity, HatchPattern, LeaderArrow, PointPart, RingGeometry,
-    TextAlign, Vec2,
+    AreaPart, DimensionStyle, Entity, LeaderArrow, PointPart, RingGeometry, TextAlign, Vec2,
 };
+use crate::hatch::HatchPattern;
 use crate::identity::BlockId;
 
 /// Reshapes, splits, joins and explodes objects in one undo step.
@@ -347,6 +347,10 @@ pub enum EntityGeometry {
         #[cfg_attr(feature = "ts", ts(optional))]
         holes: Option<Vec<Vec<Vec2>>>,
         pattern: HatchPattern,
+        /// The objects its region follows (docs/adr/0186 §6).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        assoc: Option<crate::HatchAssoc>,
     },
     /// A block placed (docs/adr/0144): the definition's base point goes to
     /// `p`, its objects are mirrored in the definition's x axis when

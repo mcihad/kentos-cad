@@ -7,6 +7,7 @@ import type { DimensionStyle } from "./DimensionStyle";
 import type { DimensionTextPlace } from "./DimensionTextPlace";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { HatchAssoc } from "./HatchAssoc";
 import type { HatchPattern } from "./HatchPattern";
 import type { LeaderArrow } from "./LeaderArrow";
 import type { PointPart } from "./PointPart";
@@ -157,7 +158,11 @@ suffix?: string,
 /**
  * The value's typeface; absent: the project's.
  */
-font?: DrawingFont, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, } | { "kind": "insert", block: BlockId, p: Vec2, scale: number, rotation: number, mirror?: boolean, } | { "kind": "leader", 
+font?: DrawingFont, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, 
+/**
+ * The objects its region follows (docs/adr/0186 §6).
+ */
+assoc?: HatchAssoc, } | { "kind": "insert", block: BlockId, p: Vec2, scale: number, rotation: number, mirror?: boolean, } | { "kind": "leader", 
 /**
  * At least two: the arrow's tip first.
  */

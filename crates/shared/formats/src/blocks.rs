@@ -13,7 +13,7 @@ use kentos_contracts::{
     SplineEntity, TableEntity, TextEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
-use kentos_geometry_core::api::json::Json;
+use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::{Attribute, Blocks, Definition};
 use kentos_geometry_core::entity::{
     Attrs, Entity as CoreEntity, HatchPattern as CorePattern, Part, PointPart as CorePoint, Shape,
@@ -359,6 +359,8 @@ fn pattern_name(k: HatchPatternType) -> &'static str {
         HatchPatternType::Solid => "solid",
         HatchPatternType::Lines => "lines",
         HatchPatternType::Cross => "cross",
+        HatchPatternType::Pattern => "pattern",
+        HatchPatternType::Gradient => "gradient",
     }
 }
 
@@ -366,8 +368,26 @@ fn pattern_of(name: &str) -> HatchPatternType {
     match name {
         "solid" => HatchPatternType::Solid,
         "cross" => HatchPatternType::Cross,
+        "pattern" => HatchPatternType::Pattern,
+        "gradient" => HatchPatternType::Gradient,
         _ => HatchPatternType::Lines,
     }
+}
+
+/// A hatch's pattern as the core holds it, its families and gradient too
+/// (docs/adr/0186): the contract's own JSON, read by the core.
+fn core_pattern(p: &HatchPattern) -> CorePattern {
+    serde_json::to_string(p)
+        .ok()
+        .and_then(|t| Json::parse(&t).ok())
+        .and_then(|j| <CorePattern as FromJson>::from_json(&j).ok())
+        .unwrap_or_else(|| CorePattern::user(pattern_name(p.kind), p.angle, p.spacing))
+}
+
+/// The core's pattern in the contract, its families and gradient too.
+fn contract_pattern(p: &CorePattern) -> HatchPattern {
+    serde_json::from_str(&kentos_geometry_core::api::json::to_string(p))
+        .unwrap_or_else(|_| HatchPattern::user(pattern_of(&p.kind), p.angle, p.spacing))
 }
 
 /// An object's geometry as the core takes it.
@@ -502,11 +522,9 @@ fn shape(e: &Entity) -> Shape {
                 .holes
                 .as_ref()
                 .map(|hs| hs.iter().map(|r| points(r)).collect()),
-            pattern: CorePattern {
-                kind: pattern_name(h.pattern.kind).to_owned(),
-                angle: h.pattern.angle,
-                spacing: h.pattern.spacing,
-            },
+            pattern: core_pattern(&h.pattern),
+            // A block's hatch follows nothing (docs/adr/0186 §6).
+            assoc: None,
         },
         Entity::Table(t) => core_table(t),
         // Its attributes show as texts, which these formats leave out of a block.
@@ -720,17 +738,15 @@ fn entity(s: &Shape) -> Option<Entity> {
             ring,
             holes,
             pattern,
+            ..
         } => Entity::Hatch(HatchEntity {
             base,
             ring: points_back(ring),
             holes: holes
                 .as_ref()
                 .map(|hs| hs.iter().map(|r| points_back(r)).collect()),
-            pattern: HatchPattern {
-                kind: pattern_of(&pattern.kind),
-                angle: pattern.angle,
-                spacing: pattern.spacing,
-            },
+            pattern: contract_pattern(pattern),
+            assoc: None,
         }),
         // A block holds no table (docs/adr/0184 §1); the core opens inserts.
         Shape::Insert { .. } | Shape::Table { .. } => return None,

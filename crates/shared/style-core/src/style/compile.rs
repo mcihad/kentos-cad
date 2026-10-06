@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::offset::offset_path;
-use kentos_geometry_core::jsmath::{PI, cos, js_max, js_min, js_round, sin};
+use kentos_geometry_core::jsmath::{PI, cos, js_hypot, js_max, js_min, js_round, sin};
 
 use super::model::{
     Base, Dd, Layer, MarkerKind, MarkerLayer, MarkerLine, SimpleLine, Symbol, SymbolType, Unit,
@@ -542,6 +542,7 @@ fn base_of(layer: &Layer) -> Option<&Base> {
         | Layer::ImageFill { base, .. }
         | Layer::CentroidMarker { base, .. } => Some(base),
         Layer::HatchFill(h) => Some(&h.base),
+        Layer::GradientFill(g) => Some(&g.base),
         Layer::PatternFill(p) => Some(&p.base),
         Layer::Unknown => None,
     }
@@ -616,10 +617,63 @@ fn emit_fill_layer(
                     .filter(|d| !d.is_empty())
                     .map(|d| d.iter().map(|&x| len(x)).collect()),
                 dash_offset: len(h.dash_offset.unwrap_or(0.0)),
+                stagger: len(h.stagger.unwrap_or(0.0)),
                 unit,
                 level,
             };
             sink.fill(&paint, rings);
+        }
+        // Its frame is the area's outer ring (docs/adr/0186 §3): along the direction its
+        // nearest and farthest points, or its box's middle and half its diagonal.
+        Layer::GradientFill(g) => {
+            let (Some(color), Some(color2)) = (
+                dd_color(&g.color, t).filter(|c| !c.is_empty()),
+                dd_color(&g.color2, t).filter(|c| !c.is_empty()),
+            ) else {
+                return;
+            };
+            let Some(outer) = rings.first().filter(|r| !r.is_empty()) else {
+                return;
+            };
+            let dir = g.angle * DEG;
+            let (c, s) = (cos(dir), sin(dir));
+            let (mut from, mut to) = (f64::INFINITY, f64::NEG_INFINITY);
+            let (mut x0, mut y0, mut x1, mut y1) = (
+                f64::INFINITY,
+                f64::INFINITY,
+                f64::NEG_INFINITY,
+                f64::NEG_INFINITY,
+            );
+            for p in outer {
+                let along = c * p.x + s * p.y;
+                from = js_min(from, along);
+                to = js_max(to, along);
+                x0 = js_min(x0, p.x);
+                y0 = js_min(y0, p.y);
+                x1 = js_max(x1, p.x);
+                y1 = js_max(y1, p.y);
+            }
+            let shape = match g.shape.as_str() {
+                "cylinder" => 1,
+                "spherical" => 2,
+                _ => 0,
+            };
+            sink.fill(
+                &FillPaint::Gradient {
+                    color,
+                    color2,
+                    opacity,
+                    shape,
+                    inverted: g.inverted,
+                    dir,
+                    from,
+                    to,
+                    centre: [(x0 + x1) / 2.0, (y0 + y1) / 2.0],
+                    radius: js_hypot(x1 - x0, y1 - y0) / 2.0,
+                    level,
+                },
+                rings,
+            );
         }
         Layer::PatternFill(p) => {
             if !(positive(p.spacing_x) && positive(p.spacing_y)) {

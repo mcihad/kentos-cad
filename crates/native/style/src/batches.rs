@@ -238,7 +238,23 @@ pub enum FillPaintBatch {
         offset: f64,
         dash: Option<Vec<f64>>,
         dash_offset: f64,
+        /// A line's start along it past the one before (docs/adr/0186 §3).
+        stagger: f64,
         unit: Unit,
+    },
+    /// A gradient (docs/adr/0186 §3): `shape` 0 linear, 1 cylinder, 2
+    /// spherical; along `dir` (radians) from `from` to `to`, or from
+    /// `centre` out to `radius` (metres from the batch's tile once folded).
+    Gradient {
+        color: [f64; 4],
+        color2: [f64; 4],
+        shape: u32,
+        inverted: bool,
+        dir: f64,
+        from: f64,
+        to: f64,
+        centre: [f64; 2],
+        radius: f64,
     },
     /// One shape on a grid computed per pixel; `tint` is the share of a cell
     /// the shape inks, used when cells are too small to draw.
@@ -615,7 +631,19 @@ impl Looks<'_> {
                 offset: n(p, "offset"),
                 dash: dash8(p, "dash"),
                 dash_offset: n(p, "dashOffset"),
+                stagger: n(p, "stagger"),
                 unit: Unit::read(p.get("unit")),
+            },
+            "gradient" => FillPaintBatch::Gradient {
+                color: self.rgba(s(p, "color"), n(p, "opacity")),
+                color2: self.rgba(s(p, "color2"), n(p, "opacity")),
+                shape: n(p, "shape") as u32,
+                inverted: p.get("inverted").and_then(Value::as_bool) == Some(true),
+                dir: n(p, "dir"),
+                from: n(p, "from"),
+                to: n(p, "to"),
+                centre: pair(p, "centre"),
+                radius: n(p, "radius"),
             },
             "pattern" => {
                 let m = p.get("mark").unwrap_or(&Value::Null);
@@ -1103,20 +1131,55 @@ fn fold(paint: FillPaintBatch, o: [f64; 2]) -> FillPaintBatch {
             offset,
             dash,
             dash_offset,
+            stagger,
             unit: Unit::World,
         } => {
-            // The lines run along (cos, sin); the offset is across them.
+            // The lines run along (cos, sin); the offset is across them. The tile's first
+            // line is `m` lines past the anchor's: a staggered family's dashes start m
+            // staggers further along there (docs/adr/0186 §3).
             let (c, s) = (cos(angle), sin(angle));
             let along = dash.as_deref().map_or(0.0, dash_period);
+            let across = -s * o[0] + c * o[1];
+            let m = if spacing > 0.0 {
+                ((across - rest(across, spacing)) / spacing).round()
+            } else {
+                0.0
+            };
             FillPaintBatch::Hatch {
                 color,
                 angle,
                 spacing,
                 width,
-                offset: offset - rest(-s * o[0] + c * o[1], spacing),
+                offset: offset - rest(across, spacing),
                 dash,
-                dash_offset: dash_offset + rest(c * o[0] + s * o[1], along),
+                dash_offset: dash_offset + rest(c * o[0] + s * o[1] - m * stagger, along),
+                stagger,
                 unit: Unit::World,
+            }
+        }
+        // A gradient's frame from the tile: along its direction, and its middle.
+        FillPaintBatch::Gradient {
+            color,
+            color2,
+            shape,
+            inverted,
+            dir,
+            from,
+            to,
+            centre,
+            radius,
+        } => {
+            let shift = cos(dir) * o[0] + sin(dir) * o[1];
+            FillPaintBatch::Gradient {
+                color,
+                color2,
+                shape,
+                inverted,
+                dir,
+                from: from - shift,
+                to: to - shift,
+                centre: [centre[0] - o[0], centre[1] - o[1]],
+                radius,
             }
         }
         FillPaintBatch::Tile {
@@ -1414,17 +1477,49 @@ fn paint_json(p: &FillPaintBatch) -> Value {
             offset,
             dash,
             dash_offset,
+            stagger,
             unit,
+        } => {
+            let mut v = json!({
+                "kind": "hatch",
+                "color": color,
+                "angle": angle,
+                "spacing": spacing,
+                "width": width,
+                "offset": offset,
+                "dash": dash,
+                "dashOffset": dash_offset,
+                "unit": unit.name(),
+            });
+            // Only a staggered family has it (docs/adr/0186 §3).
+            if *stagger != 0.0
+                && let Some(o) = v.as_object_mut()
+            {
+                o.insert("stagger".into(), json!(stagger));
+            }
+            v
+        }
+        FillPaintBatch::Gradient {
+            color,
+            color2,
+            shape,
+            inverted,
+            dir,
+            from,
+            to,
+            centre,
+            radius,
         } => json!({
-            "kind": "hatch",
+            "kind": "gradient",
             "color": color,
-            "angle": angle,
-            "spacing": spacing,
-            "width": width,
-            "offset": offset,
-            "dash": dash,
-            "dashOffset": dash_offset,
-            "unit": unit.name(),
+            "color2": color2,
+            "shape": shape,
+            "inverted": inverted,
+            "dir": dir,
+            "from": from,
+            "to": to,
+            "centre": centre,
+            "radius": radius,
         }),
         FillPaintBatch::Pattern {
             shape,
@@ -1533,6 +1628,7 @@ mod fold_tests {
             offset,
             dash: Some(dash.clone()),
             dash_offset,
+            stagger: 0.0,
             unit: Unit::World,
         };
         let FillPaintBatch::Hatch {
@@ -1559,6 +1655,86 @@ mod fold_tests {
                 (c * w[0] + s * w[1] + dash_offset) / total,
                 (c * p[0] + s * p[1] + dash_folded) / total
             ));
+        }
+    }
+
+    /// A staggered family (docs/adr/0186 §3): each line's dashes `stagger`
+    /// further along than the line's before; the tile's line numbers start
+    /// where its first line is, so its dash phase takes the lines before.
+    #[test]
+    fn a_staggered_hatch_continues_from_its_tile() {
+        let (angle, spacing, offset, dash_offset, stagger) = (0.6, 1.5, 0.25, 0.75, 0.4);
+        let dash = vec![2.0, 1.0, 0.5, 1.5];
+        let paint = FillPaintBatch::Hatch {
+            color: [0.0; 4],
+            angle,
+            spacing,
+            width: 0.1,
+            offset,
+            dash: Some(dash.clone()),
+            dash_offset,
+            stagger,
+            unit: Unit::World,
+        };
+        let FillPaintBatch::Hatch {
+            offset: folded,
+            dash_offset: dash_folded,
+            ..
+        } = fold(paint, O)
+        else {
+            panic!("a hatch stays a hatch");
+        };
+        let (c, s) = (cos(angle), sin(angle));
+        let total = dash_period(&dash);
+        // The shader's row: the nearest line, from the offset.
+        let row = |q: [f64; 2], off: f64| ((-s * q[0] + c * q[1] - off) / spacing + 0.5).floor();
+        for p in POINTS {
+            let w = from_anchor(p);
+            assert!(same_phase(
+                (c * w[0] + s * w[1] - row(w, offset) * stagger + dash_offset) / total,
+                (c * p[0] + s * p[1] - row(p, folded) * stagger + dash_folded) / total
+            ));
+        }
+    }
+
+    /// A gradient's frame moves with the tile: the same point, the same share.
+    #[test]
+    fn a_gradient_continues_from_its_tile() {
+        let paint = FillPaintBatch::Gradient {
+            color: [0.0; 4],
+            color2: [1.0; 4],
+            shape: 0,
+            inverted: false,
+            dir: 0.6,
+            from: -4_390_000.0,
+            to: -4_380_000.0,
+            centre: [-458_000.0, -4_390_000.0],
+            radius: 300.0,
+        };
+        let FillPaintBatch::Gradient {
+            from, to, centre, ..
+        } = fold(paint.clone(), O)
+        else {
+            panic!("a gradient stays a gradient");
+        };
+        let FillPaintBatch::Gradient {
+            from: f0,
+            to: t0,
+            centre: c0,
+            ..
+        } = paint
+        else {
+            unreachable!()
+        };
+        let (c, s) = (cos(0.6), sin(0.6));
+        for p in POINTS {
+            let w = from_anchor(p);
+            let t_far = (c * w[0] + s * w[1] - f0) / (t0 - f0);
+            let t_near = (c * p[0] + s * p[1] - from) / (to - from);
+            assert!((t_far - t_near).abs() < 1e-9);
+            let d_far = ((w[0] - c0[0]).powi(2) + (w[1] - c0[1]).powi(2)).sqrt();
+            let d_near = ((p[0] - centre[0]).powi(2) + (p[1] - centre[1]).powi(2)).sqrt();
+            assert!((d_far - d_near).abs() < 1e-6);
         }
     }
 
@@ -1640,6 +1816,7 @@ mod fold_tests {
             offset: 0.25,
             dash: None,
             dash_offset: 0.0,
+            stagger: 0.0,
             unit,
         };
         assert_eq!(fold(hatch(Unit::Px), O), hatch(Unit::Px));

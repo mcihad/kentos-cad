@@ -226,6 +226,11 @@ impl Layers {
         self.by_id.get(id).map(|&i| self.list[i].name.as_str())
     }
 
+    /// The colour a layer's objects take by layer.
+    pub fn colour_of(&self, id: &str) -> Option<DxfColor> {
+        self.by_id.get(id).map(|&i| self.list[i].color)
+    }
+
     /// LTYPE: the built-in three and the dashed ones the layers use, sized for paper at `scale`.
     pub fn ltype_table(&self, out: &mut Out, handles: &mut super::Handles, scale: f64) {
         let mut used: Vec<LineType> = Vec::new();

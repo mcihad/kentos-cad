@@ -3,11 +3,12 @@
 //! every other field; mirrored text stays readable (MIRRTEXT = 0).
 
 use crate::api::Op;
-use crate::entity::{Entity, Part, PointPart, Shape, ellipse_geom};
+use crate::entity::{Entity, HatchAssoc, Part, PointPart, Shape, ellipse_geom};
 use crate::geom::affine::{Affine, apply, apply_linear, is_reflection, length_scale, translation};
 use crate::geom::arc::{ArcGeom, arc_end, arc_start, norm_angle};
 use crate::geom::arrangement::Ring;
 use crate::geom::ellipse::is_full_ellipse;
+use crate::geom::hatch_pattern::carried;
 use crate::jsmath::{PI, atan2, cos, js_hypot, or, sin};
 use crate::op;
 use crate::vec2::Vec2;
@@ -282,13 +283,26 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             ring,
             holes,
             pattern,
+            assoc,
         } => {
-            let rad = (pattern.angle * PI) / 180.0;
-            let dir = apply_linear(m, Vec2::new(cos(rad), sin(rad)));
-            let angle = ((((atan2(dir.y, dir.x) * 180.0) / PI) % 180.0) + 180.0) % 180.0;
-            let mut pattern = pattern.clone();
-            pattern.angle = angle;
-            pattern.spacing *= s;
+            let pattern = match pattern.kind.as_str() {
+                // A pattern or a gradient turns with `m`, grows with its length scale and
+                // is reflected with it (docs/adr/0186 §8).
+                "pattern" | "gradient" => {
+                    let x = apply_linear(m, Vec2::new(1.0, 0.0));
+                    let turn = (atan2(x.y, x.x) * 180.0) / PI;
+                    carried(pattern, turn, s, is_reflection(m))
+                }
+                _ => {
+                    let rad = (pattern.angle * PI) / 180.0;
+                    let dir = apply_linear(m, Vec2::new(cos(rad), sin(rad)));
+                    let angle = ((((atan2(dir.y, dir.x) * 180.0) / PI) % 180.0) + 180.0) % 180.0;
+                    let mut pattern = pattern.clone();
+                    pattern.angle = angle;
+                    pattern.spacing *= s;
+                    pattern
+                }
+            };
             Shape::Hatch {
                 ring: ring.iter().map(|&p| apply(m, p)).collect(),
                 holes: holes.as_ref().map(|hs| {
@@ -297,6 +311,11 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                         .collect()
                 }),
                 pattern,
+                // The point clicked inside moves with it (docs/adr/0186 §6).
+                assoc: assoc.as_ref().map(|a| HatchAssoc {
+                    seed: apply(m, a.seed),
+                    ..a.clone()
+                }),
             }
         }
         // A block's similarity composed with `m` (docs/adr/0144 §3): the

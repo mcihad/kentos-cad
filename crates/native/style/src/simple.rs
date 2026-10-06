@@ -7,7 +7,11 @@
 //! The symbols are JSON, as the style core reads them; `fixtures/style/v1/
 //! batches.json` holds both platforms to the same sets.
 
-use kentos_contracts::{HatchEntity, HatchPatternType, LayerStyle, LineType, PointSymbol};
+use kentos_contracts::{
+    GradientShape, HatchEntity, HatchPattern, HatchPatternType, LayerStyle, LineType, PointSymbol,
+};
+use kentos_geometry_core::entity::HatchPattern as CorePattern;
+use kentos_geometry_core::geom::hatch_pattern::{FamilyPaint, PatternLine, paints};
 use serde_json::{Value, json};
 
 /// Dash patterns of the layer line types, paper mm (`LINE_TYPE_DASH`).
@@ -99,29 +103,96 @@ pub fn symbols_of_layer_style(
     })
 }
 
-/// A hatch object's own pattern, solid or lines (spacing in metres) (`hatchSymbolOf`).
+/// A hatch object's own pattern (`hatchSymbolOf`): solid at 45 %, a
+/// gradient (docs/adr/0186 §3), or one hatch fill a family, as the geometry
+/// core gives the families (spacing in metres; a user-defined pattern's
+/// lines as they always were).
 pub fn hatch_symbol_of(hatch: &HatchEntity, color: &str) -> Value {
     let p = &hatch.pattern;
-    let lines = |id: &str, angle: f64| {
-        json!({
-            "id": id,
-            "type": "hatchFill",
-            "angle": angle,
-            "spacing": p.spacing,
-            "width": 0,
-            "color": color,
-            "unit": "m",
-        })
-    };
     match p.kind {
         HatchPatternType::Solid => json!({
             "type": "fill",
             "layers": [{ "id": "s", "type": "simpleFill", "color": color, "opacity": 0.45 }],
         }),
-        HatchPatternType::Lines => json!({ "type": "fill", "layers": [lines("h1", p.angle)] }),
-        HatchPatternType::Cross => json!({
-            "type": "fill",
-            "layers": [lines("h1", p.angle), lines("h2", p.angle + 90.0)],
+        HatchPatternType::Gradient => {
+            let g = p.gradient.as_ref();
+            let shape = match g.map(|g| g.shape) {
+                Some(GradientShape::Cylinder) => "cylinder",
+                Some(GradientShape::Spherical) => "spherical",
+                _ => "linear",
+            };
+            json!({
+                "type": "fill",
+                "layers": [{
+                    "id": "g",
+                    "type": "gradientFill",
+                    "color": color,
+                    "color2": g.map_or("#FFFFFF", |g| g.color2.as_str()),
+                    "shape": shape,
+                    "angle": p.angle,
+                    "inverted": g.is_some_and(|g| g.inverted),
+                }],
+            })
+        }
+        _ => {
+            let layers: Vec<Value> = paints(&core_pattern(p))
+                .iter()
+                .enumerate()
+                .map(|(i, f)| family_layer(&format!("h{}", i + 1), f, color))
+                .collect();
+            json!({ "type": "fill", "layers": layers })
+        }
+    }
+}
+
+/// A family as a hatch fill layer: its phases, dashes and stagger only when it has them.
+fn family_layer(id: &str, f: &FamilyPaint, color: &str) -> Value {
+    let mut layer = json!({
+        "id": id,
+        "type": "hatchFill",
+        "angle": f.angle,
+        "spacing": f.spacing,
+        "width": 0,
+        "color": color,
+        "unit": "m",
+    });
+    if let Some(o) = layer.as_object_mut() {
+        if f.offset != 0.0 {
+            o.insert("offset".into(), json!(f.offset));
+        }
+        if let Some(dash) = &f.dash {
+            o.insert("dash".into(), json!(dash));
+            o.insert("dashOffset".into(), json!(f.dash_offset));
+        }
+        if f.stagger != 0.0 {
+            o.insert("stagger".into(), json!(f.stagger));
+        }
+    }
+    layer
+}
+
+/// A hatch's pattern as the geometry core holds it (its families too).
+fn core_pattern(p: &HatchPattern) -> CorePattern {
+    let kind = match p.kind {
+        HatchPatternType::Solid => "solid",
+        HatchPatternType::Lines => "lines",
+        HatchPatternType::Cross => "cross",
+        HatchPatternType::Pattern => "pattern",
+        HatchPatternType::Gradient => "gradient",
+    };
+    CorePattern {
+        name: p.name.clone(),
+        scale: p.scale,
+        lines: p.lines.as_ref().map(|ls| {
+            ls.iter()
+                .map(|l| PatternLine {
+                    angle: l.angle,
+                    origin: l.origin,
+                    offset: l.offset,
+                    dashes: (!l.dashes.is_empty()).then(|| l.dashes.clone()),
+                })
+                .collect()
         }),
+        ..CorePattern::user(kind, p.angle, p.spacing)
     }
 }

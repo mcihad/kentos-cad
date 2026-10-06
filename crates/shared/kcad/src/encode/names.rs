@@ -2,8 +2,8 @@
 //! them (the test below holds the two equal).
 
 use kentos_contracts::{
-    AngleUnit, AreaUnit, DimensionStyle, DrawingFont, DrawingUnit, HatchPatternType, LabelInk,
-    LabelPlacement, LineType, PointSymbol, Workspace,
+    AngleUnit, AreaUnit, DimensionStyle, DrawingFont, DrawingUnit, GradientShape, HatchPatternType,
+    LabelInk, LabelPlacement, LineType, PointSymbol, Workspace,
 };
 
 pub(crate) fn area_unit(u: AreaUnit) -> &'static str {
@@ -94,6 +94,16 @@ pub(crate) fn hatch_pattern(t: HatchPatternType) -> &'static str {
         HatchPatternType::Solid => "solid",
         HatchPatternType::Lines => "lines",
         HatchPatternType::Cross => "cross",
+        HatchPatternType::Pattern => "pattern",
+        HatchPatternType::Gradient => "gradient",
+    }
+}
+
+pub(crate) fn gradient_shape(s: GradientShape) -> &'static str {
+    match s {
+        GradientShape::Linear => "linear",
+        GradientShape::Cylinder => "cylinder",
+        GradientShape::Spherical => "spherical",
     }
 }
 

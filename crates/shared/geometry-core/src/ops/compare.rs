@@ -361,10 +361,12 @@ fn defs(shape: &Shape) -> Defs {
             lengths.extend([*offset, *height]);
             others.extend([text(words.as_deref()), text(style.as_deref()), num(*angle)]);
         }
+        // What its region follows is not its geometry (docs/adr/0186 §6).
         Shape::Hatch {
             ring: outer,
             holes,
             pattern,
+            ..
         } => {
             comps.push(ring(outer, None));
             for h in holes.iter().flatten() {
@@ -374,7 +376,15 @@ fn defs(shape: &Shape) -> Defs {
                 Other::Text(pattern.kind.clone()),
                 Other::Num(pattern.angle),
                 Other::Num(pattern.spacing),
+                text(pattern.name.as_deref()),
+                num(pattern.scale),
             ]);
+            if let Some(lines) = &pattern.lines {
+                others.push(Other::Text(crate::api::json::to_string(lines)));
+            }
+            if let Some(g) = &pattern.gradient {
+                others.push(Other::Text(crate::api::json::to_string(g)));
+            }
         }
         Shape::Insert {
             block,

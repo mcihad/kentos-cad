@@ -31,6 +31,7 @@ mod document;
 mod edit;
 mod external;
 mod hash;
+mod hatch_ties;
 mod history;
 mod identity;
 pub mod layer_purge;

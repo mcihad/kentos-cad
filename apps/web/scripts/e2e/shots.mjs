@@ -4630,6 +4630,13 @@ SCENES.tables = tableScenes();
 // are `tools_screens`' koordinat-* (apps/desktop/src/coordinate_scenes.rs).
 SCENES.coordinates = coordinateScenes();
 
+// Tarama ekleri (docs/adr/0186) in a CAD project at 1:500: three parcels, a building and a pool as islands and a
+// parcel's number; Tarama over the first with ANSI31 and Yazılar on (the region and the pattern before the click),
+// Desen's menu from its chip, the library's patterns and the gradients side by side, Çoklu tara over the three parcels
+// before Enter, a tied hatch following its building moved, Öznitelikler's rows of a hatch and its Desen menu. The
+// desktop's are `tools_screens`' tarama-* (apps/desktop/src/hatch_scenes.rs).
+SCENES.hatches = hatchScenes();
+
 // Yazı ve ölçü stilleri (docs/adr/0183) in a CAD project at 1:500: a parcel drawn with the project's styles (its number
 // bold in Arimo, the road's name in Barlow italic and slanted, a note in Courier Prime, its sides measured in Mimari
 // (arrows, cm), Kadastro (ticks, the value centred, “L=”), Noktalı (dots) and Açık (open arrows), one dimension in
@@ -4819,6 +4826,148 @@ function tableScenes() {
       open: async (ui) => (await drawn(ui), await ui.eval(`(() => { const k = window.kentos; const t = [...k.doc.all()].find((e) => e.kind === 'table'); k.selection.set([t.id]); })()`), await ui.move(2, 2), await ui.sleep(500)),
       close,
     },
+  ];
+}
+
+function hatchScenes() {
+  const A = [[0, 0], [30, 0], [30, 22], [0, 22]];
+  const B = [[30, 0], [56, 0], [56, 22], [30, 22]];
+  const C = [[56, 0], [80, 0], [80, 22], [56, 22]];
+  const BUILDING = [[5, 5], [15, 5], [15, 13], [5, 13]];
+  // The parcels in metres from a point left of the view's middle, the view about them (as the desktop's scene fits it).
+  const DRAWN = SCRATCH(`
+    k.doc.settings.assign({ plotScale: 500 });
+    const o = { x: c.x - 40, y: c.y - 11 };
+    const P = ([x, y]) => ({ x: o.x + x, y: o.y + y });
+    const parcels = [${JSON.stringify(A)}, ${JSON.stringify(B)}, ${JSON.stringify(C)}].map((r) => add({ kind: 'polygon', pts: r.map(P) }));
+    const building = add({ kind: 'polygon', pts: ${JSON.stringify(BUILDING)}.map(P) });
+    add({ kind: 'text', p: P([20, 16]), text: '101', height: 2, rotation: 0 });
+    add({ kind: 'circle', c: P([43, 11]), r: 3 });
+    window.__hatch = { o, parcels: parcels.map((e) => e.id), building: building.id };
+    k.view.camera.fit({ minX: o.x - 6, minY: o.y - 8, maxX: o.x + 86, maxY: o.y + 30 }, 24);
+    k.view.requestRender();`);
+  const AT = (x, y) => `(() => { const o = window.__hatch.o; return [o.x + ${x}, o.y + ${y}]; })()`;
+  const ground = async (ui, more = {}) => {
+    await ribbonOn(ui, { ribbonTab: 'annotate', type: 'cad', ...more });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(DRAWN);
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+  };
+  const close = async (ui) => (await ui.escapeAll(3), await ui.eval(UNDO_ALL), await ribbonOff(ui));
+  const hover = async (ui, x, y) => hoverAt(ui, ...(await ui.eval(AT(x, y))));
+  const click = async (ui, x, y) => (await ui.clickAt(...(await ui.eval(PAGE_AT(...(await ui.eval(AT(x, y))))))), await ui.sleep(300));
+  const input = (ui, key) => ui.eval(`window.kentos.tools.active.input('${key}')`);
+  const menuOpen = async (ui, sel) => (await ui.clickSel(sel), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300));
+  /** Tarama with Yazılar on, the pointer in the first parcel: the region (the building an island, the number's box open). */
+  const tool = async (ui) => {
+    await ground(ui);
+    await startTool(ui, 'hatch');
+    await input(ui, 'Y');
+    await hover(ui, 24, 4);
+  };
+  /** Yazılar back off (the session keeps it). */
+  const toolClose = async (ui) => {
+    await ui.escapeAll(3);
+    await startTool(ui, 'hatch');
+    if ((await ui.eval(`window.kentos.tools.active.prompt.value`)).includes('Yazılar (Y): boş bırakılır')) await input(ui, 'Y');
+    await close(ui);
+  };
+  /** Every kind of pattern side by side: 14 × 10 m squares, each hatched and named beneath, four a row. */
+  const SHOWN = [['ANSI31', 'ANSI31'], ['ANSI33', 'ANSI33'], ['ANSI36', 'ANSI36'], ['ANSI37', 'ANSI37'], ['ISO04W100', 'ISO04W100'], ['NET3', 'NET3'], ['BRICK', 'BRICK'], ['DOTS', 'DOTS'], ['CROSS', 'CROSS'], ['Degrade doğrusal', 'doğrusal'], ['Degrade silindir', 'silindir'], ['Degrade küre', 'küre']];
+  const patterns = async (ui) => {
+    await ribbonOn(ui, { ribbonTab: 'annotate', type: 'cad' });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { hatchChoiceNamed, hatchToolPattern } = await import('/src/model/ops/hatchPatterns.ts');
+      k.doc.settings.assign({ plotScale: 500 });
+      const b = k.view.camera.visibleBounds();
+      const o = { x: (b.minX + b.maxX) / 2 - 36, y: (b.minY + b.maxY) / 2 + 12 };
+      const P = ([x, y]) => ({ x: o.x + x, y: o.y + y });
+      const add = (e) => k.doc.add({ layerId: k.doc.layers.active.value, attrs: {}, ...e });
+      ${JSON.stringify(SHOWN)}.forEach(([name, label], i) => {
+        const [x, y] = [(i % 4) * 18, -Math.floor(i / 4) * 15];
+        const ring = [[x, y], [x + 14, y], [x + 14, y + 10], [x, y + 10]].map(P);
+        add({ kind: 'polygon', pts: ring });
+        const pattern = hatchToolPattern({ choice: hatchChoiceNamed(name), scale: 1, angle: 0, color2: '#FFFFFF', inverted: false, plotScale: 500 });
+        add({ kind: 'hatch', ring, pattern, ...(name.startsWith('Degrade') && { color: '#3E63DD' }) });
+        add({ kind: 'text', p: P([x, y - 2.6]), text: label, height: 1.6, rotation: 0 });
+      });
+      k.view.camera.fit({ minX: o.x - 4, minY: o.y - 36, maxX: o.x + 76, maxY: o.y + 12 }, 24);
+      k.view.requestRender();
+      window.__hatch = { o };
+    })()`);
+    await ui.eval(`window.kentos.log.clear()`);
+    await hover(ui, -3, 11);
+  };
+  /** A tied hatch in the first parcel (Yazılar as `texts`), the tool left. */
+  const hatched = async (ui, texts) => {
+    await ground(ui, texts ? { layersFraction: 0.15 } : {});
+    await startTool(ui, 'hatch');
+    if (texts) await input(ui, 'Y');
+    await click(ui, 24, 4);
+    if (texts) await input(ui, 'Y');
+    await ui.escapeAll(2);
+  };
+  const fold = async (ui, title, open) => {
+    const head = `[...document.querySelectorAll('.panel--props .props__section')].find((b) => b.textContent.includes(${JSON.stringify('Genel')}))`;
+    if (await ui.eval(`(() => { const b = ${head}; return !!b && (b.getAttribute('aria-expanded') === 'true') !== ${open}; })()`)) await ui.clickText('.panel--props .props__section', title);
+  };
+  /** The tied hatch selected: Öznitelikler over the dock (the layer tree at its least) with Genel folded. */
+  const props = async (ui) => {
+    await hatched(ui, true);
+    await ui.eval(`(() => { const k = window.kentos; const ids = [...k.doc.all()].filter((e) => e.kind === 'hatch').map((e) => e.id); k.selection.set(ids); })()`);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+    await fold(ui, 'Genel', false);
+    await ui.move(2, 2);
+    await ui.sleep(300);
+  };
+  const propsClose = async (ui) => (await fold(ui, 'Genel', true), await close(ui));
+  return [
+    { id: 'hatch-tool', open: tool, close: toolClose },
+    {
+      id: 'hatch-tool-pattern-menu',
+      // Desen's chip, or in a narrow window Diğer's menu with Desen's open over it.
+      open: async (ui) => {
+        await tool(ui);
+        const chip = '.cmdline__chip[aria-haspopup="menu"]:not(.cmdline__more):not([hidden])';
+        if (await ui.eval(`!!document.querySelector('${chip}')`)) return menuOpen(ui, chip);
+        await menuOpen(ui, '.cmdline__more');
+        await ui.hoverText('.menu .menu__item', 'Desen');
+      },
+      close: toolClose,
+    },
+    { id: 'hatch-patterns', open: patterns, close },
+    {
+      id: 'hatch-selected',
+      open: async (ui) => {
+        await ground(ui);
+        await ui.eval(`window.kentos.selection.set(window.__hatch.parcels)`);
+        await startTool(ui, 'hatchSelected');
+        await hover(ui, 40, 27);
+      },
+      close,
+    },
+    {
+      id: 'hatch-follows',
+      open: async (ui) => {
+        await hatched(ui, false);
+        await ui.eval(`window.kentos.selection.set([window.__hatch.building])`);
+        await startTool(ui, 'move');
+        await click(ui, ...BUILDING[0]);
+        await typeValue(ui, '@8,0');
+        await ui.eval(`window.kentos.selection.clear()`);
+        await hover(ui, 40, 27);
+      },
+      close,
+    },
+    { id: 'hatch-props', open: props, close: propsClose },
+    { id: 'hatch-props-pattern-menu', open: async (ui) => (await props(ui), await menuOpen(ui, '.panel--props [data-prop-key="geometry:Desen"]')), close: propsClose },
   ];
 }
 

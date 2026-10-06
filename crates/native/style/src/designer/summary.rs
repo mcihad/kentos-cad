@@ -53,6 +53,15 @@ pub fn summary(layer: &Value) -> String {
             js_text(g("angle")),
             num(g("spacing"))
         ),
+        "gradientFill" => format!(
+            "{} · {}°",
+            match g("shape").and_then(Value::as_str) {
+                Some("cylinder") => "silindir",
+                Some("spherical") => "küre",
+                _ => "doğrusal",
+            },
+            js_text(g("angle"))
+        ),
         "patternFill" => format!(
             "{} × {} {u}{}{}",
             num(g("spacingX")),

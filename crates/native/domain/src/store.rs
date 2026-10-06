@@ -55,6 +55,24 @@ pub(crate) struct Store {
     /// The texts that write an object's label, by that object's persistent
     /// id (docs/adr/0175 §4): what a step that changes the object updates.
     links: HashMap<Uuid, BTreeSet<Slot>>,
+    /// The hatches whose region follows an object, by that object's
+    /// persistent id (docs/adr/0186 §6).
+    ties: HashMap<Uuid, BTreeSet<Slot>>,
+}
+
+/// The objects a hatch's region follows: its closed object, islands and
+/// cutouts (docs/adr/0186 §6).
+fn ties_of(stored: &Stored) -> Vec<Uuid> {
+    match &*stored.entity {
+        Entity::Hatch(h) => h.assoc.as_ref().map_or_else(Vec::new, |a| {
+            std::iter::once(&a.outer)
+                .chain(&a.islands)
+                .chain(&a.cutouts)
+                .map(|id| Uuid::from_bytes(id.0))
+                .collect()
+        }),
+        _ => Vec::new(),
+    }
 }
 
 /// The object a text writes the label of, when it is a linked text (docs/adr/0175 §4).
@@ -93,9 +111,22 @@ impl Store {
         self.links.keys().copied()
     }
 
+    /// The hatches whose region follows the object with persistent id `of`, in slot order.
+    pub fn tied_to(&self, of: Uuid) -> impl Iterator<Item = Slot> + '_ {
+        self.ties.get(&of).into_iter().flatten().copied()
+    }
+
+    /// Whether any hatch follows an object.
+    pub fn has_ties(&self) -> bool {
+        !self.ties.is_empty()
+    }
+
     fn link(&mut self, stored: &Stored) {
         if let Some(of) = link_of(stored) {
             self.links.entry(of).or_default().insert(stored.slot());
+        }
+        for of in ties_of(stored) {
+            self.ties.entry(of).or_default().insert(stored.slot());
         }
     }
 
@@ -106,6 +137,14 @@ impl Store {
             texts.remove(&stored.slot());
             if texts.is_empty() {
                 self.links.remove(&of);
+            }
+        }
+        for of in ties_of(stored) {
+            if let Some(hatches) = self.ties.get_mut(&of) {
+                hatches.remove(&stored.slot());
+                if hatches.is_empty() {
+                    self.ties.remove(&of);
+                }
             }
         }
     }

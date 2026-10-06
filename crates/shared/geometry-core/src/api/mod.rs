@@ -66,14 +66,18 @@ pub fn result<R: Respond + ?Sized>(r: &R) -> Result<String, String> {
     r.respond()
 }
 
-/// Declares an operation: `op!("name", |a: A, b: B| body)`.
+/// Declares an operation: `op!("name", |a: A, b: B| body)`; one without
+/// arguments as rustfmt writes it, `op!("name", || body)`.
 #[macro_export]
 macro_rules! op {
+    ($name:literal, || $body:expr) => {
+        $crate::op!($name, | | $body)
+    };
     ($name:literal, |$($a:ident : $t:ty),* $(,)?| $body:expr) => {
         $crate::api::Op {
             name: $name,
             run: |s| {
-                #[allow(unused_mut)]
+                #[allow(unused_mut, unused_variables)]
                 let mut args = $crate::api::Args::parse(s)?;
                 $(let $a: $t = args.next(stringify!($a))?;)*
                 $crate::api::result(&$body)

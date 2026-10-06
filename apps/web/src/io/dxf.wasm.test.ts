@@ -230,12 +230,31 @@ describe.skipIf(!loader)('DXF WASM module', () => {
   });
 
   // Both platforms write the same bytes (crates/shared/formats/tests/dxf_write.rs; scripts/fixtures/dxf_write_reference.py checks them).
-  it.each(['blocks', 'texts', 'leaders', 'dimensions', 'styles', 'tables'])('writes the %s fixture to its committed bytes, as the native writer does', async (name) => {
+  it.each(['blocks', 'texts', 'leaders', 'dimensions', 'styles', 'tables', 'hatches'])('writes the %s fixture to its committed bytes, as the native writer does', async (name) => {
     const w = await load();
     const out = w.writeDxf(new TextDecoder().decode(fixture(`dxf-write/${name}.input.json`)));
     const bytes = out.takeBytes();
     out.free();
     expect(new TextDecoder().decode(bytes)).toBe(new TextDecoder().decode(fixture(`dxf-write/${name}.dxf`)));
+  });
+
+  // docs/adr/0186 §9: a pattern's families, scale and name and a gradient cross the columns (crates/shared/formats/tests/all/dxf.rs has the whole file).
+  it('reads hatch patterns and gradients', async () => {
+    const w = await load();
+    const r = imported(w.readDxf(fixture('hatch-patterns.dxf'), JSON.stringify({ maxEntities: 0 }), quiet));
+    const hatches = r.entities.flatMap((x) => (x.kind === 'hatch' ? [x] : []));
+    expect(hatches.map((h) => h.pattern.type)).toEqual(['pattern', 'pattern', 'gradient', 'gradient', 'pattern', 'pattern', 'cross', 'pattern']);
+    const ansi36 = hatches[0].pattern;
+    expect([ansi36.name, ansi36.angle, ansi36.scale]).toEqual(['ANSI36', 30, 2]);
+    const f = ansi36.lines![0];
+    expect(f.angle).toBeCloseTo(45, 9);
+    expect(f.offset[0]).toBeCloseTo(5.08, 9);
+    expect(f.offset[1]).toBeCloseTo(1.905, 9);
+    expect(f.dashes!.map((d) => Math.round(d * 1e6) / 1e6)).toEqual([7.9375, -1.5875, 0, -1.5875]);
+    expect(hatches[2].pattern.gradient).toEqual({ shape: 'spherical', color2: '#7FB2E5' });
+    expect(hatches[2].color).toBe('#FF0000');
+    expect(hatches[3].pattern.gradient).toEqual({ shape: 'linear', inverted: true, color2: '#FFFFFF' });
+    expect(hatches.every((h) => h.assoc === undefined)).toBe(true);
   });
 
   // docs/adr/0145 §7: a text's alignment, width factor and mask cross the columns (crates/shared/formats/tests/all/dxf.rs has the whole file).

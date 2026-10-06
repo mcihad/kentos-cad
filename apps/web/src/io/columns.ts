@@ -1,5 +1,7 @@
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
+import type { HatchPattern } from '../contracts/generated/HatchPattern';
+import type { PatternLine } from '../contracts/generated/PatternLine';
 import type { TextRun } from '../contracts/generated/TextRun';
 import { KcadError, OBJECT_FIELDS, exactJson, projectHead, type Dropped } from './kcad';
 
@@ -49,7 +51,11 @@ const KIND = new Map<string, number>(KINDS.map((k, i) => [k, i]));
 const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter', 'ordinate', 'arcLength', 'jogged', 'azimuth', 'slope'] as const;
 /** A text's alignments, numbered as the columns hold them (the contract's `TextAlign::ALL`). */
 const TEXT_ALIGNS = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'] as const;
-const HATCH_PATTERNS = ['solid', 'lines', 'cross'] as const;
+const HATCH_PATTERNS = ['solid', 'lines', 'cross', 'pattern', 'gradient'] as const;
+/** A hatch pattern's fields (docs/adr/0186 §1); another is counted as dropped. */
+const PATTERN_FIELDS = new Set(['type', 'angle', 'spacing', 'name', 'scale', 'lines', 'gradient']);
+/** A gradient's shapes, numbered as the columns hold them (`columns.rs`'s `GRADIENT_SHAPES`, docs/adr/0186). */
+const GRADIENT_SHAPES = ['linear', 'cylinder', 'spherical'] as const;
 /** A leader's arrowheads, numbered as the columns hold them (the contract's `LeaderArrow::ALL`; the filled arrow is none). */
 const LEADER_ARROWS = ['open', 'dot', 'none'] as const;
 /** The drawing typefaces, numbered as the columns hold them (the contract's `DrawingFont::ALL`, docs/adr/0183). */
@@ -76,7 +82,8 @@ const WEIGHT = 8;
  * width, line spacing, runs, text style, font, bold, italic, oblique
  * (docs/adr/0183); dimension: text, style, angle, c, mask, za, zb, dimension
  * style, arrow, arrow size, ext offset, ext beyond, text gap, centred,
- * decimals, unit, prefix, suffix, font; hatch: holes; insert: mirror; table:
+ * decimals, unit, prefix, suffix, font; hatch: holes, name, scale, families,
+ * gradient, tie (docs/adr/0186); insert: mirror; table:
  * merges, aligns, header, grid, text style, font, bold, italic, oblique,
  * source, frame, docs/adr/0184). A block's definitions travel in the head,
  * not here (docs/adr/0144).
@@ -506,7 +513,7 @@ class Packer {
         this.points(e.ring, 'ring', kind);
         const p = e.pattern;
         if (typeof p !== 'object' || p === null) throw unwritable('wrong_type', `${this.where}/pattern`, 'desen olmalı');
-        for (const key in p) if (key !== 'type' && key !== 'angle' && key !== 'spacing') this.drop(`${kind}.pattern.${key}`);
+        for (const key in p) if (!PATTERN_FIELDS.has(key)) this.drop(`${kind}.pattern.${key}`);
         const at = HATCH_PATTERNS.indexOf(p.type);
         if (at < 0) throw unwritable('bad_value', `${this.where}/pattern/type`, `“${String(p.type)}” desen türü bilinmiyor`);
         this.int(at);
@@ -517,6 +524,49 @@ class Packer {
           flags |= OPT[0];
           this.int(e.holes.length);
           for (const ring of e.holes) this.points(ring, 'holes', kind);
+        }
+        // A pattern's name, scale and families, a gradient, the objects it follows (docs/adr/0186).
+        if (p.name !== undefined) (flags |= OPT[1]), this.text(p.name, 'pattern/name');
+        if (p.scale !== undefined) (flags |= OPT[2]), this.float(p.scale, 'pattern/scale');
+        if (p.lines !== undefined) {
+          if (!Array.isArray(p.lines)) throw unwritable('wrong_type', `${this.where}/pattern/lines`, 'çizgi ailesi listesi olmalı');
+          flags |= OPT[3];
+          this.int(p.lines.length);
+          p.lines.forEach((l, i) => {
+            const at = `pattern/lines/${i}`;
+            for (const key in l) if (key !== 'angle' && key !== 'origin' && key !== 'offset' && key !== 'dashes') this.drop(`${kind}.pattern.lines.${key}`);
+            const dashes = l.dashes ?? [];
+            if (!Array.isArray(dashes)) throw unwritable('wrong_type', `${this.where}/${at}/dashes`, 'kesik listesi olmalı');
+            this.int(dashes.length);
+            this.float(l.angle, `${at}/angle`);
+            for (const [field, pair] of [['origin', l.origin], ['offset', l.offset]] as const) {
+              if (!Array.isArray(pair) || pair.length !== 2) throw unwritable('wrong_type', `${this.where}/${at}/${field}`, 'iki sayı olmalı');
+              this.float(pair[0], `${at}/${field}/0`);
+              this.float(pair[1], `${at}/${field}/1`);
+            }
+            dashes.forEach((d, k) => this.float(d, `${at}/dashes/${k}`));
+          });
+        }
+        if (p.gradient !== undefined) {
+          const g = p.gradient;
+          for (const key in g) if (key !== 'shape' && key !== 'inverted' && key !== 'color2') this.drop(`${kind}.pattern.gradient.${key}`);
+          flags |= OPT[4];
+          this.int(this.place(GRADIENT_SHAPES, g.shape, 'pattern/gradient/shape', 'degrade biçimi'));
+          this.int(g.inverted === true ? 1 : 0);
+          this.text(g.color2, 'pattern/gradient/color2');
+        }
+        if (e.assoc !== undefined) {
+          const a = e.assoc;
+          for (const key in a) if (key !== 'outer' && key !== 'islands' && key !== 'cutouts' && key !== 'seed') this.drop(`${kind}.assoc.${key}`);
+          const islands = a.islands ?? [];
+          const cutouts = a.cutouts ?? [];
+          flags |= OPT[5];
+          this.int(islands.length);
+          this.int(cutouts.length);
+          this.text(a.outer, 'assoc/outer');
+          islands.forEach((id, i) => this.text(id, `assoc/islands/${i}`));
+          cutouts.forEach((id, i) => this.text(id, `assoc/cutouts/${i}`));
+          this.point(a.seed, 'assoc/seed', kind);
         }
         break;
       }
@@ -907,13 +957,46 @@ export class ColumnsReader {
         break;
       case 'hatch': {
         e.ring = this.pts();
-        const type = HATCH_PATTERNS[this.readInt()];
-        e.pattern = { type, angle: this.num(), spacing: this.num() };
+        const type = this.at(HATCH_PATTERNS, 'tarama deseni');
+        const pattern: HatchPattern = { type, angle: this.num(), spacing: this.num() };
+        e.pattern = pattern;
         if (has(0)) {
           const h = this.readInt();
           const holes = [];
           for (let k = 0; k < h; k++) holes.push(this.pts());
           e.holes = holes;
+        }
+        // docs/adr/0186: a pattern's name, scale and families, a gradient, the objects it follows.
+        if (has(1)) pattern.name = this.readText();
+        if (has(2)) pattern.scale = this.num();
+        if (has(3)) {
+          const n = this.readInt();
+          const lines: PatternLine[] = [];
+          for (let k = 0; k < n; k++) {
+            const d = this.readInt();
+            const angle = this.num();
+            const origin: [number, number] = [this.num(), this.num()];
+            const offset: [number, number] = [this.num(), this.num()];
+            if (this.float + d > this.c.floats.length) throw broken('kesik listesi sayılardan uzun');
+            const line: PatternLine = { angle, origin, offset };
+            if (d > 0) line.dashes = Array.from({ length: d }, () => this.num());
+            lines.push(line);
+          }
+          pattern.lines = lines;
+        }
+        if (has(4)) {
+          const shape = this.at(GRADIENT_SHAPES, 'degrade biçimi');
+          const inverted = this.readInt();
+          if (inverted > 1) throw broken(`degradenin ters bayrağı ${inverted}`);
+          pattern.gradient = { shape, ...(inverted === 1 && { inverted: true }), color2: this.readText() };
+        }
+        if (has(5)) {
+          const i = this.readInt();
+          const k = this.readInt();
+          const outer = this.readText();
+          const islands = Array.from({ length: i }, () => this.readText());
+          const cutouts = Array.from({ length: k }, () => this.readText());
+          e.assoc = { outer, ...(i > 0 && { islands }), ...(k > 0 && { cutouts }), seed: this.pt() };
         }
         break;
       }

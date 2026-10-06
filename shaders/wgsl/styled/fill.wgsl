@@ -1,4 +1,4 @@
-// Styled drawing: triangulated areas with a paint computed per pixel (solid, hatch, tile, pattern).
+// Styled drawing: triangulated areas with a paint computed per pixel (solid, hatch, gradient, tile, pattern).
 // ── Areas ──
 struct AreaOut {
   @builtin(position) pos: vec4f,
@@ -13,7 +13,8 @@ struct AreaOut {
 @fragment fn solidFs(i: AreaOut) -> @location(0) vec4f {
   return st.color;
 }
-// Hatch: a = (dir.x, dir.y, spacing, width), b = (offset, dashTotal, dashOn, dashOffset), flags.x = unit.
+// Hatch: a = (dir.x, dir.y, spacing, width), b = (offset, dashTotal, dashOn, dashOffset), rect.x = stagger (a line's
+// dashes that much further along than the line's before, docs/adr/0186 §3), flags.x = unit.
 @fragment fn hatchFs(i: AreaOut) -> @location(0) vec4f {
   let screen = st.flags.x == 1u;
   var p = i.world;
@@ -33,10 +34,25 @@ struct AreaOut {
     let u = dot(p, n) - st.b.x;
     let d = abs(fract(u / st.a.z + 0.5) - 0.5) * gap;
     a = clamp(halfW + 0.5 - d, 0.0, 1.0);
-    a *= dashCover(dot(p, dir) * k, k, st.b.y, st.b.z, st.b.w);
+    let row = floor(u / st.a.z + 0.5);
+    a *= dashCover((dot(p, dir) - row * st.rect.x) * k, k, st.b.y, st.b.z, st.b.w);
   }
   if (a < 0.004) { discard; }
   return vec4f(st.color.rgb, st.color.a * a);
+}
+// Gradient (docs/adr/0186 §3): color = first, stroke = second, a = (dir.x, dir.y, from, to), b = (centre.x, centre.y,
+// radius, 0), flags = (unit, shape: 0 linear, 1 cylinder, 2 spherical, inverted, 0).
+@fragment fn gradientFs(i: AreaOut) -> @location(0) vec4f {
+  let p = i.world;
+  var t: f32;
+  if (st.flags.y == 2u) {
+    t = 1.0 - clamp(length(p - st.b.xy) / max(st.b.z, 1e-9), 0.0, 1.0);
+  } else {
+    let u = clamp((dot(p, st.a.xy) - st.a.z) / max(st.a.w - st.a.z, 1e-9), 0.0, 1.0);
+    t = select(u, 1.0 - abs(2.0 * u - 1.0), st.flags.y == 1u);
+  }
+  if (st.flags.z == 1u) { t = 1.0 - t; }
+  return mix(st.color, st.stroke, t);
 }
 // Tile: rect, a = (tile.x, tile.y, cos, sin), b = (shift.x, shift.y, opacity, 0), flags.x = unit. Premultiplied out.
 @fragment fn tileFs(i: AreaOut) -> @location(0) vec4f {

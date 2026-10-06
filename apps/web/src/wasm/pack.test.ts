@@ -5,6 +5,28 @@ import { packEntities, unpackEntities } from './pack';
 import { Gen } from './calls/harness';
 import { entity } from './calls/sets/p5-entities';
 
+/** Hatches of docs/adr/0186's kinds: a pattern of families with dashes and dots, tied to its objects; a gradient. */
+const HATCHES = [
+  {
+    kind: 'hatch',
+    ring: [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 4, y: 4 }],
+    pattern: {
+      type: 'pattern',
+      angle: 15,
+      spacing: 1,
+      name: 'ANSI35',
+      scale: 0.5,
+      lines: [
+        { angle: 45, origin: [0, 0], offset: [0, 6.35] },
+        { angle: 45, origin: [4.490128, 0], offset: [0, 6.35], dashes: [7.9375, -1.5875, 0, -1.5875] },
+      ],
+    },
+    assoc: { outer: '0192a3b4-c5d6-7e8f-9012-3456789abcde', islands: ['0192a3b4-c5d6-7e8f-9012-3456789abcdf'], seed: { x: 1, y: 0.5 } },
+  },
+  { kind: 'hatch', ring: [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 4, y: 4 }], pattern: { type: 'gradient', angle: 90, spacing: 1, gradient: { shape: 'spherical', inverted: true, color2: '#FFFFFF' } } },
+  { kind: 'hatch', ring: [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 4, y: 4 }], pattern: { type: 'gradient', angle: 0, spacing: 1, gradient: { shape: 'linear', color2: '#102030' } }, assoc: { outer: '0192a3b4-c5d6-7e8f-9012-3456789abce0', cutouts: ['0192a3b4-c5d6-7e8f-9012-3456789abce1'], seed: { x: 2, y: 1 } } },
+];
+
 /**
  * Packed objects (./pack.ts → crates/shared/geometry-core/src/store/pack.rs) must
  * build the very objects their JSON builds: every kind, with bulges, holes,
@@ -56,6 +78,8 @@ describe('packEntities', () => {
         font: 'courier-prime',
       },
       { id: 5014, layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 0, y: 0 }, b: { x: 8, y: 0 }, offset: 2, height: 0.5, arrow: 'none' },
+      // docs/adr/0186: a pattern's families, a gradient, the objects a hatch follows.
+      ...HATCHES.map((h, i) => ({ ...h, id: 5015 + i, layerId: 'b', attrs: {} }) as Entity),
     );
     const packed = new CoreStore();
     const p = packEntities(list);
@@ -68,6 +92,12 @@ describe('packEntities', () => {
     expect(Array.from(packed.ids())).toEqual(Array.from(json.ids()));
     packed.dispose();
     json.dispose();
+  });
+
+  it('reads a hatch’s pattern, gradient and tie back as they went (docs/adr/0186)', () => {
+    const list = HATCHES.map((h, i) => ({ ...h, id: i + 1, layerId: 'a', attrs: {} }));
+    const back = unpackEntities(packEntities(list));
+    expect(back.map(({ geometry }) => geometry)).toEqual(HATCHES);
   });
 
   it('reads a text’s face and a dimension’s look back as they went (docs/adr/0183)', () => {

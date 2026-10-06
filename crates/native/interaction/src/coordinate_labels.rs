@@ -415,6 +415,7 @@ fn choices(key: &str, m: &Memory, style: &styles::Seen) -> Vec<OptionChoice> {
                 label: name.to_owned(),
                 typed: name.to_lowercase(),
                 icon: Some(icon),
+                preview: None,
                 checked: d == m.coordinate_direction,
                 command: None,
             })

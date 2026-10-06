@@ -228,6 +228,14 @@
   width: 26px;
   margin-top: 1px;
 }
+/* A hatch pattern's wide sample (docs/adr/0186 §11, the owner's choice): a taller row. */
+.menu__item[data-preview] {
+  height: calc(34px * var(--ui-scale));
+}
+.menu__item[data-preview] .menu__icon {
+  width: 56px;
+  margin-right: 10px;
+}
 .menu__label--2 {
   display: flex;
   flex-direction: column;

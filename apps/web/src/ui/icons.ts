@@ -1,3 +1,5 @@
+import { HATCH_ICONS, HATCH_PREVIEWS } from './hatchIcons';
+
 /**
  * Hand-drawn 20×20 stroke icon set. Filled squares are CAD grips, so a tool
  * icon shows where its clicks go. Stroke = currentColor, 1.4 px.
@@ -108,6 +110,13 @@ export const ICONS = {
   readable: '<path d="M16 10.5A6 6 0 1 1 13.6 5.7"/><path d="M14 2.6v3.5h-3.5"/><path d="M7.5 8.3h5M10 8.3v5"/>',
   dimension: '<path d="M3.5 5v10M16.5 5v10M3.5 12h13"/><path d="m5.8 10.5-2.3 1.5 2.3 1.5M14.2 10.5l2.3 1.5-2.3 1.5"/><path d="M8 8.5h4"/>',
   hatch: '<rect x="3.5" y="3.5" width="13" height="13"/><path d="m3.5 9.5 6-6M3.5 15.5l12-12M9.5 16.5l7-7"/>',
+  // docs/adr/0186, the owner's choices (6 October): Çoklu tara two selected hatched areas, a hatch's tie a chain link,
+  // a gradient's shapes bands of the ink's share.
+  hatchSelected: '<path d="M2.5 3.5h7v6h-7z" stroke-width="1.2"/><path d="M2.5 7.3L4.7 9.5M2.5 4.9L7.1 9.5M3.5 3.5L9.5 9.5M5.9 3.5L9.5 7.1M8.3 3.5L9.5 4.7" stroke-width="1"/><path d="M11 9.5l6.5 1v7H10z" stroke-width="1.2"/><path d="M10.3 15.1L12.7 17.5M10.57 12.97L15.1 17.5M10.83 10.83L17.5 17.5M12.06 9.66L17.5 15.1M14.9 10.1L17.5 12.7" stroke-width="1"/><rect x="1" y="2" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="16" width="3" height="3" fill="currentColor" stroke="none"/>',
+  hatchAssoc: '<rect x="3.5" y="3.5" width="13" height="13" rx="1" stroke-width="1.2"/><path d="M3.5 15.5L4.5 16.5M3.5 12.5L7.5 16.5M3.5 9.5L9.2 15.2M3.5 6.5L9.2 12.2M3.5 3.5L11.2 11.2M6.5 3.5L14.2 11.2M9.5 3.5L16.5 10.5M12.5 3.5L16.5 7.5M15.5 3.5L16.5 4.5" stroke-width="1"/><path d="M12.6 13.2h-1.2a1.8 1.8 0 0 0 0 3.6h1.2M14.8 13.2H16a1.8 1.8 0 0 1 0 3.6h-1.2M12.4 15h2.6" stroke-width="1.2"/>',
+  hatchGradientLinear: '<rect x="3.5" y="3.5" width="2.62" height="13" fill="currentColor" fill-opacity=".06" stroke="none"/><rect x="6.1" y="3.5" width="2.62" height="13" fill="currentColor" fill-opacity=".16" stroke="none"/><rect x="8.7" y="3.5" width="2.62" height="13" fill="currentColor" fill-opacity=".28" stroke="none"/><rect x="11.3" y="3.5" width="2.62" height="13" fill="currentColor" fill-opacity=".42" stroke="none"/><rect x="13.9" y="3.5" width="2.62" height="13" fill="currentColor" fill-opacity=".58" stroke="none"/><rect x="3.5" y="3.5" width="13" height="13" rx="1" stroke-width="1.2"/>',
+  hatchGradientCylinder: '<rect x="3.5" y="3.5" width="2.62" height="13" fill="currentColor" fill-opacity=".08" stroke="none"/><rect x="6.1" y="3.5" width="2.62" height="13" fill="currentColor" fill-opacity=".3" stroke="none"/><rect x="8.7" y="3.5" width="2.62" height="13" fill="currentColor" fill-opacity=".58" stroke="none"/><rect x="11.3" y="3.5" width="2.62" height="13" fill="currentColor" fill-opacity=".3" stroke="none"/><rect x="13.9" y="3.5" width="2.62" height="13" fill="currentColor" fill-opacity=".08" stroke="none"/><rect x="3.5" y="3.5" width="13" height="13" rx="1" stroke-width="1.2"/>',
+  hatchGradientSpherical: '<circle cx="10" cy="10" r="6.5" fill="currentColor" fill-opacity=".1" stroke="none"/><circle cx="10" cy="10" r="4.8" fill="currentColor" fill-opacity=".22" stroke="none"/><circle cx="10" cy="10" r="3.1" fill="currentColor" fill-opacity=".38" stroke="none"/><circle cx="10" cy="10" r="1.5" fill="currentColor" fill-opacity=".58" stroke="none"/><rect x="3.5" y="3.5" width="13" height="13" rx="1" stroke-width="1.2"/>',
   // Blocks (docs/adr/0144): a symbol placed at its grip; objects gathered round a base grip; a shelf of symbols;
   // a symbol with its attributes' texts beside it.
   blockInsert: `<rect x="8.5" y="3.5" width="8" height="8" rx="1.2"/><circle cx="12.5" cy="7.5" r="2"/><path d="M3.5 16.5 8.5 11.5"/>${grip(3.5, 16.5)}`,
@@ -580,6 +589,10 @@ export const ICONS = {
   textAlignBaselineLeft: textAlign(3, 12.5),
   textAlignBaselineCenter: textAlign(10, 12.5),
   textAlignBaselineRight: textAlign(17, 12.5),
+  // The hatch patterns, each drawn by itself (docs/adr/0186 §2; written by scripts/ui/hatch_icons.py), and their
+  // wide samples for Desen's menus (`iconPreview`; the desktop draws them from the inventory).
+  ...HATCH_ICONS,
+  ...HATCH_PREVIEWS,
 } as const;
 
 export type IconName = keyof typeof ICONS;
@@ -599,5 +612,18 @@ export function icon(name: string, size = 18): SVGSVGElement {
   svg.setAttribute('aria-hidden', 'true');
   svg.classList.add('icon');
   svg.innerHTML = (ICONS as Record<string, string>)[name] ?? ICONS.more;
+  return svg;
+}
+
+/**
+ * A wide sample (Desen's menus, docs/adr/0186 §11): 56 × 24 px of a drawing in a 46.67 × 20 box of the icon grid's
+ * units, so that its strokes are an icon's.
+ */
+export function iconPreview(name: string): SVGSVGElement {
+  const svg = icon(name);
+  svg.setAttribute('viewBox', '0 0 46.667 20');
+  svg.setAttribute('width', '56');
+  svg.setAttribute('height', '24');
+  svg.classList.add('icon--preview');
   return svg;
 }

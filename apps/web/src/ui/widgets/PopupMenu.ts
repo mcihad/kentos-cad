@@ -1,7 +1,7 @@
 import { DisposableStore, listen } from '../../core/disposable';
 import { formatChord } from '../../core/keymap';
 import { h, overlayRoot } from '../dom';
-import { icon } from '../icons';
+import { icon, iconPreview } from '../icons';
 import { hideTooltip } from './tooltip';
 
 export interface MenuItem {
@@ -12,6 +12,8 @@ export interface MenuItem {
   drawIcon?: (size: number) => SVGSVGElement;
   /** Colour chip (layer colour). */
   swatch?: string;
+  /** A wide sample in place of the icon (a hatch pattern's, docs/adr/0186 §11): the row grows to hold it. */
+  preview?: string;
   shortcut?: string;
   checked?: boolean;
   /** Radio-style check (dot) instead of a tick. */
@@ -126,13 +128,26 @@ export class PopupMenu {
           'aria-disabled': item.disabled ? 'true' : null,
           'aria-haspopup': hasSub ? 'menu' : null,
           'data-detail': item.detail ? '' : null,
+          'data-preview': item.preview ? '' : null,
         },
         h(
           'span',
           { class: 'menu__check' },
           item.checked ? (item.radio ? h('span', { class: 'menu__dot' }) : icon('check', 14)) : null,
         ),
-        h('span', { class: 'menu__icon' }, item.swatch ? h('span', { class: 'swatch', style: `--swatch:${item.swatch}` }) : item.drawIcon ? item.drawIcon(item.detail ? 22 : 16) : item.icon ? icon(item.icon, item.detail ? 22 : 16) : null),
+        h(
+          'span',
+          { class: 'menu__icon' },
+          item.preview
+            ? iconPreview(item.preview)
+            : item.swatch
+              ? h('span', { class: 'swatch', style: `--swatch:${item.swatch}` })
+              : item.drawIcon
+                ? item.drawIcon(item.detail ? 22 : 16)
+                : item.icon
+                  ? icon(item.icon, item.detail ? 22 : 16)
+                  : null,
+        ),
         item.detail
           ? h('span', { class: 'menu__label menu__label--2' }, h('span', { class: 'menu__title' }, item.label), h('span', { class: 'menu__detail' }, item.detail))
           : h('span', { class: 'menu__label' }, item.label),

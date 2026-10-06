@@ -7,16 +7,22 @@
 
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
-    DimensionStyle, DrawingFont, EllipseEntity, Entity, EntityBase, EntityGeometry, HatchEntity,
-    HatchPattern as ContractPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity,
-    LineEntity, PathEntity, PointEntity, RingGeometry, SplineEntity, TableAlign, TableEntity,
-    TableGrid, TableSource, TextEntity, Vec2 as Point,
+    DimensionStyle, DrawingFont, EllipseEntity, Entity, EntityBase, EntityGeometry, EntityId,
+    GradientShape, HatchAssoc, HatchEntity, HatchGradient, HatchPattern as ContractPattern,
+    HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, PathEntity, PatternLine,
+    PointEntity, RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource,
+    TextEntity, Vec2 as Point,
 };
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
-use kentos_geometry_core::entity::{Attrs, HatchPattern, Part, PointPart as CorePoint, Shape};
+use kentos_geometry_core::entity::{
+    Attrs, HatchAssoc as CoreAssoc, HatchPattern, Part, PointPart as CorePoint, Shape,
+};
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::dimension::{Arrow, Look};
+use kentos_geometry_core::geom::hatch_pattern::{
+    Gradient as CoreGradient, PatternLine as CoreLine,
+};
 use kentos_geometry_core::text::face::Face;
 use kentos_geometry_core::text::paragraph::{Run, Script};
 use kentos_geometry_core::text::{Font, TextAlign};
@@ -287,7 +293,113 @@ fn pattern_name(kind: HatchPatternType) -> &'static str {
         HatchPatternType::Solid => "solid",
         HatchPatternType::Lines => "lines",
         HatchPatternType::Cross => "cross",
+        HatchPatternType::Pattern => "pattern",
+        HatchPatternType::Gradient => "gradient",
     }
+}
+
+fn gradient_name(shape: GradientShape) -> &'static str {
+    match shape {
+        GradientShape::Linear => "linear",
+        GradientShape::Cylinder => "cylinder",
+        GradientShape::Spherical => "spherical",
+    }
+}
+
+fn gradient_of(name: &str) -> Option<GradientShape> {
+    Some(match name {
+        "linear" => GradientShape::Linear,
+        "cylinder" => GradientShape::Cylinder,
+        "spherical" => GradientShape::Spherical,
+        _ => return None,
+    })
+}
+
+/// A hatch's pattern as the geometry core holds it (docs/adr/0186 §1).
+pub fn core_pattern(p: &ContractPattern) -> HatchPattern {
+    HatchPattern {
+        kind: pattern_name(p.kind).to_owned(),
+        angle: p.angle,
+        spacing: p.spacing,
+        name: p.name.clone(),
+        scale: p.scale,
+        lines: p.lines.as_ref().map(|ls| {
+            ls.iter()
+                .map(|l| CoreLine {
+                    angle: l.angle,
+                    origin: l.origin,
+                    offset: l.offset,
+                    dashes: (!l.dashes.is_empty()).then(|| l.dashes.clone()),
+                })
+                .collect()
+        }),
+        gradient: p.gradient.as_ref().map(|g| CoreGradient {
+            shape: gradient_name(g.shape).to_owned(),
+            inverted: g.inverted.then_some(true),
+            color2: g.color2.clone(),
+        }),
+    }
+}
+
+/// The core's pattern in the contract; none for a kind or a gradient's shape it does not know.
+pub fn contract_pattern(p: HatchPattern) -> Option<ContractPattern> {
+    Some(ContractPattern {
+        kind: pattern_of(&p.kind)?,
+        angle: p.angle,
+        spacing: p.spacing,
+        name: p.name,
+        scale: p.scale,
+        lines: p.lines.map(|ls| {
+            ls.into_iter()
+                .map(|l| PatternLine {
+                    angle: l.angle,
+                    origin: l.origin,
+                    offset: l.offset,
+                    dashes: l.dashes.unwrap_or_default(),
+                })
+                .collect()
+        }),
+        gradient: match p.gradient {
+            Some(g) => Some(HatchGradient {
+                shape: gradient_of(&g.shape)?,
+                inverted: g.inverted == Some(true),
+                color2: g.color2,
+            }),
+            None => None,
+        },
+    })
+}
+
+/// A hatch's tie to its objects as the core holds it: their ids as text (docs/adr/0186 §6).
+pub fn core_assoc(a: &HatchAssoc) -> CoreAssoc {
+    let ids = |list: &[EntityId]| {
+        (!list.is_empty()).then(|| list.iter().map(EntityId::to_text).collect())
+    };
+    CoreAssoc {
+        outer: a.outer.to_text(),
+        islands: ids(&a.islands),
+        cutouts: ids(&a.cutouts),
+        seed: v(&a.seed),
+    }
+}
+
+/// The core's tie in the contract; none when an id is not one.
+pub fn contract_assoc(a: CoreAssoc) -> Option<HatchAssoc> {
+    let ids = |list: Option<Vec<String>>| -> Option<Vec<EntityId>> {
+        list.unwrap_or_default()
+            .iter()
+            .map(|t| EntityId::parse(t))
+            .collect()
+    };
+    Some(HatchAssoc {
+        outer: EntityId::parse(&a.outer)?,
+        islands: ids(a.islands)?,
+        cutouts: ids(a.cutouts)?,
+        seed: Point {
+            x: a.seed.x,
+            y: a.seed.y,
+        },
+    })
 }
 
 /// A dimension style by the name the core carries; None for a name the contract does not know.
@@ -301,6 +413,8 @@ fn pattern_of(name: &str) -> Option<HatchPatternType> {
         "solid" => HatchPatternType::Solid,
         "lines" => HatchPatternType::Lines,
         "cross" => HatchPatternType::Cross,
+        "pattern" => HatchPatternType::Pattern,
+        "gradient" => HatchPatternType::Gradient,
         _ => return None,
     })
 }
@@ -414,11 +528,8 @@ pub fn shape(entity: &Entity) -> Shape {
                 .holes
                 .as_ref()
                 .map(|hs| hs.iter().map(|r| points(r)).collect()),
-            pattern: HatchPattern {
-                kind: pattern_name(h.pattern.kind).to_owned(),
-                angle: h.pattern.angle,
-                spacing: h.pattern.spacing,
-            },
+            pattern: core_pattern(&h.pattern),
+            assoc: h.assoc.as_ref().map(core_assoc),
         },
         // Its attributes too: what its block's attribute texts show (docs/adr/0144 §7).
         Entity::Insert(i) => Shape::Insert {
@@ -693,13 +804,17 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 ring,
                 holes,
                 pattern,
+                assoc,
             },
         ) => {
-            // The pattern's type is the object's own: the core carries its name through unchanged.
+            // The core carries the pattern's type through; it turns, scales and reflects
+            // its definition, and moves the point it follows from (docs/adr/0186 §8).
             e.ring = back(ring);
             e.holes = holes.map(|hs| hs.into_iter().map(back).collect());
-            e.pattern.angle = pattern.angle;
-            e.pattern.spacing = pattern.spacing;
+            if let Some(p) = contract_pattern(pattern) {
+                e.pattern = p;
+            }
+            e.assoc = assoc.and_then(contract_assoc);
         }
         (
             Entity::Leader(e),
@@ -765,13 +880,18 @@ fn held(zs: Option<Vec<Option<f64>>>) -> Option<Vec<Option<f64>>> {
     zs.filter(|z| z.iter().any(Option::is_some))
 }
 
-/// An object copied into a new one (Kopyala, Dizi, a block's definition): a
-/// linked text's copy writes no object's label, it is a text of its own
-/// (docs/adr/0175 §4); every other object as it is.
+/// An object copied into a new one (Kopyala, Dizi, a block's definition,
+/// Yapıştır): a linked text's copy writes no object's label, it is a text of
+/// its own (docs/adr/0175 §4); an associative hatch's copy follows no
+/// objects (docs/adr/0186 §6); every other object as it is.
 pub fn unlinked(mut entity: Entity) -> Entity {
-    if let Entity::Text(text) = &mut entity {
-        text.label_of = None;
-        text.label_scale = None;
+    match &mut entity {
+        Entity::Text(text) => {
+            text.label_of = None;
+            text.label_scale = None;
+        }
+        Entity::Hatch(hatch) => hatch.assoc = None,
+        _ => {}
     }
     entity
 }
@@ -934,11 +1054,13 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             ring,
             holes,
             pattern,
+            assoc,
         } => Entity::Hatch(HatchEntity {
             base,
             ring,
             holes,
             pattern,
+            assoc,
         }),
         EntityGeometry::Insert {
             block,
@@ -1132,13 +1254,14 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             ring,
             holes,
             pattern,
+            assoc,
         } => EntityGeometry::Hatch {
             ring: back(ring),
             holes: holes.map(|hs| hs.into_iter().map(back).collect()),
-            pattern: ContractPattern {
-                kind: pattern_of(&pattern.kind)?,
-                angle: pattern.angle,
-                spacing: pattern.spacing,
+            pattern: contract_pattern(pattern)?,
+            assoc: match assoc {
+                Some(a) => Some(contract_assoc(a)?),
+                None => None,
             },
         },
         // An arrowhead the contract does not name is none of a leader's (docs/adr/0146 §1).
@@ -1248,6 +1371,8 @@ mod tests {
             r#"{"kind":"text","id":11,"layerId":"a","attrs":{},"p":{"x":1,"y":2},"text":"Ada 104","height":2,"rotation":-30}"#,
             r#"{"kind":"dimension","id":12,"layerId":"a","attrs":{},"a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":-2,"height":0.5,"text":"12,5 m","style":"linear","angle":90}"#,
             r#"{"kind":"hatch","id":13,"layerId":"a","attrs":{},"ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"holes":[[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}]],"pattern":{"type":"cross","angle":30,"spacing":0.5}}"#,
+            r#"{"kind":"hatch","id":16,"layerId":"a","attrs":{},"ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"pattern":{"type":"pattern","angle":15,"spacing":1,"name":"ANSI33","scale":0.5,"lines":[{"angle":45,"origin":[0,0],"offset":[0,6.35]},{"angle":45,"origin":[4.490128,0],"offset":[0,6.35],"dashes":[3.175,-1.5875]}]},"assoc":{"outer":"0192a3b4-c5d6-7e8f-9012-3456789abcde","islands":["0192a3b4-c5d6-7e8f-9012-3456789abcdf"],"seed":{"x":1,"y":0.5}}}"#,
+            r##"{"kind":"hatch","id":17,"layerId":"a","attrs":{},"ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"pattern":{"type":"gradient","angle":90,"spacing":1,"gradient":{"shape":"spherical","inverted":true,"color2":"#FFFFFF"}}}"##,
         ];
         for text in objects {
             let e = entity(text);
@@ -1300,11 +1425,8 @@ mod tests {
         let odd = Shape::Hatch {
             ring: vec![Vec2::new(0.0, 0.0); 3],
             holes: None,
-            pattern: HatchPattern {
-                kind: "dots".into(),
-                angle: 0.0,
-                spacing: 1.0,
-            },
+            pattern: HatchPattern::user("dots", 0.0, 1.0),
+            assoc: None,
         };
         assert_eq!(edit_geometry(odd), None);
     }

@@ -1,5 +1,5 @@
 import { batchImage, batchImagePx, batchInView, batchLegible, MARKER_STRIDE, STROKE_STRIDE, type AtlasHit, type AtlasSource, type RGBA, type ScaleRange, type StyledBatch } from '../types';
-import { AREA_VS, HATCH_FS, MARKER_FS, MARKER_VS, PATTERN_FS, SHAPE_IDS, STROKE_FS, STROKE_VS, TILE_FS } from './styledShaders';
+import { AREA_VS, GRADIENT_FS, HATCH_FS, MARKER_FS, MARKER_VS, PATTERN_FS, SHAPE_IDS, STROKE_FS, STROKE_VS, TILE_FS } from './styledShaders';
 
 /**
  * WebGL2 side of the styled batches (docs/STYLE.md §6): creates the vertex
@@ -77,6 +77,7 @@ export class StyledRenderer {
   private readonly gl: WebGL2RenderingContext;
   private readonly stroke: Program;
   private readonly hatch: Program;
+  private readonly gradient: Program;
   private readonly tile: Program;
   private readonly solid: Program;
   private readonly pattern: Program;
@@ -101,7 +102,8 @@ uniform vec4 u_color;
 out vec4 outColor;
 void main() { outColor = u_color; }`;
     this.solid = make(AREA_VS, SOLID_FS, ['a_pos'], [...FRAME_UNIFORMS, 'u_color']);
-    this.hatch = make(AREA_VS, HATCH_FS, ['a_pos'], [...FRAME_UNIFORMS, ...DASH_UNIFORMS, 'u_color', 'u_dir', 'u_spacing', 'u_width', 'u_offset', 'u_unit']);
+    this.hatch = make(AREA_VS, HATCH_FS, ['a_pos'], [...FRAME_UNIFORMS, ...DASH_UNIFORMS, 'u_color', 'u_dir', 'u_spacing', 'u_width', 'u_offset', 'u_stagger', 'u_unit']);
+    this.gradient = make(AREA_VS, GRADIENT_FS, ['a_pos'], [...FRAME_UNIFORMS, 'u_color', 'u_color2', 'u_dir', 'u_range', 'u_round', 'u_shape', 'u_inverted']);
     this.tile = make(AREA_VS, TILE_FS, ['a_pos'], [...FRAME_UNIFORMS, 'u_atlas', 'u_rect', 'u_tile', 'u_rot', 'u_shift', 'u_opacity', 'u_unit']);
     this.pattern = make(AREA_VS, PATTERN_FS, ['a_pos'], [...FRAME_UNIFORMS, ...PATTERN_UNIFORMS]);
     this.marker = make(MARKER_VS, MARKER_FS, ['a_i0', 'a_i1'], [...FRAME_UNIFORMS, 'u_unit', 'u_offset', 'u_anchor', 'u_fit', 'u_aspect', 'u_strokeW', 'u_kind', 'u_shape', 'u_sp', 'u_fill', 'u_stroke', 'u_atlas', 'u_rect', 'u_opacity']);
@@ -304,8 +306,20 @@ void main() { outColor = u_color; }`;
           gl.uniform1f(p.u.u_spacing, paint.spacing);
           gl.uniform1f(p.u.u_width, paint.width);
           gl.uniform1f(p.u.u_offset, paint.offset);
+          gl.uniform1f(p.u.u_stagger, paint.stagger ?? 0);
           gl.uniform1i(p.u.u_unit, paint.unit === 'world' ? 0 : 1);
           this.dash(p, paint.dash, paint.dashOffset);
+        } else if (paint.kind === 'gradient') {
+          const p = this.gradient;
+          this.use(p, f, b);
+          this.premultiplied(false);
+          gl.uniform4fv(p.u.u_color, paint.color);
+          gl.uniform4fv(p.u.u_color2, paint.color2);
+          gl.uniform2f(p.u.u_dir, Math.cos(paint.dir), Math.sin(paint.dir));
+          gl.uniform2f(p.u.u_range, paint.from, paint.to);
+          gl.uniform3f(p.u.u_round, paint.centre[0], paint.centre[1], paint.radius);
+          gl.uniform1i(p.u.u_shape, paint.shape);
+          gl.uniform1i(p.u.u_inverted, paint.inverted ? 1 : 0);
         } else if (paint.kind === 'pattern') {
           const p = this.pattern;
           this.use(p, f, b);
@@ -383,7 +397,7 @@ void main() { outColor = u_color; }`;
   dispose(): void {
     const gl = this.gl;
     // The atlas is not detached: after a backend switch it already feeds the new backend.
-    for (const p of [this.stroke, this.hatch, this.tile, this.solid, this.pattern, this.marker]) gl.deleteProgram(p.program);
+    for (const p of [this.stroke, this.hatch, this.gradient, this.tile, this.solid, this.pattern, this.marker]) gl.deleteProgram(p.program);
     if (this.texture) gl.deleteTexture(this.texture);
   }
 }

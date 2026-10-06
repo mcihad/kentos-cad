@@ -17,7 +17,7 @@
 use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::jsmath::{js_cmp, js_hypot, js_max, js_round, stable_sort};
+use kentos_geometry_core::jsmath::{cos, js_cmp, js_hypot, js_max, js_round, sin, stable_sort};
 use kentos_geometry_core::triangulate::triangulate_many;
 
 use super::prim::{FillPaint, Look, MarkerStyle, Sink, StrokeStyle, num};
@@ -377,6 +377,41 @@ impl Sink for BatchSink {
         if rings.first().is_none_or(|r| r.len() < 3) {
             return;
         }
+        // A gradient's frame is its area's (docs/adr/0186 §3): from the anchor, as the positions
+        // are; the page moves it on to the batch's tile with the positions.
+        let anchored;
+        let paint = match paint {
+            FillPaint::Gradient {
+                color,
+                color2,
+                opacity,
+                shape,
+                inverted,
+                dir,
+                from,
+                to,
+                centre,
+                radius,
+                level,
+            } => {
+                let along = cos(*dir) * self.origin.x + sin(*dir) * self.origin.y;
+                anchored = FillPaint::Gradient {
+                    color: color.clone(),
+                    color2: color2.clone(),
+                    opacity: *opacity,
+                    shape: *shape,
+                    inverted: *inverted,
+                    dir: *dir,
+                    from: from - along,
+                    to: to - along,
+                    centre: [centre[0] - self.origin.x, centre[1] - self.origin.y],
+                    radius: *radius,
+                    level: *level,
+                };
+                &anchored
+            }
+            _ => paint,
+        };
         let tile = self.tile_of(rings[0][0]);
         let e = match self.recent_fills.find(paint, self.scale, tile) {
             Some(e) => e,
@@ -463,6 +498,51 @@ mod tests {
         x: 487_100.0,
         y: 4_420_200.0,
     };
+
+    /// A gradient's frame (docs/adr/0186 §3) is written from the anchor, as the positions are: the
+    /// share of a vertex along it is the share of its world point.
+    #[test]
+    fn a_gradient_s_frame_is_written_from_the_anchor() {
+        let mut sink = BatchSink::new(ANCHOR);
+        let ring = vec![
+            Vec2::new(487_110.0, 4_420_210.0),
+            Vec2::new(487_124.0, 4_420_210.0),
+            Vec2::new(487_124.0, 4_420_220.0),
+        ];
+        let dir = 0.5_f64;
+        let along = |p: Vec2| cos(dir) * p.x + sin(dir) * p.y;
+        let paint = FillPaint::Gradient {
+            color: "#3E63DD".into(),
+            color2: "#FFFFFF".into(),
+            opacity: 1.0,
+            shape: 0,
+            inverted: false,
+            dir,
+            from: along(ring[0]),
+            to: along(ring[2]),
+            centre: [487_117.0, 4_420_215.0],
+            radius: 8.0,
+            level: 0.0,
+        };
+        sink.fill(&paint, std::slice::from_ref(&ring));
+        let out = sink.finish();
+        let batches: serde_json::Value = serde_json::from_str(&out.json).expect("reads");
+        let style = &batches[0]["style"];
+        let (from, to) = (
+            style["from"].as_f64().unwrap(),
+            style["to"].as_f64().unwrap(),
+        );
+        let anchored = |p: Vec2| along(Vec2::new(p.x - ANCHOR.x, p.y - ANCHOR.y));
+        assert!((from - anchored(ring[0])).abs() < 1e-6, "{style}");
+        assert!((to - anchored(ring[2])).abs() < 1e-6, "{style}");
+        let centre: Vec<f64> = style["centre"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|x| x.as_f64())
+            .collect();
+        assert_eq!(centre, [17.0, 15.0]);
+    }
 
     #[test]
     fn far_primitives_make_a_batch_of_their_own_packed_from_its_tile() {

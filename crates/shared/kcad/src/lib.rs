@@ -217,8 +217,17 @@ pub const SCHEMA_WITH_STYLES: u32 = 21;
 /// byte for byte; a reader of those refuses a table rather than lose it.
 pub const SCHEMA_WITH_TABLES: u32 = 22;
 
+/// Document schema 23 (docs/specs/kcad-v2.md §6.1): schema 22 and the
+/// hatch's patterns, gradients and ties (docs/adr/0186): `pattern`'s `type`
+/// `pattern` and `gradient`, its `name`, `scale`, `lines` and `gradient`, in
+/// the drawing and in block definitions; a hatch's `assoc`, in the drawing
+/// only. A writer writes it only when a hatch has one of these: any other
+/// drawing stays 22 or older, byte for byte; a reader of those refuses them
+/// rather than draw another pattern.
+pub const SCHEMA_WITH_HATCH_PATTERNS: u32 = 23;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 21] = [
+pub const SCHEMAS: [u32; 22] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -240,6 +249,7 @@ pub const SCHEMAS: [u32; 21] = [
     SCHEMA_WITH_PARAGRAPHS,
     SCHEMA_WITH_STYLES,
     SCHEMA_WITH_TABLES,
+    SCHEMA_WITH_HATCH_PATTERNS,
 ];
 
 /// The file a drawing is saved as.

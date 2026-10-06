@@ -203,6 +203,22 @@ export interface HatchFill extends LayerBase {
   /** Dashed hatch lines (on/off lengths). */
   readonly dash?: readonly number[] | null;
   readonly dashOffset?: number;
+  /** How much further along each line starts than the one before it (a hatch pattern's family, docs/adr/0186 §3). */
+  readonly stagger?: number;
+}
+
+/**
+ * A gradient over the area (docs/adr/0186 §3): from `color` to `color2`, `linear` along `angle` (degrees),
+ * `cylinder` (the second colour along the middle) or `spherical` (the second colour in the middle); `inverted` runs it
+ * the other way. Its frame is the area's own box.
+ */
+export interface GradientFill extends LayerBase {
+  readonly type: 'gradientFill';
+  readonly color: DataDefined<Color>;
+  readonly color2: DataDefined<Color>;
+  readonly shape: 'linear' | 'cylinder' | 'spherical';
+  readonly angle: number;
+  readonly inverted?: boolean;
 }
 
 export interface PatternFill extends LayerBase {
@@ -240,7 +256,7 @@ export interface CentroidMarker extends LayerBase {
   readonly position?: 'pointOnSurface' | 'centroid';
 }
 
-export type FillLayer = SimpleFill | HatchFill | PatternFill | ImageFill | CentroidMarker | SimpleLine | MarkerLine;
+export type FillLayer = SimpleFill | HatchFill | GradientFill | PatternFill | ImageFill | CentroidMarker | SimpleLine | MarkerLine;
 
 // ── Symbols ────────────────────────────────────────────────────────────
 

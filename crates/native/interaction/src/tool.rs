@@ -165,6 +165,9 @@ pub struct OptionChoice {
     pub typed: String,
     /// The web's icon (`ui/icons.ts`); none for a list of names (the styles).
     pub icon: Option<&'static str>,
+    /// A wide sample drawn in its menu instead of the icon (a hatch
+    /// pattern's, docs/adr/0186 §11; the web's `preview`).
+    pub preview: Option<&'static str>,
     pub checked: bool,
     /// A command the host runs instead of choosing (“Yazı stilleri…” opens
     /// its window); none for a value.
@@ -532,12 +535,23 @@ pub struct Memory {
     /// (`LeaderTool.arrow`, `.mask`; docs/adr/0146 §7); its height is Yazı's.
     pub leader_arrow: Option<kentos_contracts::LeaderArrow>,
     pub leader_mask: bool,
-    /// Tarama's pattern (an index into its presets), whether the region is
-    /// found by the line work rather than a closed object, and whether closed
-    /// objects inside are left out (`HatchTool.preset`, `.byLines`, `.islands`).
-    pub hatch_preset: usize,
+    /// Tarama's and Çoklu tara's pattern (an index into the core's
+    /// `tools::hatch::choices`), its Ölçek and Açı (degrees), İkinci renk
+    /// (0xRRGGBB) and Ters, whether the region is found by the line work
+    /// rather than a closed object, whether closed objects inside are left
+    /// out, whether the hatch follows its objects and whether texts and
+    /// inserts are left open (`HatchTool.choice`, `.scale`, `.angle`,
+    /// `.color2`, `.inverted`, `.byLines`, `.islands`, `.assoc`, `.texts`;
+    /// docs/adr/0186 §4).
+    pub hatch_choice: usize,
+    pub hatch_scale: f64,
+    pub hatch_angle: f64,
+    pub hatch_color2: u32,
+    pub hatch_inverted: bool,
     pub hatch_by_lines: bool,
     pub hatch_islands: bool,
+    pub hatch_assoc: bool,
+    pub hatch_texts: bool,
     /// Alan kesiştir's Kaynakları sil, Alan çıkar's Çıkarılanları sil and
     /// İçine tıklayarak alan's Adalar (`AreaIntersectTool.erase`,
     /// `AreaSubtractTool.eraseCutters`, `BoundaryTool.islands`).
@@ -774,9 +788,15 @@ impl Default for Memory {
             paragraph_spacing: 1.0,
             leader_arrow: None,
             leader_mask: false,
-            hatch_preset: 0,
+            hatch_choice: kentos_geometry_core::tools::hatch::DEFAULT_CHOICE,
+            hatch_scale: 1.0,
+            hatch_angle: 0.0,
+            hatch_color2: 0xFF_FF_FF,
+            hatch_inverted: false,
             hatch_by_lines: false,
             hatch_islands: true,
+            hatch_assoc: true,
+            hatch_texts: false,
             area_intersect_erase: false,
             area_subtract_erase: false,
             boundary_islands: true,

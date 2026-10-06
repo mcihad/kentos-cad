@@ -585,6 +585,32 @@ cases.append({
     ],
 })
 
+H_ENTITIES = ENTITIES + [
+    {"kind": "hatch", "id": 9, "layerId": "yapi", "attrs": {}, "ring": [P(487000, 4420000), P(487010, 4420000), P(487010, 4420010)],
+     "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}, "assoc": {"outer": LINKED_TO, "seed": P(487008, 4420002)}},
+]
+H_SETUP = {**SETUP, "entities": H_ENTITIES}
+H_IDS = [e["id"] for e in H_ENTITIES]
+
+
+def H(i, tie=True):
+    e = json.loads(json.dumps(next(e for e in H_ENTITIES if e["id"] == i)))
+    if not tie:
+        e.pop("assoc")
+    return e
+
+
+cases.append({
+    "name": "Bağı kopar ilişkili taramada: taramanın ilişkisi kalkar, halkası ve deseni olduğu gibi kalır; adım “Bağı kopar”",
+    "note": "ADR 0186 §6: Öznitelikler'in İlişkiyi kopar'ı. 9 bir nesneyi izleyen tarama (nesnesi bu çizimde yok; Bağı kopar nesneye bakmaz).",
+    "setup": H_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(9, 1), "unlink": True, "operation": "unlink"}, "result": done([9]),
+         "expect": {"ids": H_IDS, "entities": {"9": H(9, False), "1": H(1)}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Bağı kopar", "expect": {"entities": {"9": H(9)}, "canUndo": False, "canRedo": True}},
+    ],
+})
+
 write(
     "cad.entities.set",
     "Nesnelerin özelliklerini değiştir: doğrulama, plan, yazma, geri alma",

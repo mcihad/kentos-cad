@@ -90,7 +90,7 @@ export function choiceItems(ctx: AppContext, key: string): MenuItem[] | null {
     c.command
       ? // An entry that opens a window (“Yazı stilleri…”, docs/adr/0183 §4), apart.
         [{ kind: 'separator' }, { label: c.label, icon: c.icon, run: () => void ctx.commands.execute(c.command!) }]
-      : [{ label: c.label, icon: c.icon, radio: true, checked: c.checked, run: () => runPromptChoice(ctx, key, c.typed) }],
+      : [{ label: c.label, icon: c.icon, preview: c.preview, radio: true, checked: c.checked, run: () => runPromptChoice(ctx, key, c.typed) }],
   );
 }
 

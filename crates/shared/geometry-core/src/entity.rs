@@ -51,14 +51,56 @@ impl Attrs {
     }
 }
 
+/// A hatch's pattern (docs/adr/0186 §1): `solid`, `lines`, `cross`,
+/// `pattern` (its line families, named and scaled) or `gradient`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct HatchPattern {
     pub kind: String,
+    /// Degrees: the lines', the pattern's turn or the gradient's direction.
     pub angle: f64,
+    /// Metres between user-defined lines.
     pub spacing: f64,
+    pub name: Option<String>,
+    /// A pattern's metres per unit of its definition.
+    pub scale: Option<f64>,
+    pub lines: Option<Vec<crate::geom::hatch_pattern::PatternLine>>,
+    pub gradient: Option<crate::geom::hatch_pattern::Gradient>,
 }
 
-crate::json_struct!(HatchPattern { kind => "type", angle, spacing });
+crate::json_struct!(HatchPattern { kind => "type", angle, spacing, name, scale, lines, gradient });
+
+impl HatchPattern {
+    /// A user-defined pattern: solid, lines or crossed lines.
+    pub fn user(kind: &str, angle: f64, spacing: f64) -> Self {
+        Self {
+            kind: kind.to_owned(),
+            angle,
+            spacing,
+            name: None,
+            scale: None,
+            lines: None,
+            gradient: None,
+        }
+    }
+}
+
+/// The objects a hatch's region follows (docs/adr/0186 §6), by their
+/// persistent ids: the closed object, its islands, the texts and inserts
+/// left open, and the point clicked inside.
+#[derive(Clone, Debug, PartialEq)]
+pub struct HatchAssoc {
+    pub outer: String,
+    pub islands: Option<Vec<String>>,
+    pub cutouts: Option<Vec<String>>,
+    pub seed: Vec2,
+}
+
+crate::json_struct!(HatchAssoc {
+    outer,
+    islands,
+    cutouts,
+    seed
+});
 
 /// A part of a multi-part area past its first (docs/adr/0143): its ring in
 /// vertex + bulge form and its holes, as the area's own fields hold the
@@ -219,6 +261,8 @@ pub enum Shape {
         ring: Vec<Vec2>,
         holes: Option<Vec<Vec<Vec2>>>,
         pattern: HatchPattern,
+        /// The objects its region follows (docs/adr/0186 §6).
+        assoc: Option<HatchAssoc>,
     },
     /// A block placed in the drawing (docs/adr/0144): the definition `block`
     /// (its id) moved from its base point to `p`, mirrored in its x axis when
@@ -290,7 +334,7 @@ crate::json_tagged!(Shape, "kind",
     Spline => "spline" { pts, closed },
     Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs & face: crate::text::face::Face },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
-    Hatch => "hatch" { ring, holes, pattern },
+    Hatch => "hatch" { ring, holes, pattern, assoc },
     Insert => "insert" { block, p, scale, rotation, mirror; attrs },
     Leader => "leader" { pts, text, height, rotation, arrow, mask },
     Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
@@ -1011,9 +1055,19 @@ impl<'a> TextPlace<'a> {
     /// little over for descenders and accents (0.23 of its height under
     /// the baseline, 1.15 over it).
     pub fn outline(&self, font: Font) -> Vec<Vec2> {
+        self.outline_grown(font, 0.0)
+    }
+
+    /// Its rotated box `margin` wider all round (a hatch leaves it open so,
+    /// docs/adr/0186 §4).
+    pub fn outline_grown(&self, font: Font, margin: f64) -> Vec<Vec2> {
         let h = self.height * 1.15;
         let (w, below, _, _) = self.extent(font);
-        self.frame(font, (0.0, -h * 0.2 - below), (w, h))
+        self.frame(
+            font,
+            (-margin, -h * 0.2 - below - margin),
+            (w + margin, h + margin),
+        )
     }
 
     /// Okunur yap (docs/adr/0145 §3): a text that reads upside down (turned

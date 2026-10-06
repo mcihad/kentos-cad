@@ -174,6 +174,15 @@ impl Objects {
         self.push(layer, fields)
     }
 
+    /// A hatch over a ring, with a pattern as the contract writes it (docs/adr/0186).
+    pub(crate) fn hatch(&mut self, layer: &str, ring: &[[f64; 2]], pattern: Value) -> u32 {
+        let ring: Vec<Value> = ring.iter().map(|p| xy(*p)).collect();
+        self.push(
+            layer,
+            json!({ "kind": "hatch", "ring": ring, "pattern": pattern }),
+        )
+    }
+
     /// A text: its start, words, height in metres and turn in degrees, and
     /// its alignment, width factor and mask when it has them (docs/adr/0145).
     pub(crate) fn text(

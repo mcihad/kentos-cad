@@ -63,7 +63,7 @@ fn look(style: &LabelStyle) -> LabelLook {
 }
 
 /// The drawing's typeface as the geometry core names it (the contract's own spelling).
-fn font_of(font: Option<DrawingFont>) -> Font {
+pub(crate) fn font_of(font: Option<DrawingFont>) -> Font {
     font.and_then(|f| serde_json::to_value(f).ok())
         .and_then(|v| v.as_str().map(Font::from_id))
         .unwrap_or(Font::DEFAULT)

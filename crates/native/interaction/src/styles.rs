@@ -96,6 +96,7 @@ impl Seen {
                 label: name.clone(),
                 typed: name.clone(),
                 icon: None,
+                preview: None,
                 checked: *chosen,
                 command: None,
             })
@@ -108,6 +109,7 @@ impl Seen {
             } else {
                 "dimensionStyle"
             }),
+            preview: None,
             checked: false,
             command: Some(command),
         });

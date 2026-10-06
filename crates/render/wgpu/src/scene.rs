@@ -42,6 +42,7 @@ use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::bulge::has_bulges;
 use kentos_geometry_core::geom::dimension::layout_dimension;
 use kentos_geometry_core::geom::hatch::hatch_lines;
+use kentos_geometry_core::geom::hatch_pattern::pattern_pieces;
 use kentos_geometry_core::geom::leader::{self, Head};
 use kentos_geometry_core::store::draw::clip_line;
 use kentos_geometry_core::tessellate::{
@@ -997,6 +998,23 @@ impl Builder {
                 rings.extend(holes);
                 self.fill(&rings, color.with_alpha(SOLID_HATCH_ALPHA));
             }
+            // The styled drawing draws a gradient; here its first colour (docs/adr/0186 §3).
+            HatchPatternType::Gradient => {
+                let mut rings = Vec::with_capacity(holes.len() + 1);
+                rings.push(ring);
+                rings.extend(holes);
+                self.fill(&rings, color);
+            }
+            // A pattern's lines and dashes, its dots as the shortest of lines.
+            HatchPatternType::Pattern => {
+                let cut = pattern_pieces(&ring, &holes, &core_pattern(&h.pattern), PATTERN_PIECES);
+                for [p, q] in cut.segments {
+                    self.segment(p, q, color);
+                }
+                for p in cut.dots {
+                    self.segment(p, p, color);
+                }
+            }
             HatchPatternType::Lines | HatchPatternType::Cross => {
                 let angles = [h.pattern.angle, h.pattern.angle + 90.0];
                 let count = if h.pattern.kind == HatchPatternType::Cross {
@@ -1011,6 +1029,37 @@ impl Builder {
                 }
             }
         }
+    }
+}
+
+/// The most lines and dots a pattern's hatch draws here.
+const PATTERN_PIECES: usize = 200_000;
+
+/// A hatch's pattern as the core holds it, its families too (docs/adr/0186);
+/// a gradient is drawn here as its first colour.
+fn core_pattern(p: &kentos_contracts::HatchPattern) -> HatchPattern {
+    use kentos_geometry_core::geom::hatch_pattern::PatternLine;
+    let kind = match p.kind {
+        HatchPatternType::Solid => "solid",
+        HatchPatternType::Lines => "lines",
+        HatchPatternType::Cross => "cross",
+        HatchPatternType::Pattern => "pattern",
+        HatchPatternType::Gradient => "gradient",
+    };
+    HatchPattern {
+        name: p.name.clone(),
+        scale: p.scale,
+        lines: p.lines.as_ref().map(|ls| {
+            ls.iter()
+                .map(|l| PatternLine {
+                    angle: l.angle,
+                    origin: l.origin,
+                    offset: l.offset,
+                    dashes: (!l.dashes.is_empty()).then(|| l.dashes.clone()),
+                })
+                .collect()
+        }),
+        ..HatchPattern::user(kind, p.angle, p.spacing)
     }
 }
 
@@ -1250,16 +1299,8 @@ fn shape(entity: &Entity) -> Shape {
                 .holes
                 .as_ref()
                 .map(|hs| hs.iter().map(|r| points(r)).collect()),
-            pattern: HatchPattern {
-                kind: match h.pattern.kind {
-                    HatchPatternType::Solid => "solid",
-                    HatchPatternType::Lines => "lines",
-                    HatchPatternType::Cross => "cross",
-                }
-                .to_owned(),
-                angle: h.pattern.angle,
-                spacing: h.pattern.spacing,
-            },
+            pattern: core_pattern(&h.pattern),
+            assoc: None,
         },
         // The scene draws no text: an attribute's value does not matter here.
         Entity::Insert(i) => Shape::Insert {

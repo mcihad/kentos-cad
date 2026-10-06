@@ -34,6 +34,7 @@ pub fn label(layer_type: &str) -> &'static str {
     match layer_type {
         "simpleFill" => "Dolgu",
         "hatchFill" => "Tarama",
+        "gradientFill" => "Degrade",
         "patternFill" => "Desen",
         "imageFill" => "Görüntü dolgusu",
         "centroidMarker" => "İç noktada işaret",
@@ -89,6 +90,11 @@ pub fn new_layer(layer_type: &str, id: &str, context: &str) -> Value {
         "hatchFill" => {
             json!({ "id": id, "type": layer_type, "angle": 45, "spacing": 2, "width": 0.2, "color": "ink" })
         }
+        // A hatch object's gradient (docs/adr/0186 §3); the designer does not offer it.
+        "gradientFill" => json!({
+            "id": id, "type": layer_type, "color": "ink", "color2": "#FFFFFF", "shape": "linear",
+            "angle": 0,
+        }),
         "patternFill" => json!({
             "id": id, "type": layer_type, "spacingX": 3, "spacingY": 3,
             "marker": { "type": "marker", "layers": [dot("0")] },

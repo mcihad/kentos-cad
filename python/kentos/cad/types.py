@@ -364,6 +364,22 @@ EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "br
 """The names of :class:`EditOperation`, for a plain string."""
 
 
+class GradientShape(_StrEnum):
+    """How a gradient runs over its hatch (docs/adr/0186 §3).
+
+    - ``linear``: From one side of the hatch to the other along `angle`.
+    - ``cylinder``: The second colour along the middle, the first at both sides.
+    - ``spherical``: The second colour in the middle, the first at the farthest corner.
+    """
+    LINEAR = "linear"
+    CYLINDER = "cylinder"
+    SPHERICAL = "spherical"
+
+
+GradientShapeName = Literal["linear", "cylinder", "spherical"]
+"""The names of :class:`GradientShape`, for a plain string."""
+
+
 class GrantRole(_StrEnum):
     """A role a share gives: every project role but the owner's (ownership is transferred, not shared)."""
     VIEWER = "viewer"
@@ -377,12 +393,20 @@ GrantRoleName = Literal["viewer", "commenter", "editor", "manager"]
 
 
 class HatchPatternType(_StrEnum):
+    """- ``solid``
+    - ``lines``: User-defined lines at `angle`, `spacing` apart.
+    - ``cross``: User-defined lines and the same turned 90°.
+    - ``pattern``: A pattern of line families (`name`, `scale`, `lines`).
+    - ``gradient``: A gradient from the hatch's colour to `gradient.color2`.
+    """
     SOLID = "solid"
     LINES = "lines"
     CROSS = "cross"
+    PATTERN = "pattern"
+    GRADIENT = "gradient"
 
 
-HatchPatternTypeName = Literal["solid", "lines", "cross"]
+HatchPatternTypeName = Literal["solid", "lines", "cross", "pattern", "gradient"]
 """The names of :class:`HatchPatternType`, for a plain string."""
 
 
@@ -3528,6 +3552,37 @@ class GridChoice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class HatchAssoc(_Model):
+    """The objects a hatch made inside a closed object follows (docs/adr/0186
+    §6): the closed object, its islands, the texts and inserts left open, and
+    the point clicked inside, which picks the region's part.
+    """
+    outer: str
+    seed: Vec2
+    cutouts: list[str] | Unset = UNSET
+    islands: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["outer"] = self.outer
+        out["seed"] = _vec2_out(self.seed)
+        if self.cutouts is not UNSET:
+            out["cutouts"] = list(self.cutouts)
+        if self.islands is not UNSET:
+            out["islands"] = list(self.islands)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchAssoc:
+        return cls(
+            outer=data["outer"],
+            seed=Vec2.from_json(data["seed"]),
+            cutouts=list(data["cutouts"]) if "cutouts" in data else UNSET,
+            islands=list(data["islands"]) if "islands" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HatchEntity(Entity):
     """Fields every object has. `id` is the object's local id inside a v1 file.
     v1 keeps no persistent id: it is derived from the file's content when the
@@ -3535,6 +3590,7 @@ class HatchEntity(Entity):
     PostgreSQL (`feature.id`).
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        assoc: The objects its region follows (docs/adr/0186 §6); none: it stays as drawn.
         color: Colour override; absent = the layer's colour ("katmana göre").
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
@@ -3548,6 +3604,7 @@ class HatchEntity(Entity):
     attrs: dict[str, str]
     ring: list[Vec2]
     pattern: HatchPattern
+    assoc: HatchAssoc | None | Unset = UNSET
     color: str | None | Unset = UNSET
     holes: list[list[Vec2]] | None | Unset = UNSET
     label: str | None | Unset = UNSET
@@ -3561,6 +3618,8 @@ class HatchEntity(Entity):
         out["attrs"] = dict(self.attrs)
         out["ring"] = [_vec2_out(e0) for e0 in self.ring]
         out["pattern"] = self.pattern.to_json()
+        if self.assoc is not UNSET:
+            out["assoc"] = None if self.assoc is None else self.assoc.to_json()
         if self.color is not UNSET:
             out["color"] = self.color
         if self.holes is not UNSET:
@@ -3581,6 +3640,7 @@ class HatchEntity(Entity):
             attrs=dict(data["attrs"]),
             ring=[Vec2.from_json(e0) for e0 in data["ring"]],
             pattern=HatchPattern.from_json(data["pattern"]),
+            assoc=UNSET if "assoc" not in data else None if data["assoc"] is None else HatchAssoc.from_json(data["assoc"]),
             color=data.get("color", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [[Vec2.from_json(e1) for e1 in e0] for e0 in data["holes"]],
             label=data.get("label", UNSET),
@@ -3590,21 +3650,65 @@ class HatchEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class HatchGradient(_Model):
+    """A gradient: its shape, whether it runs the other way, its second colour.
+    Attributes:
+        color2: `#RRGGBB`.
+    """
+    shape: GradientShape | GradientShapeName
+    color2: str
+    inverted: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["shape"] = _enum_out(self.shape)
+        out["color2"] = self.color2
+        if self.inverted is not UNSET:
+            out["inverted"] = self.inverted
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchGradient:
+        return cls(
+            shape=_enum_in(GradientShape, data["shape"]),
+            color2=data["color2"],
+            inverted=data.get("inverted", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HatchPattern(_Model):
     """
     Attributes:
-        angle: Degrees, counter-clockwise from east.
-        spacing: Metres.
+        angle: Degrees, counter-clockwise from east: the lines' (lines, cross), the
+            pattern's turn (pattern), the gradient's direction (gradient).
+        spacing: Metres between the lines (lines, cross); 1 and unread for the others.
+        gradient: A gradient's shape and second colour.
+        lines: A pattern's line families.
+        name: A pattern's name (`ANSI31`).
+        scale: A pattern's metres per unit of its definition.
     """
     type: HatchPatternType | HatchPatternTypeName
     angle: float
     spacing: float
+    gradient: HatchGradient | None | Unset = UNSET
+    lines: list[PatternLine] | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["type"] = _enum_out(self.type)
         out["angle"] = float(self.angle)
         out["spacing"] = float(self.spacing)
+        if self.gradient is not UNSET:
+            out["gradient"] = None if self.gradient is None else self.gradient.to_json()
+        if self.lines is not UNSET:
+            out["lines"] = None if self.lines is None else [e0.to_json() for e0 in self.lines]
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
         return out
 
     @classmethod
@@ -3613,6 +3717,10 @@ class HatchPattern(_Model):
             type=_enum_in(HatchPatternType, data["type"]),
             angle=float(data["angle"]),
             spacing=float(data["spacing"]),
+            gradient=UNSET if "gradient" not in data else None if data["gradient"] is None else HatchGradient.from_json(data["gradient"]),
+            lines=UNSET if "lines" not in data else None if data["lines"] is None else [PatternLine.from_json(e0) for e0 in data["lines"]],
+            name=data.get("name", UNSET),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
         )
 
 
@@ -4448,6 +4556,37 @@ class PathEntity(_Model):
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [AreaPart.from_json(e0) for e0 in data["parts"]],
             symbol=data.get("symbol", UNSET),
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PatternLine(_Model):
+    """One family of a pattern's lines (docs/adr/0186 §1), in the pattern's
+    units, before the pattern turns: lines at `angle` (degrees) through
+    `origin`, each the next `offset` on (`[along, across]` the line), drawn
+    as `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).
+    """
+    angle: float
+    origin: list[float]
+    offset: list[float]
+    dashes: list[float] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["angle"] = float(self.angle)
+        out["origin"] = [float(e0) for e0 in self.origin]
+        out["offset"] = [float(e0) for e0 in self.offset]
+        if self.dashes is not UNSET:
+            out["dashes"] = [float(e0) for e0 in self.dashes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PatternLine:
+        return cls(
+            angle=float(data["angle"]),
+            origin=[float(e0) for e0 in data["origin"]],
+            offset=[float(e0) for e0 in data["offset"]],
+            dashes=[float(e0) for e0 in data["dashes"]] if "dashes" in data else UNSET,
         )
 
 
@@ -7440,16 +7579,22 @@ class DimensionEntityGeometry(EntityGeometry):
 
 @dataclass(kw_only=True, slots=True)
 class HatchEntityGeometry(EntityGeometry):
-    """A hatched area: its ring, its holes when it has any, and its pattern."""
+    """A hatched area: its ring, its holes when it has any, and its pattern.
+    Attributes:
+        assoc: The objects its region follows (docs/adr/0186 §6).
+    """
     TAG_VALUE: ClassVar[str] = "hatch"
     ring: list[Vec2]
     pattern: HatchPattern
+    assoc: HatchAssoc | None | Unset = UNSET
     holes: list[list[Vec2]] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "hatch"}
         out["ring"] = [_vec2_out(e0) for e0 in self.ring]
         out["pattern"] = self.pattern.to_json()
+        if self.assoc is not UNSET:
+            out["assoc"] = None if self.assoc is None else self.assoc.to_json()
         if self.holes is not UNSET:
             out["holes"] = None if self.holes is None else [[_vec2_out(e1) for e1 in e0] for e0 in self.holes]
         return out
@@ -7459,6 +7604,7 @@ class HatchEntityGeometry(EntityGeometry):
         return cls(
             ring=[Vec2.from_json(e0) for e0 in data["ring"]],
             pattern=HatchPattern.from_json(data["pattern"]),
+            assoc=UNSET if "assoc" not in data else None if data["assoc"] is None else HatchAssoc.from_json(data["assoc"]),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [[Vec2.from_json(e1) for e1 in e0] for e0 in data["holes"]],
         )
 
@@ -8151,12 +8297,16 @@ __all__ = [
     "FileTableSource",
     "GeographicCrsSystem",
     "GeographicDefinition",
+    "GradientShape",
+    "GradientShapeName",
     "GrantRole",
     "GrantRoleName",
     "GridArrayLayout",
     "GridChoice",
+    "HatchAssoc",
     "HatchEntity",
     "HatchEntityGeometry",
+    "HatchGradient",
     "HatchPattern",
     "HatchPatternType",
     "HatchPatternTypeName",
@@ -8197,6 +8347,7 @@ __all__ = [
     "NewObject",
     "PathArrayLayout",
     "PathEntity",
+    "PatternLine",
     "PointCreate",
     "PointCreated",
     "PointEntity",

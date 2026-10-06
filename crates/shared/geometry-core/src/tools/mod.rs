@@ -9,6 +9,7 @@
 pub mod construct;
 pub mod drawing;
 pub mod editing;
+pub mod hatch;
 pub mod locks;
 pub mod navigation;
 pub mod object_tracking;

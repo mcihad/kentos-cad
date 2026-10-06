@@ -4,6 +4,7 @@
  "labels": {
   "simpleFill": "Dolgu",
   "hatchFill": "Tarama",
+  "gradientFill": "Degrade",
   "patternFill": "Desen",
   "imageFill": "Görüntü dolgusu",
   "centroidMarker": "İç noktada işaret",
@@ -371,6 +372,19 @@
    }
   },
   {
+   "type": "gradientFill",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "gradientFill",
+    "color": "ink",
+    "color2": "#FFFFFF",
+    "shape": "linear",
+    "angle": 0
+   }
+  },
+  {
    "type": "patternFill",
    "id": "3",
    "context": "fill",
@@ -541,6 +555,19 @@
    }
   },
   {
+   "type": "gradientFill",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "gradientFill",
+    "color": "ink",
+    "color2": "#FFFFFF",
+    "shape": "linear",
+    "angle": 0
+   }
+  },
+  {
    "type": "patternFill",
    "id": "3",
    "context": "line",
@@ -708,6 +735,19 @@
     "spacing": 2,
     "width": 0.2,
     "color": "ink"
+   }
+  },
+  {
+   "type": "gradientFill",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "gradientFill",
+    "color": "ink",
+    "color2": "#FFFFFF",
+    "shape": "linear",
+    "angle": 0
    }
   },
   {
@@ -900,6 +940,40 @@
     "unit": "px"
    },
    "summary": "22.5° · 1.25 px aralık"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "gradientFill",
+    "color": "ink",
+    "color2": "#FFFFFF",
+    "shape": "linear",
+    "angle": 0
+   },
+   "summary": "doğrusal · 0°"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "gradientFill",
+    "color": "ink",
+    "color2": "#FFFFFF",
+    "shape": "cylinder",
+    "angle": 22.5
+   },
+   "summary": "silindir · 22.5°"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "gradientFill",
+    "color": "ink",
+    "color2": "#000000",
+    "shape": "spherical",
+    "angle": 90,
+    "inverted": true
+   },
+   "summary": "küre · 90°"
   },
   {
    "layer": {

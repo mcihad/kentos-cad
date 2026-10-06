@@ -1,0 +1,35 @@
+{
+  "entities": [
+    {"kind": "hatch", "id": 1, "layerId": "yapi", "attrs": {"malzeme": "mermer"}, "color": "#E5484D",
+     "ring": [{"x": 452345.125, "y": 4412345.5}, {"x": 452365.125, "y": 4412345.5}, {"x": 452365.125, "y": 4412360.5}, {"x": 452345.125, "y": 4412360.5}],
+     "holes": [[{"x": 452350.125, "y": 4412350.5}, {"x": 452355.125, "y": 4412350.5}, {"x": 452355.125, "y": 4412355.5}]],
+     "pattern": {"type": "pattern", "angle": 30, "spacing": 1, "name": "ANSI36", "scale": 0.5,
+                 "lines": [{"angle": 45, "origin": [0, 0], "offset": [5.5562499999999995, 3.175], "dashes": [7.9375, -1.5875, 0, -1.5875]}]}},
+    {"kind": "hatch", "id": 2, "layerId": "tarama", "attrs": {},
+     "ring": [{"x": 452375.125, "y": 4412345.5}, {"x": 452395.125, "y": 4412345.5}, {"x": 452395.125, "y": 4412360.5}, {"x": 452375.125, "y": 4412360.5}],
+     "pattern": {"type": "pattern", "angle": 0, "spacing": 1, "name": "KAROLAJ", "scale": 2,
+                 "lines": [{"angle": 0, "origin": [0, 0], "offset": [0, 10]}, {"angle": 90, "origin": [2, 0.5], "offset": [0, 10], "dashes": [10, -10]}]},
+     "assoc": {"outer": "0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c09", "islands": ["0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c08"], "seed": {"x": 452380.125, "y": 4412350.5}}},
+    {"kind": "hatch", "id": 3, "layerId": "yapi", "attrs": {}, "color": "#0000FF",
+     "ring": [{"x": 452345.125, "y": 4412375.5}, {"x": 452365.125, "y": 4412375.5}, {"x": 452365.125, "y": 4412390.5}, {"x": 452345.125, "y": 4412390.5}],
+     "pattern": {"type": "gradient", "angle": 30, "spacing": 1, "gradient": {"shape": "linear", "inverted": true, "color2": "#FFFFFF"}}},
+    {"kind": "hatch", "id": 4, "layerId": "tarama", "attrs": {},
+     "ring": [{"x": 452375.125, "y": 4412375.5}, {"x": 452395.125, "y": 4412375.5}, {"x": 452395.125, "y": 4412390.5}, {"x": 452375.125, "y": 4412390.5}],
+     "pattern": {"type": "gradient", "angle": 0, "spacing": 1, "gradient": {"shape": "spherical", "inverted": true, "color2": "#7FB2E5"}}},
+    {"kind": "hatch", "id": 5, "layerId": "yapi", "attrs": {}, "color": "#E5A84D",
+     "ring": [{"x": 452405.125, "y": 4412375.5}, {"x": 452425.125, "y": 4412375.5}, {"x": 452425.125, "y": 4412390.5}, {"x": 452405.125, "y": 4412390.5}],
+     "pattern": {"type": "gradient", "angle": 90, "spacing": 1, "gradient": {"shape": "cylinder", "color2": "#E5484D"}}},
+    {"kind": "hatch", "id": 6, "layerId": "yapi", "attrs": {},
+     "ring": [{"x": 452405.125, "y": 4412345.5}, {"x": 452425.125, "y": 4412345.5}, {"x": 452415.125, "y": 4412360.5}],
+     "pattern": {"type": "lines", "angle": 37.5, "spacing": 0.75}}
+  ],
+  "layers": [
+    {"id": "yapi", "name": "Yapı", "path": [], "color": "#E5A84D", "visible": true, "locked": false, "lineType": "continuous", "lineWeight": 0.25},
+    {"id": "tarama", "name": "Tarama", "path": [], "color": "ink", "visible": true, "locked": false, "lineType": "continuous", "lineWeight": 0.25}
+  ],
+  "scale": 1000,
+  "lengthDecimals": 3,
+  "grads": true,
+  "dimensionValues": {},
+  "blocks": []
+}

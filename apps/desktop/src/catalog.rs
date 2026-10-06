@@ -197,6 +197,7 @@ pub const PORTED: &[&str] = &[
     // Tarama: the region by a closed object or by the line work, islands left
     // out, through cad.entities.create as “Tarama” (docs/adr/0062).
     "tool.hatch",
+    "tool.hatchSelected",
     // Blocks (docs/adr/0144).
     "tool.blockDefine",
     "tool.blockInsert",

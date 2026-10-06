@@ -7,6 +7,7 @@ mod columns;
 mod dimensions;
 mod elevations;
 mod fixtures;
+mod hatches;
 mod layer_states;
 mod leaders;
 mod line_parts;

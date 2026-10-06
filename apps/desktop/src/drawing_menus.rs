@@ -131,9 +131,11 @@ impl App {
                     None => {
                         let menu =
                             menu.radio(c.label, c.checked, Message::PromptChoice(key, c.typed));
-                        match c.icon {
-                            Some(name) => menu.icon(crate::icons::from_web(Some(name))),
-                            None => menu,
+                        // A hatch pattern's wide sample in its icon's place (docs/adr/0186 §11).
+                        match (c.preview, c.icon) {
+                            (Some(name), _) => menu.preview(crate::icons::from_web(Some(name))),
+                            (None, Some(name)) => menu.icon(crate::icons::from_web(Some(name))),
+                            (None, None) => menu,
                         }
                     }
                 })

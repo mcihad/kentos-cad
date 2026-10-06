@@ -77,11 +77,8 @@ impl Donut {
                 .holes
                 .map(|holes| holes.iter().map(|h| wire_all(h)).collect()),
             // A solid fill with the inner circle left out: AutoCAD's wide polyline.
-            pattern: HatchPattern {
-                kind: HatchPatternType::Solid,
-                angle: 0.0,
-                spacing: 1.0,
-            },
+            pattern: HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0),
+            assoc: None,
         };
         if let Some(out) = points::write_objects(vec![geometry], None, cx)
             && let Some(&id) = out.ids.first()

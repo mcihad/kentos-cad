@@ -40,21 +40,34 @@ fn corner(i: u32) -> vec2f {
 }
 
 // Dash coverage: s in device px, pattern (raw units) scaled by k; total/on/offset as for WebGL2.
+// A drawn dash shorter than a pixel followed by a gap is a dot: it inks a pixel wherever it falls (docs/adr/0186 §3).
 fn dashCover(s: f32, k: f32, totalRaw: f32, onShare: f32, offsetRaw: f32) -> f32 {
   let total = totalRaw * k;
   if (total <= 0.0) { return 1.0; }
-  if (total < 4.0) { return onShare; }
-  let t = fmod(s + offsetRaw * k, total);
   let d = array<f32, 8>(st.dash0.x, st.dash0.y, st.dash0.z, st.dash0.w, st.dash1.x, st.dash1.y, st.dash1.z, st.dash1.w);
+  if (total < 4.0) {
+    var dots = 0.0;
+    for (var i = 0u; i < 8u; i += 2u) {
+      if (d[i + 1u] > 0.0) { dots += max(0.0, 1.0 - d[i] * k); }
+    }
+    return min(1.0, onShare + dots / total);
+  }
+  let t = fmod(s + offsetRaw * k, total);
   var acc = 0.0;
+  var a = 0.0;
+  var found = false;
   for (var i = 0u; i < 8u; i++) {
     let l = d[i] * k;
-    if (t < acc + l) {
-      if ((i & 1u) == 1u) { return 0.0; }
-      return clamp(min(t - acc, acc + l - t) + 0.5, 0.0, 1.0);
+    if ((i & 1u) == 0u && l < 1.0 && d[i + 1u] > 0.0) {
+      let e = abs(t - (acc + 0.5 * l));
+      a = max(a, clamp(1.0 - min(e, total - e), 0.0, 1.0));
+    }
+    if (!found && t < acc + l) {
+      found = true;
+      if ((i & 1u) == 0u) { a = max(a, clamp(min(t - acc, acc + l - t) + 0.5, 0.0, 1.0)); }
     }
     acc += l;
   }
-  return 0.0;
+  return a;
 }
 

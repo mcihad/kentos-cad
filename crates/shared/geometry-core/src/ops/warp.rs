@@ -10,11 +10,12 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::entity::Shape;
+use crate::entity::{HatchAssoc, Shape};
 use crate::geom::affine::{Affine, translation};
 use crate::geom::arc::{norm_angle, sweep};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::bulge_arc;
+use crate::geom::hatch_pattern::carried;
 use crate::jsmath::{PI, TAU, atan2, cos, js_hypot, js_max, sin};
 use crate::op;
 use crate::ops::rubber::{Link, RubberError, Sheet};
@@ -669,6 +670,7 @@ fn common<M: Map + ?Sized>(
             ring,
             holes,
             pattern,
+            assoc,
         } => {
             let n = ring.len().max(1) as f64;
             let mean = Vec2::new(
@@ -676,11 +678,23 @@ fn common<M: Map + ?Sized>(
                 ring.iter().map(|p| p.y).sum::<f64>() / n,
             );
             let j = m.jac(mean)?;
-            let rad = pattern.angle * PI / 180.0;
-            let d = lin(&j, Vec2::new(cos(rad), sin(rad)));
-            let mut pattern = pattern.clone();
-            pattern.angle = (((atan2(d.y, d.x) * 180.0 / PI) % 180.0) + 180.0) % 180.0;
-            pattern.spacing *= det(&j).abs().sqrt();
+            let pattern = match pattern.kind.as_str() {
+                // A pattern or a gradient by the similarity nearest J (docs/adr/0186 §8).
+                "pattern" | "gradient" => carried(
+                    pattern,
+                    atan2(j[1], j[0]) * 180.0 / PI,
+                    det(&j).abs().sqrt(),
+                    det(&j) < 0.0,
+                ),
+                _ => {
+                    let rad = pattern.angle * PI / 180.0;
+                    let d = lin(&j, Vec2::new(cos(rad), sin(rad)));
+                    let mut pattern = pattern.clone();
+                    pattern.angle = (((atan2(d.y, d.x) * 180.0 / PI) % 180.0) + 180.0) % 180.0;
+                    pattern.spacing *= det(&j).abs().sqrt();
+                    pattern
+                }
+            };
             let map = |ps: &Vec<Vec2>| ps.iter().map(|&p| m.at(p)).collect::<Result<Vec<_>, _>>();
             kept(Shape::Hatch {
                 ring: map(ring)?,
@@ -689,6 +703,13 @@ fn common<M: Map + ?Sized>(
                     None => None,
                 },
                 pattern,
+                assoc: match assoc {
+                    Some(a) => Some(HatchAssoc {
+                        seed: m.at(a.seed)?,
+                        ..a.clone()
+                    }),
+                    None => None,
+                },
             })
         }
         _ => return Ok(None),

@@ -422,11 +422,8 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 base: b,
                 ring: points(rng, 3),
                 holes: rng.chance(50).then(|| vec![points(rng, 3)]),
-                pattern: HatchPattern {
-                    kind: HatchPatternType::Cross,
-                    angle: rng.float(),
-                    spacing: rng.float(),
-                },
+                pattern: HatchPattern::user(HatchPatternType::Cross, rng.float(), rng.float()),
+                assoc: None,
             }),
         });
     }

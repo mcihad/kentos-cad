@@ -304,6 +304,7 @@ pub fn icon(icon: Icon) -> Glyph {
     Glyph {
         icon,
         size: 16.0,
+        width: None,
         tone: Tone::Inherit,
         weight: None,
     }
@@ -316,6 +317,8 @@ pub fn icon(icon: Icon) -> Glyph {
 pub struct Glyph {
     icon: Icon,
     size: f32,
+    /// A wide picture's width; none for a square icon.
+    width: Option<f32>,
     tone: Tone,
     weight: Option<f32>,
 }
@@ -324,6 +327,15 @@ impl Glyph {
     /// Kenar uzunluğu (piksel).
     pub fn size(mut self, size: f32) -> Self {
         self.size = size;
+        self
+    }
+
+    /// Geniş resim: genişliği (piksel), yüksekliği [`size`](Self::size).
+    /// Izgara yüksekliğe göre ölçeklenir ve soldan başlar; resim 20 birim
+    /// yüksekliğinde, genişliğin oranında uzun çizilir (bir tarama deseninin
+    /// menüdeki örneği, docs/adr/0186 §11).
+    pub fn wide(mut self, width: f32) -> Self {
+        self.width = Some(width);
         self
     }
 
@@ -360,7 +372,10 @@ impl<Message> Widget<Message, Theme, Renderer> for Glyph {
     }
 
     fn size(&self) -> Size<Length> {
-        Size::new(Length::Fixed(self.size), Length::Fixed(self.size))
+        Size::new(
+            Length::Fixed(self.width.unwrap_or(self.size)),
+            Length::Fixed(self.size),
+        )
     }
 
     fn layout(
@@ -369,7 +384,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Glyph {
         _renderer: &Renderer,
         limits: &layout::Limits,
     ) -> layout::Node {
-        layout::atomic(limits, self.size, self.size)
+        layout::atomic(limits, self.width.unwrap_or(self.size), self.size)
     }
 
     fn draw(

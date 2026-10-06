@@ -37,7 +37,7 @@ export interface GpuStyledLayer {
   list: GpuStyled[];
 }
 
-type StyledPipes = Record<'stroke' | 'solid' | 'hatch' | 'pattern' | 'tile' | 'marker', GPURenderPipeline>;
+type StyledPipes = Record<'stroke' | 'solid' | 'hatch' | 'pattern' | 'tile' | 'marker' | 'gradient', GPURenderPipeline>;
 
 export class WebGPUStyledRenderer {
   private readonly device: GPUDevice;
@@ -118,6 +118,8 @@ export class WebGPUStyledRenderer {
       ),
       solid: pipe('areaVs', 'solidFs', [area], straight),
       hatch: pipe('areaVs', 'hatchFs', [area], straight),
+      // docs/adr/0186 §3: the contract's version 4.
+      gradient: pipe('areaVs', 'gradientFs', [area], straight),
       pattern: pipe('areaVs', 'patternFs', [area], premul),
       tile: pipe('areaVs', 'tileFs', [area], premul),
       marker: pipe(
@@ -201,9 +203,17 @@ export class WebGPUStyledRenderer {
       else if (p.kind === 'hatch') {
         f.set(p.color, 0);
         const v = dash(p.dash);
+        // A family's stagger (docs/adr/0186 §3).
+        f.set([p.stagger ?? 0, 0, 0, 0], 16);
         f.set([Math.cos(p.angle), Math.sin(p.angle), p.spacing, p.width], 20);
         f.set([p.offset, v.total, v.on, p.dashOffset], 24);
         u[32] = p.unit === 'world' ? 0 : 1;
+      } else if (p.kind === 'gradient') {
+        f.set(p.color, 0);
+        f.set(p.color2, 4);
+        f.set([Math.cos(p.dir), Math.sin(p.dir), p.from, p.to], 20);
+        f.set([p.centre[0], p.centre[1], p.radius, 0], 24);
+        u.set([0, p.shape, p.inverted ? 1 : 0, 0], 32);
       } else if (p.kind === 'pattern') {
         const r = patternReach(p);
         f.set(p.fill ?? [0, 0, 0, 0], 0);

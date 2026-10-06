@@ -52,6 +52,9 @@ LEADER_ARROWS = ("open", "dot", "none")
 # Schema 21 (docs/adr/0183): the drawing typefaces and a dimension's arrowheads by name.
 DRAWING_FONTS = ("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")
 DIMENSION_ARROWS = ("closed", "open", "dot", "none")
+# Schema 23 (docs/adr/0186): a hatch's pattern kinds and a gradient's shapes by name.
+HATCH_TYPES = ("solid", "lines", "cross", "pattern", "gradient")
+GRADIENT_SHAPES = ("linear", "cylinder", "spherical")
 
 
 def head(major, arg):
@@ -615,10 +618,12 @@ KINDS = {
         "suffix": (text, False),
         "font": (enum(DRAWING_FONTS), False),
     },
+    # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the drawing.
     "hatch": {
         "ring": (points, True),
         "holes": (lambda h: array([points(r) for r in h]), False),
-        "pattern": (lambda p: cmap(fields(p, {"type": (enum(("solid", "lines", "cross")), True), "angle": (f64, True), "spacing": (f64, True)}, "pattern")), True),
+        "pattern": (lambda p: hatch_pattern(p), True),
+        "assoc": (lambda a: hatch_assoc(a), False),
     },
     # Schema 6 (docs/adr/0144): the definition's id; `mirror` only when true.
     "insert": {"block": (lambda u: blob(uid_bytes(u)), True), "p": (point, True), "scale": (f64, True), "rotation": (f64, True), "mirror": (lambda b: boolean(b) if b is True else None, False)},
@@ -655,6 +660,41 @@ KINDS = {
 }
 
 
+def pattern_line(l):
+    """A pattern's family (schema 23, docs/adr/0186 §1): its angle, origin, offset and, only when it has any, its dashes."""
+    assert l.get("dashes", [None]), "boş kesik listesi yazılmaz"
+    pair = lambda xy: point({"x": xy[0], "y": xy[1]})
+    return cmap(fields(l, {"angle": (f64, True), "origin": (pair, True), "offset": (pair, True), "dashes": (floats, False)}, "desen ailesi"))
+
+
+def hatch_gradient(g):
+    """A gradient (schema 23): its shape by name, its second colour, `inverted` only when true."""
+    out = fields(g, {"shape": (enum(GRADIENT_SHAPES), True), "color2": (text, True), "inverted": (lambda b: boolean(b) if b is True else None, False)}, "degrade")
+    assert out.get("inverted", True) is not None, "inverted yalnız true yazılır"
+    return cmap(out)
+
+
+def hatch_pattern(p):
+    """A hatch's pattern: its kind by name, angle and spacing; schema 23's name, scale, families and gradient."""
+    table = {
+        "type": (enum(HATCH_TYPES), True),
+        "angle": (f64, True),
+        "spacing": (f64, True),
+        "name": (text, False),
+        "scale": (f64, False),
+        "lines": (lambda ls: array([pattern_line(l) for l in ls]), False),
+        "gradient": (hatch_gradient, False),
+    }
+    return cmap(fields(p, table, "pattern"))
+
+
+def hatch_assoc(a):
+    """What a hatch's region follows (schema 23, docs/adr/0186 §6): objects by persistent id, empty lists not written; the seed."""
+    ids = lambda us: array([blob(uid_bytes(u)) for u in us])
+    assert a.get("islands", [None]) and a.get("cutouts", [None]), "boş liste yazılmaz"
+    return cmap(fields(a, {"outer": (lambda u: blob(uid_bytes(u)), True), "islands": (ids, False), "cutouts": (ids, False), "seed": (point, True)}, "assoc"))
+
+
 def entity(e, uid, index):
     """An object; `uid` None for a block definition's object, which has no persistent id (schema 6)."""
     kind = e["kind"]
@@ -673,6 +713,8 @@ def entity(e, uid, index):
     if kind == "table":
         assert uid is not None, "blok tanımında tablo olamaz"
         table_shape(e)
+    # A block definition's objects have no persistent ids to name (docs/adr/0186 §6).
+    assert "assoc" not in e or uid is not None, "blok tanımının taraması nesnelere bağlı olamaz"
     body = fields({k: v for k, v in e.items() if k not in ("kind", "id")}, table, f"nesne {index} ({kind})")
     assert body.get("header", True) is not None, f"nesne {index}: header yalnız true yazılır"
     assert body.get("mirror", True) is not None, f"nesne {index}: mirror yalnız true yazılır"
@@ -732,7 +774,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 22 with a table, only in the drawing (docs/adr/0184), 21 with a text or a dimension style or a text's face or a dimension's look,
+    """The oldest schema that holds the drawing: 23 with a hatch's pattern of families or gradient (a field of theirs) or
+    its tie, in the drawing or a block definition (docs/adr/0186), 22 with a table, only in the drawing (docs/adr/0184), 21 with a text or a dimension style or a text's face or a dimension's look,
     in the drawing or a block definition (docs/adr/0183), 20 with a multi-line text's box, line spacing or letter formats, in the
     drawing or a block definition (docs/adr/0182 §1), 19 with layer states (docs/adr/0177 §4), 18 with a text that writes an
     object's label (docs/adr/0175 §4), 17
@@ -764,6 +807,15 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
             (e["kind"] == "text" and any(k in e for k in face)) or (e["kind"] == "dimension" and any(k in e for k in look)) for e in es
         )
 
+    def patterned(es):
+        defined = ("name", "scale", "lines", "gradient")
+        return any(
+            e["kind"] == "hatch" and ("assoc" in e or e["pattern"]["type"] in ("pattern", "gradient") or any(k in e["pattern"] for k in defined))
+            for e in es
+        )
+
+    if patterned(entities) or any(patterned(b["entities"]) for b in blocks or []):
+        return 23
     if any(e["kind"] == "table" for e in entities):
         return 22
     if settings and (settings.get("textStyles") or settings.get("dimensionStyles")):
@@ -999,7 +1051,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-23.kcad"] = container(root(cmap(parts), version=b"\x17"))
+    files["schema-version-24.kcad"] = container(root(cmap(parts), version=uint(24)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1208,6 +1260,38 @@ def broken(minimal_content, minimal_file):
     files["table-frame-too-wide.kcad"] = in_schema(22, table_of(frame=f64(2.5)))
     files["table-aligns-short.kcad"] = in_schema(22, table_of(aligns=array([text("left")])))
     files["table-source-nil.kcad"] = in_schema(22, table_of(source=cmap({"kind": text("areas"), "objects": array([blob(bytes(16))])})))
+    # A hatch's patterns, gradients and ties are schema 23's (docs/adr/0186): in schema 22 the kinds are unknown values
+    # and the fields unknown ones; a pattern has a name, a scale and families within their bounds, each family's lines
+    # apart and a dash with a length; a gradient a #RRGGBB second colour, `inverted` only when true; a tie names each
+    # object once, only in the drawing.
+    square = array([point({"x": one["p"]["x"] + x, "y": one["p"]["y"] + y}) for x, y in ((0.0, 0.0), (4.0, 0.0), (4.0, 4.0))])
+    family = lambda **extra: cmap({"angle": f64(45.0), "origin": point({"x": 0.0, "y": 0.0}), "offset": point({"x": 0.0, "y": 3.175}), **extra})
+
+    def hatch_of(pattern, **extra):
+        return cmap({"hatch": cmap({**common, "ring": square, "pattern": cmap(pattern), **extra})})
+
+    ansi = {"type": text("pattern"), "angle": f64(0.0), "spacing": f64(1.0), "name": text("ANSI31"), "scale": f64(0.5), "lines": array([family()])}
+    grad = lambda **g: {"type": text("gradient"), "angle": f64(0.0), "spacing": f64(1.0), "gradient": cmap({"shape": text("linear"), "color2": text("#FFFFFF"), **g})}
+    tie = lambda **extra: cmap({"outer": blob(uid_bytes(m["uids"][0])), "seed": point(one["p"]), **extra})
+    files["hatch-pattern-in-schema-22.kcad"] = in_schema(22, hatch_of({"type": text("gradient"), "angle": f64(0.0), "spacing": f64(1.0)}))
+    files["hatch-name-in-schema-22.kcad"] = in_schema(22, hatch_of({"type": text("lines"), "angle": f64(45.0), "spacing": f64(1.0), "name": text("ANSI31")}))
+    files["hatch-assoc-in-schema-22.kcad"] = in_schema(22, hatch_of({"type": text("solid"), "angle": f64(0.0), "spacing": f64(1.0)}, assoc=tie()))
+    files["hatch-pattern-without-lines.kcad"] = in_schema(23, hatch_of({k: v for k, v in ansi.items() if k != "lines"}))
+    files["hatch-pattern-without-name.kcad"] = in_schema(23, hatch_of({k: v for k, v in ansi.items() if k != "name"}))
+    files["hatch-pattern-scale-zero.kcad"] = in_schema(23, hatch_of({**ansi, "scale": f64(0.0)}))
+    files["hatch-pattern-lines-apart-zero.kcad"] = in_schema(23, hatch_of({**ansi, "lines": array([family(offset=point({"x": 3.0, "y": 0.0}))])}))
+    files["hatch-pattern-dashes-zero.kcad"] = in_schema(23, hatch_of({**ansi, "lines": array([family(dashes=floats([0.0, 0.0]))])}))
+    files["hatch-pattern-dashes-empty.kcad"] = in_schema(23, hatch_of({**ansi, "lines": array([family(dashes=array([]))])}))
+    files["hatch-pattern-many-dashes.kcad"] = in_schema(23, hatch_of({**ansi, "lines": array([family(dashes=floats([1.0, -1.0] * 9))])}))
+    files["hatch-lines-with-name.kcad"] = in_schema(23, hatch_of({"type": text("lines"), "angle": f64(45.0), "spacing": f64(1.0), "name": text("ANSI31")}))
+    files["hatch-gradient-without-gradient.kcad"] = in_schema(23, hatch_of({"type": text("gradient"), "angle": f64(0.0), "spacing": f64(1.0)}))
+    files["hatch-gradient-colour-name.kcad"] = in_schema(23, hatch_of(grad(color2=text("beyaz"))))
+    files["hatch-gradient-inverted-false.kcad"] = in_schema(23, hatch_of(grad(inverted=boolean(False))))
+    files["hatch-gradient-shape-unknown.kcad"] = in_schema(23, hatch_of(grad(shape=text("curved"))))
+    files["hatch-assoc-twice.kcad"] = in_schema(23, hatch_of(ansi, assoc=tie(islands=array([blob(uid_bytes(m["uids"][0]))]))))
+    files["hatch-assoc-seed-nan.kcad"] = in_schema(23, hatch_of(ansi, assoc=cmap({"outer": blob(uid_bytes(m["uids"][0])), "seed": array([nan, f64(0.0)])})))
+    files["hatch-assoc-islands-empty.kcad"] = in_schema(23, hatch_of(ansi, assoc=tie(islands=array([]))))
+    files["hatch-assoc-in-block.kcad"] = with_blocks([block(1, "Tarama", [cmap({"hatch": cmap({"attrs": cmap({}), "layerId": text("0"), "ring": square, "pattern": cmap(ansi), "assoc": tie()})})])], version=23)
     files["table-source-file-objects.kcad"] = in_schema(22, table_of(source=cmap({"kind": text("file"), "name": text("a.csv"), "objects": array([blob(uid_bytes(m["uids"][0]))])})))
     files["table-bold-without-font.kcad"] = in_schema(22, table_of(bold=boolean(True)))
     files["attribute-width-factor-negative.kcad"] = with_blocks([block(1, "Rögar", attributes=array([cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "height": f64(0.5), "rotation": f64(0.0), "widthFactor": f64(-1.0)})]))], version=7)
@@ -1424,6 +1508,7 @@ def build():
     out["paragraphs.kcad"] = container(document(load("paragraphs.json")))
     out["styles.kcad"] = container(document(load("styles.json")))
     out["tables.kcad"] = container(document(load("tables.json")))
+    out["hatches.kcad"] = container(document(load("hatches.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

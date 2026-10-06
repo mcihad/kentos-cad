@@ -27,6 +27,7 @@ fn layer_icon(t: &str) -> &'static str {
     match t {
         "simpleFill" => "fillSolid",
         "hatchFill" => "hatch",
+        "gradientFill" => "hatchGradientLinear",
         "patternFill" => "fillPattern",
         "imageFill" => "fillImage",
         "centroidMarker" => "snapCentroid",

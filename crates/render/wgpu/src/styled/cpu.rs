@@ -241,22 +241,34 @@ fn dash_cover(d: &[f64; 8], s: f64, k: f64, total_raw: f64, on_share: f64, offse
     if total <= 0.0 {
         return 1.0;
     }
+    // A drawn dash under a pixel before a gap is a dot of one pixel (docs/adr/0186 §3).
     if total < 4.0 {
-        return on_share;
+        let dots: f64 = (0..8)
+            .step_by(2)
+            .filter(|&i| d[i + 1] > 0.0)
+            .map(|i| (1.0 - d[i] * k).max(0.0))
+            .sum();
+        return (on_share + dots / total).min(1.0);
     }
     let t = fmod(s + offset_raw * k, total);
     let mut acc = 0.0;
+    let mut a: f64 = 0.0;
+    let mut found = false;
     for (i, raw) in d.iter().enumerate() {
         let l = raw * k;
-        if t < acc + l {
-            if i % 2 == 1 {
-                return 0.0;
+        if i % 2 == 0 && l < 1.0 && d.get(i + 1).is_some_and(|g| *g > 0.0) {
+            let e = (t - (acc + 0.5 * l)).abs();
+            a = a.max(clamp01(1.0 - e.min(total - e)));
+        }
+        if !found && t < acc + l {
+            found = true;
+            if i % 2 == 0 {
+                a = a.max(clamp01((t - acc).min(acc + l - t) + 0.5));
             }
-            return clamp01((t - acc).min(acc + l - t) + 0.5);
         }
         acc += l;
     }
-    0.0
+    a
 }
 
 // ── Blending ──────────────────────────────────────────────────────────────
@@ -497,6 +509,7 @@ fn fill(
             let c = match paint {
                 FillPaintBatch::Solid { .. } => straight(st.color, 1.0),
                 FillPaintBatch::Hatch { .. } => straight(st.color, hatch(st, &dashes, p, k)),
+                FillPaintBatch::Gradient { .. } => gradient(st, p),
                 FillPaintBatch::Pattern { .. } => pattern(st, p, k, view.dpr),
                 FillPaintBatch::Tile { .. } => match &tile {
                     Some(t) => tile_at(st, t, p),
@@ -529,10 +542,12 @@ fn hatch(st: &Style, dashes: &[f64; 8], p: [f64; 2], k: f64) -> f64 {
     } else {
         let u = p[0] * n[0] + p[1] * n[1] - st.b[0];
         let d = (fract(u / st.a[2] + 0.5) - 0.5).abs() * gap;
+        // A family's line `row` starts `row` staggers further along (docs/adr/0186 §3).
+        let row = (u / st.a[2] + 0.5).floor();
         clamp01(half_w + 0.5 - d)
             * dash_cover(
                 dashes,
-                (p[0] * dir[0] + p[1] * dir[1]) * k,
+                (p[0] * dir[0] + p[1] * dir[1] - row * st.rect[0]) * k,
                 k,
                 st.b[1],
                 st.b[2],
@@ -540,6 +555,28 @@ fn hatch(st: &Style, dashes: &[f64; 8], p: [f64; 2], k: f64) -> f64 {
             )
     };
     if a < 0.004 { 0.0 } else { a }
+}
+
+/// `gradientFs` (docs/adr/0186 §3): the first colour mixed toward the second.
+fn gradient(st: &Style, p: [f64; 2]) -> V4 {
+    let mut t = if st.flags[1] == 2 {
+        let d = ((p[0] - st.b[0]).powi(2) + (p[1] - st.b[1]).powi(2)).sqrt();
+        1.0 - clamp01(d / st.b[2].max(1e-9))
+    } else {
+        let u =
+            clamp01((p[0] * st.a[0] + p[1] * st.a[1] - st.a[2]) / (st.a[3] - st.a[2]).max(1e-9));
+        if st.flags[1] == 1 {
+            1.0 - (2.0 * u - 1.0).abs()
+        } else {
+            u
+        }
+    };
+    if st.flags[2] == 1 {
+        t = 1.0 - t;
+    }
+    let mix = |i: usize| st.color[i] + (st.stroke[i] - st.color[i]) * t;
+    let c = [mix(0), mix(1), mix(2), mix(3)];
+    straight(c, 1.0)
 }
 
 /// A premultiplied sample of an atlas image (its border included), linear, at texel-space `(u, v)`.
@@ -1136,6 +1173,7 @@ mod tests {
                         offset: 0.0,
                         dash: None,
                         dash_offset: 0.0,
+                        stagger: 0.0,
                         unit: Unit::World,
                     },
                 },
@@ -1149,6 +1187,77 @@ mod tests {
             inked.iter().any(|a| *a > 200) && inked.contains(&0),
             "{inked:?}"
         );
+    }
+
+    /// A staggered family's dashes (docs/adr/0186 §3): 2 m drawn, 6 m apart, each line's 4 m
+    /// further along than the one under it; a dot (0 long) inks a pixel.
+    #[test]
+    fn a_staggered_hatch_moves_its_dashes_line_by_line() {
+        let hatch = |dash: Vec<f64>| StyledLayer {
+            data: SQUARE.to_vec(),
+            batches: vec![batch(
+                BatchKind::Fill {
+                    paint: FillPaintBatch::Hatch {
+                        color: [0.0, 0.0, 0.0, 1.0],
+                        angle: 0.0,
+                        spacing: 4.0,
+                        width: 2.0,
+                        offset: 0.0,
+                        dash: Some(dash),
+                        dash_offset: 0.0,
+                        stagger: 4.0,
+                        unit: Unit::World,
+                    },
+                },
+                0..12,
+            )],
+        };
+        let img = shot(&hatch(vec![2.0, 6.0]));
+        // Line y = 16 (row 4) draws x 16…18, 24…26 (the 4th line, 16 m along); line y = 20 (row 5) 20…22, 28…30.
+        let row = |y: usize| -> Vec<usize> {
+            (10..30).filter(|&x| px(&img, x, 40 - y)[3] > 128).collect()
+        };
+        assert_eq!(row(16), [16, 17, 24, 25]);
+        assert_eq!(row(20), [12, 13, 20, 21, 28, 29]);
+        let dots = shot(&hatch(vec![0.0, 4.0]));
+        let inked = (10..30).filter(|&x| px(&dots, x, 40 - 16)[3] > 0).count();
+        assert!((4..=10).contains(&inked), "dots: {inked}");
+    }
+
+    /// A linear gradient from black on the west to white on the east; a sphere's middle is the second colour.
+    #[test]
+    fn a_gradient_runs_from_its_first_colour_to_its_second() {
+        let gradient = |shape: u32| StyledLayer {
+            data: SQUARE.to_vec(),
+            batches: vec![batch(
+                BatchKind::Fill {
+                    paint: FillPaintBatch::Gradient {
+                        color: [0.0, 0.0, 0.0, 1.0],
+                        color2: [1.0, 1.0, 1.0, 1.0],
+                        shape,
+                        inverted: false,
+                        dir: 0.0,
+                        from: 10.0,
+                        to: 30.0,
+                        centre: [20.0, 20.0],
+                        radius: 200.0_f64.sqrt(),
+                    },
+                },
+                0..12,
+            )],
+        };
+        let img = shot(&gradient(0));
+        let (west, middle, east) = (
+            px(&img, 10, 20)[0],
+            px(&img, 20, 20)[0],
+            px(&img, 29, 20)[0],
+        );
+        assert!(
+            west < 20 && (110..=150).contains(&middle) && east > 235,
+            "{west} {middle} {east}"
+        );
+        let sphere = shot(&gradient(2));
+        assert!(px(&sphere, 20, 20)[0] > 240 && px(&sphere, 10, 29)[0] < 30);
     }
 
     /// A soft-edged line fades over its blur, a hard one does not.

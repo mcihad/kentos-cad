@@ -220,8 +220,8 @@ export function fillPaths(b: PaintFillBatch, o: VectorScale): { paths: VecPath[]
   }
   if (p.kind === 'hatch') {
     if (p.spacing <= 0) return { paths: [] };
-    const a = (p.angle * Math.PI) / 180;
-    const d = { x: Math.cos(a), y: Math.sin(a) };
+    // The batch's angle is in radians (the renderers' cos(angle)).
+    const d = { x: Math.cos(p.angle), y: Math.sin(p.angle) };
     const n = { x: -d.y, y: d.x };
     const t = b.positions;
     let lo = Infinity;
@@ -235,17 +235,61 @@ export function fillPaths(b: PaintFillBatch, o: VectorScale): { paths: VecPath[]
     const first = Math.ceil((lo - p.offset) / p.spacing);
     const last = Math.floor((hi - p.offset) / p.spacing);
     if (last - first > 20_000) return { why: 'çok sık tarama' };
+    // A dashed family's dashes are cut here, each line from its own phase (the shader's dashCover: along − line·stagger
+    // + dash offset; docs/adr/0186 §3); a dot is a point. The desktop's is map_vectors.rs's `dash_pieces`.
+    const dashes = p.dash?.length ? shaderDashes(p.dash) : null;
     const parts: { points: number[]; closed: boolean }[] = [];
+    const dots: { points: number[]; closed: boolean }[] = [];
     for (let j = first; j <= last; j++) {
       const c = p.offset + j * p.spacing;
-      for (const [s0, s1] of lineInTriangles(t, n, d, c)) parts.push({ points: [d.x * s0 + n.x * c + bx, d.y * s0 + n.y * c + by, d.x * s1 + n.x * c + bx, d.y * s1 + n.y * c + by], closed: false });
+      for (const span of lineInTriangles(t, n, d, c)) {
+        const pieces = dashes ? dashPieces(span, dashes, p.dashOffset - j * (p.stagger ?? 0)) : [span];
+        for (const [s0, s1] of pieces) (s1 > s0 ? parts : dots).push({ points: [d.x * s0 + n.x * c + bx, d.y * s0 + n.y * c + by, d.x * s1 + n.x * c + bx, d.y * s1 + n.y * c + by], closed: false });
+        if (parts.length + dots.length > MAX_HATCH_PIECES) return { why: 'çok sık tarama' };
+      }
     }
-    if (!parts.length) return { paths: [] };
-    return {
-      paths: [{ parts, stroke: { color: hex(p.color), opacity: p.color[3], width: paperMm(p.width, p.unit, o.scale), dash: p.dash?.length ? p.dash.map((x) => paperMm(x, p.unit, o.scale)) : null, dashOffset: paperMm(p.dashOffset, p.unit, o.scale), cap: 'butt', join: 'miter' } }],
-    };
+    const width = paperMm(p.width, p.unit, o.scale);
+    const stroke = (w: number, cap: 'butt' | 'round') => ({ color: hex(p.color), opacity: p.color[3], width: w, dash: null, dashOffset: 0, cap, join: 'miter' as const });
+    const paths: VecPath[] = [];
+    if (parts.length) paths.push({ parts, stroke: stroke(width, 'butt') });
+    if (dots.length) paths.push({ parts: dots, stroke: stroke(Math.max(width, DOT_MM), 'round') });
+    return { paths };
   }
+  if (p.kind === 'gradient') return { why: 'degrade dolgu' };
   return { why: p.kind === 'pattern' ? 'desen dolgusu' : 'resimli dolgu' };
+}
+
+/** The most lines and dashes a hatch batch is cut into here. */
+const MAX_HATCH_PIECES = 200_000;
+/** A hatch's dot on the paper, millimetres across. */
+const DOT_MM = 0.3;
+
+/** A dash list as the shaders repeat it: an odd one twice, at most eight values. */
+function shaderDashes(dash: readonly number[]): number[] {
+  return (dash.length % 2 ? [...dash, ...dash] : [...dash]).slice(0, 8);
+}
+
+/**
+ * The drawn pieces of a span of a dashed line whose pattern starts `phase` before the line's zero (dashCover's
+ * t = s + phase), as parameter intervals; a dot (a drawn dash of no length before a gap) as a zero-length one.
+ */
+function dashPieces(span: readonly [number, number], dashes: readonly number[], phase: number): [number, number][] {
+  const total = dashes.reduce((a, b) => a + b, 0);
+  if (!(total > 0)) return [[span[0], span[1]]];
+  const out: [number, number][] = [];
+  for (let k = Math.floor((span[0] + phase) / total); k * total - phase < span[1]; k++) {
+    let at = k * total - phase;
+    dashes.forEach((len, i) => {
+      if (i % 2 === 0) {
+        const [a, b] = [at, at + len];
+        if (len === 0) {
+          if (a >= span[0] && a <= span[1] && (dashes[i + 1] ?? 0) > 0) out.push([a, a]);
+        } else if (b > span[0] && a < span[1]) out.push([Math.max(a, span[0]), Math.min(b, span[1])]);
+      }
+      at += len;
+    });
+  }
+  return out;
 }
 
 /** Points of a shape's outline (arcs as short chords), from the shapes' own code. */

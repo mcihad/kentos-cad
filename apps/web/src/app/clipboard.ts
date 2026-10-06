@@ -1,6 +1,7 @@
 import { Signal } from '../core/signal';
 import type { Entity, NewEntity } from '../model/entities';
 import type { Bounds, Vec2 } from '../model/geometry';
+import { withoutLink } from '../model/linkedTexts';
 
 /**
  * In-app clipboard (session scope). Holds deep copies of entities and the
@@ -16,7 +17,11 @@ export class Clipboard {
 
   /** `extent`: the box around the entities (the geometry store has them already; see `ViewportController.extent`). */
   set(entities: readonly Entity[], extent: Bounds | null): void {
-    this.items = entities.map(({ id: _id, uid: _uid, ...rest }) => structuredClone(rest) as NewEntity);
+    // A copy follows nothing: a linked text's writes no label, a tied hatch's follows no objects (docs/adr/0186 §6).
+    this.items = entities.map((e) => {
+      const { id: _id, uid: _uid, ...rest } = withoutLink(e) as Entity & { uid?: string };
+      return structuredClone(rest) as NewEntity;
+    });
     this.basePoint = entities.length && extent ? { x: extent.minX, y: extent.minY } : { x: 0, y: 0 };
     this.count.set(this.items.length);
   }

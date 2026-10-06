@@ -65,6 +65,7 @@ enum Pipe {
     Pattern,
     Tile,
     Marker,
+    Gradient,
 }
 
 struct Pipelines {
@@ -74,6 +75,7 @@ struct Pipelines {
     pattern: wgpu::RenderPipeline,
     tile: wgpu::RenderPipeline,
     marker: wgpu::RenderPipeline,
+    gradient: wgpu::RenderPipeline,
 }
 
 impl Pipelines {
@@ -85,6 +87,7 @@ impl Pipelines {
             Pipe::Pattern => &self.pattern,
             Pipe::Tile => &self.tile,
             Pipe::Marker => &self.marker,
+            Pipe::Gradient => &self.gradient,
         }
     }
 }
@@ -154,8 +157,8 @@ pub struct StyledPipelineSpec {
     pub buffer: wgpu::VertexBufferLayout<'static>,
 }
 
-/// The contract's pipelines, in its order: stroke, solid, hatch, pattern, tile, marker.
-pub const STYLED_PIPELINES: [StyledPipelineSpec; 6] = [
+/// The contract's pipelines, in its order: stroke, solid, hatch, pattern, tile, marker, gradient.
+pub const STYLED_PIPELINES: [StyledPipelineSpec; 7] = [
     StyledPipelineSpec {
         name: "stroke",
         vertex: "strokeVs",
@@ -203,6 +206,14 @@ pub const STYLED_PIPELINES: [StyledPipelineSpec; 6] = [
         vertex_count: Some(6),
         blend: PREMULTIPLIED,
         buffer: MARKER_BUFFER,
+    },
+    StyledPipelineSpec {
+        name: "gradient",
+        vertex: "areaVs",
+        fragment: "gradientFs",
+        vertex_count: None,
+        blend: STRAIGHT,
+        buffer: AREA_BUFFER,
     },
 ];
 
@@ -362,7 +373,7 @@ impl StyledGpu {
                     cache: None,
                 })
             };
-            let [stroke, solid, hatch, pattern, tile, marker] = &STYLED_PIPELINES;
+            let [stroke, solid, hatch, pattern, tile, marker, gradient] = &STYLED_PIPELINES;
             Pipelines {
                 stroke: pipe(stroke),
                 solid: pipe(solid),
@@ -370,6 +381,7 @@ impl StyledGpu {
                 pattern: pipe(pattern),
                 tile: pipe(tile),
                 marker: pipe(marker),
+                gradient: pipe(gradient),
             }
         })
     }
@@ -406,6 +418,7 @@ impl StyledGpu {
                     match paint {
                         FillPaintBatch::Solid { .. } => Pipe::Solid,
                         FillPaintBatch::Hatch { .. } => Pipe::Hatch,
+                        FillPaintBatch::Gradient { .. } => Pipe::Gradient,
                         FillPaintBatch::Pattern { .. } => Pipe::Pattern,
                         FillPaintBatch::Tile { .. } => Pipe::Tile,
                     },

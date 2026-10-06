@@ -38,6 +38,8 @@ export interface OptionChoice {
   /** What typing it after the option's key gives (“sağ üst”): the command history says it. */
   typed: string;
   icon?: string;
+  /** A wide sample in its menu (a hatch pattern's, docs/adr/0186 §11), in place of the icon. */
+  preview?: string;
   checked: boolean;
   /** A command the host runs instead of choosing (“Yazı stilleri…” opens its window, docs/adr/0183 §4). */
   command?: string;

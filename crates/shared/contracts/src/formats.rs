@@ -75,7 +75,10 @@ use crate::layer::LineType;
 /// 32: tables (docs/adr/0184): `.kcad` document schema 22 and the typed columns' `table` kind;
 ///    a table written to DXF as an anonymous block and its INSERT, read back as the table; the
 ///    formats module's table files (`readTableFile`: CSV, TXT and XLSX rows).
-pub const FORMATS_VERSION: u32 = 32;
+/// 33: hatch patterns (docs/adr/0186): `.kcad` document schema 23 and the typed columns' hatch
+///    name, scale, families, gradient and tie behind their next option flags; DXF HATCH's
+///    pattern lines read whole and written turned and scaled, its gradient both ways.
+pub const FORMATS_VERSION: u32 = 33;
 
 // ── Every import ────────────────────────────────────────────────────────
 

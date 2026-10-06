@@ -1,7 +1,9 @@
 //! HATCH groups: boundary paths (polyline paths with bulges, or edge paths
-//! of lines, arcs, elliptic arcs and splines) and the pattern. The same
-//! group codes mean different things in different places, so the groups
-//! are walked in order with a cursor, not looked up by code.
+//! of lines, arcs, elliptic arcs and splines), the pattern's line families
+//! as the file holds them (turned and scaled) and a gradient's name, angle
+//! and colours (docs/adr/0186 §9). The same group codes mean different
+//! things in different places, so the groups are walked in order with a
+//! cursor, not looked up by code.
 
 use super::lexer::Pair;
 use crate::num::{parse_int, parse_real};
@@ -46,11 +48,25 @@ pub enum Path {
     Edges(Vec<Edge>),
 }
 
-#[derive(Clone, Debug)]
+/// One family of a pattern's lines as DXF holds it: in the hatch's object
+/// coordinates, turned with the pattern (and the line) and scaled.
+#[derive(Clone, Debug, PartialEq)]
 pub struct PatternLine {
+    /// Degrees (53), the pattern's turn included.
     pub angle: f64,
+    /// The base point (43, 44).
+    pub base: [f64; 2],
+    /// From one line to the next (45, 46).
     pub offset: [f64; 2],
-    pub dashes: usize,
+    /// Dash lengths (49): plus drawn, minus a gap, 0 a dot.
+    pub dashes: Vec<f64>,
+}
+
+/// One of a gradient's colours: its ACI index (63) and true colour (421).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct GradientColour {
+    pub aci: Option<i64>,
+    pub rgb: Option<i64>,
 }
 
 #[derive(Clone, Debug)]
@@ -58,14 +74,25 @@ pub struct Hatch {
     pub elevation: f64,
     pub name: String,
     pub solid: bool,
-    pub gradient: bool,
+    /// 71: the hatch follows its boundary objects.
+    pub assoc: bool,
     /// 0 odd parity, 1 outermost only, 2 ignore islands.
     pub style: i64,
+    /// 76: 0 user-defined, 1 predefined, 2 custom; none when not given.
+    pub kind: Option<i64>,
     pub angle: f64,
     pub scale: f64,
     pub double: bool,
     pub lines: Vec<PatternLine>,
     pub paths: Vec<Path>,
+    /// 450: a gradient, its name (470), angle in radians (460), shift
+    /// (461), one colour with a tint (452) and colours (463, 63, 421).
+    pub gradient: bool,
+    pub gradient_name: String,
+    pub gradient_angle: f64,
+    pub gradient_shift: f64,
+    pub one_colour: bool,
+    pub colours: Vec<GradientColour>,
 }
 
 struct Cursor<'g, 'a> {
@@ -250,13 +277,20 @@ pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool) -> Result<Hatch, String> {
         elevation: 0.0,
         name: String::new(),
         solid: false,
-        gradient: false,
+        assoc: false,
         style: 0,
+        kind: None,
         angle: 0.0,
         scale: 1.0,
         double: false,
         lines: Vec::new(),
         paths: Vec::new(),
+        gradient: false,
+        gradient_name: String::new(),
+        gradient_angle: 0.0,
+        gradient_shift: 0.0,
+        one_colour: false,
+        colours: Vec::new(),
     };
     let mut c = Cursor { list, at: 0 };
     let mut in_hatch = false;
@@ -274,6 +308,7 @@ pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool) -> Result<Hatch, String> {
             30 => h.elevation = c.real(30)?,
             2 => h.name = c.take(2)?.text().to_string(),
             70 => h.solid = c.int(70)? == 1,
+            71 => h.assoc = c.int(71)? != 0,
             91 => {
                 let n = c.count(91)?;
                 for _ in 0..n {
@@ -281,6 +316,7 @@ pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool) -> Result<Hatch, String> {
                 }
             }
             75 => h.style = c.int(75)?,
+            76 => h.kind = Some(c.int(76)?),
             52 => h.angle = c.real(52)?,
             41 => h.scale = c.real(41)?,
             77 => h.double = c.int(77)? != 0,
@@ -288,20 +324,51 @@ pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool) -> Result<Hatch, String> {
                 let n = c.count(78)?;
                 for _ in 0..n {
                     let angle = c.real(53)?;
-                    let _base = [c.real(43)?, c.real(44)?];
+                    let base = [c.real(43)?, c.real(44)?];
                     let offset = [c.real(45)?, c.real(46)?];
-                    let dashes = c.count(79)?;
-                    for _ in 0..dashes {
-                        c.real(49)?;
+                    let n = c.count(79)?;
+                    let mut dashes = Vec::with_capacity(n);
+                    for _ in 0..n {
+                        dashes.push(c.real(49)?);
                     }
                     h.lines.push(PatternLine {
                         angle,
+                        base,
                         offset,
                         dashes,
                     });
                 }
             }
             450 => h.gradient = c.int(450)? != 0,
+            452 => h.one_colour = c.int(452)? != 0,
+            460 => h.gradient_angle = c.real(460)?,
+            461 => h.gradient_shift = c.real(461)?,
+            470 => h.gradient_name = c.take(470)?.text().to_string(),
+            // Each colour starts with its value (463); writers that leave it out start one with a second 63 or 421.
+            463 => {
+                c.real(463)?;
+                h.colours.push(GradientColour::default());
+            }
+            63 => {
+                let aci = c.int(63)?;
+                match h.colours.last_mut() {
+                    Some(last) if last.aci.is_none() => last.aci = Some(aci),
+                    _ => h.colours.push(GradientColour {
+                        aci: Some(aci),
+                        rgb: None,
+                    }),
+                }
+            }
+            421 => {
+                let rgb = c.int(421)?;
+                match h.colours.last_mut() {
+                    Some(last) if last.rgb.is_none() => last.rgb = Some(rgb),
+                    _ => h.colours.push(GradientColour {
+                        aci: None,
+                        rgb: Some(rgb),
+                    }),
+                }
+            }
             98 => {
                 let n = c.count(98)?;
                 for _ in 0..n {
@@ -359,6 +426,49 @@ mod tests {
         };
         assert!(matches!(edges[1], Edge::Arc { r, ccw: true, .. } if r == 0.5));
         assert_eq!((h.style, h.lines.len(), h.lines[0].angle), (1, 1, 45.0));
+    }
+
+    #[test]
+    fn pattern_lines_whole_and_a_gradient() {
+        let text = "100\nAcDbHatch\n2\nANSI33\n70\n0\n71\n1\n91\n0\n75\n0\n76\n1\n52\n30\n41\n2\n77\n0\n78\n2\n53\n75\n43\n0\n44\n0\n45\n-1\n46\n2\n79\n0\n53\n75\n43\n0.5\n44\n0.25\n45\n-1\n46\n2\n79\n2\n49\n6.35\n49\n-3.175\n98\n0\n450\n1\n451\n0\n460\n0.5\n461\n0\n452\n1\n462\n1\n453\n2\n463\n0\n63\n5\n421\n255\n463\n1\n421\n16776960\n470\nINVCYLINDER\n";
+        let h = parse_hatch(&groups(text), false).expect("hatch");
+        assert_eq!(
+            (h.kind, h.assoc, h.angle, h.scale),
+            (Some(1), true, 30.0, 2.0)
+        );
+        assert_eq!(
+            h.lines[1],
+            PatternLine {
+                angle: 75.0,
+                base: [0.5, 0.25],
+                offset: [-1.0, 2.0],
+                dashes: vec![6.35, -3.175],
+            }
+        );
+        assert!(h.lines[0].dashes.is_empty());
+        assert_eq!(
+            (
+                h.gradient,
+                h.one_colour,
+                h.gradient_angle,
+                h.gradient_name.as_str()
+            ),
+            (true, true, 0.5, "INVCYLINDER")
+        );
+        // A colour without its ACI index (as ezdxf writes them) is still the second.
+        assert_eq!(
+            h.colours,
+            vec![
+                GradientColour {
+                    aci: Some(5),
+                    rgb: Some(255)
+                },
+                GradientColour {
+                    aci: None,
+                    rgb: Some(16_776_960)
+                },
+            ]
+        );
     }
 
     #[test]

@@ -46,7 +46,27 @@ export type FillPaint =
       readonly offset: number;
       readonly dash: readonly number[] | null;
       readonly dashOffset: number;
+      /** A line's start along it past the one before (docs/adr/0186 §3); absent: 0. */
+      readonly stagger?: number;
       readonly unit: PrimUnit;
+      readonly level: number;
+    }
+  | {
+      /**
+       * A gradient (docs/adr/0186 §3) from `color` to `color2`: `shape` 0 linear, 1 cylinder, 2 spherical; along
+       * `dir` (radians) from `from` to `to` (world metres along it), or from `centre` out to `radius`.
+       */
+      readonly kind: 'gradient';
+      readonly color: Color;
+      readonly color2: Color;
+      readonly opacity: number;
+      readonly shape: number;
+      readonly inverted: boolean;
+      readonly dir: number;
+      readonly from: number;
+      readonly to: number;
+      readonly centre: readonly [number, number];
+      readonly radius: number;
       readonly level: number;
     }
   | {

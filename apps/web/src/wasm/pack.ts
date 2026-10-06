@@ -254,10 +254,44 @@ export function packEntities(list: Iterable<object>): Packed {
           out.push(holes.length);
           for (const h of holes) points(h);
         }
-        const pattern = e.pattern as { type?: unknown; angle?: unknown; spacing?: unknown } | undefined;
+        const pattern = e.pattern as
+          | { type?: unknown; angle?: unknown; spacing?: unknown; name?: unknown; scale?: unknown; lines?: unknown; gradient?: { shape?: unknown; inverted?: unknown; color2?: unknown } }
+          | undefined;
         out.push(str(pattern?.type));
         num(pattern?.angle);
         num(pattern?.spacing);
+        // A pattern's name, scale, families and gradient, the objects it follows (docs/adr/0186; pack.rs).
+        out.push(str(pattern?.name));
+        num(pattern?.scale);
+        const lines = pattern?.lines as { angle?: unknown; origin?: unknown[]; offset?: unknown[]; dashes?: unknown }[] | undefined;
+        if (!Array.isArray(lines)) out.push(-1);
+        else {
+          out.push(lines.length);
+          for (const l of lines) {
+            num(l.angle);
+            num(l.origin?.[0]);
+            num(l.origin?.[1]);
+            num(l.offset?.[0]);
+            num(l.offset?.[1]);
+            values(l.dashes);
+          }
+        }
+        const gradient = pattern?.gradient;
+        if (!gradient) out.push(-1);
+        else out.push(str(gradient.shape), gradient.inverted === undefined ? -1 : gradient.inverted ? 1 : 0, str(gradient.color2));
+        const assoc = e.assoc as { outer?: unknown; islands?: unknown; cutouts?: unknown; seed?: unknown } | undefined;
+        if (!assoc) out.push(-1);
+        else {
+          out.push(str(assoc.outer));
+          for (const ids of [assoc.islands, assoc.cutouts]) {
+            if (!Array.isArray(ids)) out.push(-1);
+            else {
+              out.push(ids.length);
+              for (const id of ids) out.push(str(id));
+            }
+          }
+          pt(assoc.seed);
+        }
         break;
       }
       case INSERT: {
@@ -557,7 +591,38 @@ export function unpackEntities(p: Packed): Unpacked[] {
         const angle = num();
         g = { kind, ring };
         if (holes) g.holes = holes;
-        g.pattern = { type, angle, spacing: num() };
+        const pattern: Record<string, unknown> = { type, angle, spacing: num() };
+        g.pattern = pattern;
+        // docs/adr/0186: a pattern's name, scale, families and gradient, the objects it follows.
+        const name = str();
+        if (name !== undefined) pattern.name = name;
+        const scale = num();
+        if (!Number.isNaN(scale)) pattern.scale = scale;
+        const families = num();
+        if (families >= 0)
+          pattern.lines = Array.from({ length: families }, () => {
+            const angle = num();
+            const origin = [num(), num()];
+            const offset = [num(), num()];
+            const dashes = values();
+            return dashes ? { angle, origin, offset, dashes } : { angle, origin, offset };
+          });
+        const shape = str();
+        if (shape !== undefined) {
+          const inverted = num();
+          const color2 = str() ?? '';
+          pattern.gradient = inverted < 0 ? { shape, color2 } : { shape, inverted: inverted === 1, color2 };
+        }
+        const outer = str();
+        if (outer !== undefined) {
+          const ids = () => {
+            const k = num();
+            return k < 0 ? undefined : Array.from({ length: k }, () => str() ?? '');
+          };
+          const islands = ids();
+          const cutouts = ids();
+          g.assoc = { outer, ...(islands && { islands }), ...(cutouts && { cutouts }), seed: pt() };
+        }
         break;
       }
       case 'insert': {

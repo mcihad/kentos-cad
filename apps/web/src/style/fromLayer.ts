@@ -1,4 +1,5 @@
-import type { Entity } from '../model/entities';
+import type { Entity, HatchPattern } from '../model/entities';
+import { hatchPaints, type FamilyPaint } from '../model/ops/hatchPatterns';
 import type { LayerStyle, LineType } from '../model/layers';
 import type { FillSymbol, LineSymbol, MarkerSymbol, ShapeName, SymbolSet } from '../model/style';
 
@@ -52,10 +53,44 @@ export function leaderSymbolsOf(style: LayerStyle, color: string, hairlines = fa
   };
 }
 
-/** A hatch object carries its own pattern: solid, lines or crossed lines (spacing in metres). */
+/** The families of the patterns met so far, by the pattern's JSON (the core gives them once a pattern). */
+const families = new Map<string, readonly FamilyPaint[]>();
+
+/** A pattern's families, as the geometry core gives them (docs/adr/0186 §3). */
+function familiesOf(pattern: HatchPattern): readonly FamilyPaint[] {
+  const key = JSON.stringify(pattern);
+  let out = families.get(key);
+  if (!out) {
+    // A drawing has a few patterns; a bound keeps a long session's edits from piling up.
+    if (families.size > 256) families.clear();
+    families.set(key, (out = hatchPaints(pattern)));
+  }
+  return out;
+}
+
+/**
+ * A hatch object carries its own pattern: solid at 45 %, a gradient (docs/adr/0186 §3), or one hatch fill a family as
+ * the geometry core gives the families (spacing in metres; a user-defined pattern's lines as they always were). The
+ * desktop's is `hatch_symbol_of` (crates/native/style/src/simple.rs).
+ */
 export function hatchSymbolOf(e: Extract<Entity, { kind: 'hatch' }>, color: string): FillSymbol {
-  const { type, angle, spacing } = e.pattern;
-  if (type === 'solid') return { type: 'fill', layers: [{ id: 's', type: 'simpleFill', color, opacity: 0.45 }] };
-  const lines = (id: string, a: number) => ({ id, type: 'hatchFill' as const, angle: a, spacing, width: 0, color, unit: 'm' as const });
-  return { type: 'fill', layers: type === 'cross' ? [lines('h1', angle), lines('h2', angle + 90)] : [lines('h1', angle)] };
+  const p = e.pattern;
+  if (p.type === 'solid') return { type: 'fill', layers: [{ id: 's', type: 'simpleFill', color, opacity: 0.45 }] };
+  if (p.type === 'gradient') {
+    const g = p.gradient;
+    return { type: 'fill', layers: [{ id: 'g', type: 'gradientFill', color, color2: g?.color2 ?? '#FFFFFF', shape: g?.shape ?? 'linear', angle: p.angle, inverted: g?.inverted === true }] };
+  }
+  const layers = familiesOf(p).map((f, i) => ({
+    id: `h${i + 1}`,
+    type: 'hatchFill' as const,
+    angle: f.angle,
+    spacing: f.spacing,
+    width: 0,
+    color,
+    unit: 'm' as const,
+    ...(f.offset !== 0 && { offset: f.offset }),
+    ...(f.dash && { dash: f.dash, dashOffset: f.dashOffset }),
+    ...(f.stagger !== 0 && { stagger: f.stagger }),
+  }));
+  return { type: 'fill', layers };
 }

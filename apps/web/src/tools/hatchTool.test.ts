@@ -101,6 +101,13 @@ describe('Tarama by a closed object on a multi-part area', () => {
     index.dispose();
   });
 
+  it('a hatch made inside a closed object follows it: its tie names the object and its islands by their persistent ids (docs/adr/0186 §6)', () => {
+    const { h, parcel, building, click, index } = scene();
+    const hatch = click(15, 15)!;
+    expect(hatch.assoc).toEqual({ outer: h.doc.uidOf(parcel.id), islands: [h.doc.uidOf(building.id)], seed: pt(15, 15) });
+    index.dispose();
+  });
+
   it('a one-part area is hatched as it was: its region, its islands', () => {
     const h = toolHarness();
     h.add({ kind: 'polygon', pts: square(0, 0, 20), attrs: {} });

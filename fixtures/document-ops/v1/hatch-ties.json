@@ -1,0 +1,1349 @@
+{
+  "format": "kentos.document-ops",
+  "version": 1,
+  "title": "İlişkili tarama",
+  "note": "İlişkili taramanın izlenmesi (docs/adr/0186 §6): taramanın assoc'u sınır nesnesinin, adaların ve boş bırakılan yazıların kalıcı kimlikleri ve tohum noktasıdır. Adım kaydedilmeden, nesneleri değişen taramanın bölgesi çekirdeğin kuralıyla (hatchRegion) yeniden kesilir; sınırı silinen ya da kapalı olmaktan çıkan taramanın ilişkisi kopar; kendi halkası ya da delikleri değişen taramanın ilişkisi, nesneleri aynı adımda değişmedikçe kopar. Halkalar çekirdeğin verdiği sırayla: dış halka saat yönünün tersine sol alttan, delik saat yönünde sağ alttan. \"$uid:ad\" captureUid'in aldığı kalıcı kimliktir.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkili tarama",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "cad",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "a",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.18
+        },
+        "children": []
+      },
+      {
+        "id": "t",
+        "name": "Tarama",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg-dim",
+          "lineType": "continuous",
+          "lineWeight": 0.18
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "İlişkili tarama sınırını izler: parsel taşınınca bölge aynı adımda yeniden kesilir; geri alma ikisini birlikte döndürür (docs/adr/0186 §6)",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {
+            "kind": "polygon",
+            "layerId": "a",
+            "pts": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 30
+              },
+              {
+                "x": 0,
+                "y": 30
+              }
+            ],
+            "attrs": {}
+          },
+          "returns": 1
+        },
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "parsel"
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "polygon",
+            "layerId": "a",
+            "pts": [
+              {
+                "x": 10,
+                "y": 10
+              },
+              {
+                "x": 20,
+                "y": 10
+              },
+              {
+                "x": 20,
+                "y": 20
+              },
+              {
+                "x": 10,
+                "y": 20
+              }
+            ],
+            "attrs": {}
+          },
+          "returns": 2
+        },
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "yapi"
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "hatch",
+            "layerId": "t",
+            "ring": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 30
+              },
+              {
+                "x": 0,
+                "y": 30
+              }
+            ],
+            "holes": [
+              [
+                {
+                  "x": 20,
+                  "y": 10
+                },
+                {
+                  "x": 10,
+                  "y": 10
+                },
+                {
+                  "x": 10,
+                  "y": 20
+                },
+                {
+                  "x": 20,
+                  "y": 20
+                }
+              ]
+            ],
+            "pattern": {
+              "type": "lines",
+              "angle": 45,
+              "spacing": 2
+            },
+            "assoc": {
+              "outer": "$uid:parsel",
+              "islands": [
+                "$uid:yapi"
+              ],
+              "seed": {
+                "x": 5,
+                "y": 5
+              }
+            },
+            "attrs": {}
+          },
+          "returns": 3
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "pts": [
+              {
+                "x": 5,
+                "y": 0
+              },
+              {
+                "x": 45,
+                "y": 0
+              },
+              {
+                "x": 45,
+                "y": 30
+              },
+              {
+                "x": 5,
+                "y": 30
+              }
+            ]
+          },
+          "note": "Parsel doğuya 5 m: tarama aynı adımda yeni sınırda, ada yine delik.",
+          "expect": {
+            "entities": {
+              "3": {
+                "id": 3,
+                "kind": "hatch",
+                "layerId": "t",
+                "ring": [
+                  {
+                    "x": 5,
+                    "y": 0
+                  },
+                  {
+                    "x": 45,
+                    "y": 0
+                  },
+                  {
+                    "x": 45,
+                    "y": 30
+                  },
+                  {
+                    "x": 5,
+                    "y": 30
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 20,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 20
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45,
+                  "spacing": 2
+                },
+                "assoc": {
+                  "outer": "$uid:parsel",
+                  "islands": [
+                    "$uid:yapi"
+                  ],
+                  "seed": {
+                    "x": 5,
+                    "y": 5
+                  }
+                },
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "polygon",
+                "layerId": "a",
+                "pts": [
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 30
+                  },
+                  {
+                    "x": 0,
+                    "y": 30
+                  }
+                ],
+                "attrs": {}
+              },
+              "3": {
+                "id": 3,
+                "kind": "hatch",
+                "layerId": "t",
+                "ring": [
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 30
+                  },
+                  {
+                    "x": 0,
+                    "y": 30
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 20,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 20
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45,
+                  "spacing": 2
+                },
+                "assoc": {
+                  "outer": "$uid:parsel",
+                  "islands": [
+                    "$uid:yapi"
+                  ],
+                  "seed": {
+                    "x": 5,
+                    "y": 5
+                  }
+                },
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "3": {
+                "id": 3,
+                "kind": "hatch",
+                "layerId": "t",
+                "ring": [
+                  {
+                    "x": 5,
+                    "y": 0
+                  },
+                  {
+                    "x": 45,
+                    "y": 0
+                  },
+                  {
+                    "x": 45,
+                    "y": 30
+                  },
+                  {
+                    "x": 5,
+                    "y": 30
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 20,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 20
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45,
+                  "spacing": 2
+                },
+                "assoc": {
+                  "outer": "$uid:parsel",
+                  "islands": [
+                    "$uid:yapi"
+                  ],
+                  "seed": {
+                    "x": 5,
+                    "y": 5
+                  }
+                },
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "label": "7"
+          },
+          "note": "Etiketi değişen sınırın bölgesi aynı: tarama değişmez.",
+          "expect": {
+            "entities": {
+              "3": {
+                "id": 3,
+                "kind": "hatch",
+                "layerId": "t",
+                "ring": [
+                  {
+                    "x": 5,
+                    "y": 0
+                  },
+                  {
+                    "x": 45,
+                    "y": 0
+                  },
+                  {
+                    "x": 45,
+                    "y": 30
+                  },
+                  {
+                    "x": 5,
+                    "y": 30
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 20,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 20
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45,
+                  "spacing": 2
+                },
+                "assoc": {
+                  "outer": "$uid:parsel",
+                  "islands": [
+                    "$uid:yapi"
+                  ],
+                  "seed": {
+                    "x": 5,
+                    "y": 5
+                  }
+                },
+                "attrs": {}
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Silinen ada listeden düşer, deliği kalkar; sınırı silinen tarama yerinde kalır, ilişkisi kopar",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {
+            "kind": "polygon",
+            "layerId": "a",
+            "pts": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 30
+              },
+              {
+                "x": 0,
+                "y": 30
+              }
+            ],
+            "attrs": {}
+          },
+          "returns": 1
+        },
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "parsel"
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "polygon",
+            "layerId": "a",
+            "pts": [
+              {
+                "x": 10,
+                "y": 10
+              },
+              {
+                "x": 20,
+                "y": 10
+              },
+              {
+                "x": 20,
+                "y": 20
+              },
+              {
+                "x": 10,
+                "y": 20
+              }
+            ],
+            "attrs": {}
+          },
+          "returns": 2
+        },
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "yapi"
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "hatch",
+            "layerId": "t",
+            "ring": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 30
+              },
+              {
+                "x": 0,
+                "y": 30
+              }
+            ],
+            "holes": [
+              [
+                {
+                  "x": 20,
+                  "y": 10
+                },
+                {
+                  "x": 10,
+                  "y": 10
+                },
+                {
+                  "x": 10,
+                  "y": 20
+                },
+                {
+                  "x": 20,
+                  "y": 20
+                }
+              ]
+            ],
+            "pattern": {
+              "type": "lines",
+              "angle": 45,
+              "spacing": 2
+            },
+            "assoc": {
+              "outer": "$uid:parsel",
+              "islands": [
+                "$uid:yapi"
+              ],
+              "seed": {
+                "x": 5,
+                "y": 5
+              }
+            },
+            "attrs": {}
+          },
+          "returns": 3
+        },
+        {
+          "op": "remove",
+          "ids": [
+            2
+          ],
+          "note": "Yapı silinir: tarama deliksiz, ada listesinde yok.",
+          "expect": {
+            "ids": [
+              1,
+              3
+            ],
+            "entities": {
+              "3": {
+                "id": 3,
+                "kind": "hatch",
+                "layerId": "t",
+                "ring": [
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 30
+                  },
+                  {
+                    "x": 0,
+                    "y": 30
+                  }
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45,
+                  "spacing": 2
+                },
+                "assoc": {
+                  "outer": "$uid:parsel",
+                  "seed": {
+                    "x": 5,
+                    "y": 5
+                  }
+                },
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Sil",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "entities": {
+              "3": {
+                "id": 3,
+                "kind": "hatch",
+                "layerId": "t",
+                "ring": [
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 30
+                  },
+                  {
+                    "x": 0,
+                    "y": 30
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 20,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 20
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45,
+                  "spacing": 2
+                },
+                "assoc": {
+                  "outer": "$uid:parsel",
+                  "islands": [
+                    "$uid:yapi"
+                  ],
+                  "seed": {
+                    "x": 5,
+                    "y": 5
+                  }
+                },
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "remove",
+          "ids": [
+            1
+          ],
+          "note": "Parsel silinir: tarama yerinde, ilişkisiz.",
+          "expect": {
+            "ids": [
+              2,
+              3
+            ],
+            "entities": {
+              "3": {
+                "id": 3,
+                "kind": "hatch",
+                "layerId": "t",
+                "ring": [
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 30
+                  },
+                  {
+                    "x": 0,
+                    "y": 30
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 20,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 20
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45,
+                  "spacing": 2
+                },
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Sil",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "entities": {
+              "3": {
+                "id": 3,
+                "kind": "hatch",
+                "layerId": "t",
+                "ring": [
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 30
+                  },
+                  {
+                    "x": 0,
+                    "y": 30
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 20,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 20
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45,
+                  "spacing": 2
+                },
+                "assoc": {
+                  "outer": "$uid:parsel",
+                  "islands": [
+                    "$uid:yapi"
+                  ],
+                  "seed": {
+                    "x": 5,
+                    "y": 5
+                  }
+                },
+                "attrs": {}
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kendi halkası değişen taramanın ilişkisi kopar; nesneleriyle birlikte taşınan tarama izler, tohumu da taşınır",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {
+            "kind": "polygon",
+            "layerId": "a",
+            "pts": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 30
+              },
+              {
+                "x": 0,
+                "y": 30
+              }
+            ],
+            "attrs": {}
+          },
+          "returns": 1
+        },
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "parsel"
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "polygon",
+            "layerId": "a",
+            "pts": [
+              {
+                "x": 10,
+                "y": 10
+              },
+              {
+                "x": 20,
+                "y": 10
+              },
+              {
+                "x": 20,
+                "y": 20
+              },
+              {
+                "x": 10,
+                "y": 20
+              }
+            ],
+            "attrs": {}
+          },
+          "returns": 2
+        },
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "yapi"
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "hatch",
+            "layerId": "t",
+            "ring": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 30
+              },
+              {
+                "x": 0,
+                "y": 30
+              }
+            ],
+            "holes": [
+              [
+                {
+                  "x": 20,
+                  "y": 10
+                },
+                {
+                  "x": 10,
+                  "y": 10
+                },
+                {
+                  "x": 10,
+                  "y": 20
+                },
+                {
+                  "x": 20,
+                  "y": 20
+                }
+              ]
+            ],
+            "pattern": {
+              "type": "lines",
+              "angle": 45,
+              "spacing": 2
+            },
+            "assoc": {
+              "outer": "$uid:parsel",
+              "islands": [
+                "$uid:yapi"
+              ],
+              "seed": {
+                "x": 5,
+                "y": 5
+              }
+            },
+            "attrs": {}
+          },
+          "returns": 3
+        },
+        {
+          "op": "update",
+          "id": 3,
+          "patch": {
+            "ring": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 0
+              },
+              {
+                "x": 40,
+                "y": 32
+              },
+              {
+                "x": 0,
+                "y": 30
+              }
+            ]
+          },
+          "note": "Tutamaçla köşesi taşınan taramanın ilişkisi kopar.",
+          "expect": {
+            "entities": {
+              "3": {
+                "id": 3,
+                "kind": "hatch",
+                "layerId": "t",
+                "ring": [
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 32
+                  },
+                  {
+                    "x": 0,
+                    "y": 30
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 20,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 20
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45,
+                  "spacing": 2
+                },
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "3": {
+                "id": 3,
+                "kind": "hatch",
+                "layerId": "t",
+                "ring": [
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 30
+                  },
+                  {
+                    "x": 0,
+                    "y": 30
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 20,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 10
+                    },
+                    {
+                      "x": 10,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 20
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45,
+                  "spacing": 2
+                },
+                "assoc": {
+                  "outer": "$uid:parsel",
+                  "islands": [
+                    "$uid:yapi"
+                  ],
+                  "seed": {
+                    "x": 5,
+                    "y": 5
+                  }
+                },
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "transact",
+          "label": "Taşı",
+          "steps": [
+            {
+              "op": "update",
+              "id": 1,
+              "patch": {
+                "pts": [
+                  {
+                    "x": 10,
+                    "y": 10
+                  },
+                  {
+                    "x": 50,
+                    "y": 10
+                  },
+                  {
+                    "x": 50,
+                    "y": 40
+                  },
+                  {
+                    "x": 10,
+                    "y": 40
+                  }
+                ]
+              }
+            },
+            {
+              "op": "update",
+              "id": 2,
+              "patch": {
+                "pts": [
+                  {
+                    "x": 20,
+                    "y": 20
+                  },
+                  {
+                    "x": 30,
+                    "y": 20
+                  },
+                  {
+                    "x": 30,
+                    "y": 30
+                  },
+                  {
+                    "x": 20,
+                    "y": 30
+                  }
+                ]
+              }
+            },
+            {
+              "op": "update",
+              "id": 3,
+              "patch": {
+                "ring": [
+                  {
+                    "x": 10,
+                    "y": 10
+                  },
+                  {
+                    "x": 50,
+                    "y": 10
+                  },
+                  {
+                    "x": 50,
+                    "y": 40
+                  },
+                  {
+                    "x": 10,
+                    "y": 40
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 30,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 30
+                    },
+                    {
+                      "x": 30,
+                      "y": 30
+                    }
+                  ]
+                ],
+                "assoc": {
+                  "outer": "$uid:parsel",
+                  "islands": [
+                    "$uid:yapi"
+                  ],
+                  "seed": {
+                    "x": 15,
+                    "y": 15
+                  }
+                }
+              }
+            }
+          ],
+          "note": "Üçü birlikte 10 m taşınır: kural yazar, tohum taşınmış.",
+          "expect": {
+            "entities": {
+              "3": {
+                "id": 3,
+                "kind": "hatch",
+                "layerId": "t",
+                "ring": [
+                  {
+                    "x": 10,
+                    "y": 10
+                  },
+                  {
+                    "x": 50,
+                    "y": 10
+                  },
+                  {
+                    "x": 50,
+                    "y": 40
+                  },
+                  {
+                    "x": 10,
+                    "y": 40
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 30,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 20
+                    },
+                    {
+                      "x": 20,
+                      "y": 30
+                    },
+                    {
+                      "x": 30,
+                      "y": 30
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45,
+                  "spacing": 2
+                },
+                "assoc": {
+                  "outer": "$uid:parsel",
+                  "islands": [
+                    "$uid:yapi"
+                  ],
+                  "seed": {
+                    "x": 15,
+                    "y": 15
+                  }
+                },
+                "attrs": {}
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

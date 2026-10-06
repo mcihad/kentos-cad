@@ -9,6 +9,7 @@ import { ProjectSettings, type ProjectSettingsData } from './projectSettings';
 import { emptyBounds, isEmptyBounds, type Bounds, type Vec2 } from './geometry';
 import type { LayerInit, LayerNode, LayerStyle } from './layers';
 import { LayerStore } from './layers';
+import { followHatches, tiesOf } from './hatchTies';
 import { followLinks } from './linkedTexts';
 import { sameJson } from './sameJson';
 import type { ProjectStyles } from './style';
@@ -174,6 +175,8 @@ export class CadDocument {
    * changes the object updates (model/linkedTexts.ts).
    */
   private links = new Map<string, Set<number>>();
+  /** The hatches whose region follows an object, by that object's persistent id (docs/adr/0186 §6). */
+  private ties = new Map<string, Set<number>>();
   /** Moves whenever which objects have linked texts may have changed (`textLabelled`). */
   private linkEdits = 0;
   /** The persistent id of a new object (UUIDv7; tests give their own maker). */
@@ -711,6 +714,7 @@ export class CadDocument {
     this.entities = new Map(entities.map((e) => [e.id, e]));
     this.uids = new Map(entities.map((e) => [e.uid, e.id]));
     this.links.clear();
+    this.ties.clear();
     this.linkEdits++;
     for (const e of entities) this.link(e);
     this.places = new Map(entities.map((e, i) => [e.id, i + 1]));
@@ -984,6 +988,20 @@ export class CadDocument {
         this.applyAll(follow);
       }
     }
+    // After the linked texts: a text a hatch leaves open may have moved with its object (model/hatchTies.ts).
+    if (this.ties.size) {
+      const follow = followHatches(tx.ops.filter(isObjectOp), {
+        get: (id) => this.entities.get(id),
+        byUid: (uid) => this.byUid(uid),
+        tiedTo: (uid) => this.ties.get(uid) ?? [],
+        font: this.settings.drawingFont.value,
+        blocks: () => this.blocks.value,
+      });
+      if (follow.length) {
+        for (const op of follow) tx.ops.push(op);
+        this.applyAll(follow);
+      }
+    }
     this.undoStack.push(tx);
     if (this.undoStack.length > 200) this.undoStack.shift();
     this.redoStack = [];
@@ -1082,8 +1100,13 @@ export class CadDocument {
     this.layerIndex.get(e.layerId)?.delete(id);
   }
 
-  /** Notes a linked text under the object it writes the label of. */
+  /** Notes a linked text under the object it writes the label of, an associative hatch under its objects. */
   private link(e: DrawingEntity): void {
+    for (const of of tiesOf(e)) {
+      let hatches = this.ties.get(of);
+      if (!hatches) this.ties.set(of, (hatches = new Set()));
+      hatches.add(e.id);
+    }
     if (e.kind !== 'text' || e.labelOf === undefined) return;
     let texts = this.links.get(e.labelOf);
     if (!texts) {
@@ -1094,6 +1117,10 @@ export class CadDocument {
   }
 
   private unlink(e: DrawingEntity): void {
+    for (const of of tiesOf(e)) {
+      const hatches = this.ties.get(of);
+      if (hatches?.delete(e.id) && !hatches.size) this.ties.delete(of);
+    }
     if (e.kind !== 'text' || e.labelOf === undefined) return;
     const texts = this.links.get(e.labelOf);
     if (texts?.delete(e.id) && !texts.size) {

@@ -407,15 +407,13 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
                 },
             ],
             holes: None,
-            pattern: HatchPattern {
-                kind: HatchPatternType::Lines,
-                angle: 45.0,
-                spacing: 3.0,
-            },
+            pattern: HatchPattern::user(HatchPatternType::Lines, 45.0, 3.0),
+            assoc: None,
         }),
     );
     let s = Slot(hatch);
-    event(&mut app, Event::Pattern(s, HatchPatternType::Cross));
+    // Çapraz, Desen's second choice: its spacing and turn carried over (docs/adr/0186 §7).
+    event(&mut app, Event::Pattern(s, 1));
     event(&mut app, Event::Commit(Field::HatchSpacing(s), "0".into()));
     event(&mut app, Event::Commit(Field::HatchAngle(s), "30".into()));
     let Entity::Hatch(h) = entity(&app, hatch) else {
@@ -429,6 +427,23 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
     assert_eq!(value(&app, "Geometri", "Desen"), "Çapraz");
     assert_eq!(value(&app, "Geometri", "Açı"), "30.00 °");
     assert_eq!(value(&app, "Geometri", "Alan"), "10.00 m²");
+    assert_eq!(value(&app, "Geometri", "İlişkili"), "Hayır");
+    // ANSI31: a pattern of the library at its paper scale; then a sphere's gradient.
+    event(
+        &mut app,
+        Event::Pattern(s, kentos_geometry_core::tools::hatch::DEFAULT_CHOICE),
+    );
+    select(&mut app, &[hatch]);
+    assert_eq!(value(&app, "Geometri", "Desen"), "ANSI31");
+    assert_eq!(value(&app, "Geometri", "Ölçek"), "1.000");
+    let last = kentos_geometry_core::tools::hatch::choices().len() - 1;
+    event(&mut app, Event::Pattern(s, last));
+    event(&mut app, Event::GradientColour(s, "#E5484D".into()));
+    event(&mut app, Event::GradientInverted(s, true));
+    select(&mut app, &[hatch]);
+    assert_eq!(value(&app, "Geometri", "Degrade biçimi"), "Küre");
+    assert_eq!(value(&app, "Geometri", "İkinci renk"), "#E5484D");
+    assert_eq!(value(&app, "Geometri", "Ters"), "Evet");
 }
 
 /// A linked text's Bağlı nesne row (docs/adr/0175 §4): its object's kind,

@@ -9,6 +9,7 @@ pub mod curve_outline;
 pub mod dimension;
 pub mod ellipse;
 pub mod hatch;
+pub mod hatch_pattern;
 pub mod intersect;
 pub mod leader;
 pub mod offset;

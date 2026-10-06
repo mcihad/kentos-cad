@@ -496,10 +496,12 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             ring,
             holes,
             pattern,
+            assoc,
         } => Shape::Hatch {
             ring: replace_at(ring, index, p),
             holes: holes.clone(),
             pattern: pattern.clone(),
+            assoc: assoc.clone(),
         },
         Shape::Dimension {
             a,

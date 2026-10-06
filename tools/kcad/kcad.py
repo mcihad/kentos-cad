@@ -100,6 +100,17 @@ SCHEMA_WITH_PARAGRAPHS = 20
 SCHEMA_WITH_STYLES = 21
 # Schema 22: schema 21 and the `table` kind, only in the drawing (docs/adr/0184 §1).
 SCHEMA_WITH_TABLES = 22
+# Schema 23: schema 22 and the hatch's patterns, gradients and ties: `pattern`'s types `pattern` and `gradient`, its
+# `name`, `scale`, `lines` and `gradient`; a hatch's `assoc`, only in the drawing (docs/adr/0186).
+SCHEMA_WITH_HATCH_PATTERNS = 23
+HATCH_TYPES = ("solid", "lines", "cross", "pattern", "gradient")
+GRADIENT_SHAPES = ("linear", "cylinder", "spherical")
+# A pattern's bounds (kentos_contracts::hatch): families, dashes a family, its name's letters, a number; a tie's objects.
+MAX_PATTERN_LINES = 64
+MAX_PATTERN_DASHES = 16
+MAX_PATTERN_NAME = 64
+MAX_PATTERN_SIZE = 1e6
+MAX_ASSOC_OBJECTS = 100_000
 DRAWING_FONTS = ("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")
 DIMENSION_ARROWS = ("closed", "open", "dot", "none")
 MAX_OBLIQUE = 85.0
@@ -133,7 +144,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -628,6 +639,7 @@ class _Schema:
         self.paragraphs = version >= SCHEMA_WITH_PARAGRAPHS
         self.styles = version >= SCHEMA_WITH_STYLES
         self.tables = version >= SCHEMA_WITH_TABLES
+        self.hatches = version >= SCHEMA_WITH_HATCH_PATTERNS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
         self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
         self.leaders = version >= SCHEMA_WITH_LEADERS
@@ -1397,6 +1409,98 @@ class _Schema:
             elif not 0 < len(src["objects"]) <= MAX_SOURCE_OBJECTS:
                 refuse("source", f"tablonun kaynağı {len(src['objects'])} nesne gösteriyor")
 
+    # Hatches (docs/adr/0186).
+
+    def hatch_pattern(self, v):
+        table = {"type": (self.enum(HATCH_TYPES if self.hatches else HATCH_TYPES[:3]), True), "angle": (self.float, True), "spacing": (self.float, True)}
+        if self.hatches:
+            table.update(
+                {
+                    "name": (self.text, False),
+                    "scale": (self.float, False),
+                    "lines": (self.array(self.pattern_line), False),
+                    "gradient": (self.hatch_gradient, False),
+                }
+            )
+        p = self.fields(table)(v)
+        self.pattern_rules(p)
+        return p
+
+    def pair(self, v):
+        q = self.point(v)
+        return [q["x"], q["y"]]
+
+    def dashes(self, v):
+        if type(v) is list and not v:
+            self.fail("bad_value", "kesik listesi boş; bütün çizgili ailede alan yazılmaz")
+        return self.array(self.float)(v)
+
+    def pattern_line(self, v):
+        return self.fields({"angle": (self.float, True), "origin": (self.pair, True), "offset": (self.pair, True), "dashes": (self.dashes, False)})(v)
+
+    def gradient_inverted(self, v):
+        if self.bool(v) is not True:
+            self.fail("bad_value", "degradenin “inverted”ı yanlışken yazılmaz")
+        return True
+
+    def hatch_gradient(self, v):
+        return self.fields({"shape": (self.enum(GRADIENT_SHAPES), True), "color2": (self.text, True), "inverted": (self.gradient_inverted, False)})(v)
+
+    def assoc_ids(self, v):
+        if type(v) is list and not v:
+            self.fail("bad_value", "nesne listesi boş; nesnesi olmayan listenin alanı yazılmaz")
+        return self.array(self.id16)(v)
+
+    def hatch_assoc(self, v):
+        a = self.fields({"outer": (self.id16, True), "islands": (self.assoc_ids, False), "cutouts": (self.assoc_ids, False), "seed": (self.point, True)})(v)
+        named = [a["outer"], *a.get("islands", []), *a.get("cutouts", [])]
+        if len(named) - 1 > MAX_ASSOC_OBJECTS:
+            self.fail("bad_value", f"taramanın ilişkisi {len(named) - 1} nesne gösteriyor; en çok {MAX_ASSOC_OBJECTS} olmalı")
+        if len(set(named)) != len(named):
+            self.fail("bad_value", "taramanın ilişkisi bir nesneyi iki kez gösteriyor")
+        return a
+
+    def pattern_rules(self, p):
+        """A pattern's and a gradient's fields (docs/adr/0186 §1) as the commands check them; the first three kinds as
+        they always were (their angle and spacing unread here)."""
+        kind = p["type"]
+        if kind not in ("pattern", "gradient") and not any(k in p for k in ("name", "scale", "lines", "gradient")):
+            return
+        fits = lambda x: math.isfinite(x) and abs(x) <= MAX_PATTERN_SIZE
+        if kind != "pattern" and any(k in p for k in ("name", "scale", "lines")):
+            self.fail("bad_value", "yalnız desen türündeki taramanın adı, ölçeği ve çizgi aileleri olur")
+        if kind != "gradient" and "gradient" in p:
+            self.fail("bad_value", "yalnız degrade taramanın ikinci rengi ve biçimi olur")
+        if kind in ("lines", "cross") and not 0.0 < p["spacing"] <= MAX_PATTERN_SIZE:
+            self.fail("bad_value", f"çizgi aralığı {p['spacing']}; sıfırdan büyük ve sonlu olmalı")
+        if kind == "pattern":
+            name = p.get("name", "")
+            if all(c in WHITE_SPACE for c in name) or len(name) > MAX_PATTERN_NAME:
+                self.fail("bad_value", f"desenin adı boş olamaz ve en çok {MAX_PATTERN_NAME} harf olabilir")
+            scale = p.get("scale", math.nan)
+            if not 0.0 < scale <= MAX_PATTERN_SIZE:
+                self.fail("bad_value", f"desenin ölçeği {scale}; sıfırdan büyük ve sonlu olmalı")
+            lines = p.get("lines", [])
+            if not 1 <= len(lines) <= MAX_PATTERN_LINES:
+                self.fail("bad_value", f"desenin {len(lines)} çizgi ailesi var; en az 1, en çok {MAX_PATTERN_LINES} olmalı")
+            for n, l in enumerate(lines, 1):
+                dashes = l.get("dashes", [])
+                if not all(fits(x) for x in [l["angle"], *l["origin"], *l["offset"], *dashes]):
+                    self.fail("bad_value", f"desenin {n}. çizgi ailesinde sonlu olmayan ya da çok büyük bir sayı var")
+                if l["offset"][1] == 0.0:
+                    self.fail("bad_value", f"desenin {n}. çizgi ailesinin çizgileri arası 0")
+                if len(dashes) > MAX_PATTERN_DASHES:
+                    self.fail("bad_value", f"desenin {n}. çizgi ailesinde {len(dashes)} kesik var; en çok {MAX_PATTERN_DASHES} olmalı")
+                if dashes and all(d == 0.0 for d in dashes):
+                    self.fail("bad_value", f"desenin {n}. çizgi ailesinin kesiklerinin hepsi 0")
+        if kind == "gradient":
+            g = p.get("gradient")
+            if g is None:
+                self.fail("bad_value", "degrade taramanın ikinci rengi ve biçimi verilmeli")
+            c = g["color2"]
+            if not (len(c) == 7 and c[0] == "#" and all(x in "0123456789abcdefABCDEF" for x in c[1:])):
+                self.fail("bad_value", f"degradenin ikinci rengi “{c}”; #RRGGBB biçiminde olmalı")
+
     def leader_points(self, v):
         pts = self.array(self.point)(v)
         if len(pts) < 2:
@@ -1631,10 +1735,13 @@ ENTITY_KINDS = {
             else {}
         ),
     },
+    # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the
+    # drawing (a block definition's objects have no persistent ids to name).
     "hatch": lambda s: {
         "ring": (s.array(s.point), True),
         "holes": (s.array(s.array(s.point)), False),
-        "pattern": (s.fields({"type": (s.enum(("solid", "lines", "cross")), True), "angle": (s.float, True), "spacing": (s.float, True)}), True),
+        "pattern": (s.hatch_pattern, True),
+        **({"assoc": (s.hatch_assoc, False)} if s.hatches and s.inside is None else {}),
     },
     # Schema 6 (docs/adr/0144): `mirror` only when true.
     "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False)},

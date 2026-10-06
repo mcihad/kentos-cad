@@ -167,14 +167,34 @@ pub fn style_block(b: &StyledBatch) -> StyleBlock {
                 offset,
                 dash,
                 dash_offset,
+                stagger,
                 unit: u,
             } => {
                 s.set(0, color);
                 let (d, total, on) = dash_values(dash.as_deref());
                 s.set(8, &d);
+                // A family's stagger (docs/adr/0186 §3).
+                s.set(16, &[*stagger, 0.0, 0.0, 0.0]);
                 s.set(20, &[angle.cos(), angle.sin(), *spacing, *width]);
                 s.set(24, &[*offset, total, on, *dash_offset]);
                 s.u[0] = unit(*u);
+            }
+            FillPaintBatch::Gradient {
+                color,
+                color2,
+                shape,
+                inverted,
+                dir,
+                from,
+                to,
+                centre,
+                radius,
+            } => {
+                s.set(0, color);
+                s.set(4, color2);
+                s.set(20, &[dir.cos(), dir.sin(), *from, *to]);
+                s.set(24, &[centre[0], centre[1], *radius, 0.0]);
+                s.u = [0, *shape, u32::from(*inverted), 0];
             }
             FillPaintBatch::Pattern {
                 shape,

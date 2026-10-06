@@ -17,6 +17,7 @@
 //! 1002 {  1000 curve    1070 <0|1>               1002 }   a SPLINE through its fit points is KentOS's curve (1: closed)
 //! 1002 {  1000 arc      1040 <a0> 1040 <a1>      1002 }   the arc's angles in radians, exactly
 //! 1002 {  1000 pattern  1040 <angle> 1040 <gap>  1002 }   the hatch's angle and spacing, exactly
+//! 1002 {  1000 hatch    <json>                   1002 }   a hatch's pattern or gradient as KentOS holds it, exactly (docs/adr/0186 §9)
 //! 1002 {  1000 turn     1040 <radians>         1002 }   an INSERT's turn, exactly (docs/adr/0144 §5)
 //! 1002 {  1000 z                                 1002 }   the object's elevations are data, even when all 0 (a point's, a line's, a path's)
 //! 1002 {  1000 noz      <hex string>             1002 }   the vertices with no elevation, while the others have one: a bit each (docs/adr/0142)
@@ -71,6 +72,9 @@ pub struct Meta {
     pub arc: Option<(f64, f64)>,
     /// Hatch angle (degrees) and spacing.
     pub pattern: Option<(f64, f64)>,
+    /// A hatch's pattern or gradient as the contract's JSON (docs/adr/0186
+    /// §9): the families, the angle and scale DXF's groups round.
+    pub hatch: Option<String>,
     /// An insert's turn in radians (its 50 holds degrees).
     pub turn: Option<f64>,
     /// The object's elevations are data even when they are all 0: a DXF
@@ -280,6 +284,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if let Some(t) = &meta.table {
         item("table", &mut out, |o| string(t, o));
+    }
+    if let Some(h) = &meta.hatch {
+        item("hatch", &mut out, |o| string(h, o));
     }
     if let Some(d) = &meta.dimension {
         item("dimension", &mut out, |o| {
@@ -494,6 +501,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "face" => m.face = text(a).or(m.face),
             "look" => m.look = text(a).or(m.look),
             "table" => m.table = text(a).or(m.table),
+            "hatch" => m.hatch = text(a).or(m.hatch),
             "noteturn" => m.note_turn = real(a).or(m.note_turn),
             "dimension" => m.dimension = dimension(&values).or(m.dimension),
             _ => {}
@@ -571,6 +579,7 @@ mod tests {
             face: Some(r#"{"textStyle":"a","font":"arimo","bold":true}"#.into()),
             look: Some(r#"{"arrow":"dot","prefix":"Ø ^ \\"}"#.into()),
             table: Some(r#"{"p":{"x":1,"y":2},"cells":[["Ad","ğ ^ \\"]]}"#.into()),
+            hatch: Some(r#"{"type":"pattern","angle":30,"spacing":1,"name":"ANSI31","scale":0.5,"lines":[{"angle":45,"origin":[0,0],"offset":[0,3.175]}]}"#.into()),
         };
         let out = groups(&meta);
         assert_eq!(out[0], (1001, "KENTOS".to_string()));

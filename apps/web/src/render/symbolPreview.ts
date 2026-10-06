@@ -303,14 +303,48 @@ function drawFill(view: View, paint: FillPaint, rings: readonly (readonly Vec2[]
       // Dashes anchored to the along-line distance 0, as on the map.
       g.lineDashOffset = (s0 + toMm(paint.dashOffset, paint.unit)) * view.k;
     }
+    // A staggered family's line `row` starts `row` staggers further along (docs/adr/0186 §3): one stroke a line then.
+    const stagger = paint.dash && paint.stagger ? toMm(paint.stagger, paint.unit) : 0;
     g.beginPath();
     for (let u = Math.ceil((Math.min(...us) - off) / sp) * sp + off; u <= Math.max(...us); u += sp) {
       const a = px(view, v(n.x * u + dir.x * s0, n.y * u + dir.y * s0));
       const b = px(view, v(n.x * u + dir.x * s1, n.y * u + dir.y * s1));
+      if (stagger) {
+        g.beginPath();
+        g.lineDashOffset = (s0 - Math.round((u - off) / sp) * stagger + toMm(paint.dashOffset, paint.unit)) * view.k;
+      }
       g.moveTo(a[0], a[1]);
       g.lineTo(b[0], b[1]);
+      if (stagger) g.stroke();
     }
-    g.stroke();
+    if (!stagger) g.stroke();
+    return;
+  }
+  if (paint.kind === 'gradient') {
+    // Its frame in the preview's own millimetres: the box's sides along the direction, its middle and half diagonal.
+    const dir = v(Math.cos(paint.dir), Math.sin(paint.dir));
+    const ss = corners.map((c) => c.x * dir.x + c.y * dir.y);
+    const [lo, hi] = [Math.min(...ss), Math.max(...ss)];
+    const mid = v((box.minX + box.maxX) / 2, (box.minY + box.maxY) / 2);
+    const c1 = css(view, paint.color, paint.opacity);
+    const c2 = css(view, paint.color2, paint.opacity);
+    const [first, second] = paint.inverted ? [c2, c1] : [c1, c2];
+    let fill: CanvasGradient;
+    if (paint.shape === 2) {
+      const [x, y] = px(view, mid);
+      fill = g.createRadialGradient(x, y, 0, x, y, (Math.hypot(box.maxX - box.minX, box.maxY - box.minY) / 2) * view.k);
+      fill.addColorStop(0, second);
+      fill.addColorStop(1, first);
+    } else {
+      const a = px(view, v(dir.x * lo, dir.y * lo));
+      const b = px(view, v(dir.x * hi, dir.y * hi));
+      fill = g.createLinearGradient(a[0], a[1], b[0], b[1]);
+      fill.addColorStop(0, first);
+      if (paint.shape === 1) fill.addColorStop(0.5, second);
+      fill.addColorStop(1, paint.shape === 1 ? first : second);
+    }
+    g.fillStyle = fill;
+    g.fillRect(...px(view, v(box.minX, box.maxY)), (box.maxX - box.minX) * view.k, (box.maxY - box.minY) * view.k);
     return;
   }
   const size: [number, number] = [toMm(paint.size[0], paint.unit), toMm(paint.size[1], paint.unit)];

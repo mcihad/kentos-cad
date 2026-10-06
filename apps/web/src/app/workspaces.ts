@@ -86,6 +86,8 @@ export const WORKSPACES: readonly WorkspaceSpec[] = [
         'tool.coordinateVertices',
         'tool.revcloud',
         'tool.hatch',
+        // Çoklu tara (docs/adr/0186): CAD's annotation too.
+        'tool.hatchSelected',
         'transform/array',
         'modify/corner',
         'tool.stretch',

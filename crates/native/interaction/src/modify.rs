@@ -432,17 +432,13 @@ impl<S: Stages> Tool for Modify<S> {
         true
     }
 
+    /// The stages' menus, while picking too: only a chip the prompt shows
+    /// asks for one (Çoklu tara's Desen shows while picking, docs/adr/0186 §4).
     fn option_choices(&self, key: &str) -> Vec<crate::tool::OptionChoice> {
-        if self.picking {
-            return Vec::new();
-        }
         self.stages.option_choices(key)
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
-        if self.picking {
-            return false;
-        }
         let taken = self.stages.choose_option(key, typed, cx);
         self.refresh(cx);
         taken

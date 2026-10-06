@@ -15,7 +15,8 @@ import { crsBySrid } from '../geo/crs';
 import { DIMENSION_ARROWS, faceProblem, lookProblem, type DimensionLook, type TextFace } from './annotationStyles';
 import { blockFaultMessage, definitionsFault, type AttributeDefinition, type BlockDefinition } from './blocks';
 import type { CadDocument, DocumentContent } from './document';
-import { MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, TEXT_ALIGNS, widthFactorOk, type Entity, type TextAlign } from './entities';
+import { MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, TEXT_ALIGNS, widthFactorOk, type Entity, type HatchAssoc, type HatchPattern, type TextAlign } from './entities';
+import { assocProblem, patternProblem } from './hatchRules';
 import type { LayerInit, LayerSnap } from './layers';
 import { DRAWING_FONT_IDS, DRAWING_UNIT_IDS, LEGACY_HYBRID, WORKSPACE_IDS } from './projectSettings';
 
@@ -743,9 +744,42 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
         (v.holes as unknown[]).forEach((r, i) => pointsAt(r, w, `ada ${i + 1}`, 3));
       }
       const p = isObj(v.pattern) ? v.pattern : fail(at(w, 'desen'), 'eksik');
-      oneOf(p.type, ['solid', 'lines', 'cross'] as const, at(w, 'desen türü'));
+      oneOf(p.type, ['solid', 'lines', 'cross', 'pattern', 'gradient'] as const, at(w, 'desen türü'));
       numAt(p.angle, w, 'desen açısı');
       numAt(p.spacing, w, 'desen aralığı');
+      // docs/adr/0186 §1: a pattern's name, scale and families, a gradient; each by its type, then the contract's rule.
+      if (p.name !== undefined) strAt(p.name, w, 'desenin adı');
+      if (p.scale !== undefined) numAt(p.scale, w, 'desenin ölçeği');
+      if (p.lines !== undefined) {
+        if (!Array.isArray(p.lines)) fail(at(w, 'desenin aileleri'), 'liste olmalı');
+        (p.lines as unknown[]).forEach((l, i) => {
+          const f = `${i + 1}. aile`;
+          if (!isObj(l)) return fail(at(w, f), 'nesne olmalı');
+          numAt(l.angle, w, `${f} açısı`);
+          for (const key of ['origin', 'offset'] as const)
+            if (!Array.isArray(l[key]) || (l[key] as unknown[]).length !== 2 || !(l[key] as unknown[]).every(finite)) fail(at(w, `${f} ${key}`), 'iki sayı olmalı');
+          if (l.dashes !== undefined) numbersAt(l.dashes, w, `${f} kesikleri`);
+        });
+      }
+      if (p.gradient !== undefined) {
+        const g = isObj(p.gradient) ? p.gradient : fail(at(w, 'degrade'), 'nesne olmalı');
+        oneOf(g.shape, ['linear', 'cylinder', 'spherical'] as const, at(w, 'degradenin biçimi'));
+        strAt(g.color2, w, 'degradenin ikinci rengi');
+        if (g.inverted !== undefined && g.inverted !== true) fail(at(w, 'degrade ters'), 'yalnız true yazılır');
+      }
+      const problem = patternProblem(p as unknown as HatchPattern);
+      if (problem) fail(at(w, 'desen'), problem[1]);
+      // What it follows: its objects by persistent id and its seed (docs/adr/0186 §6).
+      if (v.assoc !== undefined) {
+        const a = isObj(v.assoc) ? v.assoc : fail(at(w, 'ilişki'), 'nesne olmalı');
+        if (!isUuid(a.outer)) fail(at(w, 'ilişkinin nesnesi'), 'küçük harfli, tireli bir UUID olmalı');
+        for (const key of ['islands', 'cutouts'] as const)
+          if (a[key] !== undefined && (!Array.isArray(a[key]) || (a[key] as unknown[]).length === 0 || !(a[key] as unknown[]).every(isUuid)))
+            fail(at(w, `ilişkinin ${key === 'islands' ? 'adaları' : 'boş bıraktıkları'}`), 'boş olmayan bir UUID listesi olmalı');
+        pointAt(a.seed, w, 'tohum');
+        const tie = assocProblem(a as unknown as HatchAssoc);
+        if (tie) fail(at(w, 'ilişki'), tie[1]);
+      }
       break;
     }
     // A block placed (docs/adr/0144): its definition's id, a positive scale, `mirror` only when true.

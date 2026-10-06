@@ -14,6 +14,7 @@ use crate::geom::bulge::{bulge_arc, bulge_at};
 use crate::geom::curve_outline::spline_outline;
 use crate::geom::dimension::layout_dimension;
 use crate::geom::hatch::hatch_lines;
+use crate::geom::hatch_pattern::pattern_pieces;
 use crate::geom::leader::{self, Head};
 use crate::geom::intersect::Edge;
 use crate::jsmath::{PI, cos, js_hypot, js_max, sin};
@@ -21,6 +22,9 @@ use crate::op;
 use crate::ops::curve_cuts::Cut;
 use crate::text::{Font, width_em};
 use crate::vec2::Vec2;
+
+/// The most lines and points a pattern's hatch explodes into (docs/adr/0186 §8).
+pub const EXPLODE_PIECES: usize = 20_000;
 
 fn line(a: Vec2, b: Vec2) -> Entity {
     Entity::new(Shape::Line { a, b })
@@ -47,11 +51,8 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                 pieces.push(Entity::new(Shape::Hatch {
                     ring: strip.to_vec(),
                     holes: None,
-                    pattern: HatchPattern {
-                        kind: "solid".into(),
-                        angle: 0.0,
-                        spacing: *height,
-                    },
+                    pattern: HatchPattern::user("solid", 0.0, *height),
+                    assoc: None,
                 }));
             }
             for c in &laid.cells {
@@ -180,11 +181,8 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                 pieces.push(Entity::new(Shape::Hatch {
                     ring: ring.clone(),
                     holes: None,
-                    pattern: HatchPattern {
-                        kind: "solid".into(),
-                        angle: 0.0,
-                        spacing: *height,
-                    },
+                    pattern: HatchPattern::user("solid", 0.0, *height),
+                    assoc: None,
                 }));
             }
             let text = match text {
@@ -217,13 +215,39 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
             ring,
             holes,
             pattern,
+            ..
         } => {
             if pattern.kind == "solid" {
                 return Cut::Error(
                     "Dolu tarama patlatılamaz; sınır olarak taranan şekli kullanın.".into(),
                 );
             }
+            // A gradient explodes as a solid fill does (docs/adr/0186 §8).
+            if pattern.kind == "gradient" {
+                return Cut::Error(
+                    "Degrade tarama patlatılamaz; sınır olarak taranan şekli kullanın.".into(),
+                );
+            }
             let holes = holes.as_deref().unwrap_or(&[]);
+            if pattern.kind == "pattern" {
+                // Its lines and dashes as lines, its dots as points (docs/adr/0186 §8).
+                let cut = pattern_pieces(ring, holes, pattern, EXPLODE_PIECES);
+                if cut.capped {
+                    return Cut::Error(format!(
+                        "Desen bu alan için çok sık: {EXPLODE_PIECES} parçadan çok olur; deseni büyütüp yeniden deneyin."
+                    ));
+                }
+                let mut pieces: Vec<Entity> =
+                    cut.segments.into_iter().map(|[a, b]| line(a, b)).collect();
+                pieces.extend(cut.dots.into_iter().map(|p| {
+                    Entity::new(Shape::Point {
+                        p,
+                        z: None,
+                        parts: None,
+                    })
+                }));
+                return Cut::Pieces(pieces);
+            }
             let mut segs = hatch_lines(ring, pattern.angle, pattern.spacing, holes).segments;
             if pattern.kind == "cross" {
                 segs.extend(
@@ -260,11 +284,8 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                 pieces.push(Entity::new(Shape::Hatch {
                     ring,
                     holes: None,
-                    pattern: HatchPattern {
-                        kind: "solid".into(),
-                        angle: 0.0,
-                        spacing: *height,
-                    },
+                    pattern: HatchPattern::user("solid", 0.0, *height),
+                    assoc: None,
                 }));
             }
             if let (Some(text), Some(p)) = (text, l.note_point) {

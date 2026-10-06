@@ -1,8 +1,8 @@
 {
   "format": "kentos.wgsl-layout",
-  "version": 3,
+  "version": 4,
   "module": "styled",
-  "description": "KentOS styled drawing (docs/STYLE.md §6): the style engine's batches (render/types.ts StyledBatch) as strokes, fills with a per-pixel paint and markers. The web's WebGPU backend joins these sources in this order (apps/web/src/render/webgpu/styledShaders.ts) and scripts/wgsl/browser-check.mjs compiles them in a browser's WebGPU and builds these pipelines; the native renderer is to be checked against the same file. The WebGL2 twin is apps/web/src/render/webgl2/styledShaders.ts. Any change to a struct, attribute, binding or packing raises the version. Version 2 binds the atlas in group 0 beside the frame: a native wgpu device may offer only two bind groups (Iced’s does). Version 3 (docs/adr/0157) packs a batch's positions from its tile: the frame carries the camera centre's low part (offsetLo) and each style block its tile's origin.",
+  "description": "KentOS styled drawing (docs/STYLE.md §6): the style engine's batches (render/types.ts StyledBatch) as strokes, fills with a per-pixel paint and markers. The web's WebGPU backend joins these sources in this order (apps/web/src/render/webgpu/styledShaders.ts) and scripts/wgsl/browser-check.mjs compiles them in a browser's WebGPU and builds these pipelines; the native renderer is to be checked against the same file. The WebGL2 twin is apps/web/src/render/webgl2/styledShaders.ts. Any change to a struct, attribute, binding or packing raises the version. Version 2 binds the atlas in group 0 beside the frame: a native wgpu device may offer only two bind groups (Iced’s does). Version 3 (docs/adr/0157) packs a batch's positions from its tile: the frame carries the camera centre's low part (offsetLo) and each style block its tile's origin. Version 4 (docs/adr/0186) adds the gradient pipeline (gradientFs: the first colour in color, the second in stroke, a = (dir, from, to), b = (centre, radius), flags.y the shape, flags.z inverted) and packs a hatch family's stagger in rect.x; a drawn dash under a pixel before a gap is a dot of one pixel.",
   "sources": [
     "styled/common.wgsl",
     "styled/shapes.wgsl",
@@ -131,6 +131,16 @@
             { "location": 1, "name": "i1", "format": "float32", "offset": 16 }
           ]
         }
+      ]
+    },
+    {
+      "name": "gradient",
+      "vertex": "areaVs",
+      "fragment": "gradientFs",
+      "topology": "triangle-list",
+      "blend": "alpha",
+      "buffers": [
+        { "stepMode": "vertex", "arrayStride": 8, "attributes": [{ "location": 0, "name": "p", "format": "float32x2", "offset": 0 }] }
       ]
     }
   ],

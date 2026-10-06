@@ -95,6 +95,9 @@ pub struct Seen {
     pub look: Option<kentos_contracts::DimensionLook>,
     /// A table's cells and look (docs/adr/0184); none for other kinds.
     pub table: Option<TableSeen>,
+    /// A hatch's pattern and how many objects it follows (docs/adr/0186); none for other kinds.
+    pub pattern: Option<super::format::HatchPatternSeen>,
+    pub assoc: Option<usize>,
 }
 
 /// A table as a step sees it: its cells, sizes, merged ranges, columns'
@@ -129,6 +132,8 @@ impl Seen {
             Entity::Table(t) => (vec![[t.p.x, t.p.y]], Vec::new()),
             // A leader's vertices, the tip first (docs/adr/0146).
             Entity::Leader(l) => (l.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
+            // A hatch's outer ring (docs/adr/0186 §6: it follows its objects).
+            Entity::Hatch(h) => (h.ring.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
             Entity::Arc(a) => (
                 [a.a0, a.a1]
                     .iter()
@@ -254,6 +259,7 @@ impl Seen {
                             .map(|part| part.holes.as_ref().map_or(0, Vec::len))
                             .sum::<usize>(),
                 ),
+                Entity::Hatch(h) => Some(h.holes.as_ref().map_or(0, Vec::len)),
                 _ => None,
             },
             label_of: match e {
@@ -309,6 +315,29 @@ impl Seen {
                     frame: t.frame,
                     source: t.source.as_ref().map(|s| s.kind().to_owned()),
                 }),
+                _ => None,
+            },
+            pattern: match e {
+                Entity::Hatch(h) => Some(super::format::HatchPatternSeen {
+                    kind: serde_json::to_value(h.pattern.kind)
+                        .ok()
+                        .and_then(|v| v.as_str().map(str::to_owned))
+                        .unwrap_or_default(),
+                    name: h.pattern.name.clone(),
+                    shape: h.pattern.gradient.as_ref().and_then(|g| {
+                        serde_json::to_value(g.shape)
+                            .ok()
+                            .and_then(|v| v.as_str().map(str::to_owned))
+                    }),
+                }),
+                _ => None,
+            },
+            assoc: match e {
+                Entity::Hatch(h) => Some(
+                    h.assoc
+                        .as_ref()
+                        .map_or(0, |a| 1 + a.islands.len() + a.cutouts.len()),
+                ),
                 _ => None,
             },
         }

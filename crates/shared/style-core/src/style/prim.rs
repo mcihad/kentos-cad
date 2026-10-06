@@ -62,7 +62,25 @@ pub enum FillPaint {
         offset: f64,
         dash: Option<Vec<f64>>,
         dash_offset: f64,
+        /// A line's start along it past the one before (docs/adr/0186 §3).
+        stagger: f64,
         unit: PrimUnit,
+        level: f64,
+    },
+    /// A gradient (docs/adr/0186 §3) from `color` to `color2`: `shape` 0
+    /// linear, 1 cylinder, 2 spherical; along `dir` (radians) from `from` to
+    /// `to` (world metres along it), or from `centre` out to `radius`.
+    Gradient {
+        color: String,
+        color2: String,
+        opacity: f64,
+        shape: u32,
+        inverted: bool,
+        dir: f64,
+        from: f64,
+        to: f64,
+        centre: [f64; 2],
+        radius: f64,
         level: f64,
     },
     /// One shape on a grid, drawn by the shader: pattern fills of shape markers.
@@ -407,6 +425,7 @@ impl FillPaint {
                 offset,
                 dash,
                 dash_offset,
+                stagger,
                 unit,
                 level,
             } => {
@@ -419,7 +438,37 @@ impl FillPaint {
                 o.num("offset", *offset);
                 opt_nums(o.key("dash"), dash);
                 o.num("dashOffset", *dash_offset);
+                // Only a staggered family writes it: every other hatch reads as it always did.
+                if *stagger != 0.0 {
+                    o.num("stagger", *stagger);
+                }
                 o.str("unit", unit.name());
+                o.num("level", *level);
+            }
+            FillPaint::Gradient {
+                color,
+                color2,
+                opacity,
+                shape,
+                inverted,
+                dir,
+                from,
+                to,
+                centre,
+                radius,
+                level,
+            } => {
+                o.str("kind", "gradient");
+                o.str("color", color);
+                o.str("color2", color2);
+                o.num("opacity", *opacity);
+                o.num("shape", f64::from(*shape));
+                o.bool("inverted", *inverted);
+                o.num("dir", *dir);
+                o.num("from", *from);
+                o.num("to", *to);
+                nums(o.key("centre"), centre);
+                o.num("radius", *radius);
                 o.num("level", *level);
             }
             FillPaint::Pattern {
@@ -495,6 +544,7 @@ impl FillPaint {
         match self {
             FillPaint::Solid { level, .. }
             | FillPaint::Hatch { level, .. }
+            | FillPaint::Gradient { level, .. }
             | FillPaint::Pattern { level, .. }
             | FillPaint::Tile { level, .. } => *level,
         }

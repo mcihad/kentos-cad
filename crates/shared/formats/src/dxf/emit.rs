@@ -35,6 +35,7 @@ use crate::nurbs;
 use crate::report::Report;
 
 mod notes;
+mod pattern;
 
 /// Blocks nest at most this deep (a block that inserts itself is caught earlier).
 const MAX_DEPTH: usize = 24;
@@ -2484,10 +2485,26 @@ impl<'l> Emitter<'l> {
         if curved {
             self.note("Tarama (HATCH)", "sınırdaki yaylar ve eğriler parçalı alındı (72 parça/tur, uygulamanın taramaları gibi)", e.line);
         }
-        let mut pattern = self.pattern(m, h, e);
+        if h.assoc {
+            self.note(
+                "Tarama (HATCH)",
+                "ilişkili tarama ilişkisiz alındı; sınır nesnelerini izlemez",
+                e.line,
+            );
+        }
+        let mut b = b;
+        let mut pattern = self.pattern(m, h, &mut b, e);
+        // KentOS data holds a pattern or a gradient exactly; they count while the groups still say it.
+        if m.is_identity() {
+            pattern = pattern::exact(pattern, e.meta.as_ref().and_then(|x| x.hatch.as_deref()));
+        }
         // KentOS data holds the angle and spacing the pattern's offsets round; they count while the pattern still has them.
         if let (Some((angle, spacing)), true) =
             (e.meta.as_ref().and_then(|x| x.pattern), m.is_identity())
+            && matches!(
+                pattern.kind,
+                HatchPatternType::Solid | HatchPatternType::Lines | HatchPatternType::Cross
+            )
         {
             // Line families repeat every 180°: compare doubled angles.
             let same = pattern.kind == HatchPatternType::Solid
@@ -2535,102 +2552,27 @@ impl<'l> Emitter<'l> {
                 ring: rings[i].clone(),
                 holes: (!holes.is_empty()).then_some(holes),
                 pattern: pattern.clone(),
+                assoc: None,
             }));
         }
     }
 
-    fn pattern(&mut self, m: Tf, h: &Hatch, e: &Parsed) -> HatchPattern {
-        let scale = m.det().abs().sqrt().max(f64::MIN_POSITIVE);
-        // An angle (degrees) in object coordinates as the world angle of its direction.
-        let world_angle = |a: f64| -> f64 {
-            let (s, c) = sin_cos_deg(a);
-            let d = m.linear(v(c, s));
-            let w = if m.is_identity() {
-                a
-            } else {
-                deg(atan2(d.y, d.x))
-            };
-            w.rem_euclid(180.0)
-        };
-        if h.solid || h.name.eq_ignore_ascii_case("SOLID") {
-            if h.gradient {
-                self.note(
-                    "Tarama (HATCH)",
-                    "degrade dolgu düz dolgu olarak alındı",
-                    e.line,
-                );
-            }
-            return HatchPattern {
-                kind: HatchPatternType::Solid,
-                angle: 0.0,
-                spacing: 1.0,
-            };
+    /// The pattern (docs/adr/0186 §9, `pattern.rs`), what is approximated said.
+    fn pattern(&mut self, m: Tf, h: &Hatch, b: &mut EntityBase, e: &Parsed) -> HatchPattern {
+        let own = b.color.clone().or_else(|| {
+            self.lib
+                .layer_colors
+                .get(&b.layer_id.to_uppercase())
+                .cloned()
+        });
+        let taken = pattern::pattern_of(m, h, own.as_deref());
+        for n in &taken.notes {
+            self.note("Tarama (HATCH)", n, e.line);
         }
-        let spacing_of = |l: &super::hatch::PatternLine| -> f64 {
-            let (s, c) = sin_cos_deg(l.angle);
-            (l.offset[0] * -s + l.offset[1] * c).abs()
-        };
-        let lines: Vec<_> = h.lines.iter().filter(|l| spacing_of(l) > 0.0).collect();
-        let dashed = lines.iter().any(|l| l.dashes > 0);
-        let (kind, angle, spacing) = match lines.as_slice() {
-            [one] => (HatchPatternType::Lines, one.angle, spacing_of(one)),
-            [a, b]
-                if ((a.angle - b.angle).rem_euclid(180.0) - 90.0).abs() < 1e-6
-                    && (spacing_of(a) - spacing_of(b)).abs() <= 1e-9 * spacing_of(a) =>
-            {
-                (HatchPatternType::Cross, a.angle, spacing_of(a))
-            }
-            [first, ..] => {
-                self.note(
-                    "Tarama (HATCH)",
-                    &format!("“{}” deseni ilk çizgi ailesiyle yaklaşık alındı", h.name),
-                    e.line,
-                );
-                (HatchPatternType::Lines, first.angle, spacing_of(first))
-            }
-            [] => {
-                // No line data: the common ANSI patterns by name, at the pattern's angle and scale.
-                let s = 3.175 * if h.scale > 0.0 { h.scale } else { 1.0 };
-                let (kind, base) = match h.name.to_uppercase().as_str() {
-                    "ANSI37" | "NET" | "ANSI38" => (
-                        HatchPatternType::Cross,
-                        if h.name.eq_ignore_ascii_case("NET") {
-                            0.0
-                        } else {
-                            45.0
-                        },
-                    ),
-                    "LINE" => (HatchPatternType::Lines, 0.0),
-                    _ => (HatchPatternType::Lines, 45.0),
-                };
-                self.note(
-                    "Tarama (HATCH)",
-                    &format!(
-                        "“{}” deseninin çizgileri dosyada yok; yaklaşık alındı",
-                        h.name
-                    ),
-                    e.line,
-                );
-                (kind, base + h.angle, s)
-            }
-        };
-        if dashed {
-            self.note(
-                "Tarama (HATCH)",
-                "kesikli desen çizgileri düz çizgi olarak alındı",
-                e.line,
-            );
+        if taken.colour.is_some() {
+            b.color = taken.colour;
         }
-        let spacing = if m.is_identity() {
-            spacing
-        } else {
-            spacing * scale
-        };
-        HatchPattern {
-            kind,
-            angle: world_angle(angle),
-            spacing,
-        }
+        taken.pattern
     }
 }
 

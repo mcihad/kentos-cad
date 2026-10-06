@@ -351,6 +351,23 @@ pub struct Newest {
     pub(super) look: Option<kentos_contracts::DimensionLook>,
     /// A table's cells and look (docs/adr/0184); absent, not compared.
     pub(super) table: Option<TableExpect>,
+    /// A hatch's pattern (docs/adr/0186): its kind, a pattern's name, a
+    /// gradient's shape; exact, an absent member none. Absent, not compared.
+    pub(super) pattern: Option<HatchPatternSeen>,
+    /// How many objects a hatch follows: its closed object, islands and
+    /// cutouts, 0 none (docs/adr/0186 §6). Exact; absent, not compared.
+    pub(super) assoc: Option<usize>,
+}
+
+/// A hatch's pattern as a trace sees it: its kind (`pattern`), a pattern's
+/// name (`ANSI31`) and a gradient's shape (`spherical`), none for others.
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct HatchPatternSeen {
+    #[serde(rename = "type")]
+    pub kind: String,
+    pub name: Option<String>,
+    pub shape: Option<String>,
 }
 
 /// A table's expected cells (exact), rows' heights and columns' widths

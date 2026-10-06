@@ -10,7 +10,8 @@
 //! widths (millimetres on paper) are not lengths in the drawing and stay.
 
 use kentos_contracts::{
-    AreaPart, AttributeDefinition, BlockDefinition, Bounds, DrawingUnit, Entity, RingGeometry, Vec2,
+    AreaPart, AttributeDefinition, BlockDefinition, Bounds, DrawingUnit, Entity, HatchPatternType,
+    RingGeometry, Vec2,
 };
 
 /// `value × mul ÷ div`: one length unit in another.
@@ -200,7 +201,20 @@ pub fn entity(e: &mut Entity, s: Scale) {
             for hole in h.holes.iter_mut().flatten() {
                 s.points(hole);
             }
-            h.pattern.spacing = s.apply(h.pattern.spacing);
+            // Only lines are apart by a length; the other kinds' spacing is 1 and unread.
+            if matches!(
+                h.pattern.kind,
+                HatchPatternType::Lines | HatchPatternType::Cross
+            ) {
+                h.pattern.spacing = s.apply(h.pattern.spacing);
+            }
+            // A pattern's metres per unit of its definition: its definition stays.
+            if let Some(scale) = &mut h.pattern.scale {
+                *scale = s.apply(*scale);
+            }
+            if let Some(a) = &mut h.assoc {
+                s.point(&mut a.seed);
+            }
         }
         // Its definition is scaled with the drawing: its own scale stays.
         Entity::Insert(i) => s.point(&mut i.p),

@@ -1584,6 +1584,26 @@
             },
             "type": "object"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
           "GridChoice": {
             "description": "An NTv2 grid the project's datum choice names: its SHA-256 (the\ndevice's grid library keeps it by that), the file's name and size, the\naccuracy the project gives it.",
             "properties": {
@@ -1614,9 +1634,48 @@
             ],
             "type": "object"
           },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -1693,15 +1752,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -1717,12 +1832,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "Helmert": {
             "description": "Seven parameters: translations (m), rotations (″) in their convention,\nthe scale difference (ppm), and the accuracy (m) when it is given.",
@@ -2469,6 +2606,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -7059,6 +7236,26 @@
             },
             "type": "object"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
           "GridChoice": {
             "description": "An NTv2 grid the project's datum choice names: its SHA-256 (the\ndevice's grid library keeps it by that), the file's name and size, the\naccuracy the project gives it.",
             "properties": {
@@ -7089,9 +7286,48 @@
             ],
             "type": "object"
           },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -7168,15 +7404,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -7192,12 +7484,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "Helmert": {
             "description": "Seven parameters: translations (m), rotations (″) in their convention,\nthe scale difference (ppm), and the accuracy (m) when it is given.",
@@ -7944,6 +8258,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -15784,9 +16138,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -15863,15 +16276,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -15887,12 +16356,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -16277,6 +16768,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -18229,9 +18760,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -18308,15 +18898,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -18332,12 +18978,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -18722,6 +19390,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -20635,9 +21343,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -20714,15 +21481,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -20738,12 +21561,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -21128,6 +21973,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -23176,9 +24061,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -23255,15 +24199,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -23279,12 +24279,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -23669,6 +24691,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -25567,9 +26629,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -25646,15 +26767,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -25670,12 +26847,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -26060,6 +27259,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -27968,9 +29207,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -28047,15 +29345,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -28071,12 +29425,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -28461,6 +29837,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -30605,9 +32021,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -30684,15 +32159,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -30708,12 +32239,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -31098,6 +32651,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -33206,6 +34799,17 @@
               {
                 "description": "A hatched area: its ring, its holes when it has any, and its pattern.",
                 "properties": {
+                  "assoc": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/HatchAssoc"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The objects its region follows (docs/adr/0186 §6)."
+                  },
                   "holes": {
                     "items": {
                       "items": {
@@ -33471,15 +35075,119 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -33495,12 +35203,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "LeaderArrow": {
             "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
@@ -33521,6 +35251,46 @@
                 "type": "string"
               }
             ]
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
+            ],
+            "type": "object"
           },
           "PointPart": {
             "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
@@ -34782,9 +36552,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -34861,15 +36690,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -34885,12 +36770,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -35275,6 +37182,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -37305,9 +39252,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -37384,15 +39390,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -37408,12 +39470,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -37798,6 +39882,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -39631,6 +41755,17 @@
               {
                 "description": "A hatched area: its ring, its holes when it has any, and its pattern.",
                 "properties": {
+                  "assoc": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/HatchAssoc"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The objects its region follows (docs/adr/0186 §6)."
+                  },
                   "holes": {
                     "items": {
                       "items": {
@@ -39896,15 +42031,119 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -39920,12 +42159,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "LeaderArrow": {
             "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
@@ -40014,6 +42275,46 @@
             },
             "required": [
               "geometry"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -41282,9 +43583,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -41361,15 +43721,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -41385,12 +43801,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -41775,6 +44213,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -43815,9 +46293,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -43894,15 +46431,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -43918,12 +46511,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -44308,6 +46923,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -46335,9 +48990,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -46414,15 +49128,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -46438,12 +49208,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -46828,6 +49620,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },
@@ -49019,9 +51851,68 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "GradientShape": {
+            "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
+            "oneOf": [
+              {
+                "const": "linear",
+                "description": "From one side of the hatch to the other along `angle`.",
+                "type": "string"
+              },
+              {
+                "const": "cylinder",
+                "description": "The second colour along the middle, the first at both sides.",
+                "type": "string"
+              },
+              {
+                "const": "spherical",
+                "description": "The second colour in the middle, the first at the farthest corner.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchAssoc": {
+            "description": "The objects a hatch made inside a closed object follows (docs/adr/0186\n§6): the closed object, its islands, the texts and inserts left open, and\nthe point clicked inside, which picks the region's part.",
+            "properties": {
+              "cutouts": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "islands": {
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/EntityId"
+              },
+              "seed": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "required": [
+              "outer",
+              "seed"
+            ],
+            "type": "object"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "assoc": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchAssoc"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The objects its region follows (docs/adr/0186 §6); none: it stays as drawn."
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -49098,15 +51989,71 @@
             ],
             "type": "object"
           },
+          "HatchGradient": {
+            "description": "A gradient: its shape, whether it runs the other way, its second colour.",
+            "properties": {
+              "color2": {
+                "description": "`#RRGGBB`.",
+                "type": "string"
+              },
+              "inverted": {
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/GradientShape"
+              }
+            },
+            "required": [
+              "shape",
+              "color2"
+            ],
+            "type": "object"
+          },
           "HatchPattern": {
             "properties": {
               "angle": {
-                "description": "Degrees, counter-clockwise from east.",
+                "description": "Degrees, counter-clockwise from east: the lines' (lines, cross), the\npattern's turn (pattern), the gradient's direction (gradient).",
                 "format": "double",
                 "type": "number"
               },
+              "gradient": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchGradient"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A gradient's shape and second colour."
+              },
+              "lines": {
+                "description": "A pattern's line families.",
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "A pattern's name (`ANSI31`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scale": {
+                "description": "A pattern's metres per unit of its definition.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "spacing": {
-                "description": "Metres.",
+                "description": "Metres between the lines (lines, cross); 1 and unread for the others.",
                 "format": "double",
                 "type": "number"
               },
@@ -49122,12 +52069,34 @@
             "type": "object"
           },
           "HatchPatternType": {
-            "enum": [
-              "solid",
-              "lines",
-              "cross"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "solid"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "lines",
+                "description": "User-defined lines at `angle`, `spacing` apart.",
+                "type": "string"
+              },
+              {
+                "const": "cross",
+                "description": "User-defined lines and the same turned 90°.",
+                "type": "string"
+              },
+              {
+                "const": "pattern",
+                "description": "A pattern of line families (`name`, `scale`, `lines`).",
+                "type": "string"
+              },
+              {
+                "const": "gradient",
+                "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -49512,6 +52481,46 @@
               "layerId",
               "attrs",
               "pts"
+            ],
+            "type": "object"
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
             ],
             "type": "object"
           },

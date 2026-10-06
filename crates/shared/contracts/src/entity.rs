@@ -772,30 +772,6 @@ pub struct DimensionEntity {
     pub look: crate::DimensionLook,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "ts", ts(export))]
-pub enum HatchPatternType {
-    Solid,
-    Lines,
-    Cross,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export))]
-pub struct HatchPattern {
-    #[serde(rename = "type")]
-    pub kind: HatchPatternType,
-    /// Degrees, counter-clockwise from east.
-    pub angle: f64,
-    /// Metres.
-    pub spacing: f64,
-}
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -808,7 +784,11 @@ pub struct HatchEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub holes: Option<Vec<Vec<Vec2>>>,
-    pub pattern: HatchPattern,
+    pub pattern: crate::HatchPattern,
+    /// The objects its region follows (docs/adr/0186 §6); none: it stays as drawn.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub assoc: Option<crate::HatchAssoc>,
 }
 
 /// A leader (docs/adr/0146): an arrowhead at its first vertex, a line

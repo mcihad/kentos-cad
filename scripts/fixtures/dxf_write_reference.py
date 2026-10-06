@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Independent check of the DXF writer's blocks (docs/adr/0144 §5), texts (docs/adr/0145 §7), leaders (docs/adr/0146 §8),
-multi-part lines and points (docs/adr/0174 §5), multi-line texts (docs/adr/0182 §5) and text and dimension styles
-(docs/adr/0183 §7).
+multi-part lines and points (docs/adr/0174 §5), multi-line texts (docs/adr/0182 §5), text and dimension styles
+(docs/adr/0183 §7) and hatch patterns and gradients (docs/adr/0186 §9).
 
 Reads `fixtures/formats/v1/dxf-write/<name>.input.json` (the writer's input,
 written by hand) and `<name>.dxf` (what the writer made of it, committed) and
@@ -81,6 +81,24 @@ library and no KentOS code:
   masked one has KentOS's "mask" item, DIMTFILL 1 in its overrides and its
   block's MTEXT over the background (90 3), no other has; its block's MTEXT
   says the value the input gives it;
+- a hatch (docs/adr/0186 §9) is never associative (71 0), its tie left
+  out; user lines and crossed lines are DXF's user-defined pattern "_USER"
+  (76 0): its angle (52) and spacing (41), doubled when crossed (77 1), one
+  family at the angle, the second a quarter turn on, each the spacing apart
+  across itself, whole; a pattern is its name (2), predefined (76 1) when
+  KentOS's library has the name, custom (76 2) else, its angle (52) and
+  scale (41) as they are, not doubled, and each family turned and scaled as
+  DXF holds it: its angle the pattern's plus its own (53), its base point
+  its origin turned by the pattern and scaled (43, 44), from one line to the
+  next its offset turned by its angle and scaled (45, 46), its dashes scaled
+  (79, 49), within 1e-9; a gradient is a solid fill (2 SOLID, 70 1) of a
+  gradient (450 1) by AutoCAD's name (470; an inverted linear one LINEAR
+  turned a half turn), its angle in radians (460), centred (461 0), two
+  colours (453 2), the first the hatch's own (its layer's without one), the
+  second the gradient's, each an ACI index (63) and its true colour (421:
+  the colour itself, the ink ACI 7's white); a pattern's and a gradient's
+  KentOS data hold it exactly ("hatch", the contract's JSON), a user
+  pattern's never;
 - a local project's drawing (docs/adr/0165 §2; the input's `unit`, mm or
   cm) is written in its unit: $INSUNITS 4 or 5 (6 in metres), every
   coordinate and length of the input (points, vertices, radii, heights,
@@ -209,7 +227,14 @@ def scaled(o, k: float):
             # A polygon's rings ({pts, bulges, zs}) or a hatch's islands (lists of points).
             out[key] = [scaled(h, k) if isinstance(h, dict) else [xy(q) for q in h] for h in v]
         elif key == "pattern":
-            out[key] = {**v, "spacing": v["spacing"] * k}
+            # Only lines are apart by a length; a pattern's metres per unit of its definition scale too.
+            out[key] = dict(v)
+            if v["type"] in ("lines", "cross"):
+                out[key]["spacing"] = v["spacing"] * k
+            if "scale" in v:
+                out[key]["scale"] = v["scale"] * k
+        elif key == "assoc":
+            out[key] = {**v, "seed": xy(v["seed"])}
         elif key in ("entities", "blocks", "attributes", "parts"):
             out[key] = scaled(v, k)
         else:
@@ -1189,6 +1214,99 @@ def check_dim_look(o: list[tuple[int, str]], e: dict, names: tuple, spec: dict, 
             ensure(any(near(p, left) and near(q, tip) for p, q in lines) and any(near(p, tip) and near(q, right) for p, q in lines), f"{where}: an open arrowhead at {tip}")
 
 
+# KentOS's library of patterns (docs/adr/0186 §2): AutoCAD's predefined ones of these names.
+LIBRARY = ({f"ANSI3{k}" for k in range(1, 9)} | {f"ISO{k:02d}W100" for k in range(2, 15)}
+           | {"LINE", "NET", "NET3", "DASH", "DOTS", "BRICK", "CROSS"})
+# AutoCAD's gradients by shape and whether inverted; DXF names no inverted linear one.
+GRADIENT_NAMES = {("linear", False): "LINEAR", ("cylinder", False): "CYLINDER", ("cylinder", True): "INVCYLINDER",
+                  ("spherical", False): "SPHERICAL", ("spherical", True): "INVSPHERICAL"}
+
+
+def turned(degrees: float, x: float, y: float) -> tuple[float, float]:
+    r = math.radians(degrees)
+    return (math.cos(r) * x - math.sin(r) * y, math.sin(r) * x + math.cos(r) * y)
+
+
+def hatch_families(h: list[tuple[int, str]]) -> list[dict]:
+    """A HATCH's pattern line families (78, then 53, 43, 44, 45, 46, 79 and its 49s each), in order."""
+    k = next(i for i, g in enumerate(h) if g[0] == 78)
+    out = []
+    i = k + 1
+    for _ in range(int(h[k][1])):
+        codes = [c for c, _ in h[i : i + 6]]
+        ensure(codes == [53, 43, 44, 45, 46, 79], f"a family's groups in order, not {codes}")
+        a, bx, by, ox, oy = (float(v) for _, v in h[i : i + 5])
+        n = int(h[i + 5][1])
+        dashes = [float(v) for c, v in h[i + 6 : i + 6 + n]]
+        ensure(all(c == 49 for c, _ in h[i + 6 : i + 6 + n]), "its dashes (49)")
+        out.append({"angle": a, "base": (bx, by), "offset": (ox, oy), "dashes": dashes})
+        i += 6 + n
+    return out
+
+
+def colour_value(c: str) -> int:
+    """A colour's true colour as 421 holds it: a hex colour itself, the ink ACI 7's white."""
+    return 0xFFFFFF if c == "ink" else int(c[1:7], 16)
+
+
+def check_hatch(o: list[tuple[int, str]], e: dict, layer_colours: dict[str, str], where: str) -> None:
+    h = o[after(o, "AcDbHatch") :]
+    p = e["pattern"]
+    kind = p["type"]
+    fill = kind in ("solid", "gradient")
+    name = p["name"] if kind == "pattern" else ("_USER" if kind in ("lines", "cross") else "SOLID")
+    ensure(group(h, 2) == name and group(h, 70) == ("1" if fill else "0"), f"{where}: {name}, filled {fill}")
+    ensure(group(h, 71) == "0", f"{where}: not associative (71 0)")
+    kept = kentos(o).get("hatch")
+    if kind in ("lines", "cross"):
+        ensure(group(h, 76) == "0", f"{where}: user-defined (76 0)")
+        angle, spacing = p["angle"], p["spacing"]
+        ensure(float(group(h, 52)) == angle and float(group(h, 41)) == spacing, f"{where}: its angle and spacing")
+        ensure(group(h, 77) == ("1" if kind == "cross" else "0"), f"{where}: doubled exactly when crossed")
+        fams = hatch_families(h)
+        ensure(len(fams) == (2 if kind == "cross" else 1), f"{where}: its families")
+        for turn, f in zip((0.0, 90.0), fams):
+            a = angle + turn
+            want = turned(a, 0.0, spacing)
+            ensure(close(f["angle"], a) and f["base"] == (0.0, 0.0) and not f["dashes"], f"{where}: a whole family at {a}°")
+            ensure(close(f["offset"][0], want[0]) and close(f["offset"][1], want[1]), f"{where}: its lines {spacing} apart")
+        ensure(kept is None, f"{where}: no exact pattern in KentOS's data")
+    elif kind == "pattern":
+        ensure(group(h, 76) == ("1" if name.upper() in LIBRARY else "2"), f"{where}: predefined exactly when the library has {name}")
+        alpha, scale = p["angle"], p["scale"]
+        ensure(float(group(h, 52)) == alpha and float(group(h, 41)) == scale and group(h, 77) == "0", f"{where}: its angle and scale")
+        fams = hatch_families(h)
+        ensure(len(fams) == len(p["lines"]), f"{where}: {len(p['lines'])} families")
+        for k, (f, l) in enumerate(zip(fams, p["lines"])):
+            w = f"{where} › aile {k + 1}"
+            a = alpha + l["angle"]
+            base = turned(alpha, l["origin"][0] * scale, l["origin"][1] * scale)
+            offset = turned(a, l["offset"][0] * scale, l["offset"][1] * scale)
+            ensure(close(f["angle"], a), f"{w}: its angle the pattern's and its own")
+            ensure(all(close(x, y) for x, y in zip(f["base"], base)), f"{w}: its base point {base}, not {f['base']}")
+            ensure(all(close(x, y) for x, y in zip(f["offset"], offset)), f"{w}: its offset {offset}, not {f['offset']}")
+            want = [d * scale for d in l.get("dashes") or []]
+            ensure(len(f["dashes"]) == len(want) and all(close(x, y) for x, y in zip(f["dashes"], want)), f"{w}: its dashes {want}")
+    if kind == "gradient":
+        g = p["gradient"]
+        inverted = bool(g.get("inverted"))
+        half = g["shape"] == "linear" and inverted
+        ensure(group(h, 76) == "1" and group(h, 450) == "1" and group(h, 453) == "2", f"{where}: a gradient of two colours")
+        ensure(group(h, 470) == GRADIENT_NAMES[(g["shape"], inverted and not half)], f"{where}: AutoCAD's name for {g}")
+        ensure(close(float(group(h, 460)), math.radians((p["angle"] + (180.0 if half else 0.0)) % 360.0)), f"{where}: its angle in radians")
+        ensure(float(group(h, 461)) == 0.0, f"{where}: centred")
+        at = next(i for i, g2 in enumerate(h) if g2[0] == 453)
+        pairs_ = [(int(h[i + 1][1]), int(h[i + 2][1])) for i in range(at + 1, len(h)) if h[i][0] == 463]
+        ensure(all(h[i + 1][0] == 63 and h[i + 2][0] == 421 for i in range(at + 1, len(h)) if h[i][0] == 463), f"{where}: each colour 463, 63, 421")
+        first = e.get("color") or layer_colours[e["layerId"]]
+        ensure([c for _, c in pairs_] == [colour_value(first), colour_value(g["color2"])], f"{where}: its colours {first} and {g['color2']}")
+        ensure(all(1 <= a <= 255 for a, _ in pairs_), f"{where}: ACI indexes")
+        if first == "ink":
+            ensure(pairs_[0][0] == 7, f"{where}: the ink is ACI 7")
+    if kind in ("pattern", "gradient"):
+        ensure(kept is not None and json.loads(item_text(kept)) == p, f"{where}: its pattern exactly in KentOS's data")
+
+
 def check(name: str) -> list[str]:
     spec = json.loads((DIR / f"{name}.input.json").read_text(encoding="utf-8"))
     p = pairs((DIR / f"{name}.dxf").read_bytes())
@@ -1430,6 +1548,17 @@ def check(name: str) -> list[str]:
     several = sum(1 for e in spec["entities"] if e["kind"] in ("point", "polyline") and e.get("parts"))
     if several:
         said.append(f"{several} çok parçalı nesne: {len(points)} POINT, {len(paths)} çoklu çizgi")
+
+    # The drawing's hatches (docs/adr/0186 §9), in the input's order.
+    hatches = [e for e in spec["entities"] if e["kind"] == "hatch"]
+    written = [o for o in drawn if o[0] == (0, "HATCH")]
+    ensure(len(written) == len(hatches), f"{len(hatches)} HATCHes")
+    layer_colours = {l["id"]: l["color"] for l in spec["layers"]}
+    for n, (e, o) in enumerate(zip(hatches, written)):
+        check_hatch(o, e, layer_colours, f"tarama {n + 1}")
+    if any(e["pattern"]["type"] in ("pattern", "gradient") for e in hatches):
+        kinds = [e["pattern"]["type"] for e in hatches]
+        said.append(f"{len(hatches)} tarama ({kinds.count('pattern')} desen, {kinds.count('gradient')} degrade)")
 
     # Handles unique; owners name handles of the file.
     body = p[next(k for k, g in enumerate(p) if g == (2, "CLASSES")) :]

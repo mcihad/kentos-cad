@@ -82,4 +82,7 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::ops::table::OPS,
     crate::ops::table_edit::OPS,
     crate::ops::coordinate_labels::OPS,
+    crate::geom::hatch_pattern::OPS,
+    crate::ops::hatch_region::OPS,
+    crate::tools::hatch::OPS,
 ];

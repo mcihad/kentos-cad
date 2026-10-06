@@ -33,7 +33,7 @@
     { "run": "tool.hatch", "note": "Tarama: parselin içine tıklanır." },
     { "move": [0, 0] },
     { "shot": "tarama-onizleme" },
-    { "click": [0, 0], "expect": { "entities": 3, "logged": ["Çizgili tarama eklendi: 450.00 m²"] } },
+    { "click": [0, 0], "expect": { "entities": 3, "logged": ["ANSI31 tarama eklendi: 450.00 m²"] } },
     { "key": "Esc" },
     { "click": [-12.5, 3], "note": "Parselin batı kenarı seçilir." },
     { "shot": "oznitelikler" },

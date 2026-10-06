@@ -175,7 +175,8 @@ export const OBJECT_FIELDS: Record<string, ReadonlySet<string>> = Object.fromEnt
       'suffix',
       'font',
     ],
-    hatch: ['ring', 'holes', 'pattern'],
+    // What its region follows (docs/adr/0186 §6).
+    hatch: ['ring', 'holes', 'pattern', 'assoc'],
     insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
     leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
     // docs/adr/0184: its cells, sizes, ranges, alignments, heading, lines, frame, face and source.

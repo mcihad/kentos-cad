@@ -133,6 +133,8 @@ pub mod gnss;
 pub mod grip_menu;
 pub mod ground;
 pub mod hatch;
+pub mod hatch_options;
+pub mod hatch_selected;
 pub mod holes;
 mod junctions;
 pub mod labels_to_text;

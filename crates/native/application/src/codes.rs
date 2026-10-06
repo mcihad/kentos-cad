@@ -93,6 +93,11 @@ pub const UNKNOWN_BLOCK: &str = "unknown_block";
 /// that is not a persistent id's text, a scale not finite and over 0
 /// (`cad.entities.create`, docs/adr/0175 §4).
 pub const INVALID_LINK: &str = "invalid_link";
+/// A hatch's pattern or tie that cannot be one (docs/adr/0186 §1, §6): a
+/// kind's field another kind's, a spacing, scale or family out of bounds, a
+/// gradient's colour not `#RRGGBB`, a tie's seed not finite or an object
+/// named twice (`cad.entities.create`, `cad.entities.edit`).
+pub const INVALID_HATCH: &str = "invalid_hatch";
 /// The object a linked text names is not in the drawing (`cad.entities.create`).
 pub const LINK_NOT_FOUND: &str = "link_not_found";
 /// A block name empty or only white space (`cad.blocks.define`, `cad.blocks.edit`).

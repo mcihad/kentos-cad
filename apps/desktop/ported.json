@@ -119,6 +119,7 @@
     "tool.mtext",
     "tool.dimension",
     "tool.hatch",
+    "tool.hatchSelected",
     "tool.blockDefine",
     "tool.blockInsert",
     "block.panel",

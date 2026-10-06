@@ -10,13 +10,13 @@
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
-    AreaPart, BlockId, CellRange, DimensionStyle, DocumentSnapshotV2, Entity, EntityId,
-    HatchPattern, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PointPart, RingGeometry, TableAlign,
-    TableSource, TextRun, TextScript, Vec2, label_scale_ok, width_factor_ok,
+    AreaPart, BlockId, CellRange, DimensionStyle, DocumentSnapshotV2, Entity, EntityId, HatchAssoc,
+    HatchPattern, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PatternLine, PointPart, RingGeometry,
+    TableAlign, TableSource, TextRun, TextScript, Vec2, label_scale_ok, width_factor_ok,
 };
 
 use super::Encoder;
-use super::names::{dimension_style, hatch_pattern};
+use super::names::{dimension_style, gradient_shape, hatch_pattern};
 use crate::cbor::{Seg, key_order};
 use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
@@ -47,6 +47,8 @@ pub(super) enum Val<'d> {
     PointParts(&'d [PointPart]),
     Loops(&'d [Vec<Vec2>]),
     Pattern(&'d HatchPattern),
+    /// The objects a hatch's region follows (docs/adr/0186 §6).
+    Assoc(&'d HatchAssoc),
     /// A multi-line text's letter formats (§6.6, docs/adr/0182).
     Runs(&'d [TextRun]),
     /// A whole number (a dimension's decimals, docs/adr/0183).
@@ -63,6 +65,24 @@ pub(super) enum Val<'d> {
 
 impl<'d> Encoder<'d> {
     // ── Objects ─────────────────────────────────────────────────────────
+
+    /// A hatch pattern's family (docs/adr/0186 §1): angle (5), dashes (6),
+    /// offset (6), origin (6); no dashes is a whole line.
+    fn pattern_line(&mut self, l: &'d PatternLine) -> Result<(), KcadError> {
+        self.open(3 + usize::from(!l.dashes.is_empty()), true)?;
+        self.key("angle");
+        self.at(Seg::Name("angle"), |e| e.float(l.angle))?;
+        if !l.dashes.is_empty() {
+            self.key("dashes");
+            self.at(Seg::Name("dashes"), |e| e.floats(&l.dashes))?;
+        }
+        for (key, [x, y]) in [("offset", l.offset), ("origin", l.origin)] {
+            self.key(key);
+            self.at(Seg::Name(key), |e| e.point(&Vec2 { x, y }))?;
+        }
+        self.close();
+        Ok(())
+    }
 
     pub(super) fn objects(&mut self, doc: &'d DocumentSnapshotV2) -> Result<(), KcadError> {
         self.open(doc.entities.len(), false)?;
@@ -445,11 +465,38 @@ impl<'d> Encoder<'d> {
                 }
             }
             Entity::Hatch(e) => {
+                let refuse = |this: &mut Self, field: &'static str, words: &str| {
+                    this.path.push(Seg::Name(kind));
+                    this.path.push(Seg::Name(field));
+                    Err(this.fail(Code::BadValue, words))
+                };
                 f.push(("ring", Val::Points(&e.ring)));
                 if let Some(h) = &e.holes {
                     f.push(("holes", Val::Loops(h)));
                 }
+                // A pattern's or a gradient's fields within their bounds (docs/adr/0186 §1); the
+                // user-defined kinds as they always were.
+                if e.pattern.has_definition()
+                    && let Some((_, words)) = e.pattern.problem()
+                {
+                    return refuse(self, "pattern", &words);
+                }
                 f.push(("pattern", Val::Pattern(&e.pattern)));
+                // What its region follows (§6): only the drawing's hatches (a block
+                // definition's objects have no persistent ids to name).
+                if let Some(a) = &e.assoc {
+                    if uid.is_none() {
+                        return refuse(
+                            self,
+                            "assoc",
+                            "blok tanımının taraması nesnelere bağlı olamaz",
+                        );
+                    }
+                    if let Some((_, words)) = a.problem() {
+                        return refuse(self, "assoc", &words);
+                    }
+                    f.push(("assoc", Val::Assoc(a)));
+                }
             }
             // The scale was checked with the block rules (`body`).
             Entity::Insert(e) => {
@@ -859,14 +906,80 @@ impl<'d> Encoder<'d> {
                 Ok(())
             }
             Val::Pattern(p) => {
-                self.open(3, true)?;
-                // type (4), angle (5), spacing (7).
+                let n = 3
+                    + usize::from(p.name.is_some())
+                    + usize::from(p.scale.is_some())
+                    + usize::from(p.lines.is_some())
+                    + usize::from(p.gradient.is_some());
+                self.open(n, true)?;
+                // name (4), type (4), angle (5), lines (5), scale (5), spacing (7), gradient (8).
+                if let Some(name) = &p.name {
+                    self.key("name");
+                    self.at(Seg::Name("name"), |e| e.text(name))?;
+                }
                 self.key("type");
                 self.w.text(hatch_pattern(p.kind));
                 self.key("angle");
                 self.at(Seg::Name("angle"), |e| e.float(p.angle))?;
+                if let Some(lines) = &p.lines {
+                    self.key("lines");
+                    self.at(Seg::Name("lines"), |e| {
+                        e.open(lines.len(), false)?;
+                        for (i, l) in lines.iter().enumerate() {
+                            e.at(Seg::Index(i), |e| e.pattern_line(l))?;
+                        }
+                        e.close();
+                        Ok(())
+                    })?;
+                }
+                if let Some(scale) = p.scale {
+                    self.key("scale");
+                    self.at(Seg::Name("scale"), |e| e.float(scale))?;
+                }
                 self.key("spacing");
                 self.at(Seg::Name("spacing"), |e| e.float(p.spacing))?;
+                if let Some(g) = &p.gradient {
+                    self.key("gradient");
+                    self.at(Seg::Name("gradient"), |e| {
+                        e.open(2 + usize::from(g.inverted), true)?;
+                        // shape (5), color2 (6), inverted (8).
+                        e.key("shape");
+                        e.w.text(gradient_shape(g.shape));
+                        e.key("color2");
+                        e.at(Seg::Name("color2"), |e| e.text(&g.color2))?;
+                        if g.inverted {
+                            e.key("inverted");
+                            e.w.bool(true);
+                        }
+                        e.close();
+                        Ok(())
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
+            Val::Assoc(a) => {
+                let n = 2 + usize::from(!a.cutouts.is_empty()) + usize::from(!a.islands.is_empty());
+                self.open(n, true)?;
+                // seed (4), outer (5), cutouts (7), islands (7).
+                self.key("seed");
+                self.at(Seg::Name("seed"), |e| e.point(&a.seed))?;
+                self.key("outer");
+                self.at(Seg::Name("outer"), |e| e.id(&a.outer.0))?;
+                for (key, ids) in [("cutouts", &a.cutouts), ("islands", &a.islands)] {
+                    if ids.is_empty() {
+                        continue;
+                    }
+                    self.key(key);
+                    self.at(Seg::Name(key), |e| {
+                        e.open(ids.len(), false)?;
+                        for (i, id) in ids.iter().enumerate() {
+                            e.at(Seg::Index(i), |e| e.id(&id.0))?;
+                        }
+                        e.close();
+                        Ok(())
+                    })?;
+                }
                 self.close();
                 Ok(())
             }

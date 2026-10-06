@@ -62,11 +62,16 @@ function unlinked(text: LinkedText): LinkedText {
 }
 
 /**
- * An object copied into a new one (Kopyala, Dizi, a block's definition): a linked text's copy writes no object's
- * label, it is a text of its own; every other object as it is. The desktop's is kentos_native_application's
- * `geometry::unlinked`.
+ * An object copied into a new one (Kopyala, Dizi, a block's definition, Yapıştır): a linked text's copy writes no
+ * object's label, it is a text of its own; an associative hatch's copy follows no objects (docs/adr/0186 §6); every
+ * other object as it is. The desktop's is kentos_native_application's `geometry::unlinked`.
  */
 export function withoutLink<T extends { kind: string }>(e: T): T {
+  if (e.kind === 'hatch' && 'assoc' in e) {
+    const out = { ...e } as T & { assoc?: unknown };
+    delete out.assoc;
+    return out;
+  }
   if (e.kind !== 'text' || !('labelOf' in e || 'labelScale' in e)) return e;
   const out = { ...e } as T & { labelOf?: string; labelScale?: number };
   delete out.labelOf;

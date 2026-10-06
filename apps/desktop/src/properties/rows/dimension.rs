@@ -45,6 +45,7 @@ fn select(text: &str, choices: impl IntoIterator<Item = (&'static str, bool, Eve
                 label: label.to_owned(),
                 swatch: None,
                 icon: None,
+                wide: false,
                 chosen,
                 enabled: true,
                 message: Message::Properties(event),

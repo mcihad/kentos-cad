@@ -2,7 +2,7 @@ import type { AppContext } from '../../app/context';
 import { watchAll } from '../../core/signal';
 import { attributeRows, turnOf } from '../../model/blocks';
 import { DIMENSION_STYLE_LABEL, layoutDimension } from '../../model/geom/dimension';
-import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, drawsLines, entityArea, entityLength, isParagraph, type DimensionEntity, type Entity, type HatchPatternType, type LeaderEntity, type TextEntity } from '../../model/entities';
+import { ENTITY_KIND_LABEL, drawsLines, entityArea, entityLength, isParagraph, type DimensionEntity, type Entity, type LeaderEntity, type TextEntity } from '../../model/entities';
 import { angleDeg, bearingGrad, dist } from '../../model/geometry';
 import { sweep } from '../../model/geom/arc';
 import { isFullEllipse, majorLength } from '../../model/geom/ellipse';
@@ -16,6 +16,7 @@ import { PropertyGrid, type PropRow, type PropSection } from '../widgets/Propert
 import { commonElevationRow, lineEndRow, pathElevationRow, spaceRow } from './elevationRows';
 import { cornerRows, holeRows } from './pathRows';
 import { dimensionRows } from './dimensionRows';
+import { hatchRows } from './hatchRows';
 import { leaderRows } from './leaderRows';
 import { textRows } from './textRows';
 import { dimensionStyleRows, textStyleRows } from './styleRows';
@@ -362,37 +363,10 @@ export class PropertiesPanel extends Panel {
         );
         break;
       }
-      case 'hatch': {
-        const types = Object.keys(HATCH_PATTERN_LABEL) as HatchPatternType[];
-        const setPattern = (patch: Partial<typeof e.pattern>) => setGeometry(this.ctx, e, { pattern: { ...e.pattern, ...patch } });
-        const numEdit = (key: 'angle' | 'spacing') =>
-          locked
-            ? undefined
-            : ({
-                type: 'number',
-                commit: (t: string) => {
-                  const x = parseFloat(t.replace(',', '.'));
-                  if (Number.isFinite(x) && (key === 'angle' || x > 0)) setPattern({ [key]: key === 'angle' ? x : f.toMetres(x) });
-                },
-              } as const);
-        geo.push(
-          {
-            label: 'Desen',
-            value: HATCH_PATTERN_LABEL[e.pattern.type],
-            editor: locked
-              ? undefined
-              : {
-                  type: 'select',
-                  display: () => ({ text: HATCH_PATTERN_LABEL[e.pattern.type] }),
-                  items: () => types.map((t) => ({ label: HATCH_PATTERN_LABEL[t], radio: true, checked: t === e.pattern.type, run: () => setPattern({ type: t }) })),
-                },
-          },
-          { label: 'Açı', value: fixed(e.pattern.angle, 2), numeric: true, unit: '°', editor: numEdit('angle') },
-          { label: 'Aralık', value: f.length(e.pattern.spacing, false), numeric: true, unit: f.lengthUnitLabel, editor: numEdit('spacing') },
-          ...area(entityArea(e)!),
-        );
+      case 'hatch':
+        // Desen, Açı, Ölçek or Aralık, a gradient's rows, İlişkili (docs/adr/0186 §7).
+        geo.push(...hatchRows(this.ctx, e, locked), ...area(entityArea(e)!));
         break;
-      }
       case 'text':
         geo.push(
           // Yazı stili, a CAD project's (docs/adr/0183 §6).

@@ -18,6 +18,7 @@ export type SymbolKind = Symbol['type'];
 export const LAYER_LABEL: Record<LayerType, string> = {
   simpleFill: 'Dolgu',
   hatchFill: 'Tarama',
+  gradientFill: 'Degrade',
   patternFill: 'Desen',
   imageFill: 'Görüntü dolgusu',
   centroidMarker: 'İç noktada işaret',
@@ -47,6 +48,9 @@ export function newLayer(type: LayerType, id: string, context: SymbolKind): AnyL
       return { id, type, color: '#C9D6E3' };
     case 'hatchFill':
       return { id, type, angle: 45, spacing: 2, width: 0.2, color: 'ink' };
+    // A hatch object's gradient (docs/adr/0186 §3); the designer does not offer it.
+    case 'gradientFill':
+      return { id, type, color: 'ink', color2: '#FFFFFF', shape: 'linear', angle: 0 };
     case 'patternFill':
       return { id, type, spacingX: 3, spacingY: 3, marker: { type: 'marker', layers: [dot('0')] } };
     case 'imageFill':
@@ -187,6 +191,8 @@ export function summary(l: AnyLayer): string {
       return typeof l.color === 'string' ? l.color : 'ifadeden renk';
     case 'hatchFill':
       return `${l.angle}° · ${num(l.spacing)} ${u} aralık`;
+    case 'gradientFill':
+      return `${l.shape === 'cylinder' ? 'silindir' : l.shape === 'spherical' ? 'küre' : 'doğrusal'} · ${l.angle}°`;
     case 'patternFill':
       return `${num(l.spacingX)} × ${num(l.spacingY)} ${u}${l.stagger ? ', şaşırtmalı' : ''}${l.jitter ? ', dağınık' : ''}`;
     case 'imageFill':

@@ -18,7 +18,7 @@ use kentos_interaction::Level;
 
 const HATCH: &str = include_str!("../../../../../fixtures/interaction/v1/hatch.kcad");
 
-const PROMPT: &str = "Tarama: taranacak yerin içine tıklayın [Desen (D): Çizgili 45° / Sınır (B): kapalı nesne / Adalar (A): taranmaz]";
+const PROMPT: &str = "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): kapalı nesne / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır]";
 
 fn bench() -> Bench {
     let mut b = Bench::on(HATCH);
@@ -58,14 +58,21 @@ fn a_click_in_a_parcel_leaves_its_building_out() {
     let (bx, holes, pattern, area) = newest(&b);
     assert_eq!(bx, [-28.0, -6.0, -8.0, 10.0]);
     assert_eq!(holes, 1);
-    // Lines at 45°, 3 paper mm apart: 3 m at 1:1000.
-    assert_eq!(pattern, (HatchPatternType::Lines, 45.0, 3.0));
+    // ANSI31 of the library, its paper millimetres metres at 1:1000 (docs/adr/0186 §4).
+    assert_eq!(pattern, (HatchPatternType::Pattern, 0.0, 1.0));
     assert!(near(area, 320.0 - 48.0), "{area}");
     assert_eq!(b.last_level(), Some(Level::Success));
     assert_eq!(
         b.last_text(),
-        Some("Çizgili tarama eklendi: 272.00 m², 1 ada taranmadı")
+        Some("ANSI31 tarama eklendi: 272.00 m², 1 ada taranmadı")
     );
+    // It follows the parcel and its building (docs/adr/0186 §6).
+    let Entity::Hatch(h) = b.newest() else {
+        unreachable!()
+    };
+    let tie = h.assoc.as_ref().expect("a tie");
+    assert_eq!(tie.islands.len(), 1);
+    assert!(tie.cutouts.is_empty());
     // On the active layer; the tool waits for the next one.
     assert_eq!(b.newest().base().layer_id, "cizim");
     assert!(b.session.is_running());
@@ -83,19 +90,19 @@ fn inside_the_building_only_the_building() {
     let (bx, holes, _, area) = newest(&b);
     assert_eq!((bx, holes), ([-24.0, -2.0, -16.0, 4.0], 0));
     assert!(near(area, 48.0), "{area}");
-    assert_eq!(b.last_text(), Some("Çizgili tarama eklendi: 48.00 m²"));
+    assert_eq!(b.last_text(), Some("ANSI31 tarama eklendi: 48.00 m²"));
 }
 
 #[test]
 fn islands_off_fill_the_whole_parcel() {
     let mut b = bench();
     assert!(b.type_text("a"));
-    assert!(b.session.prompt().text().ends_with("/ Adalar (A): taranır]"));
+    assert!(b.session.prompt().text().contains("/ Adalar (A): taranır /"));
     b.click(-12.0, 8.0);
     let (_, holes, _, area) = newest(&b);
     assert_eq!(holes, 0);
     assert!(near(area, 320.0), "{area}");
-    assert_eq!(b.last_text(), Some("Çizgili tarama eklendi: 320.00 m²"));
+    assert_eq!(b.last_text(), Some("ANSI31 tarama eklendi: 320.00 m²"));
 }
 
 #[test]
@@ -118,7 +125,7 @@ fn by_lines_the_face_around_the_click_with_its_island() {
     assert!(b.type_text("B"));
     assert_eq!(
         b.session.prompt().text(),
-        "Tarama: taranacak yerin içine tıklayın [Desen (D): Çizgili 45° / Sınır (B): çizgiler / Adalar (A): taranmaz / Sınır katmanı (K): tümü]"
+        "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): çizgiler / Adalar (A): taranmaz / Yazılar (Y): taranır / Sınır katmanı (K): tümü]"
     );
     b.click(8.0, -3.0);
     let (bx, holes, _, area) = newest(&b);
@@ -126,8 +133,13 @@ fn by_lines_the_face_around_the_click_with_its_island() {
     assert!(near(area, 192.0 - 16.0), "{area}");
     assert_eq!(
         b.last_text(),
-        Some("Çizgili tarama eklendi: 176.00 m², 1 ada taranmadı")
+        Some("ANSI31 tarama eklendi: 176.00 m², 1 ada taranmadı")
     );
+    // Line work follows nothing (docs/adr/0186 §4).
+    let Entity::Hatch(h) = b.newest() else {
+        unreachable!()
+    };
+    assert!(h.assoc.is_none());
     // Outside every face.
     b.click(0.0, 18.0);
     assert_eq!(
@@ -177,9 +189,10 @@ fn the_boundary_layer_is_picked_by_one_of_its_objects() {
 }
 
 #[test]
-fn patterns_cycle_and_a_solid_one_fills() {
+fn patterns_cycle_by_their_key_or_go_by_their_name() {
     let mut b = bench();
-    for name in ["Çapraz 45°", "Yatay çizgili", "Dolu"] {
+    // D the next of the library; a name typed, that one (docs/adr/0186 §4).
+    for name in ["ANSI32", "ANSI33"] {
         assert!(b.type_text("D"));
         assert!(
             b.session
@@ -190,21 +203,30 @@ fn patterns_cycle_and_a_solid_one_fills() {
             b.session.prompt().text()
         );
     }
+    assert!(b.type_text("dolu"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .starts_with("Tarama: taranacak yerin içine tıklayın [Desen (D): Dolu / Sınır (B):"),
+        "{}",
+        b.session.prompt().text()
+    );
     b.click(-20.0, 1.0);
     let (_, _, pattern, _) = newest(&b);
-    assert_eq!(pattern, (HatchPatternType::Solid, 0.0, 3.0));
+    assert_eq!(pattern, (HatchPatternType::Solid, 0.0, 1.0));
     assert_eq!(b.last_text(), Some("Dolu tarama eklendi: 48.00 m²"));
     assert!(b.type_text("D"));
     assert_eq!(b.session.prompt().text(), PROMPT);
     // Kept for the next run; the boundary layer is the run's.
-    assert!(b.type_text("D"));
+    assert!(b.type_text("çapraz"));
     assert!(b.type_text("B"));
     b.confirm();
     assert!(!b.session.is_running());
     b.start("hatch");
     assert_eq!(
         b.session.prompt().text(),
-        "Tarama: taranacak yerin içine tıklayın [Desen (D): Çapraz 45° / Sınır (B): çizgiler / Adalar (A): taranmaz / Sınır katmanı (K): tümü]"
+        "Tarama: taranacak yerin içine tıklayın [Desen (D): Çapraz / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): çizgiler / Adalar (A): taranmaz / Yazılar (Y): taranır / Sınır katmanı (K): tümü]"
     );
 }
 
@@ -254,12 +276,10 @@ fn too_dense_a_pattern_is_refused() {
     assert_eq!(b.doc.entities().count(), count);
     assert_eq!(
         b.last_text(),
-        Some("Desen bu alan için çok sık; çizim ölçeğini büyütün ya da başka bir desen seçin.")
+        Some("Desen bu alan için çok sık; ölçeği ya da çizim ölçeğini büyütün ya da başka bir desen seçin.")
     );
     // Solid has no lines.
-    for _ in 0..3 {
-        assert!(b.type_text("D"));
-    }
+    assert!(b.type_text("dolu"));
     b.click(0.0, 30.0);
     assert_eq!(b.doc.entities().count(), count + 1);
 }

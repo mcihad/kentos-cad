@@ -529,6 +529,7 @@ impl Tool for Text {
                 label: label.to_owned(),
                 typed: typed.to_owned(),
                 icon: Some(icon),
+                preview: None,
                 checked: a == chosen,
                 command: None,
             })

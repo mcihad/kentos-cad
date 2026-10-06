@@ -40,7 +40,7 @@
 //! | xline, ray | | p, dir | |
 //! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`) | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any | text, label's object if linked, each run's colour if it has one, text style if any |
 //! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any | text if any, dimension style if any, prefix if any, suffix if any |
-//! | hatch | n, pattern type; h if holes, then k per hole | ring (2n), pattern angle, spacing, per hole: pts (2k) | |
+//! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer, islands (i) and cutouts (k) ids (UUID text) if tied |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation | text if any |
 //! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet |
@@ -57,7 +57,7 @@
 //! (docs/adr/0147), dimension style, arrow, arrow size, ext offset, ext
 //! beyond, text gap, centred (no value), decimals, unit, prefix, suffix, font
 //! (docs/adr/0183);
-//! hatch: holes; insert: mirror; leader: text, arrow, mask (no value;
+//! hatch: holes, name, scale, families, gradient, tie (docs/adr/0186); insert: mirror; leader: text, arrow, mask (no value;
 //! docs/adr/0146); table: merges, aligns, header (no value), grid, text
 //! style, font, bold (no value), italic (no value), oblique, source, frame
 //! (docs/adr/0184)). A
@@ -88,10 +88,11 @@ use std::collections::{BTreeMap, HashMap};
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionArrow,
     DimensionEntity, DimensionLook, DimensionStyle, DimensionTextPlace, DrawingFont, DrawingUnit,
-    EllipseEntity, Entity, EntityBase, EntityId, HatchEntity, HatchPattern, HatchPatternType,
-    InsertEntity, LeaderArrow, LeaderEntity, LineEntity, Paragraph, PathEntity, PointEntity,
-    PointPart, RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource,
-    TextAlign, TextEntity, TextFace, TextRun, TextScript, Vec2,
+    EllipseEntity, Entity, EntityBase, EntityId, GradientShape, HatchAssoc, HatchEntity,
+    HatchGradient, HatchPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity,
+    LineEntity, Paragraph, PathEntity, PatternLine, PointEntity, PointPart, RingGeometry,
+    SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign, TextEntity, TextFace,
+    TextRun, TextScript, Vec2,
 };
 
 use crate::error::{Code, KcadError};
@@ -184,10 +185,17 @@ const PART_ELEVATIONS: u32 = 2;
 const PART_HOLES: u32 = 4;
 
 const DIMENSION_STYLES: [DimensionStyle; 10] = DimensionStyle::ALL;
-const HATCH_PATTERNS: [HatchPatternType; 3] = [
+const HATCH_PATTERNS: [HatchPatternType; 5] = [
     HatchPatternType::Solid,
     HatchPatternType::Lines,
     HatchPatternType::Cross,
+    HatchPatternType::Pattern,
+    HatchPatternType::Gradient,
+];
+const GRADIENT_SHAPES: [GradientShape; 3] = [
+    GradientShape::Linear,
+    GradientShape::Cylinder,
+    GradientShape::Spherical,
 ];
 
 /// A drawing's objects as typed columns (see the module comment).
@@ -675,11 +683,16 @@ impl Packer {
                 ring,
                 holes,
                 pattern,
+                assoc,
             }) => {
                 let HatchPattern {
                     kind,
                     angle,
                     spacing,
+                    name,
+                    scale,
+                    lines,
+                    gradient,
                 } = pattern;
                 self.points(ring);
                 let at = HATCH_PATTERNS.iter().position(|x| x == kind).unwrap_or(0);
@@ -691,6 +704,50 @@ impl Packer {
                     for hole in holes {
                         self.points(hole);
                     }
+                }
+                // A pattern's name, scale and families, a gradient, the objects it follows (docs/adr/0186).
+                if let Some(n) = name {
+                    flags |= OPT[1];
+                    self.text(n);
+                }
+                if let Some(x) = scale {
+                    flags |= OPT[2];
+                    self.float(*x);
+                }
+                if let Some(lines) = lines {
+                    flags |= OPT[3];
+                    self.int(count(lines.len()));
+                    for l in lines {
+                        self.int(count(l.dashes.len()));
+                        self.out.floats.extend([
+                            l.angle,
+                            l.origin[0],
+                            l.origin[1],
+                            l.offset[0],
+                            l.offset[1],
+                        ]);
+                        self.out.floats.extend_from_slice(&l.dashes);
+                    }
+                }
+                if let Some(g) = gradient {
+                    flags |= OPT[4];
+                    let shape = GRADIENT_SHAPES
+                        .iter()
+                        .position(|x| *x == g.shape)
+                        .unwrap_or(0);
+                    self.int(count(shape));
+                    self.int(u32::from(g.inverted));
+                    self.text(&g.color2);
+                }
+                if let Some(a) = assoc {
+                    flags |= OPT[5];
+                    self.int(count(a.islands.len()));
+                    self.int(count(a.cutouts.len()));
+                    self.text(&a.outer.to_text());
+                    for id in a.islands.iter().chain(&a.cutouts) {
+                        self.text(&id.to_text());
+                    }
+                    self.out.floats.extend([a.seed.x, a.seed.y]);
                 }
             }
             Entity::Insert(InsertEntity {
@@ -1141,7 +1198,9 @@ fn allowed(kind: u8) -> u32 {
         14 => OPT[0] | OPT[1] | OPT[2],
         // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look.
         11 => OPT.iter().fold(0, |m, b| m | b),
-        12 | 13 => OPT[0],
+        // A hatch: holes, schema 23's name, scale, families, gradient and tie (docs/adr/0186).
+        12 => OPT[..6].iter().fold(0, |m, b| m | b),
+        13 => OPT[0],
         // A table: merges, aligns, header, grid, its face, source, frame (docs/adr/0184).
         15 => OPT[..11].iter().fold(0, |m, b| m | b),
         _ => 0,
@@ -1491,6 +1550,85 @@ fn geometry(
             } else {
                 None
             };
+            let name = if has(1) {
+                Some(c.text(|| place("pattern/name"))?)
+            } else {
+                None
+            };
+            let scale = if has(2) { Some(c.float()?) } else { None };
+            let lines = if has(3) {
+                let n = c.usize()?;
+                if n > c.cols.ints.len() {
+                    return Err(broken("desen ailesi sayısı tam sayılardan fazla"));
+                }
+                let mut lines = Vec::with_capacity(n);
+                for _ in 0..n {
+                    let d = c.usize()?;
+                    let angle = c.float()?;
+                    let origin = [c.float()?, c.float()?];
+                    let offset = [c.float()?, c.float()?];
+                    let end = c
+                        .float
+                        .checked_add(d)
+                        .filter(|&end| end <= c.cols.floats.len())
+                        .ok_or_else(|| broken("kesik listesi sayılardan uzun"))?;
+                    let dashes = c.cols.floats[c.float..end].to_vec();
+                    c.float = end;
+                    lines.push(PatternLine {
+                        angle,
+                        origin,
+                        offset,
+                        dashes,
+                    });
+                }
+                Some(lines)
+            } else {
+                None
+            };
+            let gradient = if has(4) {
+                let v = c.usize()?;
+                let shape = *GRADIENT_SHAPES
+                    .get(v)
+                    .ok_or_else(|| broken(&format!("degrade biçimi {v}")))?;
+                let inverted = match c.int()? {
+                    0 => false,
+                    1 => true,
+                    v => return Err(broken(&format!("degradenin ters bayrağı {v}"))),
+                };
+                Some(HatchGradient {
+                    shape,
+                    inverted,
+                    color2: c.text(|| place("pattern/gradient/color2"))?,
+                })
+            } else {
+                None
+            };
+            let assoc = if has(5) {
+                let (i, k) = (c.usize()?, c.usize()?);
+                if i.saturating_add(k) > c.cols.text_lengths.len() {
+                    return Err(broken("taramanın nesne sayısı metinlerden fazla"));
+                }
+                let mut id = |what: &str| -> Result<EntityId, KcadError> {
+                    let t = c.text(|| place(what))?;
+                    EntityId::parse(&t)
+                        .ok_or_else(|| broken(&format!("taramanın nesnesinin kimliği “{t}”")))
+                };
+                let outer = id("assoc/outer")?;
+                let islands = (0..i)
+                    .map(|_| id("assoc/islands"))
+                    .collect::<Result<Vec<_>, _>>()?;
+                let cutouts = (0..k)
+                    .map(|_| id("assoc/cutouts"))
+                    .collect::<Result<Vec<_>, _>>()?;
+                Some(HatchAssoc {
+                    outer,
+                    islands,
+                    cutouts,
+                    seed: c.point()?,
+                })
+            } else {
+                None
+            };
             Entity::Hatch(HatchEntity {
                 base,
                 ring,
@@ -1499,7 +1637,12 @@ fn geometry(
                     kind,
                     angle,
                     spacing,
+                    name,
+                    scale,
+                    lines,
+                    gradient,
                 },
+                assoc,
             })
         }
         15 => {
@@ -1858,16 +2001,58 @@ mod tests {
                 base: base("b"),
                 ring: vec![Vec2 { x: 0.0, y: 0.0 }; 3],
                 holes: Some(vec![vec![Vec2 { x: 1.0, y: 1.0 }; 3]]),
+                pattern: HatchPattern::user(HatchPatternType::Cross, 45.0, 2.0),
+                assoc: None,
+            }),
+            // A pattern of families, tied to its objects (docs/adr/0186).
+            Entity::Hatch(HatchEntity {
+                base: base("b"),
+                ring: vec![Vec2 { x: 0.0, y: 0.0 }; 3],
+                holes: None,
                 pattern: HatchPattern {
-                    kind: HatchPatternType::Cross,
-                    angle: 45.0,
-                    spacing: 2.0,
+                    name: Some("ANSI33".into()),
+                    scale: Some(0.5),
+                    lines: Some(vec![
+                        PatternLine {
+                            angle: 45.0,
+                            origin: [0.0, 0.0],
+                            offset: [0.0, 6.35],
+                            dashes: Vec::new(),
+                        },
+                        PatternLine {
+                            angle: 45.0,
+                            origin: [4.49, -0.0],
+                            offset: [0.0, 6.35],
+                            dashes: vec![3.175, -1.5875, 0.0],
+                        },
+                    ]),
+                    ..HatchPattern::user(HatchPatternType::Pattern, 30.0, 1.0)
                 },
+                assoc: Some(HatchAssoc {
+                    outer: id(1),
+                    islands: vec![id(2)],
+                    cutouts: Vec::new(),
+                    seed: Vec2 { x: 1.0, y: 0.5 },
+                }),
+            }),
+            Entity::Hatch(HatchEntity {
+                base: base("b"),
+                ring: vec![Vec2 { x: 0.0, y: 0.0 }; 3],
+                holes: None,
+                pattern: HatchPattern {
+                    gradient: Some(HatchGradient {
+                        shape: GradientShape::Cylinder,
+                        inverted: true,
+                        color2: "#FFFFFF".into(),
+                    }),
+                    ..HatchPattern::user(HatchPatternType::Gradient, 90.0, 1.0)
+                },
+                assoc: None,
             }),
         ];
-        let cols = pack(entities.clone(), vec![id(1), id(2)]);
+        let cols = pack(entities.clone(), vec![id(1), id(2), id(3), id(4)]);
         let (back, uids) = unpack(&cols).expect("unpacks");
-        assert_eq!(uids, [id(1), id(2)]);
+        assert_eq!(uids, [id(1), id(2), id(3), id(4)]);
         assert_eq!(first_difference(&entities, &uids, &back, &uids), None);
         assert_eq!(differs(&cols, &back, &uids), None);
         // Slots are the reader's: 1, 2 …

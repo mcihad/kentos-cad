@@ -5,8 +5,8 @@
 //! DXF at all. Expected values are worked out by hand from the file.
 
 use kentos_contracts::{
-    BlockId, DxfReadOptions, Entity, HatchPatternType, ImportResult, LeaderArrow, LineType,
-    TextAlign, Vec2,
+    BlockId, DxfReadOptions, Entity, GradientShape, HatchPatternType, ImportResult, LeaderArrow,
+    LineType, PatternLine, TextAlign, Vec2,
 };
 use kentos_formats::dxf;
 use kentos_formats::math::{cos, sin};
@@ -589,22 +589,169 @@ fn hatches_with_islands_solid_fill_and_a_cross_pattern() {
         holes[0]
     );
     assert!(holes[0].iter().all(|p| p.y <= 7.0 + 1e-9));
-    assert_eq!(h.pattern.kind, HatchPatternType::Lines);
+    // A predefined pattern keeps its name and its families as the file gives them (docs/adr/0186 §9).
+    let p = &h.pattern;
+    assert_eq!(
+        (p.kind, p.name.as_deref(), p.angle, p.scale),
+        (HatchPatternType::Pattern, Some("ANSI31"), 0.0, Some(1.0))
+    );
+    let f = &p.lines.as_ref().expect("families")[0];
     assert!(
-        (h.pattern.angle - 45.0).abs() < 1e-12 && (h.pattern.spacing - 3.175).abs() < 1e-9,
-        "{:?}",
-        h.pattern
+        f.angle == 45.0 && f.offset[0].abs() < 1e-9 && (f.offset[1] - 3.175).abs() < 1e-9,
+        "{f:?}"
     );
     assert_eq!(hatches[1].pattern.kind, HatchPatternType::Solid);
     assert_eq!(hatches[1].ring.len(), 72);
+    let net = &hatches[2].pattern;
+    assert_eq!(
+        (net.kind, net.name.as_deref()),
+        (HatchPatternType::Pattern, Some("NET"))
+    );
+    let lines = net.lines.as_ref().expect("families");
+    assert_eq!(
+        lines
+            .iter()
+            .map(|l| (l.angle, l.offset))
+            .collect::<Vec<_>>(),
+        vec![(0.0, [0.0, 3.175]), (90.0, [0.0, 3.175])]
+    );
+}
+
+/// The definitions `hatch-patterns.dxf` was made from: turned and scaled
+/// there (Python), unturned and unscaled here by the reader.
+fn family(angle: f64, origin: [f64; 2], offset: [f64; 2], dashes: &[f64]) -> PatternLine {
+    PatternLine {
+        angle,
+        origin,
+        offset,
+        dashes: dashes.to_vec(),
+    }
+}
+
+fn same_families(got: &[PatternLine], want: &[PatternLine]) -> bool {
+    let close = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    got.len() == want.len()
+        && got.iter().zip(want).all(|(g, w)| {
+            close(g.angle, w.angle)
+                && close(g.origin[0], w.origin[0])
+                && close(g.origin[1], w.origin[1])
+                && close(g.offset[0], w.offset[0])
+                && close(g.offset[1], w.offset[1])
+                && g.dashes.len() == w.dashes.len()
+                && g.dashes.iter().zip(&w.dashes).all(|(a, b)| close(*a, *b))
+        })
+}
+
+#[test]
+fn hatch_patterns_gradients_and_what_is_said() {
+    let r = read("hatch-patterns.dxf");
+    let hatches: Vec<_> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Hatch(h) => Some(h),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(hatches.len(), 8);
+    let pattern = |k: usize| &hatches[k].pattern;
+    let lines = |k: usize| pattern(k).lines.clone().unwrap_or_default();
+    // Predefined, turned 30° and twice as large, its dots and dashes.
     assert_eq!(
         (
-            hatches[2].pattern.kind,
-            hatches[2].pattern.angle,
-            hatches[2].pattern.spacing
+            pattern(0).kind,
+            pattern(0).name.as_deref(),
+            pattern(0).angle,
+            pattern(0).scale
         ),
-        (HatchPatternType::Cross, 0.0, 3.175)
+        (HatchPatternType::Pattern, Some("ANSI36"), 30.0, Some(2.0))
     );
+    assert!(
+        same_families(
+            &lines(0),
+            &[family(
+                45.0,
+                [0.0, 0.0],
+                [5.08, 1.905],
+                &[7.9375, -1.5875, 0.0, -1.5875]
+            )]
+        ),
+        "{:?}",
+        lines(0)
+    );
+    // A custom pattern KentOS does not know is drawn from its own families.
+    assert_eq!(
+        (pattern(1).name.as_deref(), pattern(1).scale),
+        (Some("KAROLAJ"), Some(0.5))
+    );
+    assert!(
+        same_families(
+            &lines(1),
+            &[
+                family(0.0, [0.0, 0.0], [0.0, 10.0], &[]),
+                family(90.0, [2.0, 0.0], [0.0, 10.0], &[10.0, -10.0])
+            ]
+        ),
+        "{:?}",
+        lines(1)
+    );
+    // Gradients: the first colour is the hatch's own, the second the gradient's.
+    let g = pattern(2).gradient.as_ref().expect("gradient");
+    assert_eq!(
+        (pattern(2).kind, g.shape, g.inverted, g.color2.as_str()),
+        (
+            HatchPatternType::Gradient,
+            GradientShape::Spherical,
+            false,
+            "#7FB2E5"
+        )
+    );
+    assert_eq!(hatches[2].base.color.as_deref(), Some("#FF0000"));
+    let g = pattern(3).gradient.as_ref().expect("gradient");
+    assert_eq!(
+        (g.shape, g.inverted, g.color2.as_str()),
+        (GradientShape::Linear, true, "#FFFFFF")
+    );
+    assert!(
+        (pattern(3).angle - 30.0).abs() < 1e-9,
+        "{}",
+        pattern(3).angle
+    );
+    assert_eq!(hatches[3].base.color.as_deref(), Some("#0000FF"));
+    // An associative hatch follows nothing; a pattern without its lines is the library's.
+    assert!(hatches[4].assoc.is_none());
+    assert_eq!(pattern(5).name.as_deref(), Some("LINE"));
+    assert!(same_families(
+        &lines(5),
+        &[family(0.0, [0.0, 0.0], [0.0, 3.175], &[])]
+    ));
+    assert_eq!(pattern(5).scale, Some(2.0));
+    // User-defined and doubled: crossed lines.
+    assert_eq!(
+        (pattern(6).kind, pattern(6).angle, pattern(6).spacing),
+        (HatchPatternType::Cross, 15.0, 2.5)
+    );
+    // Seen from below (210 = 0, 0, −1): reflected, turned the other way.
+    assert_eq!((pattern(7).angle, pattern(7).scale), (170.0, Some(1.0)));
+    assert!(
+        same_families(
+            &lines(7),
+            &[
+                family(0.0, [0.0, 0.0], [0.0, -6.35], &[]),
+                family(270.0, [0.0, 0.0], [6.35, -6.35], &[6.35, -6.35])
+            ]
+        ),
+        "{:?}",
+        lines(7)
+    );
+    let notes: Vec<&str> = r.report.notes.iter().map(|n| n.reason.as_str()).collect();
+    for said in [
+        "“INVCURVED” degradesi en yakın biçimle (doğrusal, ters) alındı",
+        "ilişkili tarama ilişkisiz alındı; sınır nesnelerini izlemez",
+        "“LINE” deseninin çizgileri dosyada yok; kitaplıktaki tanımıyla alındı",
+    ] {
+        assert!(notes.contains(&said), "{said}: {notes:?}");
+    }
 }
 
 fn text_width(text: &str) -> f64 {

@@ -33,8 +33,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use kentos_contracts::{
-    BlockId, DimensionEntity, Entity, EntitiesSetProperties, HatchPatternType, LeaderEntity,
-    PropertiesOperation,
+    BlockId, DimensionEntity, EntitiesSetProperties, Entity, LeaderEntity, PropertiesOperation,
 };
 use kentos_domain::Slot;
 use kentos_interaction::elevation::{self, Change};
@@ -62,8 +61,13 @@ pub enum Event {
     Color(Vec<Slot>, Option<String>),
     /// Kalınlık ▾: the objects' own line weight in mm; none, the layer's (docs/adr/0139).
     Weight(Vec<Slot>, Option<f64>),
-    /// Desen ▾ of a hatch.
-    Pattern(Slot, HatchPatternType),
+    /// Desen ▾ of a hatch: one of Tarama's choices (docs/adr/0186 §7), its
+    /// Ölçek and Açı carried over.
+    Pattern(Slot, usize),
+    /// Degrade biçimi ▾, Ters ▾ and İkinci renk ▾ of a gradient hatch.
+    GradientShape(Slot, kentos_contracts::GradientShape),
+    GradientInverted(Slot, bool),
+    GradientColour(Slot, String),
     /// Blok ▾ of an insert: the block it places (docs/adr/0144).
     InsertBlock(Slot, BlockId),
     /// Aynalı ▾ of an insert.
@@ -101,6 +105,8 @@ pub enum Field {
     DimensionText(Slot),
     HatchAngle(Slot),
     HatchSpacing(Slot),
+    /// A pattern's scale on the paper (1: the library's) (docs/adr/0186 §7).
+    HatchScale(Slot),
     /// A text object's text, height and angle.
     Text(Slot),
     TextHeight(Slot),
@@ -403,10 +409,46 @@ impl App {
                 input.line_weight = Some(weight);
                 properties::set_properties(model, input)
             }
-            Event::Pattern(slot, kind) => match model.get(slot) {
+            Event::Pattern(slot, choice) => match model.get(slot) {
                 Some(Entity::Hatch(h)) => {
+                    let plot = model.settings().plot_scale;
+                    match kentos_interaction::hatch_options::rechosen(&h.pattern, choice, plot) {
+                        Some(pattern) => {
+                            let mut h = h.clone();
+                            h.pattern = pattern;
+                            properties::set_geometry(model, slot, &Entity::Hatch(h))
+                        }
+                        None => Vec::new(),
+                    }
+                }
+                _ => Vec::new(),
+            },
+            Event::GradientShape(slot, shape) => match model.get(slot) {
+                Some(Entity::Hatch(h)) if h.pattern.gradient.is_some() => {
                     let mut h = h.clone();
-                    h.pattern.kind = kind;
+                    if let Some(g) = &mut h.pattern.gradient {
+                        g.shape = shape;
+                    }
+                    properties::set_geometry(model, slot, &Entity::Hatch(h))
+                }
+                _ => Vec::new(),
+            },
+            Event::GradientColour(slot, colour) => match model.get(slot) {
+                Some(Entity::Hatch(h)) if h.pattern.gradient.is_some() => {
+                    let mut h = h.clone();
+                    if let Some(g) = &mut h.pattern.gradient {
+                        g.color2 = colour;
+                    }
+                    properties::set_geometry(model, slot, &Entity::Hatch(h))
+                }
+                _ => Vec::new(),
+            },
+            Event::GradientInverted(slot, inverted) => match model.get(slot) {
+                Some(Entity::Hatch(h)) if h.pattern.gradient.is_some() => {
+                    let mut h = h.clone();
+                    if let Some(g) = &mut h.pattern.gradient {
+                        g.inverted = inverted;
+                    }
                     properties::set_geometry(model, slot, &Entity::Hatch(h))
                 }
                 _ => Vec::new(),
@@ -618,6 +660,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::DimensionText(s)
         | Field::HatchAngle(s)
         | Field::HatchSpacing(s)
+        | Field::HatchScale(s)
         | Field::Text(s)
         | Field::TextHeight(s)
         | Field::TextAngle(s)
@@ -671,6 +714,14 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             h.pattern.spacing = f.to_metres(n);
             true
         }
+        // The pattern's paper scale: its millimetres n × N / 1000 metres each (docs/adr/0186 §7).
+        (Field::HatchScale(_), Entity::Hatch(h))
+            if finite && n > 0.0 && h.pattern.scale.is_some() =>
+        {
+            h.pattern.scale = Some(n * model.settings().plot_scale / 1000.0);
+            true
+        }
+
         // Trimmed, as the in-place editor stores it; an empty text is not taken.
         (Field::Text(_), Entity::Text(t)) => {
             let body = kentos_interaction::js_trim(text);
@@ -733,12 +784,15 @@ fn menu(items: &[(Choice, Option<Color>)]) -> Menu<Message> {
                 enabled,
                 message,
                 icon,
+                wide,
                 ..
             } => {
                 let menu = menu.radio(label.clone(), *chosen, enabled.then(|| message.clone()));
-                // A colour's swatch, or a picture (a text's alignment, docs/adr/0145).
+                // A colour's swatch, a hatch pattern's wide sample (docs/adr/0186 §11)
+                // or a picture (a text's alignment, docs/adr/0145).
                 match (color, icon) {
                     (Some(color), _) => menu.swatch(*color),
+                    (None, Some(name)) if *wide => menu.preview(crate::icons::from_web(Some(name))),
                     (None, Some(name)) => menu.icon(crate::icons::from_web(Some(name))),
                     (None, None) => menu,
                 }

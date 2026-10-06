@@ -177,21 +177,55 @@ export interface DimensionEntity extends EntityBase, DimensionLook {
   za?: number;
   zb?: number;
 }
-export type HatchPatternType = 'solid' | 'lines' | 'cross';
+export type HatchPatternType = 'solid' | 'lines' | 'cross' | 'pattern' | 'gradient';
+/**
+ * A pattern's family (docs/adr/0186 §1), in its pattern's units, unturned: lines at `angle` (degrees) through `origin`,
+ * each the next `offset` on (`[along, across]` the line), drawn as `dashes` say (plus drawn, minus a gap, 0 a dot).
+ */
+export interface PatternLine {
+  angle: number;
+  origin: [number, number];
+  offset: [number, number];
+  dashes?: number[];
+}
+export type GradientShape = 'linear' | 'cylinder' | 'spherical';
+/** A gradient (docs/adr/0186 §1): its shape, whether it runs the other way, its second colour (`#RRGGBB`). */
+export interface HatchGradient {
+  shape: GradientShape;
+  inverted?: boolean;
+  color2: string;
+}
 export interface HatchPattern {
   type: HatchPatternType;
-  /** Line direction in degrees, CCW from east. */
+  /** Degrees, CCW from east: the lines' (lines, cross), the pattern's turn (pattern), the gradient's direction. */
   angle: number;
-  /** Line spacing in metres (world units). */
+  /** Line spacing in metres (lines, cross); 1 and unread for the others. */
   spacing: number;
+  /** A pattern's name (`ANSI31`), metres per unit of its definition and families (docs/adr/0186). */
+  name?: string;
+  scale?: number;
+  lines?: PatternLine[];
+  /** A gradient's shape and second colour. */
+  gradient?: HatchGradient;
 }
-/** Filled or line-patterned area inside a boundary ring (not associative). */
+/**
+ * The objects a hatch's region follows (docs/adr/0186 §6), by their persistent ids: the closed object, its islands,
+ * the texts and inserts left open, and the point clicked inside.
+ */
+export interface HatchAssoc {
+  outer: string;
+  islands?: string[];
+  cutouts?: string[];
+  seed: Vec2;
+}
+/** Filled, line-patterned or gradient area inside a boundary ring; associative when it has `assoc`. */
 export interface HatchEntity extends EntityBase {
   kind: 'hatch';
   ring: Vec2[];
   /** Islands left unhatched (the holes of a holed polygon). */
   holes?: Vec2[][];
   pattern: HatchPattern;
+  assoc?: HatchAssoc;
 }
 /** A text; its face (style, typeface, bold, italic, slant; docs/adr/0183 §2) is its own, all absent the project's typeface. */
 export interface TextEntity extends EntityBase, TextFace {
@@ -488,6 +522,8 @@ export const HATCH_PATTERN_LABEL: Record<HatchPatternType, string> = {
   solid: 'Dolu',
   lines: 'Çizgili',
   cross: 'Çapraz',
+  pattern: 'Desen',
+  gradient: 'Degrade',
 };
 
 // Measures and outlines of entities, computed by the geometry core

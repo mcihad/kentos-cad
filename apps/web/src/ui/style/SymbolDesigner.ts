@@ -76,6 +76,7 @@ const HISTORY = 100;
 const LAYER_ICON: Record<LayerType, string> = {
   simpleFill: 'fillSolid',
   hatchFill: 'hatch',
+  gradientFill: 'hatchGradientLinear',
   patternFill: 'fillPattern',
   imageFill: 'fillImage',
   centroidMarker: 'snapCentroid',

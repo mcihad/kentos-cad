@@ -71,6 +71,8 @@ function patchOf(e: Entity, input: EntitiesSetProperties): Partial<Entity> | nul
     patch.labelOf = undefined;
     patch.labelScale = undefined;
   }
+  // An associative hatch follows its objects no more (docs/adr/0186 §6).
+  if (input.unlink && e.kind === 'hatch' && e.assoc !== undefined) patch.assoc = undefined;
   if (input.layerId != null && e.layerId !== input.layerId) patch.layerId = input.layerId;
   for (const key of ['color', 'lineWeight', 'symbol', 'label'] as const) {
     const want = input[key];

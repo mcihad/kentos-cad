@@ -297,41 +297,29 @@ fn objects() -> Vec<Entity> {
                 vec![tm(20.0, 20.0), tm(25.0, 20.0), tm(25.0, 25.0)],
                 vec![tm(5.0, 5.0), tm(10.0, 5.0), tm(10.0, 10.0), tm(5.0, 10.0)],
             ]),
-            pattern: HatchPattern {
-                kind: HatchPatternType::Cross,
-                angle: 30.0,
-                spacing: 2.0,
-            },
+            pattern: HatchPattern::user(HatchPatternType::Cross, 30.0, 2.0),
+            assoc: None,
         }),
         Entity::Hatch(HatchEntity {
             base: base("yapi"),
             ring: vec![tm(50.0, 0.0), tm(60.0, 0.0), tm(55.0, 8.0)],
             holes: None,
-            pattern: HatchPattern {
-                kind: HatchPatternType::Lines,
-                angle: 37.5,
-                spacing: 0.75,
-            },
+            pattern: HatchPattern::user(HatchPatternType::Lines, 37.5, 0.75),
+            assoc: None,
         }),
         Entity::Hatch(HatchEntity {
             base: base("yapi"),
             ring: vec![tm(70.0, 0.0), tm(80.0, 0.0), tm(75.0, 8.0)],
             holes: None,
-            pattern: HatchPattern {
-                kind: HatchPatternType::Solid,
-                angle: 12.0,
-                spacing: 3.0,
-            },
+            pattern: HatchPattern::user(HatchPatternType::Solid, 12.0, 3.0),
+            assoc: None,
         }),
         Entity::Hatch(HatchEntity {
             base: base("yapi"),
             ring: vec![tm(90.0, 0.0), tm(100.0, 0.0), tm(95.0, 8.0)],
             holes: None,
-            pattern: HatchPattern {
-                kind: HatchPatternType::Lines,
-                angle: 0.0,
-                spacing: 1.0,
-            },
+            pattern: HatchPattern::user(HatchPatternType::Lines, 0.0, 1.0),
+            assoc: None,
         }),
     ]
     .into_iter()
@@ -2662,4 +2650,100 @@ fn tables_read_back_as_they_were() {
     want[0].source = None;
     assert_eq!(got, want);
     assert!(r.blocks.is_empty(), "{:?}", r.blocks);
+}
+
+/// The hatches' fixture (`fixtures/formats/v1/dxf-write/hatches.input.json`,
+/// docs/adr/0186 §9) goes out as its committed bytes, which
+/// `scripts/fixtures/dxf_write_reference.py` checks without KentOS's code:
+/// patterns turned and scaled, gradients by name with their two colours, the
+/// tie left out and said once.
+#[test]
+fn the_hatches_fixture_is_written_to_its_committed_bytes() {
+    let report = written_as_committed("hatches");
+    let notes: Vec<(&str, &str, u32)> = report
+        .notes
+        .iter()
+        .map(|n| (n.what.as_str(), n.reason.as_str(), n.count))
+        .collect();
+    assert_eq!(
+        notes,
+        [(
+            "Tarama",
+            "ilişkili taramalar ilişkisiz yazıldı; DXF'te sınır nesnelerini izlemezler",
+            1
+        )],
+        "{:?}",
+        report.notes
+    );
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+}
+
+/// Two JSON values the same, each number to a billionth (of 1 at least).
+fn close_json(a: &serde_json::Value, b: &serde_json::Value) -> bool {
+    use serde_json::Value;
+    match (a, b) {
+        (Value::Number(x), Value::Number(y)) => {
+            let (x, y) = (
+                x.as_f64().unwrap_or(f64::NAN),
+                y.as_f64().unwrap_or(f64::NAN),
+            );
+            (x - y).abs() <= 1e-9 * x.abs().max(y.abs()).max(1.0)
+        }
+        (Value::Array(x), Value::Array(y)) => {
+            x.len() == y.len() && x.iter().zip(y).all(|(x, y)| close_json(x, y))
+        }
+        (Value::Object(x), Value::Object(y)) => {
+            x.len() == y.len()
+                && x.iter()
+                    .all(|(k, v)| y.get(k).is_some_and(|w| close_json(v, w)))
+        }
+        _ => a == b,
+    }
+}
+
+/// Patterns and gradients come back as they went out (docs/adr/0186 §9):
+/// exactly from KentOS's data; without it (another program dropped it)
+/// from the groups to a billionth, an inverted linear gradient the linear
+/// one turned half round. A tie does not come back: the file's hatch
+/// follows nothing.
+#[test]
+fn hatches_read_back_as_they_were() {
+    let input = fixture_input("hatches");
+    let (text, _) = write(&input);
+    let hatches = |entities: &[Entity]| -> Vec<HatchEntity> {
+        entities
+            .iter()
+            .filter_map(|e| match e {
+                Entity::Hatch(h) => {
+                    let mut h = h.clone();
+                    h.base.id = 0;
+                    h.base.layer_id.clear();
+                    h.base.line_weight = None;
+                    h.assoc = None;
+                    Some(h)
+                }
+                _ => None,
+            })
+            .collect()
+    };
+    let want = hatches(&input.entities);
+    let r = read(&text);
+    assert_eq!(hatches(&r.entities), want);
+    assert!(r.report.notes.is_empty(), "{:?}", r.report.notes);
+    // Without KentOS's exact pattern the groups say it.
+    let bare = read(&text.replace("\n1000\r\nhatch\r\n", "\n1000\r\nhatch-\r\n"));
+    assert_ne!(bare.entities, r.entities);
+    let mut want = want;
+    let linear = &mut want[2].pattern;
+    linear.angle = 210.0;
+    linear.gradient.as_mut().expect("gradient").inverted = false;
+    let got = hatches(&bare.entities);
+    assert_eq!(got.len(), want.len());
+    for (g, w) in got.iter().zip(&want) {
+        let (g, w) = (
+            serde_json::to_value(g).expect("JSON"),
+            serde_json::to_value(w).expect("JSON"),
+        );
+        assert!(close_json(&g, &w), "{g}\n{w}");
+    }
 }

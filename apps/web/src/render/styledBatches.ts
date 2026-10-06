@@ -119,7 +119,20 @@ class Looks {
       case 'solid':
         return { kind: 'solid', color: this.rgba(p.color, p.opacity) };
       case 'hatch':
-        return { kind: 'hatch', color: this.rgba(p.color, p.opacity), angle: p.angle, spacing: p.spacing, width: p.width, offset: p.offset, dash: p.dash ? p.dash.slice(0, 8) : null, dashOffset: p.dashOffset, unit: p.unit };
+        return {
+          kind: 'hatch',
+          color: this.rgba(p.color, p.opacity),
+          angle: p.angle,
+          spacing: p.spacing,
+          width: p.width,
+          offset: p.offset,
+          dash: p.dash ? p.dash.slice(0, 8) : null,
+          dashOffset: p.dashOffset,
+          ...(p.stagger && { stagger: p.stagger }),
+          unit: p.unit,
+        };
+      case 'gradient':
+        return { kind: 'gradient', color: this.rgba(p.color, p.opacity), color2: this.rgba(p.color2, p.opacity), shape: p.shape, inverted: p.inverted, dir: p.dir, from: p.from, to: p.to, centre: [p.centre[0], p.centre[1]], radius: p.radius };
       case 'pattern': {
         const m = p.mark;
         const size: [number, number] = [p.size[0], p.size[1]];
@@ -198,10 +211,21 @@ function dashPeriod(dash: readonly number[]): number {
  * pattern it would from the anchor (docs/adr/0157 §3). The desktop's `fold` (native style `batches.rs`) is its twin.
  */
 function fold(paint: FillPaintBatch, o: readonly [number, number] | undefined): FillPaintBatch {
-  if (!o || (o[0] === 0 && o[1] === 0) || paint.kind === 'solid' || paint.unit !== 'world') return paint;
+  if (!o || (o[0] === 0 && o[1] === 0) || paint.kind === 'solid') return paint;
+  // A gradient's frame from the tile: along its direction, and its middle (docs/adr/0186 §3).
+  if (paint.kind === 'gradient') {
+    const shift = Math.cos(paint.dir) * o[0] + Math.sin(paint.dir) * o[1];
+    return { ...paint, from: paint.from - shift, to: paint.to - shift, centre: [paint.centre[0] - o[0], paint.centre[1] - o[1]] };
+  }
+  if (paint.unit !== 'world') return paint;
   const [c, s] = [Math.cos(paint.angle), Math.sin(paint.angle)];
-  if (paint.kind === 'hatch')
-    return { ...paint, offset: paint.offset - rest(-s * o[0] + c * o[1], paint.spacing), dashOffset: paint.dashOffset + rest(c * o[0] + s * o[1], paint.dash ? dashPeriod(paint.dash) : 0) };
+  if (paint.kind === 'hatch') {
+    // The tile's first line is `m` lines past the anchor's: a staggered family's dashes start m staggers further along.
+    const across = -s * o[0] + c * o[1];
+    const m = paint.spacing > 0 ? Math.round((across - rest(across, paint.spacing)) / paint.spacing) : 0;
+    const stagger = paint.stagger ?? 0;
+    return { ...paint, offset: paint.offset - rest(across, paint.spacing), dashOffset: paint.dashOffset + rest(c * o[0] + s * o[1] - m * stagger, paint.dash ? dashPeriod(paint.dash) : 0) };
+  }
   const turned = [c * o[0] + s * o[1], -s * o[0] + c * o[1]];
   // Staggered rows alternate: two rows make the period, so a row keeps its kind.
   const rows = paint.kind === 'pattern' && paint.stagger ? 2 * paint.size[1] : paint.size[1];

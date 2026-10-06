@@ -348,6 +348,51 @@ fn line_in_triangles(t: &[f32], n: [f64; 2], d: [f64; 2], c: f64) -> Vec<[f64; 2
     out
 }
 
+/// The most lines and dashes a hatch batch is cut into here.
+const MAX_HATCH_PIECES: usize = 200_000;
+/// A hatch's dot on the paper, millimetres across.
+const DOT_MM: f64 = 0.3;
+
+/// A dash list as the shaders repeat it: an odd one twice, at most eight values.
+fn shader_dashes(dash: &[f64]) -> Vec<f64> {
+    let mut even: Vec<f64> = if dash.len() % 2 == 1 {
+        dash.iter().chain(dash).copied().collect()
+    } else {
+        dash.to_vec()
+    };
+    even.truncate(8);
+    even
+}
+
+/// The drawn pieces of a span of a dashed line whose pattern starts `phase` before the line's
+/// zero (`dashCover`'s t = s + phase), as parameter intervals; a dot (a drawn dash of no length
+/// before a gap) as a zero-length one.
+fn dash_pieces(span: [f64; 2], dashes: &[f64], phase: f64, out: &mut Vec<[f64; 2]>) {
+    let total: f64 = dashes.iter().sum();
+    if total <= 0.0 {
+        out.push(span);
+        return;
+    }
+    let mut k = ((span[0] + phase) / total).floor();
+    while k * total - phase < span[1] {
+        let mut at = k * total - phase;
+        for (i, &len) in dashes.iter().enumerate() {
+            if i % 2 == 0 {
+                let (a, b) = (at, at + len);
+                if len == 0.0 {
+                    if a >= span[0] && a <= span[1] && dashes.get(i + 1).is_some_and(|g| *g > 0.0) {
+                        out.push([a, a]);
+                    }
+                } else if b > span[0] && a < span[1] {
+                    out.push([a.max(span[0]), b.min(span[1])]);
+                }
+            }
+            at += len;
+        }
+        k += 1.0;
+    }
+}
+
 /// A fill batch: solid as its rings, a hatch as its cut lines; the reason when it has no vector form.
 fn fill_paths(
     layer: &StyledLayer,
@@ -377,13 +422,15 @@ fn fill_paths(
             width,
             offset,
             dash,
+            dash_offset,
+            stagger,
             unit,
-            ..
         } => {
             if *spacing <= 0.0 {
                 return Ok(Vec::new());
             }
-            let a = angle.to_radians();
+            // The batch's angle is in radians (the renderers' `cos(angle)`).
+            let a = *angle;
             let d = [a.cos(), a.sin()];
             let n = [-d[1], d[0]];
             let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
@@ -398,41 +445,72 @@ fn fill_paths(
             if last - first > 20_000.0 {
                 return Err("çok sık tarama");
             }
+            // A dashed family's dashes are cut here, each line from its own phase (the shader's
+            // `dashCover`: along − line·stagger + dash offset; docs/adr/0186 §3); a dot is a point.
+            let dashes = dash.as_deref().filter(|d| !d.is_empty()).map(shader_dashes);
             let mut parts = Vec::new();
+            let mut dots = Vec::new();
+            let mut pieces = Vec::new();
             let mut j = first;
             while j <= last {
                 let c = offset + j * spacing;
-                for [s0, s1] in line_in_triangles(t, n, d, c) {
-                    parts.push(Part {
-                        points: vec![
-                            [d[0] * s0 + n[0] * c + bx, d[1] * s0 + n[1] * c + by],
-                            [d[0] * s1 + n[0] * c + bx, d[1] * s1 + n[1] * c + by],
-                        ],
-                        closed: false,
-                    });
+                let at = |s: f64| [d[0] * s + n[0] * c + bx, d[1] * s + n[1] * c + by];
+                for span in line_in_triangles(t, n, d, c) {
+                    pieces.clear();
+                    match &dashes {
+                        Some(dashes) => {
+                            dash_pieces(span, dashes, dash_offset - j * stagger, &mut pieces);
+                        }
+                        None => pieces.push(span),
+                    }
+                    for &[s0, s1] in &pieces {
+                        let points = vec![at(s0), at(s1)];
+                        if s1 > s0 {
+                            parts.push(Part {
+                                points,
+                                closed: false,
+                            });
+                        } else {
+                            dots.push(Part {
+                                points,
+                                closed: false,
+                            });
+                        }
+                    }
+                    if parts.len() + dots.len() > MAX_HATCH_PIECES {
+                        return Err("çok sık tarama");
+                    }
                 }
                 j += 1.0;
             }
-            Ok(if parts.is_empty() {
-                Vec::new()
-            } else {
-                vec![Shape {
+            let stroke = |width: f64, cap: LineCap| MapStroke {
+                color: color(*c, c[3]),
+                width,
+                dash: Vec::new(),
+                cap,
+                join: LineJoin::Miter,
+            };
+            let mut out = Vec::new();
+            if !parts.is_empty() {
+                out.push(Shape {
                     parts,
-                    stroke: Some(MapStroke {
-                        color: color(*c, c[3]),
-                        width: paper_mm(*width, *unit, o.scale),
-                        dash: dash
-                            .as_ref()
-                            .filter(|d| !d.is_empty())
-                            .map(|d| d.iter().map(|x| paper_mm(*x, *unit, o.scale)).collect())
-                            .unwrap_or_default(),
-                        cap: LineCap::Butt,
-                        join: LineJoin::Miter,
-                    }),
+                    stroke: Some(stroke(paper_mm(*width, *unit, o.scale), LineCap::Butt)),
                     fill: None,
-                }]
-            })
+                });
+            }
+            if !dots.is_empty() {
+                out.push(Shape {
+                    parts: dots,
+                    stroke: Some(stroke(
+                        paper_mm(*width, *unit, o.scale).max(DOT_MM),
+                        LineCap::Round,
+                    )),
+                    fill: None,
+                });
+            }
+            Ok(out)
         }
+        FillPaintBatch::Gradient { .. } => Err("degrade dolgu"),
         FillPaintBatch::Pattern { .. } => Err("desen dolgusu"),
         FillPaintBatch::Tile { .. } => Err("resimli dolgu"),
     }
@@ -579,7 +657,7 @@ fn why_not(layer: &StyledLayer, b: &StyledBatch) -> Option<&'static str> {
                 if *spacing <= 0.0 {
                     return None;
                 }
-                let a = angle.to_radians();
+                let a = *angle;
                 let n = [-a.sin(), a.cos()];
                 let t = layer.data.get(b.range.clone()).unwrap_or_default();
                 let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
@@ -593,6 +671,7 @@ fn why_not(layer: &StyledLayer, b: &StyledBatch) -> Option<&'static str> {
             }
             FillPaintBatch::Pattern { .. } => Some("desen dolgusu"),
             FillPaintBatch::Tile { .. } => Some("resimli dolgu"),
+            FillPaintBatch::Gradient { .. } => Some("degrade dolgu"),
         },
         BatchKind::Marker { look, .. } => match look {
             MarkerLook::Shape { .. } => None,

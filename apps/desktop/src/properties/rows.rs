@@ -5,7 +5,7 @@
 
 use std::borrow::Cow;
 
-use kentos_contracts::{DimensionStyle, Entity, HatchPatternType};
+use kentos_contracts::{DimensionStyle, Entity, GradientShape, HatchPatternType};
 use kentos_domain::{LayerTree, Slot};
 use kentos_interaction::elevation::{self, Summary as Elevations};
 use kentos_interaction::{leader, text};
@@ -26,13 +26,6 @@ use crate::selecting::kind_title;
 
 /// The colours the panel offers (the web's `DRAW_COLORS`, fields.ts).
 use crate::ribbon_panels::{DRAW_COLORS, LINE_WEIGHTS, weight_text as weight_label};
-
-/// A hatch pattern's name (the web's `HATCH_PATTERN_LABEL`), in its order.
-const PATTERNS: [(HatchPatternType, &str); 3] = [
-    (HatchPatternType::Solid, "Dolu"),
-    (HatchPatternType::Lines, "Çizgili"),
-    (HatchPatternType::Cross, "Çapraz"),
-];
 
 /// The panel's content.
 #[derive(Clone)]
@@ -109,6 +102,10 @@ pub(crate) enum Choice {
         label: String,
         swatch: Option<String>,
         icon: Option<&'static str>,
+        /// The icon is a wide sample, drawn as one (a hatch pattern's,
+        /// docs/adr/0186 §11): one more flag, not another name, keeps the
+        /// choice small.
+        wide: bool,
         chosen: bool,
         enabled: bool,
         message: Message,
@@ -120,6 +117,18 @@ pub(crate) enum Choice {
         icon: Icon,
         id: &'static str,
     },
+}
+
+impl Choice {
+    /// A pick with a wide sample in its icon's place in the menu (a hatch
+    /// pattern's, docs/adr/0186 §11).
+    fn previewed(mut self, name: &'static str) -> Self {
+        if let Choice::Pick { icon, wide, .. } = &mut self {
+            *icon = Some(name);
+            *wide = true;
+        }
+        self
+    }
 }
 
 impl Row {
@@ -300,6 +309,7 @@ fn weight_editor(ids: &[Slot], current: Option<Option<f64>>) -> Editor {
             label: "Katmana göre".to_owned(),
             swatch: None,
             icon: None,
+            wide: false,
             chosen: current == Some(None),
             enabled: true,
             message: set(None),
@@ -310,6 +320,7 @@ fn weight_editor(ids: &[Slot], current: Option<Option<f64>>) -> Editor {
         label: weight_label(w),
         swatch: None,
         icon: None,
+        wide: false,
         chosen: current == Some(Some(w)),
         enabled: true,
         message: set(Some(w)),
@@ -356,6 +367,7 @@ fn layer_editor(doc: &Document, ids: &[Slot], current: Option<&str>) -> Editor {
                 label: layer_path(layers, &l.id),
                 swatch: Some(l.style.color.clone()),
                 icon: None,
+                wide: false,
                 chosen: Some(l.id.as_str()) == current,
                 enabled: !layers.is_locked(&l.id),
                 message: Message::Properties(Event::Layer(ids.to_vec(), l.id.clone())),
@@ -377,6 +389,7 @@ fn color_editor(ids: &[Slot], current: Option<Option<&str>>) -> Editor {
             label: "Katmana göre".to_owned(),
             swatch: None,
             icon: None,
+            wide: false,
             chosen: current == Some(None),
             enabled: true,
             message: set(None),
@@ -387,6 +400,7 @@ fn color_editor(ids: &[Slot], current: Option<Option<&str>>) -> Editor {
         label: (*name).to_owned(),
         swatch: Some((*value).to_owned()),
         icon: None,
+        wide: false,
         chosen: current == Some(Some(*value)),
         enabled: true,
         message: set(Some(value)),
@@ -410,6 +424,7 @@ fn symbol_editor(doc: &Document, current: Option<Option<&str>>) -> Editor {
                 label: "Katman stiline göre".to_owned(),
                 swatch: None,
                 icon: None,
+                wide: false,
                 chosen: current == Some(None),
                 enabled: true,
                 message: Message::Run("style.clearSymbol"),
@@ -778,35 +793,13 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.extend(dimension::rows(&[d], &ids, locked, &f));
         }
         Entity::Hatch(h) => {
-            let name = |t: HatchPatternType| {
-                PATTERNS
-                    .iter()
-                    .find(|(p, _)| *p == t)
-                    .map_or("", |(_, n)| *n)
-            };
-            let pattern = Editor::Select {
-                text: name(h.pattern.kind).to_owned(),
-                swatch: None,
-                icon: None,
-                items: PATTERNS
-                    .iter()
-                    .map(|(t, n)| Choice::Pick {
-                        label: (*n).to_owned(),
-                        swatch: None,
-                        icon: None,
-                        chosen: *t == h.pattern.kind,
-                        enabled: true,
-                        message: Message::Properties(Event::Pattern(slot, *t)),
-                    })
-                    .collect(),
-            };
-            geo.extend([
-                Row::text("Desen", name(h.pattern.kind)).editor(edit(pattern)),
-                Row::figure("Açı", fixed(h.pattern.angle, 2))
-                    .unit("°")
-                    .editor(number(Field::HatchAngle(slot))),
-                metres("Aralık", h.pattern.spacing).editor(number(Field::HatchSpacing(slot))),
-            ]);
+            geo.extend(hatch_rows(
+                h,
+                slot,
+                locked,
+                doc.model.settings().plot_scale,
+                &f,
+            ));
             geo.extend(area(area_of.unwrap_or(0.0)));
         }
         Entity::Text(t) => {
@@ -879,6 +872,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                         label: b.name.clone(),
                         swatch: None,
                         icon: None,
+                        wide: false,
                         chosen: b.id == i.block,
                         enabled: true,
                         message: Message::Properties(Event::InsertBlock(slot, b.id)),
@@ -896,6 +890,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                         label: yes_no(m).to_owned(),
                         swatch: None,
                         icon: None,
+                        wide: false,
                         chosen: m == i.mirror,
                         enabled: true,
                         message: Message::Properties(Event::InsertMirror(slot, m)),
@@ -1039,6 +1034,7 @@ fn style_rows(
         label,
         swatch: None,
         icon: None,
+        wide: false,
         enabled: true,
         message: Message::Properties(if text {
             Event::TextStyle(slots.to_vec(), id)
@@ -1100,6 +1096,7 @@ fn text_rows(texts: &[&kentos_contracts::TextEntity], slots: &[Slot], locked: bo
                 label: label.to_owned(),
                 swatch: None,
                 icon: Some(icon),
+                wide: false,
                 chosen: align == Some(a),
                 enabled: true,
                 message: Message::Properties(Event::TextAlign(slots.to_vec(), a)),
@@ -1116,6 +1113,7 @@ fn text_rows(texts: &[&kentos_contracts::TextEntity], slots: &[Slot], locked: bo
                 label: on_off(on).to_owned(),
                 swatch: None,
                 icon: None,
+                wide: false,
                 chosen: mask == Some(on),
                 enabled: true,
                 message: Message::Properties(Event::TextMask(slots.to_vec(), on)),
@@ -1192,6 +1190,7 @@ fn link_rows(
         label: label.to_owned(),
         swatch: None,
         icon: None,
+        wide: false,
         chosen: false,
         enabled: true,
         message: Message::Properties(event),
@@ -1210,6 +1209,162 @@ fn link_rows(
         items,
     });
     vec![Row::text("Bağlı nesne", value).editor(editor)]
+}
+
+/// A hatch's rows (docs/adr/0186 §7): Desen (every choice with its icon,
+/// its Ölçek and Açı carried over), Açı, Ölçek (a pattern's, on the paper),
+/// Aralık (user lines'), İkinci renk, Degrade biçimi and Ters (a
+/// gradient's), İlişkili with İlişkiyi kopar. The web's `hatchRows`.
+fn hatch_rows(
+    h: &kentos_contracts::HatchEntity,
+    slot: Slot,
+    locked: bool,
+    plot_scale: f64,
+    f: &Format,
+) -> Vec<Row> {
+    use kentos_interaction::hatch_options::{choice_of, icon_name};
+    let edit = |editor: Editor| (!locked).then_some(editor);
+    let number = |field: Field| edit(Editor::Number(field));
+    let p = &h.pattern;
+    let list = kentos_geometry_core::tools::hatch::choices();
+    let now = choice_of(p);
+    let name = match (now.and_then(|k| list.get(k)), &p.name) {
+        (Some(c), _) => c.name.clone(),
+        (None, Some(n)) => n.clone(),
+        (None, None) => "Desen".to_owned(),
+    };
+    let pick =
+        |label: String, icon: Option<&'static str>, chosen: bool, event: Event| Choice::Pick {
+            label,
+            swatch: None,
+            icon,
+            wide: false,
+            chosen,
+            enabled: true,
+            message: Message::Properties(event),
+        };
+    let patterns = Editor::Select {
+        text: name.clone(),
+        swatch: None,
+        icon: now.and_then(|k| list.get(k)).map(|c| icon_name(&c.icon)),
+        items: list
+            .iter()
+            .enumerate()
+            .map(|(k, c)| {
+                pick(
+                    c.label.clone(),
+                    Some(icon_name(&c.icon)),
+                    now == Some(k),
+                    Event::Pattern(slot, k),
+                )
+                .previewed(icon_name(&c.preview))
+            })
+            .collect(),
+    };
+    let mut rows = vec![
+        Row::text("Desen", name).editor(edit(patterns)),
+        Row::figure("Açı", fixed(p.angle, 2))
+            .unit("°")
+            .editor(number(Field::HatchAngle(slot))),
+    ];
+    match p.kind {
+        HatchPatternType::Pattern => {
+            let paper = p.scale.unwrap_or(0.0) * 1000.0 / plot_scale;
+            rows.push(
+                Row::figure("Ölçek", fixed(paper, 3)).editor(number(Field::HatchScale(slot))),
+            );
+        }
+        HatchPatternType::Lines | HatchPatternType::Cross => rows.push(
+            Row::figure("Aralık", f.length(p.spacing))
+                .unit(f.length_unit_label())
+                .editor(number(Field::HatchSpacing(slot))),
+        ),
+        _ => {}
+    }
+    if let Some(g) = &p.gradient {
+        let colours = Editor::Select {
+            text: g.color2.clone(),
+            swatch: Some(g.color2.clone()),
+            icon: None,
+            items: kentos_geometry_core::tools::hatch::COLOURS
+                .iter()
+                .map(|(n, hex)| Choice::Pick {
+                    label: (*n).to_owned(),
+                    swatch: Some((*hex).to_owned()),
+                    icon: None,
+                    wide: false,
+                    chosen: g.color2 == *hex,
+                    enabled: true,
+                    message: Message::Properties(Event::GradientColour(slot, (*hex).to_owned())),
+                })
+                .collect(),
+        };
+        const SHAPES: [(GradientShape, &str, &str); 3] = [
+            (GradientShape::Linear, "Doğrusal", "hatchGradientLinear"),
+            (GradientShape::Cylinder, "Silindir", "hatchGradientCylinder"),
+            (GradientShape::Spherical, "Küre", "hatchGradientSpherical"),
+        ];
+        let shape = SHAPES
+            .iter()
+            .find(|s| s.0 == g.shape)
+            .copied()
+            .unwrap_or(SHAPES[0]);
+        let shapes = Editor::Select {
+            text: shape.1.to_owned(),
+            swatch: None,
+            icon: Some(shape.2),
+            items: SHAPES
+                .iter()
+                .map(|&(s, label, icon)| {
+                    pick(
+                        label.to_owned(),
+                        Some(icon),
+                        s == g.shape,
+                        Event::GradientShape(slot, s),
+                    )
+                })
+                .collect(),
+        };
+        let yes_no = |b: bool| if b { "Evet" } else { "Hayır" };
+        let inverted = Editor::Select {
+            text: yes_no(g.inverted).to_owned(),
+            swatch: None,
+            icon: None,
+            items: [true, false]
+                .into_iter()
+                .map(|b| {
+                    pick(
+                        yes_no(b).to_owned(),
+                        None,
+                        b == g.inverted,
+                        Event::GradientInverted(slot, b),
+                    )
+                })
+                .collect(),
+        };
+        rows.extend([
+            Row::text("İkinci renk", g.color2.clone()).editor(edit(colours)),
+            Row::text("Degrade biçimi", shape.1).editor(edit(shapes)),
+            Row::text("Ters", yes_no(g.inverted)).editor(edit(inverted)),
+        ]);
+    }
+    let tie = match &h.assoc {
+        Some(a) => format!("Evet ({} nesne)", 1 + a.islands.len() + a.cutouts.len()),
+        None => "Hayır".to_owned(),
+    };
+    let untie = (h.assoc.is_some() && !locked).then(|| Editor::Select {
+        text: tie.clone(),
+        swatch: None,
+        icon: Some("hatchAssoc"),
+        items: vec![pick(
+            "İlişkiyi kopar".to_owned(),
+            None,
+            false,
+            Event::Unlink(vec![slot]),
+        )],
+    });
+    rows.push(Row::text("İlişkili", tie).editor(untie));
+    rows
 }
 
 fn leader_rows(
@@ -1239,6 +1394,7 @@ fn leader_rows(
                 label: label.to_owned(),
                 swatch: None,
                 icon: Some(icon),
+                wide: false,
                 chosen: arrow == Some(a),
                 enabled: true,
                 message: Message::Properties(Event::LeaderArrow(slots.to_vec(), a)),
@@ -1256,6 +1412,7 @@ fn leader_rows(
                 label: on_off(on).to_owned(),
                 swatch: None,
                 icon: None,
+                wide: false,
                 chosen: mask == Some(on),
                 enabled: true,
                 message: Message::Properties(Event::LeaderMask(slots.to_vec(), on)),

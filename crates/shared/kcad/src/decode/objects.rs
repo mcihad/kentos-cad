@@ -17,13 +17,13 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockDefinition, BlockId, CellRange, CircleEntity, ConstructionEntity,
     DimensionArrow, DimensionEntity, DimensionLook, DimensionStyle, DimensionTextPlace,
-    DrawingFont, DrawingUnit, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity,
-    HatchPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, MAX_AFFIX,
-    MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO, MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_OBLIQUE,
-    MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph, PathEntity, PointEntity, PointPart,
-    RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign,
-    TextEntity, TextFace, TextRun, TextScript, Vec2, label_scale_ok, oblique_holds,
-    width_factor_ok,
+    DrawingFont, DrawingUnit, EllipseEntity, Entity, EntityBase, EntityId, GradientShape,
+    HatchAssoc, HatchEntity, HatchGradient, HatchPattern, HatchPatternType, InsertEntity,
+    LeaderArrow, LeaderEntity, LineEntity, MAX_AFFIX, MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO,
+    MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_OBLIQUE, MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph,
+    PathEntity, PatternLine, PointEntity, PointPart, RingGeometry, SplineEntity, TableAlign,
+    TableEntity, TableGrid, TableSource, TextAlign, TextEntity, TextFace, TextRun, TextScript,
+    Vec2, label_scale_ok, oblique_holds, width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -32,11 +32,11 @@ use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
-    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
-    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
-    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
-    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS,
-    SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_LAYER_SNAP,
+    SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
+    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
+    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TABLES,
+    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -128,6 +128,8 @@ pub(super) struct Features {
     pub(super) styles: bool,
     /// Schema 22: the `table` kind (docs/adr/0184).
     tables: bool,
+    /// Schema 23: a hatch's pattern and gradient fields and its tie (docs/adr/0186).
+    hatches: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -156,6 +158,7 @@ impl Features {
             paragraphs: schema >= SCHEMA_WITH_PARAGRAPHS,
             styles: schema >= SCHEMA_WITH_STYLES,
             tables: schema >= SCHEMA_WITH_TABLES,
+            hatches: schema >= SCHEMA_WITH_HATCH_PATTERNS,
             uids: true,
         }
     }
@@ -225,7 +228,11 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                                 | "font"
                         ))
             }
-            Kind::Hatch => matches!(key, "ring" | "holes" | "pattern"),
+            // A hatch's tie names objects: only the drawing's hatches (docs/adr/0186 §6).
+            Kind::Hatch => {
+                matches!(key, "ring" | "holes" | "pattern")
+                    || (has.hatches && has.uids && key == "assoc")
+            }
             Kind::Insert => matches!(key, "block" | "p" | "scale" | "rotation" | "mirror"),
             Kind::Leader => matches!(
                 key,
@@ -301,6 +308,7 @@ struct Fields {
     text: Option<String>,
     style: Option<DimensionStyle>,
     pattern: Option<HatchPattern>,
+    assoc: Option<HatchAssoc>,
     block: Option<BlockId>,
     /// Where the insert's `block` is in the payload (for an unknown block).
     block_at: usize,
@@ -629,7 +637,8 @@ pub(super) fn object(
                 let known = if has.dimensions { &styles[..] } else { &styles[..5] };
                 f.style = Some(named(r, known)?)
             }
-            "pattern" => f.pattern = Some(pattern(r)?),
+            "pattern" => f.pattern = Some(pattern(r, has)?),
+            "assoc" => f.assoc = Some(hatch_assoc(r)?),
             "block" => {
                 f.block_at = r.position();
                 f.block = Some(BlockId(id16(r)?));
@@ -1052,6 +1061,7 @@ fn build(
             ring: required(r, f.ring.take(), "ring")?,
             holes: f.loops.take(),
             pattern: required(r, f.pattern.take(), "pattern")?,
+            assoc: f.assoc.take(),
         }),
         Kind::Insert => Entity::Insert(InsertEntity {
             base,
@@ -1321,31 +1331,168 @@ fn as_long_as(
     Ok(zs)
 }
 
-fn pattern(r: &mut Reader<'_>) -> Result<HatchPattern, KcadError> {
+/// A hatch's pattern (§6.6): schema 23 adds the `pattern` and `gradient`
+/// kinds and their fields (docs/adr/0186 §1), checked as the commands check
+/// them; the first three kinds read as they always did.
+fn pattern(r: &mut Reader<'_>, has: Features) -> Result<HatchPattern, KcadError> {
+    const TYPES: [(&str, HatchPatternType); 5] = [
+        ("solid", HatchPatternType::Solid),
+        ("lines", HatchPatternType::Lines),
+        ("cross", HatchPatternType::Cross),
+        ("pattern", HatchPatternType::Pattern),
+        ("gradient", HatchPatternType::Gradient),
+    ];
+    let at = r.position();
     let (mut kind, mut angle, mut spacing) = (None, None, None);
+    let (mut name, mut scale, mut lines, mut gradient) = (None, None, None, None);
     map(r, |r, key| {
         match key {
             "type" => {
                 kind = Some(named(
                     r,
-                    &[
-                        ("solid", HatchPatternType::Solid),
-                        ("lines", HatchPatternType::Lines),
-                        ("cross", HatchPatternType::Cross),
-                    ],
+                    if has.hatches { &TYPES[..] } else { &TYPES[..3] },
                 )?)
             }
             "angle" => angle = Some(r.float()?),
             "spacing" => spacing = Some(r.float()?),
+            "name" if has.hatches => name = Some(text(r)?),
+            "scale" if has.hatches => scale = Some(r.float()?),
+            "lines" if has.hatches => lines = Some(list(r, |r, _| pattern_line(r))?),
+            "gradient" if has.hatches => gradient = Some(hatch_gradient(r)?),
             _ => return Err(unknown(r)),
         }
         Ok(())
     })?;
-    Ok(HatchPattern {
+    let p = HatchPattern {
         kind: required(r, kind, "type")?,
         angle: required(r, angle, "angle")?,
         spacing: required(r, spacing, "spacing")?,
+        name,
+        scale,
+        lines,
+        gradient,
+    };
+    if p.has_definition()
+        && let Some((_, words)) = p.problem()
+    {
+        return Err(r.fail_at(Code::BadValue, at, &words));
+    }
+    Ok(p)
+}
+
+/// A pattern's family (docs/adr/0186 §1): its angle, origin, offset and dashes.
+fn pattern_line(r: &mut Reader<'_>) -> Result<PatternLine, KcadError> {
+    let (mut angle, mut origin, mut offset, mut dashes) = (None, None, None, None);
+    map(r, |r, key| {
+        match key {
+            "angle" => angle = Some(r.float()?),
+            "dashes" => {
+                let at = r.position();
+                let list = floats(r)?;
+                // The writer leaves an empty list out: one spelling (§6.6).
+                if list.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "kesik listesi boş; bütün çizgili ailede alan yazılmaz",
+                    ));
+                }
+                dashes = Some(list);
+            }
+            "offset" => offset = Some(point(r)?),
+            "origin" => origin = Some(point(r)?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    let pair = |p: Vec2| [p.x, p.y];
+    Ok(PatternLine {
+        angle: required(r, angle, "angle")?,
+        origin: pair(required(r, origin, "origin")?),
+        offset: pair(required(r, offset, "offset")?),
+        dashes: dashes.unwrap_or_default(),
     })
+}
+
+/// A gradient (docs/adr/0186 §1): its shape, its second colour and, written
+/// only when it is so, that it runs the other way.
+fn hatch_gradient(r: &mut Reader<'_>) -> Result<HatchGradient, KcadError> {
+    let (mut shape, mut color2, mut inverted) = (None, None, false);
+    map(r, |r, key| {
+        match key {
+            "shape" => {
+                shape = Some(named(
+                    r,
+                    &[
+                        ("linear", GradientShape::Linear),
+                        ("cylinder", GradientShape::Cylinder),
+                        ("spherical", GradientShape::Spherical),
+                    ],
+                )?)
+            }
+            "color2" => color2 = Some(text(r)?),
+            "inverted" => {
+                let at = r.position();
+                if !r.bool()? {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "degradenin “inverted”ı yanlışken yazılmaz",
+                    ));
+                }
+                inverted = true;
+            }
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    Ok(HatchGradient {
+        shape: required(r, shape, "shape")?,
+        inverted,
+        color2: required(r, color2, "color2")?,
+    })
+}
+
+/// The objects a hatch's region follows (docs/adr/0186 §6): its closed
+/// object, islands and cutouts by their persistent ids, and its seed.
+fn hatch_assoc(r: &mut Reader<'_>) -> Result<HatchAssoc, KcadError> {
+    let at = r.position();
+    let (mut seed, mut outer, mut islands, mut cutouts) = (None, None, Vec::new(), Vec::new());
+    map(r, |r, key| {
+        match key {
+            "seed" => seed = Some(point(r)?),
+            "outer" => outer = Some(EntityId(id16(r)?)),
+            "cutouts" | "islands" => {
+                let at = r.position();
+                let ids = list(r, |r, _| Ok(EntityId(id16(r)?)))?;
+                // The writer leaves an empty list out: one spelling (§6.6).
+                if ids.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "nesne listesi boş; nesnesi olmayan listenin alanı yazılmaz",
+                    ));
+                }
+                if key == "cutouts" {
+                    cutouts = ids;
+                } else {
+                    islands = ids;
+                }
+            }
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    let a = HatchAssoc {
+        outer: required(r, outer, "outer")?,
+        islands,
+        cutouts,
+        seed: required(r, seed, "seed")?,
+    };
+    if let Some((_, words)) = a.problem() {
+        return Err(r.fail_at(Code::BadValue, at, &words));
+    }
+    Ok(a)
 }
 
 /// A multi-line text's run (§6.6, docs/adr/0182): its range and format;

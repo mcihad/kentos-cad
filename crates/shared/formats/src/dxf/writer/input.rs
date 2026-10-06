@@ -14,10 +14,10 @@ use kentos_contracts::{
     ArcEntity, AreaPart, AttributeDefinition, BlockDefinition, BlockId, CellRange, CircleEntity,
     ConstructionEntity, DimensionArrow, DimensionEntity, DimensionLook, DimensionStyle,
     DimensionTextPlace, DrawingFont, DrawingUnit, DxfWriteInput, DxfWriteLayer, EllipseEntity,
-    Entity, EntityBase, HatchEntity, HatchPattern, InsertEntity, LeaderArrow, LeaderEntity,
-    LineEntity, Paragraph, PathEntity, PointEntity, PointPart, RingGeometry, SplineEntity,
-    TableAlign, TableEntity, TableGrid, TableSource, TextAlign, TextEntity, TextFace, TextRun,
-    Vec2,
+    Entity, EntityBase, HatchAssoc, HatchEntity, HatchPattern, InsertEntity, LeaderArrow,
+    LeaderEntity, LineEntity, Paragraph, PathEntity, PointEntity, PointPart, RingGeometry,
+    SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign, TextEntity, TextFace,
+    TextRun, Vec2,
 };
 use serde::de::value::{MapAccessDeserializer, SeqAccessDeserializer};
 use serde::de::{self, Deserialize, Deserializer, IgnoredAny, MapAccess, SeqAccess, Visitor};
@@ -127,6 +127,7 @@ struct Fields {
     angle: Option<f64>,
     ring: Option<Vec<Vec2>>,
     pattern: Option<HatchPattern>,
+    assoc: Option<HatchAssoc>,
     block: Option<BlockId>,
     scale: Option<f64>,
     mirror: Option<bool>,
@@ -359,6 +360,8 @@ impl Fields {
                 ring: need(self.ring, "ring")?,
                 holes: islands(self.holes)?,
                 pattern: need(self.pattern, "pattern")?,
+                // Written without it (docs/adr/0186 §6), and said.
+                assoc: self.assoc,
             }),
             "insert" => Entity::Insert(InsertEntity {
                 base,
@@ -505,6 +508,7 @@ impl<'de> Deserialize<'de> for Wire {
                         "angle" => f.angle = map.next_value()?,
                         "ring" => f.ring = Some(map.next_value()?),
                         "pattern" => f.pattern = Some(map.next_value()?),
+                        "assoc" => f.assoc = map.next_value()?,
                         "block" => f.block = Some(map.next_value()?),
                         "scale" => f.scale = Some(map.next_value()?),
                         "mirror" => f.mirror = map.next_value()?,

@@ -37,6 +37,8 @@ mod expression;
 #[cfg(test)]
 mod files_testing;
 mod grids;
+#[cfg(test)]
+mod hatch_scenes;
 mod hover_card;
 #[cfg(test)]
 mod icon_tour;

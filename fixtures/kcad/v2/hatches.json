@@ -1,0 +1,506 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Taramalar",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 500.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "tarama",
+      "name": "Taramalar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5A84D",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "tarama",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "ada": "101",
+        "parsel": "5"
+      },
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400030.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400030.0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 500010.0,
+          "y": 4400010.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400010.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400020.0
+        },
+        {
+          "x": 500010.0,
+          "y": 4400020.0
+        }
+      ]
+    },
+    {
+      "kind": "text",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {},
+      "p": {
+        "x": 500025.0,
+        "y": 4400025.0
+      },
+      "text": "101/5",
+      "height": 2.0,
+      "rotation": 0.0
+    },
+    {
+      "kind": "hatch",
+      "id": 4,
+      "layerId": "tarama",
+      "attrs": {},
+      "ring": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400030.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400030.0
+        }
+      ],
+      "holes": [
+        [
+          {
+            "x": 500010.0,
+            "y": 4400010.0
+          },
+          {
+            "x": 500020.0,
+            "y": 4400010.0
+          },
+          {
+            "x": 500020.0,
+            "y": 4400020.0
+          },
+          {
+            "x": 500010.0,
+            "y": 4400020.0
+          }
+        ]
+      ],
+      "pattern": {
+        "type": "pattern",
+        "angle": 0.0,
+        "spacing": 1.0,
+        "name": "ANSI31",
+        "scale": 0.5,
+        "lines": [
+          {
+            "angle": 45.0,
+            "origin": [
+              0.0,
+              0.0
+            ],
+            "offset": [
+              0.0,
+              3.175
+            ]
+          }
+        ]
+      },
+      "assoc": {
+        "outer": "0192f5a1-2222-7000-8000-000000000001",
+        "islands": [
+          "0192f5a1-2222-7000-8000-000000000002"
+        ],
+        "cutouts": [
+          "0192f5a1-2222-7000-8000-000000000003"
+        ],
+        "seed": {
+          "x": 500005.0,
+          "y": 4400005.0
+        }
+      }
+    },
+    {
+      "kind": "hatch",
+      "id": 5,
+      "layerId": "tarama",
+      "color": "#7FB2E5",
+      "attrs": {
+        "malzeme": "mermer"
+      },
+      "ring": [
+        {
+          "x": 500050.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500070.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500070.0,
+          "y": 4400015.0
+        },
+        {
+          "x": 500050.0,
+          "y": 4400015.0
+        }
+      ],
+      "pattern": {
+        "type": "pattern",
+        "angle": 30.0,
+        "spacing": 1.0,
+        "name": "ANSI36",
+        "scale": 0.25,
+        "lines": [
+          {
+            "angle": 45.0,
+            "origin": [
+              0.0,
+              0.0
+            ],
+            "offset": [
+              5.5562499999999995,
+              3.175
+            ],
+            "dashes": [
+              7.9375,
+              -1.5875,
+              0.0,
+              -1.5875
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "hatch",
+      "id": 6,
+      "layerId": "tarama",
+      "attrs": {},
+      "ring": [
+        {
+          "x": 500050.0,
+          "y": 4400020.0
+        },
+        {
+          "x": 500070.0,
+          "y": 4400020.0
+        },
+        {
+          "x": 500060.0,
+          "y": 4400030.0
+        }
+      ],
+      "pattern": {
+        "type": "pattern",
+        "angle": -15.5,
+        "spacing": 1.0,
+        "name": "KAROLAJ",
+        "scale": 2.0,
+        "lines": [
+          {
+            "angle": 0.0,
+            "origin": [
+              0.0,
+              0.0
+            ],
+            "offset": [
+              0.0,
+              10.0
+            ]
+          },
+          {
+            "angle": 90.0,
+            "origin": [
+              2.0,
+              -0.5
+            ],
+            "offset": [
+              5.0,
+              10.0
+            ],
+            "dashes": [
+              10.0,
+              -10.0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "hatch",
+      "id": 7,
+      "layerId": "tarama",
+      "color": "#3E63DD",
+      "attrs": {},
+      "ring": [
+        {
+          "x": 500080.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500100.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500100.0,
+          "y": 4400015.0
+        },
+        {
+          "x": 500080.0,
+          "y": 4400015.0
+        }
+      ],
+      "pattern": {
+        "type": "gradient",
+        "angle": 30.0,
+        "spacing": 1.0,
+        "gradient": {
+          "shape": "linear",
+          "inverted": true,
+          "color2": "#FFFFFF"
+        }
+      }
+    },
+    {
+      "kind": "hatch",
+      "id": 8,
+      "layerId": "tarama",
+      "attrs": {},
+      "ring": [
+        {
+          "x": 500080.0,
+          "y": 4400020.0
+        },
+        {
+          "x": 500100.0,
+          "y": 4400020.0
+        },
+        {
+          "x": 500100.0,
+          "y": 4400030.0
+        },
+        {
+          "x": 500080.0,
+          "y": 4400030.0
+        }
+      ],
+      "pattern": {
+        "type": "gradient",
+        "angle": 0.0,
+        "spacing": 1.0,
+        "gradient": {
+          "shape": "spherical",
+          "color2": "#E5484D"
+        }
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 9,
+      "layerId": "tarama",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+      "p": {
+        "x": 500110.0,
+        "y": 4400005.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+    }
+  ],
+  "uids": [
+    "0192f5a1-2222-7000-8000-000000000001",
+    "0192f5a1-2222-7000-8000-000000000002",
+    "0192f5a1-2222-7000-8000-000000000003",
+    "0192f5a1-2222-7000-8000-000000000004",
+    "0192f5a1-2222-7000-8000-000000000005",
+    "0192f5a1-2222-7000-8000-000000000006",
+    "0192f5a1-2222-7000-8000-000000000007",
+    "0192f5a1-2222-7000-8000-000000000008",
+    "0192f5a1-2222-7000-8000-000000000009"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+      "name": "Tarama işareti",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "hatch",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "ring": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 4.0,
+              "y": 0.0
+            },
+            {
+              "x": 4.0,
+              "y": 4.0
+            },
+            {
+              "x": 0.0,
+              "y": 4.0
+            }
+          ],
+          "pattern": {
+            "type": "pattern",
+            "angle": 0.0,
+            "spacing": 1.0,
+            "name": "NET",
+            "scale": 0.1,
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  3.175
+                ]
+              },
+              {
+                "angle": 90.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  3.175
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "kind": "hatch",
+          "id": 2,
+          "layerId": "0",
+          "attrs": {},
+          "ring": [
+            {
+              "x": 5.0,
+              "y": 0.0
+            },
+            {
+              "x": 9.0,
+              "y": 0.0
+            },
+            {
+              "x": 7.0,
+              "y": 3.0
+            }
+          ],
+          "pattern": {
+            "type": "gradient",
+            "angle": 90.0,
+            "spacing": 1.0,
+            "gradient": {
+              "shape": "cylinder",
+              "color2": "#FFFFFF"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

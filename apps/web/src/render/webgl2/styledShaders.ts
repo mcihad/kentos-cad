@@ -26,22 +26,36 @@ uniform vec4 u_dash1;
 uniform float u_dashTotal; // raw units (0 = continuous)
 uniform float u_dashOn;    // share of the pattern that is "on" (for far zoom)
 uniform float u_dashOffset;
+// A drawn dash under a pixel before a gap is a dot: it inks a pixel wherever it falls (docs/adr/0186 §3).
 float dashCover(float s, float k) {
   float total = u_dashTotal * k;
   if (total <= 0.0) return 1.0;
-  if (total < 4.0) return u_dashOn; // too fine to see: an even tint
-  float t = mod(s + u_dashOffset * k, total);
   float d[8] = float[8](u_dash0.x, u_dash0.y, u_dash0.z, u_dash0.w, u_dash1.x, u_dash1.y, u_dash1.z, u_dash1.w);
+  if (total < 4.0) {
+    // too fine to see: an even tint, a dot counted as a pixel
+    float dots = 0.0;
+    for (int i = 0; i < 8; i += 2) {
+      if (d[i + 1] > 0.0) dots += max(0.0, 1.0 - d[i] * k);
+    }
+    return min(1.0, u_dashOn + dots / total);
+  }
+  float t = mod(s + u_dashOffset * k, total);
   float acc = 0.0;
+  float a = 0.0;
+  bool found = false;
   for (int i = 0; i < 8; i++) {
     float l = d[i] * k;
-    if (t < acc + l) {
-      if ((i & 1) == 1) return 0.0;
-      return clamp(min(t - acc, acc + l - t) + 0.5, 0.0, 1.0);
+    if ((i & 1) == 0 && l < 1.0 && d[i + 1] > 0.0) {
+      float e = abs(t - (acc + 0.5 * l));
+      a = max(a, clamp(1.0 - min(e, total - e), 0.0, 1.0));
+    }
+    if (!found && t < acc + l) {
+      found = true;
+      if ((i & 1) == 0) a = max(a, clamp(min(t - acc, acc + l - t) + 0.5, 0.0, 1.0));
     }
     acc += l;
   }
-  return 0.0;
+  return a;
 }
 `;
 
@@ -148,6 +162,7 @@ uniform vec2 u_dir;      // line direction (cos, sin)
 uniform float u_spacing;
 uniform float u_width;
 uniform float u_offset;
+uniform float u_stagger; // a line's dashes that much further along than the line's before (docs/adr/0186 §3)
 uniform int u_unit;
 uniform float u_pxPerM;
 uniform float u_dpr;
@@ -171,10 +186,40 @@ void main() {
     float u = dot(p, n) - u_offset;
     float d = abs(fract(u / u_spacing + 0.5) - 0.5) * gap;
     a = clamp(halfW + 0.5 - d, 0.0, 1.0);
-    a *= dashCover(dot(p, u_dir) * k, k);
+    float row = floor(u / u_spacing + 0.5);
+    a *= dashCover((dot(p, u_dir) - row * u_stagger) * k, k);
   }
   if (a < 0.004) discard;
   outColor = vec4(u_color.rgb, u_color.a * a);
+}`;
+
+/**
+ * A gradient (docs/adr/0186 §3) from the first colour to the second: linear along its direction from `from` to `to`,
+ * a cylinder (the second colour along the middle) or a sphere (the second colour in the middle out to `radius`).
+ */
+export const GRADIENT_FS = /* glsl */ `#version 300 es
+precision highp float;
+precision highp int;
+in vec2 v_world;
+uniform vec4 u_color;
+uniform vec4 u_color2;
+uniform vec2 u_dir;
+uniform vec2 u_range;    // from, to along the direction
+uniform vec3 u_round;    // centre, radius
+uniform int u_shape;     // 0 linear, 1 cylinder, 2 spherical
+uniform int u_inverted;
+out vec4 outColor;
+void main() {
+  vec2 p = v_world;
+  float t;
+  if (u_shape == 2) {
+    t = 1.0 - clamp(length(p - u_round.xy) / max(u_round.z, 1e-9), 0.0, 1.0);
+  } else {
+    float u = clamp((dot(p, u_dir) - u_range.x) / max(u_range.y - u_range.x, 1e-9), 0.0, 1.0);
+    t = u_shape == 1 ? 1.0 - abs(2.0 * u - 1.0) : u;
+  }
+  if (u_inverted == 1) t = 1.0 - t;
+  outColor = mix(u_color, u_color2, t);
 }`;
 
 /** An atlas tile repeated over the area (premultiplied output). */

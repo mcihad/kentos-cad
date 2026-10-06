@@ -158,6 +158,7 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             ring,
             holes,
             pattern,
+            assoc,
         } => {
             if !any(ring) && !holes.iter().flatten().any(|h| any(h)) {
                 return None;
@@ -170,6 +171,7 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
                         .collect()
                 }),
                 pattern: pattern.clone(),
+                assoc: assoc.clone(),
             }
         }
         Shape::Dimension {

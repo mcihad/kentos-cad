@@ -20,7 +20,7 @@
 //! | 9 spline | points, closed |
 //! | 10 text | p.x, p.y, height, rotation, text, align, widthFactor, mask, boxWidth, lineSpacing, runs, textStyle?, font, bold, italic, oblique |
 //! | 11 dimension | a.x, a.y, b.x, b.y, offset, height, text?, style?, hasAngle, angle, hasC, c.x, c.y, mask, za, zb, dimStyle?, arrow, arrowSize, extOffset, extBeyond, textGap, centre, decimals, unit?, prefix?, suffix?, font |
-//! | 12 hatch | points, hatch holes, pattern type, angle, spacing |
+//! | 12 hatch | points, hatch holes, pattern type, angle, spacing, name?, scale, families, gradient, assoc |
 //! | 13 multi-part polygon | path, holes, part count, then per part: path, holes |
 //! | 14 insert | p.x, p.y, scale, rotation, mirror, block, attributes |
 //! | 15 leader | points, height, rotation, text?, arrow?, mask |
@@ -31,7 +31,12 @@
 //! `label` is 1 for a non-empty label. `points` is a count n and 2n
 //! coordinates; a `path` is points and bulges (a count, −1 for none, then
 //! the values); `holes` is a count (−1 for none) of paths; `hatch holes` a
-//! count (−1 for none) of point lists; an insert's `attributes` a count
+//! count (−1 for none) of point lists; a hatch's `families` a count (−1 for
+//! none) of its pattern's lines (angle, origin x and y, offset along and
+//! across, dashes as values), its `gradient` the shape (−1 for none), then
+//! `inverted` (−1 none, 0, 1) and the second colour, its `assoc` the outer
+//! object's id (−1 for none), then the islands' and the cutouts' ids (each a
+//! count, −1 for none, of strings) and the seed (docs/adr/0186); an insert's `attributes` a count
 //! (−1 for none) of tag and value pairs of strings, its text values (docs/adr/0144
 //! §7: what its block's attribute texts show); a leader's `arrow` (docs/adr/0146)
 //! its name, −1 for the filled arrow. A field left out (`z`, `angle`, `c`, a
@@ -54,10 +59,11 @@ use std::collections::HashMap;
 
 use super::Store;
 use crate::api::json::Json;
-use crate::entity::{Attrs, CellRange, HatchPattern, Part, PointPart, Shape};
+use crate::entity::{Attrs, CellRange, HatchAssoc, HatchPattern, Part, PointPart, Shape};
 use crate::geom::affine::Affine;
 use crate::geom::arrangement::Ring;
 use crate::geom::dimension::{Arrow, Look};
+use crate::geom::hatch_pattern::{Gradient, PatternLine};
 use crate::ops::transform::transform_shape;
 use crate::text::face::Face;
 use crate::text::paragraph::{Run, Script};
@@ -148,6 +154,23 @@ impl Reader<'_> {
                     self.at
                 )
             }),
+        }
+    }
+
+    /// Strings by their indices: a count (−1 for none), then each one.
+    fn strings(&mut self) -> Result<Option<Vec<String>>, String> {
+        match self.int()? {
+            None => Ok(None),
+            Some(n) => {
+                let mut out = Vec::with_capacity(n);
+                for _ in 0..n {
+                    out.push(
+                        self.string()?
+                            .ok_or_else(|| format!("paketin {}. sayısı metin olmalı", self.at))?,
+                    );
+                }
+                Ok(Some(out))
+            }
         }
     }
 
@@ -454,14 +477,59 @@ impl Reader<'_> {
                             .collect::<Result<Vec<_>, _>>()?,
                     ),
                 };
+                let kind = self.string()?.unwrap_or_default();
+                let (angle, spacing) = (self.num()?, self.num()?);
+                // A pattern's name, scale, families and gradient, and the objects it follows (docs/adr/0186).
+                let name = self.string()?;
+                let scale = self.num()?;
+                let lines = match self.int()? {
+                    None => None,
+                    Some(n) => {
+                        let mut lines = Vec::with_capacity(n);
+                        for _ in 0..n {
+                            lines.push(PatternLine {
+                                angle: self.num()?,
+                                origin: [self.num()?, self.num()?],
+                                offset: [self.num()?, self.num()?],
+                                dashes: self.values()?,
+                            });
+                        }
+                        Some(lines)
+                    }
+                };
+                let gradient = match self.string()? {
+                    None => None,
+                    Some(shape) => {
+                        let inverted = self.num()?;
+                        Some(Gradient {
+                            shape,
+                            inverted: (inverted >= 0.0).then_some(inverted != 0.0),
+                            color2: self.string()?.unwrap_or_default(),
+                        })
+                    }
+                };
+                let assoc = match self.string()? {
+                    None => None,
+                    Some(outer) => Some(HatchAssoc {
+                        outer,
+                        islands: self.strings()?,
+                        cutouts: self.strings()?,
+                        seed: self.pt()?,
+                    }),
+                };
                 Shape::Hatch {
                     ring,
                     holes,
                     pattern: HatchPattern {
-                        kind: self.string()?.unwrap_or_default(),
-                        angle: self.num()?,
-                        spacing: self.num()?,
+                        kind,
+                        angle,
+                        spacing,
+                        name,
+                        scale: (!scale.is_nan()).then_some(scale),
+                        lines,
+                        gradient,
                     },
+                    assoc,
                 }
             }
             15 => Shape::Leader {
@@ -632,6 +700,15 @@ impl Packer {
         self.nums.push(ps.len() as f64);
         for p in ps {
             self.nums.extend([p.x, p.y]);
+        }
+    }
+
+    /// Strings by their indices: a count (−1 for none), then each one.
+    fn strings(&mut self, ss: Option<&[String]>) {
+        self.put(&[count(ss)]);
+        for s in ss.into_iter().flatten() {
+            let i = self.string(s);
+            self.put(&[i]);
         }
     }
 
@@ -840,6 +917,7 @@ impl Packer {
                 ring,
                 holes,
                 pattern,
+                assoc,
             } => {
                 self.put(&[12.0]);
                 self.points(ring);
@@ -849,6 +927,32 @@ impl Packer {
                 }
                 let kind = self.string(&pattern.kind);
                 self.put(&[kind, pattern.angle, pattern.spacing]);
+                let name = self.maybe_string(pattern.name.as_deref());
+                self.put(&[name, pattern.scale.unwrap_or(f64::NAN)]);
+                self.put(&[count(pattern.lines.as_deref())]);
+                for l in pattern.lines.iter().flatten() {
+                    self.put(&[l.angle, l.origin[0], l.origin[1], l.offset[0], l.offset[1]]);
+                    self.values(l.dashes.as_deref());
+                }
+                match &pattern.gradient {
+                    None => self.put(&[-1.0]),
+                    Some(g) => {
+                        let shape = self.string(&g.shape);
+                        let color2 = self.string(&g.color2);
+                        let inverted = g.inverted.map_or(-1.0, flag);
+                        self.put(&[shape, inverted, color2]);
+                    }
+                }
+                match assoc {
+                    None => self.put(&[-1.0]),
+                    Some(a) => {
+                        let outer = self.string(&a.outer);
+                        self.put(&[outer]);
+                        self.strings(a.islands.as_deref());
+                        self.strings(a.cutouts.as_deref());
+                        self.put(&[a.seed.x, a.seed.y]);
+                    }
+                }
             }
             // docs/adr/0144: the insertion point, scale, turn, mirror flag, the
             // block's id, and its attributes' texts (§7: what its attribute texts show).
@@ -1175,6 +1279,12 @@ mod tests {
             3.0,
             45.0,
             1.0,
+            // No name, scale, families, gradient or objects it follows (docs/adr/0186).
+            -1.0,
+            f64::NAN,
+            -1.0,
+            -1.0,
+            -1.0,
         ];
         let mut s = Store::new();
         assert_eq!(s.put_packed(&nums, &strings), Ok(4));

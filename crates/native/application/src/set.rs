@@ -131,17 +131,24 @@ struct Checked {
 
 /// `e` as the input asks, or `None` when it already is: only the fields
 /// every object has change, so only they are compared, and a linked text's
-/// link (docs/adr/0175 §4).
+/// link (docs/adr/0175 §4) and an associative hatch's tie (docs/adr/0186 §6).
 fn changed(e: &Entity, input: &EntitiesSetProperties) -> Option<Entity> {
     let mut next = e.clone();
     let mut unlinked = false;
-    if input.unlink
-        && let Entity::Text(text) = &mut next
-        && text.label_of.is_some()
-    {
-        text.label_of = None;
-        text.label_scale = None;
-        unlinked = true;
+    if input.unlink {
+        match &mut next {
+            Entity::Text(text) if text.label_of.is_some() => {
+                text.label_of = None;
+                text.label_scale = None;
+                unlinked = true;
+            }
+            // An associative hatch follows its objects no more (docs/adr/0186 §6).
+            Entity::Hatch(hatch) if hatch.assoc.is_some() => {
+                hatch.assoc = None;
+                unlinked = true;
+            }
+            _ => {}
+        }
     }
     let base = next.base_mut();
     if let Some(layer) = &input.layer_id {

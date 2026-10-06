@@ -26,12 +26,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::api::json::Json;
-use crate::entity::{Attrs, Entity, Shape};
-use crate::geom::affine::{Affine, compose, translation};
+use crate::entity::{Attrs, Entity, Shape, entity_bounds_in};
+use crate::geom::affine::{Affine, apply, compose, translation};
+use crate::geometry::{empty_bounds, extend_bounds};
 use crate::jsmath::{PI, cos, sin};
 use crate::ops::curve_cuts::Cut;
 use crate::ops::transform::transform_shape;
-use crate::text::TextAlign;
+use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
 
 /// Nested definitions followed at most this deep (`MAX_BLOCK_DEPTH` in the contracts).
@@ -204,6 +205,36 @@ impl Blocks {
                 }
             })
             .collect()
+    }
+
+    /// An insert's box (docs/adr/0186 §4): its pieces' box in its
+    /// definition's frame, placed as the insert places them; none for an
+    /// unknown block or one without pieces.
+    pub fn outline(&self, insert: &Shape, font: Font) -> Option<Vec<Vec2>> {
+        let (flat, m) = self.placed(insert)?;
+        let mut b = empty_bounds();
+        for piece in &flat.pieces {
+            let pb = entity_bounds_in(&piece.shape, font);
+            if pb.min_x <= pb.max_x && pb.min_y <= pb.max_y {
+                for q in [Vec2::new(pb.min_x, pb.min_y), Vec2::new(pb.max_x, pb.max_y)] {
+                    extend_bounds(&mut b, q, 0.0);
+                }
+            }
+        }
+        if !(b.min_x <= b.max_x && b.min_y <= b.max_y) {
+            return None;
+        }
+        Some(
+            [
+                Vec2::new(b.min_x, b.min_y),
+                Vec2::new(b.max_x, b.min_y),
+                Vec2::new(b.max_x, b.max_y),
+                Vec2::new(b.min_x, b.max_y),
+            ]
+            .into_iter()
+            .map(|q| apply(&m, q))
+            .collect(),
+        )
     }
 
     /// An insert's definition and its similarity from the base-relative pieces to the drawing.

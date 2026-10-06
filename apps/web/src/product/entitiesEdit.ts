@@ -11,6 +11,7 @@ import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
 import { FACE_FIELDS, faceProblem, LOOK_FIELDS, lookProblem } from '../model/annotationStyles';
 import { MAX_WIDTH_FACTOR, paragraphProblem, widthFactorOk, type Entity, type NewEntity } from '../model/entities';
+import { assocProblem, patternProblem } from '../model/hatchRules';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
 import { checkLayer, checkLineWeight, checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
 import { checkDimension } from './dimension';
@@ -107,7 +108,7 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   ray: ['p', 'dir'],
   text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask', 'boxWidth', 'lineSpacing', 'runs', ...FACE_FIELDS],
   dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c', 'mask', 'za', 'zb', ...LOOK_FIELDS],
-  hatch: ['ring', 'holes', 'pattern'],
+  hatch: ['ring', 'holes', 'pattern', 'assoc'],
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
   leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
   table: ['p', 'rotation', 'height', 'rows', 'columns', 'cells', 'merges', 'aligns', 'header', 'grid', 'frame', ...FACE_FIELDS, 'source'],
@@ -294,6 +295,10 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
     }
   }
   if (g.kind === 'hatch') {
+    // Its pattern's own fields within their bounds, its tie's too (docs/adr/0186 §1, §6); a number that is not
+    // finite is said as such below (`not_finite`).
+    const problem = geometryIsFinite(g as unknown as Entity) ? (patternProblem(g.pattern) ?? (g.assoc ? assocProblem(g.assoc) : null)) : null;
+    if (problem) return failed(error('invalid_hatch', problem[1], at(`.${problem[0]}`)));
     if (g.ring.length < 3) return failed(error('too_few_corners', `Taramanın en az 3 köşesi olmalı; ${g.ring.length} köşe verildi. Eksik köşeleri ekleyin.`, at('.ring')));
     for (const [h, hole] of (g.holes ?? []).entries())
       if (hole.length < 3)

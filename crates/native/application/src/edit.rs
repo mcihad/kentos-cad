@@ -30,7 +30,7 @@ use std::collections::HashSet;
 
 use kentos_contracts::{
     CommandError, CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesEditPlan,
-    EntitiesEdited, Entity, EntityBase, EntityEdit, EntityGeometry, RingGeometry, Vec2,
+    EntitiesEdited, Entity, EntityBase, EntityEdit, EntityGeometry, HatchAssoc, RingGeometry, Vec2,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::ops::elevation::{Carry, Elevated};
@@ -619,7 +619,25 @@ pub(crate) fn check_geometry(
                 }
             }
         }
-        EntityGeometry::Hatch { ring, holes, .. } => {
+        EntityGeometry::Hatch {
+            ring,
+            holes,
+            pattern,
+            assoc,
+        } => {
+            // Its pattern's own fields within their bounds, its tie's too (docs/adr/0186 §1, §6); a
+            // number that is not finite is said as such below (`not_finite`).
+            if finite(g)
+                && let Some((field, words)) = pattern
+                    .problem()
+                    .or_else(|| assoc.as_ref().and_then(HatchAssoc::problem))
+            {
+                return Err(Stop::Failed(error(
+                    codes::INVALID_HATCH,
+                    words,
+                    at(&format!(".{field}")),
+                )));
+            }
             if ring.len() < 3 {
                 return Err(Stop::Failed(error(
                     codes::TOO_FEW_CORNERS,
@@ -1072,11 +1090,20 @@ fn finite(g: &EntityGeometry) -> bool {
             ring,
             holes,
             pattern,
+            assoc,
         } => {
             pts(ring)
                 && holes.iter().flatten().all(|h| pts(h))
                 && pattern.angle.is_finite()
                 && pattern.spacing.is_finite()
+                && pattern.scale.is_none_or(f64::is_finite)
+                && pattern.lines.iter().flatten().all(|l| {
+                    [l.angle, l.origin[0], l.origin[1], l.offset[0], l.offset[1]]
+                        .iter()
+                        .chain(&l.dashes)
+                        .all(|v| v.is_finite())
+                })
+                && assoc.as_ref().is_none_or(|a| pt(&a.seed))
         }
         EntityGeometry::Insert {
             p, scale, rotation, ..

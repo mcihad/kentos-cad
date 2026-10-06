@@ -757,11 +757,14 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
             ring,
             holes,
             pattern,
+            assoc,
         } => {
             pts(ring)
                 && holes.iter().flatten().all(|h| pts(h))
                 && pattern.angle.is_finite()
                 && pattern.spacing.is_finite()
+                && pattern.scale.is_none_or(f64::is_finite)
+                && assoc.as_ref().is_none_or(|a| pt(&a.seed))
         }
     }
 }

@@ -590,6 +590,43 @@ cases.append({
     ],
 })
 
+# docs/adr/0186 §1, §6: a pattern's name, scale and families, a gradient's second colour and a hatch's tie are checked
+# as the contract checks them (`invalid_hatch`, at the field, before the ring); a pattern and a gradient are written.
+PATTERNED = {**DONUT, "pattern": {"type": "pattern", "angle": 15, "spacing": 1, "name": "ANSI33", "scale": 0.5,
+             "lines": [{"angle": 45, "origin": [0, 0], "offset": [0, 6.35]},
+                       {"angle": 45, "origin": [4.49, 0], "offset": [0, 6.35], "dashes": [3.175, -1.5875]}]}}
+GRADED = {**DONUT, "pattern": {"type": "gradient", "angle": 30, "spacing": 1,
+                               "gradient": {"shape": "cylinder", "inverted": True, "color2": "#FFFFFF"}}}
+
+
+def patterned(**pattern):
+    return O({**PATTERNED, "pattern": {**PATTERNED["pattern"], **pattern}})
+
+
+TWICE = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3301"
+cases.append({
+    "name": "taramanın deseni ve ilişkisi sözleşmenin kuralıyla denetlenir (invalid_hatch, alanında); desen ve degrade yazılır",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [patterned(lines=[])]},
+         "result": failed("invalid_hatch", "Desenin 0 çizgi ailesi var; en az 1, en çok 64 olmalı.", "objects[0].geometry.pattern.lines"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [patterned(name="  ")]},
+         "result": failed("invalid_hatch", "Desenin adı boş olamaz ve en çok 64 harf olabilir.", "objects[0].geometry.pattern.name"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [patterned(lines=[{"angle": 0, "origin": [0, 0], "offset": [3, 0]}])]},
+         "result": failed("invalid_hatch", "Desenin 1. çizgi ailesinin çizgileri arası 0; aileler sıfırdan büyük aralıklı olmalı.", "objects[0].geometry.pattern.lines"),
+         "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DONUT, "pattern": {"type": "lines", "angle": 45, "spacing": 1, "name": "ANSI31"}})]},
+         "result": failed("invalid_hatch", "Yalnız desen türündeki taramanın adı, ölçeği ve çizgi aileleri olur.", "objects[0].geometry.pattern"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**GRADED, "pattern": {**GRADED["pattern"], "gradient": {"shape": "linear", "color2": "beyaz"}}})]},
+         "result": failed("invalid_hatch", "Degradenin ikinci rengi “beyaz”; #RRGGBB biçiminde olmalı.", "objects[0].geometry.pattern.gradient.color2"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**PATTERNED, "assoc": {"outer": TWICE, "islands": [TWICE], "seed": P(487001, 4420001)}})]},
+         "result": failed("invalid_hatch", "Taramanın ilişkisi bir nesneyi iki kez gösteriyor; her nesne bir kez gösterilmeli.", "objects[0].geometry.assoc"),
+         "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "hatch", "objects": [O(PATTERNED), O(GRADED)]}, "result": done([3, 4]),
+         "expect": {"ids": IDS + [3, 4], "entities": {"3": made(O(PATTERNED), 3), "4": made(O(GRADED), 4)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Tarama", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+    ],
+})
+
 cases.append({
     "name": "NaN ya da sonsuz değer yazılmaz; ileti hangi nesnenin olduğunu söyler, hiçbiri yazılmaz",
     "steps": [

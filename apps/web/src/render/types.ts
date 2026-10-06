@@ -82,7 +82,9 @@ export const STROKE_STRIDE = 6;
 
 export type FillPaintBatch =
   | { kind: 'solid'; color: RGBA }
-  | { kind: 'hatch'; color: RGBA; angle: number; spacing: number; width: number; offset: number; dash: readonly number[] | null; dashOffset: number; unit: StyleUnit }
+  | { kind: 'hatch'; color: RGBA; angle: number; spacing: number; width: number; offset: number; dash: readonly number[] | null; dashOffset: number; stagger?: number; unit: StyleUnit }
+  /** A gradient (docs/adr/0186 §3): `shape` 0 linear, 1 cylinder, 2 spherical; its frame in metres from the batch's tile once folded. */
+  | { kind: 'gradient'; color: RGBA; color2: RGBA; shape: number; inverted: boolean; dir: number; from: number; to: number; centre: readonly [number, number]; radius: number }
   /**
    * One shape on a grid computed per pixel (sizes in `unit`): `size` is the
    * cell, `mark` the shape in it; `jitter` and `coverage` scatter it at

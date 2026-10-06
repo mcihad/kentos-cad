@@ -216,11 +216,8 @@ fn a_hatch_keeps_its_islands_when_it_changes() {
         base: base("a"),
         ring,
         holes: Some(vec![island.clone()]),
-        pattern: HatchPattern {
-            kind: HatchPatternType::Solid,
-            angle: 0.0,
-            spacing: 1.0,
-        },
+        pattern: HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0),
+        assoc: None,
     });
     let slot = doc.add(hatch).expect("slot");
     let mut changed = doc.get(slot).expect("hatch").clone();

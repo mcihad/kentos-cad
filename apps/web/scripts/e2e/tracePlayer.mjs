@@ -637,7 +637,7 @@ const observe = (mark) =>
     };
     const along = (e, t) => [e.c.x + e.major.x * Math.cos(t) - e.major.y * e.ratio * Math.sin(t), e.c.y + e.major.y * Math.cos(t) + e.major.x * e.ratio * Math.sin(t)];
     const ellipse = (e) => (e.t0 === e.t1 ? [0, 1, 2, 3].map((i) => along(e, (i * Math.PI) / 2)) : [along(e, e.t0), along(e, e.t1)]);
-    const pts = (e) => (e.pts ? e.pts.map((p) => [p.x, p.y]) : e.kind === 'line' ? [[e.a.x, e.a.y], [e.b.x, e.b.y]] : e.kind === 'point' || e.kind === 'table' ? [[e.p.x, e.p.y]] : e.kind === 'arc' ? [e.a0, e.a1].map((a) => [e.c.x + e.r * Math.cos(a), e.c.y + e.r * Math.sin(a)]) : e.kind === 'ellipse' ? ellipse(e) : e.kind === 'xline' || e.kind === 'ray' ? [[e.p.x, e.p.y], [e.p.x + e.dir.x, e.p.y + e.dir.y]] : e.kind === 'dimension' ? [e.a, e.b, ...(e.c ? [e.c] : [])].map((p) => [p.x, p.y]) : e.kind === 'insert' ? placed(e) : e.kind === 'text' ? [[e.p.x, e.p.y]] : null);
+    const pts = (e) => (e.pts ? e.pts.map((p) => [p.x, p.y]) : e.kind === 'line' ? [[e.a.x, e.a.y], [e.b.x, e.b.y]] : e.kind === 'point' || e.kind === 'table' ? [[e.p.x, e.p.y]] : e.kind === 'arc' ? [e.a0, e.a1].map((a) => [e.c.x + e.r * Math.cos(a), e.c.y + e.r * Math.sin(a)]) : e.kind === 'ellipse' ? ellipse(e) : e.kind === 'xline' || e.kind === 'ray' ? [[e.p.x, e.p.y], [e.p.x + e.dir.x, e.p.y + e.dir.y]] : e.kind === 'dimension' ? [e.a, e.b, ...(e.c ? [e.c] : [])].map((p) => [p.x, p.y]) : e.kind === 'insert' ? placed(e) : e.kind === 'text' ? [[e.p.x, e.p.y]] : e.kind === 'hatch' ? e.ring.map((p) => [p.x, p.y]) : null);
     const shape = (e) => ({
       kind: e.kind,
       pts: pts(e),
@@ -663,7 +663,10 @@ const observe = (mark) =>
       // The outer path's vertex elevations, a line's two ends' (docs/adr/0142, 0160).
       zs: e.kind === 'line' ? [e.za ?? null, e.zb ?? null] : e.kind === 'polygon' || e.kind === 'polyline' ? (e.zs ?? e.pts.map(() => null)) : [],
       // An area's holes, in all its parts (docs/adr/0173 §5).
-      holes: e.kind === 'polygon' ? (e.holes?.length ?? 0) + (e.parts ?? []).reduce((n, part) => n + (part.holes?.length ?? 0), 0) : null,
+      holes: e.kind === 'polygon' ? (e.holes?.length ?? 0) + (e.parts ?? []).reduce((n, part) => n + (part.holes?.length ?? 0), 0) : e.kind === 'hatch' ? (e.holes?.length ?? 0) : null,
+      // A hatch's pattern (its kind, a pattern's name, a gradient's shape) and how many objects it follows (docs/adr/0186).
+      pattern: e.kind === 'hatch' ? { type: e.pattern.type, name: e.pattern.name ?? null, shape: e.pattern.gradient?.shape ?? null } : null,
+      assoc: e.kind === 'hatch' ? (e.assoc ? 1 + (e.assoc.islands?.length ?? 0) + (e.assoc.cutouts?.length ?? 0) : 0) : null,
       // A linked text's object by its slot (0: no object has its id) and its scale (docs/adr/0175 §4).
       labelOf: e.kind === 'text' && e.labelOf !== undefined ? (k.doc.slotOf(e.labelOf) ?? 0) : null,
       labelScale: e.kind === 'text' ? (e.labelScale ?? null) : null,
@@ -813,6 +816,13 @@ function compareShape(name, have, want, t) {
   // An object template's symbol, colour, weight and layer (docs/adr/0176 §3), exact.
   for (const key of ['align', 'widthFactor', 'mask', 'rotation', 'arrow', 'label', 'z', 'holes', 'labelOf', 'labelScale', 'lineSpacing', 'symbol', 'color', 'lineWeight', 'layer'])
     if (want[key] !== undefined && have[key] !== want[key]) bad.push(`${name}.${key}: ${JSON.stringify(have[key])}, beklenen ${JSON.stringify(want[key])}`);
+  // A hatch's pattern (an absent member none) and how many objects it follows (docs/adr/0186), exact.
+  if (want.pattern !== undefined) {
+    const p = have.pattern;
+    if (!p || p.type !== want.pattern.type || p.name !== (want.pattern.name ?? null) || p.shape !== (want.pattern.shape ?? null))
+      bad.push(`${name}.pattern: ${JSON.stringify(p)}, beklenen ${JSON.stringify(want.pattern)}`);
+  }
+  if (want.assoc !== undefined && have.assoc !== want.assoc) bad.push(`${name}.assoc: ${JSON.stringify(have.assoc)}, beklenen ${want.assoc}`);
   // A multi-line text's box (from clicks: within the click tolerance; null none) and runs, exact (docs/adr/0182).
   if (want.boxWidth !== undefined && !(want.boxWidth === null ? have.boxWidth === null : have.boxWidth !== null && Math.abs(have.boxWidth - want.boxWidth) <= t.clickTolerance))
     bad.push(`${name}.boxWidth: ${JSON.stringify(have.boxWidth)}, beklenen ${JSON.stringify(want.boxWidth)} (±${t.clickTolerance} m)`);

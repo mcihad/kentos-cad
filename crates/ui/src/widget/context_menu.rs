@@ -106,6 +106,15 @@ const DETAIL_WIDTH: f32 = 300.0;
 const DETAIL_ICON: f32 = 22.0;
 const DETAIL_ICON_SLOT: f32 = 26.0;
 const DETAIL_PAD: (f32, f32) = (6.0, 7.0);
+/// A wide sample in place of the icon (a hatch pattern's, docs/adr/0186
+/// §11; the web's `.menu__item[data-preview]`): its size, the gap after
+/// it, and its row's height.
+const PREVIEW: (f32, f32) = (56.0, 24.0);
+const PREVIEW_GAP: f32 = 10.0;
+const PREVIEW_ROW: f32 = 34.0;
+/// Such a menu's widest (the web's `.menu`'s), so that a pattern's
+/// description beside its sample is read whole.
+const PREVIEW_MAX_WIDTH: f32 = 420.0;
 /// The detail's line height, relative to its size (the web's 1.35).
 const DETAIL_LEADING: f32 = 1.35;
 /// Alt menünün ana menünün üstüne binen kısmı.
@@ -210,6 +219,8 @@ struct Command<Message> {
     radio: bool,
     /// A colour sample before the label (a layer's, a colour's).
     swatch: Option<Color>,
+    /// A wide sample in place of the icon (a hatch pattern's).
+    preview: Option<Icon>,
     danger: bool,
     /// A muted note at the right, before the shortcut (“sabit”, what a method does).
     hint: Option<String>,
@@ -222,6 +233,9 @@ impl<Message> Item<Message> {
                 detail: Some(detail),
                 ..
             }) => detail_height(detail),
+            Item::Command(Command {
+                preview: Some(_), ..
+            }) => typography::scaled(PREVIEW_ROW),
             Item::Command(_) | Item::Submenu { .. } => item_height(),
             Item::Separator => SEPARATOR_HEIGHT,
             Item::Header(_) => header_height(),
@@ -254,6 +268,7 @@ impl<Message> Menu<Message> {
             checked: None,
             radio: false,
             swatch: None,
+            preview: None,
             danger: false,
             hint: None,
         }));
@@ -276,6 +291,7 @@ impl<Message> Menu<Message> {
             checked: Some(checked),
             radio: false,
             swatch: None,
+            preview: None,
             danger: false,
             hint: None,
         }));
@@ -299,6 +315,7 @@ impl<Message> Menu<Message> {
             checked: Some(chosen),
             radio: true,
             swatch: None,
+            preview: None,
             danger: false,
             hint: None,
         }));
@@ -310,6 +327,18 @@ impl<Message> Menu<Message> {
     pub fn swatch(mut self, color: Color) -> Self {
         if let Some(Item::Command(command)) = self.items.last_mut() {
             command.swatch = Some(color);
+        }
+
+        self
+    }
+
+    /// Son eklenen komutun ikonu yerine geniş örneği (56 × 24; bir tarama
+    /// deseninin, docs/adr/0186 §11): satırı onu alacak kadar yüksektir.
+    /// Örneği olan bir menüde örneksiz komutların adları da aynı hizadan
+    /// başlar, ikonları örneğin yerindedir.
+    pub fn preview(mut self, glyph: Icon) -> Self {
+        if let Some(Item::Command(command)) = self.items.last_mut() {
+            command.preview = Some(glyph);
         }
 
         self
@@ -416,6 +445,13 @@ impl<Message> Menu<Message> {
         self.items.iter().any(|item| {
             matches!(item, Item::Command(command) if command.checked.is_some() && command.icon.is_some())
         })
+    }
+
+    /// Bir komutunda geniş örnek var mı: varsa ikonlar örneklerin sütunundadır.
+    fn has_previews(&self) -> bool {
+        self.items
+            .iter()
+            .any(|item| matches!(item, Item::Command(command) if command.preview.is_some()))
     }
 
     /// Menüde gösterilecek bir şey var mı. Sondaki bölücü sayılmaz.
@@ -556,10 +592,23 @@ impl<Message> Menu<Message> {
             })
             .fold(0.0, f32::max);
 
-        // The icons' own column beside the radios' dots: 16 and the gap.
-        let icons = if self.has_radio_icons() { 24.0 } else { 0.0 };
+        // The icons' own column beside the radios' dots: 16 and the gap; the
+        // wide samples' 56 and theirs.
+        let previews = self.has_previews();
+        let icons = if previews {
+            PREVIEW.0 + PREVIEW_GAP
+        } else if self.has_radio_icons() {
+            24.0
+        } else {
+            0.0
+        };
+        let most = if previews {
+            PREVIEW_MAX_WIDTH
+        } else {
+            MAX_WIDTH
+        };
         (widest + icons + ICON_SLOT + 8.0 + 16.0 + PADDING * 2.0 + 8.0)
-            .clamp(typography::scaled(MIN_WIDTH), typography::scaled(MAX_WIDTH))
+            .clamp(typography::scaled(MIN_WIDTH), typography::scaled(most))
     }
 }
 
@@ -1632,13 +1681,16 @@ fn panel<'a, Message: 'a>(
     highlighted: Option<usize>,
     boxed: fn(&Theme) -> container::Style,
 ) -> Element<'a, Message> {
-    let swatches = menu.has_swatches();
-    let radio_icons = menu.has_radio_icons();
+    let columns = Columns {
+        swatches: menu.has_swatches(),
+        radio_icons: menu.has_radio_icons(),
+        previews: menu.has_previews(),
+    };
     let rows = menu
         .items
         .iter()
         .enumerate()
-        .map(|(index, item)| item_row(item, highlighted == Some(index), swatches, radio_icons));
+        .map(|(index, item)| item_row(item, highlighted == Some(index), columns));
 
     container(Column::with_children(rows))
         .padding(PADDING)
@@ -1647,12 +1699,25 @@ fn panel<'a, Message: 'a>(
         .into()
 }
 
+/// The columns a menu's rows keep for its swatches, its radios' icons and
+/// its wide samples, whether a row has one or not.
+#[derive(Clone, Copy)]
+struct Columns {
+    swatches: bool,
+    radio_icons: bool,
+    previews: bool,
+}
+
 fn item_row<'a, Message: 'a>(
     item: &Item<Message>,
     highlighted: bool,
-    swatches: bool,
-    radio_icons: bool,
+    columns: Columns,
 ) -> Element<'a, Message> {
+    let Columns {
+        swatches,
+        radio_icons,
+        previews,
+    } = columns;
     let detail = match item {
         Item::Command(command) => command.detail.clone(),
         _ => None,
@@ -1670,7 +1735,7 @@ fn item_row<'a, Message: 'a>(
             match (command.checked, command.radio) {
                 (Some(true), true) => Mark::Dot,
                 (Some(true), false) => Mark::Icon(Icon::Check),
-                _ if radio_icons => Mark::None,
+                _ if radio_icons || previews => Mark::None,
                 _ => command.icon.map_or(Mark::None, Mark::Icon),
             },
             command.label.clone(),
@@ -1733,11 +1798,19 @@ fn item_row<'a, Message: 'a>(
     let mut content = row![container(slot).width(ICON_SLOT).center_x(ICON_SLOT)]
         .spacing(8)
         .align_y(Center);
-    if radio_icons {
-        let glyph = match item {
-            Item::Command(command) => command.icon,
-            _ => None,
+    let (glyph, wide) = match item {
+        Item::Command(command) => (command.icon, command.preview),
+        _ => (None, None),
+    };
+    if previews {
+        // The sample, or the icon where it would be; the web's 10 after it.
+        let picture: Element<'a, Message> = match (wide, glyph) {
+            (Some(wide), _) => icon(wide).size(PREVIEW.1).wide(PREVIEW.0).into(),
+            (None, Some(glyph)) => container(icon(glyph).size(16.0)).center_x(PREVIEW.0).into(),
+            (None, None) => space::horizontal().width(PREVIEW.0).into(),
         };
+        content = content.push(container(picture).width(PREVIEW.0 + PREVIEW_GAP - 8.0));
+    } else if radio_icons {
         content = content.push(match glyph {
             Some(glyph) => icon(glyph).size(16.0).into(),
             None => Element::from(space::horizontal().width(16)),
@@ -1777,7 +1850,7 @@ fn item_row<'a, Message: 'a>(
 
     container(content)
         .padding([0, 8])
-        .height(item_height())
+        .height(item.height())
         .width(Fill)
         .align_y(Center)
         .style(style::container::menu_item(highlighted, enabled, danger))
@@ -1911,6 +1984,35 @@ mod tests {
         let ticks = Menu::new().check(LONG, true, 1_u8).icon(Icon::Check);
         assert!(ticks.has_radio_icons());
         assert!(!Menu::new().item(LONG, 1_u8).icon(Icon::Check).has_radio_icons());
+    }
+
+    #[test]
+    fn a_wide_sample_takes_its_column_and_a_taller_row() {
+        // Long enough a label that neither menu is at its least width.
+        const LONG: &str = "ANSI31 (demir, tuğla, taş duvar)";
+        let pictured = Menu::new()
+            .radio(LONG, true, 1_u8)
+            .icon(Icon::Check)
+            .radio("Dolu", false, 2_u8);
+        let wide = Menu::new()
+            .radio(LONG, true, 1_u8)
+            .icon(Icon::Check)
+            .preview(Icon::Grid)
+            .radio("Dolu", false, 2_u8);
+        assert!(wide.has_previews() && !pictured.has_previews());
+        assert!(wide.width() > pictured.width());
+        // A pattern's longest description is read whole beside its sample.
+        let longest = Menu::new()
+            .radio("ANSI37 (kurşun, çinko, magnezyum, yalıtım)", false, 1_u8)
+            .preview(Icon::Grid);
+        assert!(longest.width() < typography::scaled(PREVIEW_MAX_WIDTH));
+        // The sampled row is taller; the next is found below it.
+        assert_eq!(wide.items[0].height(), typography::scaled(PREVIEW_ROW));
+        assert_eq!(wide.items[1].height(), item_height());
+        let below = PADDING + typography::scaled(PREVIEW_ROW) + 1.0;
+        assert_eq!(wide.item_at(below), Some(1));
+        assert_eq!(pictured.item_at(below), Some(1));
+        assert_eq!(wide.item_at(PADDING + item_height() + 1.0), Some(0));
     }
 
     #[test]

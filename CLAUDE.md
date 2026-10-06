@@ -42,6 +42,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   yaz (seçili nokta, çizgi ve alanların bütün köşelerine, tek adımda); eğik kol ve yatay çizgi, üstünde doğu, altında kuzey ya da kolsuz
   satırlar; Şablon (`{Y}`, `{X}`, `{Z}`, `{ad}`), Basamak, Yön (Otomatik dışa), Yükseklik, Stil; Çizelge açıkken aynı nesnelerin koordinat
   çizelgesi imleçten yerleşir (ADR 0185);
+  tarama ekleri: desen türü (adı, ölçeği ve çizgi aileleri taramanın içinde; `.kcad` şema 23), kitaplıkta ANSI, ISO ve genel 28 desen,
+  kesikler, noktalar ve kayma iki platformun çizim hatlarında, degrade (doğrusal, silindir, küre; ters, ikinci renk); Tarama'nın Desen
+  (menüde her desenin geniş örneği, adı yazılarak), Ölçek, Açı, İkinci renk, Ters, İlişkili ve Yazılar seçenekleri; Çoklu tara; ilişkili tarama kapalı
+  nesnesini, adalarını ve boş bıraktığı yazıları iki belgede kayıttan önce izler, Öznitelikler'de İlişkiyi kopar; DXF'in HATCH'i desen
+  satırları ve degradesiyle iki yönde (ADR 0186);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -251,6 +256,9 @@ python3 scripts/fixtures/table_cases.py --check   # tablonun yerleşimini, çer�
 python3 scripts/fixtures/table_file_cases.py --check   # Tablo ekle'nin dosya okuyucusunu (CSV/TXT ayırıcı ve kodlama, XLSX sayfaları; .xls ve bozuk dosya) Python'un zipfile ve xml.etree'siyle yazılmış örneklerden denetle; durumlar fixtures/table/v1/files.json (ADR 0184 §4)
 python3 scripts/fixtures/coordinate_label_cases.py --check   # Koordinat yaz'ın yerlerini ve adlarını, şablonun satırlarını (yer tutucular, değeri olmayan satır, birimler, basamak) ve yerleşimi (kol, dirsek, çizgi, dört yön, Otomatik, kolsuz satırlar) kesirlerle ve yazı tiplerinin ölçülmüş ilerlemeleriyle bağımsız başvurudan denetle; durumlar fixtures/coordinate-labels/v1/cases.json (ADR 0185)
 KENTOS_SHOTS_ONLY=koordinat-yaz,koordinat-koseler,koordinat-cizelge,koordinat-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Koordinat yaz'ın resimleri, .run/shots/arac-koordinat-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs coordinates); ADR 0185)
+python3 scripts/fixtures/hatch_pattern_cases.py --check   # tarama desenlerinin kitaplığını, kesiklerin çizilişini, boyalarını, bölgeye kesilen çizgi ve noktalarını, taşınmasını ve taramanın bölgesini ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/hatch/v1/cases.json (ADR 0186)
+python3 scripts/ui/hatch_icons.py --check   # desenlerin ikonlarını ve Desen menülerinin geniş örneklerini (apps/web/src/ui/hatchIcons.ts) desenlerin tanımından yeniden üretip karşılaştır; değişince --check'siz yazar (ADR 0186 §11)
+KENTOS_SHOTS_ONLY=tarama-araci,tarama-desenler,tarama-coklu,tarama-iliskili,tarama-oznitelikler,tarama-desen-menusu,tarama-oznitelikler-desen cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # tarama eklerinin resimleri, .run/shots/arac-tarama-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hatches); ADR 0186)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
 python3 scripts/fixtures/dimension_cases.py --check   # yeni ölçü türlerinin yerleşimini kurallardan denetle (ADR 0147)
 python3 scripts/fixtures/quick_dimension_cases.py --check   # Hızlı ölçü'nün ölçülerini (taraf, uzaklık, ortak kenar) kurallardan denetle (ADR 0147 §7)
@@ -964,7 +972,17 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   yerleşim; bağımsız başvuru `coordinate_label_cases.py`, ortak `fixtures/coordinate-labels/v1/cases.json`), `cad.entities.create`'in
   `coordinates` işlemi; araçlar masaüstünde `kentos_interaction::coordinate_labels`, web'de `tools/coordinateLabelTool.ts`; Çizelge Tablo
   ekle'nin yerleştirmesiyle (`ViewChange::PlaceTable`; web'in tablo yapma yardımcıları `tools/newTable.ts`); ortak iz `coordinate-labels.json`
-  (oynatıcılar `{`, `}`, `|`, `=`'i yazar). Sıradaki `CAD-23` tarama ekleri.
+  (oynatıcılar `{`, `}`, `|`, `=`'i yazar). `CAD-23` tarama ekleri ([ADR 0186](docs/adr/0186-hatch-extras.md)) tek parçada bitti (6 Ekim;
+  ikonları sahibin seçimi): sözleşmenin `hatch` modülü (desen ve degrade türleri, `PatternLine`, `HatchGradient`, `HatchAssoc`), `.kcad`
+  şema 23 (`FORMATS_VERSION` 33), çekirdek `geom::hatch_pattern` (kitaplık, boyalar, parçalar, `carried`), `ops::hatch_region`,
+  `tools::hatch` (bağımsız başvuru `hatch_pattern_cases.py`, ortak `fixtures/hatch/v1/cases.json`); stil motorunda `hatchFill`'in
+  `stagger`'ı ve `gradientFill` (çerçevesi partide çapaya göre), WGSL sözleşmesi 4. sürüm; ilişkili taramanın izlenmesi masaüstünde
+  `kentos_domain` `hatch_ties.rs`, web'de `model/hatchTies.ts` (ortak `hatch-ties.json`); araçlar `kentos_interaction::hatch_options`,
+  `hatch_selected`, web `tools/hatchOptions.ts`, `tools/hatchSelectedTool.ts`; Öznitelikler `properties::hatch_rows`,
+  `ui/properties/hatchRows.ts`; Desen menülerinde 56 × 24'lük geniş örnekler (sahibin seçimi; KentOS UI menüsünün `preview`'ü ve
+  `Glyph::wide`'ı, web `iconPreview`); DXF `dxf/emit/pattern.rs` ve yazıcı (`hatch-patterns.dxf`, `dxf-write/hatches`); ortak izler `hatches.json`,
+  `hatch-patterns.json` (oynatıcılarda taramanın `pattern` ve `assoc` beklentisi). Sıradaki `CAD-25` seçim ekleri (`CAD-24` [M] sahibin
+  tarifini bekler).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

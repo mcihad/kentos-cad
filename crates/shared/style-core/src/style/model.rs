@@ -229,6 +229,23 @@ pub struct HatchFill {
     pub offset: Option<f64>,
     pub dash: Option<Vec<f64>>,
     pub dash_offset: Option<f64>,
+    /// How much further along each line starts than the one before it
+    /// (a hatch pattern's family, docs/adr/0186 §3).
+    pub stagger: Option<f64>,
+}
+
+/// A gradient over the area (docs/adr/0186 §3): from `color` to `color2`,
+/// `linear` along `angle` (degrees), `cylinder` (the second colour along
+/// the middle) or `spherical` (the second colour in the middle); `inverted`
+/// runs it the other way. Its frame is the area's own box.
+#[derive(Clone, Debug)]
+pub struct GradientFill {
+    pub base: Base,
+    pub color: Option<Dd<String>>,
+    pub color2: Option<Dd<String>>,
+    pub shape: String,
+    pub angle: f64,
+    pub inverted: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -257,6 +274,7 @@ pub enum Layer {
         color: Option<Dd<String>>,
     },
     HatchFill(HatchFill),
+    GradientFill(GradientFill),
     PatternFill(PatternFill),
     ImageFill {
         base: Base,
@@ -412,6 +430,15 @@ impl Exprs {
                     offset: opt_num(v.get("offset")),
                     dash: numbers(v.get("dash")),
                     dash_offset: opt_num(v.get("dashOffset")),
+                    stagger: opt_num(v.get("stagger")),
+                }),
+                "gradientFill" => Layer::GradientFill(GradientFill {
+                    base,
+                    color: self.dd_str(v.get("color")),
+                    color2: self.dd_str(v.get("color2")),
+                    shape: opt_str(v.get("shape")).unwrap_or_else(|| "linear".to_owned()),
+                    angle: opt_num(v.get("angle")).unwrap_or(0.0),
+                    inverted: opt_bool(v.get("inverted")).unwrap_or(false),
                 }),
                 "patternFill" => Layer::PatternFill(PatternFill {
                     base,

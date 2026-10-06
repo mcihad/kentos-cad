@@ -677,6 +677,20 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
             seen.layer
         ));
     }
+    // A hatch's pattern and how many objects it follows (docs/adr/0186), exact.
+    if let Some(pattern) = &want.pattern
+        && seen.pattern.as_ref() != Some(pattern)
+    {
+        bad.push(format!(
+            "{name}.pattern: {:?}, beklenen {pattern:?}",
+            seen.pattern
+        ));
+    }
+    if let Some(assoc) = want.assoc
+        && seen.assoc != Some(assoc)
+    {
+        bad.push(format!("{name}.assoc: {:?}, beklenen {assoc}", seen.assoc));
+    }
     // An area's hole count (docs/adr/0173 §5), exact.
     if let Some(holes) = want.holes
         && seen.holes != Some(holes)

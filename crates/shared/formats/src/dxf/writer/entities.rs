@@ -30,10 +30,11 @@ use std::collections::{BTreeMap, HashMap};
 use kentos_contracts::blocks::turn_of;
 use kentos_contracts::{
     BlockId, Bounds, DimensionArrow, DimensionEntity, DimensionStyle, Entity, EntityBase,
-    HatchEntity, HatchPatternType, InsertEntity, PathEntity, SplineEntity, TableAlign, TableEntity,
-    TextAlign, TextEntity, Vec2,
+    GradientShape, HatchEntity, HatchGradient, HatchPatternType, InsertEntity, PathEntity,
+    SplineEntity, TableAlign, TableEntity, TextAlign, TextEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
+use kentos_geometry_core::geom::hatch_pattern::library_pattern;
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::spline::catmull_rom_beziers;
 use kentos_geometry_core::geom::table::{DROP, PAD, table_geom};
@@ -160,6 +161,11 @@ fn finite(e: &Entity) -> bool {
             all_ok(&h.ring)
                 && h.holes.iter().flatten().all(|r| all_ok(r))
                 && nums_ok(&[h.pattern.angle, h.pattern.spacing])
+                && h.pattern.scale.is_none_or(f64::is_finite)
+                && h.pattern.lines.iter().flatten().all(|l| {
+                    nums_ok(&[l.angle, l.origin[0], l.origin[1], l.offset[0], l.offset[1]])
+                        && nums_ok(&l.dashes)
+                })
         }
         Entity::Insert(i) => ok(i.p) && nums_ok(&[i.scale, i.rotation]),
         Entity::Leader(l) => all_ok(&l.pts) && nums_ok(&[l.height, l.rotation]),
@@ -1550,15 +1556,29 @@ impl Writer<'_> {
             self.report
                 .skip("Tarama adası", "üç köşesi yok; yazılmadı", 0);
         }
-        let solid = h.pattern.kind == HatchPatternType::Solid;
+        if h.assoc.is_some() {
+            self.report.note(
+                "Tarama",
+                "ilişkili taramalar ilişkisiz yazıldı; DXF'te sınır nesnelerini izlemezler",
+                0,
+            );
+        }
+        let p = &h.pattern;
+        let kind = p.kind;
+        let fill = matches!(kind, HatchPatternType::Solid | HatchPatternType::Gradient);
         self.begin("HATCH", &h.base);
         self.out.str(100, "AcDbHatch");
         self.out.xyz(10, v(0.0, 0.0));
         self.out.real(210, 0.0);
         self.out.real(220, 0.0);
         self.out.real(230, 1.0);
-        self.out.str(2, if solid { "SOLID" } else { "_USER" });
-        self.out.int(70, i64::from(solid));
+        let name = match kind {
+            HatchPatternType::Pattern => p.name.as_deref().unwrap_or("_USER"),
+            HatchPatternType::Lines | HatchPatternType::Cross => "_USER",
+            HatchPatternType::Solid | HatchPatternType::Gradient => "SOLID",
+        };
+        self.out.str(2, name);
+        self.out.int(70, i64::from(fill));
         self.out.int(71, 0);
         self.out.int(91, 1 + holes.len() as i64);
         // Outer boundary (external polyline), then the islands (polylines).
@@ -1567,45 +1587,138 @@ impl Writer<'_> {
             self.boundary(hole, 2);
         }
         self.out.int(75, 0);
-        self.out.int(76, if solid { 1 } else { 0 });
-        let (angle, spacing) = (h.pattern.angle, h.pattern.spacing);
-        // What the reader makes of it, to know whether the exact values must ride along.
-        let mut read_back = (0.0, 1.0);
-        if !solid {
-            let families: &[f64] = if h.pattern.kind == HatchPatternType::Cross {
-                &[0.0, 90.0]
-            } else {
-                &[0.0]
-            };
-            self.out.real(52, angle);
-            self.out.real(41, spacing);
-            self.out.int(77, i64::from(families.len() == 2));
-            self.out.int(78, families.len() as i64);
-            for turn in families {
-                let a = angle + turn;
-                let (s, c) = sin_cos_deg(a);
-                let (ox, oy) = (-s * spacing, c * spacing);
-                self.out.real(53, a);
-                self.out.real(43, 0.0);
-                self.out.real(44, 0.0);
-                self.out.real(45, ox);
-                self.out.real(46, oy);
-                self.out.int(79, 0);
-                if *turn == 0.0 {
-                    read_back = (a.rem_euclid(180.0), (ox * -s + oy * c).abs());
+        // A pattern of the library is AutoCAD's predefined one of that name; another is custom.
+        self.out.int(
+            76,
+            match kind {
+                HatchPatternType::Lines | HatchPatternType::Cross => 0,
+                HatchPatternType::Pattern if library_pattern(name).is_none() => 2,
+                _ => 1,
+            },
+        );
+        let mut m = Self::base_meta(&h.base);
+        match kind {
+            HatchPatternType::Lines | HatchPatternType::Cross => {
+                let (angle, spacing) = (p.angle, p.spacing);
+                let families: &[f64] = if kind == HatchPatternType::Cross {
+                    &[0.0, 90.0]
+                } else {
+                    &[0.0]
+                };
+                self.out.real(52, angle);
+                self.out.real(41, spacing);
+                self.out.int(77, i64::from(families.len() == 2));
+                self.out.int(78, families.len() as i64);
+                // What the reader makes of it, to know whether the exact values must ride along.
+                let mut read_back = (0.0, 1.0);
+                for turn in families {
+                    let a = angle + turn;
+                    let (s, c) = sin_cos_deg(a);
+                    let (ox, oy) = (-s * spacing, c * spacing);
+                    self.out.real(53, a);
+                    self.out.real(43, 0.0);
+                    self.out.real(44, 0.0);
+                    self.out.real(45, ox);
+                    self.out.real(46, oy);
+                    self.out.int(79, 0);
+                    if *turn == 0.0 {
+                        read_back = (a.rem_euclid(180.0), (ox * -s + oy * c).abs());
+                    }
+                }
+                if read_back != (angle, spacing) {
+                    m.pattern = Some((angle, spacing));
                 }
             }
+            HatchPatternType::Pattern => {
+                // DXF holds the families turned with the pattern and scaled (docs/adr/0186 §9).
+                let (alpha, scale) = (p.angle, p.scale.unwrap_or(1.0));
+                let lines = p.lines.as_deref().unwrap_or_default();
+                self.out.real(52, alpha);
+                self.out.real(41, scale);
+                self.out.int(77, 0);
+                self.out.int(78, lines.len() as i64);
+                let (sa, ca) = sin_cos_deg(alpha);
+                for l in lines {
+                    let a = alpha + l.angle;
+                    let (sl, cl) = sin_cos_deg(a);
+                    let [ox, oy] = l.origin;
+                    let [dx, dy] = l.offset;
+                    self.out.real(53, a);
+                    self.out.real(43, (ca * ox - sa * oy) * scale);
+                    self.out.real(44, (sa * ox + ca * oy) * scale);
+                    self.out.real(45, (cl * dx - sl * dy) * scale);
+                    self.out.real(46, (sl * dx + cl * dy) * scale);
+                    self.out.int(79, l.dashes.len() as i64);
+                    for d in &l.dashes {
+                        self.out.real(49, d * scale);
+                    }
+                }
+                m.hatch = serde_json::to_string(p).ok();
+            }
+            // A solid fill has no lines; its angle and spacing ride along when they are not the reader's own.
+            HatchPatternType::Solid => {
+                if (p.angle, p.spacing) != (0.0, 1.0) {
+                    m.pattern = Some((p.angle, p.spacing));
+                }
+            }
+            HatchPatternType::Gradient => {}
         }
         self.out.int(98, 0);
+        if let (HatchPatternType::Gradient, Some(g)) = (kind, &p.gradient) {
+            self.gradient(&h.base, p.angle, g);
+            m.hatch = serde_json::to_string(p).ok();
+        }
         for p in &h.ring {
             self.grow(*p);
         }
-        let mut m = Self::base_meta(&h.base);
-        if read_back != (angle, spacing) {
-            m.pattern = Some((angle, spacing));
+        // The exact pattern goes first when KentOS's data would not fit.
+        if m.hatch.is_some() && xdata::size(&xdata::groups(&m)) > xdata::MAX_BYTES {
+            self.report.note(
+                "Tarama",
+                "bir desenin tam değerleri KentOS verisine sığmadı; KentOS'a DXF'teki değerleriyle geri okunur",
+                0,
+            );
+            m.hatch = None;
         }
         self.end(m);
         true
+    }
+
+    /// A gradient's groups (docs/adr/0186 §9): its name (no inverted linear
+    /// one: the linear turned half round), angle in radians, two colours,
+    /// the first the hatch's own (its layer's when it has none).
+    fn gradient(&mut self, base: &EntityBase, angle: f64, g: &HatchGradient) {
+        let (name, angle) = match (g.shape, g.inverted) {
+            (GradientShape::Linear, false) => ("LINEAR", angle),
+            (GradientShape::Linear, true) => ("LINEAR", angle + 180.0),
+            (GradientShape::Cylinder, false) => ("CYLINDER", angle),
+            (GradientShape::Cylinder, true) => ("INVCYLINDER", angle),
+            (GradientShape::Spherical, false) => ("SPHERICAL", angle),
+            (GradientShape::Spherical, true) => ("INVSPHERICAL", angle),
+        };
+        let first = match &base.color {
+            Some(c) => aci::from_app(c).0,
+            None => self
+                .layers
+                .colour_of(&base.layer_id)
+                .unwrap_or(aci::DxfColor { aci: 7, rgb: None }),
+        };
+        let second = aci::from_app(&g.color2).0;
+        self.out.int(450, 1);
+        self.out.int(451, 0);
+        self.out.real(460, rad(angle.rem_euclid(360.0)));
+        self.out.real(461, 0.0);
+        self.out.int(452, 0);
+        self.out.real(462, 1.0);
+        self.out.int(453, 2);
+        for (k, c) in [first, second].into_iter().enumerate() {
+            let [r, gr, b] = aci::rgb(c.aci);
+            let own = (i64::from(r) << 16) | (i64::from(gr) << 8) | i64::from(b);
+            self.out.real(463, k as f64);
+            self.out.int(63, i64::from(c.aci));
+            self.out.int(421, c.rgb.unwrap_or(own));
+        }
+        self.out.str(470, name);
     }
 
     fn boundary(&mut self, ring: &[Vec2], flags: i64) {
