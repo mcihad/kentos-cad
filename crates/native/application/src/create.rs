@@ -133,6 +133,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::Table) => "Tablo",
         // Koordinat yaz (docs/adr/0185 §1).
         Some(CreateOperation::Coordinates) => "Koordinat yaz",
+        // Km yaz (docs/adr/0189 §5).
+        Some(CreateOperation::Stations) => "Km yaz",
     }
 }
 

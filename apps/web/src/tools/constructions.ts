@@ -40,6 +40,37 @@ export const slopeHorizontal = op<(s: number, percent: number) => { horizontal: 
 export const bisectorPoint = op<(k: Vec2, a: Vec2, b: Vec2, d: number) => Vec2 | null>('bisectorPoint');
 /** The bisector's point nearest `p`, never behind K. */
 export const bisectorNearest = op<(k: Vec2, a: Vec2, b: Vec2, p: Vec2) => Vec2 | null>('bisectorNearest');
+
+// Km yaz (docs/adr/0189; crates/shared/geometry-core/src/ops/stationing.rs).
+
+/** Where a route's stations are: the km interval and the first km (metres), walked from the end, its ends too, the ends' decimals. */
+export interface StationRules {
+  interval: number;
+  start: number;
+  reverse: boolean;
+  ends: boolean;
+  decimals: number;
+}
+
+/** What is written at each station, world metres: the km text's side (none: no text), its height, the tick's half length, the cross-section's half width, the point's offset (right positive). */
+export interface StationLook {
+  text: 'left' | 'right' | null;
+  height: number;
+  tick: number;
+  section: number;
+  point: number | null;
+}
+
+export interface Stationing {
+  stations: { s: number; km: number; text: string; point: Vec2; tangent: Vec2 }[];
+  texts: { p: Vec2; rotation: number; align?: string | null; text: string }[];
+  ticks: { a: Vec2; b: Vec2; km: string }[];
+  sections: { a: Vec2; b: Vec2; km: string }[];
+  points: { p: Vec2; km: string }[];
+}
+
+/** A route's stations and what is written at them, or why nothing is. */
+export const stationing = op<(e: Entity, rules: StationRules, look: StationLook) => { stationing?: Stationing | null; problem?: string | null }>('stationing');
 /** The candidate nearest to p (the first of equally near ones); null for none. */
 export const nearestOf = op<(points: readonly Vec2[], p: Vec2) => Vec2 | null>('nearestOf');
 

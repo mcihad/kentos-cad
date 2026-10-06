@@ -196,6 +196,7 @@ pub mod spatial;
 pub mod spline;
 mod standard_layer;
 pub mod split;
+pub mod station_labels;
 pub mod station_offset;
 pub mod stretch;
 pub mod templates;

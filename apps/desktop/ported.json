@@ -150,6 +150,7 @@
     "tool.labelsToText",
     "tool.coordinateLabel",
     "tool.coordinateVertices",
+    "tool.stationLabels",
     "tool.filletAll",
     "tool.chamferAll",
     "tool.split",

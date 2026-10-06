@@ -4651,6 +4651,11 @@ SCENES.selecting = selectingScenes();
 // (apps/desktop/src/point_calc_scenes.rs).
 SCENES.pointcalc = pointCalcScenes();
 
+// Km yaz (docs/adr/0189) in a CAD project at 1:500, the shared trace's ground: a road axis with a straight and a
+// quarter-turn arc, a line and a point. Km yaz on the axis, its stations faint; every 10 m with cross-sections and
+// points; and what it wrote. The desktop's are `tools_screens`' km-yaz-* (apps/desktop/src/stationing_scenes.rs).
+SCENES.stationing = stationingScenes();
+
 // Yazı ve ölçü stilleri (docs/adr/0183) in a CAD project at 1:500: a parcel drawn with the project's styles (its number
 // bold in Arimo, the road's name in Barlow italic and slanted, a note in Courier Prime, its sides measured in Mimari
 // (arrows, cm), Kadastro (ticks, the value centred, “L=”), Noktalı (dots) and Açık (open arrows), one dimension in
@@ -4982,6 +4987,58 @@ function hatchScenes() {
     },
     { id: 'hatch-props', open: props, close: propsClose },
     { id: 'hatch-props-pattern-menu', open: async (ui) => (await props(ui), await menuOpen(ui, '.panel--props [data-prop-key="geometry:Desen"]')), close: propsClose },
+  ];
+}
+
+function stationingScenes() {
+  const DRAWN = SCRATCH(`
+    k.doc.settings.assign({ plotScale: 500 });
+    const o = { x: c.x, y: c.y + 6 };
+    const P = ([x, y]) => ({ x: o.x + x, y: o.y + y });
+    add({ kind: 'polyline', pts: [[-40, -10], [-20, -10], [0, -10]].map(P), bulges: [0, Math.tan(Math.PI / 8)], color: '#E5484D' });
+    add({ kind: 'line', a: P([-40, 10]), b: P([-20, 10]) });
+    add({ kind: 'point', p: P([20, 10]) });
+    window.__km = { o };
+    k.view.camera.fit({ minX: o.x - 46, minY: o.y - 30, maxX: o.x + 26, maxY: o.y + 18 }, 24);
+    k.view.requestRender();`);
+  const AT = (x, y) => `(() => { const o = window.__km.o; return [o.x + ${x}, o.y + ${y}]; })()`;
+  const hover = async (ui, x, y) => hoverAt(ui, ...(await ui.eval(AT(x, y))));
+  const click = async (ui, x, y) => (await ui.clickAt(...(await ui.eval(PAGE_AT(...(await ui.eval(AT(x, y))))))), await ui.sleep(300));
+  const shown = async (ui) => {
+    await ribbonOn(ui, { ribbonTab: 'annotate', type: 'cad' });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(DRAWN);
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+    await startTool(ui, 'stationLabels');
+    await click(ui, -30, -10);
+    await hover(ui, 12, 12);
+  };
+  const sections = async (ui) => {
+    await shown(ui);
+    for (const t of ['A', '10', 'E', '8', 'N', '4']) await ui.eval(`window.kentos.tools.active.input(${JSON.stringify(t)})`);
+    await hover(ui, 12, 12);
+  };
+  /** The session's options as a new session has them. */
+  const close = async (ui) => {
+    await ui.eval(`(async () => {
+      const { stationOptions } = await import('/src/tools/stationLabelTool.ts');
+      Object.assign(stationOptions, { interval: 20, start: 0, text: 'left', heightMm: 2, tick: true, section: 0, point: null, ends: true });
+    })()`);
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  return [
+    { id: 'stationing', open: shown, close },
+    { id: 'stationing-sections', open: sections, close },
+    {
+      id: 'stationing-written',
+      open: async (ui) => (await sections(ui), await ui.eval(`window.kentos.commands.execute('tool.confirm')`), await ui.sleep(300), await hover(ui, 12, 12)),
+      close,
+    },
   ];
 }
 

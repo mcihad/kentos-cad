@@ -230,32 +230,67 @@ fn way_of(d: Vec2, along: Vec2) -> Option<Vec2> {
     Some(Vec2::new(d.x / l * way, d.y / l * way))
 }
 
+/// A route walked from one end (docs/adr/0188 §1, 0189 §2): the path its
+/// points are taken along and the object it is drawn from, whose own curve
+/// gives a curve's points and directions.
+pub struct Walk {
+    shape: Shape,
+    path: Path,
+}
+
+impl Walk {
+    /// The object's route walked from its start, or from its end when
+    /// `from_end`; none for an object with no route (`route_of`).
+    pub fn new(e: &Shape, from_end: bool) -> Option<Walk> {
+        let shape = route_of(e)?;
+        let forward = path_of(&shape)?;
+        let path = if from_end { turned(&forward) } else { forward };
+        Some(Walk { shape, path })
+    }
+
+    /// Its length along the route (along a curve's chords, within 0.1 mm of the curve's own).
+    pub fn length(&self) -> f64 {
+        self.path.length
+    }
+
+    /// Whether it comes round to its start.
+    pub fn closed(&self) -> bool {
+        self.path.closed
+    }
+
+    /// The point `s` along it and the unit direction it runs there: at a
+    /// vertex the next edge's in the walk; round a closed path its length is
+    /// its start again. On a curve the point is on the curve itself (the
+    /// chords' is within 0.1 mm of it) and the direction is the curve's.
+    pub fn frame(&self, s: f64) -> (Vec2, Vec2) {
+        let q = point_at_s(&self.path, s);
+        let t = tangent_at_s(&self.path, s);
+        curve_foot(&self.shape, q)
+            .and_then(|(p, d)| Some((p, way_of(d, t)?)))
+            .unwrap_or((q, t))
+    }
+}
+
 /// The point `s` along the path from its start (from its end when
 /// `from_end`) and `offset` square to it there, the right of the way
 /// positive. At a vertex the square is the next edge's in the walk; round a
 /// closed path its length is its start again. None outside 0…length (the
 /// caller says the length), or for an object with no route (`route_of`).
 pub fn station(e: &Shape, from_end: bool, s: f64, offset: f64) -> Station {
-    let Some(forward) = route_of(e).and_then(|route| path_of(&route)) else {
+    let Some(walk) = Walk::new(e, from_end) else {
         return Station {
             point: None,
             length: 0.0,
         };
     };
-    let length = forward.length;
+    let length = walk.length();
     if !(s >= 0.0 && s <= length && offset.is_finite()) {
         return Station {
             point: None,
             length,
         };
     }
-    let path = if from_end { turned(&forward) } else { forward };
-    let q = point_at_s(&path, s);
-    let t = tangent_at_s(&path, s);
-    // On a curve: the point on the curve itself (q is within 0.1 mm of it), its own square.
-    let (p, t) = curve_foot(e, q)
-        .and_then(|(p, d)| Some((p, way_of(d, t)?)))
-        .unwrap_or((q, t));
+    let (p, t) = walk.frame(s);
     Station {
         point: Some(Vec2::new(p.x + t.y * offset, p.y - t.x * offset)),
         length,

@@ -222,6 +222,8 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Ölçü', icon: 'dimension', commands: ['tool.dimension', 'style.dimensionStyles'] },
       // Koordinat yaz (docs/adr/0185): a place's coordinates on the drawing, and every corner's with their schedule.
       { pick: 'Koordinat', icon: 'coordinateLabel', commands: ['tool.coordinateLabel', 'tool.coordinateVertices'] },
+      // Km yaz (docs/adr/0189): a route's stations, their ticks, km texts, cross-sections and points.
+      { pick: 'Km', icon: 'stationLabels', commands: ['tool.stationLabels'] },
       { pick: 'Kılavuz', icon: 'leader', commands: ['tool.leader'] },
       // Tablo (docs/adr/0184): AutoCAD's Annotate › Tables.
       { pick: 'Tablo', icon: 'table', commands: ['table.insert', 'table.edit', 'table.update'] },

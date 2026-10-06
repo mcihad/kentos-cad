@@ -673,6 +673,18 @@ pub struct Memory {
     /// Nokta hesapla's Km ve sapma: the route's first km, metres
     /// (`PointCalcTool.kmStart`; docs/adr/0188 §2).
     pub calc_km_start: f64,
+    /// Km yaz's options (`StationLabelTool`'s statics; docs/adr/0189): Aralık
+    /// and Başlangıç (metres of km), Yazı's side (none: no text), Yükseklik
+    /// (paper mm), İşaret, Enkesit's half width and Nokta's offset (metres;
+    /// 0 and none: none), Uçlar.
+    pub station_interval: f64,
+    pub station_start: f64,
+    pub station_text: Option<kentos_geometry_core::ops::stationing::Side>,
+    pub station_height_mm: f64,
+    pub station_tick: bool,
+    pub station_section: f64,
+    pub station_point: Option<f64>,
+    pub station_ends: bool,
 }
 
 /// A short text kept in [`Memory`], which is `Copy`: at most
@@ -868,6 +880,14 @@ impl Default for Memory {
             coordinate_height_mm: crate::coordinate_labels::FIRST_HEIGHT_MM,
             coordinate_schedule: false,
             calc_km_start: 0.0,
+            station_interval: crate::station_labels::FIRST_INTERVAL,
+            station_start: 0.0,
+            station_text: Some(kentos_geometry_core::ops::stationing::Side::Left),
+            station_height_mm: crate::station_labels::FIRST_HEIGHT_MM,
+            station_tick: true,
+            station_section: 0.0,
+            station_point: None,
+            station_ends: true,
         }
     }
 }

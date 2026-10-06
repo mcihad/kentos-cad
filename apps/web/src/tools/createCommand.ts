@@ -15,11 +15,24 @@ import { stamp } from './templateStamp';
  * texts are the tools' own); one undo step, “Ekle” or the tool's name.
  */
 export function writeObjects(ctx: AppContext, geometries: readonly EntityGeometry[], operation?: CreateOperation, attrs?: Record<string, string>): EntitiesCreated | null {
+  // Blok ekle's values (docs/adr/0144 §7): the objects' attributes, when given.
+  return writeObjectsEach(
+    ctx,
+    geometries.map((geometry) => ({ geometry, attrs })),
+    operation,
+  );
+}
+
+/** `writeObjects` with each object's own attributes (Km yaz's `Km`, docs/adr/0189 §3); the desktop's `write_objects_each`. */
+export function writeObjectsEach(
+  ctx: AppContext,
+  items: readonly { geometry: EntityGeometry; attrs?: Record<string, string> }[],
+  operation?: CreateOperation,
+): EntitiesCreated | null {
   const color = ctx.settings.color.value;
   // The current weight goes to what is drawn with lines (docs/adr/0139).
   const lineWeight = ctx.settings.lineWeight.value;
-  // Blok ekle's values (docs/adr/0144 §7): the objects' attributes, when given.
-  const objects = geometries.map((g) => ({
+  const objects = items.map(({ geometry: g, attrs }) => ({
     geometry: g as unknown as NewGeometry,
     ...(color !== null && { color }),
     ...(lineWeight !== null && drawsLines(g) && { lineWeight }),

@@ -84,6 +84,8 @@ export const WORKSPACES: readonly WorkspaceSpec[] = [
         // Koordinat yaz (docs/adr/0185): CAD's annotation too.
         'tool.coordinateLabel',
         'tool.coordinateVertices',
+        // Km yaz (docs/adr/0189): CAD's annotation too.
+        'tool.stationLabels',
         'tool.revcloud',
         'tool.hatch',
         // Çoklu tara (docs/adr/0186): CAD's annotation too.

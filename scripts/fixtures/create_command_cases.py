@@ -1094,6 +1094,27 @@ cases.append({
 })
 
 
+# ── Km yaz (docs/adr/0189 §5) ───────────────────────────────────────────
+
+stations = [
+    O({"kind": "line", "a": P(487020, 4420001), "b": P(487020, 4419999)}),
+    O({"kind": "text", "p": P(487020, 4420002), "text": "0+020", "height": 2, "rotation": 90, "align": "middleLeft"}),
+    O({"kind": "line", "a": P(487020, 4420010), "b": P(487020, 4419990)}, attrs={"Km": "0+020"}),
+    O({"kind": "point", "p": P(487020, 4419997)}, attrs={"Km": "0+020"}),
+]
+cases.append({
+    "name": "Km yaz: bir istasyonun işareti, yazısı, enkesiti ve noktası tek adımda yazılır, adı “Km yaz” (ADR 0189 §5)",
+    "setup": S_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "stations", "objects": stations}, "result": done([3, 4, 5, 6]),
+         "expect": {"ids": IDS + [3, 4, 5, 6], "entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(stations)},
+                    "uids": {"3": "new", "4": "new", "5": "new", "6": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Km yaz", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Km yaz", "expect": {"ids": IDS + [3, 4, 5, 6]}},
+    ],
+})
+
+
 # ── Kılavuz (docs/adr/0146) ─────────────────────────────────────────────
 
 LEADER = {"kind": "leader", "pts": [P(487060, 4420110), P(487066, 4420115)], "text": "Mevcut bina", "height": 2.5, "rotation": 0}

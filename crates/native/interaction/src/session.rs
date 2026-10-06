@@ -197,6 +197,8 @@ pub const TOOLS: &[&str] = &[
     // docs/adr/0185: Koordinat yaz and Köşelere koordinat yaz.
     coordinate_labels::ID,
     coordinate_labels::VERTICES_ID,
+    // docs/adr/0189: Km yaz.
+    crate::station_labels::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -381,6 +383,7 @@ impl Session {
             coordinate_labels::VERTICES_ID => {
                 Box::new(coordinate_labels::CoordinateVertices::tool())
             }
+            crate::station_labels::ID => Box::new(crate::station_labels::StationLabels::new()),
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command

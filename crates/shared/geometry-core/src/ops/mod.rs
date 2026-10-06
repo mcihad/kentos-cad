@@ -31,6 +31,7 @@ pub mod reshape;
 pub mod reshape_by;
 pub mod rubber;
 pub mod split;
+pub mod stationing;
 pub mod table;
 pub mod table_edit;
 pub mod stretch;

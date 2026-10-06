@@ -1,0 +1,104 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Etkileşim izi: Km yaz",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 500,
+  "workspace": "cad",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8C9AAA",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "polyline",
+   "id": 1,
+   "layerId": "yol",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 486960,
+     "y": 4419990
+    },
+    {
+     "x": 486980,
+     "y": 4419990
+    },
+    {
+     "x": 487000,
+     "y": 4419990
+    }
+   ],
+   "bulges": [
+    0,
+    0.41421356237309503
+   ]
+  },
+  {
+   "kind": "line",
+   "id": 2,
+   "layerId": "cizim",
+   "attrs": {},
+   "a": {
+    "x": 486960,
+    "y": 4420010
+   },
+   "b": {
+    "x": 486980,
+    "y": 4420010
+   }
+  },
+  {
+   "kind": "point",
+   "id": 3,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 487020,
+    "y": 4420010
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

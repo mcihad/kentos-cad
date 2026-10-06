@@ -53,6 +53,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   nokta hesaplayıcı ekleri: Obje üzerinde nokta (nesnenin yolunda yakın uçtan uzaklık ve dik sapma; çizgi, yay, daire, elips, eğri, alanın
   dış sınırı), Km ve sapma (güzergâhın km'si, Başlangıç (B)), Nokta adından, Mesafe ve eğim (eğik mesafe ve yüzde eğim), Açıortay;
   `#ad` hesaplayıcının referansını da verir, takma adlar Türkçe işaretsiz de (`eğim` EGIM) (ADR 0188);
+  Km yaz: güzergâhın aralıkla km'si (0+020 …) ve uçları, istasyonlarda dik işaret, çizginin yanında okunur km yazısı, isteğe bağlı
+  enkesit ve sapmalı nokta (`Km` özniteliğiyle), tek adımda; CAD projesinde Açıklama › Km (ADR 0189);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -267,6 +269,8 @@ python3 scripts/fixtures/selection_cases.py --check   # Seçim eklerinin kuralla
 KENTOS_SHOTS_ONLY=secim-cip,secim-cip-liste,secim-cokgen,secim-cokgen-sonuc,secim-benzeri,secim-suzgec,secim-suzgec-menu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # seçim eklerinin resimleri, .run/shots/arac-secim-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs selecting); ADR 0187)
 python3 scripts/fixtures/point_calc_cases.py --check   # nokta hesaplayıcı eklerinin hesabını (yolun uzaklıktaki noktası ve sapması: kenarlar, bükümlü yaylar, daire, yay, elips ve eğri kendi yay uzunluklarıyla; okuma, km'nin okunuşu ve gösterim kuralıyla yazılışı, eğik mesafenin yatayı, açıortay) mpmath ile 50 basamaklı bağımsız başvurudan denetle; durumlar fixtures/point-calc/v1/cases.json (ADR 0188)
 KENTOS_SHOTS_ONLY=hesap-obje,hesap-km,hesap-egim,hesap-aciortay,hesap-menu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta hesaplayıcı eklerinin resimleri, .run/shots/arac-hesap-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs pointcalc); ADR 0188)
+python3 scripts/fixtures/stationing_cases.py --check   # Km yaz'ın istasyonlarını (katlar ve uçlar, ters yön, kapalı yol, aralığın ondalığı, sınırlar) ve nesnelerini (işaret, okunur yazı çizginin yanında, enkesit, nokta) 50 basamaklı bağımsız başvurudan denetle; durumlar fixtures/stationing/v1/cases.json (ADR 0189)
+KENTOS_SHOTS_ONLY=km-yaz,km-yaz-enkesit,km-yaz-yazildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Km yaz'ın resimleri, .run/shots/arac-km-yaz-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs stationing); ADR 0189)
 python3 scripts/ui/hatch_icons.py --check   # desenlerin ikonlarını ve Desen menülerinin geniş örneklerini (apps/web/src/ui/hatchIcons.ts) desenlerin tanımından yeniden üretip karşılaştır; değişince --check'siz yazar (ADR 0186 §11)
 KENTOS_SHOTS_ONLY=tarama-araci,tarama-desenler,tarama-coklu,tarama-iliskili,tarama-oznitelikler,tarama-desen-menusu,tarama-oznitelikler-desen cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # tarama eklerinin resimleri, .run/shots/arac-tarama-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hatches); ADR 0186)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
@@ -1002,8 +1006,11 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   sahip uyurken): çekirdek `tools::point_calc` (`route_of`, `station`, `reading`, `km_value`, `km_text`, `slope`, `bisector`; eğride ayak
   eğrinin kendisinden; bağımsız başvuru `point_calc_cases.py`, ortak `fixtures/point-calc/v1`), masaüstünde `point_calc.rs` ve
   `point_calc/route.rs`, web'de `tools/pointCalc.ts` ve `tools/pointCalcRoute.ts`; adlı nokta `session::named_point_at`, `namedPointAt`;
-  KentOS UI menüsünün kısayol sütunu ölçülen genişlikle; ortak iz `point-calc-extras.json` (oynatıcılarda `%`). Sıradaki `CAD-27`
-  (`CAD-24` [M] sahibin tarifini bekler).
+  KentOS UI menüsünün kısayol sütunu ölçülen genişlikle; ortak iz `point-calc-extras.json` (oynatıcılarda `%`). `CAD-27` Km yaz
+  ([ADR 0189](docs/adr/0189-stationing.md)) tek parçada bitti (6 Ekim; ikon sahip uyurken seçenek sayfasının B'si): çekirdek `ops::stationing`
+  (bağımsız başvuru `stationing_cases.py`, ortak `fixtures/stationing/v1`), `CreateOperation::Stations`, masaüstü
+  `kentos_interaction::station_labels`, web `tools/stationLabelTool.ts`; ortak iz `stationing.json`. Sahibin 6 Ekim gecesi kararı: CAD-36
+  bitene kadar durmadan sırayla (`CAD-24` [M] sahibin tarifini bekler); sıradaki `CAD-28` orta hat.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

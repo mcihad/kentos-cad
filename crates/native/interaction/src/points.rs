@@ -220,12 +220,26 @@ pub(crate) fn write_objects_with(
     operation: Option<kentos_contracts::CreateOperation>,
     cx: &mut Context<'_>,
 ) -> Option<kentos_contracts::EntitiesCreated> {
+    let each = geometries.into_iter().map(|g| (g, attrs.clone())).collect();
+    write_objects_each(each, operation, cx)
+}
+
+/// `write_objects` with each object's own attributes (Km yaz's `Km`,
+/// docs/adr/0189 §3), over an object template's.
+pub(crate) fn write_objects_each(
+    objects: Vec<(
+        kentos_contracts::EntityGeometry,
+        Option<std::collections::BTreeMap<String, String>>,
+    )>,
+    operation: Option<kentos_contracts::CreateOperation>,
+    cx: &mut Context<'_>,
+) -> Option<kentos_contracts::EntitiesCreated> {
     use kentos_native_application::{ExecutionContext, create};
     let input = kentos_contracts::EntitiesCreate {
         layer_id: cx.doc.layers().active().to_owned(),
-        objects: geometries
+        objects: objects
             .into_iter()
-            .map(|geometry| kentos_contracts::NewObject {
+            .map(|(geometry, attrs)| kentos_contracts::NewObject {
                 // The current weight goes to what is drawn with lines (docs/adr/0139).
                 line_weight: geometry
                     .draws_lines()
@@ -234,7 +248,7 @@ pub(crate) fn write_objects_with(
                 geometry,
                 color: cx.draft.color_text(),
                 // An object template's symbol, attributes and label (docs/adr/0176 §3).
-                attrs: cx.template_attrs(attrs.clone()),
+                attrs: cx.template_attrs(attrs),
                 label: cx.template_label(),
                 label_of: None,
                 label_scale: None,

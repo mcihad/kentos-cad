@@ -84,6 +84,9 @@ pub enum CreateOperation {
     /// Koordinat yaz (docs/adr/0185): coordinate labels (texts and their
     /// leaders) at clicked points or at the selection's vertices.
     Coordinates,
+    /// Km yaz (docs/adr/0189): a route's stations: their ticks, km texts,
+    /// cross-sections and points.
+    Stations,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

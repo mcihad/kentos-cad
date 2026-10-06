@@ -249,6 +249,8 @@ pub const PORTED: &[&str] = &[
     // vertices, the latter with its coordinate schedule (coordinate_labels.rs, docs/adr/0185).
     "tool.coordinateLabel",
     "tool.coordinateVertices",
+    // docs/adr/0189: Km yaz.
+    "tool.stationLabels",
     // Drawing and editing tools, phase 1 (docs/adr/0140): every corner at once, Parçala
     // with its three methods, direction, thinning, cleaning and property copying.
     "tool.filletAll",

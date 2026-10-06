@@ -59,6 +59,8 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   table: 'Tablo',
   // Koordinat yaz (docs/adr/0185 §1).
   coordinates: 'Koordinat yaz',
+  // Km yaz (docs/adr/0189 §5).
+  stations: 'Km yaz',
 };
 
 /**

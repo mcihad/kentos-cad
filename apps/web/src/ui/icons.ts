@@ -99,6 +99,8 @@ export const ICONS = {
   coordinateLabel: `${grip(3.5, 16.5)}<path d="M3.5 16.5 8.5 11.2H18.8"/><path d="M10.2 4.9l1.35 1.7 1.35-1.7M11.55 6.6v2" stroke-width="1.2"/><path d="M14.4 7.9h4" stroke-width="1.5"/><path d="M10.3 12.9l2.5 3M12.8 12.9l-2.5 3" stroke-width="1.2"/><path d="M14.4 14.6h3.4" stroke-width="1.5"/>`,
   // Köşelere koordinat yaz: a parcel, a grip at each corner, two corners' leaders and bars with their values.
   coordinateVertices: `<path d="M2.5 7.5h7v7h-7z" fill="currentColor" fill-opacity=".14" stroke-width="1.2"/>${grip(2.5, 7.5)}${grip(9.5, 7.5)}${grip(2.5, 14.5)}${grip(9.5, 14.5)}<path d="m9.5 7.5 2.5-2.5h6.5M9.5 14.5l2.5 2.5h6.5" stroke-width="1.3"/><path d="M13 2.9h4.6M13 14.9h4.6" stroke-width="1.4"/>`,
+  // Km yaz (docs/adr/0189): option B of its sheet, the owner's to change.
+  stationLabels: '<path d="M2 15c4-1 6-6 16-7"/><path d="M5.3 12.3l1.4 2.6M10 9.2l1.8 2.2M14.6 7.6l.9 2.6"/><path d="M5 3.5h5M7.5 1v5"/>',
   // Koordinat yaz's Yön (docs/adr/0185 §4): Otomatik, out of an object every way; the four corners, an arrow from the place.
   labelAuto:
     '<path d="M7.5 7.5h5v5h-5z" fill="currentColor" fill-opacity=".14" stroke-width="1.2"/><path d="m12.5 7.5 3.5-3.5M7.5 7.5 4 4M7.5 12.5 4 16M12.5 12.5l3.5 3.5" stroke-width="1.3"/><path d="M13.4 4h2.6v2.6M4 6.6V4h2.6M4 13.4V16h2.6M13.4 16H16v-2.6" stroke-width="1.2"/>',

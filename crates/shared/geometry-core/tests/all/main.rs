@@ -30,6 +30,7 @@ mod polygonize;
 mod reshape;
 mod selection;
 mod snap;
+mod stationing;
 mod template_members;
 mod text;
 mod topology;

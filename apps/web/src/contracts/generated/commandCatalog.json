@@ -41006,6 +41006,11 @@
                 "const": "coordinates",
                 "description": "Koordinat yaz (docs/adr/0185): coordinate labels (texts and their\nleaders) at clicked points or at the selection's vertices.",
                 "type": "string"
+              },
+              {
+                "const": "stations",
+                "description": "Km yaz (docs/adr/0189): a route's stations: their ticks, km texts,\ncross-sections and points.",
+                "type": "string"
               }
             ]
           },

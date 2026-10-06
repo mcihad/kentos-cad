@@ -1,0 +1,389 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "stationing",
+ "title": "Km yaz: yolu olmayan nesne söylenir; güzergâhta istasyonlar 0+000, 0+020, 0+040 ve sonu; Enkesit (yanlış değer söylenir) ve Nokta yazılır, Aralık 10 m'de altı istasyon tek adımda yazılır (son nokta Km özniteliğiyle), Ctrl+Z geri alır; çizgide Ters, Yazı'nın üç değeri, Başlangıç ve Uçlar; bellek başladığı gibi bırakılır",
+ "source": "tools/stationLabelTool.ts; kentos_interaction::station_labels; docs/adr/0189",
+ "covers": [
+  "CAD-27"
+ ],
+ "document": "stationing.kcad",
+ "view": {
+  "center": [
+   487000,
+   4420000
+  ],
+  "metresPerPixel": 0.125
+ },
+ "draft": {
+  "snap": false,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.125,
+ "steps": [
+  {
+   "run": "tool.stationLabels",
+   "expect": {
+    "tool": "stationLabels",
+    "points": 0,
+    "prompt": "Km yaz: güzergâha tıklayın (km’si ilk köşesinde başlar) [Aralık (A): 20 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): yok / Uçlar (U): açık]"
+   }
+  },
+  {
+   "click": [
+    20,
+    10
+   ],
+   "note": "Noktanın yolu yok.",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Bu nesnenin üzerinde yürünecek tek bir yolu yok: çizgi, çoklu çizgi, yay, daire, elips, eğri ya da tek parçalı alan seçin."
+    ],
+    "points": 0
+   }
+  },
+  {
+   "click": [
+    -30,
+    -10
+   ],
+   "note": "Güzergâh: 0+000, 0+020, 0+040 ve sonu 0+042.214.",
+   "expect": {
+    "points": 1,
+    "prompt": "Km yaz: 4 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 20 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): yok / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: enkesitin yarı genişliğini yazın (0: yok)"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "-1"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Enkesitin yarı genişliği sıfır ya da daha büyük bir uzunluk olmalı (0: yok); “-1” yazıldı."
+    ]
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "5"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: 4 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 20 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): 5.000 m / Nokta (N): yok / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "N"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: noktaların sapmasını yazın (sağa artı; boş Enter: nokta yok)"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "-3"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: 4 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 20 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): 5.000 m / Nokta (N): -3.000 m / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: km aralığını metre olarak yazın (ör. 20)"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "10"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: 6 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 10 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): 5.000 m / Nokta (N): -3.000 m / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "key": "Enter",
+   "note": "Altı istasyonda işaret, yazı, enkesit ve nokta tek adımda; son nokta sondaki istasyonun solunda 3 m.",
+   "expect": {
+    "tool": "stationLabels",
+    "points": 0,
+    "entities": 27,
+    "logged": [
+     "Km yaz: 6 istasyon yazıldı."
+    ],
+    "newest": {
+     "kind": "point",
+     "points": [
+      [
+       -2.121320343559643,
+       -7.878679656440357
+      ]
+     ],
+     "attrs": {
+      "Km": "0+042.214"
+     }
+    },
+    "prompt": "Km yaz: güzergâha tıklayın (km’si ilk köşesinde başlar) [Aralık (A): 10 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): 5.000 m / Nokta (N): -3.000 m / Uçlar (U): açık]"
+   }
+  },
+  {
+   "click": [
+    -30,
+    10
+   ],
+   "expect": {
+    "points": 1,
+    "prompt": "Km yaz: 3 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 10 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): 5.000 m / Nokta (N): -3.000 m / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "key": "Ctrl+Z",
+   "note": "Önce güzergâh bırakılır, çizim geri alınmaz.",
+   "expect": {
+    "points": 0,
+    "entities": 27
+   }
+  },
+  {
+   "key": "Ctrl+Z",
+   "note": "Güzergâh yokken Ctrl+Z çizimi geri alır: tek adım.",
+   "expect": {
+    "entities": 3
+   }
+  },
+  {
+   "click": [
+    -30,
+    10
+   ],
+   "expect": {
+    "points": 1,
+    "prompt": "Km yaz: 3 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 10 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): 5.000 m / Nokta (N): -3.000 m / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "T"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: 3 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 10 m / Başlangıç (B): 0+000.000 / Ters (T): açık / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): 5.000 m / Nokta (N): -3.000 m / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "Y"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: 3 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 10 m / Başlangıç (B): 0+000.000 / Ters (T): açık / Yazı (Y): sağ / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): 5.000 m / Nokta (N): -3.000 m / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "Y"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: 3 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 10 m / Başlangıç (B): 0+000.000 / Ters (T): açık / Yazı (Y): yok / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): 5.000 m / Nokta (N): -3.000 m / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "Y"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: 3 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 10 m / Başlangıç (B): 0+000.000 / Ters (T): açık / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): 5.000 m / Nokta (N): -3.000 m / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "B"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "0+005"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: 4 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 10 m / Başlangıç (B): 0+005.000 / Ters (T): açık / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): 5.000 m / Nokta (N): -3.000 m / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "U"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: 2 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 10 m / Başlangıç (B): 0+005.000 / Ters (T): açık / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): 5.000 m / Nokta (N): -3.000 m / Uçlar (U): kapalı / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "U"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "B"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "0+000"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "20"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "0"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "N"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "key": "Enter",
+   "note": "Nokta'nın boş Enter'ı: nokta yok.",
+   "expect": {
+    "prompt": "Km yaz: 2 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 20 m / Başlangıç (B): 0+000.000 / Ters (T): açık / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): yok / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "key": "Esc",
+   "note": "Esc güzergâhı bırakır.",
+   "expect": {
+    "points": 0,
+    "prompt": "Km yaz: güzergâha tıklayın (km’si ilk köşesinde başlar) [Aralık (A): 20 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): yok / Uçlar (U): açık]"
+   }
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 3
+   }
+  }
+ ]
+}

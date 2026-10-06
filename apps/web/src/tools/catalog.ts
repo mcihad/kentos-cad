@@ -24,6 +24,7 @@ import { LengthenTool } from './lengthenTool';
 import { CleanupTool } from './cleanupTool';
 import { LabelsToTextTool } from './labelsToTextTool';
 import { CoordinateLabelTool, CoordinateVerticesTool } from './coordinateLabelTool';
+import { StationLabelTool } from './stationLabelTool';
 import { ParagraphTextTool } from './paragraphTool';
 import { TopologyTool } from './topologyTool';
 import { PolygonizeTool } from './polygonizeTool';
@@ -149,6 +150,21 @@ const defs: Def[] = [
     ],
     productCommand: entitiesCreate.id,
     create: (c) => new CoordinateVerticesTool(c),
+  },
+  {
+    id: 'stationLabels',
+    label: 'Km yaz',
+    icon: 'stationLabels',
+    group: 'annotate',
+    aliases: ['KMYAZ', 'KILOMETREYAZ', 'ISTASYON', 'STATIONLABEL'],
+    description: 'Bir güzergâhın üzerine aralıkla km yazar (0+020, 0+040 …): istasyonlarda yola dik işaret, dik ve okunur km yazısı, isteğe bağlı enkesit hattı ve eksenden sapmalı nokta; tek adımda (Netcad’in Obje Üzerinde Dizi’si).',
+    steps: [
+      'Güzergâha tıklayın (çizgi, çoklu çizgi, yay, daire, elips, eğri ya da alan; seçili tek güzergâh doğrudan alınır): istasyonlar ve yazılar soluk görünür.',
+      'Aralık (A) km aralığı, Başlangıç (B) ilk köşenin km’si, Ters (T) sondan yürür; Yazı (Y) yazının yanı (sol, sağ, yok), Yükseklik (H) kâğıtta mm, İşaret (İ) dik çizgi, Enkesit (E) yarı genişlik, Nokta (N) sapma (sağa artı), Uçlar (U) başı ve sonu da yazar.',
+      'Enter, Uygula ya da sağ tık tek adımda yazar; araç sonraki güzergâhı bekler. Esc güzergâhı bırakır, ikinci Esc çıkar.',
+    ],
+    productCommand: entitiesCreate.id,
+    create: (c) => new StationLabelTool(c),
   },
   { id: 'labelsToText', label: 'Etiketleri yazıya çevir', icon: 'labelsToText', group: 'annotate', aliases: ['ETIKETYAZI', 'ETIKETCEVIR', 'LABELCONVERT'], description: 'Katmanların etiketlerini (parsel numarası, nokta adı, yol adı) seçilen ölçekte, paftanın yazdığı gibi yazı nesnesine çevirir: boyları, yerleri ve dönüşleriyle; tek adımda.', steps: ['Seçim yoksa görünen katmanlardaki bütün etiketler, seçim varsa seçili nesnelerinki çevrilir; etiketin stili katmanınkidir.', 'Yazılar yerlerinde soluk görünür. Ölçeği yazın (1:500 ya da 500); Örtüşenler de (R), Zemin (Z) ve Katman (K) seçenekleri açılıp kapanır.', 'Enter, Uygula ya da sağ tık: yazılar yazı katmanına (yoksa açılır) ya da etkin katmana tek adımda yazılır ve seçilir.'], productCommand: entitiesCreate.id, create: (c) => new LabelsToTextTool(c) },
   {
