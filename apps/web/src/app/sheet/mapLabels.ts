@@ -180,6 +180,15 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
       if (piece?.kind === 'text') line(layer, piece.text, piece.runs, [spots[i + 7], spots[i + 8]], x, y, spots[i + 4], spots[i + 5], piece.widthFactor ?? 1, piece);
       continue;
     }
+    // A table's cell (docs/adr/0184 §2): its words in the table's face and colour, a heading row's bold.
+    if (what === LABEL.cell && e.kind === 'table') {
+      const words = e.cells[spots[i + 5]]?.[spots[i + 6]];
+      if (!words) continue;
+      const color = e.color ?? doc.layers.get(e.layerId)?.style.color;
+      const font = faceOf(e, { weight: 400, italic: false }, spots[i + 7] === 1 ? { start: 0, end: 0, bold: true } : undefined);
+      text(layer, { text: words, x, y, size: mm(e.height), rotation: spots[i + 4], align: 'left', baseline: 'alphabetic', font, color: !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal) });
+      continue;
+    }
     if (what === LABEL.dimension && e.kind === 'dimension') {
       const color = e.color ?? doc.layers.get(e.layerId)?.style.color;
       const measured = { value: spots[i + 5], unit: DIMENSION_UNIT[spots[i + 6]] ?? 'length', prefix: DIMENSION_PREFIX[spots[i + 7]] ?? '' };

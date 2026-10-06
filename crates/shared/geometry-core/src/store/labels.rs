@@ -142,6 +142,11 @@ pub const LABEL_PARAGRAPH_MASK: f64 = 11.0;
 /// scales evenly) and b its height as placed.
 pub const LABEL_PIECE_LINE: f64 = 12.0;
 
+/// One cell's words of a table (docs/adr/0184 §2): x, y where its baseline
+/// starts, a the table's rotation, b its row, c its column, d 1 when bold (a
+/// heading row's, or the face's); its words and face are the table's.
+pub const LABEL_CELL: f64 = 13.0;
+
 /// Numbers per label record.
 pub const LABEL_STRIDE: usize = 9;
 
@@ -393,6 +398,31 @@ impl Store {
                     out.extend([
                         it.id, LABEL_TEXT, o.x, o.y, *rotation, factor, mask, 0.0, 0.0,
                     ]);
+                    continue;
+                }
+                // Each cell's words where its layout puts them; under 5 px they are not drawn,
+                // its lines are (docs/adr/0184 §2).
+                Shape::Table {
+                    height, rotation, ..
+                } => {
+                    let px = height * scale;
+                    if (5.0..=240.0).contains(&px)
+                        && let Some(t) = crate::geom::table::table_geom(&it.shape)
+                    {
+                        for c in t.layout(self.font).cells {
+                            out.extend([
+                                it.id,
+                                LABEL_CELL,
+                                c.at.x,
+                                c.at.y,
+                                *rotation,
+                                c.row as f64,
+                                c.col as f64,
+                                if c.bold { 1.0 } else { 0.0 },
+                                0.0,
+                            ]);
+                        }
+                    }
                     continue;
                 }
                 // Its note, as a text's; under 5 px it is not drawn, its line and arrowhead are (docs/adr/0146 §5).

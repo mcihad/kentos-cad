@@ -31,6 +31,8 @@ export type FormatsRequest =
   | { id: number; op: 'readFieldBook'; bytes: ArrayBuffer; options: FieldCsvOptions | null }
   /** A GNSS file (docs/adr/0169 §1, §6): GPX 1.1 when it begins with “<”, else an NMEA 0183 log; WGS 84 positions as written. */
   | { id: number; op: 'readGnss'; bytes: ArrayBuffer }
+  /** A table's file (Tablo ekle, docs/adr/0184 §4): an Excel workbook (.xlsx) sheet by sheet, else a text file by its separator. */
+  | { id: number; op: 'readTableFile'; bytes: ArrayBuffer }
   /** Points as an instrument's coordinate file (docs/adr/0169 §4): Leica GSI, Topcon GTS-7, Trimble JobXML, Nikon RAW or CSV. */
   | { id: number; op: 'writeField'; points: readonly FieldPoint[]; options: FieldWriteOptions }
   | { id: number; op: 'writeCoords'; input: CoordWriteInput }

@@ -133,6 +133,14 @@ pub const UNKNOWN_STYLE: &str = "unknown_style";
 /// A dimension the core cannot draw, or a field its kind does not take
 /// (a slope's elevations elsewhere, an ordinate's axis but 0 or 90; docs/adr/0147 §6).
 pub const INVALID_DIMENSION: &str = "invalid_dimension";
+/// A table's rows, columns, cells, merged ranges, alignments or source out
+/// of their rules (docs/adr/0184 §6).
+pub const INVALID_TABLE: &str = "invalid_table";
+/// A table among the objects a block is defined from (docs/adr/0184 §1).
+pub const TABLE_IN_BLOCK: &str = "table_in_block";
+/// Tablo's edit (`table`, `tableUpdate`) changing an object that is not a
+/// table, or into one that is not (docs/adr/0184 §6).
+pub const NOT_A_TABLE: &str = "not_a_table";
 /// A block rule the checks before it did not see, as the document said it
 /// (never expected: the commands check the document's own rules first).
 pub const BLOCK_REFUSED: &str = "block_refused";

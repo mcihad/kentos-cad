@@ -11,6 +11,7 @@ import type { FieldWriteOptions } from '../contracts/generated/FieldWriteOptions
 import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
 import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
 import type { GnssRead } from '../contracts/generated/GnssRead';
+import type { TableFileRead } from '../contracts/generated/TableFileRead';
 import type { NczReadOptions } from '../contracts/generated/NczReadOptions';
 import type { ShapefileReadOptions } from '../contracts/generated/ShapefileReadOptions';
 import type { ImportResult } from '../contracts/generated/ImportResult';
@@ -104,6 +105,15 @@ export class FormatsClient {
   async readGnss(bytes: Uint8Array): Promise<GnssRead> {
     const copy = bytes.slice().buffer;
     return json<GnssRead>(await this.request({ op: 'readGnss', bytes: copy }, [copy]));
+  }
+
+  /**
+   * Reads a table's file (Tablo ekle, docs/adr/0184 §4): an Excel workbook (.xlsx) sheet by sheet, else a CSV or text
+   * file's records by its separator, and its encoding; why not when it cannot. The caller keeps `bytes`.
+   */
+  async readTableFile(bytes: Uint8Array): Promise<TableFileRead> {
+    const copy = bytes.slice().buffer;
+    return json<TableFileRead>(await this.request({ op: 'readTableFile', bytes: copy }, [copy]));
   }
 
   /**

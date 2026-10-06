@@ -11,6 +11,7 @@ import type { FieldWriteOptions } from '../contracts/generated/FieldWriteOptions
 import type { FieldStation } from '../contracts/generated/FieldStation';
 import type { GnssPoint } from '../contracts/generated/GnssPoint';
 import type { GnssRead } from '../contracts/generated/GnssRead';
+import type { TableFileRead } from '../contracts/generated/TableFileRead';
 import { FORMATS_VERSION } from './version';
 
 /**
@@ -28,6 +29,7 @@ interface Formats {
   writeCoords(input: string): { takeBytes(): Uint8Array; readonly report: string; free(): void };
   readFieldBook(bytes: Uint8Array, options: string): Uint8Array;
   readGnss(bytes: Uint8Array): Uint8Array;
+  readTableFile(bytes: Uint8Array): Uint8Array;
   writeField(points: string, options: string): Uint8Array;
 }
 
@@ -176,6 +178,21 @@ describe.skipIf(!loader)('formats WASM module', () => {
       expect(got.format, c.name).toBe(format);
       expect(got.points, c.name).toEqual(c.expect.points);
       expect(got.problems.map((p) => [p.line, p.message]), c.name).toEqual(c.expect.problems.map((p) => [p.line, p.problem]));
+    }
+  });
+
+  it('reads a table’s files as the reference does (fixtures/table/v1/files.json, docs/adr/0184 §4)', async () => {
+    const w = await load();
+    const file = JSON.parse(new TextDecoder().decode(fs.readFileSync(new URL('../../../../fixtures/table/v1/files.json', import.meta.url)))) as {
+      format: string;
+      cases: { file: string; want: TableFileRead }[];
+    };
+    expect(file.format).toBe('kentos.table-file-cases');
+    expect(file.cases.length).toBeGreaterThanOrEqual(10);
+    for (const c of file.cases) {
+      const bytes = fs.readFileSync(new URL(`../../../../fixtures/table/v1/files/${c.file}`, import.meta.url));
+      const got = JSON.parse(new TextDecoder().decode(w.readTableFile(bytes))) as TableFileRead;
+      expect(got, c.file).toEqual(c.want);
     }
   });
 

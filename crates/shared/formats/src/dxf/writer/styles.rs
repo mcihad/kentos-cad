@@ -105,13 +105,14 @@ impl StyleNames {
         }
         for e in entities {
             let face = match e {
-                Entity::Text(t)
-                    if t.face
+                Entity::Text(kentos_contracts::TextEntity { face, .. })
+                | Entity::Table(kentos_contracts::TableEntity { face, .. })
+                    if face
                         .text_style
                         .as_ref()
                         .is_none_or(|id| !names.text.contains_key(id)) =>
                 {
-                    t.face.font.map(|f| (f, t.face.bold, t.face.italic))
+                    face.font.map(|f| (f, face.bold, face.italic))
                 }
                 Entity::Dimension(d) => d.look.font.map(|f| (f, false, false)),
                 _ => None,

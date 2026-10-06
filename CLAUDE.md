@@ -34,6 +34,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   yazı tipi), stil değişince eski değerdekiler tek adımda izler; CAD projesinde Yazı stilleri ve Ölçü stilleri penceresi, araçların Stil (S)
   seçeneği (Çok satırlı yazı'nın Satır aralığı R), Öznitelikler'in stil satırları; DXF STYLE ve DIMSTYLE iki yönde, içe aktarılan stiller
   projeye adıyla eklenir, Standard Standart'tır (ADR 0183);
+  tablo: hücreler, birleşik alanlar, sütun hizası, başlık satırı, çizgiler ve kalın çerçeve (`.kcad` şema 22); CAD projesinde Tablo ekle
+  (boş, Excel .xlsx ya da CSV/TXT dosyasından, koordinat, alan ve öznitelik çizelgesi; önizleme, imleçten yerleştirme), Tabloyu düzenle
+  (elektronik tablo gibi; çift tıkla), Tabloyu güncelle (kaynağına bağlı: çizelgenin nesneleri ya da yeniden seçilen dosya), Öznitelikler'in
+  satırları; DXF'e adsız blok olarak gider, KENTOS verisiyle tablo olarak gelir (ADR 0184);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -239,6 +243,8 @@ python3 scripts/fixtures/text_cases.py --check   # yazı kurallarını (Artır, 
 python3 scripts/fixtures/annotation_style_cases.py --check   # yazı ve ölçü stillerinin kurallarını, uygulanmasını, izlenmesini ve ölçü değerinin yazımını bağımsız başvurudan denetle; durumlar fixtures/text/v1/styles.json (ADR 0183)
 python3 scripts/fixtures/paragraph_cases.py --check   # çok satırlı yazının satırlarını, sarmasını, kutusunu ve düzenleyicinin dilimlerini yazı tiplerinin ölçülmüş ilerlemeleriyle bağımsız başvurudan denetle; durumlar fixtures/text/v1/paragraph.json (ADR 0182)
 cargo test -p kentos-desktop paragraph_editor::tests::screens -- --ignored --nocapture   # çok satırlı yazının resimleri, .run/shots/paragraf-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs paragraph); ADR 0182)
+python3 scripts/fixtures/table_cases.py --check   # tablonun yerleşimini, çerçevesini, tutamaçlarını, boylarını, çizelgelerini, düzenlemelerini ve güncellemesini yazı tiplerinin ölçülmüş ilerlemeleriyle bağımsız başvurudan denetle; durumlar fixtures/table/v1/cases.json (ADR 0184)
+python3 scripts/fixtures/table_file_cases.py --check   # Tablo ekle'nin dosya okuyucusunu (CSV/TXT ayırıcı ve kodlama, XLSX sayfaları; .xls ve bozuk dosya) Python'un zipfile ve xml.etree'siyle yazılmış örneklerden denetle; durumlar fixtures/table/v1/files.json (ADR 0184 §4)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
 python3 scripts/fixtures/dimension_cases.py --check   # yeni ölçü türlerinin yerleşimini kurallardan denetle (ADR 0147)
 python3 scripts/fixtures/quick_dimension_cases.py --check   # Hızlı ölçü'nün ölçülerini (taraf, uzaklık, ortak kenar) kurallardan denetle (ADR 0147 §7)
@@ -941,7 +947,13 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   (kaydetme `kentos_interaction::style_tables`, `app/styleTables.ts`); araçların Stil'i `kentos_interaction::styles`,
   `tools/styleOption.ts` (stil adının adımında Boşluk harftir: `takes_words`, `takesWords`); DXF'te `dxf/styles.rs`,
   `writer/styles.rs`, içe aktarmanın birleştirmesi `exchange/apply.rs`, `io/apply.ts`; ortak izler `text-styles.json`,
-  `dimension-styles.json` (oynatıcılarda `face`, `look`). Sıradaki `CAD-22` tablo nesnesi.
+  `dimension-styles.json` (oynatıcılarda `face`, `look`). `CAD-22` tablo ([ADR 0184](docs/adr/0184-tables.md)) tek parçada bitti
+  (6 Ekim; sahibin eki: kalın çerçeve): sözleşmenin `TableEntity`'si ve kuralları (`table.rs`), `.kcad` şema 22 (`FORMATS_VERSION` 32),
+  çekirdek `geom::table`, `ops::table`, `ops::table_edit` (bağımsız başvuru `table_cases.py`, ortak `fixtures/table/v1/cases.json`),
+  dosya okuyucusu `formats::table_file` (`table_file_cases.py`, `fixtures/table/v1/files`); pencereler masaüstünde `tables/`, web'de
+  `ui/table/`, kuralları `kentos_interaction::table` ve `app/tables.ts`; yerleştirme `kentos_interaction::table_place`,
+  `tools/tablePlaceTool.ts`; DXF adsız blok ve KENTOS verisi (`dxf-write/tables`); ortak iz `table.json` (oynatıcılarda `table`
+  beklentisi, ok tuşları). Sıradaki `CAD-23` tarama ekleri.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

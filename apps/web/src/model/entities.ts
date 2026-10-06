@@ -3,7 +3,7 @@ import type { Bounds, Vec2 } from './geometry';
 import type { DimensionStyle } from './geom/dimension';
 import type { DimensionLook, TextFace } from './annotationStyles';
 
-export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch' | 'insert' | 'leader';
+export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch' | 'insert' | 'leader' | 'table';
 
 /**
  * Half-length (1000 km) used when an infinite line meets finite geometry on
@@ -392,6 +392,57 @@ export type LeaderArrow = 'open' | 'dot' | 'none';
 /** Every arrowhead name, in the contract's order (`LeaderArrow::ALL`). */
 export const LEADER_ARROWS: readonly LeaderArrow[] = ['open', 'dot', 'none'];
 
+/** A merged range of a table: `rows` × `cols` cells from row `row`, column `col` (docs/adr/0184 §1). */
+export interface CellRange {
+  row: number;
+  col: number;
+  rows: number;
+  cols: number;
+}
+
+/** A table column's alignment; absent alignments: all left. */
+export type TableAlign = 'left' | 'center' | 'right';
+
+/** Which of a table's lines are drawn when not all: its outline alone, with the lines between its rows, none. */
+export type TableGrid = 'outer' | 'rows' | 'none';
+
+/** Where a table's rows came from (docs/adr/0184 §5): objects by their persistent ids, or a file by its name and sheet. */
+export type TableSource =
+  | { kind: 'coordinates' | 'areas' | 'attributes'; objects: string[] }
+  | { kind: 'file'; name: string; sheet?: string };
+
+/**
+ * A table (docs/adr/0184 §1): rows and columns of one-line cells hanging from its top left corner, turned with it;
+ * its cells' face (docs/adr/0183 §2) its own.
+ */
+export interface TableEntity extends EntityBase, TextFace {
+  kind: 'table';
+  /** Its top left corner. */
+  p: Vec2;
+  /** Degrees counter-clockwise from east: its rows run along it. */
+  rotation: number;
+  /** Its cells' text height, metres. */
+  height: number;
+  /** Its rows' heights, top to bottom, metres. */
+  rows: number[];
+  /** Its columns' widths, left to right, metres. */
+  columns: number[];
+  /** The cells' words, row by row, one line each, empty for an empty cell. */
+  cells: string[][];
+  /** Merged ranges: each range's words in its top left cell, the others empty; absent: none. */
+  merges?: CellRange[];
+  /** Each column's alignment; absent: all left. */
+  aligns?: TableAlign[];
+  /** The first row is its heading: bold, centred. */
+  header?: boolean;
+  /** Which lines are drawn; absent: all. */
+  grid?: TableGrid;
+  /** Its frame's width, metres: the outline drawn as a band that wide inside it (Kalın çerçeve); absent: a line. */
+  frame?: number;
+  /** Where its rows came from (Tabloyu güncelle); absent: written by hand. */
+  source?: TableSource;
+}
+
 export type Entity =
   | PointEntity
   | LineEntity
@@ -405,7 +456,8 @@ export type Entity =
   | DimensionEntity
   | HatchEntity
   | InsertEntity
-  | LeaderEntity;
+  | LeaderEntity
+  | TableEntity;
 
 /** An object of a drawing, as `CadDocument` gives it out: always with its persistent id. */
 export type DrawingEntity = Entity & { uid: string };
@@ -429,6 +481,7 @@ export const ENTITY_KIND_LABEL: Record<EntityKind, string> = {
   hatch: 'Tarama',
   insert: 'Blok',
   leader: 'Kılavuz',
+  table: 'Tablo',
 };
 
 export const HATCH_PATTERN_LABEL: Record<HatchPatternType, string> = {

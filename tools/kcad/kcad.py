@@ -29,6 +29,7 @@ import math
 import re
 import struct
 import sys
+import unicodedata
 from collections import Counter
 
 # ── Container (spec §2, §3) ─────────────────────────────────────────────
@@ -97,6 +98,8 @@ SCHEMA_WITH_PARAGRAPHS = 20
 # face (`textStyle`, `font`, `bold`, `italic`, `oblique`) and a dimension's look (`dimStyle`, `arrow`, `arrowSize`,
 # `extOffset`, `extBeyond`, `textGap`, `textPlace`, `decimals`, `unit`, `prefix`, `suffix`, `font`; docs/adr/0183).
 SCHEMA_WITH_STYLES = 21
+# Schema 22: schema 21 and the `table` kind, only in the drawing (docs/adr/0184 §1).
+SCHEMA_WITH_TABLES = 22
 DRAWING_FONTS = ("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")
 DIMENSION_ARROWS = ("closed", "open", "dot", "none")
 MAX_OBLIQUE = 85.0
@@ -115,12 +118,22 @@ LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "p
 DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope")
 # A leader's arrowheads (spec §6.6); the filled arrow is the field's absence, no value.
 LEADER_ARROWS = ("open", "dot", "none")
+# A table's bounds (kentos_contracts::table): rows, columns, cells, a cell's letters, a size (m), a source's objects.
+MAX_TABLE_ROWS = 10_000
+MAX_TABLE_COLUMNS = 100
+MAX_TABLE_CELLS = 100_000
+MAX_CELL_LETTERS = 1000
+MAX_TABLE_SIZE = 1e6
+MAX_SOURCE_OBJECTS = 100_000
+# A table's columns' alignments and its lines (spec §6.6); all lines is the field's absence, no value.
+TABLE_ALIGNS = ("left", "center", "right")
+TABLE_GRIDS = ("outer", "rows", "none")
 # A text's alignments (spec §6.6); the left of the baseline is the field's absence, no value.
 TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", "bottomRight", "middleLeft", "middleCenter", "middleRight", "topLeft", "topCenter", "topRight")
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -614,6 +627,7 @@ class _Schema:
         self.linked_texts = version >= SCHEMA_WITH_LINKED_TEXTS
         self.paragraphs = version >= SCHEMA_WITH_PARAGRAPHS
         self.styles = version >= SCHEMA_WITH_STYLES
+        self.tables = version >= SCHEMA_WITH_TABLES
         self.blocks = version >= SCHEMA_WITH_BLOCKS
         self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
         self.leaders = version >= SCHEMA_WITH_LEADERS
@@ -1108,9 +1122,13 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
+        # A block definition holds no table (docs/adr/0184 §1).
+        if kind == "table" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında tablo olamaz")
         table = dict(self.common())
         table.update(ENTITY_KINDS[kind](self))
         self.path.append(kind)
@@ -1127,8 +1145,10 @@ class _Schema:
                 self.path.append("runs")
                 self.runs_rules(fields["text"], fields["runs"])
                 self.path.pop()
-            # Bold, italic and a slant need a typeface (docs/adr/0183 §2).
-            if kind == "text" and "font" not in fields and any(k in fields for k in ("bold", "italic", "oblique")):
+            if kind == "table":
+                self.table_rules(fields)
+            # Bold, italic and a slant need a typeface (docs/adr/0183 §2); a table's face is a text's.
+            if kind in ("text", "table") and "font" not in fields and any(k in fields for k in ("bold", "italic", "oblique")):
                 self.path.append(next(k for k in ("textStyle", "bold", "italic", "oblique") if k in fields))
                 self.fail("bad_value", "Kalın, eğik ve yatık yazı bir yazı tipiyle olur; yazının yazı tipi yok")
             # The drawing's own insert names a definition read before it (`blocks` comes before `entities`).
@@ -1285,6 +1305,97 @@ class _Schema:
         if style == "ordinate" and "angle" in d and d["angle"] not in (0.0, 90.0):
             self.path.append("angle")
             self.fail("bad_value", f"koordinat ölçüsünün ekseni {d['angle']}; 0 (Y) ya da 90 (X) olmalı")
+
+    # Tables (schema 22, spec §6.6, docs/adr/0184).
+
+    def merges(self, v):
+        ranges = self.array(self.fields({k: (self.uint(32), True) for k in ("row", "col", "rows", "cols")}))(v)
+        if not ranges:
+            self.fail("bad_value", "birleşik alan listesi boş; birleşik alanı olmayan tabloda alan yazılmaz")
+        return ranges
+
+    def table_header(self, v):
+        if self.bool(v) is not True:
+            self.fail("bad_value", "başlık false yazılmaz; başlıksız tabloda alan yoktur")
+        return True
+
+    def table_source(self, v):
+        d = self.fields(
+            {
+                "kind": (self.enum(("coordinates", "areas", "attributes", "file")), True),
+                "objects": (self.array(self.id16), False),
+                "name": (self.text, False),
+                "sheet": (self.text, False),
+            }
+        )(v)
+        if d["kind"] == "file":
+            if "objects" in d:
+                self.fail("bad_value", "dosyadan gelen tablonun kaynağında nesne yazılmaz")
+            if "name" not in d:
+                self.path.append("name")
+                self.fail("missing_field", "“name” alanı yok")
+        else:
+            if "name" in d or "sheet" in d:
+                self.fail("bad_value", "nesnelerden gelen tablonun kaynağında dosya adı yazılmaz")
+            if "objects" not in d:
+                self.path.append("objects")
+                self.fail("missing_field", "“objects” alanı yok")
+        return d
+
+    def table_rules(self, t):
+        """The contract's `TableShape::problem` (kentos_contracts::table), in its order: what it names is refused at its field."""
+        def refuse(field, words):
+            self.path.append(field)
+            self.fail("bad_value", words)
+
+        holds = lambda x: math.isfinite(x) and 0.0 < x <= MAX_TABLE_SIZE  # noqa: E731
+        if not holds(t["height"]):
+            refuse("height", f"tablonun yazı yüksekliği {t['height']}; sıfırdan büyük ve sonlu olmalı")
+        rows, columns, cells = t["rows"], t["columns"], t["cells"]
+        n, m = len(rows), len(columns)
+        if not 0 < n <= MAX_TABLE_ROWS:
+            refuse("rows", f"tablonun {n} satırı var")
+        if not 0 < m <= MAX_TABLE_COLUMNS:
+            refuse("columns", f"tablonun {m} sütunu var")
+        if n * m > MAX_TABLE_CELLS:
+            refuse("cells", f"tablonun {n * m} hücresi var")
+        if not all(holds(h) for h in rows):
+            refuse("rows", "bir satırın yüksekliği sıfırdan büyük ve sonlu değil")
+        if not all(holds(w) for w in columns):
+            refuse("columns", "bir sütunun genişliği sıfırdan büyük ve sonlu değil")
+        if len(cells) != n or any(len(r) != m for r in cells):
+            refuse("cells", "hücreler satır ve sütun sayısı kadar değil")
+        for r in cells:
+            for words in r:
+                if any(unicodedata.category(c) == "Cc" for c in words) or len(words) > MAX_CELL_LETTERS:
+                    refuse("cells", "hücrede satır sonu ya da denetim karakteri var ya da harf çok")
+        merges = t.get("merges", [])
+        for k, g in enumerate(merges):
+            if g["rows"] == 0 or g["cols"] == 0 or g["rows"] * g["cols"] < 2 or g["row"] + g["rows"] > n or g["col"] + g["cols"] > m:
+                refuse("merges", f"{k + 1}. birleşik alan tablonun içinde ve birden çok hücre değil")
+            for o in merges[:k]:
+                if o["row"] < g["row"] + g["rows"] and g["row"] < o["row"] + o["rows"] and o["col"] < g["col"] + g["cols"] and g["col"] < o["col"] + o["cols"]:
+                    refuse("merges", f"{k + 1}. birleşik alan öncekiyle örtüşüyor")
+            for i in range(g["row"], g["row"] + g["rows"]):
+                for j in range(g["col"], g["col"] + g["cols"]):
+                    if (i, j) != (g["row"], g["col"]) and cells[i][j]:
+                        refuse("merges", "birleşik alanın içindeki bir hücre boş değil")
+        if "frame" in t:
+            f = t["frame"]
+            if not (math.isfinite(f) and f > 0.0 and 2.0 * f < min(math.fsum(columns), math.fsum(rows))):
+                refuse("frame", f"tablonun çerçeve kalınlığı {f}; sıfırdan büyük, tablonun eninin ve boyunun yarısından küçük olmalı")
+        if "aligns" in t and len(t["aligns"]) != m:
+            refuse("aligns", "her sütunun hizası verilmeli")
+        src = t.get("source")
+        if src is not None:
+            if src["kind"] == "file":
+                name = src["name"]
+                if not name.strip() or any(unicodedata.category(c) == "Cc" for c in name):
+                    refuse("source", "kaynak dosyanın adı boş olamaz")
+                if "sheet" in src and not src["sheet"].strip():
+                    refuse("source", "kaynak sayfanın adı boş olamaz")
+            elif not 0 < len(src["objects"]) <= MAX_SOURCE_OBJECTS:
+                refuse("source", f"tablonun kaynağı {len(src['objects'])} nesne gösteriyor")
 
     def leader_points(self, v):
         pts = self.array(self.point)(v)
@@ -1527,6 +1638,27 @@ ENTITY_KINDS = {
     },
     # Schema 6 (docs/adr/0144): `mirror` only when true.
     "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False)},
+    # Schema 22 (docs/adr/0184): rows and columns of one-line cells, merged ranges, alignments, a heading row only when
+    # true, lines by name (all: no field), a frame's width, a text's face, a source; only in the drawing.
+    "table": lambda s: {
+        "p": (s.point, True),
+        "rotation": (s.float, True),
+        "height": (s.float, True),
+        "rows": (s.array(s.float), True),
+        "columns": (s.array(s.float), True),
+        "cells": (s.array(s.array(s.text)), True),
+        "merges": (s.merges, False),
+        "aligns": (s.array(s.enum(TABLE_ALIGNS)), False),
+        "header": (s.table_header, False),
+        "grid": (s.enum(TABLE_GRIDS), False),
+        "frame": (s.float, False),
+        "textStyle": (s.style_id, False),
+        "font": (s.enum(DRAWING_FONTS), False),
+        "bold": (s.face_flag, False),
+        "italic": (s.face_flag, False),
+        "oblique": (s.oblique, False),
+        "source": (s.table_source, False),
+    },
     # Schema 8 (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, `mask` only when true.
     "leader": lambda s: {
         "pts": (s.leader_points, True),

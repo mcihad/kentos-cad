@@ -1,0 +1,3 @@
+Ad	Kod	Açýklama
+Þ1	SN	Þev üstü ðüþýöç
+Þ2	SN	Ýþaret

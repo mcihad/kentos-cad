@@ -17,7 +17,11 @@ export function labelRule(st: LabelStyle): { placement: LabelStyle['placement'];
 }
 
 /** A label record's second number. */
-export const LABEL = { dimension: 0, text: 1, center: 2, corner: 3, beside: 4, along: 5, pieceText: 6, pieceDimension: 7, leader: 8, pieceLeader: 9, line: 10, paragraphMask: 11, pieceLine: 12 } as const;
+export const LABEL = { dimension: 0, text: 1, center: 2, corner: 3, beside: 4, along: 5, pieceText: 6, pieceDimension: 7, leader: 8, pieceLeader: 9, line: 10, paragraphMask: 11, pieceLine: 12, cell: 13 } as const;
+/*
+ * A table's cell (docs/adr/0184 §2; `cell`): x, y where its words' baseline starts, a the table's turn, b its row, c its
+ * column, d 1 when bold (a heading row's, or the face's); its words and face are the table's.
+ */
 /**
  * Numbers per label record: `id, what, x, y, a, b, c, d, e`. A text's x, y are where its baseline starts (its
  * point moved by its alignment), b its width factor, c its mask's width (0 none); a block's text piece's d and e

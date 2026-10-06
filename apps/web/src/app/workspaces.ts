@@ -88,8 +88,8 @@ export const WORKSPACES: readonly WorkspaceSpec[] = [
         'tool.stretch',
         'tool.lengthen',
       ],
-      // Yazı ve ölçü stilleri (docs/adr/0183 §4): CAD's interface only.
-      commands: ['style.textStyles', 'style.dimensionStyles'],
+      // Yazı ve ölçü stilleri (docs/adr/0183 §4) and Tablo (docs/adr/0184): CAD's interface only.
+      commands: ['style.textStyles', 'style.dimensionStyles', 'table.insert', 'table.edit', 'table.update'],
     },
   },
   {

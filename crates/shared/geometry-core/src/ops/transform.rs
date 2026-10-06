@@ -370,6 +370,47 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             arrow: arrow.clone(),
             mask: *mask,
         },
+        // Its corner moves and its sizes scale; it turns as a text does: mirrored, its
+        // top right corner's image is its new top left, its rows still read left to right
+        // (docs/adr/0184 §2).
+        Shape::Table {
+            p,
+            rotation,
+            height,
+            rows,
+            columns,
+            cells,
+            merges,
+            aligns,
+            header,
+            grid,
+            frame,
+            source,
+            face,
+        } => {
+            let corner = if is_reflection(m) {
+                let width: f64 = columns.iter().sum();
+                let r = (rotation * PI) / 180.0;
+                Vec2::new(p.x + cos(r) * width, p.y + sin(r) * width)
+            } else {
+                *p
+            };
+            Shape::Table {
+                p: apply(m, corner),
+                rotation: text_turn(*rotation, m),
+                height: height * s,
+                rows: rows.iter().map(|h| h * s).collect(),
+                columns: columns.iter().map(|w| w * s).collect(),
+                cells: cells.clone(),
+                merges: merges.clone(),
+                aligns: aligns.clone(),
+                header: *header,
+                grid: grid.clone(),
+                frame: frame.map(|f| f * s),
+                source: source.clone(),
+                face: face.clone(),
+            }
+        }
     }
 }
 

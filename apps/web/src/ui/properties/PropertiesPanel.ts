@@ -22,6 +22,7 @@ import { dimensionStyleRows, textStyleRows } from './styleRows';
 import { setGeometry, setProperties, uidsOf } from './write';
 import { fixed } from '../../core/displayNumber';
 import { projectCrsCode, projectCrsName } from '../../model/projectCrs';
+import { sourceWords } from '../../model/tables';
 
 /**
  * Öznitelikler: geometry and GIS attributes of the selection, editable. It
@@ -477,6 +478,33 @@ export class PropertiesPanel extends Panel {
                   items: () => [true, false].map((m) => ({ label: m ? 'Evet' : 'Hayır', radio: true, checked: m === mirrored, run: () => setGeometry(this.ctx, e, { mirror: m }) })),
                 },
           },
+        );
+        break;
+      }
+      // Its style, size, turn and source (docs/adr/0184 §6); its cells are its editor's (a double click). The desktop's are the same.
+      case 'table': {
+        const numEdit = (patch: (x: number) => Record<string, unknown> | null) =>
+          locked
+            ? undefined
+            : ({
+                type: 'number',
+                commit: (t: string) => {
+                  const x = parseFloat(t.replace(',', '.'));
+                  const changed = Number.isFinite(x) ? patch(x) : null;
+                  if (changed) setGeometry(this.ctx, e, changed);
+                },
+              } as const);
+        geo.push(
+          ...textStyleRows(this.ctx, [e], locked),
+          { label: 'Satır sayısı', value: String(e.rows.length), numeric: true },
+          { label: 'Sütun sayısı', value: String(e.columns.length), numeric: true },
+          { ...num('Yazı yüksekliği', e.height, 'm'), editor: numEdit((x) => (x > 0 ? { height: f.toMetres(x) } : null)) },
+          { label: 'Açı', value: fixed(e.rotation, 2), numeric: true, unit: '°', editor: numEdit((x) => ({ rotation: ((x % 360) + 360) % 360 })) },
+          num('Genişlik', e.columns.reduce((a, b) => a + b, 0), 'm'),
+          num('Derinlik', e.rows.reduce((a, b) => a + b, 0), 'm'),
+          { label: 'Kaynak', value: sourceWords(e.source) },
+          num('Konum Y', e.p.x),
+          num('Konum X', e.p.y),
         );
         break;
       }

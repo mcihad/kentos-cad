@@ -413,6 +413,31 @@ fn defs(shape: &Shape) -> Defs {
                 text(arrow.as_deref()),
             ]);
         }
+        // Its corner, sizes, words and look (docs/adr/0184).
+        Shape::Table {
+            p,
+            rotation,
+            height,
+            rows,
+            columns,
+            cells,
+            merges,
+            aligns,
+            header,
+            grid,
+            ..
+        } => {
+            comps.push(Comp::Fixed(vec![*p]));
+            lengths.push(*height);
+            lengths.extend(rows.iter().chain(columns));
+            others.push(Other::Num(*rotation));
+            others.extend(cells.iter().flatten().map(|w| Other::Text(w.clone())));
+            for m in merges.iter().flatten() {
+                others.extend([m.row, m.col, m.rows, m.cols].map(|x| Other::Num(x as f64)));
+            }
+            others.extend(aligns.iter().flatten().map(|a| Other::Text(a.clone())));
+            others.extend([Other::Flag(*header == Some(true)), text(grid.as_deref())]);
+        }
     }
     Defs {
         comps,

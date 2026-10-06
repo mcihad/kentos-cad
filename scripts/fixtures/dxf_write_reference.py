@@ -312,6 +312,9 @@ def turn_of(degrees: float) -> float:
 # The DXF entities each object is written as, in order (a polygon's holes follow it).
 def written_kinds(e: dict) -> list[str]:
     kind = e["kind"]
+    # A table is its anonymous block's INSERT (docs/adr/0184 §7).
+    if kind == "table":
+        return ["INSERT"]
     if kind == "polygon":
         return ["LWPOLYLINE"] * (1 + len(e.get("holes") or []))
     if kind == "leader":
@@ -448,6 +451,140 @@ def check_paragraph(o: list[tuple[int, str]], e: dict, where: str) -> None:
     ensure(text == want, f"{where}: its words {want!r}, not {text!r}")
     ensure(runs == expected_runs(e), f"{where}: its runs {expected_runs(e)}, not {runs}")
     ensure(factor == e.get("widthFactor"), f"{where}: its width factor")
+
+
+def table_text(words: str) -> str:
+    """A cell's words as a TEXT holds them: one line, the caret in DXF's notation, “%” tripled where “%%” would be a
+    control code."""
+    percent = "%%" in words
+    out = []
+    for c in words:
+        if control(c):
+            out.append(" ")
+        elif c == "^":
+            out.append("^ ")
+        elif c == "%" and percent:
+            out.append("%%%")
+        else:
+            out.append(c)
+    return "".join(out)
+
+
+TABLE_BASE = ("kind", "id", "layerId", "color", "attrs", "label", "symbol", "lineWeight")
+TABLE_FLOATS = ("rotation", "height", "frame", "oblique")
+
+
+def table_data(e: dict) -> str:
+    """The table's own fields as KentOS's data holds them: the contract's JSON, keys in order, numbers as floats."""
+    t = {k: v for k, v in e.items() if k not in TABLE_BASE}
+    for k in TABLE_FLOATS:
+        if k in t:
+            t[k] = float(t[k])
+    t["p"] = {"x": float(t["p"]["x"]), "y": float(t["p"]["y"])}
+    t["rows"] = [float(x) for x in t["rows"]]
+    t["columns"] = [float(x) for x in t["columns"]]
+    return json.dumps(t, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def sums(sizes: list) -> list[float]:
+    out = [0.0]
+    for s in sizes:
+        out.append(out[-1] + float(s))
+    return out
+
+
+def check_table(o: list[tuple[int, str]], e: dict, blocks: list, by_name: dict, layers: dict, where: str, n: int) -> None:
+    """A table (docs/adr/0184 §7): an INSERT of the anonymous block *Un at its corner, turned as it is, KentOS's data
+    its own fields; the block in its own axes (the corner at the origin, y down the page as −y): a LINE for every run of
+    drawn edges (the outline's only without a frame band; none without lines), the band as four SOLIDs, a TEXT for every
+    cell with words (a merged range's in its whole box), left, centred or right at half a height in, its baseline 0.35
+    of a height under the middle, on 0 in BYBLOCK."""
+    name = f"*U{n}"
+    ensure(group(o, 2) == name and group(o, 330) == "17" and group(o, 8) == layers[e["layerId"]], f"{where}: {name}'s INSERT in model space, on its layer")
+    ensure((float(group(o, 10)), float(group(o, 20))) == (float(e["p"]["x"]), float(e["p"]["y"])), f"{where}: at its corner")
+    ensure((group(o, 50) is None) if e["rotation"] == 0 else float(group(o, 50)) == float(e["rotation"]), f"{where}: its turn")
+    if e.get("color"):
+        ensure(group(o, 420) == str(int(e["color"][1:], 16)), f"{where}: its true colour")
+    data = kentos(o).get("table")
+    ensure(data is not None and item_text(data) == table_data(e), f"{where}: KentOS's data is its fields")
+    ensure(kentos_attrs(o) == e["attrs"], f"{where}: its attributes")
+    k = by_name[name]
+    end = next(i for i in range(k, len(blocks)) if blocks[i][0] == (0, "ENDBLK"))
+    head, objects = blocks[k], blocks[k + 1 : end]
+    ensure(group(head, 70) == "1" and (float(group(head, 10)), float(group(head, 20))) == (0.0, 0.0), f"{where}: anonymous, its base at the origin")
+    ensure(all(group(x, 8) == "0" and group(x, 62) == "0" for x in objects), f"{where}: its block's objects on 0 in BYBLOCK")
+    rows, columns, cells = e["rows"], e["columns"], e["cells"]
+    nr, nc = len(rows), len(columns)
+    xs, ys = sums(columns), sums(rows)
+    merges = e.get("merges") or []
+    grid = e.get("grid")
+    band = e.get("frame") if grid != "none" else None
+
+    def holds(g, i, j):
+        return g["row"] <= i < g["row"] + g["rows"] and g["col"] <= j < g["col"] + g["cols"]
+
+    def joined(a, b):
+        return any(holds(g, *a) and holds(g, *b) for g in merges)
+
+    def runs(drawn):
+        out, start = [], None
+        for j, d in enumerate(drawn + [False]):
+            if d and start is None:
+                start = j
+            elif not d and start is not None:
+                out.append((start, j))
+                start = None
+        return out
+
+    lines = []
+    if grid != "none":
+        for r in range(nr + 1):
+            outer = r in (0, nr)
+            if (not outer and grid == "outer") or (outer and band is not None):
+                continue
+            for a, b in runs([outer or not joined((r - 1, j), (r, j)) for j in range(nc)]):
+                lines.append(((xs[a], -ys[r]), (xs[b], -ys[r])))
+        for c in range(nc + 1):
+            outer = c in (0, nc)
+            if (not outer and grid in ("outer", "rows")) or (outer and band is not None):
+                continue
+            for a, b in runs([outer or not joined((i, c - 1), (i, c)) for i in range(nr)]):
+                lines.append(((xs[c], -ys[a]), (xs[c], -ys[b])))
+    got = [((float(group(x, 10)), float(group(x, 20))), (float(group(x, 11)), float(group(x, 21)))) for x in objects if x[0] == (0, "LINE")]
+    ensure(got == lines, f"{where}: its {len(lines)} lines")
+    solids = [x for x in objects if x[0] == (0, "SOLID")]
+    if band is None:
+        ensure(not solids, f"{where}: no band")
+    else:
+        f, W, H = float(band), xs[-1], ys[-1]
+        quads = [(0.0, 0.0, W, f), (0.0, H - f, W, H), (0.0, f, f, H - f), (W - f, f, W, H - f)]
+        for (x0, y0, x1, y1), sx in zip(quads, solids):
+            corners = [(float(group(sx, c)), float(group(sx, c + 10))) for c in (10, 11, 12, 13)]
+            # SOLID runs 1 2 4 3: the strip's corners round it.
+            ensure(corners == [(x0, -y0), (x1, -y0), (x0, -y1), (x1, -y1)], f"{where}: a band strip {corners}")
+        ensure(len(solids) == 4, f"{where}: its band as four SOLIDs")
+    texts = [x for x in objects if x[0] == (0, "TEXT")]
+    h = float(e["height"])
+    want = []
+    for i, row in enumerate(cells):
+        for j, words in enumerate(row):
+            if not words.strip():
+                continue
+            span = next((g for g in merges if holds(g, i, j)), None)
+            if span is not None and (span["row"], span["col"]) != (i, j):
+                continue
+            rr, cc = (span["rows"], span["cols"]) if span else (1, 1)
+            x0, x1, y0, y1 = xs[j], xs[j + cc], ys[i], ys[i + rr]
+            align = "center" if e.get("header") and i == 0 else (e.get("aligns") or ["left"] * nc)[j]
+            x = {"left": x0 + 0.5 * h, "center": (x0 + x1) / 2.0, "right": x1 - 0.5 * h}[align]
+            want.append((table_text(words), align, (x, -((y0 + y1) / 2.0 + 0.35 * h))))
+    ensure(len(texts) == len(want), f"{where}: {len(want)} TEXTs")
+    for t, (words, align, at) in zip(texts, want):
+        ensure(group(t, 1) == words and float(group(t, 40)) == h, f"{where}: “{words}” at its height")
+        if align == "left":
+            ensure(group(t, 72) is None and (float(group(t, 10)), float(group(t, 20))) == at, f"{where}: “{words}” from its start")
+        else:
+            ensure(group(t, 72) == {"center": "1", "right": "2"}[align] and (float(group(t, 11)), float(group(t, 21))) == at, f"{where}: “{words}” {align}")
 
 
 def note_of(e: dict) -> str | None:
@@ -865,7 +1002,8 @@ def style_names(spec: dict) -> tuple[dict, dict, dict]:
     synthetic: dict = {}
     for e in spec["entities"] + [x for b in spec["blocks"] for x in b["entities"]]:
         face = None
-        if e["kind"] == "text" and e.get("textStyle") not in text and e.get("font"):
+        # A table's cells are in its face, as a text's (docs/adr/0184 §7).
+        if e["kind"] in ("text", "table") and e.get("textStyle") not in text and e.get("font"):
             face = (e["font"], bool(e.get("bold")), bool(e.get("italic")))
         elif e["kind"] == "dimension" and e.get("font"):
             face = (e["font"], False, False)
@@ -1084,7 +1222,15 @@ def check(name: str) -> list[str]:
                 k += 1
                 want.append(f"*D{k}")
         want.append(names[b["id"]])
-    want += [f"*D{k + 1 + i}" for i in range(sum(1 for e in spec["entities"] if e["kind"] == "dimension"))]
+    # The drawing's dimensions' blocks and its tables' (*U1, *U2 …, docs/adr/0184 §7), in the drawing's order.
+    u = 0
+    for e in spec["entities"]:
+        if e["kind"] == "dimension":
+            k += 1
+            want.append(f"*D{k}")
+        elif e["kind"] == "table":
+            u += 1
+            want.append(f"*U{u}")
     ensure([group(r, 2) for r in records] == want, f"block records {want}")
     blocks = split(section(p, "BLOCKS"))
     heads = [e for e in blocks if e[0] == (0, "BLOCK")]
@@ -1151,9 +1297,9 @@ def check(name: str) -> list[str]:
         said.append(f"{names[b['id']]}: {len(objects)} nesne" + (f" ve {len(attributes)} ATTDEF" if attributes else ""))
         i = end
 
-    # The drawing's inserts, each with its ATTRIBs after it.
+    # The drawing's inserts, each with its ATTRIBs after it; a table's INSERT names an anonymous block (*U).
     drawn = split(section(p, "ENTITIES"))
-    at = [k for k, e in enumerate(drawn) if e[0] == (0, "INSERT")]
+    at = [k for k, e in enumerate(drawn) if e[0] == (0, "INSERT") and not (group(e, 2) or "").startswith("*U")]
     given = [e for e in spec["entities"] if e["kind"] == "insert" and e["block"] in names]
     ensure(len(at) == len(given), f"{len(given)} inserts written, the unknown block's left out")
     by_id = {b["id"]: b for b in spec["blocks"]}
@@ -1177,6 +1323,16 @@ def check(name: str) -> list[str]:
         ensure(kentos_attrs(o) == others, f"{where}: KentOS's data holds its other attributes {others}")
     if attributed:
         said.append(f"{attributed} yerleştirmenin ATTRIB'leri")
+
+    # The drawing's tables (docs/adr/0184 §7), in the input's order.
+    tables = [e for e in spec["entities"] if e["kind"] == "table"]
+    written = [e for e in drawn if e[0] == (0, "INSERT") and (group(e, 2) or "").startswith("*U")]
+    ensure(len(written) == len(tables), f"{len(tables)} tables")
+    by_name = {group(b, 2): k for k, b in enumerate(blocks) if b[0] == (0, "BLOCK")}
+    for n, (e, o) in enumerate(zip(tables, written)):
+        check_table(o, e, blocks, by_name, layers, f"tablo {n + 1}", n + 1)
+    if tables:
+        said.append(f"{len(tables)} tablo ({sum(1 for e in tables if e.get('frame') and e.get('grid') != 'none')} kalın çerçeveli)")
 
     # The drawing's texts (docs/adr/0145 §7), in the input's order.
     texts = [e for e in spec["entities"] if e["kind"] == "text" and not is_paragraph(e)]

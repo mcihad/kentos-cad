@@ -1,0 +1,334 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "table",
+  "title": "Tablo (ADR 0184): iki parselin Alan çizelgesi Tablo ekle ile, kalın çerçeveyle (kâğıtta 0,5 mm), yazılan noktaya yerleştirilir; Tabloyu düzenle'de hücre yazılır (sütun genişler), altına satır eklenir, tek adımda kaydedilir; parsel silinince Tabloyu güncelle tabloyu kalan parselden yeniden yazar, eklenen satır ve elle yazılan gider; geri alınır",
+  "source": "Web'in app/tables.ts, ui/table/, tools/tablePlaceTool.ts'i; masaüstünün tables/ ve kentos_interaction::table_place'i; cad.entities.create ve cad.entities.edit, ADR 0184",
+  "covers": [
+    "CAD-22",
+    "UX-01",
+    "CMD-04"
+  ],
+  "document": "tables.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.125
+  },
+  "draft": {
+    "snap": false,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "clickTolerance": 0.2,
+  "steps": [
+    {
+      "run": "edit.selectAll",
+      "note": "İki parsel ve iki nokta.",
+      "expect": {
+        "selected": [
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "run": "table.insert",
+      "expect": {
+        "dialog": "Tablo ekle"
+      }
+    },
+    {
+      "dialog": "Tablo ekle",
+      "press": "Alan",
+      "note": "Alan çizelgesi: seçilen nesnelerden alanlar."
+    },
+    {
+      "dialog": "Tablo ekle",
+      "check": {
+        "Çerçeve": true
+      }
+    },
+    {
+      "dialog": "Tablo ekle",
+      "fill": {
+        "Çerçeve kalınlığı": "0.5"
+      }
+    },
+    {
+      "dialog": "Tablo ekle",
+      "press": "Yerleştir",
+      "expect": {
+        "dialog": null,
+        "tool": "tablePlace",
+        "entities": 4
+      }
+    },
+    {
+      "focus": "commandLine"
+    },
+    {
+      "text": "487010,4420040"
+    },
+    {
+      "key": "Enter",
+      "note": "Sol üst köşe yazılan noktada; kalın çerçeve kâğıtta 0,5 mm (1:500'de 0,25 m), satırlar iki yazı yüksekliği (1,25 m).",
+      "expect": {
+        "entities": 5,
+        "newest": {
+          "kind": "table",
+          "points": [
+            [
+              10,
+              40
+            ]
+          ],
+          "table": {
+            "cells": [
+              [
+                "Ad",
+                "Alan (m²)",
+                "Çevre (m)"
+              ],
+              [
+                "7",
+                "600.00",
+                "100.000"
+              ],
+              [
+                "8",
+                "400.00",
+                "80.000"
+              ],
+              [
+                "Toplam",
+                "1000.00",
+                ""
+              ]
+            ],
+            "rows": [
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            "merges": [],
+            "aligns": [
+              "left",
+              "right",
+              "right"
+            ],
+            "header": true,
+            "grid": null,
+            "frame": 0.25,
+            "source": "areas"
+          }
+        },
+        "selected": [
+          5
+        ],
+        "log": "success"
+      }
+    },
+    {
+      "run": "table.edit",
+      "expect": {
+        "dialog": "Tabloyu düzenle"
+      }
+    },
+    {
+      "key": "ArrowDown",
+      "note": "A2: ilk parselin adı."
+    },
+    {
+      "dialog": "Tabloyu düzenle",
+      "fill": {
+        "Hücrenin yazısı": "Parsel 7"
+      }
+    },
+    {
+      "key": "Enter",
+      "note": "Hücre yazılır, A3'e inilir.",
+      "expect": {
+        "dialog": "Tabloyu düzenle"
+      }
+    },
+    {
+      "dialog": "Tabloyu düzenle",
+      "press": "Altına satır ekle",
+      "note": "A3'ün altına boş satır, o satır kadar yüksek."
+    },
+    {
+      "dialog": "Tabloyu düzenle",
+      "press": "Kaydet",
+      "note": "Tek adımda “Tablo”.",
+      "expect": {
+        "dialog": null,
+        "newest": {
+          "kind": "table",
+          "points": [
+            [
+              10,
+              40
+            ]
+          ],
+          "table": {
+            "cells": [
+              [
+                "Ad",
+                "Alan (m²)",
+                "Çevre (m)"
+              ],
+              [
+                "Parsel 7",
+                "600.00",
+                "100.000"
+              ],
+              [
+                "8",
+                "400.00",
+                "80.000"
+              ],
+              [
+                "",
+                "",
+                ""
+              ],
+              [
+                "Toplam",
+                "1000.00",
+                ""
+              ]
+            ],
+            "rows": [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            "merges": [],
+            "aligns": [
+              "left",
+              "right",
+              "right"
+            ],
+            "header": true,
+            "frame": 0.25,
+            "source": "areas"
+          }
+        },
+        "canUndo": true,
+        "log": "success"
+      }
+    },
+    {
+      "click": [
+        20,
+        -10
+      ],
+      "note": "İkinci parselin doğu kenarı.",
+      "expect": {
+        "selected": [
+          2
+        ]
+      }
+    },
+    {
+      "key": "Delete",
+      "expect": {
+        "entities": 4
+      }
+    },
+    {
+      "run": "table.update",
+      "note": "Seçim yok: kaynağı olan bütün tablolar; çizelge kalan parselden, elle yazılan ve eklenen satır gider.",
+      "expect": {
+        "newest": {
+          "kind": "table",
+          "points": [
+            [
+              10,
+              40
+            ]
+          ],
+          "table": {
+            "cells": [
+              [
+                "Ad",
+                "Alan (m²)",
+                "Çevre (m)"
+              ],
+              [
+                "7",
+                "600.00",
+                "100.000"
+              ]
+            ],
+            "rows": [
+              2.5,
+              2.5
+            ],
+            "merges": [],
+            "aligns": [
+              "left",
+              "right",
+              "right"
+            ],
+            "header": true,
+            "frame": 0.25,
+            "source": "areas"
+          }
+        },
+        "logged": [
+          "Çizelgenin 1 nesnesi çizimde yok: tablo kalanlardan yazıldı.",
+          "1 tablo güncellendi."
+        ]
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Güncelleme tek adımda geri alınır.",
+      "expect": {
+        "newest": {
+          "kind": "table",
+          "table": {
+            "cells": [
+              [
+                "Ad",
+                "Alan (m²)",
+                "Çevre (m)"
+              ],
+              [
+                "Parsel 7",
+                "600.00",
+                "100.000"
+              ],
+              [
+                "8",
+                "400.00",
+                "80.000"
+              ],
+              [
+                "",
+                "",
+                ""
+              ],
+              [
+                "Toplam",
+                "1000.00",
+                ""
+              ]
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

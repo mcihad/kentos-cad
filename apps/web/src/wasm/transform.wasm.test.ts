@@ -81,6 +81,26 @@ const SPECIAL: NewEntity[] = [
   { layerId: 'b', attrs: {}, kind: 'hatch', ring: [], holes: [[]], pattern: { type: 'solid', angle: 0, spacing: 1 } },
   { layerId: 'b', attrs: {}, label: '', kind: 'text', p: { x: 486520, y: 4420200 }, text: 'Çiçek 😀', height: 2, rotation: 359.5 },
   { layerId: 'b', attrs: {}, kind: 'ellipse', c: { x: 486520, y: 4420200 }, major: { x: -10, y: 3 }, ratio: 0.4, t0: 2, t1: 2 },
+  // docs/adr/0184: a table with a merged range, alignments, a heading row, a frame, a face and a source.
+  {
+    layerId: 'b',
+    attrs: {},
+    kind: 'table',
+    p: { x: 486520, y: 4420200 },
+    rotation: 30,
+    height: 1.25,
+    rows: [2.5, 3],
+    columns: [8, 10],
+    cells: [['Başlık', ''], ['7', '600']],
+    merges: [{ row: 0, col: 0, rows: 1, cols: 2 }],
+    aligns: ['left', 'right'],
+    header: true,
+    grid: 'rows',
+    frame: 0.25,
+    font: 'arimo',
+    bold: true,
+    source: { kind: 'file', name: 'a.csv' },
+  },
 ];
 
 /** A random affine: translation, rotation, uniform or non-uniform scale, reflection, or two of them composed. */
@@ -152,8 +172,9 @@ describe('move, copy and paste through the geometry store, packed', () => {
     const point = back.at(-2)!.geometry;
     expect([Object.is((point.p as { x: number }).x, -0), Number.isNaN((point.p as { y: number }).y), Object.is(point.z, -0)]).toEqual([true, true, true]);
     // 13 is the multi-part area (docs/adr/0143), 14 a block's insert (docs/adr/0144), 15 a leader (docs/adr/0146), 16 a
-    // multi-part polyline and 17 a multi-point object (docs/adr/0174); the first number that is no kind is 18.
-    expect(() => unpackEntities({ nums: Float64Array.of(1, 0, 0, 18), strings: '["a"]' })).toThrow(/bilinmeyen bir nesne türü/);
+    // multi-part polyline and 17 a multi-point object (docs/adr/0174), 18 a table (docs/adr/0184); the first number that
+    // is no kind is 19.
+    expect(() => unpackEntities({ nums: Float64Array.of(1, 0, 0, 19), strings: '["a"]' })).toThrow(/bilinmeyen bir nesne türü/);
   });
 
   it('gives what the JSON call gives, bit for bit, on random objects and affines', () => {

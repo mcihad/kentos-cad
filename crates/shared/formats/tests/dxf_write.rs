@@ -2615,3 +2615,51 @@ fn styles_read_back_as_they_were() {
     assert_eq!(ours(&block.entities), ours(&input.blocks[0].entities));
     assert!(r.report.notes.is_empty(), "{:?}", r.report.notes);
 }
+
+/// The tables' fixture (`fixtures/formats/v1/dxf-write/tables.input.json`,
+/// docs/adr/0184 §7) goes out as its committed bytes, which
+/// `scripts/fixtures/dxf_write_reference.py` checks without KentOS's code:
+/// each table an anonymous block of lines and texts and its INSERT, said once
+/// for the three.
+#[test]
+fn the_tables_fixture_is_written_to_its_committed_bytes() {
+    let report = written_as_committed("tables");
+    let notes: Vec<(&str, u32)> = report
+        .notes
+        .iter()
+        .map(|n| (n.what.as_str(), n.count))
+        .collect();
+    assert_eq!(notes, [("Tablo", 3)], "{:?}", report.notes);
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+}
+
+/// Tables go out as anonymous blocks with their KENTOS data and come back as
+/// they were (docs/adr/0184 §7): cells, sizes, merged range, alignments,
+/// heading row, lines, frame, face, colour, label and attributes; a file's
+/// source kept, a schedule's dropped (the objects read have ids of their own).
+#[test]
+fn tables_read_back_as_they_were() {
+    let input = fixture_input("tables");
+    let (text, _) = write(&input);
+    let r = read(&text);
+    let tables = |entities: &[Entity]| -> Vec<kentos_contracts::TableEntity> {
+        entities
+            .iter()
+            .filter_map(|e| match e {
+                Entity::Table(t) => {
+                    let mut t = t.clone();
+                    t.base.id = 0;
+                    t.base.layer_id.clear();
+                    t.base.line_weight = None;
+                    Some(t)
+                }
+                _ => None,
+            })
+            .collect()
+    };
+    let (got, mut want) = (tables(&r.entities), tables(&input.entities));
+    assert_eq!(got.len(), 3, "{:?}", r.report);
+    want[0].source = None;
+    assert_eq!(got, want);
+    assert!(r.blocks.is_empty(), "{:?}", r.blocks);
+}

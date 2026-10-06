@@ -37,6 +37,7 @@ pub fn kind_label(e: &Entity) -> &'static str {
         Entity::Hatch(_) => "Tarama",
         Entity::Insert(_) => "Blok",
         Entity::Leader(_) => "Kılavuz",
+        Entity::Table(_) => "Tablo",
     }
 }
 

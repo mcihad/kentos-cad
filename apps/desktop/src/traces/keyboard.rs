@@ -80,6 +80,11 @@ pub(super) fn stroke_for(ch: &str, layout: Layout) -> Result<Stroke, String> {
         "Delete" => return Ok(named(Named::Delete, Code::Delete, Some("\u{7f}"))),
         "F3" => return Ok(named(Named::F3, Code::F3, None)),
         "F8" => return Ok(named(Named::F8, Code::F8, None)),
+        // The arrows: Tabloyu düzenle's grid (docs/adr/0184 §5).
+        "ArrowUp" => return Ok(named(Named::ArrowUp, Code::ArrowUp, None)),
+        "ArrowDown" => return Ok(named(Named::ArrowDown, Code::ArrowDown, None)),
+        "ArrowLeft" => return Ok(named(Named::ArrowLeft, Code::ArrowLeft, None)),
+        "ArrowRight" => return Ok(named(Named::ArrowRight, Code::ArrowRight, None)),
         _ => {}
     }
     let plain = |base: &str, code: Code| Stroke {

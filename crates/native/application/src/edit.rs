@@ -178,6 +178,9 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::HoleFill => "Deliği doldur",
         EditOperation::TextStyle => "Yazı stili",
         EditOperation::DimensionStyle => "Ölçü stili",
+        // Tabloyu düzenle and Tabloyu güncelle (docs/adr/0184 §6).
+        EditOperation::Table => "Tablo",
+        EditOperation::TableUpdate => "Tabloyu güncelle",
     }
 }
 
@@ -299,6 +302,28 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 ),
                 Some(format!("changes[{i}].{field}")),
             )));
+        }
+    }
+    // Tabloyu düzenle and Tabloyu güncelle write tables over tables (docs/adr/0184 §6).
+    if matches!(
+        input.operation,
+        EditOperation::Table | EditOperation::TableUpdate
+    ) {
+        for (i, change) in input.changes.iter().enumerate() {
+            let table = matches!(
+                change,
+                EntityEdit::Update {
+                    geometry: EntityGeometry::Table { .. },
+                    ..
+                }
+            ) && matches!(found[i].1, Entity::Table(_));
+            if !table {
+                return Err(Stop::Failed(error(
+                    codes::NOT_A_TABLE,
+                    "Tablonun düzenlemesi yalnız tabloları değiştirir: her değişiklik bir tablonun yeni hâli olmalı (update, tablo geometrisi).".into(),
+                    Some(format!("changes[{i}]")),
+                )));
+            }
         }
     }
     // A new object's own layer: known, a layer, not locked (a block's object exploded, docs/adr/0144).
@@ -743,9 +768,40 @@ pub(crate) fn check_geometry(
             )));
         }
     }
+    // A table's rows, columns, cells, merged ranges and source (docs/adr/0184 §6).
+    if let EntityGeometry::Table {
+        height,
+        rows,
+        columns,
+        cells,
+        merges,
+        aligns,
+        frame,
+        source,
+        ..
+    } = g
+    {
+        let shape = kentos_contracts::TableShape {
+            height: *height,
+            rows,
+            columns,
+            cells,
+            merges,
+            aligns: aligns.as_deref(),
+            frame: *frame,
+            source: source.as_ref(),
+        };
+        if let Some((field, words)) = shape.problem() {
+            return Err(Stop::Failed(error(
+                codes::INVALID_TABLE,
+                words,
+                at(&format!(".{field}")),
+            )));
+        }
+    }
     // A text's face and a dimension's look (docs/adr/0183 §9).
     let style = match g {
-        EntityGeometry::Text { face, .. } => face.problem(),
+        EntityGeometry::Text { face, .. } | EntityGeometry::Table { face, .. } => face.problem(),
         EntityGeometry::Dimension { look, .. } => look.problem(),
         _ => None,
     };
@@ -770,15 +826,17 @@ pub(crate) fn check_styles<'a>(
     let settings = doc.settings();
     for (i, g) in geometries {
         let (id, known, what, field) = match g {
-            EntityGeometry::Text { face, .. } => match &face.text_style {
-                Some(id) => (
-                    id,
-                    settings.text_styles.iter().any(|s| s.id == *id),
-                    "yazı stili",
-                    "textStyle",
-                ),
-                None => continue,
-            },
+            EntityGeometry::Text { face, .. } | EntityGeometry::Table { face, .. } => {
+                match &face.text_style {
+                    Some(id) => (
+                        id,
+                        settings.text_styles.iter().any(|s| s.id == *id),
+                        "yazı stili",
+                        "textStyle",
+                    ),
+                    None => continue,
+                }
+            }
             EntityGeometry::Dimension { look, .. } => match &look.dim_style {
                 Some(id) => (
                     id,
@@ -1023,6 +1081,23 @@ fn finite(g: &EntityGeometry) -> bool {
         EntityGeometry::Insert {
             p, scale, rotation, ..
         } => pt(p) && scale.is_finite() && rotation.is_finite(),
+        EntityGeometry::Table {
+            p,
+            rotation,
+            height,
+            rows,
+            columns,
+            frame,
+            face,
+            ..
+        } => {
+            pt(p)
+                && rotation.is_finite()
+                && height.is_finite()
+                && rows.iter().chain(columns).all(|x| x.is_finite())
+                && frame.is_none_or(f64::is_finite)
+                && face.oblique.is_none_or(f64::is_finite)
+        }
         EntityGeometry::Leader {
             pts: p,
             height,

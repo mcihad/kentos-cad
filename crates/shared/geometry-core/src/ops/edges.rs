@@ -48,6 +48,11 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
         Shape::Polyline { pts, bulges, .. } => bulge_path_edges(pts, bulges.as_deref(), false),
         // Its line from the arrow's tip on to its landing's end (docs/adr/0146 §4).
         Shape::Leader { .. } => path_edges(&entity_outline(e, 72.0), false),
+        // The lines it draws (docs/adr/0184 §2).
+        Shape::Table { .. } => crate::geom::table::lines_of(e)
+            .into_iter()
+            .map(|[a, b]| Edge::Seg { a, b })
+            .collect(),
         // Part after part, each its ring's then its holes' (docs/adr/0143).
         Shape::Polygon { .. } if is_multi_part(e) => {
             area_parts(e).iter().flat_map(entity_edges).collect()

@@ -252,6 +252,18 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
             }
         }
         Line(_) => {}
+        // The file's rules (docs/adr/0184 §1): rows, columns and cells in their bounds; the drawing's only.
+        Table(x) => {
+            if in_block {
+                return Err("Blok tanımında tablo olamaz".into());
+            }
+            if let Some((_, why)) = x.shape().problem() {
+                return Err(why);
+            }
+            if let Some((_, why)) = x.face.problem() {
+                return Err(why);
+            }
+        }
     }
     Ok(())
 }
@@ -412,6 +424,12 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
         }
         // Its line; the arrowhead, the landing and the note are not projected (docs/adr/0146 §3).
         Entity::Leader(x) => Geometry::LineString(pts(&x.pts)),
+        // The rectangle it covers; its lines and words are its own (docs/adr/0184 §8).
+        Entity::Table(x) => {
+            let mut ring = pts(&kentos_formats::blocks::table_corners(x));
+            ring.extend(ring.first().copied());
+            Geometry::Polygon(vec![ring])
+        }
         // Its block's objects placed (the core's expansion, nested blocks opened), each as it is projected.
         Entity::Insert(i) => Geometry::Collection(
             blocks

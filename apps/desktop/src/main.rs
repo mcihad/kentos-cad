@@ -115,6 +115,7 @@ mod snap_tests;
 mod snapshot;
 mod start;
 mod style;
+mod tables;
 mod template_editor;
 mod template_members;
 mod templates;
@@ -142,6 +143,8 @@ mod topology_tests;
 mod overlap_tests;
 #[cfg(test)]
 mod style_scenes;
+#[cfg(test)]
+mod table_scenes;
 #[cfg(test)]
 mod text_scenes;
 #[cfg(test)]

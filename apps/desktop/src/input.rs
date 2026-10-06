@@ -162,7 +162,9 @@ impl App {
                 }
                 // Sahneden seç's objects: the processing window opens again (processing/).
                 ViewChange::PickedObjects(keep) => {
-                    if !self.processing_picked_objects(keep) && !self.edgematch_picked_objects(keep)
+                    if !self.processing_picked_objects(keep)
+                        && !self.edgematch_picked_objects(keep)
+                        && !self.table_insert_picked(keep)
                     {
                         let _ = self.builder_picked(keep);
                     }
@@ -506,6 +508,12 @@ impl App {
         }
         // 1. A dialog: Esc closes it; its own buttons do the rest.
         if self.dialog.is_some() {
+            // Tabloyu düzenle's grid takes its keys, Esc too: the bar's words back first (tables/editor.rs).
+            if self.dialog == Some(crate::app::Dialog::TableEditor)
+                && let Some(task) = self.table_editor_key(&press)
+            {
+                return task;
+            }
             // Model tasarımcısı: Ctrl+S, its undo and Delete (processing/designer/).
             if self.dialog == Some(crate::app::Dialog::ModelDesigner)
                 && press.named() != Some(Named::Escape)

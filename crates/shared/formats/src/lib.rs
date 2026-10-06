@@ -38,6 +38,7 @@ pub mod num;
 pub mod nurbs;
 pub mod report;
 pub mod shp;
+pub mod table_file;
 pub mod text;
 pub mod units;
 pub mod watch;

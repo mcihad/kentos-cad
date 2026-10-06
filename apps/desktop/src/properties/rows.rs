@@ -837,6 +837,29 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.extend(link_rows(&doc.model, &[t], &ids, locked));
             geo.extend([len("Konum Y", t.p.x), len("Konum X", t.p.y)]);
         }
+        // Its style, size, turn and source (docs/adr/0184 §6); its cells are its editor's (a double click).
+        Entity::Table(t) => {
+            geo.extend(style_rows(
+                doc.model.settings(),
+                true,
+                &[t.face.text_style.as_ref()],
+                &ids,
+                locked,
+            ));
+            geo.extend([
+                Row::figure("Satır sayısı", t.rows.len().to_string()),
+                Row::figure("Sütun sayısı", t.columns.len().to_string()),
+                metres("Yazı yüksekliği", t.height).editor(number(Field::TextHeight(slot))),
+                Row::figure("Açı", fixed(t.rotation, 2))
+                    .unit("°")
+                    .editor(number(Field::TextAngle(slot))),
+                metres("Genişlik", t.columns.iter().sum()),
+                metres("Derinlik", t.rows.iter().sum()),
+                Row::text("Kaynak", crate::tables::source_words(t)),
+                len("Konum Y", t.p.x),
+                len("Konum X", t.p.y),
+            ]);
+        }
         // The block, its place, scale, turn and mirroring, through
         // `cad.entities.edit`'s properties (docs/adr/0144 §6), as the web's.
         Entity::Insert(i) => {

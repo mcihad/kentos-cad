@@ -17,10 +17,10 @@ function angle(g: Gen): number {
 
 /**
  * A random entity of any kind, with the fields the core must hand back
- * untouched. A block's insert and a leader only when asked for: the recorded
- * call sets' streams stay as they were (docs/adr/0144, 0146).
+ * untouched. A block's insert, a leader and a table only when asked for: the
+ * recorded call sets' streams stay as they were (docs/adr/0144, 0146, 0184).
  */
-export function entity(g: Gen, kind: (typeof KINDS)[number] | 'insert' | 'leader' = g.pick(KINDS)): Entity {
+export function entity(g: Gen, kind: (typeof KINDS)[number] | 'insert' | 'leader' | 'table' = g.pick(KINDS)): Entity {
   const attrs: Record<string, string> = g.chance(0.5) ? { Ada: String(g.int(1, 999)), Parsel: String(g.int(1, 99)) } : {};
   const base = { id: g.int(1, 9999), layerId: g.pick(['parsel', 'bina', 'taslak']), attrs, ...(g.chance(0.3) ? { label: 'P' + g.int(1, 99) } : {}), ...(g.chance(0.2) ? { color: '#aa3322' } : {}), ...(g.chance(0.2) ? { symbol: 'mpyy:konut' } : {}) };
   const ring = (n: number) => g.ring(n, g.num(3, 30), g.chance(0.3));
@@ -81,6 +81,24 @@ export function entity(g: Gen, kind: (typeof KINDS)[number] | 'insert' | 'leader
         ...(g.chance(0.4) ? { arrow: g.pick(['open', 'dot', 'none'] as const) } : {}),
         ...(g.chance(0.3) ? { mask: true } : {}),
       };
+    case 'table': {
+      const height = g.num(0.5, 3);
+      const n = g.int(1, 4);
+      const m = g.int(1, 4);
+      return {
+        ...base,
+        kind,
+        p: g.pt(),
+        rotation: g.num(-180, 180),
+        height,
+        rows: Array.from({ length: n }, () => g.num(height, 4 * height)),
+        columns: Array.from({ length: m }, () => g.num(height, 8 * height)),
+        cells: Array.from({ length: n }, (_, i) => Array.from({ length: m }, (_, j) => (g.chance(0.3) ? '' : `${g.pick(['Ada', 'Ş', '12,5', '-3'])}${i}${j}`))),
+        ...(g.chance(0.4) ? { header: true } : {}),
+        ...(g.chance(0.3) ? { grid: g.pick(['outer', 'rows', 'none'] as const) } : {}),
+        ...(g.chance(0.3) ? { aligns: Array.from({ length: m }, () => g.pick(['left', 'center', 'right'] as const)) } : {}),
+      };
+    }
   }
 }
 

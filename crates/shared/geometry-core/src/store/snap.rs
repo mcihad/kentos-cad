@@ -817,6 +817,20 @@ fn shape_snaps(
         }
         // Its boundary is snapped through the outline object itself.
         Shape::Hatch { .. } => return,
+        // Its corners and its lines' ends; its lines give nearest points and crossings below
+        // (docs/adr/0184 §2).
+        Shape::Table { .. } => {
+            for q in entity_vertices(e) {
+                ch.consider(SnapKind::Endpoint, q, id);
+            }
+            for [a, b] in crate::geom::table::lines_of(e) {
+                if box_out_of_reach(a, b, p, tol) {
+                    continue;
+                }
+                ch.consider(SnapKind::Endpoint, a, id);
+                ch.consider(SnapKind::Endpoint, b, id);
+            }
+        }
         Shape::Line { .. }
         | Shape::Polyline { .. }
         | Shape::Polygon { .. }

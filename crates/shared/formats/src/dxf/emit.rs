@@ -14,7 +14,7 @@ use kentos_contracts::{
     ConstructionEntity, EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern,
     HatchPatternType, InsertEntity, LineEntity, MAX_LINE_SPACING, MAX_LINE_WEIGHT,
     MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph, PathEntity, PointEntity, RingGeometry,
-    SplineEntity, TextAlign, TextEntity, Vec2, width_factor_ok,
+    SplineEntity, TableEntity, TextAlign, TextEntity, Vec2, width_factor_ok,
 };
 
 use super::aci;
@@ -469,6 +469,7 @@ fn anchor_points(e: &Entity) -> Vec<Vec2> {
         Entity::Leader(l) => l.pts.clone(),
         Entity::Hatch(h) => h.ring.clone(),
         Entity::Insert(i) => vec![i.p],
+        Entity::Table(t) => crate::blocks::table_corners(t),
     }
 }
 
@@ -1290,6 +1291,15 @@ impl<'l> Emitter<'l> {
                     rotation: *rotation,
                     array: (*cols, *rows, *dc, *dr),
                 };
+                // A KentOS table (docs/adr/0184 §7): its INSERT carries it; else its block's lines and words.
+                if ctx.chain.is_empty()
+                    && let Some(json) = e.meta.as_ref().and_then(|m| m.table.as_deref())
+                {
+                    match self.table_of(e, ctx, &layer, json, &placed) {
+                        Ok(t) => return self.push(Entity::Table(t)),
+                        Err(why) => self.note("Tablo", why, e.line),
+                    }
+                }
                 if self.keep_insert(ctx, e, &layer, name, &placed, attrs) {
                     // Its values are the insert's attributes (docs/adr/0144 §7): the insert shows
                     // those its definition defines; any other shown one comes in as a text too.
@@ -2253,6 +2263,68 @@ impl<'l> Emitter<'l> {
                 e.line,
             );
         }
+    }
+
+    /// The KentOS table an INSERT carries in KentOS's data (docs/adr/0184
+    /// §7), where the INSERT is now: another program may have moved it. Its
+    /// corner and turn are KentOS's exact ones while the INSERT's are still
+    /// what KentOS wrote (else the INSERT's), its sizes times the INSERT's
+    /// scale. Why not, for the report: the INSERT is read as its block's lines
+    /// and words then.
+    fn table_of(
+        &self,
+        e: &Parsed,
+        ctx: &Ctx,
+        layer: &str,
+        json: &str,
+        placed: &Placed,
+    ) -> Result<TableEntity, &'static str> {
+        let [sx, sy, _] = placed.scale;
+        let uniform = sx > 0.0 && (sx - sy).abs() <= sx * 1e-9;
+        if placed.array.0 * placed.array.1 > 1
+            || super::extrusion_z(e.common.extrusion) != 1.0
+            || !uniform
+        {
+            return Err(
+                "başka bir programda aynalanmış, eğik düzleme ya da eşit olmayan ölçekle yerleştirilmiş; çizgi ve yazıları alındı",
+            );
+        }
+        let broken = "KentOS verisi okunamadı; çizgi ve yazıları alındı";
+        let mut value: serde_json::Value = serde_json::from_str(json).map_err(|_| broken)?;
+        let map = value.as_object_mut().ok_or(broken)?;
+        map.insert("id".into(), 0.into());
+        map.insert("layerId".into(), layer.into());
+        map.insert(
+            "attrs".into(),
+            serde_json::Value::Object(Default::default()),
+        );
+        let mut t: TableEntity = serde_json::from_value(value).map_err(|_| broken)?;
+        let near = |a: f64, b: f64| (a - b).abs() <= 1e-9 * a.abs().max(b.abs()).max(1.0);
+        if !(near(t.p.x, placed.p[0]) && near(t.p.y, placed.p[1])) {
+            t.p = v(placed.p[0], placed.p[1]);
+        }
+        if !near(t.rotation, placed.rotation) {
+            t.rotation = placed.rotation;
+        }
+        if !near(sx, 1.0) {
+            t.height *= sx;
+            for x in t.rows.iter_mut().chain(t.columns.iter_mut()) {
+                *x *= sx;
+            }
+        }
+        t.base = base(layer, self.color_of(e, ctx), self.weight_of(e, ctx));
+        // A schedule's objects are the writing drawing's: the objects read come with ids of their own, so the
+        // table is its own now (docs/adr/0184 §7); a file's source is still the file.
+        if t.source
+            .as_ref()
+            .is_some_and(|s| !matches!(s, kentos_contracts::TableSource::File { .. }))
+        {
+            t.source = None;
+        }
+        if t.shape().problem().is_some() || t.face.problem().is_some() {
+            return Err("KentOS verisindeki tablo geçersiz; çizgi ve yazıları alındı");
+        }
+        Ok(t)
     }
 
     /// An insert of a block kept as a definition, written as one

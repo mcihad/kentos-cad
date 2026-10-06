@@ -378,6 +378,12 @@ impl Canvas {
             }
             // Pieces of a block are their own shapes; the rest show as dots (`object`).
             Shape::Insert { p, .. } => self.dot_at(*p, c),
+            // A table's outline (docs/adr/0184 §2).
+            Shape::Table { .. } => {
+                if let Some(t) = crate::geom::table::table_geom(s) {
+                    self.path(&t.outline(), true, c);
+                }
+            }
             Shape::Text { .. }
             | Shape::Dimension { .. }
             | Shape::Leader { .. }

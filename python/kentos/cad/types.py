@@ -142,6 +142,7 @@ class CreateOperation(_StrEnum):
     - ``vertexPoints``: Köşelere nokta (docs/adr/0152): named points at the vertices of lines and areas.
     - ``adjoin``: Bitişik alan (docs/adr/0162 §3): the region a drawn path closes with
     - ``labels``: Etiketleri yazıya çevir (docs/adr/0175 §2): the layers' labels as
+    - ``table``: Tablo (docs/adr/0184 §3): a table placed by its tool.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -163,9 +164,10 @@ class CreateOperation(_StrEnum):
     VERTEX_POINTS = "vertexPoints"
     ADJOIN = "adjoin"
     LABELS = "labels"
+    TABLE = "table"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -309,6 +311,8 @@ class EditOperation(_StrEnum):
     - ``holeFill``: Deliği doldur: a new area filling a hole, made from the area.
     - ``textStyle``: Yazı stilleri's Kaydet (docs/adr/0183 §1): the texts of the styles
     - ``dimensionStyle``: Ölçü stilleri's Kaydet, as `TextStyle` for dimensions.
+    - ``table``: Tabloyu düzenle's Kaydet (docs/adr/0184 §4): a table's cells, rows,
+    - ``tableUpdate``: Tabloyu güncelle (docs/adr/0184 §5): tables written again from their source.
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -350,9 +354,11 @@ class EditOperation(_StrEnum):
     HOLE_FILL = "holeFill"
     TEXT_STYLE = "textStyle"
     DIMENSION_STYLE = "dimensionStyle"
+    TABLE = "table"
+    TABLE_UPDATE = "tableUpdate"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -609,6 +615,33 @@ RegistryDatumName = Literal["TUREF", "ED50", "WGS84"]
 """The names of :class:`RegistryDatum`, for a plain string."""
 
 
+class TableAlign(_StrEnum):
+    """A column's alignment; its cells sit in the middle of their rows."""
+    LEFT = "left"
+    CENTER = "center"
+    RIGHT = "right"
+
+
+TableAlignName = Literal["left", "center", "right"]
+"""The names of :class:`TableAlign`, for a plain string."""
+
+
+class TableGrid(_StrEnum):
+    """Which of a table's lines are drawn, when not all.
+
+    - ``outer``: Its outline alone.
+    - ``rows``: Its outline and the lines between its rows.
+    - ``none``: None: the words alone.
+    """
+    OUTER = "outer"
+    ROWS = "rows"
+    NONE = "none"
+
+
+TableGridName = Literal["outer", "rows", "none"]
+"""The names of :class:`TableGrid`, for a plain string."""
+
+
 class TenantKind(_StrEnum):
     """A tenant is an organisation or a person's personal space (docs/adr/0015).
 
@@ -786,6 +819,7 @@ class Entity(_Union):
     - :class:`HatchEntity` (``kind: hatch``)
     - :class:`InsertEntity` (``kind: insert``)
     - :class:`LeaderEntity` (``kind: leader``)
+    - :class:`TableEntity` (``kind: table``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -857,6 +891,7 @@ class EntityGeometry(_Union):
     - :class:`HatchEntityGeometry` (``kind: hatch``)
     - :class:`InsertEntityGeometry` (``kind: insert``)
     - :class:`LeaderEntityGeometry` (``kind: leader``)
+    - :class:`TableEntityGeometry` (``kind: table``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -893,6 +928,29 @@ class FeatureChange(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> FeatureChange:
         return _variant(_FEATURE_CHANGE, "FeatureChange", "op", data).from_json(data)
+
+
+class TableSource(_Union):
+    """Where a table's rows came from (docs/adr/0184 §5).
+
+    One of:
+
+    - :class:`CoordinatesTableSource` (``kind: coordinates``)
+    - :class:`AreasTableSource` (``kind: areas``)
+    - :class:`AttributesTableSource` (``kind: attributes``)
+    - :class:`FileTableSource` (``kind: file``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TableSource:
+        return _variant(_TABLE_SOURCE, "TableSource", "kind", data).from_json(data)
 
 
 class Transform(_Union):
@@ -1630,6 +1688,32 @@ class Bounds(_Model):
             min_y=float(data["minY"]),
             max_x=float(data["maxX"]),
             max_y=float(data["maxY"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CellRange(_Model):
+    """A merged range: `rows` × `cols` cells from row `row`, column `col`."""
+    row: int
+    col: int
+    rows: int
+    cols: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["row"] = self.row
+        out["col"] = self.col
+        out["rows"] = self.rows
+        out["cols"] = self.cols
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CellRange:
+        return cls(
+            row=data["row"],
+            col=data["col"],
+            rows=data["rows"],
+            cols=data["cols"],
         )
 
 
@@ -6019,6 +6103,135 @@ class SurveySettings(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TableEntity(Entity):
+    """A table (docs/adr/0184 §1).
+    Attributes:
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        p: Its top left corner.
+        rotation: Degrees counter-clockwise from east: its rows run along it.
+        height: Its cells' text height, metres.
+        rows: Its rows' heights, top to bottom, metres.
+        columns: Its columns' widths, left to right, metres.
+        cells: The cells' words, row by row, a row as many as there are columns;
+            one line each, empty for an empty cell.
+        aligns: Each column's alignment, as many as there are columns; absent: all left.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        font: Its typeface; absent: the project's, in the look of docs/adr/0055.
+        frame: Its frame's width, metres: the outline drawn as a band that wide
+            inside it (Kalın çerçeve); absent: a line as the others.
+        grid: Which of its lines are drawn; absent: all.
+        header: The first row is its heading: bold, centred.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
+        merges: Merged ranges: each range's words in its top left cell, its others empty.
+        oblique: How far its letters lean, degrees, positive with their tops to the
+            right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
+        source: Where its rows came from (Tabloyu güncelle); absent: written by hand.
+        symbol: Library symbol overriding the layer's style.
+        text_style: The project's text style it follows, by its id; absent: Standart.
+    """
+    TAG_VALUE: ClassVar[str] = "table"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    p: Vec2
+    rotation: float
+    height: float
+    rows: list[float]
+    columns: list[float]
+    cells: list[list[str]]
+    aligns: list[TableAlign | TableAlignName] | None | Unset = UNSET
+    bold: bool | Unset = UNSET
+    color: str | None | Unset = UNSET
+    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    frame: float | None | Unset = UNSET
+    grid: TableGrid | TableGridName | None | Unset = UNSET
+    header: bool | Unset = UNSET
+    italic: bool | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    merges: list[CellRange] | Unset = UNSET
+    oblique: float | None | Unset = UNSET
+    source: TableSource | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    text_style: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "table"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["p"] = _vec2_out(self.p)
+        out["rotation"] = float(self.rotation)
+        out["height"] = float(self.height)
+        out["rows"] = [float(e0) for e0 in self.rows]
+        out["columns"] = [float(e0) for e0 in self.columns]
+        out["cells"] = [list(e0) for e0 in self.cells]
+        if self.aligns is not UNSET:
+            out["aligns"] = None if self.aligns is None else [_enum_out(e0) for e0 in self.aligns]
+        if self.bold is not UNSET:
+            out["bold"] = self.bold
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.font is not UNSET:
+            out["font"] = None if self.font is None else _enum_out(self.font)
+        if self.frame is not UNSET:
+            out["frame"] = None if self.frame is None else float(self.frame)
+        if self.grid is not UNSET:
+            out["grid"] = None if self.grid is None else _enum_out(self.grid)
+        if self.header is not UNSET:
+            out["header"] = self.header
+        if self.italic is not UNSET:
+            out["italic"] = self.italic
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.merges is not UNSET:
+            out["merges"] = [e0.to_json() for e0 in self.merges]
+        if self.oblique is not UNSET:
+            out["oblique"] = None if self.oblique is None else float(self.oblique)
+        if self.source is not UNSET:
+            out["source"] = None if self.source is None else self.source.to_json()
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.text_style is not UNSET:
+            out["textStyle"] = self.text_style
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TableEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            p=Vec2.from_json(data["p"]),
+            rotation=float(data["rotation"]),
+            height=float(data["height"]),
+            rows=[float(e0) for e0 in data["rows"]],
+            columns=[float(e0) for e0 in data["columns"]],
+            cells=[list(e0) for e0 in data["cells"]],
+            aligns=UNSET if "aligns" not in data else None if data["aligns"] is None else [_enum_in(TableAlign, e0) for e0 in data["aligns"]],
+            bold=data.get("bold", UNSET),
+            color=data.get("color", UNSET),
+            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
+            grid=UNSET if "grid" not in data else None if data["grid"] is None else _enum_in(TableGrid, data["grid"]),
+            header=data.get("header", UNSET),
+            italic=data.get("italic", UNSET),
+            label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            merges=[CellRange.from_json(e0) for e0 in data["merges"]] if "merges" in data else UNSET,
+            oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
+            source=UNSET if "source" not in data else None if data["source"] is None else TableSource.from_json(data["source"]),
+            symbol=data.get("symbol", UNSET),
+            text_style=data.get("textStyle", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TextEntity(Entity):
     """Fields every object has. `id` is the object's local id inside a v1 file.
     v1 keeps no persistent id: it is derived from the file's content when the
@@ -7330,6 +7543,99 @@ class LeaderEntityGeometry(EntityGeometry):
 
 
 @dataclass(kw_only=True, slots=True)
+class TableEntityGeometry(EntityGeometry):
+    """A table (docs/adr/0184 §1): rows and columns of one-line cells
+    hanging from `p`, its top left corner, turned by `rotation` (degrees
+    counter-clockwise from east); `height` (metres, over 0) its cells'
+    text height; `rows` and `columns` its rows' heights and columns'
+    widths (metres, over 0); `cells` the words, row by row.
+    Attributes:
+        aligns: Each column's alignment; absent: all left.
+        font: Its typeface; absent: the project's, in the look of docs/adr/0055.
+        frame: Its frame's width, metres (Kalın çerçeve); absent: a line.
+        grid: Which lines are drawn; absent: all.
+        header: The first row is its heading.
+        merges: Merged ranges, their words in their top left cells.
+        oblique: How far its letters lean, degrees, positive with their tops to the
+            right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
+        source: Where its rows came from; absent: written by hand.
+        text_style: The project's text style it follows, by its id; absent: Standart.
+    """
+    TAG_VALUE: ClassVar[str] = "table"
+    p: Vec2
+    rotation: float
+    height: float
+    rows: list[float]
+    columns: list[float]
+    cells: list[list[str]]
+    aligns: list[TableAlign | TableAlignName] | None | Unset = UNSET
+    bold: bool | Unset = UNSET
+    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    frame: float | None | Unset = UNSET
+    grid: TableGrid | TableGridName | None | Unset = UNSET
+    header: bool | Unset = UNSET
+    italic: bool | Unset = UNSET
+    merges: list[CellRange] | Unset = UNSET
+    oblique: float | None | Unset = UNSET
+    source: TableSource | None | Unset = UNSET
+    text_style: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "table"}
+        out["p"] = _vec2_out(self.p)
+        out["rotation"] = float(self.rotation)
+        out["height"] = float(self.height)
+        out["rows"] = [float(e0) for e0 in self.rows]
+        out["columns"] = [float(e0) for e0 in self.columns]
+        out["cells"] = [list(e0) for e0 in self.cells]
+        if self.aligns is not UNSET:
+            out["aligns"] = None if self.aligns is None else [_enum_out(e0) for e0 in self.aligns]
+        if self.bold is not UNSET:
+            out["bold"] = self.bold
+        if self.font is not UNSET:
+            out["font"] = None if self.font is None else _enum_out(self.font)
+        if self.frame is not UNSET:
+            out["frame"] = None if self.frame is None else float(self.frame)
+        if self.grid is not UNSET:
+            out["grid"] = None if self.grid is None else _enum_out(self.grid)
+        if self.header is not UNSET:
+            out["header"] = self.header
+        if self.italic is not UNSET:
+            out["italic"] = self.italic
+        if self.merges is not UNSET:
+            out["merges"] = [e0.to_json() for e0 in self.merges]
+        if self.oblique is not UNSET:
+            out["oblique"] = None if self.oblique is None else float(self.oblique)
+        if self.source is not UNSET:
+            out["source"] = None if self.source is None else self.source.to_json()
+        if self.text_style is not UNSET:
+            out["textStyle"] = self.text_style
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TableEntityGeometry:
+        return cls(
+            p=Vec2.from_json(data["p"]),
+            rotation=float(data["rotation"]),
+            height=float(data["height"]),
+            rows=[float(e0) for e0 in data["rows"]],
+            columns=[float(e0) for e0 in data["columns"]],
+            cells=[list(e0) for e0 in data["cells"]],
+            aligns=UNSET if "aligns" not in data else None if data["aligns"] is None else [_enum_in(TableAlign, e0) for e0 in data["aligns"]],
+            bold=data.get("bold", UNSET),
+            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
+            grid=UNSET if "grid" not in data else None if data["grid"] is None else _enum_in(TableGrid, data["grid"]),
+            header=data.get("header", UNSET),
+            italic=data.get("italic", UNSET),
+            merges=[CellRange.from_json(e0) for e0 in data["merges"]] if "merges" in data else UNSET,
+            oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
+            source=UNSET if "source" not in data else None if data["source"] is None else TableSource.from_json(data["source"]),
+            text_style=data.get("textStyle", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CreateFeatureChange(FeatureChange):
     """A new object; the client picks the UUID so a retry cannot create it twice."""
     TAG_VALUE: ClassVar[str] = "create"
@@ -7385,6 +7691,82 @@ class DeleteFeatureChange(FeatureChange):
     def from_json(cls, data: Mapping[str, Any]) -> DeleteFeatureChange:
         return cls(
             id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CoordinatesTableSource(TableSource):
+    """Koordinat çizelgesi: the points and vertices of these objects."""
+    TAG_VALUE: ClassVar[str] = "coordinates"
+    objects: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "coordinates"}
+        out["objects"] = list(self.objects)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CoordinatesTableSource:
+        return cls(
+            objects=list(data["objects"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AreasTableSource(TableSource):
+    """Alan çizelgesi: these areas, their area and perimeter."""
+    TAG_VALUE: ClassVar[str] = "areas"
+    objects: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "areas"}
+        out["objects"] = list(self.objects)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AreasTableSource:
+        return cls(
+            objects=list(data["objects"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AttributesTableSource(TableSource):
+    """Öznitelik tablosu: these objects' attributes."""
+    TAG_VALUE: ClassVar[str] = "attributes"
+    objects: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "attributes"}
+        out["objects"] = list(self.objects)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AttributesTableSource:
+        return cls(
+            objects=list(data["objects"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FileTableSource(TableSource):
+    """A CSV or Excel file by its name (and sheet): it is chosen again to update."""
+    TAG_VALUE: ClassVar[str] = "file"
+    name: str
+    sheet: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "file"}
+        out["name"] = self.name
+        if self.sheet is not UNSET:
+            out["sheet"] = self.sheet
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FileTableSource:
+        return cls(
+            name=data["name"],
+            sheet=data.get("sheet", UNSET),
         )
 
 
@@ -7640,16 +8022,19 @@ _CRS_PLANE: dict[str, type[CrsPlane]] = {"similarity": SimilarityCrsPlane, "affi
 _CRS_SYSTEM: dict[str, type[CrsSystem]] = {"tm": TmCrsSystem, "geographic": GeographicCrsSystem, "local": LocalCrsSystem}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
 
 
-_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry}
+_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry}
 
 
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
+
+
+_TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource}
 
 
 _TRANSFORM: dict[str, type[Transform]] = {"move": MoveTransform, "rotate": RotateTransform, "scale": ScaleTransform, "mirror": MirrorTransform, "align": AlignTransform, "similarity": SimilarityTransform, "affine": AffineTransform, "projective": ProjectiveTransform, "rubbersheet": RubbersheetTransform}
@@ -7672,8 +8057,10 @@ __all__ = [
     "AreaPart",
     "AreaUnit",
     "AreaUnitName",
+    "AreasTableSource",
     "ArrayLayout",
     "AttributeDefinition",
+    "AttributesTableSource",
     "BlockChange",
     "BlockDefined",
     "BlockDefinition",
@@ -7686,6 +8073,7 @@ __all__ = [
     "BlocksEditPlan",
     "BlocksEdited",
     "Bounds",
+    "CellRange",
     "Checkpoint",
     "CheckpointChange",
     "CheckpointCreate",
@@ -7702,6 +8090,7 @@ __all__ = [
     "ConstructionEntity",
     "Convention",
     "ConventionName",
+    "CoordinatesTableSource",
     "CreateBlockChange",
     "CreateFeatureChange",
     "CreateOperation",
@@ -7757,6 +8146,7 @@ __all__ = [
     "FeatureChange",
     "FileCommit",
     "FileCommitted",
+    "FileTableSource",
     "GeographicCrsSystem",
     "GeographicDefinition",
     "GrantRole",
@@ -7879,6 +8269,13 @@ __all__ = [
     "SplineEntity",
     "SplineEntityGeometry",
     "SurveySettings",
+    "TableAlign",
+    "TableAlignName",
+    "TableEntity",
+    "TableEntityGeometry",
+    "TableGrid",
+    "TableGridName",
+    "TableSource",
     "TenantKind",
     "TenantKindName",
     "TextAlign",

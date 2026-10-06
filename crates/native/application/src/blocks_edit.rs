@@ -229,6 +229,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         }
         BlockEditOperation::Redefine => {
             let named = checks::named(doc, uids)?;
+            crate::blocks_define::no_tables(&named)?;
             next.entities = copies(named.iter().map(|(_, _, e, _)| *e));
             next.base = input.base.unwrap_or(old.base);
             rules_with(doc, &next)?;

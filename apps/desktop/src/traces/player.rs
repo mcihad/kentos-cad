@@ -93,6 +93,23 @@ pub struct Seen {
     /// A text's style and face, a dimension's style and look (docs/adr/0183); none for other kinds.
     pub face: Option<kentos_contracts::TextFace>,
     pub look: Option<kentos_contracts::DimensionLook>,
+    /// A table's cells and look (docs/adr/0184); none for other kinds.
+    pub table: Option<TableSeen>,
+}
+
+/// A table as a step sees it: its cells, sizes, merged ranges, columns'
+/// alignment by name, heading row, lines by name, frame width and source's kind.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TableSeen {
+    pub cells: Vec<Vec<String>>,
+    pub rows: Vec<f64>,
+    pub columns: Vec<f64>,
+    pub merges: Vec<kentos_contracts::CellRange>,
+    pub aligns: Option<Vec<String>>,
+    pub header: bool,
+    pub grid: Option<String>,
+    pub frame: Option<f64>,
+    pub source: Option<String>,
 }
 
 impl Seen {
@@ -108,6 +125,8 @@ impl Seen {
             Entity::Line(l) => (vec![[l.a.x, l.a.y], [l.b.x, l.b.y]], Vec::new()),
             Entity::Point(p) => (vec![[p.p.x, p.p.y]], Vec::new()),
             Entity::Text(t) => (vec![[t.p.x, t.p.y]], Vec::new()),
+            // A table's top left corner (docs/adr/0184).
+            Entity::Table(t) => (vec![[t.p.x, t.p.y]], Vec::new()),
             // A leader's vertices, the tip first (docs/adr/0146).
             Entity::Leader(l) => (l.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
             Entity::Arc(a) => (
@@ -273,6 +292,23 @@ impl Seen {
             },
             look: match e {
                 Entity::Dimension(d) => Some(d.look.clone()),
+                _ => None,
+            },
+            table: match e {
+                Entity::Table(t) => Some(TableSeen {
+                    cells: t.cells.clone(),
+                    rows: t.rows.clone(),
+                    columns: t.columns.clone(),
+                    merges: t.merges.clone(),
+                    aligns: t
+                        .aligns
+                        .as_ref()
+                        .map(|a| a.iter().map(|x| x.name().to_owned()).collect()),
+                    header: t.header,
+                    grid: t.grid.map(|g| g.name().to_owned()),
+                    frame: t.frame,
+                    source: t.source.as_ref().map(|s| s.kind().to_owned()),
+                }),
                 _ => None,
             },
         }

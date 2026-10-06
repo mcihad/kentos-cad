@@ -153,6 +153,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::leader_scenes::scenes());
     all.extend(crate::dimension_scenes::scenes());
     all.extend(crate::topology_scenes::scenes());
+    all.extend(crate::table_scenes::scenes());
     all
 }
 

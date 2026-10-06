@@ -4619,6 +4619,10 @@ function textToolScenes() {
 // AutoCAD MTEXT read in (fixtures/formats/v1/mtext.dxf). The desktop's are `paragraph_editor::tests::screens`.
 SCENES.paragraph = paragraphScenes();
 SCENES.styles = stylesScenes();
+// Tablo (docs/adr/0184): the ribbon's Tablo panel in a CAD project, Tablo ekle with each source (two parcels and three
+// named points selected first), its placement hanging from the pointer, the table drawn (with a frame), Tabloyu
+// düzenle with a range chosen, Öznitelikler's rows. The desktop's are `tables::tests::screens`.
+SCENES.tables = tableScenes();
 
 // Yazı ve ölçü stilleri (docs/adr/0183) in a CAD project at 1:500: a parcel drawn with the project's styles (its number
 // bold in Arimo, the road's name in Barlow italic and slanted, a note in Courier Prime, its sides measured in Mimari
@@ -4718,6 +4722,95 @@ function stylesScenes() {
     {
       id: 'styles-props',
       open: async (ui) => (await ground(ui, { layersFraction: 0.15 }), await ui.eval(`window.kentos.selection.set([window.__styled.ada])`), await ui.move(2, 2), await ui.sleep(500)),
+      close,
+    },
+  ];
+}
+
+function tableScenes() {
+  const DRAWN = FIT(`
+    const P = (fx, fy) => ({ x: c.x + fx * u, y: c.y + fy * u });
+    const pa = add({ kind: 'polygon', pts: [P(-2.7, -1.3), P(-1.1, -1.5), P(-0.8, 0.1), P(-2.5, 0.3)], label: '101/5', zs: [812.4, 812.9, null, 813.35], attrs: { Ada: '101', Parsel: '5', Nitelik: 'Arsa' } });
+    const pb = add({ kind: 'polygon', pts: [P(-1.1, -1.5), P(0.6, -1.4), P(0.7, 0.0), P(-0.8, 0.1)], label: '101/6', attrs: { Ada: '101', Parsel: '6', Nitelik: 'Bahçe' } });
+    const pts = [P(1.3, -1.1), P(2.2, -0.7), P(1.7, 0.2)].map((p, i) => add({ kind: 'point', p, z: 811.5 + i * 0.25, label: String(201 + i) }));
+    window.__tables = { a: pa.id, b: pb.id, pts: pts.map((e) => e.id) };`);
+  const ground = async (ui, fields = {}) => {
+    await ribbonOn(ui, { ribbonTab: 'annotate', type: 'cad', ...fields });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(DRAWN);
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+  };
+  const close = async (ui) => (await ui.escapeAll(3), await ui.eval(UNDO_ALL), await ribbonOff(ui));
+  /** Tablo ekle with the parcels and points selected, the source card `source` chosen. */
+  const insert = async (ui, source, after = async () => {}) => {
+    await ground(ui);
+    await ui.eval(`(() => { const t = window.__tables; window.kentos.selection.set([t.a, t.b, ...t.pts]); })()`);
+    await ui.eval(`window.kentos.commands.execute('table.insert')`);
+    await ui.waitFor(`!!document.querySelector('.dialog--table')`);
+    await ui.clickSel(`.dialog--table [data-source="${source}"]`);
+    await after();
+    await ui.sleep(400);
+  };
+  /** The areas' schedule placed above the parcels, a frame round it. */
+  const drawn = async (ui) => {
+    await insert(ui, 'areas', async () => {
+      await ui.clickSel('.dialog--table [data-grid="all"]');
+      const on = await ui.eval(`document.querySelector('.dialog--table [data-key="frame"]').checked`);
+      if (!on) await ui.clickSel('.dialog--table [data-key="frame"]');
+    });
+    await ui.clickText('.dialog--table .btn', 'Yerleştir');
+    await ui.sleep(300);
+    await ui.clickAt(...(await ui.eval(PAGE_AT(...(await ui.eval(AU(-2.6, 1.45)))))));
+    await ui.sleep(300);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+  };
+  return [
+    {
+      id: 'table-ribbon',
+      open: (ui) => ground(ui),
+      close,
+    },
+    { id: 'table-insert-areas', open: (ui) => insert(ui, 'areas'), close },
+    { id: 'table-insert-coords', open: (ui) => insert(ui, 'coordinates', async () => (await ui.clickSel('.dialog--table [data-grid="rows"]'))), close },
+    { id: 'table-insert-attributes', open: (ui) => insert(ui, 'attributes'), close },
+    { id: 'table-insert-blank', open: (ui) => insert(ui, 'blank'), close },
+    { id: 'table-insert-file', open: (ui) => insert(ui, 'file'), close },
+    {
+      id: 'table-place',
+      open: async (ui) => {
+        await insert(ui, 'coordinates', async () => (await ui.clickSel('.dialog--table [data-grid="all"]')));
+        await ui.clickText('.dialog--table .btn', 'Yerleştir');
+        await hoverU(ui, 0.9, 1.5);
+      },
+      close,
+    },
+    { id: 'table-drawn', open: drawn, close },
+    {
+      id: 'table-drawn-selected',
+      open: async (ui) => (await drawn(ui), await ui.eval(`(() => { const k = window.kentos; const t = [...k.doc.all()].find((e) => e.kind === 'table'); k.selection.set([t.id]); })()`), await ui.move(2, 2), await ui.sleep(400)),
+      close,
+    },
+    {
+      id: 'table-editor',
+      open: async (ui) => {
+        await drawn(ui);
+        await ui.eval(`(() => { const k = window.kentos; const t = [...k.doc.all()].find((e) => e.kind === 'table'); k.selection.set([t.id]); k.commands.execute('table.edit'); })()`);
+        await ui.waitFor(`!!document.querySelector('.dialog--table-editor')`);
+        await ui.sleep(300);
+        await ui.clickSel('.dialog--table-editor [data-row="1"][data-col="1"]');
+        await ui.key('ArrowRight', { shift: true });
+        await ui.key('ArrowDown', { shift: true });
+        await ui.sleep(300);
+      },
+      close,
+    },
+    {
+      id: 'table-props',
+      open: async (ui) => (await drawn(ui), await ui.eval(`(() => { const k = window.kentos; const t = [...k.doc.all()].find((e) => e.kind === 'table'); k.selection.set([t.id]); })()`), await ui.move(2, 2), await ui.sleep(500)),
       close,
     },
   ];

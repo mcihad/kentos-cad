@@ -43,7 +43,7 @@ export type DrawingHead = Omit<DocumentSnapshotV2, 'entities' | 'uids'>;
 export type PageEntity = ContractEntity & { uid?: string };
 
 /** The kinds, numbered as `kinds` holds them. */
-export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader'] as const;
+export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table'] as const;
 const KIND = new Map<string, number>(KINDS.map((k, i) => [k, i]));
 /** The dimension's kinds in the contract's order (`DimensionStyle::ALL`); KCAD schema 9 added the last five (docs/adr/0147). */
 const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter', 'ordinate', 'arcLength', 'jogged', 'azimuth', 'slope'] as const;
@@ -58,6 +58,11 @@ const FONTS = ['barlow', 'arimo', 'overpass', 'quicksand', 'architects-daughter'
 const DIMENSION_ARROWS = ['closed', 'open', 'dot', 'none'] as const;
 /** A dimension's units, numbered as the columns hold them (`columns.rs`'s `UNITS`). */
 const UNITS = ['mm', 'cm', 'm'] as const;
+/** A table's alignments and lines, numbered as the columns hold them (the contract's `TableAlign::ALL`, `TableGrid::ALL`). */
+const TABLE_ALIGNS = ['left', 'center', 'right'] as const;
+const TABLE_GRIDS = ['outer', 'rows', 'none'] as const;
+/** A table's source's kinds, numbered as the columns hold them (docs/adr/0184 §5). */
+const SOURCE_KINDS = ['coordinates', 'areas', 'attributes', 'file'] as const;
 
 const COLOR = 1;
 const LABEL = 2;
@@ -71,8 +76,10 @@ const WEIGHT = 8;
  * width, line spacing, runs, text style, font, bold, italic, oblique
  * (docs/adr/0183); dimension: text, style, angle, c, mask, za, zb, dimension
  * style, arrow, arrow size, ext offset, ext beyond, text gap, centred,
- * decimals, unit, prefix, suffix, font; hatch: holes; insert: mirror). A
- * block's definitions travel in the head, not here (docs/adr/0144).
+ * decimals, unit, prefix, suffix, font; hatch: holes; insert: mirror; table:
+ * merges, aligns, header, grid, text style, font, bold, italic, oblique,
+ * source, frame, docs/adr/0184). A block's definitions travel in the head,
+ * not here (docs/adr/0144).
  */
 const OPT = Array.from({ length: 19 }, (_, i) => 1 << (8 + i));
 /** A multi-line text's run's flags (docs/adr/0182; `columns.rs`'s `RUN_*`): its format, and whether its colour follows. */
@@ -537,6 +544,64 @@ class Packer {
         if (e.mask === true) flags |= OPT[2];
         else if (e.mask !== undefined) throw unwritable('bad_value', `${this.where}/mask`, 'zemin yalnız true yazılır; zeminsiz kılavuzda alan yoktur');
         break;
+      // docs/adr/0184: p, turn, height; the rows' and columns' lists; every cell row with its length and its words;
+      // the ranges, the alignments' places, the heading a flag, the lines' place, its face as a text's, the source
+      // (its kind's place, then its objects or a file's sheet flag, name and sheet), the frame's width.
+      case 'table': {
+        this.point(e.p, 'p', kind);
+        this.float(e.rotation, 'rotation');
+        this.float(e.height, 'height');
+        this.numbers(e.rows, 'rows');
+        this.numbers(e.columns, 'columns');
+        if (!Array.isArray(e.cells)) throw unwritable('wrong_type', `${this.where}/cells`, 'hücre satırları listesi olmalı');
+        this.int(e.cells.length);
+        e.cells.forEach((row, i) => {
+          if (!Array.isArray(row)) throw unwritable('wrong_type', `${this.where}/cells/${i}`, 'hücre listesi olmalı');
+          this.int(row.length);
+          row.forEach((words, j) => this.text(words, `cells/${i}/${j}`));
+        });
+        if (e.merges !== undefined && e.merges.length) {
+          flags |= OPT[0];
+          this.int(e.merges.length);
+          for (const m of e.merges) {
+            this.int(m.row);
+            this.int(m.col);
+            this.int(m.rows);
+            this.int(m.cols);
+          }
+        }
+        if (e.aligns !== undefined) {
+          flags |= OPT[1];
+          this.int(e.aligns.length);
+          for (const a of e.aligns) this.int(this.place(TABLE_ALIGNS, a, 'aligns', 'sütun hizası'));
+        }
+        if (e.header === true) flags |= OPT[2];
+        else if (e.header !== undefined) throw unwritable('bad_value', `${this.where}/header`, 'başlık yalnız true yazılır; başlıksız tabloda alan yoktur');
+        if (e.grid !== undefined) (flags |= OPT[3]), this.int(this.place(TABLE_GRIDS, e.grid, 'grid', 'tablo çizgisi'));
+        if (e.textStyle !== undefined) (flags |= OPT[4]), this.text(e.textStyle, 'textStyle');
+        if (e.font !== undefined) (flags |= OPT[5]), this.int(this.place(FONTS, e.font, 'font', 'yazı tipi'));
+        if (e.bold === true) flags |= OPT[6];
+        else if (e.bold !== undefined) throw unwritable('bad_value', `${this.where}/bold`, 'kalın yalnız true yazılır; alan yoksa yazı kalın değildir');
+        if (e.italic === true) flags |= OPT[7];
+        else if (e.italic !== undefined) throw unwritable('bad_value', `${this.where}/italic`, 'italik yalnız true yazılır; alan yoksa yazı italik değildir');
+        if (e.oblique !== undefined) (flags |= OPT[8]), this.float(e.oblique, 'oblique');
+        if (e.frame !== undefined) (flags |= OPT[10]), this.float(e.frame, 'frame');
+        if (e.source !== undefined) {
+          const source = e.source;
+          flags |= OPT[9];
+          this.int(this.place(SOURCE_KINDS, source.kind, 'source/kind', 'tablo kaynağı'));
+          if (source.kind === 'file') {
+            this.int(source.sheet !== undefined ? 1 : 0);
+            this.text(source.name, 'source/name');
+            if (source.sheet !== undefined) this.text(source.sheet, 'source/sheet');
+          } else {
+            if (!Array.isArray(source.objects)) throw unwritable('wrong_type', `${this.where}/source/objects`, 'nesne kimlikleri listesi olmalı');
+            this.int(source.objects.length);
+            source.objects.forEach((id, i) => this.text(id, `source/objects/${i}`));
+          }
+        }
+        break;
+      }
     }
     return flags;
   }
@@ -867,6 +932,57 @@ export class ColumnsReader {
         if (has(1)) e.arrow = LEADER_ARROWS[this.readInt()];
         if (has(2)) e.mask = true;
         break;
+      case 'table': {
+        e.p = this.pt();
+        e.rotation = this.num();
+        e.height = this.num();
+        e.rows = this.nums();
+        e.columns = this.nums();
+        const r = this.readInt();
+        const cells: string[][] = [];
+        for (let i = 0; i < r; i++) {
+          const n = this.readInt();
+          const row: string[] = [];
+          for (let j = 0; j < n; j++) row.push(this.readText());
+          cells.push(row);
+        }
+        e.cells = cells;
+        if (has(0)) {
+          const q = this.readInt();
+          const merges = [];
+          for (let k = 0; k < q; k++) merges.push({ row: this.readInt(), col: this.readInt(), rows: this.readInt(), cols: this.readInt() });
+          e.merges = merges;
+        }
+        if (has(1)) {
+          const a = this.readInt();
+          const aligns = [];
+          for (let k = 0; k < a; k++) aligns.push(this.at(TABLE_ALIGNS, 'sütun hizası'));
+          e.aligns = aligns;
+        }
+        if (has(2)) e.header = true;
+        if (has(3)) e.grid = this.at(TABLE_GRIDS, 'tablo çizgisi');
+        if (has(4)) e.textStyle = this.readText();
+        if (has(5)) e.font = this.at(FONTS, 'yazı tipi');
+        if (has(6)) e.bold = true;
+        if (has(7)) e.italic = true;
+        if (has(8)) e.oblique = this.num();
+        if (has(10)) e.frame = this.num();
+        if (has(9)) {
+          const kind = this.at(SOURCE_KINDS, 'tablo kaynağı');
+          if (kind === 'file') {
+            const sheet = this.readInt() === 1;
+            const source: Record<string, unknown> = { kind, name: this.readText() };
+            if (sheet) source.sheet = this.readText();
+            e.source = source;
+          } else {
+            const k = this.readInt();
+            const objects = [];
+            for (let i = 0; i < k; i++) objects.push(this.readText());
+            e.source = { kind, objects };
+          }
+        }
+        break;
+      }
     }
     return e as unknown as ContractEntity & { uid: string };
   }

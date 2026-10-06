@@ -37,10 +37,10 @@ use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::geom::dimension::dimension_measure;
 use kentos_geometry_core::ops::holes::HoleAt;
 use kentos_geometry_core::store::labels::{
-    DIMENSION_PREFIXES, DIMENSION_UNITS, LABEL_ALONG, LABEL_BESIDE, LABEL_CENTER, LABEL_CORNER,
-    LABEL_DIMENSION, LABEL_LEADER, LABEL_LINE, LABEL_PARAGRAPH_MASK, LABEL_PIECE_DIMENSION,
-    LABEL_PIECE_LEADER, LABEL_PIECE_LINE, LABEL_PIECE_TEXT, LABEL_STRIDE, LABEL_TEXT, LabelRule,
-    Placement,
+    DIMENSION_PREFIXES, DIMENSION_UNITS, LABEL_ALONG, LABEL_BESIDE, LABEL_CELL, LABEL_CENTER,
+    LABEL_CORNER, LABEL_DIMENSION, LABEL_LEADER, LABEL_LINE, LABEL_PARAGRAPH_MASK,
+    LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_LINE, LABEL_PIECE_TEXT, LABEL_STRIDE,
+    LABEL_TEXT, LabelRule, Placement,
 };
 use kentos_geometry_core::store::snap::{Extension, SnapExtras, SnapHit};
 use kentos_geometry_core::store::{LayerFlags, Store};
@@ -472,6 +472,15 @@ impl Spatial {
                         height: r[6],
                         lean,
                     }
+                } else if what == LABEL_CELL {
+                    LabelSpot::Cell {
+                        slot,
+                        at,
+                        rotation: r[4],
+                        row: r[5] as usize,
+                        col: r[6] as usize,
+                        bold: r[7] == 1.0,
+                    }
                 } else if what == LABEL_PIECE_DIMENSION {
                     let Shape::Dimension {
                         text,
@@ -610,6 +619,17 @@ pub enum LabelSpot {
         /// The slant's tangent of the text it is under: the box leans from
         /// its corner (docs/adr/0183 §2); 0 upright.
         lean: f64,
+    },
+    /// One cell's words of a table (docs/adr/0184 §2): from where their
+    /// baseline starts, turned by `rotation`; the words, height and face its
+    /// object's, bold for a heading row's.
+    Cell {
+        slot: Slot,
+        at: Vec2,
+        rotation: f64,
+        row: usize,
+        col: usize,
+        bold: bool,
     },
     /// A dimension's value among a block's pieces, as `Dimension`, its own
     /// text when it has one and `height` as placed.

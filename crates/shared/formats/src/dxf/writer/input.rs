@@ -11,12 +11,13 @@ use std::collections::BTreeMap;
 use std::fmt;
 
 use kentos_contracts::{
-    ArcEntity, AreaPart, AttributeDefinition, BlockDefinition, BlockId, CircleEntity,
+    ArcEntity, AreaPart, AttributeDefinition, BlockDefinition, BlockId, CellRange, CircleEntity,
     ConstructionEntity, DimensionArrow, DimensionEntity, DimensionLook, DimensionStyle,
     DimensionTextPlace, DrawingFont, DrawingUnit, DxfWriteInput, DxfWriteLayer, EllipseEntity,
     Entity, EntityBase, HatchEntity, HatchPattern, InsertEntity, LeaderArrow, LeaderEntity,
     LineEntity, Paragraph, PathEntity, PointEntity, PointPart, RingGeometry, SplineEntity,
-    TextAlign, TextEntity, TextFace, TextRun, Vec2,
+    TableAlign, TableEntity, TableGrid, TableSource, TextAlign, TextEntity, TextFace, TextRun,
+    Vec2,
 };
 use serde::de::value::{MapAccessDeserializer, SeqAccessDeserializer};
 use serde::de::{self, Deserialize, Deserializer, IgnoredAny, MapAccess, SeqAccess, Visitor};
@@ -129,6 +130,16 @@ struct Fields {
     block: Option<BlockId>,
     scale: Option<f64>,
     mirror: Option<bool>,
+    /// A table's own fields (docs/adr/0184).
+    rows: Option<Vec<f64>>,
+    columns: Option<Vec<f64>>,
+    cells: Option<Vec<Vec<String>>>,
+    merges: Option<Vec<CellRange>>,
+    aligns: Option<Vec<TableAlign>>,
+    header: Option<bool>,
+    grid: Option<TableGrid>,
+    frame: Option<f64>,
+    source: Option<TableSource>,
 }
 
 fn need<T, E: de::Error>(v: Option<T>, name: &'static str) -> Result<T, E> {
@@ -374,6 +385,28 @@ impl Fields {
                 },
                 mask: self.mask.unwrap_or(false),
             }),
+            "table" => Entity::Table(TableEntity {
+                base,
+                p: need(self.p, "p")?,
+                rotation: need(self.rotation, "rotation")?,
+                height: need(self.height, "height")?,
+                rows: need(self.rows, "rows")?,
+                columns: need(self.columns, "columns")?,
+                cells: need(self.cells, "cells")?,
+                merges: self.merges.unwrap_or_default(),
+                aligns: self.aligns,
+                header: self.header.unwrap_or(false),
+                grid: self.grid,
+                frame: self.frame,
+                face: TextFace {
+                    text_style: self.text_style,
+                    font: self.font,
+                    bold: self.bold.unwrap_or(false),
+                    italic: self.italic.unwrap_or(false),
+                    oblique: self.oblique,
+                },
+                source: self.source,
+            }),
             other => {
                 return Err(E::unknown_variant(
                     other,
@@ -393,6 +426,7 @@ impl Fields {
                         "hatch",
                         "insert",
                         "leader",
+                        "table",
                     ],
                 ));
             }
@@ -474,6 +508,15 @@ impl<'de> Deserialize<'de> for Wire {
                         "block" => f.block = Some(map.next_value()?),
                         "scale" => f.scale = Some(map.next_value()?),
                         "mirror" => f.mirror = map.next_value()?,
+                        "rows" => f.rows = Some(map.next_value()?),
+                        "columns" => f.columns = Some(map.next_value()?),
+                        "cells" => f.cells = Some(map.next_value()?),
+                        "merges" => f.merges = map.next_value()?,
+                        "aligns" => f.aligns = map.next_value()?,
+                        "header" => f.header = map.next_value()?,
+                        "grid" => f.grid = map.next_value()?,
+                        "frame" => f.frame = map.next_value()?,
+                        "source" => f.source = map.next_value()?,
                         _ => {
                             map.next_value::<IgnoredAny>()?;
                         }

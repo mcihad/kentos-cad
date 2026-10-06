@@ -319,8 +319,10 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     let mut defined: HashMap<BlockId, Written> = HashMap::new();
     let mut points = false;
     let no_values = BTreeMap::new();
-    // The dimensions' own blocks are numbered on their own: *D1, *D2 … after the drawing's.
+    // The dimensions' own blocks are numbered on their own: *D1, *D2 … after the drawing's;
+    // the tables' (docs/adr/0184 §7) too: *U1, *U2 ….
     let mut dimensions = 0usize;
+    let mut anonymous = 0usize;
     // What an insert's attribute texts show, where (docs/adr/0144 §7): the shared core's.
     let placing = crate::blocks::Placing::with_attributes(&input.blocks);
     // The STYLE and DIMSTYLE records' names: the project's styles, the styleless faces' (docs/adr/0183 §7).
@@ -344,6 +346,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
                 blocks: &mut blocks,
                 records: &mut records,
                 dimensions: &mut dimensions,
+                anonymous: &mut anonymous,
                 values: &no_values,
                 decimals: input.length_decimals,
                 grads: input.grads,
@@ -392,6 +395,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             blocks: &mut blocks,
             records: &mut records,
             dimensions: &mut dimensions,
+            anonymous: &mut anonymous,
             values: &input.dimension_values,
             decimals: input.length_decimals,
             grads: input.grads,

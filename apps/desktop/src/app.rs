@@ -174,6 +174,10 @@ pub enum Dialog {
     DataCompare,
     /// Kayıtlı ölçüleri denetle (cogo.rs, docs/adr/0180); the window is `App::cogo`.
     Cogo,
+    /// Tablo ekle (tables/insert.rs, docs/adr/0184); the window is `App::table_insert`.
+    TableInsert,
+    /// Tabloyu düzenle (tables/editor.rs, docs/adr/0184 §5); the window is `App::table_editor`.
+    TableEditor,
     /// Nokta editörü's batch operations (points/batch_view.rs, docs/adr/0153 §5); the window is
     /// `App::points.batch`.
     PointBatch,
@@ -321,6 +325,12 @@ pub enum Message {
     DataCompare(crate::data_compare::Event),
     /// Kayıtlı ölçüleri denetle's window (cogo.rs).
     Cogo(crate::cogo::Event),
+    /// Tablo ekle's window (tables/insert.rs).
+    TableInsert(crate::tables::insert::Event),
+    /// Tabloyu düzenle's window (tables/editor.rs).
+    TableEditor(crate::tables::editor::Event),
+    /// Tabloyu güncelle's files (tables/update.rs).
+    TableUpdate(crate::tables::update::Event),
     /// Genel bakış and Büyüteç over the drawing (navigation_cards.rs).
     Navigation(crate::navigation_cards::Event),
     /// Metin dosyası yerleştir's file: its name and bytes, or none (text_file.rs).
@@ -637,6 +647,12 @@ pub struct App {
     pub(crate) data_compare: Option<crate::data_compare::Window>,
     /// Kayıtlı ölçüleri denetle's window (cogo.rs, docs/adr/0180).
     pub(crate) cogo: Option<crate::cogo::Window>,
+    /// Tablo ekle's choices, kept while the app runs (tables/insert.rs, docs/adr/0184).
+    pub(crate) table_insert: crate::tables::insert::Insert,
+    /// Tabloyu düzenle's window (tables/editor.rs).
+    pub(crate) table_editor: Option<crate::tables::editor::Editor>,
+    /// Tabloyu güncelle waiting for its files (tables/update.rs).
+    pub(crate) table_update: Option<crate::tables::update::Run>,
     /// Genel bakış and Büyüteç's session state (navigation_cards.rs, docs/adr/0181).
     pub(crate) navigation: crate::navigation_cards::Navigation,
     /// The label spots the magnifier's window drew last (view.rs `lens_view`).
@@ -872,6 +888,9 @@ impl App {
             layer_list: None,
             data_compare: None,
             cogo: None,
+            table_insert: Default::default(),
+            table_editor: None,
+            table_update: None,
             navigation: Default::default(),
             lens_spots: Default::default(),
             field_send_format: 0,
@@ -1254,6 +1273,9 @@ impl App {
             Message::LayerList(event) => return self.layer_list_event(event),
             Message::DataCompare(event) => return self.data_compare_event(event),
             Message::Cogo(event) => return self.cogo_event(event),
+            Message::TableInsert(event) => return self.table_insert_event(event),
+            Message::TableEditor(event) => return self.table_editor_event(event),
+            Message::TableUpdate(event) => return self.table_update_event(event),
             Message::Navigation(event) => self.navigation_event(event),
             Message::TextFile(file) => self.text_file_given(file),
             Message::HoverCard(version) => self.hover_card_due(version),
@@ -1730,6 +1752,22 @@ impl App {
             "style.layerStyle" => self.open_layer_style(None),
             // The style library (style/manager/, docs/adr/0092).
             "style.manager" => return self.open_style_manager(None, None),
+            // Tablo (tables/, docs/adr/0184).
+            "table.insert" => self.open_table_insert(false),
+            "table.edit" => {
+                if let [slot] = self.selection.ids()
+                    && matches!(
+                        self.document.as_ref().and_then(|d| d.model.get(*slot)),
+                        Some(kentos_contracts::Entity::Table(_))
+                    )
+                {
+                    let slot = *slot;
+                    return self.open_table_editor(slot);
+                } else {
+                    self.output("Bir tablo seçin (ya da tabloya çift tıklayın).");
+                }
+            }
+            "table.update" => return self.update_tables(),
             // Yazı ve ölçü stilleri (docs/adr/0183 §5).
             "style.textStyles" => self.open_annotation_styles(crate::annotation_styles::Kind::Text),
             "style.dimensionStyles" => {

@@ -263,8 +263,9 @@ pub fn layer_call(
                 MODE_SET,
                 it.set(json!({ "fill": hatch_symbol_of(h, color) })),
             ),
-            // Its lines in its colour and weight, its arrowhead solid (docs/adr/0146 §5); as a hatch, never another symbol.
-            Entity::Leader(_) => (
+            // Its lines in its colour and weight, its arrowhead solid (docs/adr/0146 §5); as a hatch, never another
+            // symbol. A table's lines so, its frame's band solid (docs/adr/0184 §2).
+            Entity::Leader(_) | Entity::Table(_) => (
                 MODE_SET,
                 it.set(leader_symbols_of(style, color, weight, opts.hairlines)),
             ),

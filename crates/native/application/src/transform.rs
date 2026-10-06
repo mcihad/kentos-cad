@@ -712,6 +712,19 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
         } => pt(c) && pt(major) && ratio.is_finite() && t0.is_finite() && t1.is_finite(),
         Shape::Xline { p, dir } | Shape::Ray { p, dir } => pt(p) && pt(dir),
         Shape::Spline { pts: p, .. } => pts(p),
+        Shape::Table {
+            p,
+            rotation,
+            height,
+            rows,
+            columns,
+            ..
+        } => {
+            pt(p)
+                && rotation.is_finite()
+                && height.is_finite()
+                && rows.iter().chain(columns).all(|x| x.is_finite())
+        }
         Shape::Text {
             p,
             height,

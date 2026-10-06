@@ -81,6 +81,14 @@ pub fn read_gnss(bytes: &[u8]) -> Result<Vec<u8>, JsError> {
     to_json(&kentos_formats::gnss::read(bytes))
 }
 
+/// Reads a table's file (Tablo ekle, docs/adr/0184 §4): an Excel workbook
+/// (`.xlsx`) sheet by sheet, else a text file's records by its separator; the
+/// result `TableFileRead` (JSON bytes).
+#[wasm_bindgen(js_name = readTableFile)]
+pub fn read_table_file(bytes: &[u8]) -> Result<Vec<u8>, JsError> {
+    to_json(&kentos_formats::table_file::read(bytes))
+}
+
 /// Writes points as an instrument's coordinate file (docs/adr/0169 §4):
 /// `points` a `FieldPoint` list and `options` `FieldWriteOptions` (JSON);
 /// the result `FieldWrite` (JSON bytes): the file's text, how many went in,

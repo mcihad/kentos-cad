@@ -1,0 +1,254 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Tablolar",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 500.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "tablo",
+      "name": "Tablolar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "tablo",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "1043",
+        "Parsel": "7"
+      },
+      "label": "7",
+      "pts": [
+        {
+          "x": 499970.0,
+          "y": 4399980.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4399980.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 499970.0,
+          "y": 4400000.0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "1043",
+        "Parsel": "8"
+      },
+      "label": "8",
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4399980.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4399980.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        }
+      ]
+    },
+    {
+      "kind": "table",
+      "id": 3,
+      "layerId": "tablo",
+      "attrs": {},
+      "p": {
+        "x": 500010.0,
+        "y": 4400040.0
+      },
+      "rotation": 0.0,
+      "height": 1.25,
+      "rows": [
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5
+      ],
+      "columns": [
+        9.5,
+        11.25,
+        11.0
+      ],
+      "cells": [
+        [
+          "1043 ada parselleri",
+          "",
+          ""
+        ],
+        [
+          "Ad",
+          "Alan (m²)",
+          "Çevre (m)"
+        ],
+        [
+          "7",
+          "600.00",
+          "100.000"
+        ],
+        [
+          "8",
+          "400.00",
+          "80.000"
+        ],
+        [
+          "Toplam",
+          "1000.00",
+          ""
+        ]
+      ],
+      "merges": [
+        {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 3
+        }
+      ],
+      "aligns": [
+        "left",
+        "right",
+        "right"
+      ],
+      "grid": "rows",
+      "frame": 0.25,
+      "font": "arimo",
+      "bold": true,
+      "source": {
+        "kind": "areas",
+        "objects": [
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2201",
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2202"
+        ]
+      }
+    },
+    {
+      "kind": "table",
+      "id": 4,
+      "layerId": "tablo",
+      "attrs": {
+        "Not": "Excel'den"
+      },
+      "label": "Noktalar",
+      "p": {
+        "x": 500040.0,
+        "y": 4400040.0
+      },
+      "rotation": 30.0,
+      "height": 1.25,
+      "rows": [
+        2.5,
+        2.5,
+        2.5
+      ],
+      "columns": [
+        6.0,
+        12.5,
+        13.0
+      ],
+      "cells": [
+        [
+          "Nokta",
+          "X",
+          "Y"
+        ],
+        [
+          "101",
+          "499970.000",
+          "4399980.000"
+        ],
+        [
+          "102",
+          "500020.000",
+          "4399980.000"
+        ]
+      ],
+      "header": true,
+      "source": {
+        "kind": "file",
+        "name": "noktalar.xlsx",
+        "sheet": "Sayfa1"
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2201",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2202",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2203",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2204"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

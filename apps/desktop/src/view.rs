@@ -1475,6 +1475,8 @@ impl App {
             Asking::LayerList => self.layer_list_view(),
             Asking::DataCompare => self.data_compare_view(),
             Asking::Cogo => self.cogo_view(),
+            Asking::TableInsert => self.table_insert_view(),
+            Asking::TableEditor => self.table_editor_view(),
             Asking::PointBatch => self.point_batch_view(),
         }
     }
@@ -1668,6 +1670,7 @@ pub(crate) fn kind_name(kind: &str) -> &'static str {
         "hatch" => "tarama",
         "insert" => "blok",
         "leader" => "kılavuz",
+        "table" => "tablo",
         _ => "diğer",
     }
 }

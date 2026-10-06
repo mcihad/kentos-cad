@@ -1040,6 +1040,20 @@ pub struct Preview {
     /// Texts to come, drawn faint as text objects are drawn (the web's
     /// `drawTextGhost`; Etiketleri yazıya çevir, docs/adr/0175 §3).
     pub texts: Vec<TextGhost>,
+    /// A table's words to come, drawn faint in its face (Tablo ekle's
+    /// placement, docs/adr/0184 §3; the web's `TablePlaceTool.draw`).
+    pub cells: Vec<CellGhost>,
+}
+
+/// A table's cell to come: where its words' baseline starts, its words,
+/// its height on the ground, bold (a heading row's), the table's face.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CellGhost {
+    pub at: Vec2,
+    pub text: String,
+    pub height: f64,
+    pub bold: bool,
+    pub face: kentos_contracts::TextFace,
 }
 
 /// A text to come: where its alignment puts it, its text, its height on

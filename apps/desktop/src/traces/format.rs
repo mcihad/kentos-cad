@@ -349,6 +349,30 @@ pub struct Newest {
     /// writes them (`{}` none; docs/adr/0183). Exact; absent, not compared.
     pub(super) face: Option<kentos_contracts::TextFace>,
     pub(super) look: Option<kentos_contracts::DimensionLook>,
+    /// A table's cells and look (docs/adr/0184); absent, not compared.
+    pub(super) table: Option<TableExpect>,
+}
+
+/// A table's expected cells (exact), rows' heights and columns' widths
+/// (within 1e-6), merged ranges, columns' alignment (`null` all left), its
+/// heading row, lines (`null` all), frame width (within 1e-9, `null` none)
+/// and source's kind (`null` none). Each absent one is not compared.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TableExpect {
+    pub(super) cells: Option<Vec<Vec<String>>>,
+    pub(super) rows: Option<Vec<f64>>,
+    pub(super) columns: Option<Vec<f64>>,
+    pub(super) merges: Option<Vec<kentos_contracts::CellRange>>,
+    #[serde(default, deserialize_with = "present")]
+    pub(super) aligns: Option<Option<Vec<String>>>,
+    pub(super) header: Option<bool>,
+    #[serde(default, deserialize_with = "present")]
+    pub(super) grid: Option<Option<String>>,
+    #[serde(default, deserialize_with = "present")]
+    pub(super) frame: Option<Option<f64>>,
+    #[serde(default, deserialize_with = "present")]
+    pub(super) source: Option<Option<String>>,
 }
 
 /// A JSON object's members in the order they are written (a `dialog` step's

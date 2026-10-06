@@ -164,8 +164,9 @@ export function buildStyledLayer(id: string, entities: readonly Entity[], style:
     else if (e.kind === 'hatch') {
       mode = SET;
       a = setOf({ fill: hatchSymbolOf(e, color) });
-    } else if (e.kind === 'leader') {
+    } else if (e.kind === 'leader' || e.kind === 'table') {
       // Its lines in its colour and weight, its arrowhead solid (docs/adr/0146 §5); as a hatch, never another symbol.
+      // A table's lines so, its frame's band solid (docs/adr/0184 §2).
       mode = SET;
       a = setOf(leaderSymbolsOf(style, color, opts.hairlines, weight));
     } else if (e.symbol) {

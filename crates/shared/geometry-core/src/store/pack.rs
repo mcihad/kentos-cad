@@ -54,7 +54,7 @@ use std::collections::HashMap;
 
 use super::Store;
 use crate::api::json::Json;
-use crate::entity::{Attrs, HatchPattern, Part, PointPart, Shape};
+use crate::entity::{Attrs, CellRange, HatchPattern, Part, PointPart, Shape};
 use crate::geom::affine::Affine;
 use crate::geom::arrangement::Ring;
 use crate::geom::dimension::{Arrow, Look};
@@ -171,7 +171,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 17.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 18.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -472,6 +472,82 @@ impl Reader<'_> {
                 arrow: self.string()?,
                 mask: self.flag()?.then_some(true),
             },
+            // docs/adr/0184: the corner, turn and height; the rows' heights and the columns'
+            // widths; each cell's words, row by row; the merged ranges; the alignments (−1
+            // none); the heading flag; the lines (−1 all, else `TABLE_GRIDS`); the frame's
+            // width (NaN none); the face.
+            18 => {
+                let p = self.pt()?;
+                let (rotation, height) = (self.num()?, self.num()?);
+                let rows = self.values()?.unwrap_or_default();
+                let columns = self.values()?.unwrap_or_default();
+                let mut cells = Vec::with_capacity(rows.len().min(10_000));
+                for _ in 0..rows.len() {
+                    let row = (0..columns.len())
+                        .map(|_| Ok(self.string()?.unwrap_or_default()))
+                        .collect::<Result<Vec<_>, String>>()?;
+                    cells.push(row);
+                }
+                let n = self.count()?;
+                let mut merges = Vec::with_capacity(n.min(1024));
+                for _ in 0..n {
+                    merges.push(CellRange {
+                        row: self.count()?,
+                        col: self.count()?,
+                        rows: self.count()?,
+                        cols: self.count()?,
+                    });
+                }
+                let aligns = match self.int()? {
+                    None => None,
+                    Some(n) => Some(
+                        (0..n)
+                            .map(|_| {
+                                let i = self.count()?;
+                                TABLE_ALIGNS.get(i).map(|a| (*a).to_owned()).ok_or_else(|| {
+                                    format!("paketin {}. sayısı hiza değil ({i})", self.at)
+                                })
+                            })
+                            .collect::<Result<Vec<_>, String>>()?,
+                    ),
+                };
+                let header = self.flag()?.then_some(true);
+                let grid = match self.int()? {
+                    None => None,
+                    Some(i) => {
+                        Some(TABLE_GRIDS.get(i).map(|g| (*g).to_owned()).ok_or_else(|| {
+                            format!("paketin {}. sayısı çizgi seçeneği değil ({i})", self.at)
+                        })?)
+                    }
+                };
+                let frame = self.num()?;
+                let style = self.string()?;
+                let font = self.font()?;
+                let (bold, italic) = (self.flag()?, self.flag()?);
+                let oblique = self.num()?;
+                Shape::Table {
+                    p,
+                    rotation,
+                    height,
+                    rows,
+                    columns,
+                    cells,
+                    merges: (!merges.is_empty()).then_some(merges),
+                    aligns,
+                    header,
+                    grid,
+                    frame: (!frame.is_nan()).then_some(frame),
+                    // The store draws, picks and snaps: what the table came from is not packed.
+                    source: None,
+                    face: Face {
+                        style,
+                        font,
+                        bold,
+                        italic,
+                        oblique: (!oblique.is_nan()).then_some(oblique),
+                    },
+                }
+            }
             _ => {
                 return Err(format!(
                     "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
@@ -509,6 +585,10 @@ fn run_bits(r: &Run) -> u32 {
             None => 0,
         }
 }
+
+/// A table column's alignment and its lines by their place in a pack (docs/adr/0184).
+pub const TABLE_ALIGNS: [&str; 3] = ["left", "center", "right"];
+pub const TABLE_GRIDS: [&str; 3] = ["outer", "rows", "none"];
 
 /// A typeface's place in the core's tables; −1 for the project's (docs/adr/0183).
 fn font_place(f: Option<Font>) -> f64 {
@@ -822,6 +902,64 @@ impl Packer {
                 let t = self.maybe_string(text.as_deref());
                 let a = self.maybe_string(arrow.as_deref());
                 self.put(&[*height, *rotation, t, a, flag(*mask == Some(true))]);
+            }
+            // docs/adr/0184, as the reader's kind 18 says.
+            Shape::Table {
+                p,
+                rotation,
+                height,
+                rows,
+                columns,
+                cells,
+                merges,
+                aligns,
+                header,
+                grid,
+                frame,
+                source: _,
+                face,
+            } => {
+                self.put(&[18.0, p.x, p.y, *rotation, *height]);
+                self.values(Some(rows));
+                self.values(Some(columns));
+                for row in cells {
+                    for words in row {
+                        let w = self.string(words);
+                        self.put(&[w]);
+                    }
+                }
+                let merges = merges.as_deref().unwrap_or_default();
+                self.put(&[merges.len() as f64]);
+                for m in merges {
+                    self.put(&[m.row as f64, m.col as f64, m.rows as f64, m.cols as f64]);
+                }
+                match aligns {
+                    None => self.put(&[-1.0]),
+                    Some(a) => {
+                        self.put(&[a.len() as f64]);
+                        for x in a {
+                            let i = TABLE_ALIGNS.iter().position(|n| n == x).unwrap_or(0);
+                            self.put(&[i as f64]);
+                        }
+                    }
+                }
+                let g = grid.as_deref().map_or(-1.0, |g| {
+                    TABLE_GRIDS
+                        .iter()
+                        .position(|n| *n == g)
+                        .map_or(-1.0, |i| i as f64)
+                });
+                let style = self.maybe_string(face.style.as_deref());
+                self.put(&[
+                    flag(*header == Some(true)),
+                    g,
+                    frame.unwrap_or(f64::NAN),
+                    style,
+                    font_place(face.font),
+                    flag(face.bold),
+                    flag(face.italic),
+                    face.oblique.unwrap_or(f64::NAN),
+                ]);
             }
         }
     }

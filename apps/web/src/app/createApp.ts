@@ -12,6 +12,7 @@ import { AppShell } from '../ui/shell/AppShell';
 import { ViewportController } from '../viewport/ViewportController';
 import { createBlocks, registerBlockCommands } from './blocks';
 import { registerTextCommands } from './texts';
+import { readTableFile, registerTableCommands } from './tables';
 import { Clipboard } from './clipboard';
 import { registerCoreCommands, showTheme, type FrontHistory } from './commands';
 import type { AppContext } from './context';
@@ -154,6 +155,11 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   registerStyleCommands(ctx);
   registerBlockCommands(ctx);
   registerTextCommands(ctx, { findReplace: () => lazy(ctx, import('../ui/text/FindReplaceDialog'), (m) => m.openFindReplaceDialog(ctx)) });
+  registerTableCommands(ctx, {
+    insert: () => lazy(ctx, import('../ui/table/TableInsertDialog'), (m) => m.openTableInsert(ctx)),
+    edit: (id) => lazy(ctx, import('../ui/table/TableEditor'), (m) => m.openTableEditor(ctx, id)),
+    read: (file) => readTableFile(ctx, file),
+  });
   registerFileExchangeCommands(ctx);
   registerCalcCommands(ctx);
   // The open cloud project as the rename and delete dialogs name it.

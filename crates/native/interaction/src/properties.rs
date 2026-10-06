@@ -275,43 +275,52 @@ fn core_align(a: TextAlign) -> Option<kentos_geometry_core::text::TextAlign> {
 
 /// A command's answer as the host says it: nothing but its warnings when it
 /// completed, else why not.
-/// The texts in `slots` given the project's text style `id` (none:
-/// Standart) in one step “Değiştir” (docs/adr/0183 §6): its face and width
-/// factor, its height when it fixes one (`apply_text_style`); those already
-/// in it left out. What to say: the command's refusal.
+/// The texts and tables in `slots` given the project's text style `id`
+/// (none: Standart) in one step “Değiştir” (docs/adr/0183 §6, 0184 §6): its
+/// face and a text's width factor, the text height when it fixes one
+/// (`apply_text_style`); those already in it left out. What to say: the
+/// command's refusal.
 pub fn apply_text_style(doc: &mut Document, slots: &[Slot], id: Option<&str>) -> Vec<String> {
     let settings = doc.settings();
     let style = id
         .and_then(|id| settings.text_styles.iter().find(|s| s.id == id))
         .cloned();
     let scale = settings.plot_scale;
+    let same = |face: &kentos_contracts::TextFace| match &style {
+        Some(s) => face.text_style.as_deref() == Some(s.id.as_str()),
+        None => face.is_plain(),
+    };
+    let look_of = |face: &kentos_contracts::TextFace, width_factor, height| {
+        kentos_contracts::apply_text_style(
+            style.as_ref(),
+            &kentos_contracts::TextLook {
+                face: face.clone(),
+                width_factor,
+                height,
+            },
+            scale,
+        )
+    };
     let changes: Vec<(Slot, Entity)> = slots
         .iter()
-        .filter_map(|&slot| {
-            let Some(Entity::Text(t)) = doc.get(slot) else {
-                return None;
-            };
-            let same = match &style {
-                Some(s) => t.face.text_style.as_deref() == Some(s.id.as_str()),
-                None => t.face.is_plain(),
-            };
-            if same {
-                return None;
+        .filter_map(|&slot| match doc.get(slot)? {
+            Entity::Text(t) if !same(&t.face) => {
+                let look = look_of(&t.face, t.width_factor, t.height);
+                let mut t = t.clone();
+                t.face = look.face;
+                t.width_factor = look.width_factor;
+                t.height = look.height;
+                Some((slot, Entity::Text(t)))
             }
-            let look = kentos_contracts::apply_text_style(
-                style.as_ref(),
-                &kentos_contracts::TextLook {
-                    face: t.face.clone(),
-                    width_factor: t.width_factor,
-                    height: t.height,
-                },
-                scale,
-            );
-            let mut t = t.clone();
-            t.face = look.face;
-            t.width_factor = look.width_factor;
-            t.height = look.height;
-            Some((slot, Entity::Text(t)))
+            // A table's cells are drawn at its text height, without a width factor.
+            Entity::Table(t) if !same(&t.face) => {
+                let look = look_of(&t.face, None, t.height);
+                let mut t = t.clone();
+                t.face = look.face;
+                t.height = look.height;
+                Some((slot, Entity::Table(t)))
+            }
+            _ => None,
         })
         .collect();
     set_geometries(doc, &changes)

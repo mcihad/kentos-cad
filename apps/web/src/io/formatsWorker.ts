@@ -148,6 +148,9 @@ scope.onmessage = (e) => {
         } else if (m.op === 'readGnss') {
           const json = own(f.readGnss(new Uint8Array(m.bytes)));
           scope.postMessage({ id: m.id, ok: true, json }, [json]);
+        } else if (m.op === 'readTableFile') {
+          const json = own(f.readTableFile(new Uint8Array(m.bytes)));
+          scope.postMessage({ id: m.id, ok: true, json }, [json]);
         } else if (m.op === 'writeField') {
           const json = own(f.writeField(JSON.stringify(m.points), JSON.stringify(m.options)));
           scope.postMessage({ id: m.id, ok: true, json }, [json]);

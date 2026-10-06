@@ -221,6 +221,8 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Yazı', icon: 'text', commands: ['tool.text', 'tool.mtext', 'tool.placeTextFile', 'tool.labelsToText', 'text.findReplace', 'style.textStyles'] },
       { pick: 'Ölçü', icon: 'dimension', commands: ['tool.dimension', 'style.dimensionStyles'] },
       { pick: 'Kılavuz', icon: 'leader', commands: ['tool.leader'] },
+      // Tablo (docs/adr/0184): AutoCAD's Annotate › Tables.
+      { pick: 'Tablo', icon: 'table', commands: ['table.insert', 'table.edit', 'table.update'] },
       { pick: 'Tarama', icon: 'hatch', commands: ['tool.hatch'] },
       { pick: 'İşaretleme', icon: 'revcloud', commands: ['tool.revcloud'] },
       { menu: 'draw', sections: ['Açıklama'] },

@@ -37,6 +37,12 @@ import type { ProductCommand } from './command';
 export const NIL_BLOCK = '00000000-0000-0000-0000-000000000000';
 
 /** A block's name: something besides white space (`empty_name`). */
+/** None of the objects a block is defined from is a table: a block holds none (docs/adr/0184 §1), `table_in_block` at the first. */
+export function checkNoTables(found: readonly { entity: Entity; at: number }[]): Stop | null {
+  const table = found.find((f) => f.entity.kind === 'table');
+  return table ? failed(error('table_in_block', 'Seçilenlerde tablo var; tablo bloğa konamaz. Tabloyu seçimden çıkarın.', `uids[${table.at}]`)) : null;
+}
+
 export function checkName(name: string): Stop | null {
   return nameOk(name) ? null : failed(error('empty_name', 'Blok adı boş olamaz; bir ad yazın.', 'name'));
 }
@@ -162,6 +168,8 @@ function check(doc: CadDocument, input: BlocksDefine): Stop | Checked {
   if (revision) return revision;
   const found = findObjects(doc, input.uids);
   if (!Array.isArray(found)) return found;
+  const tables = checkNoTables(found);
+  if (tables) return tables;
   const block: BlockDefinition = {
     id: NIL_BLOCK,
     name: input.name,

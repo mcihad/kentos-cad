@@ -55,6 +55,8 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   vertexPoints: 'Köşelere nokta',
   adjoin: 'Bitişik alan',
   labels: 'Etiketleri yazıya çevir',
+  // Tablo ekle (docs/adr/0184 §6).
+  table: 'Tablo',
 };
 
 /**

@@ -253,6 +253,20 @@ fn crosses(e: &Shape, fence: &[Vec2], segs: &[Edge], tol: f64, font: Font) -> bo
         Shape::Point { p, .. } | Shape::Insert { p, .. } => {
             segs.iter().any(|s| closest_on_edge(s, *p).d <= tol)
         }
+        // Its body, as a text's: the fence crosses its outline or holds a point of it (docs/adr/0184 §2).
+        Shape::Table { .. } => {
+            let body = crate::entity::entity_vertices(e);
+            fence.iter().any(|q| point_in_polygon(*q, &body))
+                || segs.iter().any(|s| {
+                    (0..body.len()).any(|i| {
+                        let side = Edge::Seg {
+                            a: body[i],
+                            b: body[(i + 1) % body.len()],
+                        };
+                        !intersect_edges(s, &side).is_empty()
+                    })
+                })
+        }
         Shape::Text { .. } | Shape::Leader { .. } => {
             let body = TextPlace::of(e)
                 .or_else(|| leader::note_place(e))

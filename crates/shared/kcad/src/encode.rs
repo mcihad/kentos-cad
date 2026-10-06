@@ -34,7 +34,7 @@ use crate::{
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
-    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS,
     SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
@@ -707,7 +707,8 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 21 when the project has a text
+/// The oldest schema that holds the drawing: 22 when it has a table
+/// (docs/adr/0184), 21 when the project has a text
 /// or a dimension style or a text or a dimension of it or of a block
 /// definition a face or a look (docs/adr/0183), 20 when a text of it or of a
 /// block definition has a box, a line spacing or letter formats
@@ -747,6 +748,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             _ => false,
         })
     };
+    if doc.entities.iter().any(|e| matches!(e, Entity::Table(_))) {
+        return SCHEMA_WITH_TABLES;
+    }
     if !doc.settings.text_styles.is_empty()
         || !doc.settings.dimension_styles.is_empty()
         || styled(&doc.entities)

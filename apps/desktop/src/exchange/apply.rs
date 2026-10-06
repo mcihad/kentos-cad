@@ -698,6 +698,13 @@ fn finite(e: &Entity) -> bool {
             }
             Entity::Insert(e) => p(&e.p) && fs(&[e.scale, e.rotation]),
             Entity::Leader(e) => ps(&e.pts) && fs(&[e.height, e.rotation]),
+            Entity::Table(e) => {
+                p(&e.p)
+                    && fs(&[e.height, e.rotation])
+                    && fs(&e.rows)
+                    && fs(&e.columns)
+                    && e.face.oblique.is_none_or(f64::is_finite)
+            }
         }
 }
 

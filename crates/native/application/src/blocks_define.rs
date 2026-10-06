@@ -116,6 +116,7 @@ fn check(doc: &Document, input: &BlocksDefine) -> Result<Checked, Stop> {
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
     let named = checks::named(doc, &input.uids)?;
+    no_tables(&named)?;
     let block = BlockDefinition {
         id: BlockId([0; 16]),
         name: input.name.clone(),
@@ -192,6 +193,23 @@ fn base_mut(e: &mut Entity) -> &mut EntityBase {
         Entity::Hatch(x) => &mut x.base,
         Entity::Insert(x) => &mut x.base,
         Entity::Leader(x) => &mut x.base,
+        Entity::Table(x) => &mut x.base,
+    }
+}
+
+/// None of the objects a block is defined from is a table: a block holds no
+/// table (docs/adr/0184 §1), `table_in_block` at the first one's id.
+pub(crate) fn no_tables(named: &[(usize, Slot, &Entity, &String)]) -> Result<(), Stop> {
+    match named
+        .iter()
+        .find(|(_, _, e, _)| matches!(e, Entity::Table(_)))
+    {
+        Some((i, ..)) => Err(Stop::Failed(error(
+            codes::TABLE_IN_BLOCK,
+            "Seçilenlerde tablo var; tablo bloğa konamaz. Tabloyu seçimden çıkarın.".into(),
+            Some(format!("uids[{i}]")),
+        ))),
+        None => Ok(()),
     }
 }
 

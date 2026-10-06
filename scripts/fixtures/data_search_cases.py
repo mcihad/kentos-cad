@@ -33,9 +33,10 @@ value that is not blank, each once, in the natural order.
 
 Records: an object's record is its kind's Turkish name, its layer's path,
 its label as stored, its words (a text's text, a leader's note, a dimension's
-own text), the name of its insert's block (none for an unknown block) and
-its attributes as stored; none when it has no label, text, block name or
-attribute value that is not blank.
+own text, a table's cells that are not empty, row by row, one per line), the
+name of its insert's block (none for an unknown block) and its attributes as
+stored; none when it has no label, text, block name or attribute value that
+is not blank.
 """
 
 import argparse
@@ -215,12 +216,15 @@ KIND = {
     "hatch": "Tarama",
     "insert": "Blok",
     "leader": "Kılavuz",
+    "table": "Tablo",
 }
 
 
 def record_of(e, layers, blocks):
     label = e.get("label")
     text = e.get("text") if e["kind"] in ("text", "leader", "dimension") else None
+    if e["kind"] == "table":
+        text = "\n".join(w for row in e["cells"] for w in row if w != "")
     block = blocks.get(e["block"]) if e["kind"] == "insert" else None
     attrs = [[k, v] for k, v in e["attrs"].items()]
     blank = lambda v: v is None or not v.strip(JS_SPACE)
@@ -512,6 +516,11 @@ def record_cases():
         ("bilinmeyen blok, değersiz", ent("insert", "altyapi", None, {}, block=YOK, p=P0, scale=1.0, rotation=0.0)),
         ("etiketli, aynalı blok", ent("insert", "0", "V1", {}, block=VANA, p=P0, scale=2.0, rotation=1.0, mirror=True)),
         ("bilinmeyen katman", ent("point", "yok", "P1", {}, p=P0)),
+        (
+            "tablo, boş hücreleri yok sayılır",
+            ent("table", "0", None, {}, p=P0, rotation=0.0, height=1.0, rows=[2.0, 2.0], columns=[3.0, 3.0], cells=[["Nokta", "Y"], ["", "487000.125"]]),
+        ),
+        ("boş tablo", ent("table", "0", None, {}, p=P0, rotation=0.0, height=1.0, rows=[2.0], columns=[3.0], cells=[[""]])),
     ]
     return [{"name": n, "layers": layers, "blocks": blocks, "entity": e, "expected": record_of(e, layers, blocks)} for n, e in hand]
 

@@ -36,6 +36,7 @@ fn the_typescript_snapshot_round_trips_through_the_contracts() {
             Entity::Hatch(_) => "hatch",
             Entity::Insert(_) => "insert",
             Entity::Leader(_) => "leader",
+            Entity::Table(_) => "table",
         })
         .collect();
     assert_eq!(

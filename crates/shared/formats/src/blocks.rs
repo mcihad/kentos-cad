@@ -10,7 +10,7 @@ use kentos_contracts::{
     ArcEntity, AreaPart, BlockDefinition, CircleEntity, ConstructionEntity, DimensionEntity,
     DimensionStyle, EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern, HatchPatternType,
     InsertEntity, LeaderArrow, LeaderEntity, LineEntity, PathEntity, PointEntity, RingGeometry,
-    SplineEntity, TextEntity, Vec2,
+    SplineEntity, TableEntity, TextEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::api::json::Json;
@@ -205,6 +205,47 @@ pub(crate) fn contract_face(f: &Face) -> kentos_contracts::TextFace {
         italic: f.italic,
         oblique: f.oblique,
     }
+}
+
+/// A table as the core takes it (docs/adr/0184 §1).
+pub fn core_table(t: &TableEntity) -> Shape {
+    Shape::Table {
+        p: core(t.p),
+        rotation: t.rotation,
+        height: t.height,
+        rows: t.rows.clone(),
+        columns: t.columns.clone(),
+        cells: t.cells.clone(),
+        merges: (!t.merges.is_empty()).then(|| {
+            t.merges
+                .iter()
+                .map(|m| kentos_geometry_core::entity::CellRange {
+                    row: m.row as usize,
+                    col: m.col as usize,
+                    rows: m.rows as usize,
+                    cols: m.cols as usize,
+                })
+                .collect()
+        }),
+        aligns: t
+            .aligns
+            .as_ref()
+            .map(|a| a.iter().map(|x| x.name().to_owned()).collect()),
+        header: t.header.then_some(true),
+        grid: t.grid.map(|g| g.name().to_owned()),
+        frame: t.frame,
+        // Its corners and lines are what these formats ask of the core.
+        source: None,
+        face: core_face(&t.face),
+    }
+}
+
+/// A table's four corners (docs/adr/0184 §2): top left, top right, bottom
+/// right, bottom left.
+pub fn table_corners(t: &TableEntity) -> Vec<Vec2> {
+    kentos_geometry_core::geom::table::table_geom(&core_table(t))
+        .map(|g| g.outline().iter().map(|p| back(*p)).collect())
+        .unwrap_or_else(|| vec![t.p])
 }
 
 /// A dimension's look as the core takes it (docs/adr/0183 §3).
@@ -467,6 +508,7 @@ fn shape(e: &Entity) -> Shape {
                 spacing: h.pattern.spacing,
             },
         },
+        Entity::Table(t) => core_table(t),
         // Its attributes show as texts, which these formats leave out of a block.
         Entity::Insert(i) => Shape::Insert {
             block: i.block.to_text(),
@@ -690,7 +732,8 @@ fn entity(s: &Shape) -> Option<Entity> {
                 spacing: pattern.spacing,
             },
         }),
-        Shape::Insert { .. } => return None,
+        // A block holds no table (docs/adr/0184 §1); the core opens inserts.
+        Shape::Insert { .. } | Shape::Table { .. } => return None,
     })
 }
 

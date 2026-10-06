@@ -93,6 +93,9 @@ pub struct Meta {
     /// say only in part (the style's id, open and dot arrowheads, a unit).
     pub face: Option<String>,
     pub look: Option<String>,
+    /// A table's own fields as the contract's JSON (docs/adr/0184 §7): its
+    /// INSERT draws it with lines and texts, KentOS reads the table back.
+    pub table: Option<String>,
 }
 
 /// A STYLE record's `face` when KentOS wrote it for a styleless face
@@ -274,6 +277,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if let Some(l) = &meta.look {
         item("look", &mut out, |o| string(l, o));
+    }
+    if let Some(t) = &meta.table {
+        item("table", &mut out, |o| string(t, o));
     }
     if let Some(d) = &meta.dimension {
         item("dimension", &mut out, |o| {
@@ -487,6 +493,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "note" => m.note = text(a).or(m.note),
             "face" => m.face = text(a).or(m.face),
             "look" => m.look = text(a).or(m.look),
+            "table" => m.table = text(a).or(m.table),
             "noteturn" => m.note_turn = real(a).or(m.note_turn),
             "dimension" => m.dimension = dimension(&values).or(m.dimension),
             _ => {}
@@ -563,6 +570,7 @@ mod tests {
             note_turn: Some(29.999_999_999_999_996),
             face: Some(r#"{"textStyle":"a","font":"arimo","bold":true}"#.into()),
             look: Some(r#"{"arrow":"dot","prefix":"Ø ^ \\"}"#.into()),
+            table: Some(r#"{"p":{"x":1,"y":2},"cells":[["Ad","ğ ^ \\"]]}"#.into()),
         };
         let out = groups(&meta);
         assert_eq!(out[0], (1001, "KENTOS".to_string()));

@@ -811,7 +811,8 @@ impl Labels<'_> {
                 | LabelSpot::PieceText { slot, .. }
                 | LabelSpot::PieceDimension { slot, .. }
                 | LabelSpot::Line { slot, .. }
-                | LabelSpot::ParagraphMask { slot, .. } => *slot,
+                | LabelSpot::ParagraphMask { slot, .. }
+                | LabelSpot::Cell { slot, .. } => *slot,
             };
             self.current.set(Some(slot));
             // A label whose place is taken is not drawn: known before its
@@ -892,6 +893,55 @@ impl Labels<'_> {
                             color: self.colors.label,
                             width_factor: *width_factor as f32,
                             mask: (mask * self.camera.scale) as f32,
+                            underline: 0.0,
+                            lean,
+                        },
+                        self.colors.halo,
+                    );
+                }
+                // A table's cell (docs/adr/0184 §2): its words in the table's face and colour, upright,
+                // a heading row's bold.
+                (
+                    LabelSpot::Cell {
+                        at,
+                        rotation,
+                        row,
+                        col,
+                        bold,
+                        ..
+                    },
+                    Entity::Table(t),
+                ) => {
+                    let Some(words) = t.cells.get(*row).and_then(|r| r.get(*col)) else {
+                        continue;
+                    };
+                    let heading = Run {
+                        start: 0,
+                        end: 0,
+                        bold: *bold,
+                        italic: false,
+                        underline: false,
+                        script: None,
+                        color: None,
+                    };
+                    let (font, lean) = face_font(&t.face, self.font, false, Some(&heading));
+                    let color = self.ink_of(
+                        base.color
+                            .as_deref()
+                            .or(layer.map(|l| l.style.color.as_str())),
+                    );
+                    self.draw(
+                        frame,
+                        &Piece {
+                            text: words,
+                            at: self.screen(*at),
+                            angle: (-rotation.to_radians()) as f32,
+                            size: (t.height * self.camera.scale) as f32,
+                            font,
+                            anchor: Anchor::LeftBaseline,
+                            color,
+                            width_factor: 1.0,
+                            mask: 0.0,
                             underline: 0.0,
                             lean,
                         },
@@ -1172,7 +1222,8 @@ impl Labels<'_> {
             | LabelSpot::PieceText { .. }
             | LabelSpot::PieceDimension { .. }
             | LabelSpot::Line { .. }
-            | LabelSpot::ParagraphMask { .. } => None,
+            | LabelSpot::ParagraphMask { .. }
+            | LabelSpot::Cell { .. } => None,
         }
     }
 
@@ -1257,7 +1308,8 @@ impl Labels<'_> {
             | LabelSpot::PieceText { .. }
             | LabelSpot::PieceDimension { .. }
             | LabelSpot::Line { .. }
-            | LabelSpot::ParagraphMask { .. } => {}
+            | LabelSpot::ParagraphMask { .. }
+            | LabelSpot::Cell { .. } => {}
         }
     }
 }
@@ -1375,6 +1427,50 @@ pub(crate) fn ghost(
         color,
         width_factor: 1.0,
         mask: if mask { width } else { 0.0 },
+        underline: 0.0,
+        lean,
+    };
+    draw(frame, &piece, halo);
+}
+
+/// A table's cell to come, faint (Tablo ekle's placement, docs/adr/0184 §3;
+/// the web's `TablePlaceTool.draw`): its words from where their baseline
+/// starts at `at`, `size` px high, upright in the table's face, bold when a
+/// heading row's.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn cell_ghost(
+    frame: &mut Frame,
+    text: &str,
+    at: Point,
+    size: f32,
+    bold: bool,
+    face: &kentos_contracts::TextFace,
+    drawing: DrawingFont,
+    (color, halo): (Color, Color),
+) {
+    if size < SMALLEST || text.is_empty() {
+        return;
+    }
+    let heading = Run {
+        start: 0,
+        end: 0,
+        bold,
+        italic: false,
+        underline: false,
+        script: None,
+        color: None,
+    };
+    let (font, lean) = face_font(face, drawing, false, Some(&heading));
+    let piece = Piece {
+        text,
+        at,
+        angle: 0.0,
+        size,
+        font,
+        anchor: Anchor::LeftBaseline,
+        color,
+        width_factor: 1.0,
+        mask: 0.0,
         underline: 0.0,
         lean,
     };
@@ -1700,7 +1796,8 @@ pub fn slot_of(spot: &LabelSpot) -> Slot {
         | LabelSpot::PieceText { slot, .. }
         | LabelSpot::PieceDimension { slot, .. }
         | LabelSpot::Line { slot, .. }
-        | LabelSpot::ParagraphMask { slot, .. } => *slot,
+        | LabelSpot::ParagraphMask { slot, .. }
+        | LabelSpot::Cell { slot, .. } => *slot,
     }
 }
 

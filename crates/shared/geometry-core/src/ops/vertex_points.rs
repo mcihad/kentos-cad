@@ -45,7 +45,7 @@ crate::json_struct!(VertexPoints {
 
 /// Places by the cell of a grid `TOUCH` wide they fall in.
 #[derive(Default)]
-struct Grid {
+pub(crate) struct Grid {
     cells: HashMap<(i64, i64), Vec<usize>>,
 }
 
@@ -54,12 +54,12 @@ impl Grid {
         ((p.x / TOUCH).floor() as i64, (p.y / TOUCH).floor() as i64)
     }
 
-    fn put(&mut self, p: Vec2, item: usize) {
+    pub(crate) fn put(&mut self, p: Vec2, item: usize) {
         self.cells.entry(Self::cell(p)).or_default().push(item);
     }
 
     /// The first item (in the order they were put) within `TOUCH` of `p`.
-    fn near(&self, p: Vec2, at: impl Fn(usize) -> Vec2) -> Option<usize> {
+    pub(crate) fn near(&self, p: Vec2, at: impl Fn(usize) -> Vec2) -> Option<usize> {
         let (cx, cy) = Self::cell(p);
         let mut best: Option<usize> = None;
         for dx in -1..=1 {

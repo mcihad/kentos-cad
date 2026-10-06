@@ -168,6 +168,7 @@ impl ObjectAction {
             Shape::Hatch { .. } => "tarama",
             Shape::Insert { .. } => "blok",
             Shape::Leader { .. } => "kılavuz",
+            Shape::Table { .. } => "tablo",
         }
     }
 

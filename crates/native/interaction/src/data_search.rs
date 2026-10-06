@@ -33,6 +33,7 @@ pub fn kind_name(e: &Entity) -> &'static str {
         Entity::Hatch(_) => "Tarama",
         Entity::Insert(_) => "Blok",
         Entity::Leader(_) => "Kılavuz",
+        Entity::Table(_) => "Tablo",
     }
 }
 
@@ -56,6 +57,16 @@ pub fn record_of(
         Entity::Text(t) => Some(t.text.clone()),
         Entity::Leader(l) => l.text.clone(),
         Entity::Dimension(d) => d.text.clone(),
+        // A table's words, cell by cell, row by row, each on its own line (docs/adr/0184 §8).
+        Entity::Table(t) => Some(
+            t.cells
+                .iter()
+                .flatten()
+                .filter(|w| !w.is_empty())
+                .cloned()
+                .collect::<Vec<_>>()
+                .join("\n"),
+        ),
         _ => None,
     };
     let block = match e {

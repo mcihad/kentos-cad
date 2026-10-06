@@ -72,7 +72,10 @@ use crate::layer::LineType;
 ///    columns' layout, a text's style, typeface, bold, italic and slant, a dimension's style and
 ///    look behind their next option flags; DXF STYLE and DIMSTYLE read as the project's styles,
 ///    the import result's `textStyles` and `dimensionStyles`, written back as records.
-pub const FORMATS_VERSION: u32 = 31;
+/// 32: tables (docs/adr/0184): `.kcad` document schema 22 and the typed columns' `table` kind;
+///    a table written to DXF as an anonymous block and its INSERT, read back as the table; the
+///    formats module's table files (`readTableFile`: CSV, TXT and XLSX rows).
+pub const FORMATS_VERSION: u32 = 32;
 
 // ── Every import ────────────────────────────────────────────────────────
 

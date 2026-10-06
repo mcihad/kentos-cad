@@ -230,7 +230,7 @@ describe.skipIf(!loader)('DXF WASM module', () => {
   });
 
   // Both platforms write the same bytes (crates/shared/formats/tests/dxf_write.rs; scripts/fixtures/dxf_write_reference.py checks them).
-  it.each(['blocks', 'texts', 'leaders', 'dimensions', 'styles'])('writes the %s fixture to its committed bytes, as the native writer does', async (name) => {
+  it.each(['blocks', 'texts', 'leaders', 'dimensions', 'styles', 'tables'])('writes the %s fixture to its committed bytes, as the native writer does', async (name) => {
     const w = await load();
     const out = w.writeDxf(new TextDecoder().decode(fixture(`dxf-write/${name}.input.json`)));
     const bytes = out.takeBytes();

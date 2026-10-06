@@ -208,6 +208,13 @@ pub fn entity(e: &mut Entity, s: Scale) {
             s.points(&mut l.pts);
             l.height = s.apply(l.height);
         }
+        Entity::Table(t) => {
+            s.point(&mut t.p);
+            t.height = s.apply(t.height);
+            for x in t.rows.iter_mut().chain(t.columns.iter_mut()) {
+                *x = s.apply(*x);
+            }
+        }
     }
 }
 

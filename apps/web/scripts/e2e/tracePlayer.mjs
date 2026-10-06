@@ -107,6 +107,11 @@ const NAMED = {
   Delete: { key: 'Delete', code: 'Delete', vk: 46 },
   F3: { key: 'F3', code: 'F3', vk: 114 },
   F8: { key: 'F8', code: 'F8', vk: 119 },
+  // The arrows: Tabloyu düzenle's grid (docs/adr/0184 §5).
+  ArrowUp: { key: 'ArrowUp', code: 'ArrowUp', vk: 38 },
+  ArrowDown: { key: 'ArrowDown', code: 'ArrowDown', vk: 40 },
+  ArrowLeft: { key: 'ArrowLeft', code: 'ArrowLeft', vk: 37 },
+  ArrowRight: { key: 'ArrowRight', code: 'ArrowRight', vk: 39 },
 };
 const LAYOUTS = {
   us: {
@@ -622,7 +627,7 @@ const observe = (mark) =>
     };
     const along = (e, t) => [e.c.x + e.major.x * Math.cos(t) - e.major.y * e.ratio * Math.sin(t), e.c.y + e.major.y * Math.cos(t) + e.major.x * e.ratio * Math.sin(t)];
     const ellipse = (e) => (e.t0 === e.t1 ? [0, 1, 2, 3].map((i) => along(e, (i * Math.PI) / 2)) : [along(e, e.t0), along(e, e.t1)]);
-    const pts = (e) => (e.pts ? e.pts.map((p) => [p.x, p.y]) : e.kind === 'line' ? [[e.a.x, e.a.y], [e.b.x, e.b.y]] : e.kind === 'point' ? [[e.p.x, e.p.y]] : e.kind === 'arc' ? [e.a0, e.a1].map((a) => [e.c.x + e.r * Math.cos(a), e.c.y + e.r * Math.sin(a)]) : e.kind === 'ellipse' ? ellipse(e) : e.kind === 'xline' || e.kind === 'ray' ? [[e.p.x, e.p.y], [e.p.x + e.dir.x, e.p.y + e.dir.y]] : e.kind === 'dimension' ? [e.a, e.b, ...(e.c ? [e.c] : [])].map((p) => [p.x, p.y]) : e.kind === 'insert' ? placed(e) : e.kind === 'text' ? [[e.p.x, e.p.y]] : null);
+    const pts = (e) => (e.pts ? e.pts.map((p) => [p.x, p.y]) : e.kind === 'line' ? [[e.a.x, e.a.y], [e.b.x, e.b.y]] : e.kind === 'point' || e.kind === 'table' ? [[e.p.x, e.p.y]] : e.kind === 'arc' ? [e.a0, e.a1].map((a) => [e.c.x + e.r * Math.cos(a), e.c.y + e.r * Math.sin(a)]) : e.kind === 'ellipse' ? ellipse(e) : e.kind === 'xline' || e.kind === 'ray' ? [[e.p.x, e.p.y], [e.p.x + e.dir.x, e.p.y + e.dir.y]] : e.kind === 'dimension' ? [e.a, e.b, ...(e.c ? [e.c] : [])].map((p) => [p.x, p.y]) : e.kind === 'insert' ? placed(e) : e.kind === 'text' ? [[e.p.x, e.p.y]] : null);
     const shape = (e) => ({
       kind: e.kind,
       pts: pts(e),
@@ -663,6 +668,21 @@ const observe = (mark) =>
       layer: k.doc.layers.get(e.layerId)?.name ?? '',
       // A text's style and face, a dimension's style and look, as the contract writes them (docs/adr/0183).
       face: e.kind === 'text' ? Object.fromEntries(['textStyle', 'font', 'bold', 'italic', 'oblique'].filter((key) => e[key] !== undefined && e[key] !== false).map((key) => [key, e[key]])) : null,
+      // A table's cells and look (docs/adr/0184): its aligns and lines by name, null none; its source's kind.
+      table:
+        e.kind === 'table'
+          ? {
+              cells: e.cells,
+              rows: e.rows,
+              columns: e.columns,
+              merges: e.merges ?? [],
+              aligns: e.aligns ?? null,
+              header: e.header === true,
+              grid: e.grid ?? null,
+              frame: e.frame ?? null,
+              source: e.source?.kind ?? null,
+            }
+          : null,
       look:
         e.kind === 'dimension'
           ? Object.fromEntries(
@@ -737,6 +757,26 @@ const observe = (mark) =>
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
+/** A table's differences from what a step expects (the desktop's `compare_table`). */
+function compareTable(name, have, want) {
+  if (!have) return [`${name}.table: yok, beklenen bir tablo`];
+  const bad = [];
+  const near = (a, b, t) => a.length === b.length && a.every((x, i) => Math.abs(x - b[i]) <= t);
+  if (want.cells !== undefined && !same(have.cells, want.cells)) bad.push(`${name}.table.cells: ${JSON.stringify(have.cells)}, beklenen ${JSON.stringify(want.cells)}`);
+  if (want.rows !== undefined && !near(have.rows, want.rows, 1e-6)) bad.push(`${name}.table.rows: ${JSON.stringify(have.rows)}, beklenen ${JSON.stringify(want.rows)}`);
+  if (want.columns !== undefined && !near(have.columns, want.columns, 1e-6)) bad.push(`${name}.table.columns: ${JSON.stringify(have.columns)}, beklenen ${JSON.stringify(want.columns)}`);
+  if (want.merges !== undefined && !same(have.merges, want.merges)) bad.push(`${name}.table.merges: ${JSON.stringify(have.merges)}, beklenen ${JSON.stringify(want.merges)}`);
+  if (want.aligns !== undefined && !same(have.aligns, want.aligns)) bad.push(`${name}.table.aligns: ${JSON.stringify(have.aligns)}, beklenen ${JSON.stringify(want.aligns)}`);
+  if (want.header !== undefined && have.header !== want.header) bad.push(`${name}.table.header: ${have.header}, beklenen ${want.header}`);
+  if (want.grid !== undefined && have.grid !== want.grid) bad.push(`${name}.table.grid: ${JSON.stringify(have.grid)}, beklenen ${JSON.stringify(want.grid)}`);
+  if (want.frame !== undefined) {
+    const ok = want.frame === null ? have.frame === null : have.frame !== null && Math.abs(have.frame - want.frame) <= 1e-9;
+    if (!ok) bad.push(`${name}.table.frame: ${JSON.stringify(have.frame)}, beklenen ${JSON.stringify(want.frame)}`);
+  }
+  if (want.source !== undefined && have.source !== want.source) bad.push(`${name}.table.source: ${JSON.stringify(have.source)}, beklenen ${JSON.stringify(want.source)}`);
+  return bad;
+}
+
 /** Differences between an object's expected shape and what it is (`newest`, `objects`): `name` prefixes them. */
 function compareShape(name, have, want, t) {
   const bad = [];
@@ -767,6 +807,8 @@ function compareShape(name, have, want, t) {
   if (want.boxWidth !== undefined && !(want.boxWidth === null ? have.boxWidth === null : have.boxWidth !== null && Math.abs(have.boxWidth - want.boxWidth) <= t.clickTolerance))
     bad.push(`${name}.boxWidth: ${JSON.stringify(have.boxWidth)}, beklenen ${JSON.stringify(want.boxWidth)} (±${t.clickTolerance} m)`);
   if (want.runs !== undefined && !same(have.runs, want.runs)) bad.push(`${name}.runs: ${JSON.stringify(have.runs)}, beklenen ${JSON.stringify(want.runs)}`);
+  // A table's cells and look (docs/adr/0184): sizes within 1e-6, the frame within 1e-9, the rest exact.
+  if (want.table !== undefined) bad.push(...compareTable(name, have.table, want.table));
   // A text's style and face, a dimension's style and look (docs/adr/0183), exact, its members in any order.
   const members = (o) => o && JSON.stringify(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
   for (const key of ['face', 'look'])

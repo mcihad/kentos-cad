@@ -29,6 +29,8 @@ pub mod reshape;
 pub mod reshape_by;
 pub mod rubber;
 pub mod split;
+pub mod table;
+pub mod table_edit;
 pub mod stretch;
 pub mod template_members;
 pub mod topology;

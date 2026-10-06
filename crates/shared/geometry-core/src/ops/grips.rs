@@ -28,6 +28,10 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
     match e {
         // An insert's one grip is its insertion point (docs/adr/0144 §3).
         Shape::Point { p, .. } | Shape::Text { p, .. } | Shape::Insert { p, .. } => vec![*p],
+        // Its top left corner, then each column's right end on its top line (docs/adr/0184 §2).
+        Shape::Table { .. } => crate::geom::table::table_geom(e)
+            .map(|t| t.grips())
+            .unwrap_or_default(),
         Shape::Line { a, b } => vec![*a, *b],
         Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
             let polygon = matches!(e, Shape::Polygon { .. });
@@ -266,6 +270,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             runs: runs.clone(),
             face: face.clone(),
         },
+        // Its corner moves it; a column's end on its top line sets the column's width (docs/adr/0184 §2).
+        Shape::Table { .. } => crate::geom::table::table_geom(&e.shape)?.moved_grip(index, p)?,
         // A vertex moves; a segment's middle becomes a new vertex there (docs/adr/0146 §4).
         Shape::Leader {
             pts,

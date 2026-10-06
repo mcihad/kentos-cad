@@ -362,6 +362,99 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
 
 /// An object's expected shape against what it is: `name` (`newest`,
 /// `objects[2]`) begins each difference.
+/// A table's differences from what a step expects (the web's `compareTable`).
+fn compare_table(
+    name: &str,
+    want: &super::format::TableExpect,
+    seen: Option<&super::player::TableSeen>,
+) -> Vec<String> {
+    let Some(seen) = seen else {
+        return vec![format!("{name}.table: yok, beklenen bir tablo")];
+    };
+    let mut bad = Vec::new();
+    let near = |a: &[f64], b: &[f64], tolerance: f64| {
+        a.len() == b.len() && a.iter().zip(b).all(|(x, y)| (x - y).abs() <= tolerance)
+    };
+    if let Some(cells) = &want.cells
+        && seen.cells != *cells
+    {
+        bad.push(format!(
+            "{name}.table.cells: {:?}, beklenen {cells:?}",
+            seen.cells
+        ));
+    }
+    if let Some(rows) = &want.rows
+        && !near(&seen.rows, rows, 1e-6)
+    {
+        bad.push(format!(
+            "{name}.table.rows: {:?}, beklenen {rows:?}",
+            seen.rows
+        ));
+    }
+    if let Some(columns) = &want.columns
+        && !near(&seen.columns, columns, 1e-6)
+    {
+        bad.push(format!(
+            "{name}.table.columns: {:?}, beklenen {columns:?}",
+            seen.columns
+        ));
+    }
+    if let Some(merges) = &want.merges
+        && seen.merges != *merges
+    {
+        bad.push(format!(
+            "{name}.table.merges: {:?}, beklenen {merges:?}",
+            seen.merges
+        ));
+    }
+    if let Some(aligns) = &want.aligns
+        && seen.aligns != *aligns
+    {
+        bad.push(format!(
+            "{name}.table.aligns: {:?}, beklenen {aligns:?}",
+            seen.aligns
+        ));
+    }
+    if let Some(header) = want.header
+        && seen.header != header
+    {
+        bad.push(format!(
+            "{name}.table.header: {}, beklenen {header}",
+            seen.header
+        ));
+    }
+    if let Some(grid) = &want.grid
+        && seen.grid != *grid
+    {
+        bad.push(format!(
+            "{name}.table.grid: {:?}, beklenen {grid:?}",
+            seen.grid
+        ));
+    }
+    if let Some(frame) = want.frame {
+        let same = match (frame, seen.frame) {
+            (None, None) => true,
+            (Some(a), Some(b)) => (a - b).abs() <= 1e-9,
+            _ => false,
+        };
+        if !same {
+            bad.push(format!(
+                "{name}.table.frame: {:?}, beklenen {frame:?}",
+                seen.frame
+            ));
+        }
+    }
+    if let Some(source) = &want.source
+        && seen.source != *source
+    {
+        bad.push(format!(
+            "{name}.table.source: {:?}, beklenen {source:?}",
+            seen.source
+        ));
+    }
+    bad
+}
+
 fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) -> Vec<String> {
     let mut bad = Vec::new();
     let Some(seen) = seen else {
@@ -505,6 +598,10 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
             "{name}.height: {:?}, beklenen {height}",
             seen.height
         ));
+    }
+    // A table's cells and look (docs/adr/0184).
+    if let Some(table) = &want.table {
+        bad.extend(compare_table(name, table, seen.table.as_ref()));
     }
     // A text's style and face, a dimension's style and look (docs/adr/0183), exact.
     if let Some(face) = &want.face

@@ -500,6 +500,19 @@ impl canvas::Program<Message> for Draft {
                 t.mask,
             );
         }
+        // A table's words to come, faint, in its face (docs/adr/0184 §3).
+        for c in &self.preview.cells {
+            crate::labels::cell_ghost(
+                &mut frame,
+                &c.text,
+                self.screen(c.at),
+                (c.height * self.camera.scale) as f32,
+                c.bold,
+                &c.face,
+                self.font,
+                (accent.scale_alpha(0.65), self.halo),
+            );
+        }
         // Short texts beside points: a reference line's start “A” (docs/adr/0057).
         for label in &self.preview.labels {
             let at = self.screen(label.at);

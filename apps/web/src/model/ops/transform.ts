@@ -49,6 +49,9 @@ export const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
   // Its vertices, note, height, turn, arrowhead and mask (docs/adr/0146).
   leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
+  // Its corner, turn, sizes, cells, ranges, alignments, heading, lines, frame, source and face (docs/adr/0184): an
+  // edit without a source detaches it; the store does not carry it, so a transform keeps the object's (`withGeometry`).
+  table: ['p', 'rotation', 'height', 'rows', 'columns', 'cells', 'merges', 'aligns', 'header', 'grid', 'frame', 'source', ...FACE_FIELDS],
 };
 
 /**
@@ -80,7 +83,13 @@ export function withGeometry<E extends Entity | NewEntity>(e: E, g: Geometry): E
     const v = src[key];
     out[key] = key === 'attrs' && v && typeof v === 'object' ? { ...v } : v;
   }
-  for (const key in g) out[key] = g[key];
+  // A table's source, which the store does not carry, stays the object's, where the core writes it: before the face.
+  const source = g.kind === 'table' && !('source' in g) ? src.source : undefined;
+  for (const key in g) {
+    if (source !== undefined && !('source' in out) && (FACE_FIELDS as readonly string[]).includes(key)) out.source = source;
+    out[key] = g[key];
+  }
+  if (source !== undefined && !('source' in out)) out.source = source;
   if ((g.kind === 'polyline' || g.kind === 'polygon') && !('bulges' in g)) out.bulges = undefined;
   if ((g.kind === 'polygon' || g.kind === 'hatch') && !('holes' in g)) out.holes = undefined;
   if ((g.kind === 'polygon' || g.kind === 'polyline' || g.kind === 'point') && !('parts' in g)) out.parts = undefined;

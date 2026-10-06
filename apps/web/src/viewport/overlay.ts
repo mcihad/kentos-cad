@@ -105,6 +105,23 @@ function baselineText(g: CanvasRenderingContext2D, pal: CanvasPalette, s: Vec2, 
 }
 
 /**
+ * A table's cell (docs/adr/0184 §2): its words from where their baseline starts, upright in the table's face and colour,
+ * bold when it is a heading row's; no mask, no halo but the drawing's own.
+ */
+function tableCell(g: CanvasRenderingContext2D, pal: CanvasPalette, s: Vec2, rotation: number, px: number, words: string, face: Face, bold: boolean, color: string): void {
+  g.save();
+  g.translate(s.x, s.y);
+  g.rotate((-rotation * Math.PI) / 180);
+  const lean = leanOf(face);
+  if (lean) g.transform(1, 0, -lean, 1, 0, 0);
+  g.font = faceFont(face, px, pal.drawingFont, bold ? '600' : '400', { bold });
+  g.textAlign = 'left';
+  g.textBaseline = 'alphabetic';
+  haloText(g, words, 0, 0, color, pal.labelHalo);
+  g.restore();
+}
+
+/**
  * A text's mask from `x0` (where it starts) `width` along, a tenth of its height wider all round (docs/adr/0145); a
  * dimension's value's (`along`) wider on its sides only, so that it leaves its dimension line and an arc length's
  * symbol, 0.12h off its box, in view (docs/adr/0147).
@@ -286,6 +303,16 @@ export function drawLabels(
     if (what === LABEL.pieceLine && e.kind === 'insert') {
       const piece = pieces(e.block)?.[spots[i + 6]];
       if (piece?.kind === 'text') paragraphLine(g, pal, cam, piece.text, piece.runs, [spots[i + 7], spots[i + 8]], { x, y }, spots[i + 4], spots[i + 5], piece.widthFactor ?? 1, piece);
+      continue;
+    }
+    // A table's cell: its words in the table's face and colour (docs/adr/0184 §2).
+    if (what === LABEL.cell && e.kind === 'table') {
+      const words = e.cells[spots[i + 5]]?.[spots[i + 6]];
+      if (words) {
+        const color = e.color ?? layers.get(e.layerId)?.style.color;
+        const ink = !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal);
+        tableCell(g, pal, cam.worldToScreen({ x, y }), spots[i + 4], e.height * cam.scale, words, e, spots[i + 7] === 1, ink);
+      }
       continue;
     }
     // A leader's note, as a text (docs/adr/0146 §5).

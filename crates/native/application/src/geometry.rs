@@ -9,7 +9,8 @@ use kentos_contracts::{
     ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
     DimensionStyle, DrawingFont, EllipseEntity, Entity, EntityBase, EntityGeometry, HatchEntity,
     HatchPattern as ContractPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity,
-    LineEntity, PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2 as Point,
+    LineEntity, PathEntity, PointEntity, RingGeometry, SplineEntity, TableAlign, TableEntity,
+    TableGrid, TableSource, TextEntity, Vec2 as Point,
 };
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
@@ -57,6 +58,113 @@ pub fn contract_runs(runs: Option<Vec<Run>>) -> Vec<kentos_contracts::TextRun> {
             color: r.color,
         })
         .collect()
+}
+
+/// A table's source as the core carries it, unread (docs/adr/0184 §5): the
+/// contract's JSON (`kind`, then `objects` or `name` and `sheet`).
+pub fn core_source(source: Option<&TableSource>) -> Option<Json> {
+    let source = source?;
+    let mut fields = vec![("kind".to_owned(), Json::Str(source.kind().to_owned()))];
+    match source {
+        TableSource::File { name, sheet } => {
+            fields.push(("name".to_owned(), Json::Str(name.clone())));
+            if let Some(s) = sheet {
+                fields.push(("sheet".to_owned(), Json::Str(s.clone())));
+            }
+        }
+        _ => fields.push((
+            "objects".to_owned(),
+            Json::Arr(
+                source
+                    .objects()
+                    .iter()
+                    .map(|id| Json::Str(id.to_text()))
+                    .collect(),
+            ),
+        )),
+    }
+    Some(Json::Obj(fields))
+}
+
+/// The source the core carried, as the contract writes it; none for one it cannot read.
+pub fn contract_source(source: Option<Json>) -> Option<TableSource> {
+    let source = source?;
+    let text = |k: &str| match source.get(k) {
+        Json::Str(s) => Some(s.clone()),
+        _ => None,
+    };
+    if text("kind")? == "file" {
+        return Some(TableSource::File {
+            name: text("name")?,
+            sheet: text("sheet"),
+        });
+    }
+    let Json::Arr(ids) = source.get("objects") else {
+        return None;
+    };
+    let objects = ids
+        .iter()
+        .map(|id| match id {
+            Json::Str(s) => kentos_contracts::EntityId::parse(s),
+            _ => None,
+        })
+        .collect::<Option<Vec<_>>>()?;
+    Some(match text("kind")?.as_str() {
+        "coordinates" => TableSource::Coordinates { objects },
+        "areas" => TableSource::Areas { objects },
+        "attributes" => TableSource::Attributes { objects },
+        _ => return None,
+    })
+}
+
+/// A table as the core takes it (docs/adr/0184 §1).
+pub fn core_table(t: &TableEntity) -> Shape {
+    Shape::Table {
+        p: v(&t.p),
+        rotation: t.rotation,
+        height: t.height,
+        rows: t.rows.clone(),
+        columns: t.columns.clone(),
+        cells: t.cells.clone(),
+        merges: (!t.merges.is_empty()).then(|| t.merges.iter().map(core_range).collect()),
+        aligns: t
+            .aligns
+            .as_ref()
+            .map(|a| a.iter().map(|x| x.name().to_owned()).collect()),
+        header: t.header.then_some(true),
+        grid: t.grid.map(|g| g.name().to_owned()),
+        frame: t.frame,
+        source: core_source(t.source.as_ref()),
+        face: core_face(&t.face),
+    }
+}
+
+fn core_range(m: &kentos_contracts::CellRange) -> kentos_geometry_core::entity::CellRange {
+    kentos_geometry_core::entity::CellRange {
+        row: m.row as usize,
+        col: m.col as usize,
+        rows: m.rows as usize,
+        cols: m.cols as usize,
+    }
+}
+
+fn contract_range(m: kentos_geometry_core::entity::CellRange) -> kentos_contracts::CellRange {
+    let n = |x: usize| u32::try_from(x).unwrap_or(u32::MAX);
+    kentos_contracts::CellRange {
+        row: n(m.row),
+        col: n(m.col),
+        rows: n(m.rows),
+        cols: n(m.cols),
+    }
+}
+
+/// A table's alignments and grid as the contract names them: none for a name it does not know.
+fn contract_aligns(aligns: Option<Vec<String>>) -> Option<Vec<TableAlign>> {
+    aligns.map(|a| {
+        a.iter()
+            .map(|n| TableAlign::from_name(n).unwrap_or_default())
+            .collect()
+    })
 }
 
 /// A text's face as the core takes it (docs/adr/0183 §2).
@@ -247,6 +355,7 @@ pub fn shape(entity: &Entity) -> Shape {
             arrow: l.arrow.map(|a| a.name().to_owned()),
             mask: l.mask.then_some(true),
         },
+        Entity::Table(t) => core_table(t),
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,
@@ -610,6 +719,41 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.rotation = rotation;
             e.mask = mask == Some(true);
         }
+        (
+            Entity::Table(e),
+            Shape::Table {
+                p: at,
+                rotation,
+                height,
+                rows,
+                columns,
+                cells,
+                merges,
+                aligns,
+                header,
+                grid,
+                frame,
+                source: _,
+                face: _,
+            },
+        ) => {
+            // Its face and source are the object's own: the core carries them through unchanged.
+            e.p = p(at);
+            e.rotation = rotation;
+            e.height = height;
+            e.rows = rows;
+            e.columns = columns;
+            e.cells = cells;
+            e.merges = merges
+                .unwrap_or_default()
+                .into_iter()
+                .map(contract_range)
+                .collect();
+            e.aligns = contract_aligns(aligns);
+            e.header = header == Some(true);
+            e.grid = grid.as_deref().and_then(TableGrid::from_name);
+            e.frame = frame;
+        }
         _ => return None,
     }
     Some(out)
@@ -826,6 +970,36 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             arrow,
             mask,
         }),
+        EntityGeometry::Table {
+            p,
+            rotation,
+            height,
+            rows,
+            columns,
+            cells,
+            merges,
+            aligns,
+            header,
+            grid,
+            frame,
+            face,
+            source,
+        } => Entity::Table(TableEntity {
+            base,
+            p,
+            rotation,
+            height,
+            rows,
+            columns,
+            cells,
+            merges,
+            aligns,
+            header,
+            grid,
+            frame,
+            face,
+            source,
+        }),
     }
 }
 
@@ -1000,6 +1174,50 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             scale,
             rotation,
             mirror: mirror == Some(true),
+        },
+        // A table's alignment or lines the contract does not name are none of its (docs/adr/0184 §1).
+        Shape::Table {
+            p: at,
+            rotation,
+            height,
+            rows,
+            columns,
+            cells,
+            merges,
+            aligns,
+            header,
+            grid,
+            frame,
+            source,
+            face,
+        } => EntityGeometry::Table {
+            p: p(at),
+            rotation,
+            height,
+            rows,
+            columns,
+            cells,
+            merges: merges
+                .unwrap_or_default()
+                .into_iter()
+                .map(contract_range)
+                .collect(),
+            aligns: match aligns {
+                Some(a) => Some(
+                    a.iter()
+                        .map(|n| TableAlign::from_name(n))
+                        .collect::<Option<Vec<_>>>()?,
+                ),
+                None => None,
+            },
+            header: header == Some(true),
+            grid: match grid {
+                Some(g) => Some(TableGrid::from_name(&g)?),
+                None => None,
+            },
+            frame,
+            face: contract_face(face),
+            source: contract_source(source),
         },
     })
 }

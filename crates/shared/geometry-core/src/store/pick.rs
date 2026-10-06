@@ -280,6 +280,24 @@ pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
             }
             return d;
         }
+        // Anywhere inside it counts as a hit, as a text's body (docs/adr/0184 §2).
+        Shape::Table { .. } => {
+            let b = crate::entity::entity_vertices(e);
+            if b.len() == 4 {
+                if point_in_polygon(p, &b) {
+                    return 0.0;
+                }
+                let mut d = f64::INFINITY;
+                for i in 0..4 {
+                    let side = Edge::Seg {
+                        a: b[i],
+                        b: b[(i + 1) % 4],
+                    };
+                    d = js_min(d, closest_on_edge(&side, p).d);
+                }
+                return d;
+            }
+        }
         // Its note's body counts as a text's; its line and landing as edges (docs/adr/0146 §4).
         Shape::Leader { .. } => {
             if let Some(b) = note_place(e).map(|t| t.outline(font)) {

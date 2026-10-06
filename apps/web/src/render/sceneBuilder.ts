@@ -141,6 +141,14 @@ export function buildSceneLayer(id: string, entities: readonly Entity[], style: 
       case 'leader':
         if (g?.cls === 'mixed') leaderLines(b, g, origin, fills, opts);
         break;
+      // Its lines, and its frame's band filled solid (docs/adr/0184 §2).
+      case 'table':
+        if (g?.cls === 'line') for (const p of g.paths) b.lines.path(p.pts, origin, p.closed);
+        else if (g?.cls === 'mixed') {
+          for (const p of g.paths) b.lines.path(p.pts, origin, p.closed);
+          for (const r of g.rings) fills.add(opts.overrideFill ? b.fill : b.solid, [r]);
+        }
+        break;
       default:
         // Lines, paths, curves, construction lines (clipped) and dimensions (their layout lines).
         if (g?.cls === 'line') for (const p of g.paths) b.lines.path(p.pts, origin, p.closed);

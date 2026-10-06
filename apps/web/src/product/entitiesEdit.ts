@@ -1,3 +1,4 @@
+import { tableProblem, type TableShape } from '../model/tables';
 import type { CommandWarning } from '../contracts/generated/CommandWarning';
 import type { EditOperation } from '../contracts/generated/EditOperation';
 import type { EntitiesEdit } from '../contracts/generated/EntitiesEdit';
@@ -87,6 +88,9 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   holeFill: 'Deliği doldur',
   textStyle: 'Yazı stili',
   dimensionStyle: 'Ölçü stili',
+  // Tabloyu düzenle and Tabloyu güncelle (docs/adr/0184 §6).
+  table: 'Tablo',
+  tableUpdate: 'Tabloyu güncelle',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
@@ -106,6 +110,7 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   hatch: ['ring', 'holes', 'pattern'],
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
   leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
+  table: ['p', 'rotation', 'height', 'rows', 'columns', 'cells', 'merges', 'aligns', 'header', 'grid', 'frame', ...FACE_FIELDS, 'source'],
 };
 
 interface Checked {
@@ -145,6 +150,14 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
     if (out.mask !== true) delete out.mask;
     if (out.arrow === null) delete out.arrow;
     if (out.text === null) delete out.text;
+  }
+  // A table's (docs/adr/0184 §1): no ranges, no heading, all lines, a line for a frame, left aligned, no source;
+  // its face's as a text's; a null is no value.
+  if (g.kind === 'table') {
+    if (Array.isArray(out.merges) && !out.merges.length) delete out.merges;
+    if (out.header !== true) delete out.header;
+    for (const key of ['grid', 'frame', 'aligns', 'source']) if (out[key] === null) delete out[key];
+    for (const key of FACE_FIELDS) if (out[key] === null || out[key] === false) delete out[key];
   }
   // And a dimension's mask (docs/adr/0147 §1); a null elevation is no value.
   if (g.kind === 'dimension') {
@@ -323,8 +336,13 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
     const problem = paragraphProblem(g.text, g);
     if (problem) return failed(error('invalid_paragraph', problem[1], at(`.${problem[0]}`)));
   }
-  // A text's face and a dimension's look (docs/adr/0183 §9).
-  const style = g.kind === 'text' ? faceProblem(g) : g.kind === 'dimension' ? lookProblem(g) : null;
+  // A table's rows, columns, cells, merged ranges and source (docs/adr/0184 §6).
+  if (g.kind === 'table') {
+    const problem = tableProblem(g as unknown as TableShape);
+    if (problem) return failed(error('invalid_table', problem[1], at(`.${problem[0]}`)));
+  }
+  // A text's face and a dimension's look (docs/adr/0183 §9); a table's face as a text's.
+  const style = g.kind === 'text' || g.kind === 'table' ? faceProblem(g) : g.kind === 'dimension' ? lookProblem(g) : null;
   if (style) return failed(error('invalid_style', style[1], at(`.${style[0]}`)));
   return null;
 }
@@ -337,7 +355,7 @@ export function checkStyles(doc: CadDocument, geometries: readonly (EntityGeomet
   const settings = doc.settings;
   for (const [i, g] of geometries.entries()) {
     const [id, known, what, field] =
-      g?.kind === 'text' && g.textStyle !== undefined
+      (g?.kind === 'text' || g?.kind === 'table') && g.textStyle !== undefined
         ? [g.textStyle, settings.textStyle(g.textStyle) !== null, 'yazı stili', 'textStyle']
         : g?.kind === 'dimension' && g.dimStyle !== undefined
           ? [g.dimStyle, settings.dimensionStyle(g.dimStyle) !== null, 'ölçü stili', 'dimStyle']
@@ -458,6 +476,13 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
     const name = doc.layers.get(layerId)?.name ?? layerId;
     return failed(error('layer_locked', `“${name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.`, `changes[${i}].${named(c)[1]}`));
   }
+  // Tabloyu düzenle and Tabloyu güncelle write tables over tables (docs/adr/0184 §6).
+  if (input.operation === 'table' || input.operation === 'tableUpdate')
+    for (const [i, c] of input.changes.entries())
+      if (!(c.kind === 'update' && c.geometry.kind === 'table' && found[i].kind === 'table'))
+        return failed(
+          error('not_a_table', 'Tablonun düzenlemesi yalnız tabloları değiştirir: her değişiklik bir tablonun yeni hâli olmalı (update, tablo geometrisi).', `changes[${i}]`),
+        );
   // A new object's own layer: known, a layer, not locked (a block's object exploded, docs/adr/0144).
   for (const [i, c] of input.changes.entries()) {
     if (c.kind !== 'add' || c.layerId === undefined) continue;

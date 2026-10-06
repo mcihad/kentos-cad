@@ -10,9 +10,9 @@
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
-    AreaPart, BlockId, DimensionStyle, DocumentSnapshotV2, Entity, EntityId, HatchPattern,
-    MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PointPart, RingGeometry, TextRun, TextScript, Vec2,
-    label_scale_ok, width_factor_ok,
+    AreaPart, BlockId, CellRange, DimensionStyle, DocumentSnapshotV2, Entity, EntityId,
+    HatchPattern, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PointPart, RingGeometry, TableAlign,
+    TableSource, TextRun, TextScript, Vec2, label_scale_ok, width_factor_ok,
 };
 
 use super::Encoder;
@@ -51,6 +51,14 @@ pub(super) enum Val<'d> {
     Runs(&'d [TextRun]),
     /// A whole number (a dimension's decimals, docs/adr/0183).
     Uint(u64),
+    /// A table's cells, row by row (§6.6, docs/adr/0184).
+    Cells(&'d [Vec<String>]),
+    /// A table's merged ranges.
+    Merges(&'d [CellRange]),
+    /// A table's columns' alignment.
+    Aligns(&'d [TableAlign]),
+    /// Where a table's rows came from.
+    Source(&'d TableSource),
 }
 
 impl<'d> Encoder<'d> {
@@ -453,6 +461,82 @@ impl<'d> Encoder<'d> {
                     f.push(("mirror", Val::Bool(true)));
                 }
             }
+            Entity::Table(e) => {
+                let refuse = |this: &mut Self, field: &'static str, words: &str| {
+                    this.path.push(Seg::Name(kind));
+                    this.path.push(Seg::Name(field));
+                    Err(this.fail(Code::BadValue, words))
+                };
+                // Only the drawing's: a block definition holds no table (docs/adr/0184 §1).
+                if uid.is_none() {
+                    return refuse(self, "rows", "blok tanımında tablo olamaz");
+                }
+                // A size that is not finite meets the float's own refusal (`non_finite`), with its place.
+                if let Some((field, words)) = e.shape().problem() {
+                    let finite = match field {
+                        "height" => e.height.is_finite(),
+                        "rows" => e.rows.iter().all(|x| x.is_finite()),
+                        "columns" => e.columns.iter().all(|x| x.is_finite()),
+                        "frame" => e.frame.is_none_or(f64::is_finite),
+                        _ => true,
+                    };
+                    if finite {
+                        return refuse(self, field, &words);
+                    }
+                }
+                if let Some((field, words)) = e.face.problem()
+                    && (field != "oblique" || e.face.oblique.is_none_or(f64::is_finite))
+                {
+                    return refuse(self, field, &words);
+                }
+                f.push(("p", Val::Point(&e.p)));
+                f.push(("rotation", Val::Float(e.rotation)));
+                f.push(("height", Val::Float(e.height)));
+                f.push(("rows", Val::Floats(&e.rows)));
+                f.push(("columns", Val::Floats(&e.columns)));
+                f.push(("cells", Val::Cells(&e.cells)));
+                if !e.merges.is_empty() {
+                    f.push(("merges", Val::Merges(&e.merges)));
+                }
+                if let Some(a) = &e.aligns {
+                    f.push(("aligns", Val::Aligns(a)));
+                }
+                if e.header {
+                    f.push(("header", Val::Bool(true)));
+                }
+                if let Some(g) = e.grid {
+                    f.push(("grid", Val::Name(g.name())));
+                }
+                if let Some(w) = e.frame {
+                    f.push(("frame", Val::Float(w)));
+                }
+                let face = &e.face;
+                if let Some(id) = &face.text_style {
+                    f.push(("textStyle", Val::Text(id)));
+                }
+                if let Some(font) = face.font {
+                    f.push(("font", Val::Name(font.id())));
+                }
+                if face.bold {
+                    f.push(("bold", Val::Bool(true)));
+                }
+                if face.italic {
+                    f.push(("italic", Val::Bool(true)));
+                }
+                if let Some(o) = face.oblique {
+                    f.push(("oblique", Val::Float(o)));
+                }
+                if let Some(source) = &e.source {
+                    if source.objects().iter().any(EntityId::is_nil) {
+                        return refuse(
+                            self,
+                            "source",
+                            "tablonun kaynağındaki nesnenin kimliği boş olamaz",
+                        );
+                    }
+                    f.push(("source", Val::Source(source)));
+                }
+            }
             Entity::Leader(e) => {
                 let refuse = |this: &mut Self, field: &'static str, words: &str| {
                     this.path.push(Seg::Name(kind));
@@ -691,6 +775,85 @@ impl<'d> Encoder<'d> {
                         e.close();
                         Ok(())
                     })?;
+                }
+                self.close();
+                Ok(())
+            }
+            Val::Cells(rows) => {
+                self.open(rows.len(), false)?;
+                for (i, row) in rows.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        e.open(row.len(), false)?;
+                        for (j, words) in row.iter().enumerate() {
+                            e.at(Seg::Index(j), |e| e.text(words))?;
+                        }
+                        e.close();
+                        Ok(())
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
+            Val::Merges(ranges) => {
+                self.open(ranges.len(), false)?;
+                for (i, m) in ranges.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        e.open(4, true)?;
+                        // col (3), row (3), cols (4), rows (4).
+                        for (k, v) in [
+                            ("col", m.col),
+                            ("row", m.row),
+                            ("cols", m.cols),
+                            ("rows", m.rows),
+                        ] {
+                            e.key(k);
+                            e.w.uint(u64::from(v));
+                        }
+                        e.close();
+                        Ok(())
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
+            Val::Aligns(list) => {
+                self.open(list.len(), false)?;
+                for a in list {
+                    self.w.text(a.name());
+                }
+                self.close();
+                Ok(())
+            }
+            Val::Source(source) => {
+                match source {
+                    TableSource::File { name, sheet } => {
+                        self.open(2 + usize::from(sheet.is_some()), true)?;
+                        // kind (4), name (4), sheet (5).
+                        self.key("kind");
+                        self.w.text(source.kind());
+                        self.key("name");
+                        self.at(Seg::Name("name"), |e| e.text(name))?;
+                        if let Some(s) = sheet {
+                            self.key("sheet");
+                            self.at(Seg::Name("sheet"), |e| e.text(s))?;
+                        }
+                    }
+                    _ => {
+                        self.open(2, true)?;
+                        // kind (4), objects (7).
+                        self.key("kind");
+                        self.w.text(source.kind());
+                        self.key("objects");
+                        let ids = source.objects();
+                        self.at(Seg::Name("objects"), |e| {
+                            e.open(ids.len(), false)?;
+                            for (i, id) in ids.iter().enumerate() {
+                                e.at(Seg::Index(i), |e| e.id(&id.0))?;
+                            }
+                            e.close();
+                            Ok(())
+                        })?;
+                    }
                 }
                 self.close();
                 Ok(())

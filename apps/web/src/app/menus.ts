@@ -156,7 +156,7 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'draw',
     label: 'Çizim',
-    items: ['@tools:draw', '@tools:annotate', '@tools:block', sec('Blok'), 'block.panel', 'block.attributes', 'block.purge'],
+    items: ['@tools:draw', '@tools:annotate', '@tools:block', sec('Blok'), 'block.panel', 'block.attributes', 'block.purge', sec('Tablo'), 'table.insert', 'table.edit', 'table.update'],
   },
   {
     id: 'modify',

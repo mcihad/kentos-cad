@@ -230,6 +230,8 @@
       "where": "apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)",
       "reason": "Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır."
     },
-    "apps/web/src/ui/svgedit/svgTrace.ts#openTraceDialog": { "desktop": "implemented", "where": "apps/desktop/src/style/svgedit/files/trace.rs (ADR 0095)" }
+    "apps/web/src/ui/svgedit/svgTrace.ts#openTraceDialog": { "desktop": "implemented", "where": "apps/desktop/src/style/svgedit/files/trace.rs (ADR 0095)" },
+    "apps/web/src/ui/table/TableEditor.ts#openTableEditor": { "desktop": "implemented", "where": "apps/desktop/src/tables/editor.rs (ADR 0184 §5)" },
+    "apps/web/src/ui/table/TableInsertDialog.ts#openTableInsert": { "desktop": "implemented", "where": "apps/desktop/src/tables/insert.rs (ADR 0184 §3, §4)" }
   }
 }

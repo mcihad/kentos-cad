@@ -689,6 +689,15 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             t.rotation = ((n % 360.0) + 360.0) % 360.0;
             true
         }
+        // A table's text height and turn (docs/adr/0184 §6): its cells keep their sizes.
+        (Field::TextHeight(_), Entity::Table(t)) if finite && n > 0.0 => {
+            t.height = f.to_metres(n);
+            true
+        }
+        (Field::TextAngle(_), Entity::Table(t)) if finite => {
+            t.rotation = ((n % 360.0) + 360.0) % 360.0;
+            true
+        }
         (Field::InsertX(_), Entity::Insert(i)) if finite => {
             i.p.x = f.to_metres(n);
             true

@@ -178,6 +178,26 @@ export const OBJECT_FIELDS: Record<string, ReadonlySet<string>> = Object.fromEnt
     hatch: ['ring', 'holes', 'pattern'],
     insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
     leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
+    // docs/adr/0184: its cells, sizes, ranges, alignments, heading, lines, frame, face and source.
+    table: [
+      'p',
+      'rotation',
+      'height',
+      'rows',
+      'columns',
+      'cells',
+      'merges',
+      'aligns',
+      'header',
+      'grid',
+      'frame',
+      'textStyle',
+      'font',
+      'bold',
+      'italic',
+      'oblique',
+      'source',
+    ],
   }).map(([k, f]) => [k, new Set([...COMMON, ...f])]),
 );
 

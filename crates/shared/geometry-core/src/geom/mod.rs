@@ -19,4 +19,5 @@ pub mod region;
 pub mod shapes;
 pub mod spline;
 pub mod survey;
+pub mod table;
 pub mod tangent_circle;

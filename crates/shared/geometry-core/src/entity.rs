@@ -82,6 +82,32 @@ pub struct PointPart {
 
 crate::json_struct!(PointPart { p, z });
 
+/// A table's merged range: `rows` × `cols` cells from row `row`, column `col` (docs/adr/0184 §1).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CellRange {
+    pub row: usize,
+    pub col: usize,
+    pub rows: usize,
+    pub cols: usize,
+}
+
+crate::json_struct!(CellRange {
+    row,
+    col,
+    rows,
+    cols
+});
+
+impl CellRange {
+    /// Whether the cell at `row`, `col` is in it.
+    pub fn holds(&self, row: usize, col: usize) -> bool {
+        row >= self.row
+            && row < self.row + self.rows
+            && col >= self.col
+            && col < self.col + self.cols
+    }
+}
+
 impl Part {
     /// The part as a one-part area.
     pub fn shape(&self) -> Shape {
@@ -226,6 +252,29 @@ pub enum Shape {
         /// `Some(true)`: the note's box is filled with the drawing area's colour first.
         mask: Option<bool>,
     },
+    /// A table (docs/adr/0184): rows and columns of one-line cells hanging
+    /// from `p`, its top left corner, turned `rotation` degrees; its rows'
+    /// heights and columns' widths, its cells' words row by row, its merged
+    /// ranges, its columns' alignments (`left`, `center`, `right`), its
+    /// heading row, which lines it draws (`outer`, `rows`, `none`; none: all)
+    /// and its cells' face; its source (docs/adr/0184 §5) as it is written,
+    /// which the core carries through and does not read.
+    Table {
+        p: Vec2,
+        rotation: f64,
+        height: f64,
+        rows: Vec<f64>,
+        columns: Vec<f64>,
+        cells: Vec<Vec<String>>,
+        merges: Option<Vec<CellRange>>,
+        aligns: Option<Vec<String>>,
+        header: Option<bool>,
+        grid: Option<String>,
+        /// Its frame's width, metres: the outline drawn as a band (docs/adr/0184 §2).
+        frame: Option<f64>,
+        source: Option<crate::api::json::Json>,
+        face: crate::text::face::Face,
+    },
 }
 
 crate::json_tagged!(Shape, "kind",
@@ -244,6 +293,7 @@ crate::json_tagged!(Shape, "kind",
     Hatch => "hatch" { ring, holes, pattern },
     Insert => "insert" { block, p, scale, rotation, mirror; attrs },
     Leader => "leader" { pts, text, height, rotation, arrow, mask },
+    Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
 );
 
 /// An entity: its geometry and every other field, untouched and in order.
@@ -424,6 +474,10 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         }
         Shape::Xline { p, .. } | Shape::Ray { p, .. } => vec![*p],
         Shape::Spline { pts, .. } => pts.clone(),
+        // Its corners, its top left first (docs/adr/0184 §2).
+        Shape::Table { .. } => crate::geom::table::table_geom(e)
+            .map(|t| t.outline().to_vec())
+            .unwrap_or_default(),
         Shape::Dimension { a, b, c, .. } => match c {
             Some(c) => vec![*a, *b, *c],
             None => vec![*a, *b],
@@ -499,6 +553,14 @@ pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
             Some(l) => leader::drawn_path(pts, &l),
             None => pts.clone(),
         },
+        // Its outline, closed (docs/adr/0184 §2).
+        Shape::Table { .. } => {
+            let mut ring = entity_vertices(e);
+            if let Some(&first) = ring.first() {
+                ring.push(first);
+            }
+            ring
+        }
         _ => entity_vertices(e),
     }
 }
@@ -1210,7 +1272,8 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
         | Shape::Text { p, .. }
         | Shape::Xline { p, .. }
         | Shape::Ray { p, .. }
-        | Shape::Insert { p, .. } => *p,
+        | Shape::Insert { p, .. }
+        | Shape::Table { p, .. } => *p,
     })
 }
 

@@ -10,7 +10,7 @@ import {
   type DimensionStyleDef,
   type TextStyleDef,
 } from '../../model/annotationStyles';
-import type { DimensionEntity, TextEntity } from '../../model/entities';
+import type { DimensionEntity, TableEntity, TextEntity } from '../../model/entities';
 import { stylesShown } from '../../tools/styleOption';
 import type { MenuItem } from '../widgets/PopupMenu';
 import type { PropRow } from '../widgets/PropertyGrid';
@@ -45,8 +45,11 @@ function row<S extends { id: string; name: string }>(
   return { label, value, editor: locked ? undefined : { type: 'select', display: () => ({ text: value }), items } };
 }
 
-/** A text's Yazı stili row; none outside a CAD project. */
-export function textStyleRows(ctx: AppContext, texts: readonly TextEntity[], locked: boolean): PropRow[] {
+/**
+ * A text's or a table's Yazı stili row (a table's cells are in its face, docs/adr/0184 §6); none outside a CAD project.
+ * A table takes the style's face and fixed height, not its width factor.
+ */
+export function textStyleRows(ctx: AppContext, texts: readonly (TextEntity | TableEntity)[], locked: boolean): PropRow[] {
   if (!texts.length || !stylesShown(ctx)) return [];
   const settings = ctx.doc.settings;
   return [
@@ -57,8 +60,10 @@ export function textStyleRows(ctx: AppContext, texts: readonly TextEntity[], loc
         texts
           .filter((t) => (style ? t.textStyle !== style.id : t.textStyle !== undefined || Object.keys(faceOfText(t)).length > 0))
           .map((t) => {
-            const look = applyTextStyle(style, { ...faceOfText(t), ...(t.widthFactor !== undefined && { widthFactor: t.widthFactor }), height: t.height }, scale);
-            return { e: t, patch: patchOf([...FACE_FIELDS, 'widthFactor', 'height'], look as Record<string, unknown>) };
+            const width = t.kind === 'text' && t.widthFactor !== undefined ? { widthFactor: t.widthFactor } : {};
+            const look = applyTextStyle(style, { ...faceOfText(t), ...width, height: t.height }, scale);
+            const fields = t.kind === 'text' ? [...FACE_FIELDS, 'widthFactor', 'height'] : [...FACE_FIELDS, 'height'];
+            return { e: t, patch: patchOf(fields, look as Record<string, unknown>) };
           }),
       );
     }),

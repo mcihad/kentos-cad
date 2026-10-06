@@ -526,6 +526,31 @@ def path_fields(holes):
     return table
 
 
+# A table's columns' alignments and lines (schema 22, docs/adr/0184): all lines is the field's absence, no value.
+TABLE_ALIGNS = ("left", "center", "right")
+TABLE_GRIDS = ("outer", "rows", "none")
+
+
+def table_source(src):
+    """Where a table's rows came from (schema 22): a schedule's kind and its objects' persistent ids, or a file's name
+    and sheet."""
+    if src["kind"] == "file":
+        return cmap(fields(src, {"kind": (text, True), "name": (text, True), "sheet": (text, False)}, "kaynak"))
+    assert src["objects"], "kaynağın nesnesi olmalı"
+    return cmap(fields(src, {"kind": (enum(("coordinates", "areas", "attributes")), True), "objects": (lambda os: array([blob(uid_bytes(u)) for u in os]), True)}, "kaynak"))
+
+
+def table_shape(e):
+    """The contract's table rule, as far as an example needs it held (docs/adr/0184 §1)."""
+    n, m = len(e["rows"]), len(e["columns"])
+    assert 0 < n and 0 < m and len(e["cells"]) == n and all(len(r) == m for r in e["cells"]), "hücreler satır ve sütun sayısı kadar"
+    assert all(not any(ord(c) < 32 or 0x7F <= ord(c) <= 0x9F for c in w) for r in e["cells"] for w in r), "hücre tek satır"
+    assert e.get("merges", [None]), "boş birleşik alan listesi yazılmaz"
+    assert len(e.get("aligns", e["columns"])) == m, "her sütunun hizası"
+    if "frame" in e:
+        assert 0 < 2 * e["frame"] < min(sum(e["columns"]), sum(e["rows"])), "çerçeve tablonun içinde"
+
+
 KINDS = {
     # Schema 17 (docs/adr/0174): a multi-point object's points past its first.
     "point": {"p": (point, True), "z": (f64, False), "parts": (lambda ps: array([point_part(pp) for pp in ps]), False)},
@@ -597,6 +622,27 @@ KINDS = {
     },
     # Schema 6 (docs/adr/0144): the definition's id; `mirror` only when true.
     "insert": {"block": (lambda u: blob(uid_bytes(u)), True), "p": (point, True), "scale": (f64, True), "rotation": (f64, True), "mirror": (lambda b: boolean(b) if b is True else None, False)},
+    # Schema 22 (docs/adr/0184): one-line cells row by row, merged ranges, alignments, a heading row only when true, lines
+    # by name, a frame's width, a text's face, a source; only in the drawing.
+    "table": {
+        "p": (point, True),
+        "rotation": (f64, True),
+        "height": (f64, True),
+        "rows": (floats, True),
+        "columns": (floats, True),
+        "cells": (lambda rs: array([array([text(w) for w in r]) for r in rs]), True),
+        "merges": (lambda ms: array([cmap({k: uint(g[k]) for k in ("row", "col", "rows", "cols")}) for g in ms]), False),
+        "aligns": (lambda a: array([enum(TABLE_ALIGNS)(x) for x in a]), False),
+        "header": (lambda b: boolean(b) if b is True else None, False),
+        "grid": (enum(TABLE_GRIDS), False),
+        "frame": (f64, False),
+        "textStyle": (text, False),
+        "font": (enum(DRAWING_FONTS), False),
+        "bold": (lambda b: boolean(b) if b is True else None, False),
+        "italic": (lambda b: boolean(b) if b is True else None, False),
+        "oblique": (f64, False),
+        "source": (table_source, False),
+    },
     # Schema 8 (docs/adr/0146): two vertices or more, a note only when there is one, an arrowhead by name, `mask` only when true.
     "leader": {
         "pts": (points, True),
@@ -624,7 +670,11 @@ def entity(e, uid, index):
         "lineWeight": (f64, False),
         **KINDS[kind],
     }
+    if kind == "table":
+        assert uid is not None, "blok tanımında tablo olamaz"
+        table_shape(e)
     body = fields({k: v for k, v in e.items() if k not in ("kind", "id")}, table, f"nesne {index} ({kind})")
+    assert body.get("header", True) is not None, f"nesne {index}: header yalnız true yazılır"
     assert body.get("mirror", True) is not None, f"nesne {index}: mirror yalnız true yazılır"
     assert body.get("mask", True) is not None, f"nesne {index}: mask yalnız true yazılır"
     if uid is not None:
@@ -682,7 +732,7 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 21 with a text or a dimension style or a text's face or a dimension's look,
+    """The oldest schema that holds the drawing: 22 with a table, only in the drawing (docs/adr/0184), 21 with a text or a dimension style or a text's face or a dimension's look,
     in the drawing or a block definition (docs/adr/0183), 20 with a multi-line text's box, line spacing or letter formats, in the
     drawing or a block definition (docs/adr/0182 §1), 19 with layer states (docs/adr/0177 §4), 18 with a text that writes an
     object's label (docs/adr/0175 §4), 17
@@ -714,6 +764,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
             (e["kind"] == "text" and any(k in e for k in face)) or (e["kind"] == "dimension" and any(k in e for k in look)) for e in es
         )
 
+    if any(e["kind"] == "table" for e in entities):
+        return 22
     if settings and (settings.get("textStyles") or settings.get("dimensionStyles")):
         return 21
     if styled(entities) or any(styled(b["entities"]) for b in blocks or []):
@@ -947,7 +999,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-22.kcad"] = container(root(cmap(parts), version=b"\x16"))
+    files["schema-version-23.kcad"] = container(root(cmap(parts), version=b"\x17"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1134,6 +1186,30 @@ def broken(minimal_content, minimal_file):
     files["style-table-height-zero.kcad"] = with_styles(21, dimensionStyles=array([dimension_style(height=f64(0.0))]))
     files["style-table-ratio-too-big.kcad"] = with_styles(21, dimensionStyles=array([dimension_style(textGap=f64(400.0))]))
     files["style-table-unknown-field.kcad"] = with_styles(21, textStyles=array([text_style(color=text("red"))]))
+    # A table is schema 22's (docs/adr/0184): in schema 21 an unknown kind; only in the drawing; its rows, columns and
+    # cells as many as each other, a cell of one line, a merged range inside it and apart from the others with only its
+    # top left cell's words, a heading row and merged ranges written only when there are, a frame inside it, lines by
+    # name (all: no field), a source naming objects or a file.
+    def table_of(**extra):
+        cells = array([array([text("Ad"), text("Alan")]), array([text("7"), text("600.00")])])
+        body = {**common, "p": point(one["p"]), "rotation": f64(0.0), "height": f64(1.25), "rows": floats([2.5, 2.5]), "columns": floats([6.0, 8.0]), "cells": cells, **extra}
+        return cmap({"table": cmap(body)})
+
+    one_line = lambda words: array([array([text("Ad"), text("Alan")]), array([text(words), text("600.00")])])  # noqa: E731
+    files["table-in-schema-21.kcad"] = in_schema(21, table_of())
+    files["table-in-block.kcad"] = with_blocks([block(1, "Çizelge", [cmap({"table": cmap({"attrs": cmap({}), "layerId": text("0"), "p": point({"x": 0.0, "y": 0.0}), "rotation": f64(0.0), "height": f64(1.25), "rows": floats([2.5]), "columns": floats([6.0]), "cells": array([array([text("A")])])})})])], version=22)
+    files["table-cells-short.kcad"] = in_schema(22, table_of(cells=array([array([text("Ad"), text("Alan")])])))
+    files["table-cell-line-break.kcad"] = in_schema(22, table_of(cells=one_line("7\n8")))
+    files["table-merge-outside.kcad"] = in_schema(22, table_of(merges=array([cmap({"row": uint(1), "col": uint(1), "rows": uint(2), "cols": uint(1)})])))
+    files["table-merge-hides-words.kcad"] = in_schema(22, table_of(merges=array([cmap({"row": uint(0), "col": uint(0), "rows": uint(1), "cols": uint(2)})])))
+    files["table-merges-empty.kcad"] = in_schema(22, table_of(merges=array([])))
+    files["table-header-false.kcad"] = in_schema(22, table_of(header=boolean(False)))
+    files["table-grid-all.kcad"] = in_schema(22, table_of(grid=text("all")))
+    files["table-frame-too-wide.kcad"] = in_schema(22, table_of(frame=f64(2.5)))
+    files["table-aligns-short.kcad"] = in_schema(22, table_of(aligns=array([text("left")])))
+    files["table-source-nil.kcad"] = in_schema(22, table_of(source=cmap({"kind": text("areas"), "objects": array([blob(bytes(16))])})))
+    files["table-source-file-objects.kcad"] = in_schema(22, table_of(source=cmap({"kind": text("file"), "name": text("a.csv"), "objects": array([blob(uid_bytes(m["uids"][0]))])})))
+    files["table-bold-without-font.kcad"] = in_schema(22, table_of(bold=boolean(True)))
     files["attribute-width-factor-negative.kcad"] = with_blocks([block(1, "Rögar", attributes=array([cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "height": f64(0.5), "rotation": f64(0.0), "widthFactor": f64(-1.0)})]))], version=7)
     # A leader is schema 8's (docs/adr/0146): in schema 7 an unknown kind; two vertices or more, a positive height,
     # a note that is not empty, an arrowhead by one of its names (the filled arrow has none), `mask` only when true.
@@ -1347,6 +1423,7 @@ def build():
     out["layer-states.kcad"] = container(document(load("layer-states.json")))
     out["paragraphs.kcad"] = container(document(load("paragraphs.json")))
     out["styles.kcad"] = container(document(load("styles.json")))
+    out["tables.kcad"] = container(document(load("tables.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

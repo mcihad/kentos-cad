@@ -907,6 +907,8 @@ pub enum Entity {
     Insert(InsertEntity),
     /// An arrow with a note (docs/adr/0146).
     Leader(LeaderEntity),
+    /// Rows and columns of cells (docs/adr/0184).
+    Table(crate::TableEntity),
 }
 
 impl Entity {
@@ -940,6 +942,7 @@ impl Entity {
             Entity::Hatch(e) => &e.base,
             Entity::Insert(e) => &e.base,
             Entity::Leader(e) => &e.base,
+            Entity::Table(e) => &e.base,
         }
     }
 
@@ -960,6 +963,7 @@ impl Entity {
             Entity::Hatch(e) => &mut e.base,
             Entity::Insert(e) => &mut e.base,
             Entity::Leader(e) => &mut e.base,
+            Entity::Table(e) => &mut e.base,
         }
     }
 
@@ -981,6 +985,7 @@ impl Entity {
             Entity::Hatch(_) => "hatch",
             Entity::Insert(_) => "insert",
             Entity::Leader(_) => "leader",
+            Entity::Table(_) => "table",
         }
     }
 }

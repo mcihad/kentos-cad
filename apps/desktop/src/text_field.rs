@@ -105,6 +105,12 @@ impl App {
         let Some(entity) = doc.model.get(slot) else {
             return;
         };
+        // A table opens in Tabloyu düzenle (tables/editor.rs, docs/adr/0184 §5).
+        if matches!(entity, Entity::Table(_)) {
+            self.last_click = None;
+            let _ = self.open_table_editor(slot);
+            return;
+        }
         if !matches!(
             entity,
             Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_)

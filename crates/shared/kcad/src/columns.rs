@@ -43,6 +43,7 @@
 //! | hatch | n, pattern type; h if holes, then k per hole | ring (2n), pattern angle, spacing, per hole: pts (2k) | |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation | text if any |
+//! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet |
 //!
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
 //! line weight (docs/adr/0139); a
@@ -57,7 +58,9 @@
 //! beyond, text gap, centred (no value), decimals, unit, prefix, suffix, font
 //! (docs/adr/0183);
 //! hatch: holes; insert: mirror; leader: text, arrow, mask (no value;
-//! docs/adr/0146)). A
+//! docs/adr/0146); table: merges, aligns, header (no value), grid, text
+//! style, font, bold (no value), italic (no value), oblique, source, frame
+//! (docs/adr/0184)). A
 //! hole's flags: 1 bulges, 2 elevations; a part's: 1 bulges, 2 elevations, 4
 //! holes. Dimension styles and hatch pattern types are numbered in the
 //! contract's order.
@@ -87,14 +90,14 @@ use kentos_contracts::{
     DimensionEntity, DimensionLook, DimensionStyle, DimensionTextPlace, DrawingFont, DrawingUnit,
     EllipseEntity, Entity, EntityBase, EntityId, HatchEntity, HatchPattern, HatchPatternType,
     InsertEntity, LeaderArrow, LeaderEntity, LineEntity, Paragraph, PathEntity, PointEntity,
-    PointPart, RingGeometry, SplineEntity, TextAlign, TextEntity, TextFace, TextRun, TextScript,
-    Vec2,
+    PointPart, RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource,
+    TextAlign, TextEntity, TextFace, TextRun, TextScript, Vec2,
 };
 
 use crate::error::{Code, KcadError};
 
 /// The kinds, numbered as `kinds` holds them.
-pub const KINDS: [&str; 15] = [
+pub const KINDS: [&str; 16] = [
     "point",
     "line",
     "polyline",
@@ -110,6 +113,7 @@ pub const KINDS: [&str; 15] = [
     "hatch",
     "insert",
     "leader",
+    "table",
 ];
 
 const COLOR: u32 = 1;
@@ -234,6 +238,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Hatch(_) => 12,
         Entity::Insert(_) => 13,
         Entity::Leader(_) => 14,
+        Entity::Table(_) => 15,
     }
 }
 
@@ -727,6 +732,108 @@ impl Packer {
                     flags |= OPT[2];
                 }
             }
+            Entity::Table(TableEntity {
+                base: _,
+                p,
+                rotation,
+                height,
+                rows,
+                columns,
+                cells,
+                merges,
+                aligns,
+                header,
+                grid,
+                frame,
+                face,
+                source,
+            }) => {
+                self.point(p);
+                self.out.floats.extend([*rotation, *height]);
+                self.numbers(rows);
+                self.numbers(columns);
+                // Every cell row with its length: a ragged one reaches the encoder, which refuses it.
+                self.int(count(cells.len()));
+                for row in cells {
+                    self.int(count(row.len()));
+                    for words in row {
+                        self.text(words);
+                    }
+                }
+                if !merges.is_empty() {
+                    flags |= OPT[0];
+                    self.int(count(merges.len()));
+                    for m in merges {
+                        self.out.ints.extend([m.row, m.col, m.rows, m.cols]);
+                    }
+                }
+                if let Some(list) = aligns {
+                    flags |= OPT[1];
+                    self.int(count(list.len()));
+                    for a in list {
+                        self.int(count(
+                            TableAlign::ALL.iter().position(|x| x == a).unwrap_or(0),
+                        ));
+                    }
+                }
+                if *header {
+                    flags |= OPT[2];
+                }
+                if let Some(g) = grid {
+                    flags |= OPT[3];
+                    self.int(count(
+                        TableGrid::ALL.iter().position(|x| x == g).unwrap_or(0),
+                    ));
+                }
+                if let Some(id) = &face.text_style {
+                    flags |= OPT[4];
+                    self.text(id);
+                }
+                if let Some(f) = face.font {
+                    flags |= OPT[5];
+                    self.int(font_place(f));
+                }
+                if face.bold {
+                    flags |= OPT[6];
+                }
+                if face.italic {
+                    flags |= OPT[7];
+                }
+                if let Some(o) = face.oblique {
+                    flags |= OPT[8];
+                    self.float(o);
+                }
+                // The frame's width (docs/adr/0184 §1) after the slant; its source's ints and texts are its own streams'.
+                if let Some(f) = frame {
+                    flags |= OPT[10];
+                    self.float(*f);
+                }
+                if let Some(source) = source {
+                    flags |= OPT[9];
+                    match source {
+                        TableSource::File { name, sheet } => {
+                            self.int(3);
+                            self.int(u32::from(sheet.is_some()));
+                            self.text(name);
+                            if let Some(s) = sheet {
+                                self.text(s);
+                            }
+                        }
+                        _ => {
+                            let kind = match source {
+                                TableSource::Coordinates { .. } => 0,
+                                TableSource::Areas { .. } => 1,
+                                _ => 2,
+                            };
+                            self.int(kind);
+                            self.int(count(source.objects().len()));
+                            for id in source.objects() {
+                                self.text(&id.to_text());
+                            }
+                        }
+                    }
+                }
+            }
         }
         flags
     }
@@ -1035,6 +1142,8 @@ fn allowed(kind: u8) -> u32 {
         // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look.
         11 => OPT.iter().fold(0, |m, b| m | b),
         12 | 13 => OPT[0],
+        // A table: merges, aligns, header, grid, its face, source, frame (docs/adr/0184).
+        15 => OPT[..11].iter().fold(0, |m, b| m | b),
         _ => 0,
     }
 }
@@ -1391,6 +1500,149 @@ fn geometry(
                     angle,
                     spacing,
                 },
+            })
+        }
+        15 => {
+            let p = c.point()?;
+            let (rotation, height) = (c.float()?, c.float()?);
+            let rows = c.numbers()?;
+            let columns = c.numbers()?;
+            let r = c.usize()?;
+            if r > c.cols.ints.len() {
+                return Err(broken("tablonun satır sayısı tam sayılardan fazla"));
+            }
+            let mut cells = Vec::with_capacity(r);
+            for i in 0..r {
+                let len = c.usize()?;
+                if len > c.cols.text_lengths.len() {
+                    return Err(broken("tablonun hücre sayısı metinlerden fazla"));
+                }
+                cells.push(
+                    (0..len)
+                        .map(|j| c.text(|| place(&format!("cells/{i}/{j}"))))
+                        .collect::<Result<Vec<_>, _>>()?,
+                );
+            }
+            let merges = if has(0) {
+                let q = c.usize()?;
+                if q > c.cols.ints.len() {
+                    return Err(broken("birleşik alan sayısı tam sayılardan fazla"));
+                }
+                (0..q)
+                    .map(|_| {
+                        Ok(kentos_contracts::CellRange {
+                            row: c.int()?,
+                            col: c.int()?,
+                            rows: c.int()?,
+                            cols: c.int()?,
+                        })
+                    })
+                    .collect::<Result<Vec<_>, KcadError>>()?
+            } else {
+                Vec::new()
+            };
+            let aligns = if has(1) {
+                let a = c.usize()?;
+                if a > c.cols.ints.len() {
+                    return Err(broken("hiza sayısı tam sayılardan fazla"));
+                }
+                Some(
+                    (0..a)
+                        .map(|_| {
+                            let v = c.usize()?;
+                            TableAlign::ALL
+                                .get(v)
+                                .copied()
+                                .ok_or_else(|| broken(&format!("sütun hizası {v}")))
+                        })
+                        .collect::<Result<Vec<_>, _>>()?,
+                )
+            } else {
+                None
+            };
+            let grid = if has(3) {
+                let v = c.usize()?;
+                Some(
+                    *TableGrid::ALL
+                        .get(v)
+                        .ok_or_else(|| broken(&format!("tablo çizgileri {v}")))?,
+                )
+            } else {
+                None
+            };
+            let text_style = if has(4) {
+                Some(c.text(|| place("textStyle"))?)
+            } else {
+                None
+            };
+            let font = if has(5) {
+                Some(font_at(c.usize()?)?)
+            } else {
+                None
+            };
+            let oblique = if has(8) { Some(c.float()?) } else { None };
+            let frame = if has(10) { Some(c.float()?) } else { None };
+            let source = if has(9) {
+                match c.int()? {
+                    3 => {
+                        let sheet = match c.int()? {
+                            0 => false,
+                            1 => true,
+                            v => return Err(broken(&format!("kaynağın sayfa bayrağı {v}"))),
+                        };
+                        let name = c.text(|| place("source/name"))?;
+                        let sheet = if sheet {
+                            Some(c.text(|| place("source/sheet"))?)
+                        } else {
+                            None
+                        };
+                        Some(TableSource::File { name, sheet })
+                    }
+                    kind @ 0..=2 => {
+                        let k = c.usize()?;
+                        if k > c.cols.text_lengths.len() {
+                            return Err(broken("kaynak nesne sayısı metinlerden fazla"));
+                        }
+                        let objects = (0..k)
+                            .map(|_| {
+                                let t = c.text(|| place("source/objects"))?;
+                                EntityId::parse(&t).ok_or_else(|| {
+                                    broken(&format!("kaynak nesnenin kimliği “{t}”"))
+                                })
+                            })
+                            .collect::<Result<Vec<_>, _>>()?;
+                        Some(match kind {
+                            0 => TableSource::Coordinates { objects },
+                            1 => TableSource::Areas { objects },
+                            _ => TableSource::Attributes { objects },
+                        })
+                    }
+                    v => return Err(broken(&format!("tablonun kaynağı {v}"))),
+                }
+            } else {
+                None
+            };
+            Entity::Table(TableEntity {
+                base,
+                p,
+                rotation,
+                height,
+                rows,
+                columns,
+                cells,
+                merges,
+                aligns,
+                header: has(2),
+                grid,
+                frame,
+                face: TextFace {
+                    text_style,
+                    font,
+                    bold: has(6),
+                    italic: has(7),
+                    oblique,
+                },
+                source,
             })
         }
         13 => {

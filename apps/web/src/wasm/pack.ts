@@ -9,7 +9,7 @@
  * This only packs and reads: no coordinate is computed here.
  */
 
-const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12, insert: 14, leader: 15 };
+const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12, insert: 14, leader: 15, table: 18 };
 /** A text's alignments, numbered as the store numbers them (`TextAlign::ALL`, docs/adr/0145). */
 const TEXT_ALIGNS = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'] as const;
 /** The drawing typefaces, numbered as the core's tables number them (`FONTS`, the contract's `DrawingFont` order; docs/adr/0183). */
@@ -58,6 +58,16 @@ const LEADER = 15;
 const MULTI_PART_LINE = 16;
 /** A multi-point object (docs/adr/0174): its first point as a point's fields, then the count of the others and each one's. */
 const MULTI_POINT = 17;
+/**
+ * A table (docs/adr/0184): its corner, turn and height; its rows' heights and columns' widths; each cell's words, row
+ * by row (as many as its rows times its columns); the merged ranges (a count, four numbers each); the alignments (−1
+ * none, else a count and each one's place in TABLE_ALIGNS); the heading flag; the lines' place in TABLE_GRIDS (−1 all);
+ * the frame's width (NaN none); its face as a text's. Its source is not packed: the store draws, picks and snaps.
+ */
+const TABLE = 18;
+/** A table's alignments and lines, numbered as the store numbers them (`TABLE_ALIGNS`, `TABLE_GRIDS`). */
+const TABLE_ALIGNS = ['left', 'center', 'right'] as const;
+const TABLE_GRIDS = ['outer', 'rows', 'none'] as const;
 
 interface XY {
   x: number;
@@ -269,6 +279,36 @@ export function packEntities(list: Iterable<object>): Packed {
         num(e.rotation);
         out.push(str(e.text), str(e.arrow), e.mask === true ? 1 : 0);
         break;
+      case TABLE: {
+        pt(e.p);
+        num(e.rotation);
+        num(e.height);
+        const rows = Array.isArray(e.rows) ? (e.rows as unknown[]) : [];
+        const columns = Array.isArray(e.columns) ? (e.columns as unknown[]) : [];
+        values(rows);
+        values(columns);
+        const cells = Array.isArray(e.cells) ? (e.cells as unknown[][]) : [];
+        for (let i = 0; i < rows.length; i++) for (let j = 0; j < columns.length; j++) out.push(str(cells[i]?.[j]));
+        const merges = Array.isArray(e.merges) ? (e.merges as Record<string, unknown>[]) : [];
+        out.push(merges.length);
+        for (const m of merges) {
+          num(m.row);
+          num(m.col);
+          num(m.rows);
+          num(m.cols);
+        }
+        const aligns = Array.isArray(e.aligns) ? (e.aligns as unknown[]) : null;
+        if (!aligns) out.push(-1);
+        else {
+          out.push(aligns.length);
+          for (const a of aligns) out.push(Math.max(0, place(TABLE_ALIGNS, a)));
+        }
+        out.push(e.header === true ? 1 : 0, place(TABLE_GRIDS, e.grid));
+        num(e.frame);
+        out.push(str(e.textStyle), place(FONTS, e.font), e.bold === true ? 1 : 0, e.italic === true ? 1 : 0);
+        num(e.oblique);
+        break;
+      }
     }
   }
   return { nums: Float64Array.from(out), strings: JSON.stringify(strings) };
@@ -348,7 +388,20 @@ export function unpackEntities(p: Packed): Unpacked[] {
     const layerId = str() ?? '';
     const labelled = flag();
     const code = num();
-    const kind = code === MULTI_PART ? 'polygon' : code === MULTI_PART_LINE ? 'polyline' : code === MULTI_POINT ? 'point' : code === INSERT ? 'insert' : code === LEADER ? 'leader' : KINDS[code];
+    const kind =
+      code === MULTI_PART
+        ? 'polygon'
+        : code === MULTI_PART_LINE
+          ? 'polyline'
+          : code === MULTI_POINT
+            ? 'point'
+            : code === INSERT
+              ? 'insert'
+              : code === LEADER
+                ? 'leader'
+                : code === TABLE
+                  ? 'table'
+                  : KINDS[code];
     let g: Geometry;
     switch (kind) {
       case 'point': {
@@ -531,6 +584,35 @@ export function unpackEntities(p: Packed): Unpacked[] {
         g.rotation = rotation;
         if (arrow !== undefined) g.arrow = arrow;
         if (mask) g.mask = true;
+        break;
+      }
+      case 'table': {
+        const p = pt();
+        const rotation = num();
+        const height = num();
+        const rows = values() ?? [];
+        const columns = values() ?? [];
+        const cells = rows.map(() => columns.map(() => str() ?? ''));
+        const merges = Array.from({ length: num() }, () => ({ row: num(), col: num(), rows: num(), cols: num() }));
+        const n = num();
+        const aligns = n < 0 ? undefined : Array.from({ length: n }, () => TABLE_ALIGNS[num()] ?? 'left');
+        const header = flag();
+        const grid = num();
+        const frame = num();
+        g = { kind, p, rotation, height, rows, columns, cells };
+        if (merges.length) g.merges = merges;
+        if (aligns) g.aligns = aligns;
+        if (header) g.header = true;
+        if (grid >= 0) g.grid = TABLE_GRIDS[grid];
+        if (!Number.isNaN(frame)) g.frame = frame;
+        const textStyle = str();
+        if (textStyle !== undefined) g.textStyle = textStyle;
+        const font = num();
+        if (font >= 0) g.font = FONTS[font];
+        if (flag()) g.bold = true;
+        if (flag()) g.italic = true;
+        const oblique = num();
+        if (!Number.isNaN(oblique)) g.oblique = oblique;
         break;
       }
       default:

@@ -30,11 +30,13 @@ use std::collections::{BTreeMap, HashMap};
 use kentos_contracts::blocks::turn_of;
 use kentos_contracts::{
     BlockId, Bounds, DimensionArrow, DimensionEntity, DimensionStyle, Entity, EntityBase,
-    HatchEntity, HatchPatternType, InsertEntity, PathEntity, SplineEntity, TextEntity, Vec2,
+    HatchEntity, HatchPatternType, InsertEntity, PathEntity, SplineEntity, TableAlign, TableEntity,
+    TextAlign, TextEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::spline::catmull_rom_beziers;
+use kentos_geometry_core::geom::table::{DROP, PAD, table_geom};
 
 use super::super::aci;
 use super::super::dimension::{self as dim, Definition};
@@ -72,6 +74,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Hatch(_) => "Tarama",
         Entity::Insert(_) => "Blok",
         Entity::Leader(_) => "Kılavuz",
+        Entity::Table(_) => "Tablo",
     }
 }
 
@@ -160,11 +163,51 @@ fn finite(e: &Entity) -> bool {
         }
         Entity::Insert(i) => ok(i.p) && nums_ok(&[i.scale, i.rotation]),
         Entity::Leader(l) => all_ok(&l.pts) && nums_ok(&[l.height, l.rotation]),
+        Entity::Table(t) => {
+            ok(t.p)
+                && nums_ok(&[t.height, t.rotation])
+                && nums_ok(&t.rows)
+                && nums_ok(&t.columns)
+                && t.face.oblique.is_none_or(f64::is_finite)
+        }
     }
 }
 
 fn core(p: Vec2) -> CoreVec2 {
     CoreVec2::new(p.x, p.y)
+}
+
+/// Running sums from 0: a table's grid lines from its rows' or columns' sizes.
+fn edges(sizes: &[f64]) -> Vec<f64> {
+    let mut out = Vec::with_capacity(sizes.len() + 1);
+    let mut at = 0.0;
+    out.push(at);
+    for s in sizes {
+        at += s;
+        out.push(at);
+    }
+    out
+}
+
+/// A table's own fields as the contract's JSON, without the object's (its
+/// layer, colour, label …, which the INSERT and KentOS's data say).
+fn table_json(t: &TableEntity) -> String {
+    let mut value = serde_json::to_value(t).unwrap_or_default();
+    if let Some(map) = value.as_object_mut() {
+        for k in [
+            "kind",
+            "id",
+            "layerId",
+            "color",
+            "attrs",
+            "label",
+            "symbol",
+            "lineWeight",
+        ] {
+            map.remove(k);
+        }
+    }
+    value.to_string()
 }
 
 fn app(p: CoreVec2) -> Vec2 {
@@ -200,6 +243,8 @@ pub(super) struct Writer<'a> {
     pub records: &'a mut Vec<(u64, String)>,
     /// The dimensions' blocks written so far: the next is *D and one more.
     pub dimensions: &'a mut usize,
+    /// The tables' blocks written so far: the next is *U and one more (docs/adr/0184 §7).
+    pub anonymous: &'a mut usize,
     /// What a dimension without a text of its own shows, by object id.
     pub values: &'a BTreeMap<u32, String>,
     /// The project's length decimals and angle unit (a redrawn dimension's text).
@@ -474,6 +519,7 @@ impl Writer<'_> {
             Entity::Hatch(h) => self.hatch(h),
             Entity::Insert(i) => self.insert(i),
             Entity::Leader(l) => self.leader(l),
+            Entity::Table(t) => self.table(t),
         };
         if written && !self.defining {
             self.report.count(e.kind());
@@ -985,6 +1031,158 @@ impl Writer<'_> {
         true
     }
 
+    /// A table (docs/adr/0184 §7). DXF's ACAD_TABLE needs a table style
+    /// object other programs read differently; the table is written as an
+    /// anonymous block (*U) of its lines (LINE) and its cells' words (TEXT,
+    /// justified as their columns, so that another program's typeface keeps
+    /// them in their cells), in its own frame, placed by an INSERT at its top
+    /// left corner, turned as it is. The INSERT carries the table's own
+    /// fields in KentOS's data: KentOS reads the table back (where the INSERT
+    /// is now, as another program may have moved it). A table too large for
+    /// that data stays its lines and words, said in the report.
+    fn table(&mut self, t: &TableEntity) -> bool {
+        if self.defining {
+            self.report
+                .skip("Tablo", "blok tanımında tablo olamaz; yazılmadı", 0);
+            return false;
+        }
+        if let Some((_, why)) = t.shape().problem() {
+            self.report.skip("Tablo", &format!("{why} Yazılmadı."), 0);
+            return false;
+        }
+        // Its frame: the corner at the origin, unturned; the INSERT places it.
+        let local = TableEntity {
+            p: v(0.0, 0.0),
+            rotation: 0.0,
+            ..t.clone()
+        };
+        let shape = crate::blocks::core_table(&local);
+        let Some(g) = table_geom(&shape) else {
+            return false;
+        };
+        let record = self.handles.take();
+        *self.anonymous += 1;
+        let name = format!("*U{}", *self.anonymous);
+        self.records.push((record, name.clone()));
+        self.block_begin(record, &name);
+        for [a, b] in g.lines() {
+            self.block_line(record, app(a), app(b));
+        }
+        // Kalın çerçeve: its band's four strips filled, the outline other programs show.
+        for strip in g.band_strips() {
+            self.block_quad(record, strip.map(app));
+        }
+        let style = self.styles.text(&t.face).to_owned();
+        let (xs, ys) = (edges(&t.columns), edges(&t.rows));
+        let h = t.height;
+        let mut changed = false;
+        for (i, row) in t.cells.iter().enumerate() {
+            for (j, words) in row.iter().enumerate() {
+                if words.trim().is_empty() {
+                    continue;
+                }
+                let (rows, cols) = match t.merge_at(i, j) {
+                    Some(r) if (r.row as usize, r.col as usize) == (i, j) => {
+                        (r.rows as usize, r.cols as usize)
+                    }
+                    Some(_) => continue,
+                    None => (1, 1),
+                };
+                let (Some(&x0), Some(&x1), Some(&y0), Some(&y1)) =
+                    (xs.get(j), xs.get(j + cols), ys.get(i), ys.get(i + rows))
+                else {
+                    continue;
+                };
+                let align = if t.header && i == 0 {
+                    TableAlign::Center
+                } else {
+                    t.aligns
+                        .as_ref()
+                        .and_then(|a| a.get(j).copied())
+                        .unwrap_or_default()
+                };
+                let (x, justify) = match align {
+                    TableAlign::Left => (x0 + PAD * h, None),
+                    TableAlign::Center => ((x0 + x1) / 2.0, Some(TextAlign::BaselineCenter)),
+                    TableAlign::Right => (x1 - PAD * h, Some(TextAlign::BaselineRight)),
+                };
+                let at = g.point(x, (y0 + y1) / 2.0 + DROP * h);
+                let (value, lost) = text_value(words);
+                changed |= lost;
+                self.block_text(
+                    record,
+                    &value,
+                    &Justified {
+                        p: app(at),
+                        height: h,
+                        rotation: 0.0,
+                        align: justify,
+                        width_factor: None,
+                    },
+                    &style,
+                );
+            }
+        }
+        self.block_end(record);
+        if changed {
+            self.report.note(
+                "Tablo",
+                "hücrelerdeki denetim karakterleri boşluk oldu (DXF yazısı tek satırdır)",
+                0,
+            );
+        }
+        self.begin("INSERT", &t.base);
+        self.out.str(100, "AcDbBlockReference");
+        self.out.str(2, &name);
+        self.out.xyz(10, t.p);
+        if t.rotation != 0.0 {
+            self.out.real(50, t.rotation);
+        }
+        for p in crate::blocks::table_corners(t) {
+            self.grow(p);
+        }
+        let mut meta = Self::base_meta(&t.base);
+        meta.table = Some(table_json(t));
+        // What `end` would keep at most: the table and the data that is not the label, attributes or symbol.
+        let bare = Meta {
+            label: None,
+            attrs: Default::default(),
+            symbol: None,
+            ..meta.clone()
+        };
+        if xdata::size(&xdata::groups(&bare)) > xdata::MAX_BYTES {
+            meta.table = None;
+            self.report.note(
+                "Tablo",
+                "AutoCAD'in nesne başına genişletilmiş veri sınırını (16 KB) aştığı için tablo olarak değil, yalnız çizgi ve yazıları olarak yazıldı; KentOS'a blok olarak geri okunur",
+                0,
+            );
+        }
+        self.report.note(
+            "Tablo",
+            "DXF'te KentOS tablosu yok: çizgi ve yazılarından bir blok (*U) olarak yazıldı; başka programlar blok olarak gösterir, KentOS tablo olarak geri okur",
+            0,
+        );
+        self.end(meta);
+        true
+    }
+
+    /// A TEXT in a block (a table's cell, docs/adr/0184 §7): in the block's
+    /// colour, justified as `j` says, in `style`.
+    fn block_text(&mut self, record: u64, value: &str, j: &Justified, style: &str) {
+        self.block_head("TEXT", record);
+        let o = &mut *self.blocks;
+        o.str(100, "AcDbText");
+        let vertical = o.text(value, value, j);
+        if style != "Standard" {
+            o.str(7, style);
+        }
+        o.str(100, "AcDbText");
+        if vertical != 0 {
+            o.int(73, vertical);
+        }
+    }
+
     /// A dimension as a DXF DIMENSION: its drawing (the app's lines and
     /// ticks, the dimension arc as an ARC, the value as MTEXT) in an
     /// anonymous block of its own, the type and definition points a CAD
@@ -1259,6 +1457,18 @@ impl Writer<'_> {
         o.xyz(10, p[0]);
         o.xyz(11, p[1]);
         o.xyz(12, p[2]);
+        o.xyz(13, p[2]);
+    }
+
+    /// A filled four-cornered strip (a table's frame band, docs/adr/0184 §7),
+    /// its corners in order round it: SOLID runs 1 2 4 3.
+    fn block_quad(&mut self, record: u64, p: [Vec2; 4]) {
+        self.block_head("SOLID", record);
+        let o = &mut *self.blocks;
+        o.str(100, "AcDbTrace");
+        o.xyz(10, p[0]);
+        o.xyz(11, p[1]);
+        o.xyz(12, p[3]);
         o.xyz(13, p[2]);
     }
 

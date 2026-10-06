@@ -55,6 +55,7 @@ pub mod project_catalog;
 pub mod project_files;
 pub mod settings;
 pub mod style;
+pub mod table;
 
 pub use annotation::*;
 pub use api::*;
@@ -83,6 +84,7 @@ pub use project_catalog::*;
 pub use project_files::*;
 pub use settings::*;
 pub use style::*;
+pub use table::*;
 
 /// Version of this set of contracts, reported by the API's health endpoint.
 pub const CONTRACTS_VERSION: u32 = 1;

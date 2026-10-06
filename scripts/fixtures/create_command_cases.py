@@ -82,6 +82,12 @@ def made(obj, slot, layer_id="yapi"):
     # And a dimension's (docs/adr/0147).
     if out["kind"] == "dimension" and out.get("mask") is not True:
         out.pop("mask", None)
+    # A table's (docs/adr/0184 §1): no ranges, no heading row.
+    if out["kind"] == "table":
+        if out.get("merges") == []:
+            out.pop("merges")
+        if out.get("header") is not True:
+            out.pop("header", None)
     out["id"] = slot
     out["layerId"] = layer_id
     if "color" in obj:
@@ -943,6 +949,89 @@ cases.append({
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DIM, "dimStyle": ADA_STYLE})]},
          "result": failed("unknown_style", unknown_style_message(ADA_STYLE, "ölçü stili"), "objects[0].geometry.dimStyle"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "kilitli", "objects": [O({**TEXT, "textStyle": MISSING_STYLE})]}, "result": locked("Kilitli katman"), "expect": NOTHING},
+    ],
+})
+
+
+# ── Tablo (docs/adr/0184 §6) ────────────────────────────────────────────
+
+
+def rs(x):
+    """A number as Rust's `{}` writes an f64: a whole one without its point."""
+    return str(int(x)) if float(x).is_integer() else repr(float(x))
+
+
+TABLE = {"kind": "table", "p": P(487000, 4420200), "rotation": 0, "height": 1.25, "rows": [2.5, 2.5, 2.5], "columns": [8, 10],
+         "cells": [["Ad", "Alan (m²)"], ["7", "600.00"], ["8", "400.00"]]}
+tables = [
+    O({**TABLE, "aligns": ["left", "right"], "header": True, "grid": "rows", "frame": 0.25, "font": "arimo", "bold": True,
+       "source": {"kind": "areas", "objects": [uid(1), uid(2)]}}),
+    O({**TABLE, "p": P(487030, 4420200), "rotation": 30, "cells": [["Başlık", ""], ["a", "b"], ["c", ""]], "merges": [{"row": 0, "col": 0, "rows": 1, "cols": 2}],
+       "header": False, "source": {"kind": "file", "name": "noktalar.xlsx", "sheet": "Sayfa1"}}, attrs={"Not": "Excel"}, label="Noktalar"),
+]
+
+
+def table_message(kind, *given):
+    return {
+        "height": "Tablonun yazı yüksekliği {}; sıfırdan büyük ve sonlu olmalı.",
+        "rows": "Tablonun {} satırı var; en az 1, en çok 10000 olmalı.",
+        "rowHeight": "Tablonun {}. satırının yüksekliği {}; sıfırdan büyük ve sonlu olmalı.",
+        "cells": "Tablonun {} satırı var ama {} satırlık hücre verildi; her satırın hücreleri verilmeli.",
+        "row": "Tablonun {}. satırında {} hücre var; sütun sayısı kadar ({}) olmalı.",
+        "cell": "{}. satırın {}. hücresi: satır sonu ya da denetim karakteri var; hücre tek satırdır.",
+        "merge": "{}. birleşik alan ({}. satır, {}. sütundan {} × {}) tablonun içinde ve birden çok hücre olmalı.",
+        "overlap": "{}. birleşik alan, {}. satır {}. sütundaki birleşik alanla örtüşüyor; birleşik alanlar ayrı olmalı.",
+        "hidden": "{}. satırın {}. hücresi birleşik bir alanın içinde ama boş değil; birleşik alanın yazısı sol üst hücresindedir.",
+        "frame": "Tablonun çerçeve kalınlığı {}; sıfırdan büyük, tablonun eninin ve boyunun yarısından küçük olmalı.",
+        "aligns": "Tablonun {} sütunu var ama {} hiza verildi; her sütunun hizası verilmeli.",
+        "file": "Tablonun kaynağı olan dosyanın adı boş olamaz.",
+        "objects": "Tablonun kaynağı {} nesne gösteriyor; en az 1, en çok 100000 olmalı.",
+    }[kind].format(*given)
+
+
+cases.append({
+    "name": "Tablo: hücreleri, birleşik alanı, hizaları, başlığı, çizgileri, çerçevesi, yüzü ve kaynağıyla tek adımda yazılır, adı “Tablo”; birleşik alansızlık ve başlıksızlık alan değildir (ADR 0184 §6)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "table", "objects": tables}, "result": done([3, 4]),
+         "expect": {"ids": IDS + [3, 4], "entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(tables)}, "uids": {"3": "new", "4": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Tablo", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Tablo", "expect": {"ids": IDS + [3, 4]}},
+    ],
+})
+cases.append({
+    "name": "tablonun kuralları sırayla: invalid_table, yolu alanın; sonlu olmayan önce not_finite; yüz yazınınki gibi invalid_style (ADR 0184 §6)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(TABLE), O({**TABLE, "height": 0})]},
+         "result": failed("invalid_table", table_message("height", 0), "objects[1].geometry.height"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "rows": [], "cells": []})]},
+         "result": failed("invalid_table", table_message("rows", 0), "objects[0].geometry.rows"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "rows": [2.5, -1, 2.5]})]},
+         "result": failed("invalid_table", table_message("rowHeight", 2, -1), "objects[0].geometry.rows"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "cells": TABLE["cells"][:2]})]},
+         "result": failed("invalid_table", table_message("cells", 3, 2), "objects[0].geometry.cells"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "cells": [["Ad", "Alan (m²)"], ["7"], ["8", "400.00"]]})]},
+         "result": failed("invalid_table", table_message("row", 2, 1, 2), "objects[0].geometry.cells"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "cells": [["Ad", "Alan (m²)"], ["7", "600\n00"], ["8", "400.00"]]})]},
+         "result": failed("invalid_table", table_message("cell", 2, 2), "objects[0].geometry.cells"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "merges": [{"row": 2, "col": 0, "rows": 2, "cols": 1}]})]},
+         "result": failed("invalid_table", table_message("merge", 1, 3, 1, 2, 1), "objects[0].geometry.merges"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "cells": [["Ad", ""], ["", ""], ["8", "400.00"]],
+                                                                     "merges": [{"row": 0, "col": 0, "rows": 2, "cols": 2}, {"row": 1, "col": 1, "rows": 2, "cols": 1}]})]},
+         "result": failed("invalid_table", table_message("overlap", 2, 1, 1), "objects[0].geometry.merges"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "merges": [{"row": 1, "col": 0, "rows": 1, "cols": 2}]})]},
+         "result": failed("invalid_table", table_message("hidden", 2, 2), "objects[0].geometry.merges"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "frame": 3.75})]},
+         "result": failed("invalid_table", table_message("frame", 3.75), "objects[0].geometry.frame"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "aligns": ["left"]})]},
+         "result": failed("invalid_table", table_message("aligns", 2, 1), "objects[0].geometry.aligns"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "source": {"kind": "file", "name": " "}})]},
+         "result": failed("invalid_table", table_message("file"), "objects[0].geometry.source"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "source": {"kind": "coordinates", "objects": []}})]},
+         "result": failed("invalid_table", table_message("objects", 0), "objects[0].geometry.source"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "bold": True})]},
+         "result": failed("invalid_style", face_message(), "objects[0].geometry.bold"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "height": 0})]}, "nonFinite": {"objects[0].geometry.columns[1]": "Infinity"},
+         "result": not_finite(1), "note": "Sonlu olmayan sayı tablonun kurallarından önce.", "expect": NOTHING},
     ],
 })
 

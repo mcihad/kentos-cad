@@ -1,3 +1,4 @@
+import { tableProblem, type TableShape } from './tables';
 import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
 import type { DimensionStyleDef } from '../contracts/generated/DimensionStyleDef';
@@ -332,7 +333,7 @@ const numbersAt = (v: unknown, w: string, f: string): number => {
   return v.length;
 };
 
-const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader'] as const;
+const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table'] as const;
 /** The dimension's kinds; KCAD schema 9 added the last five (docs/adr/0147). */
 const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter', 'ordinate', 'arcLength', 'jogged', 'azimuth', 'slope'] as const;
 const LINE_TYPES = ['continuous', 'dashed', 'dashdot', 'dotted'] as const;
@@ -764,6 +765,36 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
       if (v.arrow !== undefined) oneOf(v.arrow, ['open', 'dot', 'none'] as const, at(w, 'ok'));
       if (v.mask !== undefined && v.mask !== true) fail(at(w, 'zemin'), 'yalnız true yazılır; zeminsiz kılavuzda alan yoktur');
       break;
+    // A table (docs/adr/0184 §1): its fields' types here, its rows, columns, cells and ranges by the contract's rule.
+    case 'table': {
+      pointAt(v.p, w, 'konum');
+      numAt(v.rotation, w, 'açı');
+      numAt(v.height, w, 'yazı yüksekliği');
+      numbersAt(v.rows, w, 'satırlar');
+      numbersAt(v.columns, w, 'sütunlar');
+      if (!Array.isArray(v.cells) || !v.cells.every((r) => Array.isArray(r) && r.every((c) => typeof c === 'string'))) fail(at(w, 'hücreler'), 'metin listelerinin listesi olmalı');
+      if (v.merges !== undefined && (!Array.isArray(v.merges) || !v.merges.every((r) => isObj(r) && ['row', 'col', 'rows', 'cols'].every((k) => Number.isInteger(r[k]) && (r[k] as number) >= 0))))
+        fail(at(w, 'birleşik alanlar'), 'satır, sütun ve boyları sayı olan alanlar olmalı');
+      if (v.aligns !== undefined) {
+        if (!Array.isArray(v.aligns)) fail(at(w, 'hizalar'), 'liste olmalı');
+        (v.aligns as unknown[]).forEach((a, i) => oneOf(a, ['left', 'center', 'right'] as const, at(w, `${i + 1}. hiza`)));
+      }
+      if (v.header !== undefined && v.header !== true) fail(at(w, 'başlık'), 'yalnız true yazılır; başlıksız tabloda alan yoktur');
+      if (v.grid !== undefined) oneOf(v.grid, ['outer', 'rows', 'none'] as const, at(w, 'çizgiler'));
+      if (v.frame !== undefined) numAt(v.frame, w, 'çerçeve kalınlığı');
+      if (v.source !== undefined) {
+        const s = isObj(v.source) ? v.source : fail(at(w, 'kaynak'), 'nesne olmalı');
+        const kind = oneOf(s.kind, ['coordinates', 'areas', 'attributes', 'file'] as const, at(w, 'kaynak türü'));
+        if (kind === 'file') {
+          strAt(s.name, w, 'kaynak dosya');
+          if (s.sheet !== undefined) strAt(s.sheet, w, 'kaynak sayfa');
+        } else if (!Array.isArray(s.objects) || !s.objects.every(isUuid)) fail(at(w, 'kaynak nesneler'), 'küçük harfli, tireli UUID listesi olmalı');
+      }
+      faceAt(v, w);
+      const problem = tableProblem(v as unknown as TableShape);
+      if (problem) fail(at(w, problem[0]), problem[1]);
+      break;
+    }
   }
   // Checked field by field above; the object is kept as read (optional fields included).
   return v as unknown as Entity;

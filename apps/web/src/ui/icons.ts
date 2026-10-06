@@ -442,6 +442,39 @@ export const ICONS = {
   fullscreenExit: '<path d="M7.5 3.5v4h-4M16.5 7.5h-4v-4M12.5 16.5v-4h4M3.5 12.5h4v4"/>',
   crs: '<circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3c-2.5 2-2.5 12 0 14M10 3c2.5 2 2.5 12 0 14"/>',
   table: '<rect x="2.5" y="3.5" width="15" height="13" rx="1"/><path d="M2.5 7.5h15M2.5 12h15M7.5 7.5v9"/>',
+  // Tablo (docs/adr/0184): the table object's commands, a table with its badge; the editor's tools on a grid.
+  tableInsert:
+    '<rect x="2.5" y="3" width="11.5" height="3.5" fill="currentColor" fill-opacity=".3" stroke="none"/><rect x="2.5" y="3" width="11.5" height="10.5" rx="1"/><path d="M2.5 6.5h11.5M2.5 10h11.5M6.5 6.5v7"/><path d="M16.2 12.6v6M13.2 15.6h6" stroke-width="1.6"/>',
+  tableEdit:
+    '<rect x="2.5" y="3" width="11.5" height="10.5" rx="1"/><path d="M2.5 6.5h11.5M2.5 10h11.5M6.5 6.5v7"/><path d="m11.6 18.2.7-2.7 4.6-4.6 2 2-4.6 4.6z" stroke-width="1.2"/><path d="m15.6 12.2 2 2" stroke-width="1.1"/>',
+  tableUpdate:
+    '<rect x="2.5" y="3" width="11.5" height="10.5" rx="1"/><path d="M2.5 6.5h11.5M2.5 10h11.5M6.5 6.5v7"/><path d="M18.4 14.6a3 3 0 0 0-5.4-1.2M12.2 16.4a3 3 0 0 0 5.4 1.2" stroke-width="1.2"/><path d="M12.8 11.6v1.9h1.9M17.8 19.2v-1.9h-1.9" stroke-width="1.1"/>',
+  // Tablo ekle's sources: a table with what it is made of (a file, points, areas, attributes).
+  tableFile: '<rect x="2.5" y="3" width="11.5" height="10.5" rx="1"/><path d="M2.5 6.5h11.5M2.5 10h11.5M6.5 6.5v7"/><path d="M12.6 11.4h3.7l2.4 2.4v5.5h-6.1z" stroke-width="1.2"/><path d="M16.1 11.4v2.6h2.6M14.2 16.2h2.8M14.2 17.8h2" stroke-width="1"/>',
+  tableCoordinates: '<rect x="2.5" y="3" width="11.5" height="10.5" rx="1"/><path d="M2.5 6.5h11.5M2.5 10h11.5M6.5 6.5v7"/><circle cx="15.8" cy="15.7" r="1.3" fill="currentColor" stroke="none"/><path d="M15.8 11.6v2.2M15.8 17.6v2M11.7 15.7h2.2M17.7 15.7h2" stroke-width="1.2"/>',
+  tableAreas: '<rect x="2.5" y="3" width="11.5" height="10.5" rx="1"/><path d="M2.5 6.5h11.5M2.5 10h11.5M6.5 6.5v7"/><path d="m12.3 14.4 3.9-2.6 3.2 2.5-.9 4.5-4.8.6z" fill="currentColor" fill-opacity=".3" stroke-width="1.2"/>',
+  tableAttributes: '<rect x="2.5" y="3" width="11.5" height="10.5" rx="1"/><path d="M2.5 6.5h11.5M2.5 10h11.5M6.5 6.5v7"/><path d="M12.2 12.2h3.9l3.3 3.3-3.9 3.9-3.3-3.3z" stroke-width="1.2"/><circle cx="14.3" cy="14.3" r=".8" fill="currentColor" stroke="none"/>',
+  tableRowAbove: '<rect x="3" y="9" width="14" height="8.5" rx="1"/><path d="M3 13.2h14M10 9v8.5"/><path d="M10 1.8v5.4M7.3 4.5h5.4" stroke-width="1.6"/>',
+  tableRowBelow: '<rect x="3" y="2.5" width="14" height="8.5" rx="1"/><path d="M3 6.8h14M10 2.5V11"/><path d="M10 12.8v5.4M7.3 15.5h5.4" stroke-width="1.6"/>',
+  tableColumnLeft: '<rect x="9" y="3" width="8.5" height="14" rx="1"/><path d="M13.2 3v14M9 10h8.5"/><path d="M4.5 7.3v5.4M1.8 10h5.4" stroke-width="1.6"/>',
+  tableColumnRight: '<rect x="2.5" y="3" width="8.5" height="14" rx="1"/><path d="M6.8 3v14M2.5 10H11"/><path d="M15.5 7.3v5.4M12.8 10h5.4" stroke-width="1.6"/>',
+  tableRowDelete:
+    '<rect x="2.5" y="3.5" width="11" height="13" rx="1"/><rect x="2.5" y="8" width="11" height="4" fill="currentColor" fill-opacity=".35" stroke="none"/><path d="M2.5 8h11M2.5 12h11M7 3.5v13"/><path d="M15 10h4" stroke-width="1.6"/>',
+  tableColumnDelete:
+    '<rect x="3.5" y="2.5" width="13" height="11" rx="1"/><rect x="8" y="2.5" width="4" height="11" fill="currentColor" fill-opacity=".35" stroke="none"/><path d="M8 2.5v11M12 2.5v11M3.5 7h13"/><path d="M8 17h4" stroke-width="1.6"/>',
+  tableMerge: '<rect x="2.5" y="5" width="15" height="10" rx="1"/><path d="M10 5v2M10 13v2"/><path d="M4.4 10h4.1M7 8.5l1.5 1.5L7 11.5M15.6 10h-4.1M13 8.5 11.5 10l1.5 1.5" stroke-width="1.2"/>',
+  tableUnmerge: '<rect x="2.5" y="5" width="15" height="10" rx="1"/><path d="M10 5v10"/><path d="M8.4 10H4.3M5.8 8.5 4.3 10l1.5 1.5M11.6 10h4.1M14.2 8.5l1.5 1.5-1.5 1.5" stroke-width="1.2"/>',
+  tableHeader:
+    '<rect x="2.5" y="3.5" width="15" height="4" fill="currentColor" fill-opacity=".45" stroke="none"/><rect x="2.5" y="3.5" width="15" height="13" rx="1"/><path d="M2.5 7.5h15M2.5 12h15M7.5 7.5v9M12.5 7.5v9"/>',
+  tableFit: '<rect x="2.5" y="4.5" width="15" height="11" rx="1"/><path d="M6.5 4.5v11M13.5 4.5v11" stroke-dasharray="1.2 1.3" stroke-width="1"/><path d="M4.3 10h11.4M6.3 8 4.3 10l2 2M13.7 8l2 2-2 2" stroke-width="1.2"/>',
+  tableGridAll: '<rect x="2.5" y="3.5" width="15" height="13" rx="1"/><path d="M2.5 7.8h15M2.5 12.2h15M7.5 3.5v13M12.5 3.5v13"/>',
+  tableGridOuter: '<rect x="2.5" y="3.5" width="15" height="13" rx="1"/><path d="M2.5 7.8h15M2.5 12.2h15M7.5 3.5v13M12.5 3.5v13" stroke-dasharray="1 1.6" stroke-width=".9"/>',
+  tableGridRows: '<rect x="2.5" y="3.5" width="15" height="13" rx="1"/><path d="M2.5 7.8h15M2.5 12.2h15"/><path d="M7.5 3.5v13M12.5 3.5v13" stroke-dasharray="1 1.6" stroke-width=".9"/>',
+  tableGridNone: '<path d="M4 5.6h4M11.5 5.6h4.5M4 10h3M11.5 10h3.5M4 14.4h4.5M11.5 14.4h2.5" stroke-width="1.3"/><rect x="2.5" y="3.5" width="15" height="13" rx="1" stroke-dasharray="1 1.6" stroke-width=".9"/>',
+  tableFrame: '<rect x="3" y="4" width="14" height="12" rx=".6" stroke-width="2.6"/><path d="M3 8.2h14M3 11.8h14M8 4v12M12.5 4v12" stroke-width=".9"/>',
+  cellLeft: '<path d="M3 4.5h14M3 8.2h9M3 11.8h14M3 15.5h9"/>',
+  cellCenter: '<path d="M3 4.5h14M5.5 8.2h9M3 11.8h14M5.5 15.5h9"/>',
+  cellRight: '<path d="M3 4.5h14M8 8.2h9M3 11.8h14M8 15.5h9"/>',
   // Processing: two steps joined by a flow, a third node waiting.
   processing: '<rect x="2.5" y="3" width="6" height="4.5" rx="1"/><circle cx="15" cy="5.25" r="2.25"/><rect x="11" y="12.5" width="6.5" height="4.5" rx="1"/><path d="M8.5 5.25h4.25M5.5 7.5v3.25a2 2 0 0 0 2 2H11"/><path d="m9.4 11 1.6 1.75-1.6 1.75"/>',
   numberVertices: `<path d="M3 13V4.5l6.5-2L13 6"/>${grip(3, 13)}${grip(3, 4.5)}${grip(9.5, 2.5)}<path d="M12 10v7.5M15.5 10v7.5M10.5 12.5H17M10.5 15H17"/>`,

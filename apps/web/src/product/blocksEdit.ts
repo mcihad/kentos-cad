@@ -8,7 +8,7 @@ import type { Entity as ContractEntity } from '../contracts/generated/Entity';
 import type { BlockDefinition } from '../model/blocks';
 import { Refusal, type CadDocument } from '../model/document';
 import { sameJson } from '../model/sameJson';
-import { checkBlockRules, checkName, checkReplaced, copies, noLayer, writeBlock, type Replaced } from './blocksDefine';
+import { checkBlockRules, checkName, checkNoTables, checkReplaced, copies, noLayer, writeBlock, type Replaced } from './blocksDefine';
 import { checkRevision, checkUids, error, failed, findObjects, isBlank, notFinite, notFiniteValue, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
@@ -157,6 +157,8 @@ function check(doc: CadDocument, input: BlocksEdit): Stop | Checked {
     case 'redefine': {
       const found = findObjects(doc, uids);
       if (!Array.isArray(found)) return found;
+      const tables = checkNoTables(found);
+      if (tables) return tables;
       next = { ...next, entities: copies(found.map((f) => f.entity)), base: input.base ? { x: input.base.x, y: input.base.y } : next.base };
       const stop = rulesWith(doc, next);
       if (stop) return stop;

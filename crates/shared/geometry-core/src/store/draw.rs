@@ -177,6 +177,29 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
             }
             None => out.push(NONE),
         },
+        // Its lines, then its frame's band, four strips each a ring of its own; its words are
+        // labels (docs/adr/0184 §2).
+        Shape::Table { .. } => {
+            let lines = crate::geom::table::lines_of(s);
+            let band = crate::geom::table::band_of(s);
+            if lines.is_empty() && band.is_empty() {
+                out.push(NONE);
+            } else {
+                out.extend([
+                    if band.is_empty() { LINE } else { MIXED },
+                    lines.len() as f64,
+                ]);
+                for [a, b] in lines {
+                    path(out, false, &[a, b]);
+                }
+                if !band.is_empty() {
+                    out.push(band.len() as f64);
+                    for strip in &band {
+                        ring(out, strip, false, oriented.then_some(true));
+                    }
+                }
+            }
+        }
         Shape::Line { a, b } => {
             out.extend([LINE, 1.0]);
             if refs {

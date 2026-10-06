@@ -211,8 +211,14 @@ pub const SCHEMA_WITH_PARAGRAPHS: u32 = 20;
 /// its styles.
 pub const SCHEMA_WITH_STYLES: u32 = 21;
 
+/// Document schema 22 (docs/specs/kcad-v2.md §6.1): schema 21 and the
+/// `table` kind (docs/adr/0184 §1), in the drawing only. A writer writes it
+/// only when the drawing has a table: any other drawing stays 21 or older,
+/// byte for byte; a reader of those refuses a table rather than lose it.
+pub const SCHEMA_WITH_TABLES: u32 = 22;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 20] = [
+pub const SCHEMAS: [u32; 21] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -233,6 +239,7 @@ pub const SCHEMAS: [u32; 20] = [
     SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_PARAGRAPHS,
     SCHEMA_WITH_STYLES,
+    SCHEMA_WITH_TABLES,
 ];
 
 /// The file a drawing is saved as.

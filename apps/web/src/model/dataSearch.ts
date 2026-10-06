@@ -11,12 +11,21 @@ import type { SearchRecord } from './ops/dataSearch';
 
 /**
  * The record of an object: its kind's name, its layer's path, its label as it is stored, its words (a text's text, a
- * leader's note, a dimension's own text), the name of its insert's block (none for an unknown block) and its
- * attributes as they are stored; null when it has no label, text, block name or attribute value that is not blank.
+ * leader's note, a dimension's own text, a table's cells that are not empty, row by row, one per line; docs/adr/0184
+ * §8), the name of its insert's block (none for an unknown block) and its attributes as they are stored; null when it
+ * has no label, text, block name or attribute value that is not blank.
  */
 export function recordOf(e: Entity, layerPath: string, blockName: (id: string) => string | undefined): SearchRecord | null {
   const label = e.label ?? null;
-  const text = e.kind === 'text' || e.kind === 'leader' || e.kind === 'dimension' ? (e.text ?? null) : null;
+  const text =
+    e.kind === 'text' || e.kind === 'leader' || e.kind === 'dimension'
+      ? (e.text ?? null)
+      : e.kind === 'table'
+        ? e.cells
+            .flat()
+            .filter((w) => w !== '')
+            .join('\n')
+        : null;
   const block = e.kind === 'insert' ? (blockName(e.block) ?? null) : null;
   const attrs = Object.entries(e.attrs);
   const blank = (v: string | null) => !v || !v.trim();

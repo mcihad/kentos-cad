@@ -79,6 +79,8 @@ pub enum CreateOperation {
     /// Etiketleri yazıya çevir (docs/adr/0175 §2): the layers' labels as
     /// texts, placed and sized as a sheet at a scale writes them.
     Labels,
+    /// Tablo (docs/adr/0184 §3): a table placed by its tool.
+    Table,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

@@ -640,6 +640,36 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             "rotation" => Some(rotation),
             _ => point_number(pts, rest),
         },
+        // A table's sizes and corner (docs/adr/0184): `rows[1]`, `columns[0]`, `height`, `p.x` ….
+        EntityGeometry::Table {
+            p,
+            rotation,
+            height,
+            rows,
+            columns,
+            ..
+        } => match rest {
+            "height" => Some(height),
+            "rotation" => Some(rotation),
+            _ => {
+                let item = |list: &'a mut Vec<f64>, name: &str| {
+                    let i: usize = rest
+                        .strip_prefix(name)?
+                        .strip_prefix('[')?
+                        .strip_suffix(']')?
+                        .parse()
+                        .ok()?;
+                    list.get_mut(i)
+                };
+                if rest.starts_with("rows[") {
+                    item(rows, "rows")
+                } else if rest.starts_with("columns[") {
+                    item(columns, "columns")
+                } else {
+                    coordinate(p, "p", rest)
+                }
+            }
+        },
         EntityGeometry::Hatch { ring, pattern, .. } => match rest {
             "pattern.angle" => Some(&mut pattern.angle),
             "pattern.spacing" => Some(&mut pattern.spacing),

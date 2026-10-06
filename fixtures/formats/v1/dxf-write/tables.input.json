@@ -1,0 +1,212 @@
+{
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "1043"
+      },
+      "label": "7",
+      "pts": [
+        {
+          "x": 452300,
+          "y": 4412300
+        },
+        {
+          "x": 452330,
+          "y": 4412300
+        },
+        {
+          "x": 452330,
+          "y": 4412320
+        },
+        {
+          "x": 452300,
+          "y": 4412320
+        }
+      ]
+    },
+    {
+      "kind": "table",
+      "id": 2,
+      "layerId": "tablo",
+      "attrs": {
+        "Not": "çizelge"
+      },
+      "label": "T1",
+      "p": {
+        "x": 452340.5,
+        "y": 4412345.25
+      },
+      "rotation": 0,
+      "height": 2.5,
+      "rows": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "columns": [
+        18,
+        22,
+        22
+      ],
+      "cells": [
+        [
+          "1043 ada parselleri",
+          "",
+          ""
+        ],
+        [
+          "Ad",
+          "Alan (m²)",
+          "Çevre (m)"
+        ],
+        [
+          "7",
+          "600.00",
+          "100.000"
+        ],
+        [
+          "8",
+          "400.00",
+          "80.000"
+        ],
+        [
+          "Toplam",
+          "1000.00",
+          ""
+        ]
+      ],
+      "merges": [
+        {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 3
+        }
+      ],
+      "aligns": [
+        "left",
+        "right",
+        "right"
+      ],
+      "grid": "rows",
+      "frame": 0.5,
+      "source": {
+        "kind": "areas",
+        "objects": [
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001"
+        ]
+      }
+    },
+    {
+      "kind": "table",
+      "id": 3,
+      "layerId": "tablo",
+      "attrs": {},
+      "color": "#E5484D",
+      "p": {
+        "x": 452420.125,
+        "y": 4412345.25
+      },
+      "rotation": 30,
+      "height": 2.0,
+      "rows": [
+        4,
+        4,
+        4
+      ],
+      "columns": [
+        12,
+        25,
+        25
+      ],
+      "cells": [
+        [
+          "Nokta",
+          "X",
+          "Y"
+        ],
+        [
+          "101",
+          "452300.000",
+          "4412300.000"
+        ],
+        [
+          "102",
+          "452330.000",
+          "4412300.000"
+        ]
+      ],
+      "header": true,
+      "font": "arimo",
+      "bold": true,
+      "source": {
+        "kind": "file",
+        "name": "noktalar.xlsx",
+        "sheet": "Sayfa1"
+      }
+    },
+    {
+      "kind": "table",
+      "id": 4,
+      "layerId": "tablo",
+      "attrs": {},
+      "p": {
+        "x": 452340.5,
+        "y": 4412300
+      },
+      "rotation": 0,
+      "height": 2.5,
+      "rows": [
+        5,
+        5
+      ],
+      "columns": [
+        20,
+        20
+      ],
+      "cells": [
+        [
+          "50%% ^ işaret",
+          "tek satır"
+        ],
+        [
+          "",
+          "boş hücre solda"
+        ]
+      ],
+      "grid": "none"
+    }
+  ],
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "path": [],
+      "color": "#3E63DD",
+      "visible": true,
+      "locked": false,
+      "lineType": "continuous",
+      "lineWeight": 0.25
+    },
+    {
+      "id": "tablo",
+      "name": "Tablolar",
+      "path": [],
+      "color": "#7FB2E5",
+      "visible": true,
+      "locked": false,
+      "lineType": "continuous",
+      "lineWeight": 0.25
+    }
+  ],
+  "scale": 1000,
+  "lengthDecimals": 3,
+  "grads": true,
+  "dimensionValues": {},
+  "blocks": []
+}

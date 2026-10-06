@@ -2,7 +2,8 @@
 //! ones. Paths become lines and arcs (holes included), a spline a polyline
 //! through its curve, a dimension lines, an arc, its filled arrowheads and
 //! dots (solid hatches) and its text, a patterned hatch its lines, a leader
-//! its line, its arrowhead and its note. The
+//! its line, its arrowhead and its note, a table its lines and each cell's
+//! words (docs/adr/0184 §2). The
 //! dimension's value text comes in already formatted (project units belong
 //! to the app), and is used only when the dimension has no text of its own.
 
@@ -27,6 +28,59 @@ fn line(a: Vec2, b: Vec2) -> Entity {
 
 pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
     match e {
+        // Its lines, and each cell's words a text on its baseline in the table's face; a
+        // heading row's bold in its typeface (bold needs one, docs/adr/0183 §2).
+        Shape::Table {
+            height,
+            rotation,
+            cells,
+            face,
+            ..
+        } => {
+            let Some(t) = crate::geom::table::table_geom(e) else {
+                return Cut::Error("Tablo geçersiz.".into());
+            };
+            let laid = t.layout(font);
+            let mut pieces: Vec<Entity> = laid.lines.iter().map(|[a, b]| line(*a, *b)).collect();
+            // Its frame's band, solid hatches as a dimension's arrowheads (docs/adr/0184 §2).
+            for strip in &laid.frame {
+                pieces.push(Entity::new(Shape::Hatch {
+                    ring: strip.to_vec(),
+                    holes: None,
+                    pattern: HatchPattern {
+                        kind: "solid".into(),
+                        angle: 0.0,
+                        spacing: *height,
+                    },
+                }));
+            }
+            for c in &laid.cells {
+                let words = cells[c.row][c.col].clone();
+                let mut f = face.clone();
+                if c.bold && !f.is_bold() {
+                    f.font = Some(f.font_or(font));
+                    f.bold = true;
+                }
+                pieces.push(Entity::new(Shape::Text {
+                    p: c.at,
+                    text: words,
+                    height: *height,
+                    rotation: *rotation,
+                    align: None,
+                    width_factor: None,
+                    mask: None,
+                    box_width: None,
+                    line_spacing: None,
+                    runs: None,
+                    face: f,
+                }));
+            }
+            if pieces.is_empty() {
+                Cut::Error("Tablonun çizgisi ve yazısı yok.".into())
+            } else {
+                Cut::Pieces(pieces)
+            }
+        }
         // A multi-point object comes apart into its points (docs/adr/0174).
         Shape::Point { .. } if crate::entity::is_multi_part(e) => Cut::Pieces(
             crate::entity::area_parts(e)

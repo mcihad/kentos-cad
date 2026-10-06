@@ -82,6 +82,8 @@ GEOMETRY = {
     "hatch": ["ring", "holes", "pattern"],
     "insert": ["block", "p", "scale", "rotation", "mirror"],
     "leader": ["pts", "text", "height", "rotation", "arrow", "mask"],
+    "table": ["p", "rotation", "height", "rows", "columns", "cells", "merges", "aligns", "header", "grid", "frame", "textStyle", "font", "bold",
+              "italic", "oblique", "source"],
 }
 
 
@@ -1766,6 +1768,64 @@ cases.append({
          "result": failed("not_finite", not_finite_message(1), "changes[0].geometry"), "note": "Kotlar da sonlu sayıdır.", "expect": DIMENSION_NOTHING},
         {"op": "execute", "input": properties(4, dimension_geometry(4, offset=8)),
          "result": failed("layer_locked", locked_message("Kilitli katman"), "changes[0].uid"), "note": "Kilitli katmandaki ölçü değişmez.", "expect": DIMENSION_NOTHING},
+    ],
+})
+
+# ── Tablo (docs/adr/0184 §6) ───────────────────────────────────────────
+
+T_TABLE = {"kind": "table", "id": 9, "layerId": "yapi", "attrs": {"Not": "çizelge"}, "label": "T1", "p": P(487000, 4420060), "rotation": 0, "height": 1.25,
+           "rows": [2.5, 2.5, 2.5], "columns": [8, 10], "cells": [["Ad", "Alan (m²)"], ["7", "600.00"], ["8", "400.00"]], "aligns": ["left", "right"],
+           "header": True, "source": {"kind": "areas", "objects": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002"]}}
+T_LOCKED = {**T_TABLE, "id": 10, "layerId": "kilitli", "attrs": {}, "label": None, "source": None}
+T_LOCKED = {k: v for k, v in T_LOCKED.items() if v is not None}
+T_SETUP = {**SETUP, "entities": ENTITIES + [T_TABLE, T_LOCKED]}
+T_IDS = IDS + [9, 10]
+T_NOTHING = {"ids": T_IDS, "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
+NOT_A_TABLE = "Tablonun düzenlemesi yalnız tabloları değiştirir: her değişiklik bir tablonun yeni hâli olmalı (update, tablo geometrisi)."
+
+
+def table_geometry(e, **fields):
+    """A table's geometry with some fields changed; a field given None is left out."""
+    g = {k: v for k, v in e.items() if k == "kind" or k in GEOMETRY["table"]}
+    g.update(fields)
+    return {k: v for k, v in g.items() if v is not None}
+
+
+edited = table_geometry(T_TABLE, cells=[["Parseller", ""], ["Parsel 7", "600.00"], ["8", "400.00"]], columns=[11.5, 10],
+                        merges=[{"row": 0, "col": 0, "rows": 1, "cols": 2}], aligns=["center", "right"], grid="rows", frame=0.25)
+refreshed = table_geometry(T_TABLE, rows=[2.5, 2.5], cells=[["Ad", "Alan (m²)"], ["7", "612.50"]])
+detached = table_geometry(T_TABLE, source=None)
+cases.append({
+    "name": "table (Tabloyu düzenle) ve tableUpdate (Tabloyu güncelle): tablo yeni hâliyle tek adımda yazılır, adı “Tablo” ve “Tabloyu güncelle”; öznitelikleri, etiketi ve kimliği kalır (ADR 0184 §6)",
+    "setup": T_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 9, "as": "tablo"},
+        {"op": "execute", "input": {"operation": "table", "changes": [{"kind": "update", "uid": uid(9), "geometry": edited}]}, "result": done(changed=[uid(9)]),
+         "expect": {"entities": {"9": reshaped(T_TABLE, edited)}, "uids": {"9": "tablo"}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Tablo", "expect": {"entities": {"9": T_TABLE}, "canUndo": False}},
+        {"op": "execute", "input": {"operation": "tableUpdate", "changes": [{"kind": "update", "uid": uid(9), "geometry": refreshed}]}, "result": done(changed=[uid(9)]),
+         "expect": {"entities": {"9": reshaped(T_TABLE, refreshed)}, "uids": {"9": "tablo"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Tabloyu güncelle", "expect": {"entities": {"9": T_TABLE}}},
+        {"op": "execute", "input": {"operation": "table", "changes": [{"kind": "update", "uid": uid(9), "geometry": detached}]}, "result": done(changed=[uid(9)]),
+         "note": "Kaynağı kopar: kaynağı olmayan geometri tablonun kaynağını kaldırır.",
+         "expect": {"entities": {"9": reshaped(T_TABLE, detached)}, "uids": {"9": "tablo"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Tablo", "expect": {"entities": {"9": T_TABLE}}},
+    ],
+})
+cases.append({
+    "name": "tablonun düzenlemesi yalnız tabloyu tablo yapar: not_a_table, sırayla; tablonun kuralları önce (invalid_table), kilitli katman sonra (ADR 0184 §6)",
+    "setup": T_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "table", "changes": [{"kind": "update", "uid": uid(1), "geometry": table_geometry(T_TABLE)}]},
+         "result": failed("not_a_table", NOT_A_TABLE, "changes[0]"), "expect": T_NOTHING},
+        {"op": "execute", "input": {"operation": "tableUpdate", "changes": [{"kind": "update", "uid": uid(9), "geometry": table_geometry(T_TABLE)}, {"kind": "remove", "uid": uid(1)}]},
+         "result": failed("not_a_table", NOT_A_TABLE, "changes[1]"), "note": "Silme de tablonun düzenlemesi değildir.", "expect": T_NOTHING},
+        {"op": "execute", "input": {"operation": "table", "changes": [{"kind": "update", "uid": uid(9), "geometry": line(487000, 4420060, 487010, 4420060)}]},
+         "result": failed("not_a_table", NOT_A_TABLE, "changes[0]"), "expect": T_NOTHING},
+        {"op": "execute", "input": {"operation": "table", "changes": [{"kind": "update", "uid": uid(9), "geometry": table_geometry(T_TABLE, aligns=["left"])}]},
+         "result": failed("invalid_table", "Tablonun 2 sütunu var ama 1 hiza verildi; her sütunun hizası verilmeli.", "changes[0].geometry.aligns"), "expect": T_NOTHING},
+        {"op": "execute", "input": {"operation": "table", "changes": [{"kind": "update", "uid": uid(10), "geometry": table_geometry(T_LOCKED, grid="none")}]},
+         "result": failed("layer_locked", locked_message("Kilitli katman"), "changes[0].uid"), "expect": T_NOTHING},
     ],
 })
 

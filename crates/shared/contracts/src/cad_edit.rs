@@ -143,6 +143,11 @@ pub enum EditOperation {
     TextStyle,
     /// Ölçü stilleri's Kaydet, as `TextStyle` for dimensions.
     DimensionStyle,
+    /// Tabloyu düzenle's Kaydet (docs/adr/0184 §4): a table's cells, rows,
+    /// columns, merges and look written in place.
+    Table,
+    /// Tabloyu güncelle (docs/adr/0184 §5): tables written again from their source.
+    TableUpdate,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
@@ -378,6 +383,47 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         mask: bool,
+    },
+    /// A table (docs/adr/0184 §1): rows and columns of one-line cells
+    /// hanging from `p`, its top left corner, turned by `rotation` (degrees
+    /// counter-clockwise from east); `height` (metres, over 0) its cells'
+    /// text height; `rows` and `columns` its rows' heights and columns'
+    /// widths (metres, over 0); `cells` the words, row by row.
+    Table {
+        p: Vec2,
+        rotation: f64,
+        height: f64,
+        rows: Vec<f64>,
+        columns: Vec<f64>,
+        cells: Vec<Vec<String>>,
+        /// Merged ranges, their words in their top left cells.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::CellRange>>", optional))]
+        merges: Vec<crate::CellRange>,
+        /// Each column's alignment; absent: all left.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        aligns: Option<Vec<crate::TableAlign>>,
+        /// The first row is its heading.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        header: bool,
+        /// Which lines are drawn; absent: all.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        grid: Option<crate::TableGrid>,
+        /// Its frame's width, metres (Kalın çerçeve); absent: a line.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        frame: Option<f64>,
+        /// Its cells' style and face (docs/adr/0183 §2).
+        #[serde(flatten)]
+        #[cfg_attr(feature = "ts", ts(flatten))]
+        face: crate::TextFace,
+        /// Where its rows came from; absent: written by hand.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        source: Option<crate::TableSource>,
     },
 }
 

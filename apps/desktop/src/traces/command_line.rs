@@ -78,6 +78,8 @@ impl CommandLine {
             Id::new(crate::find_replace::FIND_FIELD),
             // Arama's search box (search/, docs/adr/0178).
             Id::new(crate::search::SEARCH_FIELD),
+            // Tabloyu düzenle's cell bar (tables/editor.rs, docs/adr/0184 §5).
+            Id::new(crate::tables::editor::BAR),
         ];
         let mut visit = |operation: &mut dyn Operation| {
             let bounds = Rectangle::default();
@@ -104,7 +106,7 @@ impl CommandLine {
                 "iz, oynatıcının izleyemediği bir widget işlemi üretti: komut satırında {what}"
             ));
         }
-        if !text_box.touched && !window_field.touched {
+        if !text_box.touched && !window_field.touched && !window_field.asked.get() {
             return Err(
                 "iz, oynatıcının izleyemediği bir widget işlemi üretti: komut satırının odağına dokunmuyor"
                     .to_owned(),
@@ -208,15 +210,19 @@ fn list_key(
 }
 
 /// A window's field as a widget operation sees it: whether the operation
-/// did anything to it (took or gave the keyboard, chose its text).
+/// did anything to it (took or gave the keyboard, chose its text) or asked
+/// whether it has the keyboard (Tabloyu düzenle's keys, docs/adr/0184 §5: a
+/// trace's field never has it).
 #[derive(Default)]
 struct WindowField {
     focused: bool,
     touched: bool,
+    asked: std::cell::Cell<bool>,
 }
 
 impl Focusable for WindowField {
     fn is_focused(&self) -> bool {
+        self.asked.set(true);
         self.focused
     }
 

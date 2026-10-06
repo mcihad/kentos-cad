@@ -193,6 +193,8 @@ pub fn build_fixed<D: Drawing + ?Sized>(doc: &D, palette: &Palette, origin: Vec2
                 }
                 // Its arrowhead solid in its colour (docs/adr/0146 §5).
                 Entity::Leader(_) => leader_parts(&mut b, entity, color, Some(color)),
+                // Its lines; its words over the scene, as text (docs/adr/0184 §2).
+                Entity::Table(_) => table_lines(&mut b, entity, color),
                 // Text over the scene (the host's); curves and bulged paths in the
                 // curves part; construction lines in theirs.
                 _ => {}
@@ -232,6 +234,17 @@ fn leader_parts(b: &mut Builder, entity: &Entity, color: Rgba8, fill: Option<Rgb
         b.path(lines, false, color);
     } else if let Some(ring) = leader::head_ring(&l.head) {
         b.polygon(&[ring], color, fill);
+    }
+}
+
+/// A table's lines and its frame's band, filled (docs/adr/0184 §2), as the core lays them out.
+fn table_lines(b: &mut Builder, entity: &Entity, color: Rgba8) {
+    let s = shape(entity);
+    for [from, to] in kentos_geometry_core::geom::table::lines_of(&s) {
+        b.segment(from, to, color);
+    }
+    for strip in kentos_geometry_core::geom::table::band_of(&s) {
+        b.polygon(&[strip.to_vec()], color, Some(color));
     }
 }
 
@@ -619,6 +632,7 @@ fn highlight_one(b: &mut Builder, entity: &Entity, style: &Highlight, tol: f64, 
             dimension_lines(b, entity, color, style.fill);
         }
         Entity::Leader(_) => leader_parts(b, entity, color, style.fill),
+        Entity::Table(_) => table_lines(b, entity, color),
         Entity::Xline(_) | Entity::Ray(_) => construction_line(b, entity, clip, color),
         _ => {}
     }
@@ -1139,6 +1153,35 @@ fn shape(entity: &Entity) -> Shape {
             }),
         },
         Entity::Circle(c) => Shape::Circle { c: v(&c.c), r: c.r },
+        // Its lines are what the scene draws (docs/adr/0184 §2); its words are labels.
+        Entity::Table(t) => Shape::Table {
+            p: v(&t.p),
+            rotation: t.rotation,
+            height: t.height,
+            rows: t.rows.clone(),
+            columns: t.columns.clone(),
+            cells: t.cells.clone(),
+            merges: (!t.merges.is_empty()).then(|| {
+                t.merges
+                    .iter()
+                    .map(|m| kentos_geometry_core::entity::CellRange {
+                        row: m.row as usize,
+                        col: m.col as usize,
+                        rows: m.rows as usize,
+                        cols: m.cols as usize,
+                    })
+                    .collect()
+            }),
+            aligns: t
+                .aligns
+                .as_ref()
+                .map(|a| a.iter().map(|x| x.name().to_owned()).collect()),
+            header: t.header.then_some(true),
+            grid: t.grid.map(|g| g.name().to_owned()),
+            frame: t.frame,
+            source: None,
+            face: text_face(&t.face),
+        },
         Entity::Leader(l) => Shape::Leader {
             pts: points(&l.pts),
             text: l.text.clone(),

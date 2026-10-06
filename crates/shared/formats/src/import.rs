@@ -74,6 +74,7 @@ pub fn defining_bounds(e: &Entity) -> Option<Bounds> {
         // Its insertion point: the extent of its definition is the store's (docs/adr/0144).
         Entity::Insert(e) => add(&e.p),
         Entity::Leader(e) => e.pts.iter().for_each(&mut add),
+        Entity::Table(e) => crate::blocks::table_corners(e).iter().for_each(&mut add),
     }
     b
 }

@@ -7,21 +7,23 @@
 //! docs/adr/0143), schema 6 the `insert` kind (docs/adr/0144), schema 7 a
 //! text's `align`, `widthFactor` and `mask` (docs/adr/0145), schema 8 the
 //! `leader` kind (docs/adr/0146), schema 9 the dimension's new kinds, its
-//! `mask` and a slope's `za`, `zb` (docs/adr/0147); in an older schema they
-//! are unknown fields, kinds or values. A block definition's objects are
-//! read the same way, without persistent ids.
+//! `mask` and a slope's `za`, `zb` (docs/adr/0147), schema 22 the `table`
+//! kind (docs/adr/0184), the drawing's only; in an older schema they are
+//! unknown fields, kinds or values. A block definition's objects are read
+//! the same way, without persistent ids.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use kentos_contracts::{
-    ArcEntity, AreaPart, BlockDefinition, BlockId, CircleEntity, ConstructionEntity,
+    ArcEntity, AreaPart, BlockDefinition, BlockId, CellRange, CircleEntity, ConstructionEntity,
     DimensionArrow, DimensionEntity, DimensionLook, DimensionStyle, DimensionTextPlace,
     DrawingFont, DrawingUnit, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity,
     HatchPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, MAX_AFFIX,
     MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO, MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_OBLIQUE,
     MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph, PathEntity, PointEntity, PointPart,
-    RingGeometry, SplineEntity, TextAlign, TextEntity, TextFace, TextRun, TextScript, Vec2,
-    label_scale_ok, oblique_holds, width_factor_ok,
+    RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign,
+    TextEntity, TextFace, TextRun, TextScript, Vec2, label_scale_ok, oblique_holds,
+    width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -33,7 +35,7 @@ use crate::{
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
-    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS,
     SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
@@ -54,6 +56,7 @@ enum Kind {
     Hatch,
     Insert,
     Leader,
+    Table,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -75,6 +78,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("hatch", Kind::Hatch),
     ("insert", Kind::Insert),
     ("leader", Kind::Leader),
+    ("table", Kind::Table),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -122,6 +126,8 @@ pub(super) struct Features {
     /// Schema 21: the settings' text and dimension styles, a text's face and a
     /// dimension's look (docs/adr/0183).
     pub(super) styles: bool,
+    /// Schema 22: the `table` kind (docs/adr/0184).
+    tables: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -149,6 +155,7 @@ impl Features {
             linked_texts: schema >= SCHEMA_WITH_LINKED_TEXTS,
             paragraphs: schema >= SCHEMA_WITH_PARAGRAPHS,
             styles: schema >= SCHEMA_WITH_STYLES,
+            tables: schema >= SCHEMA_WITH_TABLES,
             uids: true,
         }
     }
@@ -224,6 +231,25 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 key,
                 "pts" | "text" | "height" | "rotation" | "arrow" | "mask"
             ),
+            Kind::Table => matches!(
+                key,
+                "p" | "rotation"
+                    | "height"
+                    | "rows"
+                    | "columns"
+                    | "cells"
+                    | "merges"
+                    | "aligns"
+                    | "header"
+                    | "grid"
+                    | "frame"
+                    | "source"
+                    | "textStyle"
+                    | "font"
+                    | "bold"
+                    | "italic"
+                    | "oblique"
+            ),
         }
 }
 
@@ -295,6 +321,45 @@ struct Fields {
     face_at: usize,
     look: DimensionLook,
     runs_at: usize,
+    /// A table's own fields (docs/adr/0184), and where each is (for a refusal).
+    rows: Option<Vec<f64>>,
+    columns: Option<Vec<f64>>,
+    cells: Option<Vec<Vec<String>>>,
+    merges: Option<Vec<CellRange>>,
+    aligns: Option<Vec<TableAlign>>,
+    header: Option<bool>,
+    grid: Option<TableGrid>,
+    frame: Option<f64>,
+    source: Option<TableSource>,
+    table_at: TablePlaces,
+}
+
+/// Where a table's fields are in the payload, for a refusal of its shape.
+#[derive(Default)]
+struct TablePlaces {
+    height: usize,
+    rows: usize,
+    columns: usize,
+    cells: usize,
+    merges: usize,
+    aligns: usize,
+    frame: usize,
+    source: usize,
+}
+
+impl TablePlaces {
+    fn of(&self, field: &str) -> usize {
+        match field {
+            "height" => self.height,
+            "rows" => self.rows,
+            "columns" => self.columns,
+            "cells" => self.cells,
+            "merges" => self.merges,
+            "aligns" => self.aligns,
+            "frame" => self.frame,
+            _ => self.source,
+        }
+    }
 }
 
 /// The objects and their persistent ids, each id once (§6.8); each insert
@@ -377,13 +442,11 @@ pub(super) fn object(
     let mut previous = None;
     let name = r.key(&mut previous)?;
     r.push(Seg::Key(name));
-    let Some(&(_, kind)) = KINDS
-        .iter()
-        .find(|(k, _)| *k == name)
-        .filter(|(_, kind)| {
-            (has.blocks || *kind != Kind::Insert) && (has.leaders || *kind != Kind::Leader)
-        })
-    else {
+    let Some(&(_, kind)) = KINDS.iter().find(|(k, _)| *k == name).filter(|(_, kind)| {
+        (has.blocks || *kind != Kind::Insert)
+            && (has.leaders || *kind != Kind::Leader)
+            && (has.tables || *kind != Kind::Table)
+    }) else {
         return Err(r.fail(
             Code::UnknownKind,
             &format!(
@@ -391,6 +454,10 @@ pub(super) fn object(
             ),
         ));
     };
+    // Only the drawing's: a block definition holds no table (docs/adr/0184 §1).
+    if kind == Kind::Table && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında tablo olamaz"));
+    }
     let mut f = Fields::default();
     map(r, |r, key| {
         if !allowed(kind, key, has) {
@@ -453,8 +520,66 @@ pub(super) fn object(
                 }
                 f.height = Some(h);
             }
-            "height" => f.height = Some(r.float()?),
+            "height" => {
+                f.table_at.height = r.position();
+                f.height = Some(r.float()?);
+            }
             "rotation" => f.rotation = Some(r.float()?),
+            "rows" => {
+                f.table_at.rows = r.position();
+                f.rows = Some(floats(r)?);
+            }
+            "columns" => {
+                f.table_at.columns = r.position();
+                f.columns = Some(floats(r)?);
+            }
+            "cells" => {
+                f.table_at.cells = r.position();
+                f.cells = Some(list(r, |r, _| list(r, |r, _| text(r)))?);
+            }
+            "merges" => {
+                f.table_at.merges = r.position();
+                let ranges = list(r, |r, _| cell_range(r))?;
+                // The writer leaves an empty list out: one spelling (§6.6).
+                if ranges.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        f.table_at.merges,
+                        "birleşik alan listesi boş; birleşik alanı olmayan tabloda alan yazılmaz",
+                    ));
+                }
+                f.merges = Some(ranges);
+            }
+            "aligns" => {
+                f.table_at.aligns = r.position();
+                let names: Vec<(&str, TableAlign)> =
+                    TableAlign::ALL.iter().map(|a| (a.name(), *a)).collect();
+                f.aligns = Some(list(r, |r, _| named(r, &names))?);
+            }
+            "header" => {
+                let at = r.position();
+                if !r.bool()? {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "başlık false yazılmaz; başlıksız tabloda alan yoktur",
+                    ));
+                }
+                f.header = Some(true);
+            }
+            "grid" => {
+                let names: Vec<(&str, TableGrid)> =
+                    TableGrid::ALL.iter().map(|g| (g.name(), *g)).collect();
+                f.grid = Some(named(r, &names)?);
+            }
+            "frame" => {
+                f.table_at.frame = r.position();
+                f.frame = Some(r.float()?);
+            }
+            "source" => {
+                f.table_at.source = r.position();
+                f.source = Some(table_source(r)?);
+            }
             "offset" => f.offset = Some(r.float()?),
             "angle" => {
                 f.angle_at = r.position();
@@ -583,7 +708,7 @@ pub(super) fn object(
                 if id.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "stil kimliği boş"));
                 }
-                if kind == Kind::Text {
+                if matches!(kind, Kind::Text | Kind::Table) {
                     f.face_at = at;
                     f.face.text_style = Some(id);
                 } else {
@@ -591,13 +716,14 @@ pub(super) fn object(
                 }
             }
             "font" => {
-                if kind == Kind::Text && f.face_at == 0 {
+                let faced = matches!(kind, Kind::Text | Kind::Table);
+                if faced && f.face_at == 0 {
                     f.face_at = r.position();
                 }
                 let names: Vec<(&str, DrawingFont)> =
                     DrawingFont::ALL.iter().map(|d| (d.id(), *d)).collect();
                 let font = Some(super::named(r, &names)?);
-                if kind == Kind::Text {
+                if faced {
                     f.face.font = font;
                 } else {
                     f.look.font = font;
@@ -944,6 +1070,110 @@ fn build(
             arrow: f.arrow,
             mask: f.mask.unwrap_or(false),
         }),
+        Kind::Table => {
+            // Bold, italic and a slant need a typeface (docs/adr/0183 §2).
+            if let Some((_, words)) = f.face.problem() {
+                return Err(r.fail_at(Code::BadValue, f.face_at, &words));
+            }
+            let table = TableEntity {
+                base,
+                p: required(r, f.p, "p")?,
+                rotation: required(r, f.rotation, "rotation")?,
+                height: required(r, f.height, "height")?,
+                rows: required(r, f.rows.take(), "rows")?,
+                columns: required(r, f.columns.take(), "columns")?,
+                cells: required(r, f.cells.take(), "cells")?,
+                merges: f.merges.take().unwrap_or_default(),
+                aligns: f.aligns.take(),
+                header: f.header.unwrap_or(false),
+                grid: f.grid,
+                frame: f.frame,
+                face: std::mem::take(&mut f.face),
+                source: f.source.take(),
+            };
+            // Its rows, columns, cells and ranges hold together (docs/adr/0184 §1).
+            if let Some((field, words)) = table.shape().problem() {
+                return Err(field_fail(r, field, f.table_at.of(field), &words));
+            }
+            Entity::Table(table)
+        }
+    })
+}
+
+/// A table's merged range (§6.6): its `row`, `col`, `rows` and `cols`.
+fn cell_range(r: &mut Reader<'_>) -> Result<CellRange, KcadError> {
+    let (mut row, mut col, mut rows, mut cols) = (None, None, None, None);
+    let limit = u64::from(u32::MAX);
+    map(r, |r, key| {
+        let n = Some(r.uint(limit)? as u32);
+        match key {
+            "row" => row = n,
+            "col" => col = n,
+            "rows" => rows = n,
+            "cols" => cols = n,
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    Ok(CellRange {
+        row: required(r, row, "row")?,
+        col: required(r, col, "col")?,
+        rows: required(r, rows, "rows")?,
+        cols: required(r, cols, "cols")?,
+    })
+}
+
+/// Where a table's rows came from (§6.6): its `kind` and the objects' ids,
+/// or a file's `name` and `sheet`.
+fn table_source(r: &mut Reader<'_>) -> Result<TableSource, KcadError> {
+    let at = r.position();
+    let (mut kind, mut objects, mut name, mut sheet) = (None, None, None, None);
+    map(r, |r, key| {
+        match key {
+            "kind" => {
+                kind = Some(named(
+                    r,
+                    &[
+                        ("coordinates", 0u8),
+                        ("areas", 1),
+                        ("attributes", 2),
+                        ("file", 3),
+                    ],
+                )?)
+            }
+            "objects" => objects = Some(list(r, |r, _| Ok(EntityId(id16(r)?)))?),
+            "name" => name = Some(text(r)?),
+            "sheet" => sheet = Some(text(r)?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    let kind = required(r, kind, "kind")?;
+    if kind == 3 {
+        if objects.is_some() {
+            return Err(r.fail_at(
+                Code::BadValue,
+                at,
+                "dosyadan gelen tablonun kaynağında nesne yazılmaz",
+            ));
+        }
+        return Ok(TableSource::File {
+            name: required(r, name, "name")?,
+            sheet,
+        });
+    }
+    if name.is_some() || sheet.is_some() {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            "nesnelerden gelen tablonun kaynağında dosya adı yazılmaz",
+        ));
+    }
+    let objects = required(r, objects, "objects")?;
+    Ok(match kind {
+        0 => TableSource::Coordinates { objects },
+        1 => TableSource::Areas { objects },
+        _ => TableSource::Attributes { objects },
     })
 }
 

@@ -1,0 +1,335 @@
+/* Tablo (docs/adr/0184): Tablo ekle and Tabloyu düzenle (ui/table/). Loaded with the windows, not at start-up
+   (CLAUDE.md §20). The desktop's are apps/desktop/src/tables/. */
+
+/* Tablo ekle's sources: five cards in a row, an icon over each name; the chosen one in the accent. */
+.table-sources {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.table-source {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: calc(62px * var(--ui-scale));
+  padding: 8px 6px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-field);
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.2;
+  text-align: center;
+}
+.table-source span {
+  overflow: hidden;
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.table-source:hover:not([aria-checked='true']) {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.table-source[aria-checked='true'] {
+  border-color: var(--c-accent-line);
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--c-accent-line);
+}
+.table-source:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.table-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.table-file,
+.table-objects {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--c-panel-head);
+  border: 1px solid var(--c-line-soft);
+  border-radius: var(--r-md);
+}
+.table-file .btn,
+.table-objects .btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.table-objects__count {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+/* Görünüş: its own titled block, as the other windows' groups. */
+.table-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--c-line-soft);
+}
+.dialog--table .dialog__body {
+  gap: 12px;
+}
+.table-section__title {
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.table-fixed {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ctl-h);
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+.table-lines .seg__opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+}
+.table-frame {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--ctl-h);
+}
+.table-frame .io-check svg {
+  color: var(--c-text-2);
+}
+
+/* The first rows of the table to come. */
+.table-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.table-preview__wrap {
+  max-height: calc(150px * var(--ui-scale));
+  overflow: auto;
+  border: 1px solid var(--c-line-soft);
+  border-radius: var(--r-md);
+  background: var(--c-field);
+}
+.table-preview__grid {
+  border-collapse: collapse;
+  min-width: 100%;
+  font-size: var(--fs-sm);
+}
+.table-preview__grid td {
+  max-width: calc(180px * var(--ui-scale));
+  padding: 3px 9px;
+  overflow: hidden;
+  border-right: 1px solid var(--c-line-soft);
+  border-bottom: 1px solid var(--c-line-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.table-preview__grid td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.table-preview__head td {
+  background: var(--c-panel-head);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Tabloyu düzenle: tools, the cell bar, the grid, sizes, source and status. */
+.dialog--table-editor .dialog__body {
+  gap: 10px;
+}
+.table-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: var(--c-panel-head);
+  border: 1px solid var(--c-line-soft);
+  border-radius: var(--r-md);
+}
+.table-tools__gap {
+  width: 1px;
+  height: calc(20px * var(--ui-scale));
+  margin: 0 5px;
+  background: var(--c-line);
+}
+.table-tool[aria-pressed='true'] {
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+  box-shadow: inset 0 0 0 1px var(--c-accent-line);
+}
+.table-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.table-bar__address {
+  flex: none;
+  min-width: calc(64px * var(--ui-scale));
+  padding: 0 8px;
+  line-height: var(--ctl-h);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  background: var(--c-panel-head);
+  color: var(--c-text-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+.table-bar__input {
+  flex: 1;
+  min-width: 0;
+}
+.table-grid__wrap {
+  height: min(calc(330px * var(--ui-scale)), 42vh);
+  overflow: auto;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-field);
+  outline: none;
+}
+.table-grid__wrap:focus-visible {
+  box-shadow: 0 0 0 2px var(--c-accent-line);
+}
+.table-grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-sm);
+  user-select: none;
+}
+.table-grid th,
+.table-grid td {
+  height: 26px;
+  box-sizing: border-box;
+  padding: 0 9px;
+  border-right: 1px solid var(--c-line-soft);
+  border-bottom: 1px solid var(--c-line-soft);
+  white-space: nowrap;
+}
+.table-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--c-panel-head);
+  color: var(--c-text-3);
+  font-weight: 500;
+  text-align: center;
+}
+.table-grid__corner {
+  left: 0;
+  z-index: 3 !important;
+  min-width: calc(40px * var(--ui-scale));
+}
+.table-grid__row {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: calc(40px * var(--ui-scale));
+  background: var(--c-panel-head);
+  color: var(--c-text-3);
+  font-weight: 500;
+  text-align: right;
+}
+.table-grid__row--on,
+.table-grid thead .table-grid__col--on {
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+}
+.table-grid__cell {
+  min-width: calc(72px * var(--ui-scale));
+  max-width: calc(260px * var(--ui-scale));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: cell;
+}
+.table-grid__cell--center {
+  text-align: center;
+}
+.table-grid__cell--right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.table-grid__cell--head {
+  font-weight: 650;
+}
+.table-grid__cell--on {
+  background: var(--c-accent-soft);
+}
+.table-grid__cell--active {
+  box-shadow: inset 0 0 0 2px var(--c-accent);
+}
+.table-grid__spacer td {
+  padding: 0;
+  border: 0;
+}
+.table-sizes {
+  align-items: flex-end;
+}
+.table-size {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.table-size__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.table-num {
+  width: calc(96px * var(--ui-scale));
+  font-variant-numeric: tabular-nums;
+}
+.table-size__unit {
+  color: var(--c-text-3);
+  font-size: var(--fs-sm);
+}
+.table-source-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--ctl-h);
+}
+.table-source-row__text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.table-source-row__hint {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.table-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.table-status[data-kind='error'] {
+  color: var(--c-danger);
+}
