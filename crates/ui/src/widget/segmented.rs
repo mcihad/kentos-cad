@@ -25,7 +25,7 @@
 use std::fmt::Display;
 
 use iced::widget::tooltip::Position;
-use iced::widget::{Row, button, container, row, space, stack};
+use iced::widget::{Row, button, container, responsive, row, space, stack};
 use iced::{Center, Element, Length, Theme};
 
 use crate::icon::{Icon, icon};
@@ -44,6 +44,7 @@ const COMPACT_INSET: f32 = 1.0;
 const GAP: f32 = 2.0;
 
 /// Parçalı seçimin bir parçası.
+#[derive(Clone)]
 struct Segment<Message> {
     text: String,
     selected: bool,
@@ -203,6 +204,33 @@ fn separator<'a, Message: 'a>(visible: bool, height: f32) -> Element<'a, Message
     .into()
 }
 
+/// Genişliği dolduran seçimde parçaların genişlikleri (web'in `flex: 1`'i,
+/// `white-space: nowrap` ile): parçalar yuvayı eşit paylaşır, ama hiçbiri
+/// yazısından dar olmaz; yazısı payına sığmayan yazısı kadar alır, kalanı
+/// öbürleri eşit paylaşır. `room`: parçalara kalan genişlik (aralıklar
+/// düşülmüş).
+pub fn fill_widths(needs: &[f32], room: f32) -> Vec<f32> {
+    let n = needs.len();
+    let mut fixed = vec![false; n];
+    loop {
+        let taken: f32 = (0..n).filter(|&i| fixed[i]).map(|i| needs[i]).sum();
+        let free = n - fixed.iter().filter(|f| **f).count();
+        if free == 0 {
+            return needs.to_vec();
+        }
+        let share = (room - taken).max(0.0) / free as f32;
+        let more: Vec<usize> = (0..n).filter(|&i| !fixed[i] && needs[i] > share).collect();
+        if more.is_empty() {
+            return (0..n)
+                .map(|i| if fixed[i] { needs[i] } else { share })
+                .collect();
+        }
+        for i in more {
+            fixed[i] = true;
+        }
+    }
+}
+
 impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Message> {
     fn from(segmented: Segmented<'a, Message>) -> Self {
         let fill = segmented.width != Length::Shrink;
@@ -212,47 +240,124 @@ impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Messa
             (metrics::control(), INSET)
         };
         let height = outer - 2.0 * inset;
-        let padding = if segmented.compact { 8.0 } else { 12.0 };
-        let accent = segmented.accent;
-        let icon_only = segmented.icon_only;
-        let mut hints = segmented.hints.into_iter();
-        let mut icons = segmented.icons.into_iter();
-        let selected: Vec<bool> = segmented.segments.iter().map(|s| s.selected).collect();
+        let width = segmented.width;
+        let parts = Parts {
+            segments: segmented.segments,
+            hints: segmented.hints,
+            icons: segmented.icons,
+            icon_only: segmented.icon_only,
+            compact: segmented.compact,
+            accent: segmented.accent,
+            height,
+        };
+        // Filling its width, the row is laid out when the width is known: the parts' shares and
+        // their labels' widths decide (fill_widths).
+        let content: Element<'a, Message> = if fill {
+            responsive(move |size| {
+                let n = parts.segments.len();
+                let room = size.width - GAP * n.saturating_sub(1) as f32;
+                let needs = parts.needs();
+                // Unbounded (a row that grows with its contents): each part as wide as its label.
+                let widths = if room.is_finite() {
+                    fill_widths(&needs, room)
+                } else {
+                    needs
+                };
+                parts.row(Some(&widths))
+            })
+            .height(height)
+            .into()
+        } else {
+            parts.row(None)
+        };
+        container(content)
+            .padding(inset)
+            .height(outer)
+            .width(typography::length(width))
+            .style(style::container::segmented)
+            .into()
+    }
+}
 
+/// What a segmented choice is drawn from, kept so the row can be built again
+/// once its width is known.
+struct Parts<Message> {
+    segments: Vec<Segment<Message>>,
+    hints: Vec<String>,
+    icons: Vec<Icon>,
+    icon_only: bool,
+    compact: bool,
+    accent: bool,
+    height: f32,
+}
+
+impl<'a, Message: Clone + 'a> Parts<Message> {
+    fn padding(&self, shows_name: bool) -> f32 {
+        if !shows_name {
+            7.0
+        } else if self.compact {
+            8.0
+        } else {
+            12.0
+        }
+    }
+
+    /// Each part's least width: its label in the strong face (the part keeps that width when
+    /// chosen), its icon and its padding.
+    fn needs(&self) -> Vec<f32> {
+        let size = if self.compact { 12.0 } else { 14.0 };
+        self.segments
+            .iter()
+            .enumerate()
+            .map(|(i, s)| {
+                let glyph = self.icons.get(i).is_some();
+                let shows_name = !(self.icon_only && glyph);
+                let mut w = 2.0 * self.padding(shows_name);
+                if glyph {
+                    w += size;
+                }
+                if shows_name {
+                    w += typography::measured_width(&s.text, typography::body(), true).ceil();
+                    if glyph {
+                        w += 6.0;
+                    }
+                }
+                w
+            })
+            .collect()
+    }
+
+    /// The parts in a row: `widths` when filling (each part's), else as wide as their contents.
+    fn row(&self, widths: Option<&[f32]>) -> Element<'a, Message> {
+        let height = self.height;
+        let selected: Vec<bool> = self.segments.iter().map(|s| s.selected).collect();
         let mut segments = Row::new().align_y(Center);
-
-        for (index, segment) in segmented.segments.into_iter().enumerate() {
+        for (index, segment) in self.segments.iter().enumerate() {
             if index > 0 {
                 let visible = !selected[index - 1] && !selected[index];
                 segments = segments.push(separator(visible, height));
             }
-
-            let glyph = icons.next();
-            let name = segment.text;
-            let shows_name = !(icon_only && glyph.is_some());
-
+            let glyph = self.icons.get(index).copied();
+            let name = segment.text.clone();
+            let shows_name = !(self.icon_only && glyph.is_some());
             let mut content = row![].spacing(6).align_y(Center);
-
             if let Some(glyph) = glyph {
-                content =
-                    content.push(icon(glyph).size(if segmented.compact { 12.0 } else { 14.0 }));
+                content = content.push(icon(glyph).size(if self.compact { 12.0 } else { 14.0 }));
             }
-
             if shows_name {
                 content = content.push(face(name.clone(), segment.selected));
             }
-
             let on = segment.selected;
+            let accent = self.accent;
             let content = container(content).height(height).center_y(height);
-            let content = if fill {
+            let content = if widths.is_some() {
                 content.center_x(Length::Fill)
             } else {
                 content
             };
-
             let segment_button = button(content)
-                .on_press_maybe(segment.on_press)
-                .padding([0.0, if shows_name { padding } else { 7.0 }])
+                .on_press_maybe(segment.on_press.clone())
+                .padding([0.0, self.padding(shows_name)])
                 .style(move |theme: &Theme, status| {
                     if accent {
                         style::button::segment_accent(on)(theme, status)
@@ -260,27 +365,42 @@ impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Messa
                         style::button::segment(on)(theme, status)
                     }
                 });
-
-            let segment_button: Element<'a, Message> = if fill {
-                segment_button.width(Length::Fill).into()
-            } else {
-                segment_button.into()
+            let segment_button: Element<'a, Message> = match widths.and_then(|w| w.get(index)) {
+                Some(w) => segment_button.width(Length::Fixed(*w)).into(),
+                None => segment_button.into(),
             };
-
             // Yalnız ikonlu parçanın ipucu, verilmemişse adıdır.
-            let hint = hints.next().or_else(|| (!shows_name).then(|| name.clone()));
-
+            let hint = self
+                .hints
+                .get(index)
+                .cloned()
+                .or_else(|| (!shows_name).then(|| name.clone()));
             segments = segments.push(match hint {
                 Some(hint) => tip(segment_button, Tip::new(hint), Position::Bottom),
                 None => segment_button,
             });
         }
+        segments.into()
+    }
+}
 
-        container(segments)
-            .padding(inset)
-            .height(outer)
-            .width(typography::length(segmented.width))
-            .style(style::container::segmented)
-            .into()
+#[cfg(test)]
+mod tests {
+    use super::fill_widths;
+
+    #[test]
+    fn parts_share_the_width_but_none_is_narrower_than_its_label() {
+        // Every label fits its share: equal parts.
+        assert_eq!(fill_widths(&[60.0, 40.0, 50.0], 300.0), vec![100.0; 3]);
+        // A long label takes its width; the others share the rest.
+        assert_eq!(
+            fill_widths(&[120.0, 50.0, 40.0], 300.0),
+            vec![120.0, 90.0, 90.0]
+        );
+        // Too narrow for all: each its label (the row is wider than its room).
+        assert_eq!(
+            fill_widths(&[120.0, 110.0, 100.0], 300.0),
+            vec![120.0, 110.0, 100.0]
+        );
     }
 }

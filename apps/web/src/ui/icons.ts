@@ -565,6 +565,19 @@ export const ICONS = {
   numberVertices: `<path d="M3 13V4.5l6.5-2L13 6"/>${grip(3, 13)}${grip(3, 4.5)}${grip(9.5, 2.5)}<path d="M12 10v7.5M15.5 10v7.5M10.5 12.5H17M10.5 15H17"/>`,
   edgeLengths: `<path d="M3 16.5 10 3.5l7 13z"/><path d="M4.4 8.6 7.3 3.2M12.7 3.2l2.9 5.4M5.5 19h9" stroke-dasharray="1.6 1.4"/>`,
   selectExpression: '<path d="M3.5 3 12 8.2l-3.7 1-1.9 3.6z"/><path d="M11 13.2h6.5M11 16.4h6.5"/>',
+  // Mekânsal ve öznitelik sorgusu (docs/adr/0200), the owner's choices (7 October): the select pointer with a parcel
+  // holding an object; a parcel, its trees and a sigma; an arrow from a parcel's edge into its building; a sigma and
+  // bars; a key going into a table.
+  selectLocation:
+    '<path d="M2 1.8 8.6 5.9l-2.9.8-1.5 2.8z"/><path d="M8.5 10 14.5 7.6l3.3 4.9-2.6 5.1H8.2z"/><rect x="11" y="11.3" width="3.4" height="3.4" fill="currentColor" fill-opacity=".28" stroke="none"/><rect x="11" y="11.3" width="3.4" height="3.4" stroke-width="1.1"/>',
+  infoInside:
+    '<path d="M2.5 9.2 7.5 6.6l5 1.9-1 8.9h-8z"/><circle cx="5.8" cy="11.6" r="1.1" fill="currentColor" stroke="none"/><circle cx="9" cy="10.9" r="1.1" fill="currentColor" stroke="none"/><circle cx="7.4" cy="14.4" r="1.1" fill="currentColor" stroke="none"/><path d="M18 2.8h-4.6l2.5 3-2.5 3H18" stroke-width="1.3"/>',
+  infoEnclosing:
+    '<path d="M2.5 6.5 9.5 2.8l8 3.6-1.5 11.1H4z"/><rect x="8" y="10.3" width="4.6" height="4.6" fill="currentColor" fill-opacity=".28" stroke="none"/><rect x="8" y="10.3" width="4.6" height="4.6" stroke-width="1.2"/><path d="M10.3 4.8v3.8M8.7 7.1l1.6 1.6 1.6-1.6" stroke-width="1.2"/>',
+  statsSummary:
+    '<path d="M9 3.2H2.8l3.4 4.6-3.4 4.6H9" stroke-width="1.4"/><path d="M11.8 17v-5M14.8 17V8.5M17.8 17v-6.5" stroke-width="2"/><path d="M10.3 17.2h8.5" stroke-width="1.1"/>',
+  joinField:
+    '<circle cx="5.2" cy="5.2" r="2.7"/><path d="m7.1 7.1 4 4M9.3 9.3l1.3-1.3M10.6 10.6l1.3-1.3" stroke-width="1.3"/><rect x="10.5" y="11" width="7.5" height="6.5" rx=".8"/><path d="M10.5 14.2h7.5M14.2 11v6.5" stroke-width="1.1"/>',
   // Öznitelik tablosu (docs/adr/0199 §4): a table and its layer's object (the owner's choice A).
   featureTable:
     '<rect x="2" y="2.5" width="11.5" height="10" rx="1"/><path d="M2 6h11.5M2 9.25h11.5M6 6v6.5"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z"/>',

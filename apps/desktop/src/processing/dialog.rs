@@ -10,8 +10,8 @@ use kentos_domain::Slot;
 use kentos_processing::model_runner::MODEL_PREFIX;
 use kentos_processing::parameters::{default_values, restore_values};
 use kentos_processing::{
-    Defaults, InputSummary, Issue, Outcome, ParamKind, Registry, Runner, Scene, Target, Tool,
-    Values,
+    Defaults, InputSummary, Issue, Outcome, OutputKind, ParamKind, Registry, Runner, Scene, Target,
+    Tool, Values,
 };
 use serde_json::{Value, json};
 
@@ -30,17 +30,74 @@ pub enum RunStatus {
         background: bool,
     },
     /// It ran. `pick`: what Sonuçları seç selects; `selected`: the run chose
-    /// the selection itself; `undo`: it changed the drawing.
+    /// the selection itself; `undo`: it changed the drawing; `table`: the
+    /// run's table output, shown under the form (docs/adr/0200 §7).
     Ok {
         text: String,
         pick: Vec<Slot>,
         selected: bool,
         undo: bool,
+        table: Option<ResultTable>,
     },
     /// It did not start (nothing selected …).
     Invalid(String),
     /// It started and failed, or was stopped.
     Error(String),
+}
+
+/// A table a run gives (Özet istatistik): its columns and rows, texts.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ResultTable {
+    pub columns: Vec<String>,
+    pub rows: Vec<Vec<String>>,
+}
+
+impl ResultTable {
+    /// The table an output holds (`{ columns, rows }`); none when it is not one.
+    pub fn read(v: &Value) -> Option<Self> {
+        let texts = |v: &Value| -> Option<Vec<String>> {
+            v.as_array()?
+                .iter()
+                .map(|c| c.as_str().map(str::to_owned))
+                .collect()
+        };
+        Some(Self {
+            columns: texts(v.get("columns")?)?,
+            rows: v
+                .get("rows")?
+                .as_array()?
+                .iter()
+                .map(texts)
+                .collect::<Option<_>>()?,
+        })
+    }
+
+    /// The columns' row, then the rows: what Panoya kopyala and CSV olarak kaydet write.
+    pub fn lines(&self) -> Vec<Vec<String>> {
+        std::iter::once(self.columns.clone())
+            .chain(self.rows.iter().cloned())
+            .collect()
+    }
+}
+
+/// A file parameter's value from a chosen file (docs/adr/0200 §7): its name,
+/// where it is and its first sheet's rows, read as Tablo ekle reads one; or
+/// why it cannot be read.
+pub fn file_value(file: &str, path: &std::path::Path, bytes: &[u8]) -> Result<Value, String> {
+    let read = kentos_formats::table_file::read(bytes);
+    if let Some(problem) = read.problem {
+        return Err(format!("“{file}” okunamadı: {problem}"));
+    }
+    let rows = read
+        .sheets
+        .into_iter()
+        .next()
+        .map(|s| s.rows)
+        .unwrap_or_default();
+    if rows.is_empty() {
+        return Err(format!("“{file}” boş: okunacak satır yok."));
+    }
+    Ok(json!({ "name": file, "path": path.to_string_lossy(), "rows": rows }))
 }
 
 /// One tool's or model's window.
@@ -94,6 +151,33 @@ impl ToolDialog {
             run_issues: Vec::new(),
             inputs: BTreeMap::new(),
             previews: BTreeMap::new(),
+        }
+    }
+
+    /// A file the last values name (its path kept, not its rows) read again
+    /// from its place; one that cannot be read is left to be chosen again.
+    pub fn reread_files(&mut self) {
+        for p in &self.tool.parameters {
+            if !matches!(p.kind, ParamKind::File { .. }) {
+                continue;
+            }
+            let Some(v) = self.values.get(&p.name) else {
+                continue;
+            };
+            let (Some(file), Some(path), None) = (
+                v.get("name").and_then(Value::as_str),
+                v.get("path").and_then(Value::as_str),
+                v.get("rows"),
+            ) else {
+                continue;
+            };
+            let path = std::path::PathBuf::from(path);
+            if let Some(value) = std::fs::read(&path)
+                .ok()
+                .and_then(|bytes| file_value(file, &path, &bytes).ok())
+            {
+                self.values.insert(p.name.clone(), value);
+            }
         }
     }
 
@@ -291,11 +375,19 @@ impl ToolDialog {
                 edited,
                 record,
             } => {
+                let table = self
+                    .tool
+                    .outputs
+                    .iter()
+                    .find(|o| o.kind == OutputKind::Table)
+                    .and_then(|o| result.outputs.get(&o.name))
+                    .and_then(ResultTable::read);
                 self.status = RunStatus::Ok {
                     text: record.summary,
                     pick: if added.is_empty() { touched } else { added },
                     selected: result.select.is_some(),
                     undo: edited,
+                    table,
                 };
                 self.attempted = false;
             }

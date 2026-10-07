@@ -4,9 +4,9 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 382 | 370 | 0 | 12 |
+| Komutlar | 387 | 375 | 0 | 12 |
 | Araçlar | 121 | 119 | 0 | 2 |
-| İşlem araçları | 4 | 4 | 0 | 0 |
+| İşlem araçları | 9 | 9 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
 | Ayarlar | 92 | 92 | 0 | 0 |
@@ -49,9 +49,9 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 310 | 0 | 58 | 12 | 2 | 382 |
+| Komutlar | 315 | 0 | 58 | 12 | 2 | 387 |
 | Araçlar | 119 | 0 | 0 | 2 | 0 | 121 |
-| İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
+| İşlem araçları | 9 | 0 | 0 | 0 | 0 | 9 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
 | Ayarlar | 88 | 0 | 3 | 0 | 1 | 92 |
@@ -76,7 +76,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 382; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 387; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -154,7 +154,7 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - `subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 
-#### İşlem araçları (0 / 4)
+#### İşlem araçları (0 / 9)
 
 Yok.
 
@@ -205,4 +205,4 @@ Yok.
 
 ## Test başvurusu
 
-127 / 382 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+132 / 387 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

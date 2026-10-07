@@ -2,13 +2,14 @@ import type { AppContext } from '../../../app/context';
 import { ENTITY_KIND_LABEL, type EntityKind } from '../../../model/entities';
 import { stepName, type ModelIssue, type ProcessingModel } from '../../../processing/model';
 import { addOutput as addModelOutput, INPUT_TYPES, inputFromParam, inputTypeFor, removeInput, removeStep, setCaption, setSource, sourcesFor } from '../../../processing/modelEdit';
-import { defaultValue, isVisible } from '../../../processing/parameters';
+import { defaultValue, fieldSource, isVisible } from '../../../processing/parameters';
 import type { FeaturesValue, ParamDef, ProcessingTool } from '../../../processing/types';
 import { h } from '../../dom';
 import { icon } from '../../icons';
 import { segmented, textField, toggleSwitch } from '../../widgets/controls';
 import { Dropdown } from '../../widgets/Dropdown';
 import type { MenuItem } from '../../widgets/PopupMenu';
+import { DIALOG_TEXTS } from '../dialogTexts';
 import { paramControl, type FieldEnv } from '../paramFields';
 import { DESIGNER_TEXTS, sourceText, type NodeRef } from './designerPlan';
 
@@ -245,6 +246,14 @@ function stepInspector(host: InspectorHost, stepId: string): HTMLElement {
   const env: FieldEnv = {
     ctx,
     describe: (name) => runner.describeInputs(tool, fixed())[name],
+    sourceOf: (name) => {
+      const def = tool.parameters.find((p) => p.name === name);
+      const values = fixed();
+      const src = def?.type === 'field' ? fieldSource(tool, def, values) : undefined;
+      return src ? runner.describeInputs(tool, values)[src] : undefined;
+    },
+    // A file's rows are not kept in a model (docs/adr/0200 §7): a step reads a layer instead.
+    chooseFile: () => ctx.log.info(DIALOG_TEXTS.file.inModel),
     previewExpression: (name) => runner.previewExpression(tool, fixed(), name),
     builderObjects: (name) => runner.builderObjects(tool, fixed(), name),
     pickPoint: (name) => host.pickPoint(stepId, name),

@@ -541,6 +541,14 @@ impl App {
                 }
                 return Task::none();
             }
+            // A file's rows are not kept in a model (docs/adr/0200 §7): a step reads a layer instead.
+            F::ChooseFile(_) => {
+                self.say(
+                    kentos_interaction::Level::Info,
+                    "Model adımında dosya seçilmez: dosyanın içeriği modelde saklanmaz. Kaynağı katman yapın.".to_owned(),
+                );
+                return Task::none();
+            }
             F::Run
             | F::Close
             | F::Reset
@@ -548,7 +556,11 @@ impl App {
             | F::Undo
             | F::Target(_)
             | F::Panel(_)
-            | F::PickObjects(_) => {
+            | F::PickObjects(_)
+            | F::FileChosen(..)
+            | F::CopyTable
+            | F::SaveTable
+            | F::TableSaved(_) => {
                 return Task::none();
             }
             F::Advanced => {

@@ -54,6 +54,7 @@ fn a_run_writes_one_undo_step_named_after_the_tool_and_the_window_stays() {
             pick: (11..=18).map(Slot).collect(),
             selected: false,
             undo: true,
+            table: None,
         }
     );
     assert_eq!(
@@ -124,6 +125,7 @@ fn a_run_in_the_background_does_what_it_does_here_in_one_undo_step() {
             pick: (11..=18).map(Slot).collect(),
             selected: false,
             undo: true,
+            table: None,
         }
     );
     assert_eq!(
@@ -594,7 +596,7 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     let _ = app.update(Message::Run("processing.toolbox"));
     assert!(app.docks.is_shown(Panel::Processing));
     assert_eq!(app.processing.panel.tab, Tab::Tools);
-    assert_eq!(app.processing_meta(), "4 araç");
+    assert_eq!(app.processing_meta(), "9 araç");
     // Turkish letters folded: “kose” finds Köşe noktalarını numarala only.
     event(&mut app, Event::Panel(PanelEvent::Search("kose".into())));
     let hits: Vec<String> = app

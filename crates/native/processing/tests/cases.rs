@@ -1,8 +1,10 @@
 //! The shared processing cases (fixtures/processing/v1, the format in
 //! fixtures/processing/README.md): each case runs a built-in tool or model
 //! on a drawing through the native runner, and what the run did is compared
-//! with what the case says. The web plays the same file
-//! (apps/web/src/processing/cases.test.ts).
+//! with what the case says. The web plays the same files
+//! (apps/web/src/processing/cases.test.ts): cases.json, and queries.json
+//! (docs/adr/0200), whose file values name files beside it, read through the
+//! formats core as the dialog reads a chosen file.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -12,6 +14,7 @@ use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_processing::model_runner::{model_as_tool, record_model, replay_model, run_model};
 use kentos_processing::parameters::default_values;
+use kentos_processing::types::ParamKind;
 use kentos_processing::{
     Defaults, Feedback, Host, Level, LogLine, Outcome, Prepared, Registry, Runner, Scene, Tool,
     Values,
@@ -154,11 +157,29 @@ fn slots(v: Option<&Value>) -> Vec<Slot> {
         .unwrap_or_default()
 }
 
-fn with_values(tool: &Tool, doc: &Document, over: Option<&Value>) -> Values {
+fn with_values(tool: &Tool, doc: &Document, over: Option<&Value>, files: &Value) -> Values {
     let mut values = default_values(tool, &Defaults::of(doc));
     if let Some(Value::Object(over)) = over {
         for (k, v) in over {
             values.insert(k.clone(), v.clone());
+        }
+    }
+    // A file parameter's value names a file beside the cases: the dialog's value, its name and first sheet's rows.
+    for p in &tool.parameters {
+        if let (ParamKind::File { .. }, Some(Value::String(name))) = (&p.kind, values.get(&p.name))
+        {
+            let path = files[name.as_str()]
+                .as_str()
+                .unwrap_or_else(|| panic!("dosya yok: {name}"));
+            let bytes = std::fs::read(folder().join(path)).expect("the file reads");
+            let read = kentos_formats::table_file::read(&bytes);
+            let rows = read
+                .sheets
+                .first()
+                .map(|s| s.rows.clone())
+                .unwrap_or_default();
+            let value = json!({ "name": name, "rows": rows });
+            values.insert(p.name.clone(), value);
         }
     }
     values
@@ -192,7 +213,7 @@ impl Feedback for Apart<'_> {
 /// another thread, a tool is prepared on the host, computed on the
 /// drawing's reading copy and finished on the host; a model runs on the
 /// copy, recorded, and is replayed on the host.
-fn play(c: &Value, registry: &Registry, on_copy: bool) -> Seen {
+fn play(c: &Value, registry: &Registry, on_copy: bool, files: &Value) -> Seen {
     let doc = load(c["document"].as_str().expect("a document"));
     let view = c.get("view").and_then(Value::as_array).map(|v| {
         let n = |i: usize| v[i].as_f64().expect("a number");
@@ -216,7 +237,7 @@ fn play(c: &Value, registry: &Registry, on_copy: bool) -> Seen {
         let tool = registry
             .tool(id)
             .unwrap_or_else(|| panic!("araç yok: {id}"));
-        let values = with_values(&tool, &host.doc, c.get("values"));
+        let values = with_values(&tool, &host.doc, c.get("values"), files);
         if on_copy {
             match runner.prepare(&host, &tool, &values, false, &mut log) {
                 Prepared::Ready(job) => {
@@ -235,7 +256,7 @@ fn play(c: &Value, registry: &Registry, on_copy: bool) -> Seen {
             .model(id)
             .unwrap_or_else(|| panic!("model yok: {id}"));
         let as_tool = model_as_tool(model, &lookup);
-        let values = with_values(&as_tool, &host.doc, c.get("values"));
+        let values = with_values(&as_tool, &host.doc, c.get("values"), files);
         if on_copy {
             let mut copy = TestHost {
                 doc: host.doc.reading_copy(),
@@ -509,14 +530,48 @@ fn check(c: &Value, mut s: Seen, tol: f64) -> Vec<String> {
     problems
 }
 
-fn cases() -> Value {
-    let file: Value = serde_json::from_str(&fixture("cases.json")).expect("cases.json reads");
+fn case_file(name: &str) -> Value {
+    let file: Value = serde_json::from_str(&fixture(name)).expect("the case file reads");
     assert_eq!(
         (file["format"].as_str(), file["version"].as_u64()),
         (Some("kentos.processing-cases"), Some(1)),
-        "a v1 case file"
+        "{name}: a v1 case file"
     );
     file
+}
+
+fn cases() -> Value {
+    case_file("cases.json")
+}
+
+/// The query tools' cases (docs/adr/0200): the same run here and on the
+/// drawing's reading copy as the background runs it.
+#[test]
+fn the_query_cases_do_what_they_say() {
+    let file = case_file("queries.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check(c, play(c, &registry, false, &file["files"]), tol);
+        found.extend(check(c, play(c, &registry, true, &file["files"]), tol));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 20, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
 }
 
 /// Each drawing's defaults and each tool's default values on it, as the web reads them.
@@ -568,7 +623,7 @@ fn every_case_does_the_same_computed_on_a_copy_of_the_drawing() {
         } else {
             models += 1;
         }
-        problems.extend(check(c, play(c, &registry, true), tol));
+        problems.extend(check(c, play(c, &registry, true, &file["files"]), tol));
     }
     assert!(
         tools > 10 && models > 0,
@@ -585,7 +640,7 @@ fn every_case_does_what_it_says() {
     let mut problems = Vec::new();
     let mut report = Vec::new();
     for c in file["cases"].as_array().expect("cases") {
-        let found = check(c, play(c, &registry, false), tol);
+        let found = check(c, play(c, &registry, false, &file["files"]), tol);
         report.push(format!(
             "{} {}: {}",
             if found.is_empty() { "✓" } else { "✗" },

@@ -486,6 +486,7 @@ pub fn run_model_with(
         select,
         outputs: model_outputs,
         summary: Some(summary.clone()),
+        refused: None,
     };
     let record = record(runner, Status::Ok, summary, added.clone(), touched.clone());
     Outcome::Ok {

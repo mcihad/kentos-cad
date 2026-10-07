@@ -1,0 +1,618 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: sorgular",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.35,
+    "fill": "#E5484D1F"
+   },
+   "children": [],
+   "fields": [
+    {
+     "name": "Ada",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "integer"
+    },
+    {
+     "name": "Ağaç sayısı",
+     "kind": "integer"
+    },
+    {
+     "name": "Taban toplamı",
+     "kind": "decimal",
+     "scale": 2
+    },
+    {
+     "name": "Taban ortalaması",
+     "kind": "decimal",
+     "scale": 1
+    }
+   ]
+  },
+  {
+   "id": "yapi",
+   "name": "Yapı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8C9AAA",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "agac",
+   "name": "Ağaç",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#30A46C",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "ring",
+     "size": 6
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.5
+   },
+   "children": []
+  },
+  {
+   "id": "kayit",
+   "name": "Tapu kayıtları",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E63DD",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "cross",
+     "size": 6
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "kilitli",
+   "name": "Kilitli parseller",
+   "type": "layer",
+   "visible": true,
+   "locked": true,
+   "expanded": true,
+   "style": {
+    "color": "fg-dim",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "parsel",
+   "label": "1",
+   "attrs": {
+    "Ada": "101",
+    "Parsel": "1",
+    "Tapu alanı": "600.00"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420000
+    },
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487020,
+     "y": 4420030
+    },
+    {
+     "x": 487000,
+     "y": 4420030
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 2,
+   "layerId": "parsel",
+   "label": "2",
+   "attrs": {
+    "Ada": "101",
+    "Parsel": "2",
+    "Tapu alanı": "750.00"
+   },
+   "pts": [
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487045,
+     "y": 4420000
+    },
+    {
+     "x": 487045,
+     "y": 4420030
+    },
+    {
+     "x": 487020,
+     "y": 4420030
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 3,
+   "layerId": "parsel",
+   "label": "3",
+   "attrs": {
+    "Ada": "101",
+    "Parsel": "3",
+    "Tapu alanı": "450,25"
+   },
+   "pts": [
+    {
+     "x": 487045,
+     "y": 4420000
+    },
+    {
+     "x": 487060,
+     "y": 4420000
+    },
+    {
+     "x": 487060,
+     "y": 4420030
+    },
+    {
+     "x": 487045,
+     "y": 4420030
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 4,
+   "layerId": "parsel",
+   "label": "4",
+   "attrs": {
+    "Ada": "102",
+    "Parsel": "4",
+    "Tapu alanı": "1100"
+   },
+   "pts": [
+    {
+     "x": 487060,
+     "y": 4420000
+    },
+    {
+     "x": 487100,
+     "y": 4420000
+    },
+    {
+     "x": 487100,
+     "y": 4420030
+    },
+    {
+     "x": 487060,
+     "y": 4420030
+    }
+   ],
+   "holes": [
+    {
+     "pts": [
+      {
+       "x": 487070,
+       "y": 4420010
+      },
+      {
+       "x": 487080,
+       "y": 4420010
+      },
+      {
+       "x": 487080,
+       "y": 4420020
+      },
+      {
+       "x": 487070,
+       "y": 4420020
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 5,
+   "layerId": "yapi",
+   "attrs": {
+    "Taban alanı": "70",
+    "Kat": "2"
+   },
+   "pts": [
+    {
+     "x": 487005,
+     "y": 4420005
+    },
+    {
+     "x": 487015,
+     "y": 4420005
+    },
+    {
+     "x": 487015,
+     "y": 4420012
+    },
+    {
+     "x": 487005,
+     "y": 4420012
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 6,
+   "layerId": "yapi",
+   "attrs": {
+    "Taban alanı": "100",
+    "Kat": "1"
+   },
+   "pts": [
+    {
+     "x": 487025,
+     "y": 4420005
+    },
+    {
+     "x": 487035,
+     "y": 4420005
+    },
+    {
+     "x": 487035,
+     "y": 4420015
+    },
+    {
+     "x": 487025,
+     "y": 4420015
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 7,
+   "layerId": "yapi",
+   "attrs": {
+    "Taban alanı": "25,5",
+    "Kat": "2"
+   },
+   "pts": [
+    {
+     "x": 487040,
+     "y": 4420020
+    },
+    {
+     "x": 487050,
+     "y": 4420020
+    },
+    {
+     "x": 487050,
+     "y": 4420025
+    },
+    {
+     "x": 487040,
+     "y": 4420025
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 8,
+   "layerId": "yapi",
+   "attrs": {
+    "Taban alanı": "36",
+    "Kat": ""
+   },
+   "pts": [
+    {
+     "x": 487072,
+     "y": 4420012
+    },
+    {
+     "x": 487078,
+     "y": 4420012
+    },
+    {
+     "x": 487078,
+     "y": 4420018
+    },
+    {
+     "x": 487072,
+     "y": 4420018
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 9,
+   "layerId": "yapi",
+   "attrs": {
+    "Taban alanı": "bilinmiyor",
+    "Kat": "1"
+   },
+   "pts": [
+    {
+     "x": 487085,
+     "y": 4420002
+    },
+    {
+     "x": 487095,
+     "y": 4420002
+    },
+    {
+     "x": 487095,
+     "y": 4420008
+    },
+    {
+     "x": 487085,
+     "y": 4420008
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 10,
+   "layerId": "agac",
+   "attrs": {
+    "Tür": "Çam"
+   },
+   "p": {
+    "x": 487005,
+    "y": 4420020
+   }
+  },
+  {
+   "kind": "point",
+   "id": 11,
+   "layerId": "agac",
+   "attrs": {
+    "Tür": "Meşe"
+   },
+   "p": {
+    "x": 487010,
+    "y": 4420025
+   }
+  },
+  {
+   "kind": "point",
+   "id": 12,
+   "layerId": "agac",
+   "attrs": {
+    "Tür": "Çam"
+   },
+   "p": {
+    "x": 487030,
+    "y": 4420025
+   }
+  },
+  {
+   "kind": "point",
+   "id": 13,
+   "layerId": "agac",
+   "attrs": {
+    "Tür": "Ihlamur"
+   },
+   "p": {
+    "x": 487045,
+    "y": 4420010
+   }
+  },
+  {
+   "kind": "point",
+   "id": 14,
+   "layerId": "agac",
+   "attrs": {
+    "Tür": "Çam"
+   },
+   "p": {
+    "x": 487075,
+    "y": 4420015
+   }
+  },
+  {
+   "kind": "point",
+   "id": 15,
+   "layerId": "agac",
+   "attrs": {
+    "Tür": "Meşe"
+   },
+   "p": {
+    "x": 487090,
+    "y": 4420022
+   }
+  },
+  {
+   "kind": "line",
+   "id": 16,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Cumhuriyet Caddesi"
+   },
+   "a": {
+    "x": 486990,
+    "y": 4419995
+   },
+   "b": {
+    "x": 487110,
+    "y": 4419995
+   }
+  },
+  {
+   "kind": "polyline",
+   "id": 17,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Okul Sokağı"
+   },
+   "pts": [
+    {
+     "x": 487052,
+     "y": 4419990
+    },
+    {
+     "x": 487052,
+     "y": 4420040
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 18,
+   "layerId": "kayit",
+   "attrs": {
+    "Parsel": "1",
+    "Malik": "Ayşe Yılmaz"
+   },
+   "p": {
+    "x": 487010,
+    "y": 4420015
+   }
+  },
+  {
+   "kind": "point",
+   "id": 19,
+   "layerId": "kayit",
+   "attrs": {
+    "Parsel": "2",
+    "Malik": "Hasan Demir"
+   },
+   "p": {
+    "x": 487032,
+    "y": 4420020
+   }
+  },
+  {
+   "kind": "point",
+   "id": 20,
+   "layerId": "kayit",
+   "attrs": {
+    "Parsel": "002",
+    "Malik": "Tekrar Kayıt"
+   },
+   "p": {
+    "x": 487033,
+    "y": 4420020
+   }
+  },
+  {
+   "kind": "point",
+   "id": 21,
+   "layerId": "kayit",
+   "attrs": {
+    "Parsel": "9",
+    "Malik": "Kayıtsız"
+   },
+   "p": {
+    "x": 487120,
+    "y": 4420015
+   }
+  },
+  {
+   "kind": "polygon",
+   "id": 22,
+   "layerId": "kilitli",
+   "label": "5",
+   "attrs": {
+    "Ada": "103",
+    "Parsel": "5"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420040
+    },
+    {
+     "x": 487020,
+     "y": 4420040
+    },
+    {
+     "x": 487020,
+     "y": 4420060
+    },
+    {
+     "x": 487000,
+     "y": 4420060
+    }
+   ]
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

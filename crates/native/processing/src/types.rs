@@ -6,6 +6,7 @@
 
 use std::collections::BTreeMap;
 
+use kentos_contracts::fields::LayerField;
 use kentos_contracts::{AngleUnit, Entity, LabelStyle, LayerStyle, PointStyle, Vec2};
 use kentos_domain::{Document, Slot};
 use kentos_native_application::geometry::drawing_font;
@@ -182,10 +183,21 @@ pub enum ParamKind {
         of: Option<String>,
         placeholder: Option<String>,
     },
-    /// An attribute name of the objects of `of`; `allow_new` lets a new one be typed.
+    /// An attribute name of the objects of a features parameter, or a column
+    /// of a file parameter's table; `allow_new` lets a new one be typed. `of`
+    /// names the parameters the names come from, the first shown read (a
+    /// source that is a layer or a file, docs/adr/0200 §6); `multiple`:
+    /// several names, written with commas between them.
     Field {
-        of: String,
+        of: Vec<String>,
         allow_new: bool,
+        multiple: bool,
+    },
+    /// A file the user chooses (docs/adr/0200 §7): a table read when it is
+    /// chosen (CSV, TXT, XLSX: Tablo ekle's reader, the first sheet), its first
+    /// row the column names; `accept`: the extensions offered (".csv").
+    File {
+        accept: Vec<String>,
     },
 }
 
@@ -292,16 +304,20 @@ impl ParamDef {
             ParamKind::Point => "point",
             ParamKind::Expression { .. } => "expression",
             ParamKind::Field { .. } => "field",
+            ParamKind::File { .. } => "file",
         }
     }
 }
 
-/// What an output is: objects (a model feeds their ids to the next step), a number or a text.
+/// What an output is: objects (a model feeds their ids to the next step), a
+/// number or a text; or a table (`{ columns, rows }`) the dialog shows after
+/// the run (docs/adr/0200 §7), not passed to a model's next step.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OutputKind {
     Features,
     Number,
     Text,
+    Table,
 }
 
 impl OutputKind {
@@ -310,6 +326,7 @@ impl OutputKind {
             OutputKind::Features => "features",
             OutputKind::Number => "number",
             OutputKind::Text => "string",
+            OutputKind::Table => "table",
         }
     }
 }
@@ -468,6 +485,16 @@ impl RunContext<'_> {
     pub fn layer_name<'a>(&'a self, id: &'a str) -> &'a str {
         self.layer_names.get(id).map_or(id, String::as_str)
     }
+
+    /// A layer's field of that name (docs/adr/0199 §1): what a value written to the attribute becomes.
+    pub fn field(&self, layer_id: &str, name: &str) -> Option<&LayerField> {
+        self.doc
+            .layers()
+            .get(layer_id)?
+            .fields
+            .iter()
+            .find(|f| f.name == name)
+    }
 }
 
 /// Progress, messages and cancellation, shared with the dialog.
@@ -506,4 +533,17 @@ pub struct RunResult {
     pub outputs: Values,
     /// One line for the log and history.
     pub summary: Option<String>,
+    /// The run refuses, and says why (a file without the key column):
+    /// nothing changes and the run ends as an error with this message as it is.
+    pub refused: Option<String>,
+}
+
+impl RunResult {
+    /// A run that refuses with this message.
+    pub fn refused(message: String) -> Self {
+        Self {
+            refused: Some(message),
+            ..Self::default()
+        }
+    }
 }

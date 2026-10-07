@@ -1,10 +1,12 @@
 import type { AppContext } from '../../app/context';
+import { layerListCsv, layerListTsv } from '../../app/layerList';
 import { DisposableStore } from '../../core/disposable';
 import type { Vec2 } from '../../model/geometry';
 import type { ProcessingModel } from '../../processing/model';
 import { MODEL_PREFIX, modelAsTool, runModel } from '../../processing/modelRunner';
+import { storedValues } from '../../processing/parameters';
 import type { RunOptions, RunOutcome } from '../../processing/runner';
-import type { FeaturesValue, ProcessingTool } from '../../processing/types';
+import type { FeaturesValue, ProcessingTool, TableOutput } from '../../processing/types';
 import { PickObjectsTool } from '../../tools/pickObjectsTool';
 import { PickPointTool } from '../../tools/pickPointTool';
 import { h, replaceChildren, type Child } from '../dom';
@@ -89,6 +91,8 @@ class ToolDialog {
   private readonly d = new DisposableStore();
   private readonly dialog: Dialog;
   private readonly form = h('div', { class: 'ptool__form' });
+  /** The last run's table (Özet istatistik), under the form. */
+  private readonly result = h('section', { class: 'pgroup ptool__result', 'aria-label': T.result.title });
   private readonly preview = h('div', { class: 'ptool__preview-value num' });
   private readonly statusEl = h('div', { class: 'ptool__status', role: 'status', 'aria-live': 'polite' });
   private readonly targetsEl = h('div', { class: 'ptool__targets', role: 'radiogroup', 'aria-label': T.side.targets });
@@ -120,7 +124,7 @@ class ToolDialog {
       title: form.title,
       width: 940,
       className: 'dialog--ptool',
-      content: [h('div', { class: 'ptool' }, h('div', { class: 'ptool__main' }, this.form), this.side(form.side))],
+      content: [h('div', { class: 'ptool' }, h('div', { class: 'ptool__main' }, this.form, this.result), this.side(form.side))],
       footer: [this.resetBtn, this.statusEl, this.closeBtn, this.runBtn],
       onClose: () => this.d.dispose(),
     });
@@ -210,6 +214,51 @@ class ToolDialog {
       else slot.replaceChildren();
     }
     this.paintStatus(frame);
+    this.paintResult(frame.result);
+  }
+
+  /** The run's table with its Panoya kopyala and CSV olarak kaydet; nothing without one. */
+  private paintResult(table: TableOutput | null): void {
+    this.result.hidden = !table;
+    if (!table) return void this.result.replaceChildren();
+    const rows = [table.columns, ...table.rows];
+    const copy = h('button', { class: 'btn btn--ghost btn--small', type: 'button' }, icon('copy', 14), T.result.copy);
+    const save = h('button', { class: 'btn btn--ghost btn--small', type: 'button' }, icon('export', 14), T.result.save);
+    const { log } = this.ctx;
+    copy.addEventListener('click', () => {
+      void navigator.clipboard.writeText(layerListTsv(rows)).then(
+        () => log.success(T.result.copied),
+        () => log.warn('Tablo panoya kopyalanamadı: tarayıcı izin vermedi.'),
+      );
+    });
+    save.addEventListener('click', () => {
+      const url = URL.createObjectURL(new Blob([layerListCsv(rows)], { type: 'text/csv;charset=utf-8' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${this.tool.label}.csv`;
+      document.body.append(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      log.success(`${this.tool.label}: tablo CSV olarak kaydedildi: ${a.download} (${table.rows.length} satır).`);
+    });
+    // The first column names the row (a group); the figures are numbers.
+    const named = table.columns[0] === 'Grup';
+    const cell = (tag: 'th' | 'td', text: string, i: number) => h(tag, named && i === 0 ? null : { class: 'num' }, text);
+    replaceChildren(
+      this.result,
+      h('div', { class: 'pgroup__title ptool__result-title' }, h('span', null, T.result.title), h('span', { class: 'ptool__result-actions' }, copy, save)),
+      h(
+        'div',
+        { class: 'ptool__result-table' },
+        h(
+          'table',
+          { class: 'io-table' },
+          h('thead', null, h('tr', null, table.columns.map((c, i) => cell('th', c, i)))),
+          h('tbody', null, table.rows.map((r) => h('tr', null, r.map((c, i) => cell('td', c, i))))),
+        ),
+      ),
+    );
   }
 
   private paintStatus(frame: DialogFrame): void {
@@ -280,6 +329,8 @@ class ToolDialog {
     const env: FieldEnv = {
       ctx: this.ctx,
       describe: (n) => this.env.inputs[n],
+      sourceOf: (n) => this.env.sourceOf(n),
+      chooseFile: (n) => void this.chooseFile(n),
       previewExpression: (n) => runner.previewExpression(this.tool, this.state.values, n),
       builderObjects: (n) => runner.builderObjects(this.tool, this.state.values, n),
       pickPoint: (n) => this.pickPoint(n),
@@ -352,6 +403,16 @@ class ToolDialog {
     this.paint(this.frame());
   }
 
+  /** A file parameter's file: asked for, read, and set; a file that cannot be read is said and changes nothing. */
+  private async chooseFile(name: string): Promise<void> {
+    const def = this.tool.parameters.find((p) => p.name === name);
+    if (def?.type !== 'file') return;
+    const read = await this.ctx.processing.chooseFile(def.accept);
+    if (!read) return;
+    if ('problem' in read) return void this.ctx.log.warn(read.problem);
+    this.set(name, read, true);
+  }
+
   /** Hides the dialog while the user shows a point, then brings it back as it was, with the point filled in. */
   private pickPoint(name: string): void {
     const def = this.tool.parameters.find((p) => p.name === name)!;
@@ -415,14 +476,14 @@ class ToolDialog {
       return;
     }
     const values = this.state.values;
-    this.ctx.processing.remember(this.tool.id, values);
+    this.ctx.processing.remember(this.tool.id, storedValues(this.tool, values));
     const target = effectiveChoice(this.state.choice, this.env.targets.available) ?? 'auto';
     const where = this.opts.model ? undefined : runner.executorFor(this.tool, target, runner.inputSize(this.tool, values))?.target;
     this.state = started(this.state, where);
     this.paintStatus(this.frame());
     const log = (level: 'info' | 'warn', m: string) => (level === 'warn' ? this.ctx.log.warn(m) : this.ctx.log.info(m));
     const out: RunOutcome = this.opts.run ? await this.opts.run(values, { log, target }) : await runner.run(this.tool, values, { log, target });
-    this.state = finished(this.state, out);
+    this.state = finished(this.state, out, this.tool);
     if (out.status === 'ok') this.ctx.log.success(`${this.tool.label}: ${out.record.summary}`);
     else if (out.status !== 'invalid') this.ctx.log.warn(out.message);
     this.ctx.view.requestRender();

@@ -2821,6 +2821,72 @@ const sheetAfterHelmert = async (ui) => {
   if (!seen.said.startsWith('5 bağ (1 sabit nokta); levha her bağdan tam geçer.') || seen.target[1] !== seen.target[3] || seen.target[2] !== seen.target[4]) throw new Error(`Kauçuk levha, Sabit: ${JSON.stringify(seen)}`);
   return seen;
 };
+// Mekânsal ve öznitelik sorgusu (docs/adr/0200) on fixtures/processing/v1/queries.kcad, the scenes the desktop's
+// `processing::query_tests::screens` draws: each query tool's window after a run (Konuma göre seç, İçindekinden and
+// Çevreleyenden bilgi al), Özet istatistik with its table under the form, Anahtarla birleştir with the owners' CSV and
+// its fields' list open.
+const QUERIES = readFileSync(new URL('../../../../fixtures/processing/v1/queries.kcad', import.meta.url), 'utf8');
+const OWNERS_ROWS = [
+  ['Parsel', 'Malik', 'Hisse'],
+  ['1', 'Ayşe Yılmaz', '1/2'],
+  ['3', 'Mehmet Kaya', '1'],
+  ['03', 'Tekrar Kayıt', '1'],
+  ['5', 'Kimse', '1'],
+];
+const QUERY_LAYER = (id) => ({ scope: 'layer', layerId: id });
+const openQuery = async (ui, tool, values, run = true) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(QUERIES)}, null))) throw new Error('queries.kcad did not load');
+    k.view.zoomExtents();
+    k.selection.clear();
+  })()`);
+  await ui.sleep(300);
+  await ui.eval(openTool(tool, values));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  if (run) {
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 8000);
+    await ui.sleep(300);
+  }
+};
+const queryClose = async (ui) => (await ui.escapeAll(2), await ui.eval(`(() => { const k = window.kentos; while (k.doc.canUndo.value) k.doc.undo(); })()`));
+/** The form scrolled to its end (the table, or the file and its fields). */
+const formEnd = (ui) => ui.eval(`(() => { const f = document.querySelector('.ptool__main'); f.scrollTop = f.scrollHeight; })()`);
+SCENES.queries = [
+  { id: 'sorgu-konum', open: (ui) => openQuery(ui, 'selection.byLocation', { input: QUERY_LAYER('parsel'), relation: 'intersects', reference: QUERY_LAYER('yol') }), close: queryClose },
+  { id: 'sorgu-icindeki', open: (ui) => openQuery(ui, 'attributes.fromInside', { target: QUERY_LAYER('parsel'), source: QUERY_LAYER('agac'), output: 'Ağaç sayısı' }), close: queryClose },
+  { id: 'sorgu-cevreleyen', open: (ui) => openQuery(ui, 'attributes.fromEnclosing', { target: QUERY_LAYER('yapi'), source: QUERY_LAYER('parsel'), field: 'Parsel' }), close: queryClose },
+  {
+    id: 'sorgu-ozet',
+    open: async (ui) => (await openQuery(ui, 'statistics.summary', { input: QUERY_LAYER('yapi'), field: 'Taban alanı', group: 'Kat' }), await formEnd(ui), await ui.sleep(200)),
+    close: queryClose,
+  },
+  {
+    id: 'sorgu-birlestir',
+    open: async (ui) => (
+      await openQuery(ui, 'attributes.joinByField', { target: QUERY_LAYER('parsel'), targetKey: 'Parsel', sourceKind: 'file', file: { name: 'malikler.csv', rows: OWNERS_ROWS }, fields: 'Malik, Hisse', prefix: 'Tapu ' }, false),
+      await formEnd(ui),
+      await ui.sleep(200)
+    ),
+    close: queryClose,
+  },
+  {
+    id: 'sorgu-birlestir-alanlar',
+    open: async (ui) => {
+      await openQuery(ui, 'attributes.joinByField', { target: QUERY_LAYER('parsel'), targetKey: 'Parsel', sourceKind: 'file', file: { name: 'malikler.csv', rows: OWNERS_ROWS }, fields: 'Malik, Hisse', prefix: 'Tapu ' }, false);
+      await formEnd(ui);
+      await ui.sleep(200);
+      await ui.clickSel('[data-param="fields"] .dropdown');
+      await ui.waitFor(`!!document.querySelector('.menu')`);
+      await ui.sleep(300);
+    },
+    close: queryClose,
+  },
+];
+
 SCENES.vectorfit = [
   { id: 'oturt', open: openFitScene },
   { id: 'oturt-adla-eslendi', open: async (ui) => (await matchFit(ui), await ui.move(2, 2), await ui.sleep(300)) },

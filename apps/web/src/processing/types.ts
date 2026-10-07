@@ -2,6 +2,7 @@ import type { AngleUnit, DrawingFont } from '../model/projectSettings';
 import type { Entity, EntityKind, NewEntity } from '../model/entities';
 import type { CompiledExpression } from '../model/expression/expression';
 import type { Vec2 } from '../model/geometry';
+import type { LayerField } from '../model/layerFields';
 import type { LayerStyle } from '../model/layers';
 import type { RunGeometry } from './geometry';
 
@@ -159,15 +160,42 @@ export interface ExpressionParam<N extends string = string> extends ParamBase<N>
   readonly placeholder?: string;
 }
 
-/** An attribute name of the objects of a features parameter; `allowNew` lets the user type a new one. */
+/**
+ * An attribute name of the objects of a features parameter, or a column of a file parameter's table; `allowNew`
+ * lets the user type a new one. `of` names the parameter the names come from; a list names several, of which the
+ * first shown is read (a source that is a layer or a file, docs/adr/0200 §6). `multiple`: several names, written
+ * with commas between them ("Malik, Hisse").
+ */
 export interface FieldParam<N extends string = string> extends ParamBase<N> {
   readonly type: 'field';
   readonly default?: Default<string>;
-  readonly of: string;
+  readonly of: string | readonly string[];
   readonly allowNew?: boolean;
+  readonly multiple?: boolean;
 }
 
-export type ParamDef = FeaturesParam | NumberParam | StringParam | BooleanParam | EnumParam | LayerParam | PointParam | ExpressionParam | FieldParam;
+/**
+ * A file the user chooses (docs/adr/0200 §7): a table read when it is chosen (CSV, TXT, XLSX: Tablo ekle's
+ * reader, the first sheet), its first row the column names. `accept`: the extensions offered (".csv").
+ */
+export interface FileParam<N extends string = string> extends ParamBase<N> {
+  readonly type: 'file';
+  readonly accept: readonly string[];
+  readonly default?: null;
+}
+
+/**
+ * A file parameter's value: the file's name and its rows. The last values keep only the name (the desktop also its
+ * path), so a file is chosen again when the dialog opens again; a value without rows asks for that.
+ */
+export interface FileValue {
+  readonly name: string;
+  readonly rows?: readonly (readonly string[])[];
+  /** Where the desktop read it, to read it again. */
+  readonly path?: string;
+}
+
+export type ParamDef = FeaturesParam | NumberParam | StringParam | BooleanParam | EnumParam | LayerParam | PointParam | ExpressionParam | FieldParam | FileParam;
 export type ParamType = ParamDef['type'];
 
 /** A parameter's value as the dialog and history hold it. */
@@ -187,7 +215,9 @@ export type ValueOf<D> = D extends { type: 'features' }
               ? Vec2 | null
               : D extends { type: 'expression' | 'field' }
                 ? string
-                : never;
+                : D extends { type: 'file' }
+                  ? FileValue | null
+                  : never;
 
 type Maybe<D, T> = D extends { optional: true } ? T | null : T;
 
@@ -219,9 +249,17 @@ export interface OutputDef {
   readonly label: string;
   /**
    * features: ids of objects the tool created (a model feeds them to the
-   * next step); number/string: a value in RunResult.outputs.
+   * next step); number/string: a value in RunResult.outputs; table: a
+   * `TableOutput` the dialog shows after the run (docs/adr/0200 §7), not
+   * passed to a model's next step.
    */
-  readonly type: 'features' | 'number' | 'string';
+  readonly type: 'features' | 'number' | 'string' | 'table';
+}
+
+/** A table a run gives (Özet istatistik): its columns and rows, texts. */
+export interface TableOutput {
+  readonly columns: readonly string[];
+  readonly rows: readonly (readonly string[])[];
 }
 
 // ── Running ────────────────────────────────────────────────────────────
@@ -253,6 +291,8 @@ export interface RunContext {
    * store (docs/adr/0008, S4): the same code wherever the run is.
    */
   readonly geometry: RunGeometry;
+  /** A layer's field of that name (docs/adr/0199 §1): what a value written to the attribute becomes. */
+  field(layerId: string, name: string): LayerField | undefined;
 }
 
 /** Progress, messages and cancellation, shared with the dialog. */
@@ -281,6 +321,11 @@ export interface RunResult {
   outputs?: Record<string, unknown>;
   /** One line for the log and history ("24 köşe numaralandı: P00001 – P00024"). */
   summary?: string;
+  /**
+   * The run refuses, and says why (a file without the key column): nothing
+   * changes and the run ends as an error with this message as it is.
+   */
+  refused?: string;
 }
 
 // ── The tool ───────────────────────────────────────────────────────────

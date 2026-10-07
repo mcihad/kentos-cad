@@ -1,4 +1,5 @@
 import type { Entity } from '../model/entities';
+import type { LayerField } from '../model/layerFields';
 import { compileExpression } from '../model/expression/expression';
 import { ObjectStore, type RunGeometry } from './geometry';
 import type { DefaultsContext, DocumentSnapshot, ExecutionTarget, Feedback, FeatureSet, ProcessingTool, RunContext, RunResult } from './types';
@@ -25,6 +26,8 @@ export interface RunJob {
   readonly selection: readonly number[];
   /** Layer id → name, for expressions and summaries. */
   readonly layers: readonly (readonly [string, string])[];
+  /** The fields of the layers that have them (docs/adr/0199 §1): what a value written to an attribute becomes. */
+  readonly fields: readonly (readonly [string, readonly LayerField[]])[];
 }
 
 /** Where a tool runs. `execute` gets the job and the document the page has; a remote one copies it. */
@@ -57,7 +60,8 @@ export function materialize(tool: ProcessingTool, values: RunJob['values'], doc:
 
 export function jobContext(job: RunJob, doc: DocumentSnapshot, geometry: RunGeometry): RunContext {
   const names = new Map(job.layers);
-  return { doc, units: job.units, selection: job.selection, layerName: (id) => names.get(id) ?? id, geometry };
+  const fields = new Map(job.fields);
+  return { doc, units: job.units, selection: job.selection, layerName: (id) => names.get(id) ?? id, geometry, field: (layerId, name) => fields.get(layerId)?.find((f) => f.name === name) };
 }
 
 /** The objects of a tool's features inputs, each once. */

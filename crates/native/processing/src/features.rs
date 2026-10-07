@@ -205,6 +205,34 @@ pub struct InputSummary {
     pub by_kind: Vec<(String, usize)>,
     /// Attribute names on the objects, most common first (field pickers, expressions).
     pub fields: Vec<(String, usize)>,
+    /// A chosen file's table (docs/adr/0200 §7): the counts are its rows, not objects.
+    pub rows: bool,
+}
+
+/// A chosen file's table as a field parameter reads it: its rows, and its
+/// named columns (each once, in the file's order) with how many rows fill each.
+pub fn summarize_file(header: &[String], rows: &[Vec<String>]) -> InputSummary {
+    let mut fields: Vec<(String, usize)> = Vec::new();
+    for (i, name) in header.iter().enumerate() {
+        if name.is_empty() || fields.iter().any(|(n, _)| n == name) {
+            continue;
+        }
+        let filled = rows
+            .iter()
+            .filter(|r| {
+                r.get(i)
+                    .is_some_and(|c| !crate::text::js_trim(c).is_empty())
+            })
+            .count();
+        fields.push((name.clone(), filled));
+    }
+    InputSummary {
+        count: rows.len(),
+        description: String::new(),
+        by_kind: Vec::new(),
+        fields,
+        rows: true,
+    }
 }
 
 pub fn summarize_features(
@@ -242,6 +270,7 @@ pub fn summarize_features(
         description: set.description,
         by_kind,
         fields,
+        rows: false,
     }
 }
 

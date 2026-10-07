@@ -106,9 +106,17 @@ pub fn param_from_json(v: &Value) -> Option<ParamDef> {
             of: text(o, "of"),
             placeholder: text(o, "placeholder"),
         },
+        // `of` names one parameter, or a list of them (the first shown is read).
         "field" => ParamKind::Field {
-            of: text(o, "of").unwrap_or_default(),
+            of: match o.get("of") {
+                Some(Value::Array(_)) => texts(o.get("of")).unwrap_or_default(),
+                _ => text(o, "of").into_iter().collect(),
+            },
             allow_new: flag(o, "allowNew"),
+            multiple: flag(o, "multiple"),
+        },
+        "file" => ParamKind::File {
+            accept: texts(o.get("accept")).unwrap_or_default(),
         },
         _ => return None,
     };

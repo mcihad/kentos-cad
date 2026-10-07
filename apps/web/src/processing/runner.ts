@@ -6,8 +6,9 @@ import { compileExpression, previewExpression } from '../model/expression/expres
 import { resolveFeatures, summarizeFeatures, type FeatureHost, type InputSummary } from './features';
 import { withObjects } from './geometry';
 import { clientExecutor, type Executor, type FeatureRef, type RunJob } from './job';
-import { isVisible, validateValues, type ValidationIssue } from './parameters';
-import type { DefaultsContext, ExecutionTarget, Feedback, FeaturesValue, LayerParam, LayerValue, ProcessingTool, RunResult, TargetLayer } from './types';
+import { fileTable, isVisible, validateValues, type ValidationIssue } from './parameters';
+import type { DefaultsContext, ExecutionTarget, Feedback, FeaturesValue, FileValue, LayerParam, LayerValue, ProcessingTool, RunResult, TargetLayer } from './types';
+import { checkWrites } from './writeCheck';
 
 /**
  * Runs processing tools: validate → resolve what depends on the host into
@@ -77,6 +78,15 @@ export function sameNamedLayer<L extends { readonly name: string }>(leaves: read
   return key ? leaves.find((l) => foldTurkish(l.name) === key) : undefined;
 }
 
+/** A chosen file's table as a field parameter reads it: its rows, and its named columns with how many rows fill each. */
+function fileSummary(header: readonly string[], rows: readonly (readonly string[])[]): InputSummary {
+  const fields: InputSummary['fields'] = [];
+  header.forEach((name, i) => {
+    if (name && !fields.some((f) => f.name === name)) fields.push({ name, count: rows.filter((r) => (r[i] ?? '').trim() !== '').length });
+  });
+  return { count: rows.length, description: '', byKind: [], fields, rows: true };
+}
+
 /** Where a scope looked, as the refusal of an input whose objects are all on locked layers says it. */
 const LOCKED_WHERE: Record<Exclude<FeaturesValue['scope'], 'ids'>, string> = {
   selection: 'seçili nesnelerin',
@@ -128,10 +138,19 @@ export class ProcessingRunner {
     return validateValues(tool, values, { layerExists: (id) => !!layers.get(id), layerLocked: (id) => layers.isLocked(id) });
   }
 
-  /** What each features parameter currently resolves to ("12 kapalı alan; seçili nesneler"). */
+  /**
+   * What each features parameter currently resolves to ("12 kapalı alan; seçili nesneler"), and each chosen file's
+   * table (its columns as the fields a field parameter offers, docs/adr/0200 §6).
+   */
   describeInputs(tool: ProcessingTool, values: Record<string, unknown>): Record<string, InputSummary> {
     const out: Record<string, InputSummary> = {};
-    for (const p of tool.parameters) if (p.type === 'features' && values[p.name]) out[p.name] = summarizeFeatures(values[p.name] as FeaturesValue, p, this.host);
+    for (const p of tool.parameters) {
+      if (p.type === 'features' && values[p.name]) out[p.name] = summarizeFeatures(values[p.name] as FeaturesValue, p, this.host);
+      if (p.type === 'file') {
+        const t = fileTable(values[p.name] as FileValue | null);
+        if (t) out[p.name] = fileSummary(t.header, t.rows);
+      }
+    }
     return out;
   }
 
@@ -285,6 +304,7 @@ export class ProcessingRunner {
       units: this.defaults(),
       selection: [...this.host.selectedIds()],
       layers: layers.leaves().map((l) => [l.id, l.name] as const),
+      fields: layers.leaves().flatMap((l) => (l.fields?.length ? [[l.id, l.fields] as const] : [])),
     };
 
     this.canceled = false;
@@ -310,11 +330,16 @@ export class ProcessingRunner {
     for (const n of notes) log?.('warn', n);
     this.running.set({ toolId: tool.id, fraction: 0, label: '' });
     try {
-      const result = await executor.execute(tool, job, this.host.doc, feedback);
+      let result = await executor.execute(tool, job, this.host.doc, feedback);
       if (this.canceled) {
         const message = 'İşlem iptal edildi; çizim değişmedi.';
         return { status: 'canceled', message, record: record('canceled', message) };
       }
+      // A tool that refuses, or a value a layer's field does not take, ends the run with nothing changed.
+      const checked = result.refused === undefined && result.changes ? checkWrites(this.host.doc, result.changes) : null;
+      const refused = result.refused ?? (checked && 'refused' in checked ? checked.refused : undefined);
+      if (refused !== undefined) return { status: 'error', message: refused, record: record('error', refused) };
+      if (checked && 'changes' in checked) result = { ...result, changes: checked.changes };
       const added = this.apply(tool, result, newLayers, log);
       const doc = this.host.doc;
       const selected = result.select ? [...new Set(result.select)].filter((id) => doc.get(id)) : null;

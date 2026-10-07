@@ -3,7 +3,7 @@ import type { Vec2 } from '../../model/geometry';
 import { attributeFields, type BuilderObjects } from '../../model/expression/builderObjects';
 import { exprCatalog } from '../../model/expression/expressionLib';
 import type { InputSummary } from '../../processing/runner';
-import type { FeaturesValue, LayerValue, ParamDef } from '../../processing/types';
+import type { FeaturesValue, FileValue, LayerValue, ParamDef } from '../../processing/types';
 import { h } from '../dom';
 import { builderButton } from '../expression/builderApi';
 import { icon } from '../icons';
@@ -18,6 +18,7 @@ import {
   attrFieldView,
   expressionView,
   featuresView,
+  fileView,
   insertText,
   layerFieldView,
   numberOfText,
@@ -25,6 +26,7 @@ import {
   pointView,
   previewIcon,
   toggleKind,
+  toggledName,
   withLayer,
   withScope,
 } from './fieldPlan';
@@ -40,6 +42,10 @@ export interface FieldEnv {
   readonly ctx: AppContext;
   /** What a features parameter resolves to ("12 kapalı alan; seçili nesneler"). */
   describe(name: string): InputSummary | undefined;
+  /** What a field parameter's source shown now reads: a layer's objects or a file's columns. */
+  sourceOf(name: string): InputSummary | undefined;
+  /** Asks for a file parameter's file and sets it (docs/adr/0200 §7). */
+  chooseFile(name: string): void;
   /** How an expression parameter works out on its objects now; null when it cannot be run. */
   previewExpression(name: string): string | null;
   /** The objects an expression parameter runs on, for the expression builder. */
@@ -88,7 +94,22 @@ export function paramControl(def: ParamDef, value: unknown, set: Setter, env: Fi
       return fieldField(def, String(value ?? ''), set, env);
     case 'expression':
       return expressionField(def, String(value ?? ''), set, env);
+    case 'file':
+      return fileField(def, value as FileValue | null, env);
   }
+}
+
+/** A file: its button, its name and what it holds (or that it must be chosen again). */
+function fileField(def: Extract<ParamDef, { type: 'file' }>, value: FileValue | null, env: FieldEnv): HTMLElement {
+  const view = fileView(value);
+  const b = h('button', { class: 'btn pfield__pick', type: 'button' }, icon('tableFile', 14), view.button);
+  b.addEventListener('click', () => env.chooseFile(def.name));
+  return h(
+    'div',
+    { class: 'pfield__stack' },
+    h('div', { class: 'pfield__point' }, h('span', { class: 'pfield__coord pfield__file', title: view.text, 'data-muted': view.chosen ? null : '' }, view.text), b),
+    view.note ? h('div', { class: 'pfield__hint' }, view.note) : null,
+  );
 }
 
 function enumField(def: Extract<ParamDef, { type: 'enum' }>, value: unknown, set: Setter): HTMLElement {
@@ -226,14 +247,18 @@ function pointField(def: Extract<ParamDef, { type: 'point' }>, value: Vec2 | nul
   return h('div', { class: 'pfield__point' }, h('span', { class: `pfield__coord${view.shown ? ' num' : ''}` }, view.text), pick);
 }
 
-/** Attribute name: pick one the objects have, or (allowNew) type a new one. */
+/** Attribute name: pick one the objects have, or (allowNew) type a new one; `multiple` checks several. */
 function fieldField(def: Extract<ParamDef, { type: 'field' }>, value: string, set: Setter, env: FieldEnv): HTMLElement {
-  const fields = env.describe(def.of)?.fields ?? [];
+  const source = env.sourceOf(def.name);
   // The name as typed so far: the note and the list's tick follow it without a rebuild.
   let current = value;
-  const view = () => attrFieldView(def, current, fields);
+  const view = () => attrFieldView(def, current, source);
   const items = (): MenuItem[] =>
-    view().items.map((it): MenuItem => ('disabled' in it ? { label: it.label, disabled: true } : { label: it.label, hint: it.hint, radio: true, checked: it.checked, run: () => set(it.label, true) }));
+    view().items.map((it): MenuItem =>
+      'disabled' in it
+        ? { label: it.label, disabled: true }
+        : { label: it.label, hint: it.hint, radio: !def.multiple, checked: it.checked, run: () => set(def.multiple ? toggledName(current, it.label) : it.label, true) },
+    );
   const first = view();
   const note = h('div', { class: 'pfield__hint' }, first.note);
   if (!def.allowNew) {

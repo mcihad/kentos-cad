@@ -117,7 +117,12 @@ pub(super) fn control<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, M
         }
         ParamKind::Layer { .. } => layer(def, env),
         ParamKind::Point => point_field(def, env),
-        ParamKind::Field { of, allow_new } => field(def, of, *allow_new, env),
+        ParamKind::Field {
+            of,
+            allow_new,
+            multiple,
+        } => field(def, of, *allow_new, *multiple, env),
+        ParamKind::File { .. } => file(def, env),
         ParamKind::Expression {
             of, placeholder, ..
         } => expression(def, of.as_deref(), placeholder.as_deref(), env),
@@ -250,11 +255,26 @@ fn features<'a>(
         }
         parts = parts.push(chips.wrap());
     } else if let Some(kinds) = kinds {
-        let names: Vec<String> = kinds.iter().map(|k| tr_lower(kind_label(k))).collect();
-        parts = parts.push(
-            label::caption(format!("Uygun nesneler: {}", names.join(", ")))
-                .style(style::text::muted),
-        );
+        // A tool that takes nearly every kind says what it leaves out (the web's `kindsView`).
+        let left: Vec<&str> = KINDS
+            .iter()
+            .copied()
+            .filter(|k| !kinds.iter().any(|x| x == k))
+            .collect();
+        let note = if left.len() < kinds.len() {
+            let list: Vec<String> = left.iter().map(|k| tr_lower(kind_label(k))).collect();
+            let list = list.join(", ");
+            let mut chars = list.chars();
+            let first = chars
+                .next()
+                .map(|c| kentos_processing::text::tr_upper(&c.to_string()))
+                .unwrap_or_default();
+            format!("{first}{} alınmaz.", chars.as_str())
+        } else {
+            let names: Vec<String> = kinds.iter().map(|k| tr_lower(kind_label(k))).collect();
+            format!("Uygun nesneler: {}", names.join(", "))
+        };
+        parts = parts.push(label::caption(note).style(style::text::muted));
     }
     parts.into()
 }
@@ -471,28 +491,65 @@ fn pick_button<'a>(caption: Option<&'a str>, on_press: Message, on: bool) -> Ele
         .into()
 }
 
+/// Every object kind in the web's order (`ENTITY_KIND_LABEL`): what a
+/// features field's note names as left out.
+const KINDS: [&str; 17] = [
+    "point",
+    "line",
+    "polyline",
+    "polygon",
+    "circle",
+    "arc",
+    "ellipse",
+    "spline",
+    "xline",
+    "ray",
+    "text",
+    "dimension",
+    "hatch",
+    "insert",
+    "leader",
+    "table",
+    "image",
+];
+
 /// An attribute name: typed (a new one too, with `allow_new`) or picked
-/// from those the objects have, with a note on what writing it does.
+/// from those its source has (a layer's objects, or a file's columns, the
+/// first of `of` shown), with a note on what writing it does; `multiple`:
+/// several names, the list checks each (the web's `attrFieldView`).
 fn field<'a>(
     def: &'a ParamDef,
-    of: &'a str,
+    of: &'a [String],
     allow_new: bool,
+    multiple: bool,
     env: &Env<'a, '_>,
 ) -> Element<'a, Message> {
     let ev = env.send;
     let value = env.value(&def.name).as_str().unwrap_or("").to_owned();
-    let fields: Vec<(String, usize)> = env
-        .window
-        .inputs
-        .get(of)
-        .map(|s| s.fields.clone())
-        .unwrap_or_default();
+    let source =
+        kentos_processing::parameters::field_source(&env.window.tool, of, &env.window.values)
+            .and_then(|p| env.window.inputs.get(&p.name));
+    let fields: Vec<(String, usize)> = source.map(|s| s.fields.clone()).unwrap_or_default();
+    let rows = source.is_some_and(|s| s.rows);
+    let names = kentos_processing::parameters::field_names(multiple, &value);
     let typed = kentos_processing::text::js_trim(&value).to_owned();
     let known = fields.iter().find(|(n, _)| *n == typed);
-    let note = if typed.is_empty() {
+    let note = if multiple {
+        names
+            .iter()
+            .find(|n| !fields.iter().any(|(f, _)| f == *n))
+            .map(|n| format!("“{n}” kaynakta yok."))
+            .unwrap_or_default()
+    } else if typed.is_empty() {
         String::new()
     } else if let Some((_, count)) = known {
-        format!("{count} nesnede var; değeri değişir.")
+        if rows {
+            format!("{count} satırda var.")
+        } else if allow_new {
+            format!("{count} nesnede var; değeri değişir.")
+        } else {
+            format!("{count} nesnede var.")
+        }
     } else if allow_new {
         "Yeni alan: nesnelere eklenir.".into()
     } else {
@@ -505,13 +562,32 @@ fn field<'a>(
         if menu_fields.is_empty() {
             return Menu::new().item("Bu nesnelerde öznitelik alanı yok", None);
         }
+        let names = kentos_processing::parameters::field_names(multiple, &chosen);
         menu_fields.iter().fold(Menu::new(), |m, (f, count)| {
-            m.radio(
-                f.clone(),
-                *f == chosen,
-                ev(Event::Value(name.clone(), json!(f))),
-            )
-            .shortcut(format!("{count} nesne"))
+            let on = names.iter().any(|n| n == f);
+            let count = if rows {
+                format!("{count} satır")
+            } else {
+                format!("{count} nesne")
+            };
+            if multiple {
+                // A name checked joins the names written, or leaves them.
+                let mut next = names.clone();
+                if on {
+                    next.retain(|n| n != f);
+                } else {
+                    next.push(f.clone());
+                }
+                m.check(
+                    f.clone(),
+                    on,
+                    ev(Event::Value(name.clone(), json!(next.join(", ")))),
+                )
+                .shortcut(count)
+            } else {
+                m.radio(f.clone(), on, ev(Event::Value(name.clone(), json!(f))))
+                    .shortcut(count)
+            }
         })
     };
     let open = MenuButton::new(
@@ -551,6 +627,71 @@ fn field<'a>(
         .into()
     };
     let mut out = column![combo].spacing(6).width(Fill);
+    if !note.is_empty() {
+        out = out.push(label::caption(note).style(style::text::muted));
+    }
+    out.into()
+}
+
+/// A file (docs/adr/0200 §7): its button, its name and what it holds, or
+/// that it must be chosen again (the last values keep only its name and path).
+fn file<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
+    let ev = env.send;
+    let v = env.value(&def.name);
+    let name = v.get("name").and_then(Value::as_str);
+    let table = kentos_processing::parameters::file_table(v);
+    let (text, note, button_text, chosen) = match (name, &table) {
+        (None, _) => (
+            "Dosya seçilmedi".to_owned(),
+            String::new(),
+            "Dosya seç…",
+            false,
+        ),
+        (Some(n), Some((header, rows))) => (
+            n.to_owned(),
+            format!(
+                "{} satır, {} sütun",
+                rows.len(),
+                header.iter().filter(|h| !h.is_empty()).count()
+            ),
+            "Başka dosya…",
+            true,
+        ),
+        (Some(n), None) => (
+            n.to_owned(),
+            if v.get("rows").is_some() {
+                "Dosya boş.".to_owned()
+            } else {
+                "Yeniden seçin: dosyanın içeriği saklanmaz.".to_owned()
+            },
+            "Dosya seç…",
+            false,
+        ),
+    };
+    let shown = label::body(text);
+    let shown = if chosen {
+        shown
+    } else {
+        shown.style(style::text::muted)
+    };
+    let pick = button(
+        row![
+            icon(crate::icons::from_web(Some("tableFile"))).size(14.0),
+            label::body(button_text)
+        ]
+        .spacing(6)
+        .align_y(Center),
+    )
+    .padding([5, 10])
+    .style(style::button::secondary)
+    .on_press(ev(Event::ChooseFile(def.name.clone())));
+    let mut out = column![
+        row![container(shown).width(Fill).clip(true), pick]
+            .spacing(10)
+            .align_y(Center)
+    ]
+    .spacing(6)
+    .width(Fill);
     if !note.is_empty() {
         out = out.push(label::caption(note).style(style::text::muted));
     }

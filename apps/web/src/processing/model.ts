@@ -43,7 +43,7 @@ export interface ProcessingModel {
 export type ModelIssue = { step?: string; message: string };
 
 /** Kinds of value a model input or a step output can feed. */
-export type SourceType = ParamType | 'string' | 'number' | 'features';
+export type SourceType = ParamType | 'string' | 'number' | 'features' | 'table';
 
 /**
  * Whether a value of type `from` (a model input or a step output) can feed

@@ -1,0 +1,1406 @@
+{
+ "format": "kentos.spatial-query-cases",
+ "version": 1,
+ "source": "scripts/fixtures/spatial_query_cases.py (docs/adr/0200)",
+ "tolerance": 0.001,
+ "shapes": {
+  "A1": {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420000
+    },
+    {
+     "x": 487010,
+     "y": 4420000
+    },
+    {
+     "x": 487010,
+     "y": 4420010
+    },
+    {
+     "x": 487000,
+     "y": 4420010
+    }
+   ]
+  },
+  "A2": {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487002,
+     "y": 4420002
+    },
+    {
+     "x": 487004,
+     "y": 4420002
+    },
+    {
+     "x": 487004,
+     "y": 4420004
+    },
+    {
+     "x": 487002,
+     "y": 4420004
+    }
+   ]
+  },
+  "A3": {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487010,
+     "y": 4420000
+    },
+    {
+     "x": 487015,
+     "y": 4420000
+    },
+    {
+     "x": 487015,
+     "y": 4420005
+    },
+    {
+     "x": 487010,
+     "y": 4420005
+    }
+   ]
+  },
+  "A4": {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487025,
+     "y": 4420000
+    },
+    {
+     "x": 487025,
+     "y": 4420005
+    },
+    {
+     "x": 487020,
+     "y": 4420005
+    }
+   ]
+  },
+  "A5": {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487030,
+     "y": 4420000
+    },
+    {
+     "x": 487050,
+     "y": 4420000
+    },
+    {
+     "x": 487050,
+     "y": 4420020
+    },
+    {
+     "x": 487030,
+     "y": 4420020
+    }
+   ],
+   "holes": [
+    {
+     "pts": [
+      {
+       "x": 487035,
+       "y": 4420005
+      },
+      {
+       "x": 487045,
+       "y": 4420005
+      },
+      {
+       "x": 487045,
+       "y": 4420015
+      },
+      {
+       "x": 487035,
+       "y": 4420015
+      }
+     ]
+    }
+   ]
+  },
+  "A6": {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487037,
+     "y": 4420007
+    },
+    {
+     "x": 487043,
+     "y": 4420007
+    },
+    {
+     "x": 487043,
+     "y": 4420013
+    },
+    {
+     "x": 487037,
+     "y": 4420013
+    }
+   ]
+  },
+  "A7": {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487031,
+     "y": 4420001
+    },
+    {
+     "x": 487034,
+     "y": 4420001
+    },
+    {
+     "x": 487034,
+     "y": 4420004
+    },
+    {
+     "x": 487031,
+     "y": 4420004
+    }
+   ]
+  },
+  "A8": {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487033,
+     "y": 4420003
+    },
+    {
+     "x": 487047,
+     "y": 4420003
+    },
+    {
+     "x": 487047,
+     "y": 4420017
+    },
+    {
+     "x": 487033,
+     "y": 4420017
+    }
+   ]
+  },
+  "L": {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487060,
+     "y": 4420000
+    },
+    {
+     "x": 487070,
+     "y": 4420000
+    },
+    {
+     "x": 487070,
+     "y": 4420004
+    },
+    {
+     "x": 487064,
+     "y": 4420004
+    },
+    {
+     "x": 487064,
+     "y": 4420010
+    },
+    {
+     "x": 487060,
+     "y": 4420010
+    }
+   ]
+  },
+  "M": {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487080,
+     "y": 4420000
+    },
+    {
+     "x": 487084,
+     "y": 4420000
+    },
+    {
+     "x": 487084,
+     "y": 4420004
+    },
+    {
+     "x": 487080,
+     "y": 4420004
+    }
+   ],
+   "parts": [
+    {
+     "pts": [
+      {
+       "x": 487090,
+       "y": 4420000
+      },
+      {
+       "x": 487094,
+       "y": 4420000
+      },
+      {
+       "x": 487094,
+       "y": 4420004
+      },
+      {
+       "x": 487090,
+       "y": 4420004
+      }
+     ]
+    }
+   ]
+  },
+  "L1": {
+   "kind": "line",
+   "a": {
+    "x": 486995,
+    "y": 4420005
+   },
+   "b": {
+    "x": 487005,
+    "y": 4420005
+   }
+  },
+  "L2": {
+   "kind": "line",
+   "a": {
+    "x": 487001,
+    "y": 4420001
+   },
+   "b": {
+    "x": 487009,
+    "y": 4420009
+   }
+  },
+  "L3": {
+   "kind": "line",
+   "a": {
+    "x": 487010,
+    "y": 4420002
+   },
+   "b": {
+    "x": 487010,
+    "y": 4420008
+   }
+  },
+  "L4": {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 486995,
+     "y": 4419995
+    },
+    {
+     "x": 486995,
+     "y": 4420020
+    },
+    {
+     "x": 487005,
+     "y": 4420020
+    }
+   ]
+  },
+  "Pt1": {
+   "kind": "point",
+   "p": {
+    "x": 487005,
+    "y": 4420005
+   }
+  },
+  "Pt2": {
+   "kind": "point",
+   "p": {
+    "x": 487010,
+    "y": 4420005
+   }
+  },
+  "Pt3": {
+   "kind": "point",
+   "p": {
+    "x": 487012,
+    "y": 4420012
+   }
+  },
+  "Pt4": {
+   "kind": "point",
+   "p": {
+    "x": 487010,
+    "y": 4420005.0005
+   }
+  },
+  "MP1": {
+   "kind": "point",
+   "p": {
+    "x": 487001,
+    "y": 4420001
+   },
+   "parts": [
+    {
+     "p": {
+      "x": 487020,
+      "y": 4420020
+     }
+    }
+   ]
+  },
+  "C1": {
+   "kind": "circle",
+   "c": {
+    "x": 487040,
+    "y": 4420030
+   },
+   "r": 5
+  },
+  "C2": {
+   "kind": "circle",
+   "c": {
+    "x": 487005,
+    "y": 4420005
+   },
+   "r": 3
+  },
+  "C3": {
+   "kind": "circle",
+   "c": {
+    "x": 487012,
+    "y": 4420005
+   },
+   "r": 3
+  },
+  "T1": {
+   "kind": "text",
+   "p": {
+    "x": 487003,
+    "y": 4420007
+   },
+   "text": "Ağaç",
+   "height": 2,
+   "rotation": 0
+  }
+ },
+ "relations": [
+  {
+   "a": "A1",
+   "b": "A2",
+   "intersects": true,
+   "contains": true,
+   "within": false,
+   "centerIn": false,
+   "distance": 0.0
+  },
+  {
+   "a": "A2",
+   "b": "A1",
+   "intersects": true,
+   "contains": false,
+   "within": true,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "A1",
+   "b": "A3",
+   "intersects": true,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 0.0
+  },
+  {
+   "a": "A1",
+   "b": "A4",
+   "intersects": false,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 10.0
+  },
+  {
+   "a": "A5",
+   "b": "A6",
+   "intersects": false,
+   "contains": false,
+   "within": false,
+   "centerIn": true,
+   "distance": 2.0
+  },
+  {
+   "a": "A6",
+   "b": "A5",
+   "intersects": false,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 2.0
+  },
+  {
+   "a": "A7",
+   "b": "A5",
+   "intersects": true,
+   "contains": false,
+   "within": true,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "A8",
+   "b": "A5",
+   "intersects": true,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 0.0
+  },
+  {
+   "a": "A5",
+   "b": "A8",
+   "intersects": true,
+   "contains": false,
+   "within": false,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "L1",
+   "b": "A1",
+   "intersects": true,
+   "contains": false,
+   "within": false,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "L2",
+   "b": "A1",
+   "intersects": true,
+   "contains": false,
+   "within": true,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "L3",
+   "b": "A1",
+   "intersects": true,
+   "contains": false,
+   "within": true,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "L4",
+   "b": "A1",
+   "intersects": false,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 5.0
+  },
+  {
+   "a": "Pt1",
+   "b": "A1",
+   "intersects": true,
+   "contains": false,
+   "within": true,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "Pt2",
+   "b": "A1",
+   "intersects": true,
+   "contains": false,
+   "within": true,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "Pt3",
+   "b": "A1",
+   "intersects": false,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 2.8284271247461903
+  },
+  {
+   "a": "Pt4",
+   "b": "A1",
+   "intersects": true,
+   "contains": false,
+   "within": true,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "MP1",
+   "b": "A1",
+   "intersects": true,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 0.0
+  },
+  {
+   "a": "C1",
+   "b": "A5",
+   "intersects": false,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 5.0
+  },
+  {
+   "a": "C2",
+   "b": "A1",
+   "intersects": true,
+   "contains": false,
+   "within": true,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "C3",
+   "b": "A1",
+   "intersects": true,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 0.0
+  },
+  {
+   "a": "C3",
+   "b": "A3",
+   "intersects": true,
+   "contains": false,
+   "within": false,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "C2",
+   "b": "A3",
+   "intersects": false,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 2.0
+  },
+  {
+   "a": "T1",
+   "b": "A1",
+   "intersects": true,
+   "contains": false,
+   "within": true,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "A1",
+   "b": "Pt1",
+   "intersects": true,
+   "contains": true,
+   "within": false,
+   "centerIn": false,
+   "distance": 0.0
+  },
+  {
+   "a": "A1",
+   "b": "T1",
+   "intersects": true,
+   "contains": true,
+   "within": false,
+   "centerIn": false,
+   "distance": 0.0
+  },
+  {
+   "a": "L1",
+   "b": "L2",
+   "intersects": true,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 0.0
+  },
+  {
+   "a": "Pt2",
+   "b": "Pt4",
+   "intersects": true,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 0.0
+  },
+  {
+   "a": "A2",
+   "b": "L",
+   "intersects": false,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 56.0
+  },
+  {
+   "a": "M",
+   "b": "A1",
+   "intersects": false,
+   "contains": false,
+   "within": false,
+   "centerIn": false,
+   "distance": 70.0
+  },
+  {
+   "a": "Pt1",
+   "b": "C2",
+   "intersects": true,
+   "contains": false,
+   "within": true,
+   "centerIn": true,
+   "distance": 0.0
+  },
+  {
+   "a": "C2",
+   "b": "Pt1",
+   "intersects": true,
+   "contains": true,
+   "within": false,
+   "centerIn": false,
+   "distance": 0.0
+  }
+ ],
+ "centers": [
+  {
+   "shape": "A1",
+   "center": [
+    487005,
+    4420005
+   ]
+  },
+  {
+   "shape": "A5",
+   "center": [
+    487040,
+    4420010
+   ]
+  },
+  {
+   "shape": "L",
+   "center": [
+    487063.875,
+    4420003.875
+   ]
+  },
+  {
+   "shape": "M",
+   "center": [
+    487087,
+    4420002
+   ]
+  },
+  {
+   "shape": "L1",
+   "center": [
+    487000,
+    4420005
+   ]
+  },
+  {
+   "shape": "L4",
+   "center": [
+    486995,
+    4420020
+   ]
+  },
+  {
+   "shape": "MP1",
+   "center": [
+    487010.5,
+    4420010.5
+   ]
+  },
+  {
+   "shape": "C1",
+   "center": [
+    487040,
+    4420030
+   ]
+  },
+  {
+   "shape": "T1",
+   "center": [
+    487003,
+    4420007
+   ]
+  }
+ ],
+ "numbers": [
+  {
+   "text": " 1,50 ",
+   "number": "1.50"
+  },
+  {
+   "text": "-0.0",
+   "number": "0.0"
+  },
+  {
+   "text": "+007",
+   "number": "7"
+  },
+  {
+   "text": "1e3",
+   "number": null
+  },
+  {
+   "text": "1.2.3",
+   "number": null
+  },
+  {
+   "text": "",
+   "number": null
+  },
+  {
+   "text": ",5",
+   "number": "0.5"
+  },
+  {
+   "text": "5,",
+   "number": "5"
+  },
+  {
+   "text": "-",
+   "number": null
+  },
+  {
+   "text": "12345678901234567890123456789012",
+   "number": null
+  },
+  {
+   "text": "١٢",
+   "number": null
+  },
+  {
+   "text": "0001.000",
+   "number": "1.000"
+  },
+  {
+   "text": "-3",
+   "number": "-3"
+  }
+ ],
+ "figures": [
+  {
+   "values": [
+    " 0.1",
+    "0,2",
+    "x",
+    null
+   ],
+   "scale": null,
+   "expect": {
+    "read": 2,
+    "skipped": 1,
+    "sum": "0.3",
+    "mean": "0.150",
+    "min": "0.1",
+    "max": "0.2",
+    "std": "0.071"
+   }
+  },
+  {
+   "values": [
+    "100",
+    "25,5",
+    "70",
+    "36"
+   ],
+   "scale": null,
+   "expect": {
+    "read": 4,
+    "skipped": 0,
+    "sum": "231.5",
+    "mean": "57.875",
+    "min": "25.5",
+    "max": "100",
+    "std": "33.903"
+   }
+  },
+  {
+   "values": [
+    "100",
+    "25,5",
+    "70",
+    "36"
+   ],
+   "scale": 1,
+   "expect": {
+    "read": 4,
+    "skipped": 0,
+    "sum": "231.5",
+    "mean": "57.9",
+    "min": "25.5",
+    "max": "100",
+    "std": "33.9"
+   }
+  },
+  {
+   "values": [
+    "0.125"
+   ],
+   "scale": 2,
+   "expect": {
+    "read": 1,
+    "skipped": 0,
+    "sum": "0.125",
+    "mean": "0.12",
+    "min": "0.125",
+    "max": "0.125",
+    "std": null
+   }
+  },
+  {
+   "values": [
+    "0.135"
+   ],
+   "scale": 2,
+   "expect": {
+    "read": 1,
+    "skipped": 0,
+    "sum": "0.135",
+    "mean": "0.14",
+    "min": "0.135",
+    "max": "0.135",
+    "std": null
+   }
+  },
+  {
+   "values": [
+    "1",
+    "2"
+   ],
+   "scale": 0,
+   "expect": {
+    "read": 2,
+    "skipped": 0,
+    "sum": "3",
+    "mean": "2",
+    "min": "1",
+    "max": "2",
+    "std": "1"
+   }
+  },
+  {
+   "values": [
+    "1",
+    "4"
+   ],
+   "scale": 0,
+   "expect": {
+    "read": 2,
+    "skipped": 0,
+    "sum": "5",
+    "mean": "2",
+    "min": "1",
+    "max": "4",
+    "std": "2"
+   }
+  },
+  {
+   "values": [
+    "-1.5",
+    "-2.5"
+   ],
+   "scale": 0,
+   "expect": {
+    "read": 2,
+    "skipped": 0,
+    "sum": "-4.0",
+    "mean": "-2",
+    "min": "-2.5",
+    "max": "-1.5",
+    "std": "1"
+   }
+  },
+  {
+   "values": [
+    "7"
+   ],
+   "scale": null,
+   "expect": {
+    "read": 1,
+    "skipped": 0,
+    "sum": "7",
+    "mean": "7.00",
+    "min": "7",
+    "max": "7",
+    "std": null
+   }
+  },
+  {
+   "values": [
+    "a",
+    "b"
+   ],
+   "scale": null,
+   "expect": {
+    "read": 0,
+    "skipped": 2,
+    "sum": null,
+    "mean": null,
+    "min": null,
+    "max": null,
+    "std": null
+   }
+  },
+  {
+   "values": [
+    "1000000000000000000000.5",
+    "1000000000000000000000.25"
+   ],
+   "scale": null,
+   "expect": {
+    "read": 2,
+    "skipped": 0,
+    "sum": "2000000000000000000000.75",
+    "mean": "1000000000000000000000.3750",
+    "min": "1000000000000000000000.25",
+    "max": "1000000000000000000000.5",
+    "std": "0.0000"
+   }
+  }
+ ],
+ "statistics": [
+  {
+   "values": [
+    null,
+    "3",
+    "x",
+    "4"
+   ],
+   "stat": "count",
+   "scale": null,
+   "expect": {
+    "value": "4",
+    "skipped": 0
+   }
+  },
+  {
+   "values": [
+    null,
+    " ",
+    "Konut",
+    "Ticaret"
+   ],
+   "stat": "first",
+   "scale": null,
+   "expect": {
+    "value": "Konut",
+    "skipped": 0
+   }
+  },
+  {
+   "values": [
+    "70",
+    "25,5"
+   ],
+   "stat": "mean",
+   "scale": 1,
+   "expect": {
+    "value": "47.8",
+    "skipped": 0
+   }
+  },
+  {
+   "values": [
+    "70",
+    "25,5"
+   ],
+   "stat": "mean",
+   "scale": 0,
+   "expect": {
+    "value": "48",
+    "skipped": 0
+   }
+  },
+  {
+   "values": [
+    "70",
+    "x",
+    "25,5"
+   ],
+   "stat": "sum",
+   "scale": null,
+   "expect": {
+    "value": "95.5",
+    "skipped": 1
+   }
+  },
+  {
+   "values": [
+    "70",
+    "25,5"
+   ],
+   "stat": "min",
+   "scale": null,
+   "expect": {
+    "value": "25.5",
+    "skipped": 0
+   }
+  },
+  {
+   "values": [
+    "70",
+    "25,5"
+   ],
+   "stat": "max",
+   "scale": null,
+   "expect": {
+    "value": "70",
+    "skipped": 0
+   }
+  },
+  {
+   "values": [],
+   "stat": "sum",
+   "scale": null,
+   "expect": {
+    "skipped": 0
+   }
+  }
+ ],
+ "summaries": [
+  {
+   "groups": [
+    "2",
+    "1",
+    "2",
+    ""
+   ],
+   "values": [
+    "70",
+    "100",
+    "25,5",
+    "36"
+   ],
+   "grouped": true,
+   "expect": {
+    "columns": [
+     "Grup",
+     "Nesne",
+     "Değer",
+     "Toplam",
+     "Ortalama",
+     "En az",
+     "En çok",
+     "Std. sapma"
+    ],
+    "rows": [
+     [
+      "1",
+      "1",
+      "1",
+      "100",
+      "100.000",
+      "100",
+      "100",
+      ""
+     ],
+     [
+      "2",
+      "2",
+      "2",
+      "95.5",
+      "47.750",
+      "25.5",
+      "70",
+      "31.466"
+     ],
+     [
+      "(boş)",
+      "1",
+      "1",
+      "36",
+      "36.000",
+      "36",
+      "36",
+      ""
+     ],
+     [
+      "Toplam",
+      "4",
+      "4",
+      "231.5",
+      "57.875",
+      "25.5",
+      "100",
+      "33.903"
+     ]
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "groups": [
+    "Konut",
+    "konut",
+    "İşyeri",
+    null,
+    "Arsa 10",
+    "Arsa 2"
+   ],
+   "values": [
+    "1",
+    "2",
+    "x",
+    "4",
+    "5",
+    "6"
+   ],
+   "grouped": true,
+   "expect": {
+    "columns": [
+     "Grup",
+     "Nesne",
+     "Değer",
+     "Toplam",
+     "Ortalama",
+     "En az",
+     "En çok",
+     "Std. sapma"
+    ],
+    "rows": [
+     [
+      "Arsa 2",
+      "1",
+      "1",
+      "6",
+      "6.00",
+      "6",
+      "6",
+      ""
+     ],
+     [
+      "Arsa 10",
+      "1",
+      "1",
+      "5",
+      "5.00",
+      "5",
+      "5",
+      ""
+     ],
+     [
+      "İşyeri",
+      "1",
+      "0",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Konut",
+      "1",
+      "1",
+      "1",
+      "1.00",
+      "1",
+      "1",
+      ""
+     ],
+     [
+      "konut",
+      "1",
+      "1",
+      "2",
+      "2.00",
+      "2",
+      "2",
+      ""
+     ],
+     [
+      "(boş)",
+      "1",
+      "1",
+      "4",
+      "4.00",
+      "4",
+      "4",
+      ""
+     ],
+     [
+      "Toplam",
+      "6",
+      "5",
+      "18",
+      "3.60",
+      "1",
+      "6",
+      "2.07"
+     ]
+    ],
+    "skipped": 1
+   }
+  },
+  {
+   "groups": [
+    null,
+    null,
+    null
+   ],
+   "values": [
+    "600",
+    "750",
+    "450"
+   ],
+   "grouped": false,
+   "expect": {
+    "columns": [
+     "Nesne",
+     "Değer",
+     "Toplam",
+     "Ortalama",
+     "En az",
+     "En çok",
+     "Std. sapma"
+    ],
+    "rows": [
+     [
+      "3",
+      "3",
+      "1800",
+      "600.00",
+      "450",
+      "750",
+      "150.00"
+     ]
+    ],
+    "skipped": 0
+   }
+  }
+ ],
+ "keys": [
+  {
+   "text": " 007 ",
+   "key": "#7"
+  },
+  {
+   "text": "7",
+   "key": "#7"
+  },
+  {
+   "text": "1.50",
+   "key": "#1.5"
+  },
+  {
+   "text": "1,5",
+   "key": "#1.5"
+  },
+  {
+   "text": "7a",
+   "key": "$7a"
+  },
+  {
+   "text": "",
+   "key": null
+  },
+  {
+   "text": "  ",
+   "key": null
+  },
+  {
+   "text": "101/5",
+   "key": "$101/5"
+  },
+  {
+   "text": "-0",
+   "key": "#0"
+  },
+  {
+   "text": "0",
+   "key": "#0"
+  }
+ ],
+ "joins": [
+  {
+   "targets": [
+    "7",
+    "8",
+    null
+   ],
+   "sources": [
+    "007",
+    "9",
+    "7"
+   ],
+   "expect": {
+    "matches": [
+     0,
+     null,
+     null
+    ],
+    "repeated": 1,
+    "unused": 1
+   }
+  },
+  {
+   "targets": [
+    "1",
+    "2",
+    "3",
+    "4"
+   ],
+   "sources": [
+    "1",
+    "2",
+    "002",
+    "9"
+   ],
+   "expect": {
+    "matches": [
+     0,
+     1,
+     null,
+     null
+    ],
+    "repeated": 1,
+    "unused": 1
+   }
+  },
+  {
+   "targets": [
+    "101/5",
+    "101/6"
+   ],
+   "sources": [
+    "101/5",
+    " 101/5",
+    "101/7"
+   ],
+   "expect": {
+    "matches": [
+     0,
+     null
+    ],
+    "repeated": 1,
+    "unused": 1
+   }
+  }
+ ]
+}

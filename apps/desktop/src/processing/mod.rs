@@ -30,6 +30,8 @@ pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
     crate::app::Message::Processing(Event::Panel(event))
 }
 #[cfg(test)]
+mod query_tests;
+#[cfg(test)]
 mod tests;
 mod window;
 
@@ -167,6 +169,16 @@ pub enum Event {
     PickChoice(String),
     /// Sahneden seç for a features parameter's objects.
     PickObjects(String),
+    /// Dosya seç…: a file parameter's file asked for (docs/adr/0200 §7).
+    ChooseFile(String),
+    /// The file chosen for a parameter: its name, where it is and its bytes; none when given up.
+    FileChosen(String, Option<(String, std::path::PathBuf, Vec<u8>)>),
+    /// Panoya kopyala for the run's table (Özet istatistik).
+    CopyTable,
+    /// CSV olarak kaydet for the run's table.
+    SaveTable,
+    /// Where the run's table is saved; none when given up.
+    TableSaved(Option<std::path::PathBuf>),
     /// Sonuçları seç, or Seçime yakınlaştır after a selecting tool.
     Results,
     /// Geri al after a run.
@@ -290,7 +302,9 @@ impl App {
         };
         let explicit = values.is_some();
         let stored = values.or_else(|| self.processing.memory.last_values(&tool.id).cloned());
-        let window = ToolDialog::new(tool, stored.as_ref(), explicit, &Defaults::of(&doc.model));
+        let mut window =
+            ToolDialog::new(tool, stored.as_ref(), explicit, &Defaults::of(&doc.model));
+        window.reread_files();
         self.processing.dialog = Some(window);
         self.refresh_processing();
         self.dialog = Some(Dialog::Processing);
@@ -328,6 +342,40 @@ impl App {
             }
             Event::Results => {
                 self.processing_results();
+                return Task::none();
+            }
+            Event::ChooseFile(name) => return self.processing_choose_file(name),
+            Event::FileChosen(_, None) | Event::TableSaved(None) => return Task::none(),
+            Event::FileChosen(name, Some((file, path, bytes))) => {
+                self.processing_file_read(name, &file, &path, &bytes);
+            }
+            Event::CopyTable => {
+                let Some(table) = self.processing_table() else {
+                    return Task::none();
+                };
+                self.say(Level::Success, "Tablo panoya kopyalandı.".to_owned());
+                return iced::clipboard::write(crate::layer_list::tsv(&table.lines()));
+            }
+            Event::SaveTable => {
+                let Some(window) = &self.processing.dialog else {
+                    return Task::none();
+                };
+                let label = window.tool.label.clone();
+                return Task::perform(
+                    async move {
+                        let file = rfd::AsyncFileDialog::new()
+                            .set_title(format!("{label}: tabloyu kaydet"))
+                            .add_filter("CSV (.csv)", &["csv"])
+                            .set_file_name(format!("{label}.csv"))
+                            .save_file()
+                            .await?;
+                        Some(file.path().to_path_buf())
+                    },
+                    |path| Message::Processing(Event::TableSaved(path)),
+                );
+            }
+            Event::TableSaved(Some(path)) => {
+                self.processing_save_table(&path);
                 return Task::none();
             }
             Event::Undo => {
@@ -415,7 +463,11 @@ impl App {
             Some(plan::Choice::Auto) => auto == Some(Target::Worker),
             _ => false,
         };
-        self.processing.memory.remember(&tool.id, &values);
+        // The last values keep a file's name and path, not its rows (docs/adr/0200 §7).
+        self.processing.memory.remember(
+            &tool.id,
+            &kentos_processing::parameters::stored_values(&tool, &values),
+        );
         let session = doc.session;
         let mut stage = Stage {
             doc: &mut doc.model,
@@ -667,6 +719,89 @@ impl App {
             }
         };
         self.processing_ran(&label, Some(id), Vec::new(), outcome);
+    }
+
+    /// Dosya seç… (docs/adr/0200 §7): the file asked for with the
+    /// parameter's extensions, read on its answer.
+    fn processing_choose_file(&mut self, name: String) -> Task<Message> {
+        let accept: Vec<String> = self
+            .processing
+            .dialog
+            .as_ref()
+            .and_then(|w| w.tool.parameters.iter().find(|p| p.name == name))
+            .and_then(|p| match &p.kind {
+                kentos_processing::ParamKind::File { accept } => Some(accept.clone()),
+                _ => None,
+            })
+            .unwrap_or_default();
+        let extensions: Vec<String> = accept
+            .iter()
+            .map(|a| a.trim_start_matches('.').to_owned())
+            .collect();
+        let filter = format!("Tablo ({})", accept.join(", "));
+        Task::perform(
+            async move {
+                let file = rfd::AsyncFileDialog::new()
+                    .set_title("Tablo dosyası")
+                    .add_filter(filter, &extensions)
+                    .pick_file()
+                    .await?;
+                let bytes = file.read().await;
+                Some((file.file_name(), file.path().to_path_buf(), bytes))
+            },
+            move |read| Message::Processing(Event::FileChosen(name.clone(), read)),
+        )
+    }
+
+    /// A chosen file read as Tablo ekle reads one, its first sheet's rows
+    /// the parameter's value; a file that cannot be read is said and
+    /// changes nothing.
+    fn processing_file_read(&mut self, name: String, file: &str, path: &std::path::Path, bytes: &[u8]) {
+        match dialog::file_value(file, path, bytes) {
+            Ok(value) => {
+                let active = self
+                    .document
+                    .as_ref()
+                    .map(|d| d.model.layers().active().to_owned());
+                if let Some(window) = &mut self.processing.dialog {
+                    window.edit(Event::Value(name, value), active.as_deref().unwrap_or(""));
+                }
+            }
+            Err(why) => self.warn(why),
+        }
+    }
+
+    /// The open window's last run's table.
+    fn processing_table(&self) -> Option<dialog::ResultTable> {
+        match &self.processing.dialog.as_ref()?.status {
+            RunStatus::Ok { table, .. } => table.clone(),
+            _ => None,
+        }
+    }
+
+    /// CSV olarak kaydet: the run's table written where the user said.
+    fn processing_save_table(&mut self, path: &std::path::Path) {
+        let (Some(table), Some(window)) = (self.processing_table(), &self.processing.dialog) else {
+            return;
+        };
+        let label = window.tool.label.clone();
+        match std::fs::write(path, crate::layer_list::csv(&table.lines())) {
+            Ok(()) => {
+                let file = path
+                    .file_name()
+                    .map_or_else(String::new, |f| f.to_string_lossy().into_owned());
+                self.say(
+                    Level::Success,
+                    format!(
+                        "{label}: tablo CSV olarak kaydedildi: {file} ({} satır).",
+                        table.rows.len()
+                    ),
+                );
+            }
+            Err(e) => self.warn(format!(
+                "{label}: tablo kaydedilemedi: {e}. Başka bir klasör seçin."
+            )),
+        }
     }
 
     /// Sonuçları seç: what the run made or changed becomes the selection,

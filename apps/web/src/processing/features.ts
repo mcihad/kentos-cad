@@ -101,6 +101,8 @@ export interface InputSummary {
   byKind: { kind: EntityKind; count: number }[];
   /** Attribute names on the objects, most common first (field pickers, expressions). */
   fields: { name: string; count: number }[];
+  /** A chosen file's table (docs/adr/0200 §7): the counts are its rows, not objects. */
+  rows?: true;
 }
 
 export function summarizeFeatures(value: FeaturesValue, def: Pick<FeaturesParam, 'kinds'>, host: FeatureHost): InputSummary {

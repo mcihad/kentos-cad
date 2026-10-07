@@ -38,7 +38,7 @@ const CONDITIONS = ['$alan > 100', '$uzunluk < 40', "$katman = 'A'", '$y > 0', '
 
 /** A run's job as the runner makes it: features as ids, a target layer, the rest as entered. */
 function job(toolId: string, values: Record<string, unknown>, doc: CadDocument, units: DefaultsContext, selection: number[]): RunJob {
-  return { toolId, values, units, selection, layers: doc.layers.leaves().map((l) => [l.id, l.name] as const) };
+  return { toolId, values, units, selection, layers: doc.layers.leaves().map((l) => [l.id, l.name] as const), fields: [] };
 }
 
 /** The same job through the worker's job handler, on copies of the objects. */

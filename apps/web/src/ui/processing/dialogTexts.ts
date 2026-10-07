@@ -50,6 +50,10 @@ export const DIALOG_TEXTS = {
     kindOff: 'Bu türü dışarıda bırak',
     kindOn: 'Bu türü de al',
     kindsNote: (kinds: readonly EntityKind[]) => `Uygun nesneler: ${kinds.map((k) => ENTITY_KIND_LABEL[k].toLocaleLowerCase('tr-TR')).join(', ')}`,
+    kindsLeftOut: (kinds: readonly EntityKind[]) => {
+      const list = kinds.map((k) => ENTITY_KIND_LABEL[k].toLocaleLowerCase('tr-TR')).join(', ');
+      return `${list.charAt(0).toLocaleUpperCase('tr-TR')}${list.slice(1)} alınmaz.`;
+    },
     noLayer: '—',
   },
   layer: {
@@ -76,9 +80,30 @@ export const DIALOG_TEXTS = {
     choose: 'Alan seçin',
     placeholder: 'Alan adı',
     count: (n: number) => `${n} nesne`,
+    rows: (n: number) => `${n} satır`,
     has: (n: number) => `${n} nesnede var; değeri değişir.`,
+    present: (n: number) => `${n} nesnede var.`,
+    presentRows: (n: number) => `${n} satırda var.`,
     fresh: 'Yeni alan: nesnelere eklenir.',
     missing: 'Bu nesnelerde böyle bir alan yok.',
+    lacking: (name: string) => `“${name}” kaynakta yok.`,
+  },
+  /** A file parameter (docs/adr/0200 §7). */
+  file: {
+    none: 'Dosya seçilmedi',
+    choose: 'Dosya seç…',
+    other: 'Başka dosya…',
+    size: (s: { rows: number; columns: number }) => `${s.rows} satır, ${s.columns} sütun`,
+    again: 'Yeniden seçin: dosyanın içeriği saklanmaz.',
+    empty: 'Dosya boş.',
+    inModel: 'Model adımında dosya seçilmez: dosyanın içeriği modelde saklanmaz. Kaynağı katman yapın.',
+  },
+  /** The table a run gives (Özet istatistik), under the form. */
+  result: {
+    title: 'Sonuç',
+    copy: 'Panoya kopyala',
+    save: 'CSV olarak kaydet',
+    copied: 'Tablo panoya kopyalandı.',
   },
   expression: {
     fields: 'Alanlar',

@@ -6,13 +6,16 @@ import type { Bounds } from '../model/geometry';
 import type { Selection } from '../model/selection';
 import { BUILTIN_TOOLS } from '../processing/builtin';
 import { BUILTIN_MODELS } from '../processing/builtin/models';
+import { formats } from '../io/client';
 import type { DocumentGeometry } from '../processing/geometry';
 import type { ProcessingModel } from '../processing/model';
 import { ProcessingRegistry } from '../processing/registry';
 import { clientExecutor, type Executor } from '../processing/job';
 import { ProcessingRunner, type TargetChoice } from '../processing/runner';
+import type { FileValue } from '../processing/types';
 import { workerExecutor, type WorkerLike } from '../processing/worker/workerExecutor';
 import type { AppContext } from './context';
+import { readFile } from './fileAccess';
 import { persistedSignals } from './state';
 
 /**
@@ -26,6 +29,11 @@ export interface ProcessingService {
   /** Values of the tool's last run in this browser, if any. */
   lastValues(toolId: string): Record<string, unknown> | undefined;
   remember(toolId: string, values: Record<string, unknown>): void;
+  /**
+   * A file parameter's file (docs/adr/0200 §7): asked for with these extensions and read as Tablo ekle reads one, its
+   * first sheet's rows; null when none is chosen, the problem when it cannot be read.
+   */
+  chooseFile(accept: readonly string[]): Promise<FileValue | { problem: string } | null>;
   /** Where the user wants the tool to run (Otomatik unless changed). */
   targetChoice(toolId: string): TargetChoice;
   setTargetChoice(toolId: string, choice: TargetChoice): void;
@@ -76,11 +84,39 @@ export function createProcessing(doc: CadDocument, selection: Selection, visible
     removeModel: (id) => memory.models.set(memory.models.value.filter((m) => m.id !== id)),
     registry,
     runner,
+    chooseFile,
     lastValues: (id) => memory.lastValues.value[id],
     remember: (id, values) => memory.lastValues.set({ ...memory.lastValues.value, [id]: JSON.parse(JSON.stringify(values)) }),
     targetChoice: (id) => memory.targets.value[id] ?? 'auto',
     setTargetChoice: (id, choice) => memory.targets.set({ ...memory.targets.value, [id]: choice }),
   };
+}
+
+/** The most a table file may be (the core's `table_file::MAX_BYTES`, as Tablo ekle has it). */
+const MAX_FILE_BYTES = 64 * 1024 * 1024;
+
+async function chooseFile(accept: readonly string[]): Promise<FileValue | { problem: string } | null> {
+  const file = await new Promise<File | null>((done) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = [...accept, ...accept.map((a) => a.toUpperCase())].join(',');
+    input.addEventListener('change', () => done(input.files?.[0] ?? null), { once: true });
+    input.addEventListener('cancel', () => done(null), { once: true });
+    input.click();
+  });
+  if (!file) return null;
+  if (file.size > MAX_FILE_BYTES) return { problem: `“${file.name}” ${MAX_FILE_BYTES / (1024 * 1024)} MB'tan büyük; bu kadar büyük tablo okunmuyor.` };
+  try {
+    const bytes = await readFile(file);
+    if (!bytes) return null;
+    const read = await formats().readTableFile(bytes);
+    if (read.problem) return { problem: `“${file.name}” okunamadı: ${read.problem}` };
+    const sheet = read.sheets[0];
+    if (!sheet?.rows.length) return { problem: `“${file.name}” boş: okunacak satır yok.` };
+    return { name: file.name, rows: sheet.rows };
+  } catch (e) {
+    return { problem: `“${file.name}” okunamadı: ${e instanceof Error ? e.message : String(e)}` };
+  }
 }
 
 export const processingCommandId = (toolId: string) => `processing.run.${toolId}`;

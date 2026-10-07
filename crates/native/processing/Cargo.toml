@@ -21,3 +21,8 @@ kentos-style-core = { path = "../../shared/style-core" }
 # a model's steps keep their values in the order written (serde's map visitor).
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+# The shared cases' file values (fixtures/processing/v1/queries.json) are read
+# as the dialog reads a chosen file: Tablo ekle's reader (docs/adr/0200 §7).
+[dev-dependencies]
+kentos-formats = { path = "../../shared/formats" }

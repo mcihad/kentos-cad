@@ -326,6 +326,12 @@ pub const PORTED: &[&str] = &[
     "processing.run.annotation.edgeLengths",
     "processing.run.attributes.calculate",
     "processing.run.selection.byExpression",
+    // Mekânsal ve öznitelik sorgusu (docs/adr/0200).
+    "processing.run.selection.byLocation",
+    "processing.run.attributes.fromInside",
+    "processing.run.attributes.fromEnclosing",
+    "processing.run.statistics.summary",
+    "processing.run.attributes.joinByField",
     "processing.model.builtin.parcelSheet",
     "processing.newModel",
     "map.edgeLengths",

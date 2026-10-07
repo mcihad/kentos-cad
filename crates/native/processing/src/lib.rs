@@ -43,6 +43,7 @@ pub mod text;
 pub mod types;
 pub mod values;
 pub mod web_param;
+pub mod writes;
 
 pub use features::{Host, InputSummary, Scene};
 pub use kentos_geometry_core::geometry::Bounds;

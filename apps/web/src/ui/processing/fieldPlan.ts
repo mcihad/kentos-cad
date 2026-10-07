@@ -3,9 +3,9 @@ import { ENTITY_KIND_LABEL, type EntityKind } from '../../model/entities';
 import type { Vec2 } from '../../model/geometry';
 import type { LayerStore } from '../../model/layers';
 import type { InputSummary } from '../../processing/features';
-import { scopesOf } from '../../processing/parameters';
+import { fieldNames, fileTable, scopesOf } from '../../processing/parameters';
 import { sameNamedLayer } from '../../processing/runner';
-import type { FeaturesValue, LayerValue, ParamDef } from '../../processing/types';
+import type { FeaturesValue, FileValue, LayerValue, ParamDef } from '../../processing/types';
 import { DIALOG_TEXTS as T } from './dialogTexts';
 
 /**
@@ -62,7 +62,10 @@ export function kindsView(def: FeaturesParam, value: FeaturesValue, present: Inp
       }),
     };
   }
-  return def.kinds ? { note: T.features.kindsNote(def.kinds) } : null;
+  if (!def.kinds) return null;
+  // A tool that takes nearly every kind says what it leaves out.
+  const left = (Object.keys(ENTITY_KIND_LABEL) as EntityKind[]).filter((k) => !def.kinds!.includes(k));
+  return { note: left.length < def.kinds.length ? T.features.kindsLeftOut(left) : T.features.kindsNote(def.kinds) };
 }
 
 /** A chip clicked: the kind leaves or joins the filter; every kind in scope on again means no filter. */
@@ -165,21 +168,57 @@ export interface AttrFieldView {
   items: AttrItem[];
 }
 
-/** The note under an attribute name: on n objects, a new field (when new ones are allowed) or not on these objects. */
-export function fieldNote(fields: InputSummary['fields'], name: string, allowNew: boolean): string {
+/**
+ * The note under an attribute name: on n objects (a field written to: its value changes), on n rows of a file, a new
+ * field (when new ones are allowed) or not on these objects.
+ */
+export function fieldNote(fields: InputSummary['fields'], name: string, allowNew: boolean, rows = false): string {
   const key = name.trim();
   if (!key) return '';
   const known = fields.find((f) => f.name === key);
-  return known ? T.field.has(known.count) : allowNew ? T.field.fresh : T.field.missing;
+  if (known) return rows ? T.field.presentRows(known.count) : allowNew ? T.field.has(known.count) : T.field.present(known.count);
+  return allowNew ? T.field.fresh : T.field.missing;
 }
 
-export function attrFieldView(def: Extract<ParamDef, { type: 'field' }>, value: string, fields: InputSummary['fields']): AttrFieldView {
-  const key = value.trim();
+/**
+ * An attribute name, or several (`multiple`: the list checks each one written, the note speaks of the first the
+ * objects lack, or of none).
+ */
+export function attrFieldView(def: Extract<ParamDef, { type: 'field' }>, value: string, source: InputSummary | undefined): AttrFieldView {
+  const fields = source?.fields ?? [];
+  const rows = !!source?.rows;
+  const names = fieldNames(def, value);
+  const lacking = def.multiple ? names.find((n) => !fields.some((f) => f.name === n)) : undefined;
   return {
     text: def.allowNew ? value : value || T.field.choose,
-    note: fieldNote(fields, value, !!def.allowNew),
-    items: fields.length ? fields.map((f) => ({ label: f.name, hint: T.field.count(f.count), checked: f.name === key })) : [{ label: T.field.none, disabled: true }],
+    note: def.multiple ? (lacking ? T.field.lacking(lacking) : '') : fieldNote(fields, value, !!def.allowNew, rows),
+    items: fields.length
+      ? fields.map((f) => ({ label: f.name, hint: rows ? T.field.rows(f.count) : T.field.count(f.count), checked: names.includes(f.name) }))
+      : [{ label: T.field.none, disabled: true }],
   };
+}
+
+/** A name checked in a `multiple` field's list: added after the names written, or taken out. */
+export function toggledName(value: string, name: string): string {
+  const names = fieldNames({ multiple: true }, value);
+  return (names.includes(name) ? names.filter((n) => n !== name) : [...names, name]).join(', ');
+}
+
+export interface FileView {
+  /** The file's name, or that none is chosen. */
+  text: string;
+  /** Under it: its rows and columns, or that it must be chosen again (the last values keep only its name). */
+  note: string;
+  button: string;
+  /** Whether a file with its rows is there. */
+  chosen: boolean;
+}
+
+export function fileView(value: FileValue | null): FileView {
+  if (!value) return { text: T.file.none, note: '', button: T.file.choose, chosen: false };
+  const t = fileTable(value);
+  if (!t) return { text: value.name, note: value.rows ? T.file.empty : T.file.again, button: T.file.choose, chosen: false };
+  return { text: value.name, note: T.file.size({ rows: t.rows.length, columns: t.header.filter(Boolean).length }), button: T.file.other, chosen: true };
 }
 
 const PLAIN_NAME = /^[\p{L}_][\p{L}\p{N}_]*$/u;

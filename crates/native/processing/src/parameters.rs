@@ -47,7 +47,7 @@ pub fn default_value(def: &ParamDef, d: &Defaults) -> Value {
         ParamKind::Boolean => json!(false),
         ParamKind::Choice { options } => options.first().map_or(Value::Null, |o| json!(o.value)),
         ParamKind::Layer { .. } => json!({ "layerId": d.active_layer }),
-        ParamKind::Point => Value::Null,
+        ParamKind::Point | ParamKind::File { .. } => Value::Null,
     }
 }
 
@@ -63,6 +63,86 @@ pub fn is_visible(def: &ParamDef, values: &Values) -> bool {
     def.visible_when
         .as_ref()
         .is_none_or(|when| when.holds(values))
+}
+
+/// The parameter a field's names come from: the first of `of` that is shown
+/// (docs/adr/0200 §6).
+pub fn field_source<'t>(tool: &'t Tool, of: &[String], values: &Values) -> Option<&'t ParamDef> {
+    of.iter().find_map(|n| {
+        tool.parameters
+            .iter()
+            .find(|p| &p.name == n)
+            .filter(|p| is_visible(p, values))
+    })
+}
+
+/// The names a field parameter holds: one, or several written with commas
+/// between them (`multiple`), each trimmed.
+pub fn field_names(multiple: bool, value: &str) -> Vec<String> {
+    let names: Vec<&str> = if multiple {
+        value.split(',').collect()
+    } else {
+        vec![value]
+    };
+    names
+        .into_iter()
+        .map(js_trim)
+        .filter(|n| !n.is_empty())
+        .map(str::to_owned)
+        .collect()
+}
+
+/// A file value's rows (`{ name, rows }`); none without them.
+pub fn file_rows(v: &Value) -> Option<Vec<Vec<String>>> {
+    v.get("rows")?
+        .as_array()?
+        .iter()
+        .map(|r| {
+            r.as_array()?
+                .iter()
+                .map(|c| c.as_str().map(str::to_owned))
+                .collect::<Option<Vec<_>>>()
+        })
+        .collect()
+}
+
+/// A file parameter's table as fields read it: the first row's names
+/// (trimmed), then the rows; none without rows.
+pub fn file_table(v: &Value) -> Option<(Vec<String>, Vec<Vec<String>>)> {
+    let mut rows = file_rows(v)?;
+    if rows.is_empty() {
+        return None;
+    }
+    let header = rows
+        .remove(0)
+        .iter()
+        .map(|c| js_trim(c).to_owned())
+        .collect();
+    Some((header, rows))
+}
+
+/// A value as the last values keep it: a file's name (and path) without its rows.
+pub fn stored_value(def: &ParamDef, v: &Value) -> Value {
+    match (&def.kind, v) {
+        (ParamKind::File { .. }, Value::Object(o)) => Value::Object(
+            o.iter()
+                .filter(|(k, _)| *k != "rows")
+                .map(|(k, v)| (k.clone(), v.clone()))
+                .collect(),
+        ),
+        _ => v.clone(),
+    }
+}
+
+/// Values as the last values keep them (`stored_value` for each).
+pub fn stored_values(tool: &Tool, values: &Values) -> Values {
+    let mut out = values.clone();
+    for p in &tool.parameters {
+        if let Some(v) = out.get_mut(&p.name) {
+            *v = stored_value(p, v);
+        }
+    }
+    out
 }
 
 /// Whether a stored value still fits the parameter (so it can be restored).
@@ -99,6 +179,11 @@ pub fn fits(def: &ParamDef, v: &Value) -> bool {
         }
         ParamKind::Layer { .. } => LayerValue::read(v).is_some(),
         ParamKind::Point => point(v).is_some(),
+        ParamKind::File { .. } => {
+            v.get("name").is_some_and(Value::is_string)
+                && v.get("rows")
+                    .is_none_or(|r| file_rows(v).is_some() && r.is_array())
+        }
     }
 }
 
@@ -152,7 +237,10 @@ pub fn validate_values(tool: &Tool, values: &Values, layers: &LayerTree) -> Vec<
 fn check_param(p: &ParamDef, v: &Value, layers: &LayerTree) -> Option<String> {
     let name = format!("“{}”", p.label);
     if v.is_null() {
-        return (!p.optional).then(|| format!("{name} boş bırakılamaz."));
+        return (!p.optional).then(|| match p.kind {
+            ParamKind::File { .. } => format!("{name}: bir dosya seçin."),
+            _ => format!("{name} boş bırakılamaz."),
+        });
     }
     if !fits(p, v) {
         return Some(format!("{name} için geçersiz değer."));
@@ -208,19 +296,35 @@ fn check_param(p: &ParamDef, v: &Value, layers: &LayerTree) -> Option<String> {
                 .err()
                 .map(|e| format!("{name}: {}", e.text()))
         }
-        ParamKind::Field { allow_new, .. } => {
-            let f = js_trim(v.as_str().unwrap_or(""));
-            if f.is_empty() {
+        ParamKind::Field {
+            allow_new,
+            multiple,
+            ..
+        } => {
+            let names = field_names(*multiple, v.as_str().unwrap_or(""));
+            if names.is_empty() {
                 let or_type = if *allow_new { " ya da yazın" } else { "" };
                 return (!p.optional).then(|| format!("{name}: bir alan adı seçin{or_type}."));
             }
-            if utf16_len(f) > 64 {
+            if names.iter().any(|f| utf16_len(f) > 64) {
                 return Some(format!("{name}: alan adı en çok 64 karakter olabilir."));
             }
-            if f.contains(['[', ']']) {
+            if names.iter().any(|f| f.contains(['[', ']'])) {
                 return Some(format!("{name}: alan adında köşeli parantez kullanılamaz."));
             }
             None
+        }
+        ParamKind::File { .. } => {
+            let file = v.get("name").and_then(Value::as_str).unwrap_or("");
+            match file_rows(v) {
+                Some(rows) if rows.is_empty() => Some(format!(
+                    "{name}: “{file}” boş; başlık satırı olan bir dosya seçin."
+                )),
+                Some(_) => None,
+                None => Some(format!(
+                    "{name}: “{file}” dosyasını yeniden seçin; dosyanın içeriği saklanmaz."
+                )),
+            }
         }
         ParamKind::Layer { .. } => match LayerValue::read(v)? {
             LayerValue::New(name_) if js_trim(&name_).is_empty() => {

@@ -3,7 +3,7 @@
 İşlem araçlarının (İşlemler, [docs/PROCESSING.md](../../docs/PROCESSING.md)) iki platformda aynı sonucu vermesi için ortak durumlar. Her durum bir çizimde yerleşik bir aracı ya da modeli çalıştırır ve çalıştırmanın ne yaptığını platformdan bağımsız olarak söyler: yeni katmanlar, eklenen, değişen ve silinen nesneler, seçim, özet, iletiler, geri alma adımı ya da ret iletileri.
 
 - **Web**: `apps/web/src/processing/cases.test.ts` (Vitest). Her durum `ProcessingRunner` ile sayfada, sonra işçinin yolundan (`handleJob`) bir kez daha çalışır; ikisi de beklenenle karşılaştırılır.
-- **Masaüstü**: `crates/native/processing` (`kentos-processing`) aynı dosyayı oynatır.
+- **Masaüstü**: `crates/native/processing` (`kentos-processing`) aynı dosyaları oynatır; büyük işlerin yolu da (çizimin okuma kopyasında hesap, çizimde bitiş) her durumda denenir.
 
 Çalıştırmalar ürün komutu değildir: katalogda kaydı ve `CommandResult`'ı yoktur, belgenin işlemiyle tek geri alma adımında yazar. Python ve yapay zekâ için ileride `cad.processing.run` onları saracak (CLAUDE.md §18).
 
@@ -11,6 +11,7 @@
 |---|---|
 | `v1/parcels.kcad` | Durumların çizimi (`.kcad` v1): Parsel katmanında yan yana üç parsel (1: 0…20, 2: 20…45, 3: 45…60 doğu; 0…30 kuzey; 1 ile 2 x = 20'yi, 2 ile 3 x = 45'i paylaşır; Ada, Parsel, Nitelik öznitelikleri, etiketleri parsel numarası), kilitli katmanda parsel 4, gizli katmanda parsel 5, Çizim'de çoklu çizgi 6 (30 m ve 15 m) ve 20 m'lik çizgi 7, Mevcut noktalar katmanında parsel 1'in üç köşesinde P00001–P00003 (8–10). Koordinatlar (487000, 4420000)'e göre verilmiştir |
 | `v1/cases.json` | Durumlar |
+| `v1/queries.kcad`, `v1/queries.json`, `v1/malikler.csv` | Mekânsal ve öznitelik sorgusunun durumları (ADR 0200): Konuma göre seç, İçindekinden ve Çevreleyenden bilgi al, Özet istatistik, Anahtarla birleştir, katmanın alanlarının kuralıyla yazma. Çizim, durumlar ve CSV `scripts/fixtures/spatial_query_cases.py`'nin bağımsız başvurusundan yazılır (`--check` farkı arar): parseller (Parsel katmanının alanları: Ada metin, Parsel ve Ağaç sayısı tam sayı, Taban toplamı 2, Taban ortalaması 1 basamaklı ondalık), biri delikli; yapılar, ağaçlar, iki yol, tapu kayıtları, kilitli katmanda bir parsel |
 | `v1/dialog.json` | İşlem penceresinin davranışı: formlar, oturumlar ve saf kuralların tabloları ([aşağıda](#pencere-kentosprocessing-dialog-sürüm-1)) |
 | `v1/designer.json` | Model tasarımcısı: modelin düzenlemeleri adım adım ve her adımdan sonraki denetim, tasarımcının bir modelden okudukları, sözleri ve diyagramın geometrisi ([aşağıda](#model-tasarımcısı-kentosmodeldesigner-sürüm-1)) |
 
@@ -21,6 +22,7 @@
 | `format`, `version` | `"kentos.processing-cases"`, `1` |
 | `tolerance` | Koordinatların karşılaştırılacağı mesafe, metre (`1e-9`): iki platform aynı Rust çekirdeğini çağırır |
 | `documents` | Çizim başına `defaults`: araçların çizimden aldığı varsayılanlar (`DefaultsContext`: uzunluk ve alan ondalığı, açı birimi, çizim ölçeği, çizim yazı tipi, etkin katman) ve `tools`: her aracın ve modelin o çizimdeki varsayılan değerleri, pencerenin açtığı gibi |
+| `files` | İsteğe bağlı: dosya parametresinin (ADR 0200 §7) değerinde yazılan ad → bu klasördeki dosya. Oynatıcı dosyayı pencerenin okuduğu gibi Tablo ekle'nin okuyucusuyla okur (ilk sayfa) ve değeri `{ name, rows }` yapar |
 | `cases` | Durumlar |
 
 Bir durum:
@@ -50,7 +52,7 @@ Beklentiler:
 | `updated` | Değişen nesneler: `id`, bütün `attrs` ve varsa `label` |
 | `removed` | Silinen nesnelerin kimlikleri |
 | `selection` | Çalıştırmadan sonraki seçim |
-| `outputs` | Aracın çıktılarından yazılanlar: sayılar ve kimlik listeleri tam |
+| `outputs` | Aracın çıktılarından yazılanlar: sayılar, kimlik listeleri ve tablolar (`{ columns, rows }`, metinler) tam |
 
 ## Karşılaştırma kuralları
 
@@ -58,6 +60,7 @@ Beklentiler:
 - Eklenen bir nesnenin alan kümesi beklenenle aynı olmalıdır; fazla ya da eksik alan farktır. Yalnız geometri alanları (`p`, `a`, `b`, `c`, `pts`, `holes`) `tolerance` içinde karşılaştırılır, öbür sayılar tam.
 - `ok` ve `undo`'su olan her durumda, durum yazmasa da: geri alma adımın adını verir, çizim (nesneler ve katman ağacı) çalıştırmadan önceki hâline döner, başka adım kalmaz; yineleme sonucu geri getirir.
 - `undo: null` olan durumda geri alınacak adım yoktur.
+- Çalıştırıcı değişiklik kümesini uygulamadan önce öznitelik yazmalarını katmanın alanlarının kuralıyla denetler (ADR 0199 §1, 0200 §3): alana yazılan değer alanın tek biçimine çevrilir; uymayan ilk değer bütün çalıştırmayı `error` ile reddeder: "Öznitelik yazılamadı (#id): <alanın nedeni>" (yeni nesnede "(yeni nesne)"). Değişen anahtarlar kod noktası sırasıyla denetlenir; kaldırılan öznitelik boş sayılır. Araç kendisi de reddedebilir (`refused`: dosyada anahtar sütunu yok): ileti olduğu gibi, çizim değişmez.
 
 ## Beklenenlerin kaynağı
 
@@ -74,7 +77,7 @@ Sayılar, adlar, özetler ve ret iletileri araçların kuralından okunur ([docs
 `v1/dialog.json`, işlem penceresinin (web: `ui/processing/ToolDialog.ts` ve `paramFields.ts`) ne gösterdiğini ve kullanıcının her işinde nasıl değiştiğini tutar. Kurallar sayfasızdır: `apps/web/src/ui/processing/dialogPlan.ts` (form, bölümler, sorunlar, alt satır, yerler, durum), `fieldPlan.ts` (alanlar) ve `dialogTexts.ts` (sözler); pencere onlardan çizer.
 
 - **Web**: `apps/web/src/ui/processing/dialogFixture.test.ts` oynatır (oynatıcı `dialogFixture.ts`). Kaydedici `apps/web/scripts/fixtures/record-processing-dialog.test.ts`, yalnız bilerek: `GOLDEN_WRITE=1 pnpm -C apps/web exec vitest run scripts/fixtures/record-processing-dialog.test.ts`. Kaydedilen cevaplar okunmuştur; yeniden yazmak farkı okunacak bilinçli bir değişikliktir.
-- **Masaüstü**: araç penceresi (ADR 0084) aynı dosyayı oynatır.
+- **Masaüstü**: araç penceresinin planı (`apps/desktop/src/processing/plan.rs`) dosyanın `status` ve `targets` tablolarını oynatır; formlar, oturumlar ve öbür tablolar web'in pencere kurallarını sabitler, masaüstü penceresi aynı kurallarla çizer.
 
 | Alan | Anlamı |
 |---|---|
@@ -93,7 +96,7 @@ Sayılar, adlar, özetler ve ret iletileri araçların kuralından okunur ([docs
 | `numbers` | Sayı alanının metni → değer: nokta ya da virgül ondalık; okunamayan `null` (web'de NaN; doğrulama "için geçersiz değer." der) |
 | `icons` | İfade satırının simgesi: satır " yok." ya da " boş." içeriyorsa `info`, değilse `check` |
 
-Formdaki denetimler (`control.type` parametrenin türüdür): `features` kapsam düğmeleriyle; `number` birimiyle; `string` (`short`: en çok 2 karakter); `boolean` anahtar; `enum` en çok üç seçenek ve her etiket en çok 22 karakterse düğmeler (`segmented`), yoksa açıklamalı liste (`dropdown`); `layer`; `point`; `field` yeni ad yazılabiliyorsa yazı ve liste (`combo`, "Alan adı"), yoksa yalnız liste (`dropdown`, "Alan seçin"); `expression`.
+Formdaki denetimler (`control.type` parametrenin türüdür): `features` kapsam düğmeleriyle; `number` birimiyle; `string` (`short`: en çok 2 karakter); `boolean` anahtar; `enum` en çok üç seçenek ve her etiket en çok 22 karakterse düğmeler (`segmented`), yoksa açıklamalı liste (`dropdown`); `layer`; `point`; `field` yeni ad yazılabiliyorsa yazı ve liste (`combo`, "Alan adı"), yoksa yalnız liste (`dropdown`, "Alan seçin"), birden çok ad alıyorsa `multiple` (liste adları işaretler, adlar virgülle yazılır); `expression`; `file` (ADR 0200 §7) Dosya seç… düğmesiyle, `accept`: sunulan uzantılar.
 
 ### Oturum
 
@@ -108,7 +111,7 @@ Formdaki denetimler (`control.type` parametrenin türüdür): `features` kapsam 
 | `last` | Aracın son çalıştırmasının değerleri |
 | `choice` | Saklanan yer seçimi; yoksa Otomatik |
 | `opened` | Açılınca görünen (bütün görünüş) |
-| `steps` | Adımlar: `do` (kullanıcının işi) ve `expect` (bir önceki görünüşten değişenler); `pickObjects` adımında ayrıca `picking` ve `after` (aşağıda) |
+| `steps` | Adımlar: `do` (kullanıcının işi) ve `expect` (bir önceki görünüşten değişenler); `pickObjects` adımında ayrıca `picking` ve `after` (aşağıda). Dosya alanının dosyası `choose` ile verilir: değer `{ name, rows }` (pencerenin seçilen dosyadan yaptığı); son değerlerde dosyanın yalnız adı (masaüstünde yolu) kalır |
 
 Kullanıcının işleri (`do`):
 
@@ -141,10 +144,11 @@ Görünüş:
 |---|---|
 | `values` | Değerler, çalıştırmanın alacağı gibi |
 | `sections` | `groups`: Girdi (`features`), Ayarlar (öbürleri), Çıktı (`layer`); satırı olanlar, bu sırayla, satırlar parametre adları. `advanced`: Gelişmiş ayarlar'ın satırları ve açık mı (kullanıcı açtıysa ya da satırlarından birinde sorun görünüyorsa açık); görünen gelişmiş parametre yoksa `null` |
-| `fields` | Görünen alanların (Gelişmiş'inkiler açıkken) değişen parçaları; sayı, metin, anahtar ve seçim alanları yalnız değerlerini gösterir. Kapsam alanı: seçili düğme (`scope`; önceki adımın çıktısı ilk kapsam görünür), Katman kapsamında katman listesi ve yazısı (olmayan katman "—"), ne okunduğu (`count.text`, boşsa `count.empty` ve uyarı simgesi), tür çipleri (`chips`: tür, ad, sayı, basılı mı, ipucu; kapsamda iki ya da daha çok tür varsa ya da süzgeç varken) ya da aracın uygun türleri notu. Hedef katman: yazısı (seçili katman; yeni adda "(mevcut)" var olan katmanın adıyla, ya da "(yeni)"), yeni katman adı alanı (`name`; mevcut katman seçiliyken `null`), liste (başlıklar, "Yeni: …", katmanlar yollarıyla; kilitliler kapalı ve "kilitli"). Nokta: `text`, `button`, `shown`. Öznitelik alanı: `text`, not (`note`: "n nesnede var; değeri değişir.", "Yeni alan: nesnelere eklenir.", "Bu nesnelerde böyle bir alan yok.", boş ad için boş), liste (alanlar en çok bulunandan; alan yoksa kapalı tek satır). İfade: alan çipleri (ilk 6: ad, yazılışı, ipucu), kalanlar `more` ("+n"), satır (`preview`: simge ve metin; ifade boşken ya da hatalıyken `null`) |
+| `fields` | Görünen alanların (Gelişmiş'inkiler açıkken) değişen parçaları; sayı, metin, anahtar ve seçim alanları yalnız değerlerini gösterir. Kapsam alanı: seçili düğme (`scope`; önceki adımın çıktısı ilk kapsam görünür), Katman kapsamında katman listesi ve yazısı (olmayan katman "—"), ne okunduğu (`count.text`, boşsa `count.empty` ve uyarı simgesi), tür çipleri (`chips`: tür, ad, sayı, basılı mı, ipucu; kapsamda iki ya da daha çok tür varsa ya da süzgeç varken) ya da aracın uygun türleri notu. Hedef katman: yazısı (seçili katman; yeni adda "(mevcut)" var olan katmanın adıyla, ya da "(yeni)"), yeni katman adı alanı (`name`; mevcut katman seçiliyken `null`), liste (başlıklar, "Yeni: …", katmanlar yollarıyla; kilitliler kapalı ve "kilitli"). Nokta: `text`, `button`, `shown`. Öznitelik alanı: `text`, not (`note`: yazılan alanda "n nesnede var; değeri değişir.", okunan alanda "n nesnede var.", dosyanın sütununda "n satırda var.", "Yeni alan: nesnelere eklenir.", "Bu nesnelerde böyle bir alan yok.", boş ad için boş; `multiple`'da kaynakta olmayan ilk ad için "“ad” kaynakta yok."), liste (alanın kaynağının adları: nesnelerin alanları en çok bulunandan, dosyanın sütunları sırasıyla, ipucu "n nesne" ya da "n satır"; alan yoksa kapalı tek satır). Alanın kaynağı `of`'tur; bir liste ise görünen ilki (katman ya da dosya kaynağı). Dosya: `text` (adı ya da "Dosya seçilmedi"), `note` ("n satır, m sütun", içeriği olmayan değerde "Yeniden seçin: dosyanın içeriği saklanmaz."), `button` ("Dosya seç…", seçiliyken "Başka dosya…"), `chosen`. Kapsam alanının tür notu: araç neredeyse her türü alıyorsa alınmayanlar ("Yardımcı çizgi, ışın alınmaz."). İfade: alan çipleri (ilk 6: ad, yazılışı, ipucu), kalanlar `more` ("+n"), satır (`preview`: simge ve metin; ifade boşken ya da hatalıyken `null`) |
 | `issues` | Alanların altındaki sorunlar: dokunulmuş alanınki hemen, Çalıştır'dan sonra bütün alanlarınki (başarılı çalıştırmaya ya da Varsayılanlar'a kadar). Çalıştırıcının çalıştırmadan önce bulduğu (seçim boş, girdinin hepsi kilitli) bir değer değişene ya da yeni çalıştırmaya kadar alanında durur |
 | `preview` | Yan paneldeki Önizleme: aracın önizlemesi, bir alanda sorun varken (görünmese de) "Önizleme için alanları düzeltin."; önizlemesi olmayan araçta `null`. `muted`: gösterecek önizleme yok |
 | `status` | Alt satır: `kind` (`idle`, `running`, `ok`, `warn`, `error`), `icon`, `text`; çalışırken `progress` (0–100); başarıda `actions`: `zoom` "Seçime yakınlaştır" (araç seçti), `select` "Sonuçları seç" (`pick`: eklenenler, yoksa değişenler ya da seçilenler), `undo` "Geri al" (çizim değişti). Uyarı: Çalıştır'dan sonra aracın kendi kuralı, yoksa "Çalıştırmadan önce n alanı düzeltin.", yoksa çalıştırıcının iletisi |
+| `result` | Son çalıştırmanın tablo çıktısı (Özet istatistik; ADR 0200 §7): `columns`, `rows`; formun altında Panoya kopyala (sekmeyle ayrılmış) ve CSV olarak kaydet ile. Yoksa ya da bir değer değişince `null` |
 | `footer` | Çalıştır (çalışırken "Çalışıyor…" ve kapalı), Kapat (çalışırken "Durdur": çalıştırmayı durdurur), Varsayılanlar (çalışırken kapalı) |
 | `targets` | `options` (`value`, `label`, `note`, `disabled`, `checked`), `hint` (Otomatik seçiliyken ipucu), `choice` (çalıştırmanın alacağı seçim). Birden çok yer varsa önce Otomatik ("şimdi: …"; modelde "adım adım"); sonra aracın bildirdiği her yer: bu evde varsa seçenek (tek yerse "bu çalıştırmada" notuyla, işaretli), yoksa "yakında" ve kapalı. Modelde bildirilen yerler adımlarının bu evdeki yerleridir. Saklanan seçim bu evde yoksa Otomatik (tek yerde o yer) |
 

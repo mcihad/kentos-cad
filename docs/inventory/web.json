@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 382,
-      "implemented": 370,
+      "total": 387,
+      "implemented": 375,
       "partial": 0,
       "pending": 12
     },
@@ -31,8 +31,8 @@
       "pending": 2
     },
     "processing": {
-      "total": 4,
-      "implemented": 4,
+      "total": 9,
+      "implemented": 9,
       "partial": 0,
       "pending": 0
     },
@@ -101,12 +101,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 127,
-    "commandsOnDesktop": 310,
+    "commandsWithoutTests": 132,
+    "commandsOnDesktop": 315,
     "desktop": {
       "commands": {
-        "total": 382,
-        "implemented": 310,
+        "total": 387,
+        "implemented": 315,
         "partial": 0,
         "pending": 12,
         "none": 58,
@@ -121,8 +121,8 @@
         "n/a": 0
       },
       "processing": {
-        "total": 4,
-        "implemented": 4,
+        "total": 9,
+        "implemented": 9,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -4573,6 +4573,90 @@
       "tests": []
     },
     {
+      "id": "processing.run.attributes.fromEnclosing",
+      "title": "Çevreleyenden bilgi al…",
+      "category": "İşlemler",
+      "icon": "infoEnclosing",
+      "description": "Her nesneye ağırlık merkezinin içinde kaldığı alanın bir alanını yazar: yapıya parsel numarası, parsele mahalle adı.",
+      "aliases": [
+        "CEVREBILGI",
+        "CEVRELEYENBILGI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Öznitelik"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.attributes.fromInside",
+      "title": "İçindekinden bilgi al…",
+      "category": "İşlemler",
+      "icon": "infoInside",
+      "description": "Her alana içindeki ya da ona değen nesnelerin sayısını ya da bir alanlarının toplamını, ortalamasını, en azını, en çoğunu yazar.",
+      "aliases": [
+        "ICBILGI",
+        "ICINDEKIBILGI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Öznitelik"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.attributes.joinByField",
+      "title": "Anahtarla birleştir…",
+      "category": "İşlemler",
+      "icon": "joinField",
+      "description": "Ortak bir anahtar alanla (parsel numarası, kimlik) başka bir katmandan ya da CSV, TXT, Excel dosyasından öznitelik aktarır.",
+      "aliases": [
+        "ANAHTARBIRLESTIR",
+        "VERIAKTAR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Öznitelik"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "processing.run.points.numberVertices",
       "title": "Köşe noktalarını numarala…",
       "category": "İşlemler",
@@ -4634,6 +4718,62 @@
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
+    },
+    {
+      "id": "processing.run.selection.byLocation",
+      "title": "Konuma göre seç…",
+      "category": "İşlemler",
+      "icon": "selectLocation",
+      "description": "Başka nesnelerle konum ilişkisi olan nesneleri seçer: kesişen, içeren, içinde kalan, ayrık, uzaklıkta ya da merkezi içinde.",
+      "aliases": [
+        "KONUMSEC",
+        "KONUMSALSECIM"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.statistics.summary",
+      "title": "Özet istatistik…",
+      "category": "İşlemler",
+      "icon": "statsSummary",
+      "description": "Bir alanın toplamını, ortalamasını, en azını, en çoğunu ve standart sapmasını, isterseniz başka bir alanın değerlerine göre gruplayarak tablo olarak verir.",
+      "aliases": [
+        "OZETIST",
+        "ISTATISTIK"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Analiz"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
     },
     {
       "id": "processing.toolbox",
@@ -15800,6 +15940,221 @@
       ]
     },
     {
+      "id": "attributes.fromEnclosing",
+      "label": "Çevreleyenden bilgi al",
+      "category": "Öznitelik",
+      "description": "Her nesneye ağırlık merkezinin içinde kaldığı alanın bir alanını yazar: yapıya parsel numarası, parsele mahalle adı.",
+      "aliases": [
+        "CEVREBILGI",
+        "CEVRELEYENBILGI"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "target",
+          "type": "features",
+          "label": "Hedef nesneler",
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": "features",
+          "label": "Kaynak alanlar",
+          "optional": false
+        },
+        {
+          "name": "field",
+          "type": "field",
+          "label": "Alan",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "field",
+          "label": "Yazılacak alan",
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "changed",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.attributes.fromEnclosing",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "attributes.fromInside",
+      "label": "İçindekinden bilgi al",
+      "category": "Öznitelik",
+      "description": "Her alana içindeki ya da ona değen nesnelerin sayısını ya da bir alanlarının toplamını, ortalamasını, en azını, en çoğunu yazar.",
+      "aliases": [
+        "ICBILGI",
+        "ICINDEKIBILGI"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "target",
+          "type": "features",
+          "label": "Hedef alanlar",
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": "features",
+          "label": "Kaynak nesneler",
+          "optional": false
+        },
+        {
+          "name": "relation",
+          "type": "enum",
+          "label": "İlişki",
+          "optional": false
+        },
+        {
+          "name": "stat",
+          "type": "enum",
+          "label": "İstatistik",
+          "optional": false
+        },
+        {
+          "name": "field",
+          "type": "field",
+          "label": "Alan",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "field",
+          "label": "Yazılacak alan",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "changed",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.attributes.fromInside",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "attributes.joinByField",
+      "label": "Anahtarla birleştir",
+      "category": "Öznitelik",
+      "description": "Ortak bir anahtar alanla (parsel numarası, kimlik) başka bir katmandan ya da CSV, TXT, Excel dosyasından öznitelik aktarır.",
+      "aliases": [
+        "ANAHTARBIRLESTIR",
+        "VERIAKTAR"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "target",
+          "type": "features",
+          "label": "Hedef nesneler",
+          "optional": false
+        },
+        {
+          "name": "targetKey",
+          "type": "field",
+          "label": "Hedef anahtar",
+          "optional": false
+        },
+        {
+          "name": "sourceKind",
+          "type": "enum",
+          "label": "Kaynak",
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": "features",
+          "label": "Kaynak nesneler",
+          "optional": false
+        },
+        {
+          "name": "file",
+          "type": "file",
+          "label": "Dosya",
+          "optional": false
+        },
+        {
+          "name": "sourceKey",
+          "type": "field",
+          "label": "Kaynak anahtar",
+          "optional": true
+        },
+        {
+          "name": "fields",
+          "type": "field",
+          "label": "Aktarılacak alanlar",
+          "optional": true
+        },
+        {
+          "name": "prefix",
+          "type": "string",
+          "label": "Önek",
+          "optional": false
+        },
+        {
+          "name": "existing",
+          "type": "enum",
+          "label": "Var olan değerler",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "changed",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.attributes.joinByField",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/fixtures/record-processing-dialog.test.ts"
+      ]
+    },
+    {
       "id": "points.numberVertices",
       "label": "Köşe noktalarını numarala",
       "category": "Nokta işlemleri",
@@ -15979,6 +16334,125 @@
         "apps/web/scripts/e2e/flow.mjs",
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
+      ]
+    },
+    {
+      "id": "selection.byLocation",
+      "label": "Konuma göre seç",
+      "category": "Seçim",
+      "description": "Başka nesnelerle konum ilişkisi olan nesneleri seçer: kesişen, içeren, içinde kalan, ayrık, uzaklıkta ya da merkezi içinde.",
+      "aliases": [
+        "KONUMSEC",
+        "KONUMSALSECIM"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Seçilecek nesneler",
+          "optional": false
+        },
+        {
+          "name": "relation",
+          "type": "enum",
+          "label": "İlişki",
+          "optional": false
+        },
+        {
+          "name": "reference",
+          "type": "features",
+          "label": "Başvuru nesneleri",
+          "optional": false
+        },
+        {
+          "name": "distance",
+          "type": "number",
+          "label": "Uzaklık",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "mode",
+          "type": "enum",
+          "label": "Seçim biçimi",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "matched",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.selection.byLocation",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/fixtures/record-processing-dialog.test.ts"
+      ]
+    },
+    {
+      "id": "statistics.summary",
+      "label": "Özet istatistik",
+      "category": "Analiz",
+      "description": "Bir alanın toplamını, ortalamasını, en azını, en çoğunu ve standart sapmasını, isterseniz başka bir alanın değerlerine göre gruplayarak tablo olarak verir.",
+      "aliases": [
+        "OZETIST",
+        "ISTATISTIK"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Nesneler",
+          "optional": false
+        },
+        {
+          "name": "field",
+          "type": "field",
+          "label": "Alan",
+          "optional": false
+        },
+        {
+          "name": "group",
+          "type": "field",
+          "label": "Grupla",
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "table",
+          "type": "table"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.statistics.summary",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/fixtures/record-processing-dialog.test.ts"
       ]
     }
   ],
@@ -26017,7 +26491,12 @@
               "processing.run.points.numberVertices",
               "processing.run.annotation.edgeLengths",
               "processing.run.attributes.calculate",
-              "processing.run.selection.byExpression"
+              "processing.run.selection.byExpression",
+              "processing.run.selection.byLocation",
+              "processing.run.attributes.fromInside",
+              "processing.run.attributes.fromEnclosing",
+              "processing.run.statistics.summary",
+              "processing.run.attributes.joinByField"
             ]
           }
         ]
@@ -27762,10 +28241,34 @@
           },
           {
             "label": "Öznitelik",
-            "icon": "fieldCalc",
+            "icon": "joinField",
             "items": [
               {
+                "command": "processing.run.attributes.joinByField",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.attributes.fromEnclosing",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.attributes.fromInside",
+                "size": "small"
+              },
+              {
                 "command": "processing.run.attributes.calculate",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Analiz",
+            "icon": "statsSummary",
+            "items": [
+              {
+                "command": "processing.run.statistics.summary",
                 "size": "large"
               }
             ],
@@ -27778,6 +28281,10 @@
             "items": [
               {
                 "command": "processing.run.selection.byExpression",
+                "size": "large"
+              },
+              {
+                "command": "processing.run.selection.byLocation",
                 "size": "large"
               }
             ],
@@ -32481,10 +32988,34 @@
             },
             {
               "label": "Öznitelik",
-              "icon": "fieldCalc",
+              "icon": "joinField",
               "items": [
                 {
+                  "command": "processing.run.attributes.joinByField",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.attributes.fromEnclosing",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.attributes.fromInside",
+                  "size": "small"
+                },
+                {
                   "command": "processing.run.attributes.calculate",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Analiz",
+              "icon": "statsSummary",
+              "items": [
+                {
+                  "command": "processing.run.statistics.summary",
                   "size": "large"
                 }
               ],
@@ -32497,6 +33028,10 @@
               "items": [
                 {
                   "command": "processing.run.selection.byExpression",
+                  "size": "large"
+                },
+                {
+                  "command": "processing.run.selection.byLocation",
                   "size": "large"
                 }
               ],
@@ -33587,6 +34122,11 @@
     "numberVertices": "<path d=\"M3 13V4.5l6.5-2L13 6\"/><rect x=\"1.5\" y=\"11.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"1.5\" y=\"3\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8\" y=\"1\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M12 10v7.5M15.5 10v7.5M10.5 12.5H17M10.5 15H17\"/>",
     "edgeLengths": "<path d=\"M3 16.5 10 3.5l7 13z\"/><path d=\"M4.4 8.6 7.3 3.2M12.7 3.2l2.9 5.4M5.5 19h9\" stroke-dasharray=\"1.6 1.4\"/>",
     "selectExpression": "<path d=\"M3.5 3 12 8.2l-3.7 1-1.9 3.6z\"/><path d=\"M11 13.2h6.5M11 16.4h6.5\"/>",
+    "selectLocation": "<path d=\"M2 1.8 8.6 5.9l-2.9.8-1.5 2.8z\"/><path d=\"M8.5 10 14.5 7.6l3.3 4.9-2.6 5.1H8.2z\"/><rect x=\"11\" y=\"11.3\" width=\"3.4\" height=\"3.4\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><rect x=\"11\" y=\"11.3\" width=\"3.4\" height=\"3.4\" stroke-width=\"1.1\"/>",
+    "infoInside": "<path d=\"M2.5 9.2 7.5 6.6l5 1.9-1 8.9h-8z\"/><circle cx=\"5.8\" cy=\"11.6\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9\" cy=\"10.9\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"7.4\" cy=\"14.4\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M18 2.8h-4.6l2.5 3-2.5 3H18\" stroke-width=\"1.3\"/>",
+    "infoEnclosing": "<path d=\"M2.5 6.5 9.5 2.8l8 3.6-1.5 11.1H4z\"/><rect x=\"8\" y=\"10.3\" width=\"4.6\" height=\"4.6\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><rect x=\"8\" y=\"10.3\" width=\"4.6\" height=\"4.6\" stroke-width=\"1.2\"/><path d=\"M10.3 4.8v3.8M8.7 7.1l1.6 1.6 1.6-1.6\" stroke-width=\"1.2\"/>",
+    "statsSummary": "<path d=\"M9 3.2H2.8l3.4 4.6-3.4 4.6H9\" stroke-width=\"1.4\"/><path d=\"M11.8 17v-5M14.8 17V8.5M17.8 17v-6.5\" stroke-width=\"2\"/><path d=\"M10.3 17.2h8.5\" stroke-width=\"1.1\"/>",
+    "joinField": "<circle cx=\"5.2\" cy=\"5.2\" r=\"2.7\"/><path d=\"m7.1 7.1 4 4M9.3 9.3l1.3-1.3M10.6 10.6l1.3-1.3\" stroke-width=\"1.3\"/><rect x=\"10.5\" y=\"11\" width=\"7.5\" height=\"6.5\" rx=\".8\"/><path d=\"M10.5 14.2h7.5M14.2 11v6.5\" stroke-width=\"1.1\"/>",
     "featureTable": "<rect x=\"2\" y=\"2.5\" width=\"11.5\" height=\"10\" rx=\"1\"/><path d=\"M2 6h11.5M2 9.25h11.5M6 6v6.5\"/><path d=\"m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><path d=\"m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z\"/>",
     "layerFields": "<path d=\"M2.5 4h4M2.5 9h4M2.5 14h4\" stroke-width=\"1.2\"/><rect x=\"8.5\" y=\"2.5\" width=\"9\" height=\"3\" rx=\".8\"/><rect x=\"8.5\" y=\"7.5\" width=\"9\" height=\"3\" rx=\".8\"/><rect x=\"8.5\" y=\"12.5\" width=\"9\" height=\"3\" rx=\".8\"/><path d=\"m15 13.5.9.9.9-.9\" stroke-width=\"1\"/>",
     "fieldsFromData": "<rect x=\"2.5\" y=\"3\" width=\"15\" height=\"4\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><rect x=\"2.5\" y=\"3\" width=\"15\" height=\"14\" rx=\"1\"/><path d=\"M2.5 7h15M5 11h3M5 14.5h3\"/><path d=\"M13 15.5v-6M10.8 11.6 13 9.4l2.2 2.2\" stroke-width=\"1.3\"/>",

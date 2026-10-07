@@ -4,9 +4,12 @@
 //! and in the processing worker alike (`apps/web/src/processing/geometry.ts`), so
 //! both run this same code; the viewport's store answers the box test.
 
+use std::collections::HashMap;
+
 use super::{Store, padded};
 use crate::entity::Shape;
 use crate::geometry::Bounds;
+use crate::ops::spatial_query::{Geometry, Relation, geometry_of, reach, relate};
 use crate::processing::edge_lengths::{edge_lengths, edge_paths};
 use crate::processing::numbering::{CornerRing, CornerWalk, number_corners};
 use crate::vec2::Vec2;
@@ -17,6 +20,56 @@ pub const CORNER_STRIDE: usize = 5;
 pub const EDGE_LABEL_STRIDE: usize = 5;
 
 impl Store {
+    /// The pairs of an input and a reference in `relation` (docs/adr/0200
+    /// §1), as positions in the two lists, flat (`i, j, i, j …`), inputs in
+    /// their order and each one's references in theirs: Konuma göre seç and
+    /// Bilgi al. References are looked for by their boxes first; an object is
+    /// never paired with itself; unknown ids and construction lines take no
+    /// part. Ayrık is not asked: the caller keeps the inputs Kesişen pairs with none.
+    pub fn relate_pairs(
+        &self,
+        inputs: &[f64],
+        references: &[f64],
+        relation: Relation,
+        within: f64,
+    ) -> Vec<f64> {
+        let refs: Vec<Option<Geometry>> = references
+            .iter()
+            .map(|&id| self.get(id).and_then(|it| geometry_of(&it.shape)))
+            .collect();
+        let mut place: HashMap<u64, usize> = HashMap::new();
+        for (j, id) in references.iter().enumerate() {
+            place.entry(id.to_bits()).or_insert(j);
+        }
+        let pad = reach(relation, within);
+        let mut out = Vec::new();
+        for (i, &id) in inputs.iter().enumerate() {
+            let Some(g) = self.get(id).and_then(|it| geometry_of(&it.shape)) else {
+                continue;
+            };
+            let mut near: Vec<usize> = self
+                .candidates(&padded(g.bounds, pad))
+                .into_iter()
+                .filter_map(|it| place.get(&it.id.to_bits()).copied())
+                .collect();
+            near.sort_unstable();
+            near.dedup();
+            for j in near {
+                if references[j] == id {
+                    continue;
+                }
+                if refs[j]
+                    .as_ref()
+                    .is_some_and(|r| relate(&g, r, relation, within))
+                {
+                    out.push(i as f64);
+                    out.push(j as f64);
+                }
+            }
+        }
+        out
+    }
+
     /// Ids of objects on every layer whose box overlaps `r`, in the
     /// document's order: the "visible" scope's box test
     /// (`overlaps(entityBounds(e), view)`). A box with NaN never overlaps;

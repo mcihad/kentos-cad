@@ -11,9 +11,11 @@ use kentos_domain::{Document, NewLayer, Slot, default_style};
 use serde_json::{Value, json};
 
 use crate::expression::{measures_of, preview_expression};
-use crate::features::{Host, InputSummary, Scene, resolve_features, summarize_features};
+use crate::features::{
+    Host, InputSummary, Scene, resolve_features, summarize_features, summarize_file,
+};
 use crate::geometry::RunGeometry;
-use crate::parameters::{Issue, is_visible, validate_values};
+use crate::parameters::{Issue, file_table, is_visible, validate_values};
 use crate::text::{fold_turkish, js_trim};
 use crate::types::{
     ChangeSet, Defaults, FeatureSet, Feedback, NewLayerStyle, ParamKind, Resolved, RunContext,
@@ -271,7 +273,9 @@ impl Runner {
         validate_values(tool, values, doc.layers())
     }
 
-    /// What each features parameter resolves to now ("12 kapalı alan; seçili nesneler").
+    /// What each features parameter resolves to now ("12 kapalı alan; seçili
+    /// nesneler"), and each chosen file's table (its columns as the fields a
+    /// field parameter offers, docs/adr/0200 §6).
     pub fn describe_inputs(
         &self,
         tool: &Tool,
@@ -280,13 +284,21 @@ impl Runner {
     ) -> BTreeMap<String, InputSummary> {
         let mut out = BTreeMap::new();
         for p in &tool.parameters {
-            if let ParamKind::Features { kinds, .. } = &p.kind
-                && let Some(fv) = values.get(&p.name).and_then(FeaturesValue::read)
-            {
-                out.insert(
-                    p.name.clone(),
-                    summarize_features(&fv, kinds.as_deref(), scene),
-                );
+            match &p.kind {
+                ParamKind::Features { kinds, .. } => {
+                    if let Some(fv) = values.get(&p.name).and_then(FeaturesValue::read) {
+                        out.insert(
+                            p.name.clone(),
+                            summarize_features(&fv, kinds.as_deref(), scene),
+                        );
+                    }
+                }
+                ParamKind::File { .. } => {
+                    if let Some((header, rows)) = values.get(&p.name).and_then(file_table) {
+                        out.insert(p.name.clone(), summarize_file(&header, &rows));
+                    }
+                }
+                _ => {}
             }
         }
         out
@@ -688,7 +700,30 @@ impl Runner {
         let target = Some(target);
         // The change set is spent here: its new objects move into the
         // drawing, not copied (a run may add hundreds of thousands).
-        let changes = result.changes.take().unwrap_or_default();
+        let mut changes = result.changes.take().unwrap_or_default();
+        // A tool that refuses, or a value a layer's field does not take, ends the run with nothing changed.
+        let refused = result
+            .refused
+            .clone()
+            .or_else(|| crate::writes::check(host.doc(), &mut changes).err());
+        if let Some(message) = refused {
+            let record = self.record(
+                silent,
+                tool,
+                values,
+                started,
+                Status::Error,
+                message.clone(),
+                Vec::new(),
+                Vec::new(),
+                target,
+            );
+            return Outcome::Stopped {
+                status: Status::Error,
+                message,
+                record,
+            };
+        }
         let updated: Vec<Slot> = changes.update.iter().map(|u| u.id).collect();
         let removed = !changes.remove.is_empty();
         let added = match apply(host.doc_mut(), tool, changes, &new_layers, log) {

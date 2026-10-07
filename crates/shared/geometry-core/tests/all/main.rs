@@ -39,6 +39,7 @@ mod selection;
 mod snap;
 mod stationing;
 mod template_members;
+mod spatial_query;
 mod text;
 mod text_along;
 mod topology;

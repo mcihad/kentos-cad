@@ -8,6 +8,7 @@
 use kentos_contracts::{Entity, Vec2};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::ops::spatial_query::Relation;
 use kentos_geometry_core::processing::numbering::{CornerWalk, corner_text_at};
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::processing::{CORNER_STRIDE, EDGE_LABEL_STRIDE};
@@ -115,6 +116,24 @@ impl RunGeometry {
             .iter()
             .zip(texts)
             .map(|((p, out), t)| plain(corner_text_at(core(*p), core(*out), t, height, font)))
+            .collect()
+    }
+
+    /// Which inputs stand in the relation to which references (docs/adr/0200
+    /// §1): (input position, reference position) pairs, inputs first, then
+    /// references in their order; an object is never paired with itself.
+    /// Ayrık is asked as Kesişen and turned round by the caller.
+    pub fn relate_pairs(
+        &self,
+        inputs: &[Slot],
+        references: &[Slot],
+        relation: Relation,
+        within: f64,
+    ) -> Vec<(usize, usize)> {
+        self.store
+            .relate_pairs(&ids(inputs), &ids(references), relation, within)
+            .chunks_exact(2)
+            .map(|p| (p[0] as usize, p[1] as usize))
             .collect()
     }
 

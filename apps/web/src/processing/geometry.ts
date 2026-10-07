@@ -75,7 +75,19 @@ export interface RunGeometry extends ExprGeometry {
   cornerTexts(corners: readonly { p: Vec2; out: Vec2 }[], texts: readonly string[], height: number, font: string): Vec2[];
   /** Edge-length labels of these objects in order (lines, polylines, polygons); an edge two shapes share once when `shared`. */
   edgeLengths(ids: readonly number[], height: number, minLength: number, side: 'outside' | 'inside', shared: boolean): { labels: CoreEdgeLabel[]; skipped: number };
+  /**
+   * Which inputs stand in the relation to which references (docs/adr/0200 §1): (input position, reference position)
+   * pairs, inputs first, then references in their order; an object is never paired with itself. Ayrık is asked as
+   * Kesişen and turned round by the caller.
+   */
+  relatePairs(inputs: readonly number[], references: readonly number[], relation: Exclude<SpatialRelation, 'disjoint'>, within: number): [number, number][];
 }
+
+/** The relations of the queries (docs/adr/0200 §1), as the tools' values and the shared cases write them. */
+export type SpatialRelation = 'intersects' | 'contains' | 'within' | 'disjoint' | 'near' | 'centerIn';
+
+/** The core's relation codes (crates/shared/geometry-core/src/ops/spatial_query.rs `Relation::ALL`). */
+const RELATION_CODE: Record<SpatialRelation, number> = { intersects: 0, contains: 1, within: 2, disjoint: 3, near: 4, centerIn: 5 };
 
 /** The core's start codes (crates/shared/geometry-core/src/processing/numbering.rs `StartCorner::from_code`). */
 const START: Record<CornerWalk['start'], number> = { northwest: 0, north: 1, first: 2, point: 3 };
@@ -134,6 +146,13 @@ export class ObjectStore implements RunGeometry, DocumentGeometry {
     const labels: CoreEdgeLabel[] = [];
     for (let k = 1; k < r.length; k += LABEL_STRIDE) labels.push({ id: r[k], p: { x: r[k + 1], y: r[k + 2] }, rotation: r[k + 3], length: r[k + 4] });
     return { labels, skipped: r[0] ?? 0 };
+  }
+
+  relatePairs(inputs: readonly number[], references: readonly number[], relation: Exclude<SpatialRelation, 'disjoint'>, within: number): [number, number][] {
+    const r = this.core.relatePairs(Float64Array.from(inputs), Float64Array.from(references), RELATION_CODE[relation], within);
+    const out: [number, number][] = [];
+    for (let k = 0; k + 1 < r.length; k += 2) out.push([r[k], r[k + 1]]);
+    return out;
   }
 
   /** Frees the Rust side; the store is built again if asked afterwards. */

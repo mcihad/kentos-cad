@@ -255,7 +255,8 @@ pub fn input_type_for(p: &ParamDef) -> Option<&'static str> {
         ParamKind::Boolean => Some("boolean"),
         ParamKind::Layer { .. } => Some("layer"),
         ParamKind::Point => Some("point"),
-        ParamKind::Choice { .. } => None,
+        // A file's rows are not kept in a model (docs/adr/0200 §7).
+        ParamKind::Choice { .. } | ParamKind::File { .. } => None,
     }
 }
 

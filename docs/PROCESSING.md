@@ -127,7 +127,8 @@ export const vertexNumbering = defineTool({
 | `layer` | `{ layerId }` ya da `{ newName }` | `TargetLayer { id, name, isNew }` | `newLayerStyle` |
 | `point` | `Vec2 \| null` | aynı | — |
 | `expression` | ifade metni | `CompiledExpression` (isteğe bağlı ve boşsa `null`) | `returns: 'condition' \| 'value'`, `of` (okuduğu `features` parametresi), `placeholder` |
-| `field` | alan adı | aynı (kırpılmış) | `of` (alanları sunulan `features` parametresi), `allowNew` (yeni alan adı yazılabilir) |
+| `field` | alan adı (`multiple`: virgülle ayrılmış adlar) | aynı (kırpılmış) | `of` (alanları sunulan `features` ya da `file` parametresi; bir liste ise görünen ilki), `allowNew` (yeni alan adı yazılabilir), `multiple` (liste adları işaretler) |
+| `file` | `{ name, rows }` (masaüstünde `path` de) ya da `null` | aynı | `accept` (sunulan uzantılar). Dosya seçilince Tablo ekle'nin okuyucusuyla okunur (ilk sayfa, ilk satır sütun adları; ADR 0200 §7); son değerlerde yalnız adı (masaüstünde yolu) kalır, pencere yeniden açılınca dosya yeniden seçilir (masaüstünde yolundan okunur). Model girdisi olamaz, model adımında seçilmez |
 
 Ortak alanlar: `name` (değer anahtarı), `label`, `description`, `optional`,
 `advanced` ("Gelişmiş ayarlar" altında), `visibleWhen` (yalnızca koşul
@@ -148,10 +149,12 @@ run(values: ResolvedValues<Ds>, ctx: RunContext, feedback: Feedback): RunResult 
 
 RunContext { doc: DocumentSnapshot /* get, all, byLayer; salt okunur */, units: DefaultsContext,
              layerName(id): string, selection: readonly number[] /* çalıştırma başındaki seçim */,
-             geometry: RunGeometry /* girdilerin geometrisi, kimlikten: measures, numberCorners, cornerTexts, edgeLengths */ }
+             geometry: RunGeometry /* girdilerin geometrisi, kimlikten: measures, numberCorners, cornerTexts, edgeLengths, relatePairs */,
+             field(layerId, name): LayerField | undefined /* katmanın alanı (ADR 0199 §1) */ }
 Feedback   { progress(fraction, label?), info(m), warn(m), canceled, yield() }
 ChangeSet  { add?: NewEntity[], update?: { id, patch }[], remove?: number[] }
-RunResult  { changes?, select?: readonly number[] /* çalıştırmadan sonraki seçim */, outputs?, summary? }
+RunResult  { changes?, select?: readonly number[] /* çalıştırmadan sonraki seçim */, outputs?, summary?,
+             refused?: string /* araç reddeder: çizim değişmez, ileti olduğu gibi */ }
 ```
 
 - Uzun döngülerde `await feedback.yield()` sayfanın donmasını önler (16 ms'de bir gerçekten bekler) ve `feedback.canceled` denetlenir. İptal edilen çalıştırmanın değişiklikleri uygulanmaz.
@@ -161,6 +164,8 @@ RunResult  { changes?, select?: readonly number[] /* çalıştırmadan sonraki s
 - **Geometri çekirdekten gelir** (`ctx.geometry`, `processing/geometry.ts`): çalıştırma, features girdilerinin nesnelerini kendi geometri deposuna paketler (ilk soruda; bitince bırakılır). Araç kimlikle sorar: ifadelerin geometri değerleri (`measures`, `measuredOf` ile bütün nesneler için bir kez), köşe numaralama (`numberCorners`: her köşenin yeri, dışa bakan yönü ve kimin numarasını aldığı; adları `nameCorners` verir), köşe yazısının yeri (`cornerTexts`), kenar ölçüsü yazıları ve ortak kenar testi (`edgeLengths`).
 - **Öznitelik değiştiren araçlar** `update` içinde `attrs` alanının tamamını verir (`{ ...e.attrs, [alan]: değer }`); yalnızca öznitelik değişirse belge `attrs` olayı yayar ve GPU tamponu kurulmaz.
 - **`features` çıktıları:** `outputs[ad]` bir kimlik dizisiyse o kullanılır (seçilenler, değişenler); yoksa çalıştırmanın eklediği nesneler çıktıdır. Modeller bu kimlikleri sonraki adıma `{ scope: 'ids' }` olarak verir.
+- **`table` çıktısı** (`{ columns, rows }`, metinler; Özet istatistik): pencere çalıştırmadan sonra formun altında gösterir (Panoya kopyala, CSV olarak kaydet); modelde sonraki adıma geçmez.
+- **Katmanın alanları:** çalıştırıcı değişiklik kümesini uygulamadan önce öznitelik yazmalarını katmanın alanlarının kuralıyla denetler (`processing/writeCheck.ts`, masaüstünde `kentos_processing::writes`; ADR 0199 §1, 0200 §3): alana yazılan değer alanın tek biçimine çevrilir, uymayan ilk değer bütün çalıştırmayı reddeder ("Öznitelik yazılamadı (#id): …"). Araçlar değeri yazarken `ctx.field` ile aynı biçime çevirir; aynı kalan değeri yeniden yazmaz.
 
 ### 4.4 Çalıştırma akışı (`ProcessingRunner.run`)
 
@@ -304,7 +309,7 @@ türünün işaretidir (bkz. §10).
 
 ## 10. Genişletme noktaları
 
-- **Yeni parametre türü:** `types.ts` (tanım + `ValueOf` + gerekirse `ResolvedOf`), `parameters.ts` (`defaultValue`, `fits`, `checkParam`), `runner.ts` (çözme), `ui/processing/paramFields.ts` (kontrol). Planlananlar: çoklu seçim, dosya, CRS, mesafe (birimli), renk, tablo (satır listesi).
+- **Yeni parametre türü:** `types.ts` (tanım + `ValueOf` + gerekirse `ResolvedOf`), `parameters.ts` (`defaultValue`, `fits`, `checkParam`), `runner.ts` (çözme), `ui/processing/paramFields.ts` (kontrol), `dialogPlan.ts` ve `fieldPlan.ts` (form ve görünüş); masaüstünde `kentos_processing::types`, `parameters`, `web_param` ve `apps/desktop/src/processing/fields.rs`. Planlananlar: CRS, mesafe (birimli), renk.
 - **Yeni çalışma yeri:** bir `Executor` yazıp `app/processing.ts` içindeki `createExecutors` listesine ekleyin. İşi `RunJob` olarak alır; `materialize` ve `jobContext` ile aracı çalıştırır ya da işi uzağa gönderir.
 - **Eklenti araçları:** `registry.register(tool)` bir `Disposable` döndürür; eklenti kaldırılınca araç ve menü öğeleri kaybolur (`version` sinyali).
 
@@ -317,6 +322,11 @@ türünün işaretidir (bkz. §10).
 | `attributes.calculate` | Öznitelik hesapla | Seçilen alana (var olan ya da yeni) her nesne için bir ifadenin değerini yazar; varsayılan `metin($alan, <proje alan hassasiyeti>)`. İsteğe bağlı koşulla yalnızca bazı nesnelere yazar; sonuç boşsa alana dokunmaz ya da boşaltır. Etiket alanın eski değerini gösteriyorsa yeni değeri gösterir. Tek geri alma adımı. |
 | `selection.byExpression` | İfadeyle seç | Koşulu sağlayan nesneleri seçer: yeni seçim, seçime ekle, seçimden çıkar ya da seçim içinde ara. Belgeyi değiştirmez. |
 | `annotation.edgeLengths` | Kenar uzunluklarını yaz | Alan, çoklu çizgi ve çizgilerin her kenarına uzunluğunu, kenar ortasına ve okunur açıyla, dışa ya da içe yazar. Yay kenarında yay boyu yazılır. Ortak kenarlar bir kez yazılır; ondalık basamak varsayılanı proje ayarından gelir; önek, sonek ve en kısa kenar süzgeci gelişmiş ayarlardadır. |
+| `selection.byLocation` | Konuma göre seç | Başvuru nesnelerinden biriyle (Ayrık: hiçbiriyle) ilişkisi olan nesneleri seçer: Kesişen, İçeren, İçinde kalan, Ayrık, Uzaklıkta, Merkezi içinde (ADR 0200 §1–§2; ilişkiler çekirdeğin `ops::spatial_query`'si). Seçim biçimleri İfadeyle seç'inki. |
+| `attributes.fromInside` | İçindekinden bilgi al | Her alana içindeki (ya da ona değen, merkezi içindeki) kaynak nesnelerin sayısını ya da bir alanlarının toplamını, ortalamasını, en azını, en çoğunu ya da ilk değerini yazar (sayıların kuralı `kentos.statistics/1`, ADR 0200 §4). |
+| `attributes.fromEnclosing` | Çevreleyenden bilgi al | Her nesneye merkezinin içinde kaldığı alanın bir alanını yazar; birden çok alan: çizim sırasıyla ilki, hiçbiri: değişmez; ikisi de söylenir. |
+| `statistics.summary` | Özet istatistik | Bir alanın sayı, toplam, ortalama, en az, en çok ve standart sapmasını, isteğe bağlı bir alana göre gruplayarak tablo olarak verir; çizimi değiştirmez. |
+| `attributes.joinByField` | Anahtarla birleştir | Ortak anahtarla başka katmandan ya da CSV, TXT, XLSX dosyasından alan aktarır (sayı anahtarlar sayı olarak; kaynakta tekrarlanan anahtarın ilk satırı); önek, Üzerine yaz ya da Yalnız boşlara. |
 
 ## 12. Masaüstü
 

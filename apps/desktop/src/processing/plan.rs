@@ -108,6 +108,7 @@ pub fn status_line(status: &RunStatus, attempted: bool, issues: &[Issue]) -> Sta
             pick,
             selected,
             undo,
+            ..
         } => {
             let mut actions = if *selected {
                 vec![Action::Zoom]
@@ -344,6 +345,7 @@ mod tests {
                     .collect(),
                 selected: v["selected"].as_bool().unwrap_or(false),
                 undo: v["undo"].as_bool().unwrap_or(false),
+                table: None,
             },
             "error" => RunStatus::Error(text()),
             "invalid" => RunStatus::Invalid(text()),

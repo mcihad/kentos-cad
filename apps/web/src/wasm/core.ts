@@ -735,6 +735,15 @@ export class CoreStore {
     return typed(() => this.raw.edgeLengths(ids, height, minLength, inside, shared));
   }
 
+  /**
+   * Pairs of input and reference objects in the relation (docs/adr/0200 §1; code: the core's `Relation::from_code`,
+   * 0 Kesişen, 1 İçeren, 2 İçinde kalan, 3 Ayrık, 4 Uzaklıkta, 5 Merkezi içinde), `within` metres for Uzaklıkta:
+   * flat (input position, reference position) pairs, inputs first, then references in their order.
+   */
+  relatePairs(inputs: Float64Array, references: Float64Array, relation: number, within: number): Float64Array {
+    return typed(() => this.raw.relatePairs(inputs, references, relation, within));
+  }
+
   /** Ids in the document's order. */
   ids(): Float64Array {
     return typed(() => this.raw.ids());

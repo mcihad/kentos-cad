@@ -62,8 +62,9 @@ pub fn tool() -> Tool {
                 "field",
                 "Yazılacak alan",
                 ParamKind::Field {
-                    of: "input".into(),
+                    of: vec!["input".into()],
                     allow_new: true,
+                    multiple: false,
                 },
             )
             .default_value(json!("Hesap alanı"))

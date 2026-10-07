@@ -1,5 +1,5 @@
 import { compileExpression, expressionError } from '../model/expression/expression';
-import type { DefaultsContext, FeaturesValue, LayerValue, ParamDef, ProcessingTool } from './types';
+import type { DefaultsContext, FeaturesValue, FieldParam, FileValue, LayerValue, ParamDef, ProcessingTool } from './types';
 
 /**
  * Parameter bookkeeping shared by the dialog, the runner and models:
@@ -40,6 +40,8 @@ export function defaultValue(def: ParamDef, ctx: DefaultsContext): unknown {
     case 'expression':
     case 'field':
       return '';
+    case 'file':
+      return null;
   }
 }
 
@@ -49,6 +51,40 @@ export function defaultValues(tool: ProcessingTool, ctx: DefaultsContext): Value
 
 /** Whether the parameter is shown (and checked) for these values. */
 export const isVisible = (def: ParamDef, values: Values) => !def.visibleWhen || def.visibleWhen(values);
+
+/** The parameter a field's names come from: the first of `of` that is shown (docs/adr/0200 §6). */
+export function fieldSource(tool: ProcessingTool, def: FieldParam, values: Values): string | undefined {
+  const names = typeof def.of === 'string' ? [def.of] : def.of;
+  return names.find((n) => {
+    const p = tool.parameters.find((q) => q.name === n);
+    return !!p && isVisible(p, values);
+  });
+}
+
+/** The names a field parameter holds: one, or several written with commas between them (`multiple`), each trimmed. */
+export const fieldNames = (def: Pick<FieldParam, 'multiple'>, value: string): string[] =>
+  (def.multiple ? value.split(',') : [value]).map((n) => n.trim()).filter(Boolean);
+
+/** A file parameter's table as fields read it: the first row's names, then the rows. */
+export function fileTable(v: FileValue | null | undefined): { header: string[]; rows: (readonly string[])[] } | null {
+  if (!v?.rows?.length) return null;
+  const [first, ...rows] = v.rows;
+  return { header: first.map((c) => c.trim()), rows };
+}
+
+/** A value as the last values keep it: a file's name (and path) without its rows. */
+export function storedValue(def: ParamDef, v: unknown): unknown {
+  if (def.type !== 'file' || !v || typeof v !== 'object') return v;
+  const { rows: _rows, ...rest } = v as FileValue;
+  return rest;
+}
+
+/** Values as the last values keep them (`storedValue` for each). */
+export function storedValues(tool: ProcessingTool, values: Values): Values {
+  const out: Values = { ...values };
+  for (const p of tool.parameters) if (p.name in out) out[p.name] = storedValue(p, out[p.name]);
+  return out;
+}
 
 /** Whether a stored value still fits the parameter (so it can be restored). */
 export function fits(def: ParamDef, v: unknown): boolean {
@@ -71,6 +107,10 @@ export function fits(def: ParamDef, v: unknown): boolean {
     case 'expression':
     case 'field':
       return typeof v === 'string';
+    case 'file': {
+      const f = v as FileValue;
+      return !!f && typeof f === 'object' && typeof f.name === 'string' && (f.rows === undefined || (Array.isArray(f.rows) && f.rows.every((r) => Array.isArray(r) && r.every((c) => typeof c === 'string'))));
+    }
     case 'layer': {
       const l = v as LayerValue;
       return !!l && typeof l === 'object' && ('layerId' in l ? typeof l.layerId === 'string' : typeof l.newName === 'string');
@@ -118,7 +158,7 @@ export function validateValues(tool: ProcessingTool, values: Values, env: Valida
 
 function checkParam(p: ParamDef, v: unknown, env: ValidationEnv): string | null {
   const name = `“${p.label}”`;
-  if (v === null || v === undefined) return p.optional ? null : `${name} boş bırakılamaz.`;
+  if (v === null || v === undefined) return p.optional ? null : p.type === 'file' ? `${name}: bir dosya seçin.` : `${name} boş bırakılamaz.`;
   if (!fits(p, v)) return `${name} için geçersiz değer.`;
   switch (p.type) {
     case 'number': {
@@ -147,11 +187,15 @@ function checkParam(p: ParamDef, v: unknown, env: ValidationEnv): string | null 
       return r.ok ? null : `${name}: ${expressionError(r)}`;
     }
     case 'field': {
-      const f = (v as string).trim();
-      if (!f) return p.optional ? null : `${name}: bir alan adı seçin${p.allowNew ? ' ya da yazın' : ''}.`;
-      if (f.length > 64) return `${name}: alan adı en çok 64 karakter olabilir.`;
-      if (/[[\]]/.test(f)) return `${name}: alan adında köşeli parantez kullanılamaz.`;
+      const names = fieldNames(p, v as string);
+      if (!names.length) return p.optional ? null : `${name}: bir alan adı seçin${p.allowNew ? ' ya da yazın' : ''}.`;
+      if (names.some((f) => f.length > 64)) return `${name}: alan adı en çok 64 karakter olabilir.`;
+      if (names.some((f) => /[[\]]/.test(f))) return `${name}: alan adında köşeli parantez kullanılamaz.`;
       return null;
+    }
+    case 'file': {
+      const f = v as FileValue;
+      return f.rows ? (f.rows.length ? null : `${name}: “${f.name}” boş; başlık satırı olan bir dosya seçin.`) : `${name}: “${f.name}” dosyasını yeniden seçin; dosyanın içeriği saklanmaz.`;
     }
     case 'layer': {
       const l = v as LayerValue;

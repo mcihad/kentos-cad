@@ -2,20 +2,22 @@ import type { Vec2 } from '../../model/geometry';
 import type { LayerStore } from '../../model/layers';
 import type { InputSummary } from '../../processing/features';
 import { orderSteps, stepName, type ProcessingModel } from '../../processing/model';
-import { defaultValues, isVisible, restoreValues, scopesOf, type ValidationIssue } from '../../processing/parameters';
+import { defaultValues, fieldSource, isVisible, restoreValues, scopesOf, type ValidationIssue } from '../../processing/parameters';
 import type { ProcessingRunner, RunOutcome, TargetChoice } from '../../processing/runner';
-import type { DefaultsContext, EnumOption, ExecutionTarget, FeaturesValue, LayerValue, ParamDef, ParamUnit, ProcessingTool } from '../../processing/types';
+import type { DefaultsContext, EnumOption, ExecutionTarget, FeaturesValue, FileValue, LayerValue, ParamDef, ParamUnit, ProcessingTool, TableOutput } from '../../processing/types';
 import { DIALOG_TEXTS as T, SCOPE_SHORT } from './dialogTexts';
 import {
   attrFieldView,
   expressionView,
   featuresView,
+  fileView,
   layerFieldView,
   planLayers,
   pointView,
   type AttrFieldView,
   type ExpressionView,
   type FeaturesView,
+  type FileView,
   type LayerFieldView,
   type PlanLayers,
   type PointView,
@@ -48,8 +50,10 @@ export type ControlForm =
   | { type: 'enum'; control: 'segmented' | 'dropdown'; options: EnumOption[]; picks?: { option: string; point: string } }
   | { type: 'layer' }
   | { type: 'point' }
-  /** combo: a name field with the list beside it (allowNew); dropdown: only the list. */
-  | { type: 'field'; control: 'combo' | 'dropdown'; placeholder: string }
+  /** combo: a name field with the list beside it (allowNew); dropdown: only the list. `multiple`: several names, the list checks them. */
+  | { type: 'field'; control: 'combo' | 'dropdown'; placeholder: string; multiple?: true }
+  /** A file chosen with its button (docs/adr/0200 §7); `accept`: the extensions offered. */
+  | { type: 'file'; accept: string[] }
   | { type: 'expression'; returns: 'condition' | 'value'; placeholder?: string };
 
 export interface RowForm {
@@ -83,10 +87,14 @@ export function controlForm(def: ParamDef): ControlForm {
       return { type: 'layer' };
     case 'point':
       return { type: 'point' };
-    case 'field':
-      return def.allowNew ? { type: 'field', control: 'combo', placeholder: T.field.placeholder } : { type: 'field', control: 'dropdown', placeholder: T.field.choose };
+    case 'field': {
+      const multiple = def.multiple ? { multiple: true as const } : {};
+      return def.allowNew ? { type: 'field', control: 'combo', placeholder: T.field.placeholder, ...multiple } : { type: 'field', control: 'dropdown', placeholder: T.field.choose, ...multiple };
+    }
     case 'expression':
       return { type: 'expression', returns: def.returns, ...(def.placeholder ? { placeholder: def.placeholder } : {}) };
+    case 'file':
+      return { type: 'file', accept: [...def.accept] };
   }
 }
 
@@ -196,8 +204,11 @@ export function previewOf(tool: ProcessingTool, values: Values, issues: readonly
 export type DialogStatus =
   | { kind: 'idle' }
   | { kind: 'running'; fraction: number; label: string; where?: ExecutionTarget }
-  /** `pick`: objects "Sonuçları seç" selects; `selected`: the run set the selection itself; `undo`: it edited the drawing. */
-  | { kind: 'ok'; text: string; pick: readonly number[]; selected: boolean; undo: boolean }
+  /**
+   * `pick`: objects "Sonuçları seç" selects; `selected`: the run set the selection itself; `undo`: it edited the
+   * drawing; `table`: the run's table output, shown under the form (docs/adr/0200 §7).
+   */
+  | { kind: 'ok'; text: string; pick: readonly number[]; selected: boolean; undo: boolean; table?: TableOutput }
   | { kind: 'error' | 'invalid'; text: string };
 
 export type StatusAction = 'zoom' | 'select' | 'undo';
@@ -367,10 +378,14 @@ export const progressed = (state: DialogState, fraction: number, label: string):
  * to undo; problems are forgotten. Refused before running: the runner's
  * problems show on their fields. Failed or stopped: its message.
  */
-export function finished(state: DialogState, out: RunOutcome): DialogState {
+export function finished(state: DialogState, out: RunOutcome, tool: ProcessingTool): DialogState {
   switch (out.status) {
-    case 'ok':
-      return { ...state, attempted: false, runIssues: null, status: { kind: 'ok', text: out.record.summary, pick: out.added.length ? out.added : out.touched, selected: !!out.result.select, undo: out.edited } };
+    case 'ok': {
+      const name = tool.outputs?.find((o) => o.type === 'table')?.name;
+      const table = name ? (out.result.outputs?.[name] as TableOutput | undefined) : undefined;
+      const status: DialogStatus = { kind: 'ok', text: out.record.summary, pick: out.added.length ? out.added : out.touched, selected: !!out.result.select, undo: out.edited, ...(table ? { table } : {}) };
+      return { ...state, attempted: false, runIssues: null, status };
+    }
     case 'invalid':
       return { ...state, runIssues: out.issues, status: { kind: 'invalid', text: out.issues[0]?.message ?? '' } };
     default:
@@ -419,8 +434,10 @@ export function pickedObjects(state: DialogState, name: string, keep: boolean, c
 export interface ViewEnv {
   /** The values' problems (the runner's check). */
   readonly issues: readonly ValidationIssue[];
-  /** What each features parameter reads now. */
+  /** What each features parameter reads now, and each chosen file's table. */
   readonly inputs: Readonly<Record<string, InputSummary>>;
+  /** What a field parameter's source shown now reads (`fieldSource`): the names it offers. */
+  sourceOf(name: string): InputSummary | undefined;
   /** An expression parameter's line on its input's objects. */
   previewExpression(name: string): string | null;
   readonly layers: PlanLayers;
@@ -436,6 +453,11 @@ export function hostEnv(runner: ProcessingRunner, tool: ProcessingTool, values: 
   return {
     issues: runner.validate(tool, values),
     inputs,
+    sourceOf: (name) => {
+      const def = tool.parameters.find((p) => p.name === name);
+      const src = def?.type === 'field' ? fieldSource(tool, def, values) : undefined;
+      return src ? inputs[src] : undefined;
+    },
     previewExpression: (name) => runner.previewExpression(tool, values, name),
     layers: planLayers(layers),
     formatPoint,
@@ -448,7 +470,7 @@ export function hostEnv(runner: ProcessingRunner, tool: ProcessingTool, values: 
   };
 }
 
-export type FieldView = FeaturesView | LayerFieldView | PointView | AttrFieldView | ExpressionView;
+export type FieldView = FeaturesView | LayerFieldView | PointView | AttrFieldView | ExpressionView | FileView;
 
 /** A shown field's changing parts (number, text, switch and choice fields show only their value). */
 export function fieldView(def: ParamDef, value: unknown, env: ViewEnv): FieldView | null {
@@ -460,9 +482,11 @@ export function fieldView(def: ParamDef, value: unknown, env: ViewEnv): FieldVie
     case 'point':
       return pointView(value as Vec2 | null, env.formatPoint);
     case 'field':
-      return attrFieldView(def, String(value ?? ''), env.inputs[def.of]?.fields ?? []);
+      return attrFieldView(def, String(value ?? ''), env.sourceOf(def.name));
     case 'expression':
       return expressionView(def.of ? (env.inputs[def.of]?.fields ?? []) : [], env.previewExpression(def.name));
+    case 'file':
+      return fileView(value as FileValue | null);
     default:
       return null;
   }
@@ -476,6 +500,8 @@ export interface DialogFrame {
   issues: Record<string, string>;
   preview: { text: string; muted: boolean } | null;
   status: StatusLine;
+  /** The last run's table (Özet istatistik), shown under the form; null when it gave none. */
+  result: TableOutput | null;
   footer: Footer;
   targets: { options: TargetOption[]; hint: string | null; choice: TargetChoice | null };
 }
@@ -495,6 +521,7 @@ export function dialogFrame(tool: ProcessingTool, state: DialogState, env: ViewE
     // The preview waits for the values' own problems only, not for what a run found.
     preview: previewOf(tool, state.values, env.issues),
     status: statusLine(state.status, state.attempted, issues),
+    result: state.status.kind === 'ok' && state.status.table ? { columns: [...state.status.table.columns], rows: state.status.table.rows.map((r) => [...r]) } : null,
     footer: footerOf(state.status),
     targets: targetsView(env.targets, state.choice),
   };

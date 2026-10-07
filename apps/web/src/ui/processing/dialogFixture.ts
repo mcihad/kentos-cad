@@ -128,6 +128,10 @@ const TEXT_SAMPLES: Record<string, unknown> = {
   fixFields: 2,
   autoNow: 'worker',
   kindsNote: ['polygon', 'polyline'],
+  kindsLeftOut: ['xline', 'ray'],
+  rows: 4,
+  present: 3,
+  presentRows: 4,
   newItem: 'Köşe noktaları',
   count: 3,
   has: 3,
@@ -135,6 +139,8 @@ const TEXT_SAMPLES: Record<string, unknown> = {
   more: 2,
   prompt: { label: 'Alanlar', count: 2 },
   picked: 2,
+  lacking: 'Ada',
+  size: { rows: 4, columns: 3 },
 };
 
 /** The dialog's texts as the file writes them: a text made from a value as `{ sample, text }`. */
@@ -342,7 +348,7 @@ async function play(spec: SessionSpec, doc: CadDocument, index: PickIndex): Prom
         const values = state.values;
         state = started(state, model ? undefined : runner.executorFor(tool, target, runner.inputSize(tool, values))?.target);
         const out: RunOutcome = model ? await runModel(model, values, runner, lookup, { target }) : await runner.run(tool, values, { target });
-        state = finished(state, out);
+        state = finished(state, out, tool);
       }
     }
     views.push(plain(dialogView(tool, state, envOf(state))));

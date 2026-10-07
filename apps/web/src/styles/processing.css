@@ -225,6 +225,39 @@
 .pfield__coord.num {
   color: var(--c-text);
 }
+/* A file parameter's chosen file (docs/adr/0200 §7): its name in full colour, cut with an ellipsis. */
+.pfield__file {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pfield__file:not([data-muted]) {
+  color: var(--c-text);
+}
+
+/* The run's table under the form (Özet istatistik): its title with the copy and save buttons, then the table. */
+.ptool__result-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ptool__result-actions {
+  display: flex;
+  gap: 4px;
+}
+.ptool__result-table {
+  max-height: calc(240px * var(--ui-scale));
+  margin-top: 8px;
+  overflow: auto;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+.ptool__result-table .io-table td.num,
+.ptool__result-table .io-table th.num {
+  text-align: right;
+}
 /* Sahneden seç beside a control (docs/adr/0088): the control takes the room, the pick keeps its size. */
 .prow__control > .pfield__pickrow {
   align-self: stretch;

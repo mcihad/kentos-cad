@@ -12,6 +12,7 @@ use kentos_geometry_core::entity::{Entity, Shape};
 use kentos_geometry_core::geom::affine::similarity;
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geometry::Bounds;
+use kentos_geometry_core::ops::spatial_query::Relation;
 use kentos_geometry_core::processing::numbering::{CornerWalk, StartCorner};
 use kentos_geometry_core::store::labels::LabelWanted;
 use kentos_geometry_core::store::overview::OverviewRequest;
@@ -977,6 +978,23 @@ impl GeometryStore {
     ) -> Vec<f64> {
         self.inner
             .edge_lengths(ids, height, min_length, inside, shared)
+    }
+
+    /// Pairs of input and reference objects that satisfy the relation
+    /// (`Store::relate_pairs`; relation code is `Relation::from_code`'s):
+    /// flat (input position, reference position) pairs, inputs first.
+    #[wasm_bindgen(js_name = relatePairs)]
+    pub fn relate_pairs(
+        &self,
+        inputs: &[f64],
+        references: &[f64],
+        relation: u32,
+        within: f64,
+    ) -> Vec<f64> {
+        match Relation::from_code(relation) {
+            Some(r) => self.inner.relate_pairs(inputs, references, r, within),
+            None => Vec::new(),
+        }
     }
 
     /// Edges of visible objects overlapping the rectangle (see `pack_edges`).

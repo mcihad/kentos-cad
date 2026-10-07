@@ -1,0 +1,1063 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "documents": {},
+ "files": {
+  "malikler.csv": "malikler.csv"
+ },
+ "cases": [
+  {
+   "id": "location-intersects",
+   "title": "Konuma göre seç, Kesişen: Okul Sokağı'nın geçtiği parsel",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byLocation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "relation": "intersects",
+    "reference": {
+     "scope": "layer",
+     "layerId": "yol"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 / 4 nesne “Kesişen” ilişkisini sağladı; seçimde 1 nesne var.",
+    "undo": null,
+    "selection": [
+     3
+    ],
+    "outputs": {
+     "count": 1,
+     "matched": [
+      3
+     ]
+    }
+   }
+  },
+  {
+   "id": "location-within",
+   "title": "İçinde kalan: parsellerin içindeki yapılar; iki parseli aşan ve parselin deliğindeki yapı seçilmez",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byLocation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yapi"
+    },
+    "relation": "within",
+    "reference": {
+     "scope": "layer",
+     "layerId": "parsel"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 / 5 nesne “İçinde kalan” ilişkisini sağladı; seçimde 3 nesne var.",
+    "undo": null,
+    "selection": [
+     5,
+     6,
+     9
+    ],
+    "outputs": {
+     "count": 3,
+     "matched": [
+      5,
+      6,
+      9
+     ]
+    }
+   }
+  },
+  {
+   "id": "location-contains",
+   "title": "İçeren: bir yapıyı bütünüyle içeren parseller",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byLocation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "relation": "contains",
+    "reference": {
+     "scope": "layer",
+     "layerId": "yapi"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 / 4 nesne “İçeren” ilişkisini sağladı; seçimde 3 nesne var.",
+    "undo": null,
+    "selection": [
+     1,
+     2,
+     4
+    ],
+    "outputs": {
+     "count": 3,
+     "matched": [
+      1,
+      2,
+      4
+     ]
+    }
+   }
+  },
+  {
+   "id": "location-disjoint",
+   "title": "Ayrık: yollarla kesişmeyen parseller (cadde 5 m güneyde, dokunmaz)",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byLocation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "relation": "disjoint",
+    "reference": {
+     "scope": "layer",
+     "layerId": "yol"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 / 4 nesne “Ayrık” ilişkisini sağladı; seçimde 3 nesne var.",
+    "undo": null,
+    "selection": [
+     1,
+     2,
+     4
+    ],
+    "outputs": {
+     "count": 3,
+     "matched": [
+      1,
+      2,
+      4
+     ]
+    }
+   }
+  },
+  {
+   "id": "location-near",
+   "title": "Uzaklıkta, 7 m: sokağa tam 7 m'deki ağaç sayılır",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byLocation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "agac"
+    },
+    "relation": "near",
+    "reference": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "distance": 7
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 / 6 nesne “Uzaklıkta” ilişkisini sağladı; seçimde 1 nesne var.",
+    "undo": null,
+    "selection": [
+     13
+    ],
+    "outputs": {
+     "count": 1,
+     "matched": [
+      13
+     ]
+    }
+   }
+  },
+  {
+   "id": "location-center",
+   "title": "Merkezi içinde: merkezi iki parselin sınırında olan yapı da, deliğin içindeki değil",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byLocation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yapi"
+    },
+    "relation": "centerIn",
+    "reference": {
+     "scope": "layer",
+     "layerId": "parsel"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 / 5 nesne “Merkezi içinde” ilişkisini sağladı; seçimde 4 nesne var.",
+    "undo": null,
+    "selection": [
+     5,
+     6,
+     7,
+     9
+    ],
+    "outputs": {
+     "count": 4,
+     "matched": [
+      5,
+      6,
+      7,
+      9
+     ]
+    }
+   }
+  },
+  {
+   "id": "location-remove",
+   "title": "Seçimden çıkar: seçili üç parselden yolla kesişen çıkar",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byLocation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "relation": "intersects",
+    "reference": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "mode": "remove"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 / 4 nesne “Kesişen” ilişkisini sağladı; seçimde 2 nesne var.",
+    "undo": null,
+    "selection": [
+     1,
+     2
+    ],
+    "outputs": {
+     "count": 1,
+     "matched": [
+      3
+     ]
+    }
+   },
+   "selection": [
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "id": "refuse-location-reference",
+   "title": "Başvuru seçili nesnelerken seçim boşsa çalışmaz",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byLocation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "relation": "intersects",
+    "reference": {
+     "scope": "selection"
+    }
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "param": "reference",
+      "message": "“Başvuru nesneleri”: seçili nesneler arasında uygun nesne yok. Önce nesneleri seçin ya da kapsamı değiştirin."
+     }
+    ]
+   }
+  },
+  {
+   "id": "inside-count",
+   "title": "İçindekinden bilgi al, Sayı: parsellerin ağaçları; sınırdaki ağaç iki parselde, delikteki hiçbirinde",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.fromInside"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "source": {
+     "scope": "layer",
+     "layerId": "agac"
+    },
+    "relation": "within",
+    "stat": "count",
+    "output": "Ağaç sayısı"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 hedef nesneye “Ağaç sayısı” yazıldı (sayı).",
+    "undo": "İçindekinden bilgi al",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "Ağaç sayısı": "2"
+      },
+      "label": "1"
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00",
+       "Ağaç sayısı": "2"
+      },
+      "label": "2"
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25",
+       "Ağaç sayısı": "1"
+      },
+      "label": "3"
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Tapu alanı": "1100",
+       "Ağaç sayısı": "1"
+      },
+      "label": "4"
+     }
+    ],
+    "outputs": {
+     "count": 4,
+     "changed": [
+      1,
+      2,
+      3,
+      4
+     ]
+    }
+   }
+  },
+  {
+   "id": "inside-sum",
+   "title": "Toplam, Kesişen: yapıların taban alanları (virgüllü değer okunur, sayı olmayan atlanır); alanı ondalık 2 basamak",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.fromInside"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "source": {
+     "scope": "layer",
+     "layerId": "yapi"
+    },
+    "relation": "intersects",
+    "stat": "sum",
+    "field": "Taban alanı",
+    "output": "Taban toplamı"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 hedef nesneye “Taban toplamı” yazıldı (toplam).",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 değer sayı olarak okunamadığı için atlandı."
+     }
+    ],
+    "undo": "İçindekinden bilgi al",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "Taban toplamı": "70"
+      },
+      "label": "1"
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00",
+       "Taban toplamı": "125.5"
+      },
+      "label": "2"
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25",
+       "Taban toplamı": "25.5"
+      },
+      "label": "3"
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "changed": [
+      1,
+      2,
+      3
+     ]
+    }
+   }
+  },
+  {
+   "id": "inside-mean",
+   "title": "Ortalama, Merkezi içinde: alan olmayan yazılacak alanda girdilerin basamağı + 2",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.fromInside"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "source": {
+     "scope": "layer",
+     "layerId": "yapi"
+    },
+    "relation": "centerIn",
+    "stat": "mean",
+    "field": "Taban alanı",
+    "output": "Ortalama taban"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 hedef nesneye “Ortalama taban” yazıldı (ortalama).",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 değer sayı olarak okunamadığı için atlandı."
+     }
+    ],
+    "undo": "İçindekinden bilgi al",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "Ortalama taban": "70.00"
+      },
+      "label": "1"
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00",
+       "Ortalama taban": "62.750"
+      },
+      "label": "2"
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25",
+       "Ortalama taban": "25.500"
+      },
+      "label": "3"
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "changed": [
+      1,
+      2,
+      3
+     ]
+    }
+   }
+  },
+  {
+   "id": "inside-mean-field",
+   "title": "Ortalama ondalık 1 basamaklı alana yarım çifte yuvarlanır (62,75 → 62,8)",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.fromInside"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "source": {
+     "scope": "layer",
+     "layerId": "yapi"
+    },
+    "relation": "intersects",
+    "stat": "mean",
+    "field": "Taban alanı",
+    "output": "Taban ortalaması"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 hedef nesneye “Taban ortalaması” yazıldı (ortalama).",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 değer sayı olarak okunamadığı için atlandı."
+     }
+    ],
+    "undo": "İçindekinden bilgi al",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "Taban ortalaması": "70.0"
+      },
+      "label": "1"
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00",
+       "Taban ortalaması": "62.8"
+      },
+      "label": "2"
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25",
+       "Taban ortalaması": "25.5"
+      },
+      "label": "3"
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "changed": [
+      1,
+      2,
+      3
+     ]
+    }
+   }
+  },
+  {
+   "id": "inside-first",
+   "title": "İlk değer: ağaçların türü, çizim sırasıyla ilki",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.fromInside"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "source": {
+     "scope": "layer",
+     "layerId": "agac"
+    },
+    "relation": "within",
+    "stat": "first",
+    "field": "Tür",
+    "output": "İlk ağaç"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 hedef nesneye “İlk ağaç” yazıldı (ilk değer).",
+    "undo": "İçindekinden bilgi al",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "İlk ağaç": "Çam"
+      },
+      "label": "1"
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00",
+       "İlk ağaç": "Çam"
+      },
+      "label": "2"
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25",
+       "İlk ağaç": "Ihlamur"
+      },
+      "label": "3"
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Tapu alanı": "1100",
+       "İlk ağaç": "Meşe"
+      },
+      "label": "4"
+     }
+    ],
+    "outputs": {
+     "count": 4,
+     "changed": [
+      1,
+      2,
+      3,
+      4
+     ]
+    }
+   }
+  },
+  {
+   "id": "enclosing-parcel",
+   "title": "Çevreleyenden bilgi al: yapıların parsel numarası; sınırdaki yapı ilk parselden, delikteki değişmez",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.fromEnclosing"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "yapi"
+    },
+    "source": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "field": "Parsel",
+    "output": ""
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 nesneye “Parsel” yazıldı.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin merkezi birden çok alanın içinde; çizim sırasıyla ilki alındı."
+     },
+     {
+      "level": "warn",
+      "text": "1 nesnenin merkezi hiçbir alanın içinde değil; değişmedi."
+     }
+    ],
+    "undo": "Çevreleyenden bilgi al",
+    "updated": [
+     {
+      "id": 5,
+      "attrs": {
+       "Taban alanı": "70",
+       "Kat": "2",
+       "Parsel": "1"
+      }
+     },
+     {
+      "id": 6,
+      "attrs": {
+       "Taban alanı": "100",
+       "Kat": "1",
+       "Parsel": "2"
+      }
+     },
+     {
+      "id": 7,
+      "attrs": {
+       "Taban alanı": "25,5",
+       "Kat": "2",
+       "Parsel": "2"
+      }
+     },
+     {
+      "id": 9,
+      "attrs": {
+       "Taban alanı": "bilinmiyor",
+       "Kat": "1",
+       "Parsel": "4"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 4,
+     "changed": [
+      5,
+      6,
+      7,
+      9
+     ]
+    }
+   }
+  },
+  {
+   "id": "summary-grouped",
+   "title": "Özet istatistik, Kat'a göre: taban alanları; boş grup sonda, Toplam satırı",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "statistics.summary"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yapi"
+    },
+    "field": "Taban alanı",
+    "group": "Kat"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "5 nesnede “Taban alanı”: 4 değer okundu, 3 grup.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 değer sayı olarak okunamadığı için atlandı."
+     }
+    ],
+    "undo": null,
+    "outputs": {
+     "count": 5,
+     "table": {
+      "columns": [
+       "Grup",
+       "Nesne",
+       "Değer",
+       "Toplam",
+       "Ortalama",
+       "En az",
+       "En çok",
+       "Std. sapma"
+      ],
+      "rows": [
+       [
+        "1",
+        "2",
+        "1",
+        "100",
+        "100.000",
+        "100",
+        "100",
+        ""
+       ],
+       [
+        "2",
+        "2",
+        "2",
+        "95.5",
+        "47.750",
+        "25.5",
+        "70",
+        "31.466"
+       ],
+       [
+        "(boş)",
+        "1",
+        "1",
+        "36",
+        "36.000",
+        "36",
+        "36",
+        ""
+       ],
+       [
+        "Toplam",
+        "5",
+        "4",
+        "231.5",
+        "57.875",
+        "25.5",
+        "100",
+        "33.903"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "summary-plain",
+   "title": "Özet istatistik, gruplamasız: parsellerin tapu alanı",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "statistics.summary"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "field": "Tapu alanı",
+    "group": ""
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 nesnede “Tapu alanı”: 4 değer okundu.",
+    "undo": null,
+    "outputs": {
+     "count": 4,
+     "table": {
+      "columns": [
+       "Nesne",
+       "Değer",
+       "Toplam",
+       "Ortalama",
+       "En az",
+       "En çok",
+       "Std. sapma"
+      ],
+      "rows": [
+       [
+        "4",
+        "4",
+        "2900.25",
+        "725.0625",
+        "450.25",
+        "1100",
+        "278.3059"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "join-layer",
+   "title": "Anahtarla birleştir, katmandan: tapu kayıtlarının maliki Parsel'le; 002 ile 2 aynı anahtar",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.joinByField"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "kayit"
+    },
+    "sourceKey": "",
+    "fields": "Malik"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 nesne eşleşti; 2 nesnede 1 alan aktarıldı.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 anahtar kaynakta birden çok kez var; ilk satırları alındı."
+     },
+     {
+      "level": "info",
+      "text": "2 hedef nesnenin kaynakta eşi yok."
+     },
+     {
+      "level": "info",
+      "text": "1 kaynak satırı hiçbir hedefle eşleşmedi."
+     }
+    ],
+    "undo": "Anahtarla birleştir",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "Malik": "Ayşe Yılmaz"
+      },
+      "label": "1"
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00",
+       "Malik": "Hasan Demir"
+      },
+      "label": "2"
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "changed": [
+      1,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "id": "join-file",
+   "title": "Anahtarla birleştir, CSV'den: önekle bütün sütunlar; 03 ile 3 aynı anahtar",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.joinByField"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "file",
+    "file": "malikler.csv",
+    "sourceKey": "",
+    "fields": "",
+    "prefix": "Tapu "
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 nesne eşleşti; 2 nesnede 2 alan aktarıldı.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 anahtar kaynakta birden çok kez var; ilk satırları alındı."
+     },
+     {
+      "level": "info",
+      "text": "2 hedef nesnenin kaynakta eşi yok."
+     },
+     {
+      "level": "info",
+      "text": "1 kaynak satırı hiçbir hedefle eşleşmedi."
+     }
+    ],
+    "undo": "Anahtarla birleştir",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "Tapu Malik": "Ayşe Yılmaz",
+       "Tapu Hisse": "1/2"
+      },
+      "label": "1"
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25",
+       "Tapu Malik": "Mehmet Kaya",
+       "Tapu Hisse": "1"
+      },
+      "label": "3"
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "changed": [
+      1,
+      3
+     ]
+    }
+   }
+  },
+  {
+   "id": "refuse-join-column",
+   "title": "Dosyada kaynak anahtar sütunu yoksa çalışmaz, sütunları söyler",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.joinByField"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "file",
+    "file": "malikler.csv",
+    "sourceKey": "Ada",
+    "fields": ""
+   },
+   "expect": {
+    "status": "error",
+    "message": "Kaynakta “Ada” alanı yok; alanları: Parsel, Malik, Hisse."
+   }
+  },
+  {
+   "id": "refuse-field-rule",
+   "title": "Öznitelik hesapla, katmanın tam sayı alanına sayı olmayan değer: çalıştırma reddedilir, hiçbir şey değişmez",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.calculate"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "field": "Ağaç sayısı",
+    "value": "'çok'",
+    "where": "",
+    "empty": "keep",
+    "label": false
+   },
+   "expect": {
+    "status": "error",
+    "message": "Öznitelik yazılamadı (#1): “Ağaç sayısı” alanı tam sayı ister; “çok” verildi. Rakamlarla, ondalıksız yazın."
+   }
+  }
+ ]
+}

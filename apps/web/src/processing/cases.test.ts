@@ -12,13 +12,17 @@ import { ProcessingRunner, type RunOutcome, type TargetChoice } from './runner';
 import { handleJob } from './worker/handleJob';
 import type { WorkerRequest } from './worker/protocol';
 import { workerExecutor, type WorkerLike } from './worker/workerExecutor';
+import type { FileValue, ProcessingTool } from './types';
+import type { TableFileRead } from '../contracts/generated/TableFileRead';
 
 /**
  * The shared processing cases (fixtures/processing/v1, format in
  * fixtures/processing/README.md): each case runs a built-in tool or model on a drawing through
  * ProcessingRunner, in the page and again through the worker's path
  * (handleJob), and what the run did is compared with what the case says.
- * The desktop's kentos-processing plays the same file.
+ * The desktop's kentos-processing plays the same files: cases.json, and
+ * queries.json (docs/adr/0200), whose file values name files beside it,
+ * read through the formats module as the dialog reads a chosen file.
  */
 
 const files = import.meta.glob<string>('../../../../fixtures/processing/v1/*', { query: '?raw', import: 'default', eager: true });
@@ -44,10 +48,42 @@ interface CaseFile {
   version: number;
   tolerance: number;
   documents: Record<string, { defaults: Json; tools: Record<string, Json> }>;
+  /** A file parameter's value names one of these files (the value → the file beside the cases). */
+  files?: Record<string, string>;
   cases: Case[];
 }
 
 const CASES = JSON.parse(file('cases.json')) as CaseFile;
+const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
+
+interface Formats {
+  initSync(o: { module: BufferSource }): unknown;
+  readTableFile(bytes: Uint8Array): Uint8Array;
+}
+const glue = import.meta.glob<Formats>('../io/pkg/kentos_formats_wasm.js');
+const loader = Object.values(glue)[0];
+const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL): Uint8Array<ArrayBuffer> } } }).process.getBuiltinModule('node:fs');
+let formats: Formats | undefined;
+
+/** A case's file value as the dialog makes it: the file's name and its first sheet's rows (Tablo ekle's reader). */
+async function fileValue(cases: CaseFile, name: string): Promise<FileValue> {
+  const path = cases.files?.[name];
+  if (!path) throw new Error(`dosya yok: ${name}`);
+  if (!formats) {
+    const w = await loader!();
+    w.initSync({ module: fs.readFileSync(new URL('../io/pkg/kentos_formats_wasm_bg.wasm', import.meta.url)) });
+    formats = w;
+  }
+  const read = JSON.parse(new TextDecoder().decode(formats.readTableFile(fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${path}`, import.meta.url))))) as TableFileRead;
+  return { name, rows: read.sheets[0]?.rows ?? [] };
+}
+
+/** The case's values with each file parameter's name turned into the file's value. */
+async function caseValues(cases: CaseFile, tool: ProcessingTool, values: Json | undefined): Promise<Json> {
+  const out: Json = { ...values };
+  for (const p of tool.parameters) if (p.type === 'file' && typeof out[p.name] === 'string') out[p.name] = await fileValue(cases, out[p.name] as string);
+  return out;
+}
 const TOOLS = new Map(BUILTIN_TOOLS.map((t) => [t.id, t]));
 const MODELS = new Map(BUILTIN_MODELS.map((m) => [m.id, m]));
 const lookup = (id: string) => TOOLS.get(id);
@@ -116,7 +152,7 @@ interface Seen {
   selection: number[];
 }
 
-async function play(c: Case, target: TargetChoice): Promise<Seen> {
+async function play(cases: CaseFile, c: Case, target: TargetChoice): Promise<Seen> {
   const doc = load(c.document);
   let selection = [...(c.selection ?? [])];
   const view = c.view ? { minX: c.view[0], minY: c.view[1], maxX: c.view[2], maxY: c.view[3] } : null;
@@ -131,7 +167,7 @@ async function play(c: Case, target: TargetChoice): Promise<Seen> {
   if ('tool' in c.run) {
     const tool = TOOLS.get(c.run.tool);
     if (!tool) throw new Error(`${c.id}: araç yok: ${c.run.tool}`);
-    outcome = await runner.run(tool, { ...defaultValues(tool, runner.defaults()), ...c.values }, opts);
+    outcome = await runner.run(tool, { ...defaultValues(tool, runner.defaults()), ...(await caseValues(cases, tool, c.values)) }, opts);
   } else {
     const model = MODELS.get(c.run.model);
     if (!model) throw new Error(`${c.id}: model yok: ${c.run.model}`);
@@ -223,9 +259,22 @@ describe('processing cases (fixtures/processing/v1)', () => {
 
   for (const c of CASES.cases) {
     it(`${c.id}: ${c.title}`, async () => {
-      check(c, await play(c, 'client'), CASES.tolerance);
+      check(c, await play(CASES, c, 'client'), CASES.tolerance);
       // The same run through the worker's path gives the same result.
-      check(c, await play(c, 'worker'), CASES.tolerance);
+      check(c, await play(CASES, c, 'worker'), CASES.tolerance);
+    });
+  }
+});
+
+describe.skipIf(!loader)('query cases (fixtures/processing/v1/queries.json, docs/adr/0200)', () => {
+  it('is a v1 case file', () => {
+    expect([QUERIES.format, QUERIES.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of QUERIES.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      check(c, await play(QUERIES, c, 'client'), QUERIES.tolerance);
+      check(c, await play(QUERIES, c, 'worker'), QUERIES.tolerance);
     });
   }
 });

@@ -242,6 +242,70 @@ const SESSIONS: SessionSpec[] = [
       { do: { pickObjects: { name: 'input', tolerance: 0.5, actions: [{ click: { x: 487032, y: 4420015 } }], end: 'done' } } },
     ],
   },
+  {
+    id: 'by-location',
+    title: 'Konuma göre seç (ADR 0200): Uzaklıkta seçilince Uzaklık görünür, virgüllü uzaklık; başvuru seçimken seçim boşsa sorun başvurunun altında; başvuru katman olunca çalışır ve seçer',
+    open: { tool: 'selection.byLocation' },
+    selection: [],
+    available: ['client'],
+    steps: [
+      { do: { choose: { name: 'relation', value: 'near' } } },
+      { do: { type: { name: 'distance', text: '2,5' } } },
+      { do: { run: true } },
+      { do: { scope: { name: 'reference', scope: 'layer' } } },
+      { do: { scopeLayer: { name: 'reference', layerId: 'mevcut' } } },
+      { do: { run: true } },
+    ],
+  },
+  {
+    id: 'summary',
+    title: 'Özet istatistik (ADR 0200): alan ve gruplama listeleri, çalıştırınca sonuç tablosu (Grup sütunu, Toplam satırı); bir değer değişince tablo kalkar; gruplamasız tek satır',
+    open: { tool: 'statistics.summary' },
+    selection: [],
+    available: ['client'],
+    steps: [
+      { do: { scopeLayer: { name: 'input', layerId: 'parsel' } } },
+      { do: { choose: { name: 'field', value: 'Parsel' } } },
+      { do: { choose: { name: 'group', value: 'Nitelik' } } },
+      { do: { run: true } },
+      { do: { choose: { name: 'group', value: '' } } },
+      { do: { run: true } },
+    ],
+  },
+  {
+    id: 'join-file',
+    title: 'Anahtarla birleştir (ADR 0200): son değerlerde yalnız adı kalan dosya yeniden istenir; seçilen dosyanın sütunları anahtar ve aktarılacak alanlar listesinde; iki alan işaretlenir; çalıştırma ve geri alma',
+    open: { tool: 'attributes.joinByField' },
+    selection: [1, 2, 3],
+    available: ['client'],
+    last: { sourceKind: 'file', file: { name: 'eski.csv' } },
+    steps: [
+      { do: { scope: { name: 'target', scope: 'selection' } } },
+      { do: { run: true } },
+      {
+        do: {
+          choose: {
+            name: 'file',
+            value: {
+              name: 'malikler.csv',
+              rows: [
+                ['Parsel', 'Malik', 'Hisse'],
+                ['1', 'Ayşe Yılmaz', '1/2'],
+                ['3', 'Mehmet Kaya', '1'],
+                ['03', 'Tekrar Kayıt', '1'],
+                ['5', 'Kimse', '1'],
+              ],
+            },
+          },
+        },
+      },
+      { do: { choose: { name: 'targetKey', value: 'Parsel' } } },
+      { do: { choose: { name: 'fields', value: 'Malik' } } },
+      { do: { choose: { name: 'fields', value: 'Malik, Hisse' } } },
+      { do: { run: true } },
+      { do: { undo: true } },
+    ],
+  },
 ];
 
 /** Status lines: the run's state, whether Çalıştır was pressed, the problems. */

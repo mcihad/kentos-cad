@@ -13,7 +13,7 @@ import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { CommandLine } from './CommandLine';
 import { vertexListing } from './coordinates';
-import { FeatureTable } from './FeatureTable';
+import { FeatureTable, resetFeatureTable } from './FeatureTable';
 import { PointTable } from './PointTable';
 import { SearchPanel } from './SearchPanel';
 import { isEditable } from './vertexEdit';
@@ -73,6 +73,8 @@ export class BottomPanel extends Component {
     const clear = h('button', { class: 'ibtn', type: 'button', 'aria-label': BOTTOM_TEXTS.clear }, icon('clear', 16));
     const collapse = h('button', { class: 'ibtn', type: 'button', 'aria-label': BOTTOM_TEXTS.close }, icon('chevronDown', 16));
     this.d.add(listen(clear, 'click', () => ctx.log.clear()));
+    // Another drawing: the table's choices (its layer, search, sort) start again, as they do for a new session.
+    this.d.add(ctx.doc.events.on('reset', () => resetFeatureTable()));
     this.d.add(listen(collapse, 'click', () => ui.bottomExpanded.set(false)));
     this.d.add(tooltip(clear, () => ({ title: BOTTOM_TEXTS.clear }), 'top'));
     this.d.add(tooltip(collapse, () => ({ title: BOTTOM_TEXTS.close, shortcut: ctx.keymap.chordFor('view.bottomPanel') }), 'top'));

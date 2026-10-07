@@ -17,6 +17,7 @@ use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::progress::{self, Tint};
 use kentos_ui::widget::radio::RadioGroup;
+use kentos_ui::widget::table::{self, Table};
 use kentos_ui::widget::{Dialog, horizontal_divider, overlay};
 
 use super::dialog::ToolDialog;
@@ -147,7 +148,102 @@ fn form<'a>(window: &'a ToolDialog, env: &Env<'a, '_>) -> Element<'a, Message> {
         }
         out = out.push(section);
     }
+    if let super::RunStatus::Ok { table: Some(t), .. } = &window.status {
+        out = out.push(result(t));
+    }
     out.into()
+}
+
+/// The run's table under the form (Özet istatistik, docs/adr/0200 §7): its
+/// title with Panoya kopyala and CSV olarak kaydet, then the table; a
+/// group's name on the left, the figures right-aligned.
+fn result(t: &super::dialog::ResultTable) -> Element<'_, Message> {
+    let small = |glyph: &str, text: &'static str, e: Event| {
+        button(
+            row![
+                icon(crate::icons::from_web(Some(glyph))).size(14.0),
+                label::caption(text)
+            ]
+            .spacing(5)
+            .align_y(Center),
+        )
+        .padding([3, 8])
+        .style(style::button::ghost)
+        .on_press(ev(e))
+    };
+    let named = t.columns.first().is_some_and(|c| c == "Grup");
+    // Each column as wide as its widest text (the web's table sizes its columns so): the names in
+    // the interface's face, the figures in mono.
+    let size = typography::caption();
+    let widths: Vec<f32> = t
+        .columns
+        .iter()
+        .enumerate()
+        .map(|(i, head)| {
+            let text = named && i == 0;
+            let widest = t
+                .rows
+                .iter()
+                .filter_map(|r| r.get(i))
+                .map(|c| {
+                    if text {
+                        typography::measured_width(c, size, false)
+                    } else {
+                        c.chars().count() as f32 * size * 0.62
+                    }
+                })
+                .fold(typography::measured_width(head, size, true), f32::max);
+            // The table puts its own spacing between the columns.
+            widest + 6.0
+        })
+        .collect();
+    let columns = t
+        .columns
+        .iter()
+        .zip(&widths)
+        .enumerate()
+        .map(|(i, (c, w))| {
+            let col = table::Column::new(c.as_str()).width(*w);
+            if named && i == 0 {
+                col
+            } else {
+                col.align_right()
+            }
+        });
+    let body: Vec<table::Row<'_, Message>> = t
+        .rows
+        .iter()
+        .map(|r| {
+            table::Row::new(r.iter().enumerate().map(|(i, c)| {
+                if named && i == 0 {
+                    label::caption(c.clone()).into()
+                } else {
+                    label::mono_caption(c.clone()).into()
+                }
+            }))
+        })
+        .collect();
+    let height = (28.0 * (t.rows.len() as f32 + 1.0) + 8.0).min(240.0);
+    column![
+        row![
+            container(
+                label::caption("Sonuç")
+                    .font(typography::ui_strong())
+                    .style(style::text::muted)
+            )
+            .width(Fill),
+            small("copy", "Panoya kopyala", Event::CopyTable),
+            small("export", "CSV olarak kaydet", Event::SaveTable),
+        ]
+        .spacing(4)
+        .align_y(Center),
+        horizontal_divider(),
+        container(Table::new(columns).extend(body).horizontal().height(height))
+            .style(style::container::field_box)
+            .width(Fill),
+    ]
+    .spacing(6)
+    .into()
 }
 
 fn group<'a>(

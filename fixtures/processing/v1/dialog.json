@@ -64,6 +64,13 @@
     ],
     "text": "Uygun nesneler: kapalı alan, çoklu çizgi"
    },
+   "kindsLeftOut": {
+    "sample": [
+     "xline",
+     "ray"
+    ],
+    "text": "Yardımcı çizgi, ışın alınmaz."
+   },
    "noLayer": "—"
   },
   "layer": {
@@ -108,12 +115,49 @@
     "sample": 3,
     "text": "3 nesne"
    },
+   "rows": {
+    "sample": 4,
+    "text": "4 satır"
+   },
    "has": {
     "sample": 3,
     "text": "3 nesnede var; değeri değişir."
    },
+   "present": {
+    "sample": 3,
+    "text": "3 nesnede var."
+   },
+   "presentRows": {
+    "sample": 4,
+    "text": "4 satırda var."
+   },
    "fresh": "Yeni alan: nesnelere eklenir.",
-   "missing": "Bu nesnelerde böyle bir alan yok."
+   "missing": "Bu nesnelerde böyle bir alan yok.",
+   "lacking": {
+    "sample": "Ada",
+    "text": "“Ada” kaynakta yok."
+   }
+  },
+  "file": {
+   "none": "Dosya seçilmedi",
+   "choose": "Dosya seç…",
+   "other": "Başka dosya…",
+   "size": {
+    "sample": {
+     "rows": 4,
+     "columns": 3
+    },
+    "text": "4 satır, 3 sütun"
+   },
+   "again": "Yeniden seçin: dosyanın içeriği saklanmaz.",
+   "empty": "Dosya boş.",
+   "inModel": "Model adımında dosya seçilmez: dosyanın içeriği modelde saklanmaz. Kaynağı katman yapın."
+  },
+  "result": {
+   "title": "Sonuç",
+   "copy": "Panoya kopyala",
+   "save": "CSV olarak kaydet",
+   "copied": "Tablo panoya kopyalandı."
   },
   "expression": {
    "fields": "Alanlar",
@@ -749,6 +793,717 @@
     "aliases": [
      "IFADESEC",
      "SORGU"
+    ]
+   }
+  },
+  "selection.byLocation": {
+   "title": "Konuma göre seç",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Seçilecek nesneler",
+     "description": "İlişkisi denenen nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       }
+      ]
+     }
+    },
+    {
+     "name": "relation",
+     "label": "İlişki",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "intersects",
+        "label": "Kesişen",
+        "hint": "Ortak noktası olan"
+       },
+       {
+        "value": "contains",
+        "label": "İçeren",
+        "hint": "Başvuruyu bütünüyle içine alan"
+       },
+       {
+        "value": "within",
+        "label": "İçinde kalan",
+        "hint": "Bütünüyle başvurunun içinde olan"
+       },
+       {
+        "value": "disjoint",
+        "label": "Ayrık",
+        "hint": "Hiçbir başvuruyla kesişmeyen"
+       },
+       {
+        "value": "near",
+        "label": "Uzaklıkta",
+        "hint": "Verilen uzaklıktan yakın olan"
+       },
+       {
+        "value": "centerIn",
+        "label": "Merkezi içinde",
+        "hint": "Ağırlık merkezi başvurunun içinde olan"
+       }
+      ]
+     }
+    },
+    {
+     "name": "reference",
+     "label": "Başvuru nesneleri",
+     "description": "İlişkinin karşı tarafı.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "distance",
+     "label": "Uzaklık",
+     "description": "Bu uzaklıktan yakın ya da tam bu uzaklıkta olanlar seçilir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "mode",
+     "label": "Seçim biçimi",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "new",
+        "label": "Yeni seçim",
+        "hint": "Mevcut seçim bırakılır"
+       },
+       {
+        "value": "add",
+        "label": "Seçime ekle",
+        "hint": "İlişkiyi sağlayanlar mevcut seçime eklenir"
+       },
+       {
+        "value": "remove",
+        "label": "Seçimden çıkar",
+        "hint": "İlişkiyi sağlayanlar mevcut seçimden çıkar"
+       },
+       {
+        "value": "within",
+        "label": "Seçim içinde ara",
+        "hint": "Seçili olanlardan yalnızca ilişkiyi sağlayanlar kalır"
+       }
+      ]
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "select",
+     "text": "Seçim"
+    },
+    "icon": "selectLocation",
+    "about": "Başka nesnelerle konum ilişkisi olan nesneleri seçer: kesişen, içeren, içinde kalan, ayrık, uzaklıkta ya da merkezi içinde.",
+    "help": [
+     "Seçilecek nesneler başvuru nesnelerinden en az biriyle ilişkiyi sağlıyorsa seçilir; Ayrık, hiçbiriyle kesişmeyenleri seçer.",
+     "Kesişen: ortak bir noktaları vardır (değmek de sayılır). İçeren: başvuru bütünüyle bu nesnenin alanının içindedir. İçinde kalan: nesne bütünüyle başvurunun alanının içindedir. Uzaklıkta: aradaki en kısa uzaklık verilen uzaklıktan büyük değildir. Merkezi içinde: nesnenin ağırlık merkezi ($merkez_y, $merkez_x) başvurunun alanının içinde ya da sınırındadır.",
+     "Sınırda olmak ve değmek 1 mm içinde sayılır. Bir nesne kendisiyle karşılaştırılmaz."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KONUMSEC",
+     "KONUMSALSECIM"
+    ]
+   }
+  },
+  "attributes.fromInside": {
+   "title": "İçindekinden bilgi al",
+   "rows": [
+    {
+     "name": "target",
+     "label": "Hedef alanlar",
+     "description": "Bilginin yazılacağı alanlar; kilitli katmandakiler alınmaz.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "source",
+     "label": "Kaynak nesneler",
+     "description": "Sayılan ya da değerleri alınan nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       }
+      ]
+     }
+    },
+    {
+     "name": "relation",
+     "label": "İlişki",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "within",
+        "label": "İçinde kalan",
+        "hint": "Bütünüyle alanın içinde olanlar"
+       },
+       {
+        "value": "intersects",
+        "label": "Kesişen",
+        "hint": "Alana değen ya da onu kesenler"
+       },
+       {
+        "value": "centerIn",
+        "label": "Merkezi içinde",
+        "hint": "Ağırlık merkezi alanın içinde olanlar"
+       }
+      ]
+     }
+    },
+    {
+     "name": "stat",
+     "label": "İstatistik",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "count",
+        "label": "Sayı",
+        "hint": "Kaynak nesnelerin sayısı"
+       },
+       {
+        "value": "sum",
+        "label": "Toplam",
+        "hint": "Alanın değerlerinin toplamı"
+       },
+       {
+        "value": "mean",
+        "label": "Ortalama",
+        "hint": "Alanın değerlerinin ortalaması"
+       },
+       {
+        "value": "min",
+        "label": "En az",
+        "hint": "Alanın en küçük değeri"
+       },
+       {
+        "value": "max",
+        "label": "En çok",
+        "hint": "Alanın en büyük değeri"
+       },
+       {
+        "value": "first",
+        "label": "İlk değer",
+        "hint": "Çizim sırasıyla ilk dolu değer, olduğu gibi"
+       }
+      ]
+     }
+    },
+    {
+     "name": "field",
+     "label": "Alan",
+     "description": "Kaynak nesnelerin değeri alınan alanı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Yazılacak alan",
+     "description": "Listeden var olan bir alanı seçin ya da yeni bir ad yazın.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "combo",
+      "placeholder": "Alan adı"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "table",
+     "text": "Öznitelik"
+    },
+    "icon": "infoInside",
+    "about": "Her alana içindeki ya da ona değen nesnelerin sayısını ya da bir alanlarının toplamını, ortalamasını, en azını, en çoğunu yazar.",
+    "help": [
+     "Örnekler: parsellere içlerindeki ağaçların sayısı; adalara yapıların taban alanlarının toplamı; mahallelere içindeki yapıların kat ortalaması.",
+     "İlişki kaynağın hedefe göre durumudur: İçinde kalan bütünüyle içeride olanları, Kesişen alana değen ya da onu kesenleri, Merkezi içinde ağırlık merkezi içeride olanları alır. Sınır 1 mm içinde sayılır.",
+     "Toplam, en az ve en çok kesindir; ortalama yazılacak alan ondalık sayıysa onun basamağına, değilse değerlerin en çok basamağından iki fazlasına yarım çifte yuvarlanır. Sayı olarak okunamayan değerler atlanır ve söylenir. Hiçbir kaynak yoksa Sayı 0 yazar, öbürleri alanı boşaltır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": true,
+    "aliases": [
+     "ICBILGI",
+     "ICINDEKIBILGI"
+    ]
+   }
+  },
+  "attributes.fromEnclosing": {
+   "title": "Çevreleyenden bilgi al",
+   "rows": [
+    {
+     "name": "target",
+     "label": "Hedef nesneler",
+     "description": "Bilginin yazılacağı nesneler; kilitli katmandakiler alınmaz.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "source",
+     "label": "Kaynak alanlar",
+     "description": "Hedefleri çevreleyen alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       }
+      ]
+     }
+    },
+    {
+     "name": "field",
+     "label": "Alan",
+     "description": "Kaynak alanların değeri alınan alanı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Yazılacak alan",
+     "description": "Boş bırakılırsa kaynağın alanının adı.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "combo",
+      "placeholder": "Alan adı"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "table",
+     "text": "Öznitelik"
+    },
+    "icon": "infoEnclosing",
+    "about": "Her nesneye ağırlık merkezinin içinde kaldığı alanın bir alanını yazar: yapıya parsel numarası, parsele mahalle adı.",
+    "help": [
+     "Nesnenin merkezi ifadelerdeki $merkez_y, $merkez_x’tir: alanların ağırlık merkezi, öbür nesnelerin yerleşim noktası. Merkez alanın sınırındaysa (1 mm içinde) o alan da sayılır.",
+     "Merkez birden çok alanın içindeyse çizim sırasıyla ilki alınır; hiçbirinin içinde değilse nesne değişmez. İkisi de sayılır ve söylenir.",
+     "Yazılacak alan boş bırakılırsa kaynağın alanının adı kullanılır. İşlem tek adımda geri alınır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "CEVREBILGI",
+     "CEVRELEYENBILGI"
+    ]
+   }
+  },
+  "statistics.summary": {
+   "title": "Özet istatistik",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "İstatistiği alınan nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "field",
+     "label": "Alan",
+     "description": "Değerleri sayı olarak okunan alan.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "group",
+     "label": "Grupla",
+     "description": "Boş bırakılırsa bütün nesneler tek satırdır.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "measure",
+     "text": "Analiz"
+    },
+    "icon": "statsSummary",
+    "about": "Bir alanın toplamını, ortalamasını, en azını, en çoğunu ve standart sapmasını, isterseniz başka bir alanın değerlerine göre gruplayarak tablo olarak verir.",
+    "help": [
+     "Örnekler: yapıların taban alanlarının kat sayısına göre toplamı; parsellerin tapu alanlarının ortalaması ve standart sapması.",
+     "Değerler sayı olarak okunur (ondalık nokta ya da virgül); okunamayanlar atlanır ve söylenir. Toplam, en az ve en çok kesindir; ortalama ve standart sapma (örneklem) değerlerin en çok basamağından iki fazla basamakla yazılır.",
+     "Gruplar adlarının doğal sırasıyla, boş grup “(boş)” en sonda; gruplanınca son satır bütün nesnelerin toplamıdır. Çizim değişmez."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "OZETIST",
+     "ISTATISTIK"
+    ]
+   }
+  },
+  "attributes.joinByField": {
+   "title": "Anahtarla birleştir",
+   "rows": [
+    {
+     "name": "target",
+     "label": "Hedef nesneler",
+     "description": "Özniteliklerin aktarılacağı nesneler; kilitli katmandakiler alınmaz.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "targetKey",
+     "label": "Hedef anahtar",
+     "description": "Hedef nesnelerin anahtar alanı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "sourceKind",
+     "label": "Kaynak",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "layer",
+        "label": "Katman",
+        "hint": "Başka nesnelerin öznitelikleri"
+       },
+       {
+        "value": "file",
+        "label": "Dosya",
+        "hint": "CSV, TXT ya da Excel dosyası"
+       }
+      ]
+     }
+    },
+    {
+     "name": "source",
+     "label": "Kaynak nesneler",
+     "description": "Özniteliklerin alınacağı nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       }
+      ]
+     }
+    },
+    {
+     "name": "file",
+     "label": "Dosya",
+     "description": "İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "file",
+      "accept": [
+       ".csv",
+       ".txt",
+       ".xlsx"
+      ]
+     }
+    },
+    {
+     "name": "sourceKey",
+     "label": "Kaynak anahtar",
+     "description": "Boş bırakılırsa hedef anahtarla aynı ad.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "fields",
+     "label": "Aktarılacak alanlar",
+     "description": "Boş bırakılırsa anahtardan başka bütün alanlar.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin",
+      "multiple": true
+     }
+    },
+    {
+     "name": "prefix",
+     "label": "Önek",
+     "description": "Aktarılan alanların adının başına eklenir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "Tapu "
+     }
+    },
+    {
+     "name": "existing",
+     "label": "Var olan değerler",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "overwrite",
+        "label": "Üzerine yaz",
+        "hint": "Hedefteki değer kaynağınkiyle değişir"
+       },
+       {
+        "value": "empty",
+        "label": "Yalnız boşlara",
+        "hint": "Hedefte dolu olan değer kalır"
+       }
+      ]
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "table",
+     "text": "Öznitelik"
+    },
+    "icon": "joinField",
+    "about": "Ortak bir anahtar alanla (parsel numarası, kimlik) başka bir katmandan ya da CSV, TXT, Excel dosyasından öznitelik aktarır.",
+    "help": [
+     "Örnek: tapu kayıtlarının malik ve hisse sütunlarını parsel numarasıyla parsellere aktarmak.",
+     "Anahtarlar baştaki ve sondaki boşluklar atılarak karşılaştırılır; iki taraf da sayıysa sayı olarak (007 ile 7 aynı), değilse metin olarak tam. Kaynakta aynı anahtar birden çok kez varsa ilk satır alınır ve söylenir.",
+     "Dosyanın ilk satırı sütun adlarıdır; Excel dosyasının ilk sayfası okunur. Aktarılacak alanlar boş bırakılırsa anahtardan başka bütün alanlar aktarılır; önek yeni alanların adının başına eklenir. Kaynakta boş olan değer hedefte alanı boşaltır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ANAHTARBIRLESTIR",
+     "VERIAKTAR"
     ]
    }
   },
@@ -1416,6 +2171,7 @@
      "text": "",
      "actions": []
     },
+    "result": null,
     "footer": {
      "run": {
       "label": "Çalıştır",
@@ -2197,6 +2953,7 @@
      "text": "",
      "actions": []
     },
+    "result": null,
     "footer": {
      "run": {
       "label": "Çalıştır",
@@ -2974,6 +3731,7 @@
      "text": "",
      "actions": []
     },
+    "result": null,
     "footer": {
      "run": {
       "label": "Çalıştır",
@@ -3361,6 +4119,7 @@
      "text": "",
      "actions": []
     },
+    "result": null,
     "footer": {
      "run": {
       "label": "Çalıştır",
@@ -3649,6 +4408,7 @@
      "text": "",
      "actions": []
     },
+    "result": null,
     "footer": {
      "run": {
       "label": "Çalıştır",
@@ -3922,6 +4682,7 @@
      "text": "",
      "actions": []
     },
+    "result": null,
     "footer": {
      "run": {
       "label": "Çalıştır",
@@ -4548,6 +5309,7 @@
      "text": "",
      "actions": []
     },
+    "result": null,
     "footer": {
      "run": {
       "label": "Çalıştır",
@@ -4740,6 +5502,7 @@
      "text": "",
      "actions": []
     },
+    "result": null,
     "footer": {
      "run": {
       "label": "Çalıştır",
@@ -5147,6 +5910,7 @@
      "text": "",
      "actions": []
     },
+    "result": null,
     "footer": {
      "run": {
       "label": "Çalıştır",
@@ -5543,6 +6307,7 @@
      "text": "",
      "actions": []
     },
+    "result": null,
     "footer": {
      "run": {
       "label": "Çalıştır",
@@ -5767,6 +6532,7 @@
      "text": "",
      "actions": []
     },
+    "result": null,
     "footer": {
      "run": {
       "label": "Çalıştır",
@@ -6639,6 +7405,7 @@
      "text": "",
      "actions": []
     },
+    "result": null,
     "footer": {
      "run": {
       "label": "Çalıştır",
@@ -6740,6 +7507,1417 @@
         },
         "checked": false,
         "disabled": false
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "by-location",
+   "title": "Konuma göre seç (ADR 0200): Uzaklıkta seçilince Uzaklık görünür, virgüllü uzaklık; başvuru seçimken seçim boşsa sorun başvurunun altında; başvuru katman olunca çalışır ve seçer",
+   "open": {
+    "tool": "selection.byLocation"
+   },
+   "selection": [],
+   "available": [
+    "client"
+   ],
+   "steps": [
+    {
+     "do": {
+      "choose": {
+       "name": "relation",
+       "value": "near"
+      }
+     },
+     "expect": {
+      "values": {
+       "relation": "near"
+      },
+      "sections": {
+       "groups": [
+        {
+         "title": "Girdi",
+         "rows": [
+          "input",
+          "reference"
+         ]
+        },
+        {
+         "title": "Ayarlar",
+         "rows": [
+          "relation",
+          "distance",
+          "mode"
+         ]
+        }
+       ],
+       "advanced": null
+      }
+     }
+    },
+    {
+     "do": {
+      "type": {
+       "name": "distance",
+       "text": "2,5"
+      }
+     },
+     "expect": {
+      "values": {
+       "distance": 2.5
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "issues": {
+       "reference": "“Başvuru nesneleri”: seçili nesneler arasında uygun nesne yok. Önce nesneleri seçin ya da kapsamı değiştirin."
+      },
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 1 alanı düzeltin.",
+       "actions": []
+      }
+     }
+    },
+    {
+     "do": {
+      "scope": {
+       "name": "reference",
+       "scope": "layer"
+      }
+     },
+     "expect": {
+      "values": {
+       "reference": {
+        "scope": "layer",
+        "layerId": "cizim"
+       }
+      },
+      "issues": {},
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      },
+      "fields": {
+       "reference": {
+        "scope": "layer",
+        "layer": {
+         "text": "Çizim",
+         "items": [
+          {
+           "id": "cizim",
+           "label": "Çizim",
+           "checked": true
+          },
+          {
+           "id": "parsel",
+           "label": "Parsel",
+           "checked": false
+          },
+          {
+           "id": "kilitli",
+           "label": "Kilitli katman",
+           "checked": false
+          },
+          {
+           "id": "gizli",
+           "label": "Gizli katman",
+           "checked": false
+          },
+          {
+           "id": "mevcut",
+           "label": "Mevcut noktalar",
+           "checked": false
+          }
+         ]
+        },
+        "count": {
+         "text": "2 nesne (çoklu çizgi, çizgi); “Çizim” katmanında",
+         "empty": false
+        },
+        "kinds": {
+         "chips": [
+          {
+           "kind": "polyline",
+           "label": "Çoklu çizgi",
+           "count": 1,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          },
+          {
+           "kind": "line",
+           "label": "Çizgi",
+           "count": 1,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "scopeLayer": {
+       "name": "reference",
+       "layerId": "mevcut"
+      }
+     },
+     "expect": {
+      "values": {
+       "reference": {
+        "scope": "layer",
+        "layerId": "mevcut"
+       }
+      },
+      "fields": {
+       "reference": {
+        "scope": "layer",
+        "layer": {
+         "text": "Mevcut noktalar",
+         "items": [
+          {
+           "id": "cizim",
+           "label": "Çizim",
+           "checked": false
+          },
+          {
+           "id": "parsel",
+           "label": "Parsel",
+           "checked": false
+          },
+          {
+           "id": "kilitli",
+           "label": "Kilitli katman",
+           "checked": false
+          },
+          {
+           "id": "gizli",
+           "label": "Gizli katman",
+           "checked": false
+          },
+          {
+           "id": "mevcut",
+           "label": "Mevcut noktalar",
+           "checked": true
+          }
+         ]
+        },
+        "count": {
+         "text": "3 nokta; “Mevcut noktalar” katmanında",
+         "empty": false
+        },
+        "kinds": {
+         "note": "Yardımcı çizgi, ışın alınmaz."
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "status": {
+       "kind": "ok",
+       "icon": "success",
+       "text": "2 / 9 nesne “Uzaklıkta” ilişkisini sağladı; seçimde 2 nesne var.",
+       "actions": [
+        "zoom"
+       ]
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "input": {
+      "scope": "all"
+     },
+     "relation": "intersects",
+     "reference": {
+      "scope": "selection"
+     },
+     "distance": 10,
+     "mode": "new"
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "input",
+        "reference"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "relation",
+        "mode"
+       ]
+      }
+     ],
+     "advanced": null
+    },
+    "issues": {},
+    "preview": null,
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "result": null,
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": "bu çalıştırmada",
+       "disabled": false,
+       "checked": true
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": "yakında",
+       "disabled": true,
+       "checked": false
+      }
+     ],
+     "hint": null,
+     "choice": "client"
+    },
+    "fields": {
+     "input": {
+      "scope": "all",
+      "layer": null,
+      "count": {
+       "text": "9 nesne (kapalı alan, çoklu çizgi, çizgi, nokta); tümü (görünen katmanlar)",
+       "empty": false
+      },
+      "kinds": {
+       "chips": [
+        {
+         "kind": "polygon",
+         "label": "Kapalı alan",
+         "count": 4,
+         "pressed": true,
+         "title": "Bu türü dışarıda bırak"
+        },
+        {
+         "kind": "point",
+         "label": "Nokta",
+         "count": 3,
+         "pressed": true,
+         "title": "Bu türü dışarıda bırak"
+        },
+        {
+         "kind": "polyline",
+         "label": "Çoklu çizgi",
+         "count": 1,
+         "pressed": true,
+         "title": "Bu türü dışarıda bırak"
+        },
+        {
+         "kind": "line",
+         "label": "Çizgi",
+         "count": 1,
+         "pressed": true,
+         "title": "Bu türü dışarıda bırak"
+        }
+       ]
+      }
+     },
+     "reference": {
+      "scope": "selection",
+      "layer": null,
+      "count": {
+       "text": "Seçili nesneler arasında uygun nesne yok",
+       "empty": true
+      },
+      "kinds": {
+       "note": "Yardımcı çizgi, ışın alınmaz."
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "summary",
+   "title": "Özet istatistik (ADR 0200): alan ve gruplama listeleri, çalıştırınca sonuç tablosu (Grup sütunu, Toplam satırı); bir değer değişince tablo kalkar; gruplamasız tek satır",
+   "open": {
+    "tool": "statistics.summary"
+   },
+   "selection": [],
+   "available": [
+    "client"
+   ],
+   "steps": [
+    {
+     "do": {
+      "scopeLayer": {
+       "name": "input",
+       "layerId": "parsel"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       }
+      },
+      "fields": {
+       "input": {
+        "scope": "layer",
+        "layer": {
+         "text": "Parsel",
+         "items": [
+          {
+           "id": "cizim",
+           "label": "Çizim",
+           "checked": false
+          },
+          {
+           "id": "parsel",
+           "label": "Parsel",
+           "checked": true
+          },
+          {
+           "id": "kilitli",
+           "label": "Kilitli katman",
+           "checked": false
+          },
+          {
+           "id": "gizli",
+           "label": "Gizli katman",
+           "checked": false
+          },
+          {
+           "id": "mevcut",
+           "label": "Mevcut noktalar",
+           "checked": false
+          }
+         ]
+        },
+        "count": {
+         "text": "3 kapalı alan; “Parsel” katmanında",
+         "empty": false
+        },
+        "kinds": null
+       },
+       "field": {
+        "text": "Alan seçin",
+        "note": "",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": false
+         }
+        ]
+       },
+       "group": {
+        "text": "Alan seçin",
+        "note": "",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "field",
+       "value": "Parsel"
+      }
+     },
+     "expect": {
+      "values": {
+       "field": "Parsel"
+      },
+      "fields": {
+       "field": {
+        "text": "Parsel",
+        "note": "3 nesnede var.",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": true
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "group",
+       "value": "Nitelik"
+      }
+     },
+     "expect": {
+      "values": {
+       "group": "Nitelik"
+      },
+      "fields": {
+       "group": {
+        "text": "Nitelik",
+        "note": "3 nesnede var.",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": true
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "status": {
+       "kind": "ok",
+       "icon": "success",
+       "text": "3 nesnede “Parsel”: 3 değer okundu, 2 grup.",
+       "actions": []
+      },
+      "result": {
+       "columns": [
+        "Grup",
+        "Nesne",
+        "Değer",
+        "Toplam",
+        "Ortalama",
+        "En az",
+        "En çok",
+        "Std. sapma"
+       ],
+       "rows": [
+        [
+         "Arsa",
+         "2",
+         "2",
+         "3",
+         "1.50",
+         "1",
+         "2",
+         "0.71"
+        ],
+        [
+         "Tarla",
+         "1",
+         "1",
+         "3",
+         "3.00",
+         "3",
+         "3",
+         ""
+        ],
+        [
+         "Toplam",
+         "3",
+         "3",
+         "6",
+         "2.00",
+         "1",
+         "3",
+         "1.00"
+        ]
+       ]
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "group",
+       "value": ""
+      }
+     },
+     "expect": {
+      "values": {
+       "group": ""
+      },
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      },
+      "result": null,
+      "fields": {
+       "group": {
+        "text": "Alan seçin",
+        "note": "",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "status": {
+       "kind": "ok",
+       "icon": "success",
+       "text": "3 nesnede “Parsel”: 3 değer okundu.",
+       "actions": []
+      },
+      "result": {
+       "columns": [
+        "Nesne",
+        "Değer",
+        "Toplam",
+        "Ortalama",
+        "En az",
+        "En çok",
+        "Std. sapma"
+       ],
+       "rows": [
+        [
+         "3",
+         "3",
+         "6",
+         "2.00",
+         "1",
+         "3",
+         "1.00"
+        ]
+       ]
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "field": "",
+     "group": ""
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "input"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "field",
+        "group"
+       ]
+      }
+     ],
+     "advanced": null
+    },
+    "issues": {},
+    "preview": null,
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "result": null,
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": "bu çalıştırmada",
+       "disabled": false,
+       "checked": true
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": "yakında",
+       "disabled": true,
+       "checked": false
+      }
+     ],
+     "hint": null,
+     "choice": "client"
+    },
+    "fields": {
+     "input": {
+      "scope": "layer",
+      "layer": {
+       "text": "Çizim",
+       "items": [
+        {
+         "id": "cizim",
+         "label": "Çizim",
+         "checked": true
+        },
+        {
+         "id": "parsel",
+         "label": "Parsel",
+         "checked": false
+        },
+        {
+         "id": "kilitli",
+         "label": "Kilitli katman",
+         "checked": false
+        },
+        {
+         "id": "gizli",
+         "label": "Gizli katman",
+         "checked": false
+        },
+        {
+         "id": "mevcut",
+         "label": "Mevcut noktalar",
+         "checked": false
+        }
+       ]
+      },
+      "count": {
+       "text": "2 nesne (çoklu çizgi, çizgi); “Çizim” katmanında",
+       "empty": false
+      },
+      "kinds": {
+       "chips": [
+        {
+         "kind": "polyline",
+         "label": "Çoklu çizgi",
+         "count": 1,
+         "pressed": true,
+         "title": "Bu türü dışarıda bırak"
+        },
+        {
+         "kind": "line",
+         "label": "Çizgi",
+         "count": 1,
+         "pressed": true,
+         "title": "Bu türü dışarıda bırak"
+        }
+       ]
+      }
+     },
+     "field": {
+      "text": "Alan seçin",
+      "note": "",
+      "items": [
+       {
+        "label": "Bu nesnelerde öznitelik alanı yok",
+        "disabled": true
+       }
+      ]
+     },
+     "group": {
+      "text": "Alan seçin",
+      "note": "",
+      "items": [
+       {
+        "label": "Bu nesnelerde öznitelik alanı yok",
+        "disabled": true
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "join-file",
+   "title": "Anahtarla birleştir (ADR 0200): son değerlerde yalnız adı kalan dosya yeniden istenir; seçilen dosyanın sütunları anahtar ve aktarılacak alanlar listesinde; iki alan işaretlenir; çalıştırma ve geri alma",
+   "open": {
+    "tool": "attributes.joinByField"
+   },
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "available": [
+    "client"
+   ],
+   "last": {
+    "sourceKind": "file",
+    "file": {
+     "name": "eski.csv"
+    }
+   },
+   "steps": [
+    {
+     "do": {
+      "scope": {
+       "name": "target",
+       "scope": "selection"
+      }
+     },
+     "expect": {
+      "values": {
+       "target": {
+        "scope": "selection"
+       }
+      },
+      "fields": {
+       "target": {
+        "scope": "selection",
+        "layer": null,
+        "count": {
+         "text": "3 kapalı alan; seçili nesneler",
+         "empty": false
+        },
+        "kinds": null
+       },
+       "targetKey": {
+        "text": "Alan seçin",
+        "note": "",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "issues": {
+       "targetKey": "“Hedef anahtar”: bir alan adı seçin.",
+       "file": "“Dosya”: “eski.csv” dosyasını yeniden seçin; dosyanın içeriği saklanmaz."
+      },
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 2 alanı düzeltin.",
+       "actions": []
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "file",
+       "value": {
+        "name": "malikler.csv",
+        "rows": [
+         [
+          "Parsel",
+          "Malik",
+          "Hisse"
+         ],
+         [
+          "1",
+          "Ayşe Yılmaz",
+          "1/2"
+         ],
+         [
+          "3",
+          "Mehmet Kaya",
+          "1"
+         ],
+         [
+          "03",
+          "Tekrar Kayıt",
+          "1"
+         ],
+         [
+          "5",
+          "Kimse",
+          "1"
+         ]
+        ]
+       }
+      }
+     },
+     "expect": {
+      "values": {
+       "file": {
+        "name": "malikler.csv",
+        "rows": [
+         [
+          "Parsel",
+          "Malik",
+          "Hisse"
+         ],
+         [
+          "1",
+          "Ayşe Yılmaz",
+          "1/2"
+         ],
+         [
+          "3",
+          "Mehmet Kaya",
+          "1"
+         ],
+         [
+          "03",
+          "Tekrar Kayıt",
+          "1"
+         ],
+         [
+          "5",
+          "Kimse",
+          "1"
+         ]
+        ]
+       }
+      },
+      "issues": {
+       "targetKey": "“Hedef anahtar”: bir alan adı seçin."
+      },
+      "status": {
+       "kind": "warn",
+       "icon": "warning",
+       "text": "Çalıştırmadan önce 1 alanı düzeltin.",
+       "actions": []
+      },
+      "fields": {
+       "file": {
+        "text": "malikler.csv",
+        "note": "4 satır, 3 sütun",
+        "button": "Başka dosya…",
+        "chosen": true
+       },
+       "sourceKey": {
+        "text": "Alan seçin",
+        "note": "",
+        "items": [
+         {
+          "label": "Parsel",
+          "hint": "4 satır",
+          "checked": false
+         },
+         {
+          "label": "Malik",
+          "hint": "4 satır",
+          "checked": false
+         },
+         {
+          "label": "Hisse",
+          "hint": "4 satır",
+          "checked": false
+         }
+        ]
+       },
+       "fields": {
+        "text": "Alan seçin",
+        "note": "",
+        "items": [
+         {
+          "label": "Parsel",
+          "hint": "4 satır",
+          "checked": false
+         },
+         {
+          "label": "Malik",
+          "hint": "4 satır",
+          "checked": false
+         },
+         {
+          "label": "Hisse",
+          "hint": "4 satır",
+          "checked": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "targetKey",
+       "value": "Parsel"
+      }
+     },
+     "expect": {
+      "values": {
+       "targetKey": "Parsel"
+      },
+      "issues": {},
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      },
+      "fields": {
+       "targetKey": {
+        "text": "Parsel",
+        "note": "3 nesnede var.",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": true
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "fields",
+       "value": "Malik"
+      }
+     },
+     "expect": {
+      "values": {
+       "fields": "Malik"
+      },
+      "fields": {
+       "fields": {
+        "text": "Malik",
+        "note": "",
+        "items": [
+         {
+          "label": "Parsel",
+          "hint": "4 satır",
+          "checked": false
+         },
+         {
+          "label": "Malik",
+          "hint": "4 satır",
+          "checked": true
+         },
+         {
+          "label": "Hisse",
+          "hint": "4 satır",
+          "checked": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "choose": {
+       "name": "fields",
+       "value": "Malik, Hisse"
+      }
+     },
+     "expect": {
+      "values": {
+       "fields": "Malik, Hisse"
+      },
+      "fields": {
+       "fields": {
+        "text": "Malik, Hisse",
+        "note": "",
+        "items": [
+         {
+          "label": "Parsel",
+          "hint": "4 satır",
+          "checked": false
+         },
+         {
+          "label": "Malik",
+          "hint": "4 satır",
+          "checked": true
+         },
+         {
+          "label": "Hisse",
+          "hint": "4 satır",
+          "checked": true
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "run": true
+     },
+     "expect": {
+      "status": {
+       "kind": "ok",
+       "icon": "success",
+       "text": "2 nesne eşleşti; 2 nesnede 2 alan aktarıldı.",
+       "actions": [
+        "select",
+        "undo"
+       ],
+       "pick": [
+        1,
+        3
+       ]
+      },
+      "fields": {
+       "targetKey": {
+        "text": "Parsel",
+        "note": "3 nesnede var.",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": true
+         },
+         {
+          "label": "Hisse",
+          "hint": "2 nesne",
+          "checked": false
+         },
+         {
+          "label": "Malik",
+          "hint": "2 nesne",
+          "checked": false
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "undo": true
+     },
+     "expect": {
+      "status": {
+       "kind": "idle",
+       "icon": null,
+       "text": "",
+       "actions": []
+      },
+      "fields": {
+       "targetKey": {
+        "text": "Parsel",
+        "note": "3 nesnede var.",
+        "items": [
+         {
+          "label": "Ada",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Nitelik",
+          "hint": "3 nesne",
+          "checked": false
+         },
+         {
+          "label": "Parsel",
+          "hint": "3 nesne",
+          "checked": true
+         }
+        ]
+       }
+      }
+     }
+    }
+   ],
+   "opened": {
+    "values": {
+     "target": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "targetKey": "",
+     "sourceKind": "file",
+     "source": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "file": {
+      "name": "eski.csv"
+     },
+     "sourceKey": "",
+     "fields": "",
+     "prefix": "",
+     "existing": "overwrite"
+    },
+    "sections": {
+     "groups": [
+      {
+       "title": "Girdi",
+       "rows": [
+        "target"
+       ]
+      },
+      {
+       "title": "Ayarlar",
+       "rows": [
+        "targetKey",
+        "sourceKind",
+        "file",
+        "sourceKey",
+        "fields",
+        "prefix",
+        "existing"
+       ]
+      }
+     ],
+     "advanced": null
+    },
+    "issues": {},
+    "preview": null,
+    "status": {
+     "kind": "idle",
+     "icon": null,
+     "text": "",
+     "actions": []
+    },
+    "result": null,
+    "footer": {
+     "run": {
+      "label": "Çalıştır",
+      "disabled": false
+     },
+     "close": "Kapat",
+     "reset": {
+      "disabled": false
+     }
+    },
+    "targets": {
+     "options": [
+      {
+       "value": "client",
+       "label": "Bu tarayıcıda",
+       "note": "bu çalıştırmada",
+       "disabled": false,
+       "checked": true
+      },
+      {
+       "value": "worker",
+       "label": "Arka planda (worker)",
+       "note": "yakında",
+       "disabled": true,
+       "checked": false
+      }
+     ],
+     "hint": null,
+     "choice": "client"
+    },
+    "fields": {
+     "target": {
+      "scope": "layer",
+      "layer": {
+       "text": "Çizim",
+       "items": [
+        {
+         "id": "cizim",
+         "label": "Çizim",
+         "checked": true
+        },
+        {
+         "id": "parsel",
+         "label": "Parsel",
+         "checked": false
+        },
+        {
+         "id": "kilitli",
+         "label": "Kilitli katman",
+         "checked": false
+        },
+        {
+         "id": "gizli",
+         "label": "Gizli katman",
+         "checked": false
+        },
+        {
+         "id": "mevcut",
+         "label": "Mevcut noktalar",
+         "checked": false
+        }
+       ]
+      },
+      "count": {
+       "text": "2 nesne (çoklu çizgi, çizgi); “Çizim” katmanında",
+       "empty": false
+      },
+      "kinds": {
+       "chips": [
+        {
+         "kind": "polyline",
+         "label": "Çoklu çizgi",
+         "count": 1,
+         "pressed": true,
+         "title": "Bu türü dışarıda bırak"
+        },
+        {
+         "kind": "line",
+         "label": "Çizgi",
+         "count": 1,
+         "pressed": true,
+         "title": "Bu türü dışarıda bırak"
+        }
+       ]
+      }
+     },
+     "targetKey": {
+      "text": "Alan seçin",
+      "note": "",
+      "items": [
+       {
+        "label": "Bu nesnelerde öznitelik alanı yok",
+        "disabled": true
+       }
+      ]
+     },
+     "file": {
+      "text": "eski.csv",
+      "note": "Yeniden seçin: dosyanın içeriği saklanmaz.",
+      "button": "Dosya seç…",
+      "chosen": false
+     },
+     "sourceKey": {
+      "text": "Alan seçin",
+      "note": "",
+      "items": [
+       {
+        "label": "Bu nesnelerde öznitelik alanı yok",
+        "disabled": true
+       }
+      ]
+     },
+     "fields": {
+      "text": "Alan seçin",
+      "note": "",
+      "items": [
+       {
+        "label": "Bu nesnelerde öznitelik alanı yok",
+        "disabled": true
        }
       ]
      }
