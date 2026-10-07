@@ -1,6 +1,19 @@
 {
  "declaredSrid": 2320,
  "encoding": "Windows-1254",
+ "fields": {
+  "yollarz": [
+   {
+    "name": "AD",
+    "kind": "text",
+    "length": 30
+   },
+   {
+    "name": "KOD",
+    "kind": "integer"
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "polyline",

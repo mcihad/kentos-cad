@@ -176,9 +176,17 @@ pub struct NewObject {
 /// `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `layer_not_found`, `not_a_layer`, `layer_locked`, `unknown_block` (each
 /// insert's block, in order; docs/adr/0144), `link_not_found` (each linked
-/// text's object, in order: no object of the drawing has that id); on the
-/// desktop also `slots_exhausted`. Warning: `layer_hidden` (they are
-/// written all the same).
+/// text's object, in order: no object of the drawing has that id), then
+/// `invalid_attribute` and `attribute_required` (each object's attributes by
+/// the layer's fields, objects in order, names in theirs, at
+/// `objects[i].attrs.<name>`; docs/adr/0199 §2); on the desktop also
+/// `slots_exhausted`. Warning: `layer_hidden` (they are written all the same).
+///
+/// A layer with fields (docs/adr/0199 §2): a value given to a field's key is
+/// written in its canonical text; a value that does not keep the field's
+/// rules is refused (`invalid_attribute`), an empty one of a required field
+/// too (`attribute_required`); a field an object does not give takes its
+/// default. A required field without a value or a default is not refused.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

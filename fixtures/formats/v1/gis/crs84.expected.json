@@ -1,5 +1,13 @@
 {
  "declaredSrid": 4326,
+ "fields": {
+  "crs84": [
+   {
+    "name": "ad",
+    "kind": "text"
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "point",

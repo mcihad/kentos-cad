@@ -34,7 +34,7 @@ use crate::watch::{EVERY, Step};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES,
-    SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
+    SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TABLES,
     SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
@@ -137,6 +137,8 @@ pub(super) struct Features {
     images: bool,
     /// Schema 25: a text's curve, `path` (docs/adr/0196).
     text_paths: bool,
+    /// Schema 26: a layer's fields, `fields` (docs/adr/0199 §1).
+    pub(super) layer_fields: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -168,6 +170,7 @@ impl Features {
             hatches: schema >= SCHEMA_WITH_HATCH_PATTERNS,
             images: schema >= SCHEMA_WITH_IMAGES,
             text_paths: schema >= SCHEMA_WITH_TEXT_PATHS,
+            layer_fields: schema >= SCHEMA_WITH_LAYER_FIELDS,
             uids: true,
         }
     }

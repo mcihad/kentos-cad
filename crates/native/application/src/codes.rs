@@ -86,8 +86,13 @@ pub const NO_OBJECTS: &str = "no_objects";
 pub const EMPTY_TEXT: &str = "empty_text";
 /// No property given (`cad.entities.set`).
 pub const NOTHING_TO_SET: &str = "nothing_to_set";
-/// An attribute name empty or only white space (`cad.entities.set`).
+/// An attribute name empty or only white space (`cad.entities.set`); a
+/// value that does not keep its layer's field's rules (`cad.entities.set`,
+/// `cad.entities.create`, docs/adr/0199 §2).
 pub const INVALID_ATTRIBUTE: &str = "invalid_attribute";
+/// A required field of the layer written empty or taken away
+/// (`cad.entities.set`, `cad.entities.create`, docs/adr/0199 §2).
+pub const ATTRIBUTE_REQUIRED: &str = "attribute_required";
 /// A line weight that is not a number from 0 to 100 mm (`cad.entities.set`, docs/adr/0139).
 pub const INVALID_LINE_WEIGHT: &str = "invalid_line_weight";
 /// An insert's scale that is not above zero (its geometry, docs/adr/0144).

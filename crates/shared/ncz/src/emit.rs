@@ -845,6 +845,7 @@ impl Emitter {
                     count: l.count,
                     kinds: BTreeMap::new(),
                     bounds: None,
+                    fields: Vec::new(),
                 }
             })
             .collect()

@@ -12,6 +12,10 @@ import { entityBounds, type Entity } from './entities';
  *   scale, from another drawing; the same names skipped or replaced.
  * - `fileBlock`: another drawing's objects but pictures and tables as one block, its base the lower left of their
  *   extent; their layers by path (the missing made), their blocks and styles brought in under names this drawing has not.
+ * - `layerTake`: another drawing's layer with its objects (Kaynaklar's Katman olarak ekle, docs/adr/0199 §7): the layer
+ *   by path (a met one kept), the layers their blocks' objects are on, the blocks by name (a met name is ours), the
+ *   styles by name (the missing added), the library items the objects and the made layers draw with; links, ties and a
+ *   table's source dropped (the objects take new ids).
  *
  * The rules read and write the drawings as the contract's JSON, as the reference does: an object's style, link and tie
  * are its fields there.
@@ -446,4 +450,78 @@ export function fileBlock(oursIn: Json, theirs: Json, file: string): { drawing: 
     entities: kept.map((e, i) => ({ ...mapObject(e, layerOf, blockOf, styles), id: i + 1 })),
   });
   return { drawing: ours, images: all.filter((e) => e.kind === 'image').length, tables: all.filter((e) => e.kind === 'table').length };
+}
+
+// ── 4. A layer with its objects ───────────────────────────────────────
+
+/**
+ * Their layer at `path` with its objects into `ours` (docs/adr/0199 §7): the new drawing (its objects as they were) and
+ * the objects to add, numbered from 1; null when `path` is not a layer of theirs or our node at it is not a layer.
+ */
+export function layerTake(oursIn: Json, theirs: Json, path: string): { drawing: Json; objects: Json[] } | null {
+  const ours = clone(oursIn);
+  const target = walk(list(theirs, 'layers')).find(([n, here]) => n.type === 'layer' && here.join(' / ') === path)?.[0];
+  if (!target) return null;
+  const objects = list(theirs, 'entities').filter((e) => e.layerId === target.id);
+  const nested = placedBlocks(objects, blocksById(theirs));
+  const nestedBlocks = list(theirs, 'blocks').filter((b) => nested.has(b.id));
+  const pieces = [...objects, ...nestedBlocks.flatMap((b) => list(b, 'entities'))];
+  const theirPaths = pathOf(list(theirs, 'layers'));
+  const wanted = new Set([path]);
+  for (const e of pieces) {
+    const here = theirPaths.get(e.layerId);
+    if (here) wanted.add(here.join(' / '));
+  }
+  const before = allIds(list(ours, 'layers'));
+  takeLayers(ours, theirs, wanted, 'skip', new Set(before));
+  if (ourNodeFor(ours, theirPaths, target.id, false) === null) return null;
+  const madeStyles = walk(list(ours, 'layers'))
+    .filter(([n]) => !before.has(n.id))
+    .map(([n]) => n.style);
+  // Styles by name, the missing added (the import's rule, docs/adr/0183 §7).
+  const styles = new Map<string, string | null>();
+  for (const [key, field] of [
+    ['textStyles', 'textStyle'],
+    ['dimensionStyles', 'dimStyle'],
+  ] as const) {
+    const used = new Set(pieces.flatMap((e) => (typeof e[field] === 'string' ? [e[field] as string] : [])));
+    const mine = listMut(ours.settings, key);
+    for (const s of list(theirs.settings, key)) {
+      if (!used.has(s.id)) continue;
+      const hit = mine.find((m) => exchangeFold(m.name) === exchangeFold(s.name));
+      if (hit) styles.set(s.id, hit.id);
+      else {
+        const added = mine.some((m) => m.id === s.id) ? { ...clone(s), id: crypto.randomUUID() } : clone(s);
+        styles.set(s.id, added.id);
+        mine.push(added);
+      }
+    }
+    if (!mine.length) delete ours.settings[key];
+  }
+  // The library items the objects, their pictures and the made layers draw with, when we have none such.
+  const have = new Set(list(ours.styles, 'items').map((it) => it.id as string));
+  const items: string[] = [];
+  for (const e of objects) {
+    if (typeof e.symbol === 'string') items.push(e.symbol);
+    if (e.kind === 'image' && typeof e.asset === 'string') items.push(e.asset);
+  }
+  for (const st of madeStyles) items.push(...[...stringsAt(st, 'ref', new Set())].sort(), ...[...stringsAt(st, 'asset', new Set())].sort());
+  takeItems(
+    ours,
+    theirs,
+    items.filter((i) => !have.has(i)),
+    'skip',
+  );
+  // The blocks by name: a met one is ours, the others come with what they place.
+  takeBlocks(ours, theirs, new Set(nestedBlocks.map((b) => b.name as string)), 'skip', theirPaths);
+  const blockOf = new Map<string, string>(
+    nestedBlocks.map((b) => [b.id as string, list(ours, 'blocks').find((m) => blockKey(m.name) === blockKey(b.name))?.id ?? b.id]),
+  );
+  const layerOf = (i: string) => ourNodeFor(ours, theirPaths, i, false) ?? '';
+  const out = objects.map((e, i) => {
+    const m = mapObject(e, layerOf, blockOf, styles);
+    delete m.source;
+    return { ...m, id: i + 1 };
+  });
+  return { drawing: ours, objects: out };
 }

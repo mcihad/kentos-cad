@@ -80,6 +80,8 @@ impl CommandLine {
             Id::new(crate::search::SEARCH_FIELD),
             // Tabloyu düzenle's cell bar (tables/editor.rs, docs/adr/0184 §5).
             Id::new(crate::tables::editor::BAR),
+            // Öznitelik tablosu's cell, Noktalar's (features/, points/cell.rs; docs/adr/0199 §4).
+            Id::new(crate::points::cell::FIELD),
         ];
         let mut visit = |operation: &mut dyn Operation| {
             let bounds = Rectangle::default();

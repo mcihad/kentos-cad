@@ -261,7 +261,7 @@ class GisImportDialog {
         l.name,
         t.existing
           ? { kind: 'existing', id: t.existing }
-          : { kind: 'new', name: l.name, style: { color: l.color, lineType: l.lineType }, visible: l.visible, locked: l.locked },
+          : { kind: 'new', name: l.name, style: { color: l.color, lineType: l.lineType }, visible: l.visible, locked: l.locked, fields: l.fields ?? [] },
       );
     }
     const label = `${this.source.kind === 'geojson' ? 'GeoJSON' : 'Shapefile'}: ${name}`;

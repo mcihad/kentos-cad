@@ -331,6 +331,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
             Vec::new()
         },
         snap: None,
+        fields: Vec::new(),
     }
 }
 
@@ -360,6 +361,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             },
             children: Vec::new(),
             snap: None,
+            fields: Vec::new(),
         });
     }
     let mut entities = Vec::new();

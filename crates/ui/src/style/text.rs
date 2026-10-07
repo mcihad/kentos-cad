@@ -55,6 +55,13 @@ pub fn info(theme: &Theme) -> Style {
     }
 }
 
+/// Uyarı metni (web'in `--c-warn`'u): ör. katmanın alanının kuralına uymayan değer.
+pub fn warning(theme: &Theme) -> Style {
+    Style {
+        color: Some(Tokens::of(theme).warning),
+    }
+}
+
 /// Hata ve uyarı metni.
 pub fn danger(theme: &Theme) -> Style {
     Style {

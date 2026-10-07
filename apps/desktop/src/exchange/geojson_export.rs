@@ -180,6 +180,8 @@ impl App {
                     layers.get(id).map(|l| GeoJsonLayer {
                         id: id.clone(),
                         name: l.name.clone(),
+                        // A number's and a yes or no value's attribute as JSON's own (docs/adr/0199 §6).
+                        fields: l.fields.clone(),
                     })
                 })
                 .collect(),

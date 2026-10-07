@@ -79,6 +79,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   halkaları (Aralık, Sayı, Işın) (ADR 0197);
   plan yolu çizimi: yol alan, türü ve genişliği öznitelik; Plan yolu (yol, yaya ve bisiklet yolu; kaldırımla taşıt yolu, refüj, eksen),
   Kavşak temizle (türlere göre birleştirme, ada ve kaldırım köşelerinin yuvarlanması), Refüj kapat (ADR 0198);
+  katman alanları, öznitelik tablosu ve veri kaynakları: katmanın alanları (metin, tam sayı, ondalık sayı, tarih, evet/hayır;
+  uzunluk, basamak, aralık, değer listesi, zorunlu, varsayılan; tek biçim `kentos_contracts::fields`; `.kcad` şema 26), `cad.entities.set`
+  ve `.create` alanların kuralıyla yazar, Alanlar penceresi (Verilerden al), alt panelin Tablo sekmesi (Katman, Ara, Göster, İfade
+  süzgeci, türe göre sıralama, hücrede düzenleme, uymayan değer uyarı zeminiyle), Öznitelikler'de alanlar türlerine göre; Shapefile
+  ve GeoJSON alanları taşır; sağ dokta Kaynaklar (klasörler ve dosyaları içe aktarma penceresine, KentOS projelerinin katmanları
+  nesneleriyle tek adımda) (ADR 0199);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -301,7 +307,11 @@ python3 scripts/fixtures/arrange_cases.py --check   # Hizala ve dağıt'ın kaym
 python3 scripts/fixtures/text_along_cases.py --check   # Eğri boyunca yazı'nın kurallarını (harflerin yeri ve dönüşü, kutu, kayıtlar, doğrultu, Okunur yap, aynalamalar, eğrinin parçası, Düzleştir, Doğrultuya döndür) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/text/v1/along.json (ADR 0196)
 python3 scripts/fixtures/drawing_extras_cases.py --check   # Çizim eklerinin kurallarını (iki dairenin ve yayın ortak teğetleri ve sırası, tıklamaların seçtiği teğet, dördüncü köşe, menzil halkalarının yarıçapları ve ışınları) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/drawing-extras/v1/cases.json (ADR 0197)
 python3 scripts/fixtures/plan_road_cases.py --check   # Plan yolu çiziminin kurallarını (yolun, taşıt yolunun ve refüjün alanları, iç köşelerin yuvarlanması ve sayıları, iki çizginin refüj olarak kapanması) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/plan-road/v1/cases.json (ADR 0198)
-python3 scripts/fixtures/exchange_cases.py --check   # Çizimler arası alışverişin kurallarını (seçimin çizimi: budanan ağaç, iç içe bloklar, kitaplığın kullanılanları, düşen bağlar; Başka çizimden al: yollar, katlanan adlar, Atla ve Değiştir, kimliklerin ekleri, katman durumlarının yolları; Dosyadan blok ekle: ad sayısı, sol alt köşe, resim ve tablo) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/exchange/v1/cases.json (ADR 0193)
+python3 scripts/fixtures/layer_field_cases.py --check   # katman alanlarının değer kurallarını (tek biçim, tam ve ondalık sayı, tarih, evet/hayır, değer listesi, aralık, zorunlu, alanın sorunları, verilerden tür) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/layer-fields/v1 (ADR 0199)
+python3 scripts/fixtures/feature_table_cases.py --check   # Öznitelik tablosunun sıralamasını (sayılar kesin, tarihler, evet/hayır, doğal metin, boş ve uymayan sonda), aramasını ve gösterilen satırlarını bağımsız başvurudan denetle; durumlar fixtures/feature-table/v1/cases.json (ADR 0199 §4)
+python3 scripts/fixtures/source_list_cases.py --check   # Kaynaklar'ın klasör listesini (desteklenen uzantılar, Shapefile'ın parçaları, gizli adlar, doğal sıra) ADR'den yazılmış başvurudan denetle; durumlar fixtures/sources/v1/cases.json (ADR 0199 §7)
+cargo test -p kentos-desktop sources::tests::screens -- --ignored --nocapture; cargo test -p kentos-desktop features::tests::screens -- --ignored --nocapture   # Kaynaklar ve Öznitelikler'in alanları, .run/shots/kaynaklar-*, oznitelik-alanlari-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs sources), shots.mjs fields; KentOS projeleri gerçek sunucuyla cloud-shots.mjs --only sources-project,sources-added; ADR 0199)
+python3 scripts/fixtures/exchange_cases.py --check   # Çizimler arası alışverişin kurallarını (seçimin çizimi: budanan ağaç, iç içe bloklar, kitaplığın kullanılanları, düşen bağlar; Başka çizimden al: yollar, katlanan adlar, Atla ve Değiştir, kimliklerin ekleri, katman durumlarının yolları; Dosyadan blok ekle: ad sayısı, sol alt köşe, resim ve tablo; Kaynaklar'ın Katman olarak ekle'si: katman nesneleriyle, aynı adlı blok ve stil, açılan katmanın görünüşünün simgesi) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/exchange/v1/cases.json (ADR 0193, 0199 §7)
 python3 scripts/fixtures/image_cases.py --check   # Resim ekle'nin çerçevesini (genişlik, yükseklik, dönüş) ve Resmi kırp'ın sınırını resmin kendi kesirleriyle (taşan, saran, saat yönünde, aynalı, dönük, dışarıda) kesirlerle bağımsız başvurudan denetle; durumlar fixtures/image/v1/cases.json (ADR 0192)
 KENTOS_SHOTS_ONLY=resim-ekle,resim-ekle-yazildi,resim-kirp,resim-kirpildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # resim nesnesinin resimleri, .run/shots/arac-resim-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs images), WebGPU'yla --renderer webgpu; ADR 0192)
 python3 scripts/fixtures/edge_shift_cases.py --check   # Paralel kaydır'ın kenarlarını (dışarı ve içeri, saat yönü, delik, çoklu çizginin serbest ucu, harita koordinatları, irrasyonel boy, halkadaki yay, retler) ve hedef alanın uzaklığını kesirlerle ve 50 basamaklı mpmath ile bağımsız başvurudan denetle; durumlar fixtures/edge-shift/v1/cases.json (ADR 0191)
@@ -455,7 +465,8 @@ pnpm kentosd -- <komut>  # yönetim CLI; yetkili hedefte bilinçli kullanılır
   taslakları `$XDG_DATA_HOME/kentos-cad/bulut-taslak`, projelerin yerel kopyaları
   `…/kentos-cad/bulut-kopya` altındadır (ADR 0040, 0043).
   Masaüstünün son dosyaları `$XDG_STATE_HOME/kentos-cad/son-dosyalar.json`'dadır (yoksa
-  `~/.local/state/kentos-cad/`; yalnız yollar ve kısa bilgi, ADR 0050). Masaüstünün Kitaplığım'ı
+  `~/.local/state/kentos-cad/`; yalnız yollar ve kısa bilgi, ADR 0050). Kaynaklar'ın klasörleri web'de IndexedDB
+  `kentos.sources/folders`'ta (tarayıcının klasör tutamaçları), masaüstünde yanında `kaynak-klasorleri.json`'dadır (yollar; ADR 0199 §7). Masaüstünün Kitaplığım'ı
   (web'de `kentos.styles.v1`) `$XDG_DATA_HOME/kentos-cad/kitaplik.kstil`'dedir; okunamayan dosya
   `kitaplik-okunamadi-<zaman>.kstil` olarak ayrılır, üzerine yazılmaz (ADR 0092).
   Yerel çizimin kaydedilmemiş işinin kurtarma kopyaları IndexedDB `kentos.recovery/copies`'tedir;
@@ -1085,8 +1096,15 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   tarifini bekler): çekirdek `ops::road` (bağımsız başvuru `plan_road_cases.py`, ortak `fixtures/plan-road/v1/cases.json`; köşeler
   `ops::reshape::corners_of_path_where` ve `turns_inward` ile), `cad.entities.create`'in `planRoad`, `cad.entities.edit`'in
   `roadJunctions` ve `medianClose` adımları; araçlar masaüstünde `kentos_interaction::plan_road`, web'de `tools/planRoadTools.ts`; ortak iz
-  `plan-road.json`. §16.1'in sahibin sırası (CAD-27 … CAD-36) bitti; `CAD-18` ve `CAD-24` **[M]** sahibin tarifini bekler; sıradaki
-  §16.2 CBS (`GIS-01` …).
+  `plan-road.json`. §16.1'in sahibin sırası (CAD-27 … CAD-36) bitti; `CAD-18` ve `CAD-24` **[M]** sahibin tarifini bekler.
+  §16.2 CBS başladı (sahibin seçimi “GIS-01”, kapsamı üç kararı: kaynaklar klasörler ve KentOS projeleri, değerler metin ve şema
+  türü verir, form şemadan): `GIS-01` katman alanları, öznitelik tablosu ve veri kaynakları
+  ([ADR 0199](docs/adr/0199-layer-fields-and-feature-table.md)) tek parçada bitti (7 Ekim; ikonlar sahibin seçtikleri): sözleşmenin
+  `fields`'ı (bağımsız başvuru `layer_field_cases.py`), `.kcad` şema 26 (`FORMATS_VERSION` 36), belgenin “Alanlar” adımı, komutların
+  alan denetimi, çekirdek `ops::feature_table` (`feature_table_cases.py`); masaüstü `features/`, `layer_fields.rs`, `sources/`, web
+  `ui/bottom/FeatureTable.ts`, `ui/layers/LayerFieldsDialog.ts`, `ui/sources/SourcesPanel.ts`; katmanı nesneleriyle alma `layerTake`
+  (`exchange_cases.py`'nin `layers`'ı), klasör listesi `source_list_cases.py`; ortak iz `feature-table.json` (adım düzeyinde
+  `featureTable` beklentisi); KentOS UI'da yalnız ikonu kalan dok sekmesi 28 px. Sıradaki `GIS-02`.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

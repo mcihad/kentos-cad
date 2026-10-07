@@ -165,6 +165,16 @@ fn canonical(r: &ImportResult, encoding: Option<&str>) -> Value {
     if let Some(e) = encoding {
         doc.insert("encoding".into(), json!(e));
     }
+    // The layers' fields (docs/adr/0199 §6), by layer, only layers that have any.
+    let fields: Map<String, Value> = r
+        .layers
+        .iter()
+        .filter(|l| !l.fields.is_empty())
+        .map(|l| (l.name.clone(), json!(l.fields)))
+        .collect();
+    if !fields.is_empty() {
+        doc.insert("fields".into(), Value::Object(fields));
+    }
     doc.insert("objects".into(), Value::Array(objects));
     Value::Object(doc)
 }

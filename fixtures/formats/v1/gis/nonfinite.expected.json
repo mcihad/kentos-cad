@@ -1,5 +1,17 @@
 {
  "declaredSrid": 4326,
+ "fields": {
+  "nonfinite": [
+   {
+    "name": "ad",
+    "kind": "text"
+   },
+   {
+    "name": "buyuk",
+    "kind": "text"
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "point",

@@ -1,6 +1,37 @@
 {
  "declaredSrid": 5256,
  "encoding": "Windows-1254",
+ "fields": {
+  "noktalar": [
+   {
+    "name": "AD",
+    "kind": "text",
+    "length": 30
+   },
+   {
+    "name": "KOT",
+    "kind": "decimal",
+    "scale": 3
+   },
+   {
+    "name": "ALAN",
+    "kind": "decimal"
+   },
+   {
+    "name": "VAR",
+    "kind": "boolean"
+   },
+   {
+    "name": "TARIH",
+    "kind": "date"
+   },
+   {
+    "name": "ACIKLAMA",
+    "kind": "text",
+    "length": 20
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "point",
@@ -13,7 +44,7 @@
    "attrs": {
     "AD": "ÇŞĞÜÖİ çşğüöı",
     "KOT": "105.200",
-    "ALAN": "1.23456780000e+003",
+    "ALAN": "1234.56780000",
     "VAR": "true",
     "TARIH": "2026-09-26"
    }
@@ -29,7 +60,7 @@
    "attrs": {
     "AD": "Işıklı Köprü",
     "KOT": "107.850",
-    "ALAN": "-4.50000000000e-001",
+    "ALAN": "-0.450000000000",
     "VAR": "false",
     "ACIKLAMA": "Sınır taşı"
    }
@@ -44,7 +75,7 @@
    "z": 99.5,
    "attrs": {
     "AD": " Kuzey Çeşme",
-    "ALAN": "0.00000000000e+000"
+    "ALAN": "0.00000000000"
    }
   }
  ]

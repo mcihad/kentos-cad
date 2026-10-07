@@ -198,6 +198,12 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub snap: Option<LayerSnap>,
+    /// A layer's fields (docs/adr/0199 §1): the schema of its objects'
+    /// attributes, in the order the table and the form show them; empty, no
+    /// schema (and nothing written). Only a layer has them, never a group.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::fields::LayerField>>", optional))]
+    pub fields: Vec<crate::fields::LayerField>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

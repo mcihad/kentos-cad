@@ -16,7 +16,8 @@ use std::fmt;
 use std::sync::Arc;
 
 use kentos_contracts::{
-    Entity, EntityBase, LayerNodeType, LayerSnap, LayerStyle, ProjectSettings, ProjectStyles,
+    Entity, EntityBase, LayerField, LayerNodeType, LayerSnap, LayerStyle, ProjectSettings,
+    ProjectStyles, fields_problem,
 };
 
 use crate::document::Document;
@@ -31,6 +32,7 @@ pub mod labels {
     pub const REMOVE: &str = "Sil";
     pub const CHANGE: &str = "Değiştir";
     pub const LAYER_STYLE: &str = "Katman stili";
+    pub const LAYER_FIELDS: &str = "Alanlar";
     pub const LAYER_REMOVE: &str = "Katman sil";
     pub const LAYER_ADD: &str = "Katman ekle";
     pub const GROUP_ADD: &str = "Grup ekle";
@@ -168,6 +170,78 @@ impl Document {
         };
         self.record(vec![op], label);
         true
+    }
+
+    /// Gives a layer its fields as one undo step “Alanlar” (docs/adr/0199 §3):
+    /// the schema `fields` (empty: none), and the keys `renames` moves on the
+    /// layer's objects (old → new, all at once, so two may swap), their values
+    /// kept; a deleted field's values stay as attributes without a schema.
+    /// Refused with nothing changed (the web's `setLayerFields`): a group,
+    /// fields with a problem (`kentos_contracts::fields_problem`), renames
+    /// that would give an object two attributes of one name. An unknown id
+    /// changes nothing; returns whether anything changed.
+    pub fn set_layer_fields(
+        &mut self,
+        id: &str,
+        fields: Vec<LayerField>,
+        renames: &[(String, String)],
+    ) -> Result<bool, Refusal> {
+        let Some(node) = self.layers.get(id) else {
+            return Ok(false);
+        };
+        if node.kind == LayerNodeType::Group {
+            return Err(Refusal(format!(
+                "“{}” bir grup; alanlar yalnız katmanın olur.",
+                node.name
+            )));
+        }
+        if let Some(problem) = fields_problem(&fields) {
+            return Err(Refusal(problem));
+        }
+        let before = node.fields.clone();
+        let moved: HashMap<&str, &str> = renames
+            .iter()
+            .filter(|(old, new)| old != new)
+            .map(|(old, new)| (old.as_str(), new.as_str()))
+            .collect();
+        let mut changes = Vec::new();
+        if !moved.is_empty() {
+            for e in self.by_layer(id) {
+                let attrs = &e.base().attrs;
+                if !attrs.keys().any(|k| moved.contains_key(k.as_str())) {
+                    continue;
+                }
+                let mut next = std::collections::BTreeMap::new();
+                for (k, v) in attrs {
+                    let key = moved.get(k.as_str()).copied().unwrap_or(k.as_str());
+                    if next.insert(key.to_owned(), v.clone()).is_some() {
+                        return Err(Refusal(format!(
+                            "Yeniden adlandırma bir nesnede “{key}” adlı iki öznitelik yapıyor; alana başka bir ad verin."
+                        )));
+                    }
+                }
+                let mut entity = e.clone();
+                base_mut(&mut entity).attrs = next;
+                changes.push((Slot(e.base().id), entity));
+            }
+        }
+        if before == fields && changes.is_empty() {
+            return Ok(false);
+        }
+        let layer = id.to_owned();
+        let _ = self.transact(labels::LAYER_FIELDS, |doc| {
+            if before != fields {
+                let op = Op::LayerFields {
+                    layer,
+                    before,
+                    after: fields,
+                };
+                doc.record(vec![op], labels::LAYER_FIELDS);
+            }
+            doc.update_many(changes, labels::LAYER_FIELDS);
+            Ok::<(), Refusal>(())
+        });
+        Ok(true)
     }
 
     /// Deletes a layer, or a group with everything under it, and the objects

@@ -15,6 +15,12 @@
 //!   block, its base given (the lower left of their extent, [`extent_corner`]);
 //!   their layers by path (the missing made), their blocks and styles brought
 //!   in under names this drawing has not.
+//! - [`layer_take`]: another drawing's layer with its objects (Kaynaklar's
+//!   Katman olarak ekle, docs/adr/0199 §7): the layer by path (a met one
+//!   kept), the layers their blocks' objects are on, the blocks by name (a met
+//!   name is ours), the styles by name (the missing added), the library items
+//!   the objects and the made layers draw with; links, ties and a table's
+//!   source dropped (the objects take new ids).
 //!
 //! The rules read and write the drawings as the contract's JSON, as the
 //! reference does: an object's style, link and tie are its fields there.
@@ -1041,4 +1047,182 @@ pub fn file_block_json(
     block.insert("entities".into(), Value::Array(entities));
     mine.push(Value::Object(block));
     Some((ours, left))
+}
+
+// ── 4. A layer with its objects ───────────────────────────────────────
+
+/// What [`layer_take`] gives: the drawing with the layer (its objects as
+/// they were), the objects to add, and how many layers or groups and blocks
+/// it made, for the message.
+#[derive(Clone, Debug, PartialEq)]
+pub struct LayerTake {
+    pub drawing: DocumentSnapshotV2,
+    pub objects: Vec<kentos_contracts::Entity>,
+    pub layers: usize,
+    pub blocks: usize,
+}
+
+/// Their layer at `path` with its objects into `ours` (docs/adr/0199 §7).
+/// Refused when `path` is not a layer of theirs or our node at it is not a
+/// layer.
+pub fn layer_take(
+    ours: &DocumentSnapshotV2,
+    theirs: &DocumentSnapshotV2,
+    path: &str,
+) -> Result<LayerTake, String> {
+    let ours_json = to_json(ours)?;
+    let theirs_json = to_json(theirs)?;
+    let (drawing, objects) = layer_take_json(&ours_json, &theirs_json, path).ok_or_else(|| {
+        format!("“{path}” alınamadı: kaynakta böyle bir katman yok ya da bu çizimde aynı yolda katman olmayan bir düğüm var.")
+    })?;
+    let layers = all_ids(arr(&drawing, "layers")).len() - all_ids(arr(&ours_json, "layers")).len();
+    let blocks = arr(&drawing, "blocks").len() - arr(&ours_json, "blocks").len();
+    let objects = objects
+        .into_iter()
+        .map(|o| serde_json::from_value(o).map_err(|e| e.to_string()))
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(LayerTake {
+        drawing: from_json(drawing)?,
+        objects,
+        layers,
+        blocks,
+    })
+}
+
+/// [`layer_take`] over the contract's JSON (the cases' form): the new
+/// drawing and the objects to add, numbered from 1; none when refused.
+pub fn layer_take_json(ours: &Value, theirs: &Value, path: &str) -> Option<(Value, Vec<Value>)> {
+    let mut ours = ours.clone();
+    let target = walked(arr(theirs, "layers"))
+        .into_iter()
+        .find(|(n, here)| str_of(n, "type") == "layer" && here.join(" / ") == path)
+        .map(|(n, _)| str_of(&n, "id").to_owned())?;
+    let objects: Vec<Value> = arr(theirs, "entities")
+        .iter()
+        .filter(|e| str_of(e, "layerId") == target)
+        .cloned()
+        .collect();
+    let nested = placed_blocks(&objects, &blocks_by_id(theirs));
+    let nested_blocks: Vec<Value> = arr(theirs, "blocks")
+        .iter()
+        .filter(|b| nested.contains(str_of(b, "id")))
+        .cloned()
+        .collect();
+    let pieces: Vec<&Value> = objects
+        .iter()
+        .chain(nested_blocks.iter().flat_map(|b| arr(b, "entities")))
+        .collect();
+    let their_paths = path_of(arr(theirs, "layers"));
+    let mut wanted: HashSet<String> = HashSet::from([path.to_owned()]);
+    for e in &pieces {
+        if let Some(here) = their_paths.get(str_of(e, "layerId")) {
+            wanted.insert(here.join(" / "));
+        }
+    }
+    let before = all_ids(arr(&ours, "layers"));
+    let mut taken = before.clone();
+    take_layers(&mut ours, theirs, &wanted, Same::Skip, &mut taken);
+    our_node_for(&ours, &their_paths, &target, false)?;
+    let made_styles: Vec<Value> = walked(arr(&ours, "layers"))
+        .into_iter()
+        .filter(|(n, _)| !before.contains(str_of(n, "id")))
+        .map(|(n, _)| n["style"].clone())
+        .collect();
+    // Styles by name, the missing added (the import's rule, docs/adr/0183 §7).
+    let mut styles: HashMap<String, Option<String>> = HashMap::new();
+    for (key, field) in [("textStyles", "textStyle"), ("dimensionStyles", "dimStyle")] {
+        let used: HashSet<&str> = pieces
+            .iter()
+            .filter_map(|e| e.get(field).and_then(Value::as_str))
+            .collect();
+        let their_list = arr(&theirs["settings"], key).to_vec();
+        let mine = arr_mut(&mut ours["settings"], key);
+        for s in their_list {
+            if !used.contains(str_of(&s, "id")) {
+                continue;
+            }
+            let hit = mine
+                .iter()
+                .find(|m| fold(str_of(m, "name")) == fold(str_of(&s, "name")))
+                .map(|m| str_of(m, "id").to_owned());
+            let to = match hit {
+                Some(to) => to,
+                None => {
+                    let mut s = s.clone();
+                    if mine.iter().any(|m| m["id"] == s["id"]) {
+                        s["id"] = json!(uuid::Uuid::now_v7().to_string());
+                    }
+                    let to = str_of(&s, "id").to_owned();
+                    mine.push(s);
+                    to
+                }
+            };
+            styles.insert(str_of(&s, "id").to_owned(), Some(to));
+        }
+        if mine.is_empty()
+            && let Some(o) = ours["settings"].as_object_mut()
+        {
+            o.remove(key);
+        }
+    }
+    // The library items the objects, their pictures and the made layers draw
+    // with, when we have none such.
+    let have: HashSet<String> = arr(&ours["styles"], "items")
+        .iter()
+        .map(|it| str_of(it, "id").to_owned())
+        .collect();
+    let mut items: Vec<String> = Vec::new();
+    for e in &objects {
+        if let Some(s) = e.get("symbol").and_then(Value::as_str) {
+            items.push(s.to_owned());
+        }
+        if str_of(e, "kind") == "image"
+            && let Some(a) = e.get("asset").and_then(Value::as_str)
+        {
+            items.push(a.to_owned());
+        }
+    }
+    for st in &made_styles {
+        for key in ["ref", "asset"] {
+            let mut found = BTreeSet::new();
+            strings_at(st, key, &mut found);
+            items.extend(found);
+        }
+    }
+    items.retain(|i| !have.contains(i));
+    take_items(&mut ours, theirs, &items, Same::Skip);
+    // The blocks by name: a met one is ours, the others come with what they place.
+    let names: HashSet<String> = nested_blocks
+        .iter()
+        .map(|b| str_of(b, "name").to_owned())
+        .collect();
+    take_blocks(&mut ours, theirs, &names, Same::Skip, &their_paths);
+    let block_of: HashMap<String, String> = nested_blocks
+        .iter()
+        .map(|b| {
+            let ours_id = arr(&ours, "blocks")
+                .iter()
+                .find(|m| block_key(str_of(m, "name")) == block_key(str_of(b, "name")))
+                .map_or_else(
+                    || str_of(b, "id").to_owned(),
+                    |m| str_of(m, "id").to_owned(),
+                );
+            (str_of(b, "id").to_owned(), ours_id)
+        })
+        .collect();
+    let snapshot = ours.clone();
+    let layer_of = |i: &str| our_node_for(&snapshot, &their_paths, i, false).unwrap_or_default();
+    let out = objects
+        .iter()
+        .enumerate()
+        .map(|(i, e)| {
+            let mut m = map_object(e, &layer_of, &block_of, &styles);
+            if let Some(o) = m.as_object_mut() {
+                o.remove("source");
+            }
+            m["id"] = json!(i + 1);
+            m
+        })
+        .collect();
+    Some((ours, out))
 }

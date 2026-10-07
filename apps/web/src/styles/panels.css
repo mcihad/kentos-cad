@@ -397,6 +397,9 @@
   color: var(--c-text-3);
   font-size: var(--fs-xs);
 }
+.props__note--warn {
+  color: var(--c-warn);
+}
 
 /* ── Empty states ────────────────────────────────────────────────── */
 .empty {
@@ -682,6 +685,50 @@
   font-weight: 600;
 }
 
+/* ── Öznitelik tablosu (docs/adr/0199 §4): the point editor's table over a layer's objects ── */
+.ftable__layer .dropdown__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Öznitelik tablosu's controls wrap in a narrow panel, the filter last (the desktop's two rows). */
+.ftable .ptable__group {
+  flex-wrap: wrap;
+  row-gap: 6px;
+  min-width: 0;
+}
+.ftable__expr {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.ftable__filter {
+  width: calc(220px * var(--ui-scale));
+  height: calc(28px * var(--ui-scale));
+}
+.ftable__filter.is-invalid {
+  border-color: var(--c-danger);
+}
+/* The column header grows with its words; the sort arrow follows them. */
+.ftable__table th .ptable__sort {
+  white-space: nowrap;
+}
+.ftable__req {
+  color: var(--c-danger);
+}
+/* A value its field refuses: the warning tint, its reason as the cell's title. */
+.ptable td.ftable__bad {
+  background: color-mix(in srgb, var(--c-warn) 16%, transparent);
+  color: var(--c-warn);
+}
+.ftable__select {
+  padding: 0 4px;
+}
+/* The kind column (the second) is plain, not the first value's weight. */
+.ftable .ptable__scroll td:nth-child(2) {
+  font-weight: 400;
+  color: var(--c-text-2);
+}
+
 /* ── Köşe tablosu (docs/adr/0172): the point editor's table over the coordinate list's foot ── */
 .vtable__hint {
   color: var(--c-text-2);
@@ -852,6 +899,41 @@
 .tpl__group {
   color: var(--c-text-2);
   font-weight: 600;
+}
+/* Kaynaklar (ui/sources/SourcesPanel.ts, docs/adr/0199 §7): the folders and KentOS projects as one tree; a file or a
+   layer row carries what it is on the right and its Katman olarak ekle button. */
+.panel__toolbar.src__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.src__section {
+  color: var(--c-text-2);
+  font-weight: 600;
+}
+.src__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--c-text-2);
+}
+.src__meta {
+  flex: none;
+  max-width: 45%;
+  overflow: hidden;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.src__note--muted {
+  color: var(--c-text-3);
+}
+.src__note--warn {
+  color: var(--c-warn);
+}
+.tree .src__add {
+  flex: none;
 }
 /* Çiftleri göster: the groups shown instead of the query; a click shows the query again. */
 .ptable__chip {

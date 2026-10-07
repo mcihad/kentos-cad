@@ -641,6 +641,37 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       },
     },
     {
+      // Öznitelik tablosu (docs/adr/0199 §4): the bottom panel's Tablo tab, a layer's objects and their fields.
+      id: 'data.featureTable',
+      title: 'Öznitelik tablosu',
+      short: 'Tablo',
+      category: V,
+      icon: 'featureTable',
+      aliases: ['OZNITELIKTABLOSU', 'OZTABLO', 'OT', 'ATTRIBUTETABLE'],
+      description:
+        'Alt panelin Tablo sekmesi: bir katmanın nesneleri ve öznitelikleri, katmanın alanlarıyla; sıralanır, aranır, Göster ve İfade süzgeciyle süzülür, hücreye çift tıkla düzenlenir. Satıra tıklamak nesneyi seçer.',
+      run: () => {
+        ui.bottomTab.set('table');
+        if (ui.bottomHeight.value < SEARCH_PANEL_HEIGHT) ui.bottomHeight.set(SEARCH_PANEL_HEIGHT);
+        ui.bottomExpanded.set(true);
+      },
+    },
+    {
+      // Veri kaynakları (docs/adr/0199 §7): the dock's Kaynaklar tab, folders and KentOS projects to add layers from.
+      id: 'data.sources',
+      title: 'Veri kaynakları',
+      short: 'Kaynaklar',
+      category: V,
+      icon: 'dataSources',
+      aliases: ['VERIKAYNAKLARI', 'KAYNAKLAR', 'TARAYICI', 'BROWSER'],
+      description:
+        'Sağ panelin Kaynaklar sekmesi: eklediğiniz klasörlerin GeoJSON, Shapefile, DXF, NCZ, GPX, NMEA ve koordinat listesi dosyaları ile KentOS projelerinizin katmanları; Katman olarak ekle dosyayı içe aktarır, projenin katmanını nesneleriyle bu çizime alır.',
+      run: () => {
+        ui.rightVisible.set(true);
+        ui.dockTab.set('sources');
+      },
+    },
+    {
       // Veride ara and Koordinata git (docs/adr/0178): the bottom panel's Arama tab, its search box taking the keyboard.
       id: 'data.search',
       title: 'Veride ara',
@@ -810,6 +841,26 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       aliases: ['KATMANKOPYASI', 'LAYDUP'],
       description: 'Katmanın yanına aynı görünüşle “<ad> kopyası” katmanını açar ve nesnelerinin kopyalarını ona yazar; tek adımda geri alınır. Katmanlar panelinde katmanın menüsünden; komut olarak etkin katmanınki.',
       run: (args) => duplicateLayer(ctx, typeof args === 'string' ? args : undefined),
+      isEnabled: () => !treeLocked(ctx),
+      whyDisabled: () => treeLocked(ctx),
+      watch: [ctx.cloud.project],
+    },
+    {
+      // Alanlar (docs/adr/0199 §3): the layer's fields; the Layers panel's menu gives its layer, the command the active one.
+      id: 'layer.fields',
+      title: 'Alanlar…',
+      category: 'Katman',
+      icon: 'layerFields',
+      aliases: ['ALANLAR', 'KATMANALANLARI', 'FIELDS'],
+      description:
+        'Katmanın alanları: ad, takma ad, tür (metin, tam sayı, ondalık sayı, tarih, evet/hayır), uzunluk ya da ondalık basamak, zorunlu, varsayılan, aralık ve değer listesi. Değerler alanlara göre denetlenir, tabloda ve formda türüne göre düzenlenir. Katmanlar panelinde katmanın menüsünden; komut olarak etkin katmanınki.',
+      run: (args) => {
+        const id = typeof args === 'string' ? args : ctx.doc.layers.active.value;
+        void import('../ui/layers/LayerFieldsDialog').then(
+          (m) => m.openLayerFields(ctx, id),
+          (e: Error) => ctx.log.error(`Pencere yüklenemedi: ${e.message}. Bağlantıyı denetleyip yeniden deneyin.`),
+        );
+      },
       isEnabled: () => !treeLocked(ctx),
       whyDisabled: () => treeLocked(ctx),
       watch: [ctx.cloud.project],

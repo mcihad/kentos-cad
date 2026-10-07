@@ -140,6 +140,95 @@
   color: var(--c-text-3);
 }
 
+/* Alanlar (docs/adr/0199 §3): a layer's fields as an editable table, the chosen row marked. */
+.fields-layer {
+  margin: 0 0 8px;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+.fields-scroll {
+  max-height: calc(360px * var(--ui-scale));
+  overflow: auto;
+  border: 1px solid var(--c-line);
+  border-radius: 4px;
+}
+.fields-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--fs-sm);
+}
+.fields-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 4px 6px;
+  background: var(--c-panel);
+  border-bottom: 1px solid var(--c-line);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+  vertical-align: bottom;
+}
+/* The columns of Alanlar's table: the kind's list wide enough for “Ondalık sayı” and “Evet/hayır”. */
+.fields-col--name,
+.fields-col--alias {
+  width: 15%;
+}
+.fields-col--kind {
+  width: 15%;
+}
+.fields-col--size,
+.fields-col--min,
+.fields-col--max {
+  width: 9%;
+}
+.fields-col--must {
+  width: 7%;
+}
+.fields-col--default {
+  width: 11%;
+}
+.fields-col--list {
+  width: 10%;
+}
+/* The value list's table: the code, its label, the row's remove button. */
+.fields-col--code {
+  width: 32%;
+}
+.fields-col--label {
+  width: 52%;
+}
+.fields-col--remove {
+  width: 16%;
+}
+.fields-table td {
+  padding: 3px 4px;
+  border-bottom: 1px solid var(--c-line-soft);
+}
+.fields-table tr.is-selected td {
+  background: var(--c-accent-soft);
+}
+.fields-cell {
+  width: 100%;
+  min-width: calc(60px * var(--ui-scale));
+  height: calc(26px * var(--ui-scale));
+}
+.fields-cell.num {
+  text-align: right;
+}
+.fields-check {
+  text-align: center;
+}
+.fields-actions {
+  align-items: center;
+}
+.fields-gap {
+  flex: 1;
+}
+
 /* Katman durumları (docs/adr/0177 §4): the saved states as rows to choose, the mark of the one the layers are in. */
 .states-list {
   display: flex;

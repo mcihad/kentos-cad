@@ -33,6 +33,7 @@ mod elevation_scenes;
 #[cfg(test)]
 mod elevation_tests;
 mod exchange;
+mod features;
 mod find_replace;
 mod expression;
 #[cfg(test)]
@@ -50,6 +51,7 @@ mod input;
 mod keys;
 mod keytips;
 mod labels;
+mod layer_fields;
 mod layer_list;
 mod layer_merge;
 mod layer_purge;
@@ -131,6 +133,7 @@ mod snap_menu;
 #[cfg(test)]
 mod snap_tests;
 mod snapshot;
+mod sources;
 mod start;
 mod style;
 mod tables;
@@ -232,6 +235,8 @@ fn main() -> iced::Result {
             // The recent files, kept beside the program's other history.
             if let Some(folder) = recent::RecentFiles::default_folder() {
                 app.recent = recent::RecentFiles::open(&folder);
+                // Kaynaklar's folders, beside them (docs/adr/0199 §7).
+                app.sources.folders = sources::SourceFolders::open(&folder);
                 // The Python tab's unsaved script, kept beside them (docs/adr/0136).
                 app.python.script = python::script::Script::load(&folder);
                 // Each processing tool's last values (islemler.json), beside them.

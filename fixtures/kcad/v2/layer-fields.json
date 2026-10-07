@@ -1,0 +1,215 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Katman alanları",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "kadastro",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "parsel",
+          "name": "Parsel",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#3E63DD",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+            {
+              "name": "Ada",
+              "kind": "text",
+              "length": 10,
+              "required": true
+            },
+            {
+              "name": "Parsel",
+              "kind": "integer",
+              "min": "1"
+            },
+            {
+              "name": "Alan",
+              "alias": "Tapu alanı",
+              "kind": "decimal",
+              "scale": 2,
+              "min": "0",
+              "max": "1000000"
+            },
+            {
+              "name": "Tescil",
+              "alias": "Tescil tarihi",
+              "kind": "date"
+            },
+            {
+              "name": "Ruhsat",
+              "kind": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "Kullanım",
+              "kind": "text",
+              "values": [
+                {
+                  "code": "K",
+                  "label": "Konut"
+                },
+                {
+                  "code": "T",
+                  "label": "Ticaret"
+                },
+                {
+                  "code": "İ",
+                  "label": "İşyeri"
+                }
+              ],
+              "default": "K"
+            },
+            {
+              "name": "Kat",
+              "kind": "integer",
+              "values": [
+                {
+                  "code": "1",
+                  "label": "Bir kat"
+                },
+                {
+                  "code": "2",
+                  "label": "İki kat"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "101",
+        "Parsel": "7",
+        "Alan": "400.00",
+        "Tescil": "2026-10-07",
+        "Ruhsat": "true",
+        "Kullanım": "K",
+        "Kat": "2",
+        "Not": "köşe parsel"
+      },
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400020.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400020.0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "101",
+        "Parsel": "8",
+        "Alan": "12,5",
+        "Ruhsat": "false",
+        "Kullanım": "T"
+      },
+      "pts": [
+        {
+          "x": 500020.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400020.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400020.0
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 500000.0,
+        "y": 4400030.0
+      },
+      "b": {
+        "x": 500040.0,
+        "y": 4400030.0
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a1-4444-7000-8000-000000000201",
+    "0192f5a1-4444-7000-8000-000000000202",
+    "0192f5a1-4444-7000-8000-000000000203"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

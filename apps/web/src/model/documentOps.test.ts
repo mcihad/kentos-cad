@@ -3,6 +3,7 @@ import { isUuid } from '../core/uuid';
 import type { BlockDefinition } from './blocks';
 import { CadDocument, Refusal } from './document';
 import type { Entity, NewEntity } from './entities';
+import type { LayerField } from './layerFields';
 import { LayerStore, type LayerInit, type LayerSnap, type LayerStyle } from './layers';
 import type { ProjectSettingsData } from './projectSettings';
 import { readSnapshot } from './snapshot';
@@ -29,6 +30,8 @@ interface LayerExpect {
   isLocked?: boolean;
   /** A layer's own snapping; null when it has none (docs/adr/0163 §4). */
   snap?: Json;
+  /** A layer's fields; empty when it has none (docs/adr/0199 §1). */
+  fields?: Json;
 }
 
 interface Expect {
@@ -231,6 +234,8 @@ class Run {
         return layers.rename(layerId, s.name as string);
       case 'setLayerStyle':
         return doc.setLayerStyle(layerId, patchOf(s.patch) as Partial<LayerStyle>, s.label as string | undefined);
+      case 'setLayerFields':
+        return doc.setLayerFields(layerId, (s.fields ?? []) as LayerField[], (s.renames ?? []) as [string, string][]);
       case 'addLayer':
         return doc.addLayer(s.layer as LayerInit, (s.parent as string | null | undefined) ?? null, { activate: s.activate === true }).id;
       case 'removeLayer':
@@ -309,6 +314,7 @@ class Run {
         isVisible: doc.layers.isVisible(id),
         isLocked: doc.layers.isLocked(id),
         snap: (node?.snap ?? null) as Json,
+        fields: (node?.fields ?? []) as unknown as Json,
       };
       for (const key of Object.keys(want) as (keyof LayerExpect)[]) {
         expect(key in got, `${where}: “${id}” katmanı › bilinmeyen alan ${key}`).toBe(true);

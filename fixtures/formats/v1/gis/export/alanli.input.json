@@ -1,0 +1,150 @@
+{
+  "name": "Alanlı parseller",
+  "srid": 5256,
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parseller",
+      "fields": [
+        {
+          "name": "Ada",
+          "kind": "integer"
+        },
+        {
+          "name": "Alan",
+          "kind": "decimal",
+          "scale": 2
+        },
+        {
+          "name": "Ruhsat",
+          "kind": "boolean"
+        },
+        {
+          "name": "Tescil",
+          "kind": "date"
+        },
+        {
+          "name": "Kullanım",
+          "kind": "text",
+          "values": [
+            {
+              "code": "K",
+              "label": "Konut"
+            },
+            {
+              "code": "T",
+              "label": "Ticaret"
+            }
+          ]
+        },
+        {
+          "name": "Büyük",
+          "kind": "decimal"
+        }
+      ]
+    },
+    {
+      "id": "yol",
+      "name": "Yollar"
+    }
+  ],
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "101",
+        "Alan": "400.50",
+        "Ruhsat": "true",
+        "Tescil": "2026-10-07",
+        "Kullanım": "K",
+        "Büyük": "123456789012345678901234567890",
+        "Not": "12"
+      },
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400020.0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "012",
+        "Alan": "12,5",
+        "Ruhsat": "Evet",
+        "Kullanım": "T",
+        "Büyük": "0.1"
+      },
+      "pts": [
+        {
+          "x": 500020.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400020.0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "3a",
+        "Alan": "1.234",
+        "Ruhsat": "belki",
+        "Tescil": "31.02.2026",
+        "Büyük": "-0.00"
+      },
+      "pts": [
+        {
+          "x": 500040.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500060.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500060.0,
+          "y": 4400020.0
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 4,
+      "layerId": "yol",
+      "attrs": {
+        "Ad": "Atatürk",
+        "Şerit": "4"
+      },
+      "a": {
+        "x": 500000.0,
+        "y": 4400030.0
+      },
+      "b": {
+        "x": 500060.0,
+        "y": 4400030.0
+      }
+    }
+  ]
+}

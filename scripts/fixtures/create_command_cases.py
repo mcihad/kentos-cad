@@ -1463,10 +1463,72 @@ def write(command, title, note, cases):
         f.write(text)
 
 
+# A layer's fields (docs/adr/0199 §2): a value given to a field's key is written in its canonical text, one that does
+# not keep its rules refused (`invalid_attribute`; an empty one of a required field `attribute_required`; path
+# objects[i].attrs.<name>, objects in order, names in theirs); a field the object does not give takes its default; a
+# required field without a value or a default is not refused (the drawing tools know no fields). The rules and their
+# words are the independent reference's (scripts/fixtures/layer_field_cases.py).
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+from layer_field_cases import check as field_check  # noqa: E402
+
+YAPI_FIELDS = [
+    {"name": "Ada", "kind": "text", "required": True},
+    {"name": "Kat", "kind": "integer", "min": "1", "default": "1"},
+    {"name": "Durum", "kind": "text", "values": [{"code": "M", "label": "Mevcut"}, {"code": "P", "label": "Proje"}], "default": "M"},
+    {"name": "Tarih", "kind": "date"},
+]
+F_SETUP = {**SETUP, "layers": [{**SETUP["layers"][0], "fields": YAPI_FIELDS}] + SETUP["layers"][1:]}
+FIELD = {f["name"]: f for f in YAPI_FIELDS}
+SPOT = point(487070, 4420070)
+SPOT2 = point(487072, 4420070)
+
+
+def refused_at(i, name, text):
+    r = field_check(FIELD[name], text)
+    assert "error" in r, (name, text)
+    return failed("attribute_required" if r["error"] == "required" else "invalid_attribute", r["message"], f"objects[{i}].attrs.{name}")
+
+
+def with_attrs(obj, attrs):
+    return {**obj, "attrs": attrs}
+
+
+cases.append({
+    "name": "Katmanın alanları: verilen değer tek biçimiyle yazılır, verilmeyen alan varsayılanını alır; zorunlu alanın değeri ve varsayılanı yoksa reddedilmez",
+    "note": "ADR 0199 §2. Yapı katmanının alanları: Ada (zorunlu, varsayılansız), Kat (en az 1, varsayılan 1), Durum (değer listesi, varsayılan M), Tarih.",
+    "setup": F_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(SPOT, attrs={"Kat": "+03", "Tarih": "7.10.2026", "Not": " serbest "}), O(SPOT2)]}, "result": done([3, 4]),
+         "expect": {"ids": IDS + [3, 4],
+                    "entities": {"3": made(with_attrs(O(SPOT), {"Kat": "3", "Tarih": "2026-10-07", "Not": " serbest ", "Durum": "M"}), 3),
+                                 "4": made(with_attrs(O(SPOT2), {"Kat": "1", "Durum": "M"}), 4)},
+                    "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": IDS}},
+        {"op": "plan", "input": {"layerId": "yapi", "objects": [O(SPOT, attrs={"Durum": "proje"})]},
+         "result": {"status": "completed", "output": {"entities": [{**made(with_attrs(O(SPOT), {"Durum": "P", "Kat": "1"}), 0)}], "revision": "$current"}, "warnings": []},
+         "note": "Etiket kodunu verir; plan da tek biçimi ve varsayılanları gösterir.", "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"layerId": "ada", "objects": [O(SPOT, attrs={"Kat": "+03"})]}, "result": done([5]),
+         "note": "Alanları olmayan katmanda değer verildiği gibi yazılır.", "expect": {"entities": {"5": made(with_attrs(O(SPOT), {"Kat": "+03"}), 5, "ada")}}},
+    ],
+})
+
+cases.append({
+    "name": "Katmanın alanları: kurala uymayan değer invalid_attribute, zorunlu alana boş attribute_required; nesneler sırayla, adlar kendi sıralarıyla; hiçbir şey yazılmaz",
+    "note": "ADR 0199 §2. Yol objects[i].attrs.<ad>.",
+    "setup": F_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(SPOT), O(SPOT2, attrs={"Kat": "0", "Durum": "X"})]}, "result": refused_at(1, "Durum", "X"),
+         "note": "İkinci nesnenin iki uymayanından adların sırasıyla ilki (Durum, Kat'tan önce).", "expect": {"ids": IDS, "revision": "same", "canUndo": False}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(SPOT, attrs={"Kat": "2.5"})]}, "result": refused_at(0, "Kat", "2.5"), "expect": {"revision": "same"}},
+        {"op": "validate", "input": {"layerId": "yapi", "objects": [O(SPOT, attrs={"Ada": " "})]}, "result": refused_at(0, "Ada", " ")},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(SPOT, attrs={"Tarih": "31.02.2026"})]}, "result": refused_at(0, "Tarih", "31.02.2026"), "expect": {"revision": "same"}},
+    ],
+})
+
 write(
     "cad.entities.create",
     "Nesneleri ekle: doğrulama, plan, yazma, geri alma",
-    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, ölçünün kuralları (ADR 0147: kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizebildiği ölçü; invalid_dimension), yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş), etiketi ve sembolüyle yazılır (ADR 0176: sembolün kimliği kitaplıkta aranmaz). Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Toplu alan, Köşelere nokta, Bitişik alan, Etiketleri yazıya çevir. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, ölçünün kuralları (ADR 0147: kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizebildiği ölçü; invalid_dimension), yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş), etiketi ve sembolüyle yazılır (ADR 0176: sembolün kimliği kitaplıkta aranmaz). Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Toplu alan, Köşelere nokta, Bitişik alan, Etiketleri yazıya çevir. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Katmanın alanları (ADR 0199 §2): verilen öznitelikler katmanın alanlarıyla denetlenir ve tek biçimleriyle yazılır, verilmeyen alan varsayılanını alır; kurala uymayan invalid_attribute, zorunlu alana boş attribute_required (yol objects[i].attrs.<ad>; nesneler sırayla, adlar kendi sıralarıyla; bağlı yazının nesnesinden sonra); değeri ve varsayılanı olmayan zorunlu alan reddedilmez. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

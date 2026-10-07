@@ -17,7 +17,12 @@
 //!    writes, when given, a text's, whole and well formed (docs/adr/0175 §4);
 //! 3. the expected revision, then the layer (every create command's, `checks.rs`);
 //! 4. every insert's block is the drawing's (docs/adr/0144);
-//! 5. every linked text's object is the drawing's.
+//! 5. every linked text's object is the drawing's;
+//! 6. the attributes given, by the layer's fields (docs/adr/0199 §2), objects
+//!    in order, names in theirs: written in their canonical text, and the
+//!    fields' defaults fill what an object does not give.
+
+use std::collections::BTreeMap;
 
 use kentos_contracts::{
     CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntitiesCreatePlan,
@@ -35,9 +40,9 @@ use crate::geometry::entity_of;
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesCreate) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(warnings) => CommandResult::Completed {
+        Ok(checked) => CommandResult::Completed {
             output: (),
-            warnings,
+            warnings: checked.warnings,
         },
         Err(stop) => stop.into(),
     }
@@ -50,12 +55,12 @@ pub fn plan(
     input: &EntitiesCreate,
 ) -> CommandResult<EntitiesCreatePlan> {
     match check(cx.doc, input) {
-        Ok(warnings) => CommandResult::Completed {
+        Ok(checked) => CommandResult::Completed {
             output: EntitiesCreatePlan {
-                entities: entities(input),
+                entities: entities(input, &checked.attrs),
                 revision: cx.doc.revision().to_string(),
             },
-            warnings,
+            warnings: checked.warnings,
         },
         Err(stop) => stop.into(),
     }
@@ -68,11 +73,11 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: EntitiesCreate,
 ) -> CommandResult<EntitiesCreated> {
-    let warnings = match check(cx.doc, &input) {
-        Ok(warnings) => warnings,
+    let Checked { warnings, attrs } = match check(cx.doc, &input) {
+        Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
-    let slots = match cx.doc.add_many(entities(&input), label(input.operation)) {
+    let slots = match cx.doc.add_many(entities(&input, &attrs), label(input.operation)) {
         Ok(slots) => slots,
         Err(full) => {
             return CommandResult::Failed {
@@ -145,9 +150,16 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
     }
 }
 
-/// The checks in the contract's order: why nothing may be written, or the
-/// warnings when it may.
-fn check(doc: &Document, input: &EntitiesCreate) -> Result<Vec<CommandWarning>, Stop> {
+/// What the checks give when the input may be written: the warnings, and
+/// each object's attributes as they will be stored.
+struct Checked {
+    warnings: Vec<CommandWarning>,
+    attrs: Vec<BTreeMap<String, String>>,
+}
+
+/// The checks in the contract's order: why nothing may be written, or what
+/// will be when it may.
+fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
     if input.objects.is_empty() {
         return Err(Stop::Failed(error(
             codes::NO_OBJECTS,
@@ -199,7 +211,39 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Vec<CommandWarning>, 
             )));
         }
     }
-    Ok(warnings)
+    // The values given to the layer's fields in their canonical text, and its
+    // defaults where an object gives none (docs/adr/0199 §2).
+    let defaults: Vec<(&str, &str)> = doc
+        .layers()
+        .get(&input.layer_id)
+        .map(|n| {
+            n.fields
+                .iter()
+                .filter_map(|f| Some((f.name.as_str(), f.default.as_deref()?)))
+                .collect()
+        })
+        .unwrap_or_default();
+    let mut attrs = Vec::with_capacity(input.objects.len());
+    for (i, object) in input.objects.iter().enumerate() {
+        let given: BTreeMap<String, Option<String>> = object
+            .attrs
+            .iter()
+            .flatten()
+            .map(|(k, v)| (k.clone(), Some(v.clone())))
+            .collect();
+        let at = format!("objects[{i}].attrs");
+        let mut own: BTreeMap<String, String> =
+            checks::field_values(doc, &input.layer_id, &given, &at)?
+                .into_iter()
+                .filter_map(|(k, v)| Some((k, v?)))
+                .collect();
+        for (name, value) in &defaults {
+            own.entry((*name).to_owned())
+                .or_insert_with(|| (*value).to_owned());
+        }
+        attrs.push(own);
+    }
+    Ok(Checked { warnings, attrs })
 }
 
 /// A new object's link to the object whose label it writes, when it has one
@@ -267,19 +311,21 @@ fn check_link(object: &NewObject, i: usize) -> Result<(), Stop> {
 }
 
 /// The objects `input` describes, as the document stores them: slot 0 (given
-/// when written), its own copies of every field.
-fn entities(input: &EntitiesCreate) -> Vec<Entity> {
+/// when written), its own copies of every field, the attributes `attrs`
+/// (each object's, as the checks gave them).
+fn entities(input: &EntitiesCreate, attrs: &[BTreeMap<String, String>]) -> Vec<Entity> {
     input
         .objects
         .iter()
-        .map(|object| {
+        .zip(attrs)
+        .map(|(object, attrs)| {
             let mut entity = entity_of(
                 &object.geometry,
                 EntityBase {
                     id: 0,
                     layer_id: input.layer_id.clone(),
                     color: object.color.clone(),
-                    attrs: object.attrs.clone().unwrap_or_default(),
+                    attrs: attrs.clone(),
                     label: object.label.clone(),
                     symbol: object.symbol.clone(),
                     line_weight: object.line_weight,

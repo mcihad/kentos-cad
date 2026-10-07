@@ -319,7 +319,12 @@ impl App {
     fn cell<'a>(&'a self, row: Row) -> Element<'a, Message> {
         let unit = row.unit.clone();
         if row.note {
-            return container(label::caption(row.value).style(style::text::muted))
+            let tone = if row.warn {
+                style::text::warning
+            } else {
+                style::text::muted
+            };
+            return container(label::caption(row.value).style(tone))
                 .padding([0, 6])
                 .into();
         }

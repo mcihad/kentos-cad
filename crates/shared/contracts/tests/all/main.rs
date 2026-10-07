@@ -5,4 +5,5 @@
 mod annotation;
 mod crs;
 mod document;
+mod fields;
 mod identity;

@@ -495,6 +495,19 @@ LabelPlacementName = Literal["center", "corner", "beside", "along"]
 """The names of :class:`LabelPlacement`, for a plain string."""
 
 
+class LayerFieldKind(_StrEnum):
+    """What a field holds (docs/adr/0199 §1)."""
+    TEXT = "text"
+    INTEGER = "integer"
+    DECIMAL = "decimal"
+    DATE = "date"
+    BOOLEAN = "boolean"
+
+
+LayerFieldKindName = Literal["text", "integer", "decimal", "date", "boolean"]
+"""The names of :class:`LayerFieldKind`, for a plain string."""
+
+
 class LayerNodeType(_StrEnum):
     GROUP = "group"
     LAYER = "layer"
@@ -2839,9 +2852,17 @@ class EntitiesCreate(_Model):
     `invalid_revision`, `revision_conflict` (status `conflict`),
     `layer_not_found`, `not_a_layer`, `layer_locked`, `unknown_block` (each
     insert's block, in order; docs/adr/0144), `link_not_found` (each linked
-    text's object, in order: no object of the drawing has that id); on the
-    desktop also `slots_exhausted`. Warning: `layer_hidden` (they are
-    written all the same).
+    text's object, in order: no object of the drawing has that id), then
+    `invalid_attribute` and `attribute_required` (each object's attributes by
+    the layer's fields, objects in order, names in theirs, at
+    `objects[i].attrs.<name>`; docs/adr/0199 §2); on the desktop also
+    `slots_exhausted`. Warning: `layer_hidden` (they are written all the same).
+
+    A layer with fields (docs/adr/0199 §2): a value given to a field's key is
+    written in its canonical text; a value that does not keep the field's
+    rules is refused (`invalid_attribute`), an empty one of a required field
+    too (`attribute_required`); a field an object does not give takes its
+    default. A required field without a value or a default is not refused.
     Attributes:
         layer_id: The layer they go on: a layer's id (`LayerNode.id`), not a group's.
         objects: What is written, at least one, in this order.
@@ -3233,8 +3254,17 @@ class EntitiesSetProperties(_Model):
     `invalid_revision`, `revision_conflict` (status `conflict`),
     `entity_not_found` (each id in order), `layer_not_found` and
     `not_a_layer` (the `layerId` given), `layer_locked` (each object's layer
-    in the input's order, then the `layerId` given). Warning: `layer_hidden`
-    (the `layerId` given is hidden and at least one object moves to it).
+    in the input's order, then the `layerId` given), then `invalid_attribute`
+    and `attribute_required` (the attributes given, by the fields of each
+    object's layer, the one it moves to else its own, objects in the input's
+    order, names in theirs, at `attrs.<name>`; docs/adr/0199 §2). Warning:
+    `layer_hidden` (the `layerId` given is hidden and at least one object
+    moves to it).
+
+    A layer with fields (docs/adr/0199 §2): a value given to a field's key is
+    written in its canonical text; a value that does not keep the field's
+    rules is refused (`invalid_attribute`), an empty or removed one of a
+    required field too (`attribute_required`). Keys no field names are free.
     White space is Unicode's `White_Space` (Rust's `char::is_whitespace`).
     Attributes:
         uids: The objects' persistent ids (lowercase UUID text with hyphens), at
@@ -3490,6 +3520,28 @@ class EntitiesTransformed(_Model):
             created=list(data["created"]),
             locked=list(data["locked"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldChoice(_Model):
+    """One value of a field's value list: the code written to the attribute
+    and the label shown for it.
+    """
+    code: str
+    label: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["label"] = self.label
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldChoice:
+        return cls(
+            code=data["code"],
+            label=data["label"],
         )
 
 
@@ -4143,9 +4195,74 @@ class LabelStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerField(_Model):
+    """A field of a layer (docs/adr/0199 §1): its name is the attribute's key.
+    Attributes:
+        alias: The name the table and the form show.
+        default: The value a new object takes, in its canonical text.
+        length: A text's most characters (1–10 000).
+        max: A number's greatest value, in its canonical text; included.
+        min: A number's least value, in its canonical text; included.
+        required: An object may not leave it empty; written only as `true`.
+        scale: A decimal's most fraction digits (0–15).
+        values: The values a text or a number takes, when only some.
+    """
+    name: str
+    kind: LayerFieldKind | LayerFieldKindName
+    alias: str | None | Unset = UNSET
+    default: str | None | Unset = UNSET
+    length: int | None | Unset = UNSET
+    max: str | None | Unset = UNSET
+    min: str | None | Unset = UNSET
+    required: bool | Unset = UNSET
+    scale: int | None | Unset = UNSET
+    values: list[FieldChoice] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        if self.alias is not UNSET:
+            out["alias"] = self.alias
+        if self.default is not UNSET:
+            out["default"] = self.default
+        if self.length is not UNSET:
+            out["length"] = self.length
+        if self.max is not UNSET:
+            out["max"] = self.max
+        if self.min is not UNSET:
+            out["min"] = self.min
+        if self.required is not UNSET:
+            out["required"] = self.required
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        if self.values is not UNSET:
+            out["values"] = None if self.values is None else [e0.to_json() for e0 in self.values]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerField:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(LayerFieldKind, data["kind"]),
+            alias=data.get("alias", UNSET),
+            default=data.get("default", UNSET),
+            length=data.get("length", UNSET),
+            max=data.get("max", UNSET),
+            min=data.get("min", UNSET),
+            required=data.get("required", UNSET),
+            scale=data.get("scale", UNSET),
+            values=UNSET if "values" not in data else None if data["values"] is None else [FieldChoice.from_json(e0) for e0 in data["values"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerNode(_Model):
     """A node of the layer tree: a group or a layer.
     Attributes:
+        fields: A layer's fields (docs/adr/0199 §1): the schema of its objects'
+            attributes, in the order the table and the form show them; empty, no
+            schema (and nothing written). Only a layer has them, never a group.
         snap: A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;
             absent, the general kinds. Only a layer has it, never a group.
     """
@@ -4157,6 +4274,7 @@ class LayerNode(_Model):
     expanded: bool
     style: LayerStyle
     children: list[LayerNode]
+    fields: list[LayerField] | Unset = UNSET
     snap: LayerSnap | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -4169,6 +4287,8 @@ class LayerNode(_Model):
         out["expanded"] = self.expanded
         out["style"] = self.style.to_json()
         out["children"] = [e0.to_json() for e0 in self.children]
+        if self.fields is not UNSET:
+            out["fields"] = [e0.to_json() for e0 in self.fields]
         if self.snap is not UNSET:
             out["snap"] = None if self.snap is None else self.snap.to_json()
         return out
@@ -4184,6 +4304,7 @@ class LayerNode(_Model):
             expanded=data["expanded"],
             style=LayerStyle.from_json(data["style"]),
             children=[LayerNode.from_json(e0) for e0 in data["children"]],
+            fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
             snap=UNSET if "snap" not in data else None if data["snap"] is None else LayerSnap.from_json(data["snap"]),
         )
 
@@ -8593,6 +8714,7 @@ __all__ = [
     "EntityEdit",
     "EntityGeometry",
     "FeatureChange",
+    "FieldChoice",
     "FileCommit",
     "FileCommitted",
     "FileTableSource",
@@ -8626,6 +8748,9 @@ __all__ = [
     "LabelPlacement",
     "LabelPlacementName",
     "LabelStyle",
+    "LayerField",
+    "LayerFieldKind",
+    "LayerFieldKindName",
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",

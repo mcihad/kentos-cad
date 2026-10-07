@@ -1,7 +1,8 @@
 import { uuidv7 } from '../core/uuid';
 import { packDrawing, type PageEntity } from '../io/columns';
 import { CadDocument } from '../model/document';
-import { fileBlock, selectionDrawing, takeFrom, TAKEN_SETTINGS, type Json, type Picks, type Same } from '../model/exchange';
+import type { NewEntity } from '../model/entities';
+import { fileBlock, layerTake, selectionDrawing, takeFrom, TAKEN_SETTINGS, type Json, type Picks, type Same } from '../model/exchange';
 import { LayerStore, type LayerInit, type LayerStyle } from '../model/layers';
 import { DOCUMENT_EXTENSION, DOCUMENT_MIME, toSnapshotV2 } from '../model/snapshot';
 import { BlockInsertTool } from '../tools/blockTools';
@@ -243,6 +244,43 @@ export function insertFileBlock(ctx: AppContext, theirs: Json, file: string): bo
   );
   if (!before.has(id)) BlockInsertTool.block = id;
   void ctx.commands.execute('tool.blockInsert');
+  return true;
+}
+
+/**
+ * Kaynaklar's Katman olarak ekle (docs/adr/0199 §7): `theirs`'s layer at `path` with its objects into the open drawing
+ * (model/exchange.ts `layerTake`): the layers, blocks and objects as one undo step, the styles and library items as
+ * settings; `from` names where it came from. The objects take new ids; a layer of ours that is locked takes none.
+ */
+export function takeLayerInto(ctx: AppContext, theirs: Json, path: string, from: string): boolean {
+  const made = layerTake(drawingJson(ctx), theirs, path);
+  if (!made) {
+    ctx.log.warn(`Katman olarak ekle: “${path}” alınamadı: kaynakta böyle bir katman yok ya da bu çizimde aynı yolda katman olmayan bir düğüm var.`);
+    return false;
+  }
+  const locked = treeLocked(ctx);
+  if (locked && changesTree(ctx, made.drawing.layers ?? [])) {
+    ctx.log.warn(`Katman olarak ekle: ${locked}`);
+    return false;
+  }
+  const shut = [...new Set(made.objects.map((e) => e.layerId as string))].find((id) => ctx.doc.layers.get(id) && ctx.doc.layers.isLocked(id));
+  if (shut !== undefined) {
+    ctx.log.warn(`Katman olarak ekle: “${ctx.doc.layers.path(shut)}” katmanı kilitli; kilidini açıp yeniden deneyin.`);
+    return false;
+  }
+  let counts = { layers: 0, blocks: 0, redefined: 0 };
+  try {
+    ctx.doc.transact('Katman olarak ekle', () => {
+      counts = putLayersAndBlocks(ctx, made.drawing);
+      if (made.objects.length) ctx.doc.addMany(made.objects.map(({ id: _id, ...e }) => e as NewEntity), 'Katman olarak ekle');
+    });
+  } catch (e) {
+    ctx.log.warn(`Katman olarak ekle: ${message(e)} Hiçbir şey alınmadı.`);
+    return false;
+  }
+  putSettings(ctx, made.drawing, false);
+  const parts = [`${made.objects.length} nesne`, counts.layers ? `${counts.layers} yeni katman ya da grup` : '', counts.blocks ? `${counts.blocks} blok` : ''].filter(Boolean);
+  ctx.log.success(`“${from}” içinden “${path}” alındı: ${parts.join(', ')} (tek adımda geri alınır).`);
   return true;
 }
 

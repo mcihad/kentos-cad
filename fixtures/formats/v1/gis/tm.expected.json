@@ -1,5 +1,46 @@
 {
  "declaredSrid": 5256,
+ "fields": {
+  "Parsel": [
+   {
+    "name": "ada",
+    "kind": "text"
+   },
+   {
+    "name": "parsel",
+    "kind": "text"
+   },
+   {
+    "name": "alan",
+    "kind": "decimal",
+    "scale": 3
+   },
+   {
+    "name": "mahalle",
+    "kind": "text"
+   }
+  ],
+  "Bina": [
+   {
+    "name": "kat",
+    "kind": "integer"
+   },
+   {
+    "name": "yapi",
+    "kind": "text"
+   },
+   {
+    "name": "ad",
+    "kind": "text"
+   }
+  ],
+  "tm": [
+   {
+    "name": "tur",
+    "kind": "text"
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "polygon",

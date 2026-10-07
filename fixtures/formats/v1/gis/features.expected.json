@@ -1,5 +1,90 @@
 {
  "declaredSrid": 4326,
+ "fields": {
+  "ornek": [
+   {
+    "name": "ad",
+    "kind": "text"
+   },
+   {
+    "name": "no",
+    "kind": "integer"
+   },
+   {
+    "name": "oran",
+    "kind": "decimal",
+    "scale": 2
+   },
+   {
+    "name": "bin",
+    "kind": "text"
+   },
+   {
+    "name": "sifir",
+    "kind": "decimal",
+    "scale": 1
+   },
+   {
+    "name": "durum",
+    "kind": "text"
+   },
+   {
+    "name": "aktif",
+    "kind": "boolean"
+   },
+   {
+    "name": "kapali",
+    "kind": "boolean"
+   },
+   {
+    "name": "detay",
+    "kind": "text"
+   },
+   {
+    "name": "notlar",
+    "kind": "text"
+   },
+   {
+    "name": "bos_metin",
+    "kind": "text"
+   },
+   {
+    "name": "bos_nesne",
+    "kind": "text"
+   },
+   {
+    "name": "bos_dizi",
+    "kind": "text"
+   },
+   {
+    "name": "eksi_sifir",
+    "kind": "integer"
+   },
+   {
+    "name": "buyuk",
+    "kind": "decimal",
+    "scale": 0
+   },
+   {
+    "name": "pi",
+    "kind": "text"
+   },
+   {
+    "name": "tur",
+    "kind": "text"
+   }
+  ],
+  "Sınır": [
+   {
+    "name": "ada",
+    "kind": "text"
+   },
+   {
+    "name": "parsel",
+    "kind": "integer"
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "point",
@@ -14,7 +99,7 @@
     "no": "12",
     "oran": "1.50",
     "bin": "1e3",
-    "sifir": "-0.0",
+    "sifir": "0.0",
     "durum": "yeni",
     "aktif": "true",
     "kapali": "false",
@@ -43,7 +128,7 @@
     "bos_metin": "",
     "bos_nesne": "{}",
     "bos_dizi": "[]",
-    "eksi_sifir": "-0",
+    "eksi_sifir": "0",
     "buyuk": "123456789012345678901234567890",
     "pi": "3.14159265358979323846264338327950288"
    }

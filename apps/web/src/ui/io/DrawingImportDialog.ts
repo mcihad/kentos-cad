@@ -351,7 +351,7 @@ class DrawingImportDialog {
         l.name,
         t.existing
           ? { kind: 'existing', id: t.existing }
-          : { kind: 'new', name: l.name, style: { color: l.color, lineType: l.lineType, ...(l.lineWeight ? { lineWeight: l.lineWeight } : {}) }, visible: l.visible, locked: l.locked },
+          : { kind: 'new', name: l.name, style: { color: l.color, lineType: l.lineType, ...(l.lineWeight ? { lineWeight: l.lineWeight } : {}) }, visible: l.visible, locked: l.locked, fields: l.fields ?? [] },
       );
     }
     const plan: ImportPlan = { label: `${SOURCE[this.source].prefix}: ${name}`, layers, group: name };

@@ -4,15 +4,15 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 379 | 367 | 0 | 12 |
+| Komutlar | 382 | 370 | 0 | 12 |
 | Araçlar | 121 | 119 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
 | Ayarlar | 92 | 92 | 0 | 0 |
-| Tarayıcı depoları | 11 | 11 | 0 | 0 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 470 | 470 | 0 | 0 |
-| Pencereler ve paneller | 109 | 109 | 0 | 0 |
+| Tarayıcı depoları | 12 | 12 | 0 | 0 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 484 | 484 | 0 | 0 |
+| Pencereler ve paneller | 112 | 112 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -49,15 +49,15 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 307 | 0 | 58 | 12 | 2 | 379 |
+| Komutlar | 310 | 0 | 58 | 12 | 2 | 382 |
 | Araçlar | 119 | 0 | 0 | 2 | 0 | 121 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
 | Ayarlar | 88 | 0 | 3 | 0 | 1 | 92 |
-| Tarayıcı depoları | 9 | 0 | 0 | 0 | 2 | 11 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 470 | 0 | 0 | 0 | 0 | 470 |
-| Pencereler ve paneller | 89 | 2 | 17 | 0 | 1 | 109 |
+| Tarayıcı depoları | 10 | 0 | 0 | 0 | 2 | 12 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 484 | 0 | 0 | 0 | 0 | 484 |
+| Pencereler ve paneller | 92 | 2 | 17 | 0 | 1 | 112 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -76,7 +76,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 379; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 382; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -173,15 +173,15 @@ Yok.
 - `session.overlapLayers`
 - `session.selectKinds`
 
-#### Tarayıcı depoları (0 / 11)
+#### Tarayıcı depoları (0 / 12)
 
 Yok.
 
-#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 470)
+#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 484)
 
 Yok.
 
-#### Pencereler ve paneller (19 / 109)
+#### Pencereler ve paneller (19 / 112)
 
 - `apps/web/src/ui/io/TakeFromDialog.ts#openTakeFrom` openTakeFrom
 - `apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog` openProjectTypeDialog
@@ -205,4 +205,4 @@ Yok.
 
 ## Test başvurusu
 
-126 / 379 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+127 / 382 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

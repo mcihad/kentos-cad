@@ -68,6 +68,8 @@ pub enum Event {
     Duplicate(String),
     /// Başka katmanlarla birleştir…: Katmanları birleştir's window, this layer the target.
     MergeInto(String),
+    /// Alanlar… (docs/adr/0199 §3): the layer's fields.
+    Fields(String),
     /// Sil: the layer, or the group with everything under it, and their objects.
     Remove(String),
     /// A layer's own snapping, a group's on all its layers (the magnet, Kenet ▸;
@@ -171,6 +173,13 @@ impl App {
             self.open_layer_merge(Some(id));
             return Task::none();
         }
+        if let Event::Fields(id) = event {
+            if let Some(why) = self.tree_locked() {
+                self.warn(why);
+                return Task::none();
+            }
+            return self.open_layer_fields(&id);
+        }
         if let Event::ZoomTo(id) = &event {
             self.zoom_to_layer(id);
             return Task::none();
@@ -196,7 +205,7 @@ impl App {
                 model.set_active_layer(&id);
             }
             // Handled above, before the drawing is borrowed.
-            Event::Duplicate(_) | Event::MergeInto(_) => {}
+            Event::Duplicate(_) | Event::MergeInto(_) | Event::Fields(_) => {}
             Event::Isolate(id) => model.isolate_layer(&id),
             Event::Snap(id, snap) => model.set_layer_snap(&id, snap),
             Event::SelectObjects(id) => {
@@ -453,6 +462,16 @@ impl App {
                     Message::LayerStyle(crate::style::layer_style::Event::Open(Some(id.clone()))),
                 )
                 .icon(crate::icons::from_web(Some("layerStyle")))
+                // Alanlar (docs/adr/0199 §3): the schema of its objects' attributes.
+                .item(
+                    if node.fields.is_empty() {
+                        "Alanlar…".to_owned()
+                    } else {
+                        format!("Alanlar… ({})", node.fields.len())
+                    },
+                    event(Event::Fields(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("layerFields")))
                 .separator();
         }
         let menu = menu

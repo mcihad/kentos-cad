@@ -27,6 +27,7 @@ pub mod blocks;
 pub mod coords;
 pub mod dxf;
 pub mod field;
+pub mod fields;
 pub mod geojson;
 pub mod geom;
 pub mod gis;

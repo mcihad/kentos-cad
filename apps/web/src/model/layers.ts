@@ -1,3 +1,4 @@
+import type { LayerField } from '../contracts/generated/LayerField';
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
 import type { LayerRenderer } from './style';
@@ -59,6 +60,8 @@ export interface LayerNode {
   children: LayerNode[];
   /** A layer's own snapping (docs/adr/0163 §4): off, or only these kinds; absent, the general kinds. Never a group's. */
   snap?: LayerSnap;
+  /** A layer's fields (docs/adr/0199 §1): the schema of its objects' attributes, in order; absent, none. Never a group's. */
+  fields?: LayerField[];
 }
 
 /** A layer's own snapping: `{ off: true }` or `{ kinds: [...] }` (contracts' `LayerSnap`, exactly one of the two). */
@@ -135,6 +138,8 @@ export class LayerStore {
       children: [],
       // A layer's own snapping (docs/adr/0163 §4); a group keeps none.
       ...(n.snap && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { snap: n.snap.kinds ? { kinds: [...n.snap.kinds] } : { off: true } }),
+      // A layer's fields (docs/adr/0199 §1); a group keeps none, an empty list is none.
+      ...(n.fields?.length && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { fields: structuredClone(n.fields) }),
     };
     node.children = (n.children ?? []).map((c) => this.make(c));
     return node;
@@ -322,6 +327,15 @@ export class LayerStore {
     const n = this.get(id);
     if (!n) return;
     n.style = structuredClone(style);
+    this.changedState(id);
+  }
+
+  /** A layer's fields (docs/adr/0199 §1), as the document's undoable `setLayerFields` puts them; empty takes them off. */
+  replaceFields(id: string, fields: readonly LayerField[]): void {
+    const n = this.get(id);
+    if (!n || n.type !== 'layer') return;
+    if (fields.length) n.fields = structuredClone([...fields]);
+    else delete n.fields;
     this.changedState(id);
   }
 

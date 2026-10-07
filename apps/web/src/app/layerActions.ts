@@ -89,8 +89,8 @@ export function mergeLayers(ctx: AppContext, sources: readonly string[], target:
 
 /**
  * Kopyasını oluştur (`layer.duplicate`, docs/adr/0177 §3): a new layer last in the same group, named “<ad> kopyası” (one
- * of its kind in the tree), with the same style (and layer style) and visibility, unlocked, and the copies of its
- * objects; one undo step “Katmanı kopyala”. Without an id, the active layer's. A locked layer is not copied (nor are its
+ * of its kind in the tree), with the same style (and layer style), fields and visibility, unlocked, and the copies of
+ * its objects; one undo step “Katmanı kopyala”. Without an id, the active layer's. A locked layer is not copied (nor are its
  * objects, CLAUDE.md §7); a project without project.edit cannot change its tree.
  */
 export function duplicateLayer(ctx: AppContext, id?: string): void {
@@ -107,11 +107,14 @@ export function duplicateLayer(ctx: AppContext, id?: string): void {
   try {
     doc.transact('Katmanı kopyala', () => {
       const node = doc.addLayer({ name, type: 'layer', visible: source.visible, style: structuredClone(source.style) }, source.id);
-      if (!objects.length) return;
-      const r = entitiesCreate.execute({ doc }, { layerId: node.id, objects: objects.map(newObjectOf) });
-      if (r.status !== 'completed') throw new Error('error' in r ? r.error.message : 'Nesneler kopyalanamadı.');
-      warnings.push(...r.warnings.map((w) => w.message));
-      made = r.output.ids.length;
+      if (objects.length) {
+        const r = entitiesCreate.execute({ doc }, { layerId: node.id, objects: objects.map(newObjectOf) });
+        if (r.status !== 'completed') throw new Error('error' in r ? r.error.message : 'Nesneler kopyalanamadı.');
+        warnings.push(...r.warnings.map((w) => w.message));
+        made = r.output.ids.length;
+      }
+      // Its fields after the copies (docs/adr/0199 §1): their values go as they are, kept or not.
+      if (source.fields?.length) doc.setLayerFields(node.id, source.fields);
     });
   } catch (e) {
     return void log.warn(e instanceof Error ? e.message : String(e));

@@ -1,3 +1,5 @@
+import type { LayerField } from '../contracts/generated/LayerField';
+import { layerFieldsProblem } from './layerFields';
 import { tableProblem, type TableShape } from './tables';
 import { imageProblem, type ImageShape } from './imageRules';
 import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
@@ -518,7 +520,50 @@ function layer(v: unknown, where: string): LayerInit {
     style: { ...(s as object), color: str(s.color, `${w} › renk`), lineType: oneOf(s.lineType, LINE_TYPES, `${w} › çizgi tipi`), lineWeight: num(s.lineWeight, `${w} › kalınlık`) },
     children,
     ...(v.snap !== undefined && { snap: layerSnap(v.snap, type, `${w} › kenet`) }),
+    ...(v.fields !== undefined && { fields: layerFieldsAt(v.fields, type, `${w} › alanlar`) }),
   };
+}
+
+/**
+ * A layer's fields (docs/adr/0199 §1), checked as the KCAD readers check them: on a layer only, a list that is not
+ * empty of fields with a name and a known kind and nothing unknown, `required` only true, the list whole by its rules.
+ */
+function layerFieldsAt(v: unknown, type: 'group' | 'layer', where: string): LayerField[] {
+  if (type === 'group') return fail(where, 'grubun alanları olmaz; alanlar yalnız katmanındır');
+  if (!Array.isArray(v)) return fail(where, 'liste olmalı');
+  const keys = ['name', 'alias', 'kind', 'length', 'scale', 'min', 'max', 'values', 'required', 'default'];
+  const fields = v.map((f, i): LayerField => {
+    const fw = `${where} › ${i + 1}`;
+    if (!isObj(f)) return fail(fw, 'nesne olmalı');
+    const unknown = Object.keys(f).find((k) => !keys.includes(k));
+    if (unknown) return fail(`${fw} › ${unknown}`, 'bilinmeyen alan');
+    const out: LayerField = { name: str(f.name, `${fw} › ad`), kind: oneOf(f.kind, ['text', 'integer', 'decimal', 'date', 'boolean'] as const, `${fw} › tür`) };
+    if (f.alias !== undefined) out.alias = str(f.alias, `${fw} › takma ad`);
+    for (const k of ['length', 'scale'] as const)
+      if (f[k] !== undefined) {
+        const n = num(f[k], `${fw} › ${k}`);
+        if (!Number.isInteger(n) || n < 0 || n > 4294967295) fail(`${fw} › ${k}`, 'eksi olmayan tam sayı olmalı');
+        out[k] = n;
+      }
+    for (const k of ['min', 'max', 'default'] as const) if (f[k] !== undefined) out[k] = str(f[k], `${fw} › ${k}`);
+    if (f.values !== undefined) {
+      if (!Array.isArray(f.values)) fail(`${fw} › değer listesi`, 'liste olmalı');
+      out.values = (f.values as unknown[]).map((c, j) => {
+        const cw = `${fw} › değer ${j + 1}`;
+        if (!isObj(c)) return fail(cw, 'nesne olmalı');
+        if (Object.keys(c).some((k) => k !== 'code' && k !== 'label')) fail(cw, 'yalnız code ve label olabilir');
+        return { code: str(c.code, `${cw} › kod`), label: str(c.label, `${cw} › etiket`) };
+      });
+    }
+    if (f.required !== undefined) {
+      if (f.required !== true) fail(`${fw} › zorunlu`, 'yalnız true yazılır');
+      out.required = true;
+    }
+    return out;
+  });
+  const problem = layerFieldsProblem(fields);
+  if (problem) fail(where, problem);
+  return fields;
 }
 
 /** The snap kinds a layer can keep to (contracts' `LAYER_SNAP_KINDS`; Uç nokta brings Çeyrek with it). */

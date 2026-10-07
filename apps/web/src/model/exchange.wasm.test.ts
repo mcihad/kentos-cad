@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import text from '../../../../fixtures/exchange/v1/cases.json?raw';
-import { blockKey, exchangeFold, fileBlock, selectionDrawing, takeFrom, uniqueNames, type Picks, type Same } from './exchange';
+import { blockKey, exchangeFold, fileBlock, layerTake, selectionDrawing, takeFrom, uniqueNames, type Picks, type Same } from './exchange';
 
 /**
  * Çizimler arası alışveriş (docs/adr/0193) on the shared cases fixtures/exchange/v1/cases.json
  * (scripts/fixtures/exchange_cases.py, no KentOS code): the selection's drawing, taking from another drawing, a drawing
- * as a block (its base by the WASM core's boxes). The desktop plays the same file
+ * as a block (its base by the WASM core's boxes), a layer with its objects (docs/adr/0199 §7). The desktop plays the same file
  * (crates/native/domain/tests/all/exchange.rs).
  */
 const f = JSON.parse(text);
@@ -26,6 +26,10 @@ describe('Çizimler arası alışveriş (fixtures/exchange/v1)', () => {
       expect([got?.images, got?.tables], c.name).toEqual([c.left.images, c.left.tables]);
     }
     expect(fileBlock(f.drawings.ours, { ...f.drawings.ours, entities: [], uids: [] }, 'Boş')).toBeNull();
+  });
+
+  it('takes a layer with its objects', () => {
+    for (const c of f.layers) expect(layerTake(f.drawings[c.into], f.drawings[c.from], c.path), c.name).toEqual(c.expect);
   });
 
   it('folds names as the rule says', () => {

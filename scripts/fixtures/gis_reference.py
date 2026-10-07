@@ -729,7 +729,8 @@ F1_ATTRS = {
     "no": "12",
     "oran": "1.50",
     "bin": "1e3",
-    "sifir": "-0.0",
+    # A decimal field (docs/adr/0199 §6): its canonical text, no minus on a zero.
+    "sifir": "0.0",
     "durum": "yeni",
     "aktif": "true",
     "kapali": "false",
@@ -741,14 +742,16 @@ F2_ATTRS = {
     "bos_metin": "",
     "bos_nesne": "{}",
     "bos_dizi": "[]",
-    "eksi_sifir": "-0",
+    # An integer field: -0 is 0.
+    "eksi_sifir": "0",
     "buyuk": "123456789012345678901234567890",
     "pi": "3.14159265358979323846264338327950288",
 }
 NOKTA = [
-    {"AD": "ÇŞĞÜÖİ çşğüöı", "KOT": "105.200", "ALAN": "1.23456780000e+003", "VAR": "true", "TARIH": "2026-09-26"},
-    {"AD": "Işıklı Köprü", "KOT": "107.850", "ALAN": "-4.50000000000e-001", "VAR": "false", "ACIKLAMA": "Sınır taşı"},
-    {"AD": " Kuzey Çeşme", "ALAN": "0.00000000000e+000"},
+    # An F field is a decimal (docs/adr/0199 §6): its exponent written out in full, exactly, every digit kept.
+    {"AD": "ÇŞĞÜÖİ çşğüöı", "KOT": "105.200", "ALAN": "1234.56780000", "VAR": "true", "TARIH": "2026-09-26"},
+    {"AD": "Işıklı Köprü", "KOT": "107.850", "ALAN": "-0.450000000000", "VAR": "false", "ACIKLAMA": "Sınır taşı"},
+    {"AD": " Kuzey Çeşme", "ALAN": "0.00000000000"},
 ]
 YOL = [{"AD": "Atatürk Bulvarı", "ŞERİT": "4", "KAPLAMA": "Asfalt"}, {"AD": "Gökçe Ağaçlı Yolu", "ŞERİT": "2", "KAPLAMA": "Stabilize"}]
 PARSEL = [
@@ -767,6 +770,63 @@ KUYU = [
     {"AD": "Şifalı Kuyu 1", "DERINLIK": "120.50", "SU": "true", "OLCUM": "2025-03-14"},
     {"AD": "Işıklı Çeşme Kuyusu", "DERINLIK": "85.00", "SU": "false", "OLCUM": "1.3.25"},
 ]
+
+# The layers' fields (docs/adr/0199 §6), by hand from the rules: a DBF field's type and width (C text of its width,
+# N without decimals an integer, with decimals a decimal of as many, F a decimal, D a date, L a yes or no), a GeoJSON
+# key by all its values in the layer (integers, numbers without an exponent, booleans, else text).
+FIELDS = {
+    "features": {
+        "ornek": [
+            {"name": "ad", "kind": "text"},
+            {"name": "no", "kind": "integer"},
+            {"name": "oran", "kind": "decimal", "scale": 2},
+            {"name": "bin", "kind": "text"},
+            {"name": "sifir", "kind": "decimal", "scale": 1},
+            {"name": "durum", "kind": "text"},
+            {"name": "aktif", "kind": "boolean"},
+            {"name": "kapali", "kind": "boolean"},
+            {"name": "detay", "kind": "text"},
+            {"name": "notlar", "kind": "text"},
+            {"name": "bos_metin", "kind": "text"},
+            {"name": "bos_nesne", "kind": "text"},
+            {"name": "bos_dizi", "kind": "text"},
+            {"name": "eksi_sifir", "kind": "integer"},
+            # Wider than a float64's whole number: a decimal of no fraction.
+            {"name": "buyuk", "kind": "decimal", "scale": 0},
+            # 36 digits: more than a decimal's 30.
+            {"name": "pi", "kind": "text"},
+            {"name": "tur", "kind": "text"},
+        ],
+        "Sınır": [{"name": "ada", "kind": "text"}, {"name": "parsel", "kind": "integer"}],
+    },
+    "tm": {
+        "Parsel": [{"name": "ada", "kind": "text"}, {"name": "parsel", "kind": "text"}, {"name": "alan", "kind": "decimal", "scale": 3}, {"name": "mahalle", "kind": "text"}],
+        "Bina": [{"name": "kat", "kind": "integer"}, {"name": "yapi", "kind": "text"}, {"name": "ad", "kind": "text"}],
+        "tm": [{"name": "tur", "kind": "text"}],
+    },
+    "bare-polygon": None,
+    "feature-epsg": {"feature-epsg": [{"name": "yol", "kind": "text"}, {"name": "serit", "kind": "integer"}]},
+    "crs84": {"crs84": [{"name": "ad", "kind": "text"}]},
+    "kotlu": {"Kot cizgisi": [{"name": "tur", "kind": "text"}], "kotlu": [{"name": "tur", "kind": "text"}], "Parsel": [{"name": "tur", "kind": "text"}]},
+    # 1e999 is a number with an exponent: text.
+    "nonfinite": {"nonfinite": [{"name": "ad", "kind": "text"}, {"name": "buyuk", "kind": "text"}]},
+    "noktalar": {
+        "noktalar": [
+            {"name": "AD", "kind": "text", "length": 30},
+            {"name": "KOT", "kind": "decimal", "scale": 3},
+            {"name": "ALAN", "kind": "decimal"},
+            {"name": "VAR", "kind": "boolean"},
+            {"name": "TARIH", "kind": "date"},
+            {"name": "ACIKLAMA", "kind": "text", "length": 20},
+        ]
+    },
+    "yollar": {"yollar": [{"name": "AD", "kind": "text", "length": 50}, {"name": "ŞERİT", "kind": "integer"}, {"name": "KAPLAMA", "kind": "text", "length": 20}]},
+    "parseller": {"parseller": [{"name": "ADA", "kind": "integer"}, {"name": "PARSEL", "kind": "integer"}, {"name": "MALİK", "kind": "text", "length": 30}, {"name": "NİTELİK", "kind": "text", "length": 25}]},
+    "kuyular": {"kuyular": [{"name": "AD", "kind": "text", "length": 25}, {"name": "DERINLIK", "kind": "decimal", "scale": 2}, {"name": "SU", "kind": "boolean"}, {"name": "OLCUM", "kind": "date"}]},
+    "karisik": {"karisik": [{"name": "AD", "kind": "text", "length": 10}, {"name": "NO", "kind": "integer"}]},
+    "yollarz": {"yollarz": [{"name": "AD", "kind": "text", "length": 30}, {"name": "KOD", "kind": "integer"}]},
+    "alanlarz": {"alanlarz": [{"name": "AD", "kind": "text", "length": 30}, {"name": "KOD", "kind": "integer"}]},
+}
 
 SUMMARY = {
     "features": {
@@ -1060,11 +1120,16 @@ def bits(v):
 
 def against_summary(name, result):
     want, problems = SUMMARY[name], []
-    top = ("declaredSrid", "encoding", "objects") if "encoding" in want else ("declaredSrid", "objects")
+    fields = FIELDS[name]
+    top = ("declaredSrid", "encoding") if "encoding" in want else ("declaredSrid",)
+    top += ("fields", "objects") if fields else ("objects",)
     if tuple(result) != top:
         problems.append(f"{name}: kök anahtarları {list(result)}, beklenen {list(top)}")
     for key in top[:-1]:
-        if bits(result.get(key)) != bits(want[key]):
+        if key == "fields":
+            if result.get("fields") != fields:
+                problems.append(f"{name}: alanlar {result.get('fields')!r}, beklenen {fields!r}")
+        elif bits(result.get(key)) != bits(want[key]):
             problems.append(f"{name}: {key} {result.get(key)!r}, beklenen {want[key]!r}")
     got = result.get("objects", [])
     if [o.get("kind") for o in got] != [o["kind"] for o in want["objects"]]:
@@ -1608,6 +1673,48 @@ def placed_piece(entity, m, obj):
     return [f"blokta denetlenmeyen tür {kind!r} (fixture'a eklemeden önce kuralını yazın)"]
 
 
+def canonical_boolean(value):
+    """A yes or no value's canonical text (docs/adr/0199 §1), or None."""
+    f = gis.fold(value.strip())
+    return "true" if f in ("evet", "true", "1") else "false" if f in ("hayır", "false", "0") else None
+
+
+def written_value(field, value):
+    """How the writer writes an attribute of a layer with fields (docs/adr/0199 §6): ("number", its canonical text)
+    when a number field's canonical value is exactly its nearest float64's shortest text, ("bool", True or False) for a
+    yes or no, else ("text", the value)."""
+    if field is not None and field["kind"] in ("integer", "decimal"):
+        c = gis.field_value(field, value)
+        if c and Fraction(c) == Fraction(repr(float(c))):
+            return ("number", c)
+    if field is not None and field["kind"] == "boolean":
+        b = canonical_boolean(value)
+        if b is not None:
+            return ("bool", b == "true")
+    return ("text", value)
+
+
+def check_typed(name, spec, data):
+    """A layer with fields: each feature's properties, by their JSON kinds, as `written_value` says."""
+    problems = []
+    fields = {layer["id"]: {f["name"]: f for f in layer.get("fields", [])} for layer in spec["layers"]}
+    features = gis.load_json(data)["features"]
+    written = [e for e in spec["entities"] if e["kind"] not in UNWRITTEN and e["kind"] != "insert"]
+    for i, (e, feature) in enumerate(zip(written, features)):
+        props = feature["properties"]
+        for key, value in e.get("attrs", {}).items():
+            kind, want = written_value(fields.get(e.get("layerId"), {}).get(key), value)
+            got = props.get(key)
+            ok = (
+                (kind == "number" and isinstance(got, gis.Num) and got.text == want)
+                or (kind == "bool" and got is want)
+                or (kind == "text" and isinstance(got, str) and got == want)
+            )
+            if not ok:
+                problems.append(f"export/{name}: {i}. nesnenin “{key}” özelliği {got!r}, beklenen {kind} {want!r}")
+    return problems
+
+
 def check_export(name, spec, data):
     """One written pair: the document's shape and crs, then every object read back against its entity."""
     try:
@@ -1624,6 +1731,8 @@ def check_export(name, spec, data):
     if result["declaredSrid"] != srid:
         problems.append(f"export/{name}: okunan SRID {result['declaredSrid']}, girdininki {srid}")
     layers = {layer["id"]: layer["name"] for layer in spec["layers"]}
+    fields_of = {layer["id"]: {f["name"]: f for f in layer.get("fields", [])} for layer in spec["layers"]}
+    problems += check_typed(name, spec, data)
     blocks = {b["id"]: b for b in spec.get("blocks", [])}
     # (the object read back, the input object whose feature it is, the block's object and its placement for an insert's member)
     expected = []
@@ -1645,7 +1754,13 @@ def check_export(name, spec, data):
             problems.append(f"{where}: katman {obj['layer']!r}, beklenen {layer!r}")
         if obj.get("label") != label:
             problems.append(f"{where}: etiket {obj.get('label')!r}, beklenen {label!r} (None: etiket yok)")
-        if obj["attrs"] != entity.get("attrs", {}):
+        # A layer with fields writes numbers and yes or no values as JSON's own (docs/adr/0199 §6): they read back so.
+        own = fields_of.get(entity.get("layerId"), {})
+        back = {}
+        for key, value in entity.get("attrs", {}).items():
+            kind, want = written_value(own.get(key), value)
+            back[key] = want if kind == "number" else ("true" if want else "false") if kind == "bool" else value
+        if obj["attrs"] != back:
             problems.append(f"{where}: öznitelikler girdidekiler değil")
         problems += [f"{where}: {p}" for p in (exported(entity, obj) if piece is None else placed_piece(piece, m, obj))]
     return problems
@@ -1783,8 +1898,8 @@ def verify(files):
         problems += against_summary(name, result)
         if gis.dumps(result).encode("utf-8") != files[f"{name}.expected.json"]:
             problems.append(f"{name}: okuyucunun çıktısı {name}.expected.json değil")
-    if set(SUMMARY) != set(GEOJSON) | set(SHAPEFILES):
-        problems.append("SUMMARY her fixture'ı bir kez anlatmalı")
+    if set(SUMMARY) != set(GEOJSON) | set(SHAPEFILES) or set(FIELDS) != set(SUMMARY):
+        problems.append("SUMMARY ve FIELDS her fixture'ı bir kez anlatmalı")
     return problems
 
 

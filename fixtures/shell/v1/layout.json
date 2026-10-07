@@ -56,6 +56,7 @@
     "history",
     "coords",
     "points",
+    "table",
     "search",
     "messages"
    ]
@@ -66,7 +67,8 @@
     "layers",
     "processing",
     "blocks",
-    "templates"
+    "templates",
+    "sources"
    ]
   },
   "processingTab": {
@@ -448,6 +450,29 @@
     "bottomHeight": 190,
     "bottomTab": "history",
     "dockTab": "templates",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
+   }
+  },
+  {
+   "title": "the Kaynaklar tab in front is kept (docs/adr/0199 §7)",
+   "stored": "{\"dockTab\":\"sources\"}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "dockTab": "sources",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",

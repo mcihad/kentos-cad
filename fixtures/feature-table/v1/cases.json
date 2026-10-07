@@ -1,0 +1,3338 @@
+{
+ "format": "kentos.feature-table-cases",
+ "version": 1,
+ "generatedBy": "scripts/fixtures/feature_table_cases.py",
+ "title": "Öznitelik tablosu: gösterilen satırlar ve sıraları (ADR 0199 §4)",
+ "tables": [
+  {
+   "name": "parseller",
+   "columns": [
+    {
+     "order": "text",
+     "searched": false
+    },
+    {
+     "order": "text",
+     "searched": true
+    },
+    {
+     "order": "number",
+     "searched": true
+    },
+    {
+     "order": "number",
+     "searched": true
+    },
+    {
+     "order": "date",
+     "searched": true
+    },
+    {
+     "order": "boolean",
+     "searched": true
+    },
+    {
+     "order": "text",
+     "searched": true
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "shown": "Alan",
+       "key": "Alan"
+      },
+      {
+       "shown": "Ada 10",
+       "key": "Ada 10"
+      },
+      {
+       "shown": "3",
+       "key": "3"
+      },
+      {
+       "shown": "120.50",
+       "key": "120.50"
+      },
+      {
+       "shown": "07.10.2026",
+       "key": "2026-10-07"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "Konut",
+       "key": "Konut"
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "Alan",
+       "key": "Alan"
+      },
+      {
+       "shown": "Ada 2",
+       "key": "Ada 2"
+      },
+      {
+       "shown": "12",
+       "key": "12"
+      },
+      {
+       "shown": "98.25",
+       "key": "98.25"
+      },
+      {
+       "shown": "02.01.2026",
+       "key": "2026-01-02"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "Ticaret",
+       "key": "Ticaret"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "Alan",
+       "key": "Alan"
+      },
+      {
+       "shown": "ada 9",
+       "key": "ada 9"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "120.5",
+       "key": "120.5"
+      },
+      {
+       "shown": "31.12.1999",
+       "key": "1999-12-31"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "İşyeri",
+       "key": "İşyeri"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "Nokta",
+       "key": "Nokta"
+      },
+      {
+       "shown": "İstasyon",
+       "key": "İstasyon"
+      },
+      {
+       "shown": "3a"
+      },
+      {
+       "shown": "-0.75",
+       "key": "-0.75"
+      },
+      {
+       "shown": "2026-13-01"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": ""
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "Alan",
+       "key": "Alan"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "-2",
+       "key": "-2"
+      },
+      {
+       "shown": "0",
+       "key": "0"
+      },
+      {
+       "shown": "07.10.2026",
+       "key": "2026-10-07"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "Konut",
+       "key": "Konut"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": false
+    },
+    {
+     "cells": [
+      {
+       "shown": "Çizgi",
+       "key": "Çizgi"
+      },
+      {
+       "shown": "Ilgaz",
+       "key": "Ilgaz"
+      },
+      {
+       "shown": "40",
+       "key": "40"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "01.01.0999",
+       "key": "0999-01-01"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "konut ek"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "Alan",
+       "key": "Alan"
+      },
+      {
+       "shown": "Zeytin",
+       "key": "Zeytin"
+      },
+      {
+       "shown": "3",
+       "key": "3"
+      },
+      {
+       "shown": "120.500",
+       "key": "120.500"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "Ticaret",
+       "key": "Ticaret"
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    }
+   ],
+   "queries": [
+    {
+     "name": "çizim-sırası",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      0,
+      1,
+      2,
+      3,
+      5,
+      6
+     ]
+    },
+    {
+     "name": "ad-artan",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 1,
+      "descending": false
+     },
+     "want": [
+      1,
+      2,
+      0,
+      5,
+      3,
+      6
+     ]
+    },
+    {
+     "name": "ad-azalan",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 1,
+      "descending": true
+     },
+     "want": [
+      6,
+      3,
+      5,
+      0,
+      2,
+      1
+     ]
+    },
+    {
+     "name": "kat-artan",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 2,
+      "descending": false
+     },
+     "want": [
+      0,
+      6,
+      1,
+      5,
+      2,
+      3
+     ]
+    },
+    {
+     "name": "kat-azalan",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 2,
+      "descending": true
+     },
+     "want": [
+      5,
+      1,
+      0,
+      6,
+      2,
+      3
+     ]
+    },
+    {
+     "name": "alan-eşitler",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 3,
+      "descending": false
+     },
+     "want": [
+      3,
+      1,
+      0,
+      2,
+      6,
+      5
+     ]
+    },
+    {
+     "name": "alan-azalan",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 3,
+      "descending": true
+     },
+     "want": [
+      0,
+      2,
+      6,
+      1,
+      3,
+      5
+     ]
+    },
+    {
+     "name": "tarih-artan",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 4,
+      "descending": false
+     },
+     "want": [
+      5,
+      2,
+      1,
+      0,
+      3,
+      6
+     ]
+    },
+    {
+     "name": "tarih-azalan",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 4,
+      "descending": true
+     },
+     "want": [
+      0,
+      1,
+      2,
+      5,
+      3,
+      6
+     ]
+    },
+    {
+     "name": "evet-hayır",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 5,
+      "descending": false
+     },
+     "want": [
+      1,
+      6,
+      0,
+      3,
+      5,
+      2
+     ]
+    },
+    {
+     "name": "evet-hayır-azalan",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 5,
+      "descending": true
+     },
+     "want": [
+      0,
+      3,
+      5,
+      1,
+      6,
+      2
+     ]
+    },
+    {
+     "name": "liste-etiketle",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 6,
+      "descending": false
+     },
+     "want": [
+      2,
+      0,
+      1,
+      6,
+      3,
+      5
+     ]
+    },
+    {
+     "name": "tür",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 0,
+      "descending": false
+     },
+     "want": [
+      0,
+      1,
+      2,
+      6,
+      5,
+      3
+     ]
+    },
+    {
+     "name": "olmayan-sütun",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 9,
+      "descending": false
+     },
+     "want": [
+      0,
+      1,
+      2,
+      3,
+      5,
+      6
+     ]
+    },
+    {
+     "name": "seçililer",
+     "query": {
+      "search": "",
+      "show": "selected",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      0,
+      3,
+      6
+     ]
+    },
+    {
+     "name": "görünümdekiler",
+     "query": {
+      "search": "",
+      "show": "inView",
+      "sort": 2,
+      "descending": false
+     },
+     "want": [
+      0,
+      6,
+      1,
+      3
+     ]
+    },
+    {
+     "name": "bilinmeyen-gösterim",
+     "query": {
+      "search": "",
+      "show": "hepsi",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      0,
+      1,
+      2,
+      3,
+      5,
+      6
+     ]
+    },
+    {
+     "name": "ara-büyük-harf",
+     "query": {
+      "search": "  KONUT ",
+      "show": "all",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      0,
+      5
+     ]
+    },
+    {
+     "name": "ara-joker",
+     "query": {
+      "search": "ada*",
+      "show": "all",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "name": "ara-joker-ortada",
+     "query": {
+      "search": "*1*.5*",
+      "show": "all",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      0,
+      2,
+      6
+     ]
+    },
+    {
+     "name": "ara-ı",
+     "query": {
+      "search": "ılg",
+      "show": "all",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      5
+     ]
+    },
+    {
+     "name": "ara-i",
+     "query": {
+      "search": "istasyon",
+      "show": "all",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      3
+     ]
+    },
+    {
+     "name": "ara-türde-aranmaz",
+     "query": {
+      "search": "Nokta",
+      "show": "all",
+      "sort": null,
+      "descending": false
+     },
+     "want": []
+    },
+    {
+     "name": "ara-gösterilende",
+     "query": {
+      "search": "07.10",
+      "show": "all",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      0
+     ]
+    },
+    {
+     "name": "ara-sırala",
+     "query": {
+      "search": "e",
+      "show": "all",
+      "sort": 3,
+      "descending": true
+     },
+     "want": [
+      0,
+      2,
+      6,
+      1,
+      3,
+      5
+     ]
+    },
+    {
+     "name": "ara-boşluk",
+     "query": {
+      "search": "   ",
+      "show": "all",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      0,
+      1,
+      2,
+      3,
+      5,
+      6
+     ]
+    }
+   ]
+  },
+  {
+   "name": "kesin-ve-doğal",
+   "columns": [
+    {
+     "order": "number",
+     "searched": true
+    },
+    {
+     "order": "date",
+     "searched": true
+    },
+    {
+     "order": "boolean",
+     "searched": false
+    },
+    {
+     "order": "text",
+     "searched": true
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "shown": "a",
+       "key": "123456789012345678901234567891"
+      },
+      {
+       "shown": "x",
+       "key": "2026-10-07"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "a10",
+       "key": "a10"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "b",
+       "key": "123456789012345678901234567890"
+      },
+      {
+       "shown": "y",
+       "key": "2026-10-06"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "a2",
+       "key": "a2"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "c",
+       "key": "0.10000000000000000000000000001"
+      },
+      {
+       "shown": "z",
+       "key": "9999-12-31"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "B",
+       "key": "B"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "d",
+       "key": "0.1"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "ç",
+       "key": "ç"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "e",
+       "key": "-0.1"
+      },
+      {
+       "shown": "w",
+       "key": "0001-01-01"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "C",
+       "key": "C"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "f",
+       "key": "-123456789012345678901234567890"
+      },
+      {
+       "shown": "v",
+       "key": "2026-10-07"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "a02",
+       "key": "a02"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "g",
+       "key": "0"
+      },
+      {
+       "shown": "u",
+       "key": "1999-02-28"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": ""
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    }
+   ],
+   "queries": [
+    {
+     "name": "sayı",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 0,
+      "descending": false
+     },
+     "want": [
+      5,
+      4,
+      6,
+      3,
+      2,
+      1,
+      0
+     ]
+    },
+    {
+     "name": "sayı-azalan",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 0,
+      "descending": true
+     },
+     "want": [
+      0,
+      1,
+      2,
+      3,
+      6,
+      4,
+      5
+     ]
+    },
+    {
+     "name": "tarih",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 1,
+      "descending": false
+     },
+     "want": [
+      4,
+      6,
+      1,
+      0,
+      5,
+      2,
+      3
+     ]
+    },
+    {
+     "name": "evet-hayır",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 2,
+      "descending": false
+     },
+     "want": [
+      1,
+      4,
+      6,
+      0,
+      3,
+      5,
+      2
+     ]
+    },
+    {
+     "name": "doğal",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 3,
+      "descending": false
+     },
+     "want": [
+      5,
+      1,
+      0,
+      2,
+      4,
+      3,
+      6
+     ]
+    },
+    {
+     "name": "doğal-azalan",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 3,
+      "descending": true
+     },
+     "want": [
+      3,
+      4,
+      2,
+      0,
+      1,
+      5,
+      6
+     ]
+    }
+   ]
+  },
+  {
+   "name": "rastgele",
+   "columns": [
+    {
+     "order": "number",
+     "searched": true
+    },
+    {
+     "order": "number",
+     "searched": true
+    },
+    {
+     "order": "date",
+     "searched": true
+    },
+    {
+     "order": "boolean",
+     "searched": true
+    },
+    {
+     "order": "text",
+     "searched": true
+    },
+    {
+     "order": "text",
+     "searched": true
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "shown": "-10.230",
+       "key": "-10.230"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "17.08.2015",
+       "key": "2015-08-17"
+      },
+      {
+       "shown": "x1"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "u 2",
+       "key": "u 2"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-1.9",
+       "key": "-1.9"
+      },
+      {
+       "shown": "-8",
+       "key": "-8"
+      },
+      {
+       "shown": "25.11.1991",
+       "key": "1991-11-25"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "Ş",
+       "key": "Ş"
+      },
+      {
+       "shown": "ıl",
+       "key": "ıl"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": false
+    },
+    {
+     "cells": [
+      {
+       "shown": "-19.5",
+       "key": "-19.5"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "25.02.2026",
+       "key": "2026-02-25"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "--"
+      },
+      {
+       "shown": "u 10",
+       "key": "u 10"
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-190",
+       "key": "-190"
+      },
+      {
+       "shown": "0.69",
+       "key": "0.69"
+      },
+      {
+       "shown": "11.09.2003",
+       "key": "2003-09-11"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "Çam 10",
+       "key": "Çam 10"
+      },
+      {
+       "shown": "x1"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": ""
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "08.12.2009",
+       "key": "2009-12-08"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "ada 10",
+       "key": "ada 10"
+      },
+      {
+       "shown": ""
+      }
+     ],
+     "selected": true,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "?"
+      },
+      {
+       "shown": "-18.76",
+       "key": "-18.76"
+      },
+      {
+       "shown": "20.03.1999",
+       "key": "1999-03-20"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "Ada 10",
+       "key": "Ada 10"
+      },
+      {
+       "shown": "u 2",
+       "key": "u 2"
+      }
+     ],
+     "selected": true,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "--"
+      },
+      {
+       "shown": "0",
+       "key": "0"
+      },
+      {
+       "shown": "11.07.1995",
+       "key": "1995-07-11"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": ""
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "0.220",
+       "key": "0.220"
+      },
+      {
+       "shown": "?"
+      },
+      {
+       "shown": "13.01.2014",
+       "key": "2014-01-13"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "a1 10",
+       "key": "a1 10"
+      },
+      {
+       "shown": "Ada 1",
+       "key": "Ada 1"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": false
+    },
+    {
+     "cells": [
+      {
+       "shown": "148.000",
+       "key": "148.000"
+      },
+      {
+       "shown": "-0.74",
+       "key": "-0.74"
+      },
+      {
+       "shown": "12.06.2023",
+       "key": "2023-06-12"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "Ş",
+       "key": "Ş"
+      },
+      {
+       "shown": "x1"
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": ""
+      },
+      {
+       "shown": "-1390.0",
+       "key": "-1390.0"
+      },
+      {
+       "shown": "28.01.2029",
+       "key": "2029-01-28"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "b 2",
+       "key": "b 2"
+      },
+      {
+       "shown": "Konut",
+       "key": "Konut"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "15.64",
+       "key": "15.64"
+      },
+      {
+       "shown": "1349.00",
+       "key": "1349.00"
+      },
+      {
+       "shown": "28.05.2008",
+       "key": "2008-05-28"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "a10 2",
+       "key": "a10 2"
+      },
+      {
+       "shown": "a1 2",
+       "key": "a1 2"
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-575",
+       "key": "-575"
+      },
+      {
+       "shown": "4",
+       "key": "4"
+      },
+      {
+       "shown": "01.03.2000",
+       "key": "2000-03-01"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "Konut 1",
+       "key": "Konut 1"
+      },
+      {
+       "shown": "a10 2",
+       "key": "a10 2"
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "?"
+      },
+      {
+       "shown": "1.7",
+       "key": "1.7"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "çam 10",
+       "key": "çam 10"
+      },
+      {
+       "shown": "a2 1",
+       "key": "a2 1"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-1118.000",
+       "key": "-1118.000"
+      },
+      {
+       "shown": "51.0",
+       "key": "51.0"
+      },
+      {
+       "shown": "10.06.2009",
+       "key": "2009-06-10"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "a1 10",
+       "key": "a1 10"
+      },
+      {
+       "shown": "u 2",
+       "key": "u 2"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "1755.0",
+       "key": "1755.0"
+      },
+      {
+       "shown": "49.7",
+       "key": "49.7"
+      },
+      {
+       "shown": "14.01.2019",
+       "key": "2019-01-14"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "B 1",
+       "key": "B 1"
+      },
+      {
+       "shown": ""
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "166.30",
+       "key": "166.30"
+      },
+      {
+       "shown": "-3.7",
+       "key": "-3.7"
+      },
+      {
+       "shown": "19.04.1998",
+       "key": "1998-04-19"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "u 2",
+       "key": "u 2"
+      },
+      {
+       "shown": "b 10",
+       "key": "b 10"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-1.869",
+       "key": "-1.869"
+      },
+      {
+       "shown": "-177.500",
+       "key": "-177.500"
+      },
+      {
+       "shown": "19.07.1993",
+       "key": "1993-07-19"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "u 2",
+       "key": "u 2"
+      },
+      {
+       "shown": "u",
+       "key": "u"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": false
+    },
+    {
+     "cells": [
+      {
+       "shown": "-155.90",
+       "key": "-155.90"
+      },
+      {
+       "shown": "x1"
+      },
+      {
+       "shown": "09.11.2024",
+       "key": "2024-11-09"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "a2 2",
+       "key": "a2 2"
+      },
+      {
+       "shown": "a2 2",
+       "key": "a2 2"
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "1.902",
+       "key": "1.902"
+      },
+      {
+       "shown": "-18",
+       "key": "-18"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "İl 10",
+       "key": "İl 10"
+      },
+      {
+       "shown": "B",
+       "key": "B"
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": ""
+      },
+      {
+       "shown": "345",
+       "key": "345"
+      },
+      {
+       "shown": "19.04.1992",
+       "key": "1992-04-19"
+      },
+      {
+       "shown": "x1"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "a10 10",
+       "key": "a10 10"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-1626.0",
+       "key": "-1626.0"
+      },
+      {
+       "shown": "-18",
+       "key": "-18"
+      },
+      {
+       "shown": "12.06.2022",
+       "key": "2022-06-12"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "b 10",
+       "key": "b 10"
+      },
+      {
+       "shown": "a1",
+       "key": "a1"
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "2",
+       "key": "2"
+      },
+      {
+       "shown": "1.205",
+       "key": "1.205"
+      },
+      {
+       "shown": "--"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "a1 1",
+       "key": "a1 1"
+      },
+      {
+       "shown": "ada 2",
+       "key": "ada 2"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-1",
+       "key": "-1"
+      },
+      {
+       "shown": "-9",
+       "key": "-9"
+      },
+      {
+       "shown": "12.02.2028",
+       "key": "2028-02-12"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "Konut 10",
+       "key": "Konut 10"
+      },
+      {
+       "shown": "?"
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "1.86",
+       "key": "1.86"
+      },
+      {
+       "shown": "-141",
+       "key": "-141"
+      },
+      {
+       "shown": "20.04.2022",
+       "key": "2022-04-20"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "ü 10",
+       "key": "ü 10"
+      },
+      {
+       "shown": "İl 2",
+       "key": "İl 2"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-188",
+       "key": "-188"
+      },
+      {
+       "shown": "104.400",
+       "key": "104.400"
+      },
+      {
+       "shown": "20.01.1994",
+       "key": "1994-01-20"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "İl 1",
+       "key": "İl 1"
+      },
+      {
+       "shown": ""
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "?"
+      },
+      {
+       "shown": "-1.00",
+       "key": "-1.00"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "b 2",
+       "key": "b 2"
+      },
+      {
+       "shown": ""
+      }
+     ],
+     "selected": true,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": ""
+      },
+      {
+       "shown": "-54.500",
+       "key": "-54.500"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "a1 2",
+       "key": "a1 2"
+      },
+      {
+       "shown": "Konut 2",
+       "key": "Konut 2"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": ""
+      },
+      {
+       "shown": "5.74",
+       "key": "5.74"
+      },
+      {
+       "shown": "--"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "Ada 2",
+       "key": "Ada 2"
+      },
+      {
+       "shown": ""
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "1028.0",
+       "key": "1028.0"
+      },
+      {
+       "shown": "-195.10",
+       "key": "-195.10"
+      },
+      {
+       "shown": "22.01.1999",
+       "key": "1999-01-22"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "u 2",
+       "key": "u 2"
+      },
+      {
+       "shown": "çam 10",
+       "key": "çam 10"
+      }
+     ],
+     "selected": true,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "10.72",
+       "key": "10.72"
+      },
+      {
+       "shown": "671.00",
+       "key": "671.00"
+      },
+      {
+       "shown": "--"
+      },
+      {
+       "shown": "--"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "konut 1",
+       "key": "konut 1"
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "55",
+       "key": "55"
+      },
+      {
+       "shown": "-369.00",
+       "key": "-369.00"
+      },
+      {
+       "shown": "15.07.1998",
+       "key": "1998-07-15"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "x1"
+      },
+      {
+       "shown": ""
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "5",
+       "key": "5"
+      },
+      {
+       "shown": "150",
+       "key": "150"
+      },
+      {
+       "shown": "09.04.2024",
+       "key": "2024-04-09"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "x1"
+      },
+      {
+       "shown": "çam",
+       "key": "çam"
+      }
+     ],
+     "selected": true,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-176.300",
+       "key": "-176.300"
+      },
+      {
+       "shown": "-32.40",
+       "key": "-32.40"
+      },
+      {
+       "shown": "19.03.2026",
+       "key": "2026-03-19"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "ü 10",
+       "key": "ü 10"
+      },
+      {
+       "shown": "b 1",
+       "key": "b 1"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "110.000",
+       "key": "110.000"
+      },
+      {
+       "shown": "1.103",
+       "key": "1.103"
+      },
+      {
+       "shown": "26.07.2024",
+       "key": "2024-07-26"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "Ada 2",
+       "key": "Ada 2"
+      },
+      {
+       "shown": "a2",
+       "key": "a2"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "?"
+      },
+      {
+       "shown": "2.350",
+       "key": "2.350"
+      },
+      {
+       "shown": "25.10.1998",
+       "key": "1998-10-25"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "Ada",
+       "key": "Ada"
+      },
+      {
+       "shown": "ıl 2",
+       "key": "ıl 2"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-188.1",
+       "key": "-188.1"
+      },
+      {
+       "shown": "-605.00",
+       "key": "-605.00"
+      },
+      {
+       "shown": "26.10.2009",
+       "key": "2009-10-26"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "x1"
+      },
+      {
+       "shown": "b 2",
+       "key": "b 2"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "96.900",
+       "key": "96.900"
+      },
+      {
+       "shown": "2",
+       "key": "2"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "a10 2",
+       "key": "a10 2"
+      },
+      {
+       "shown": "ada",
+       "key": "ada"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "5.1",
+       "key": "5.1"
+      },
+      {
+       "shown": "-1420.000",
+       "key": "-1420.000"
+      },
+      {
+       "shown": "?"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "Ş",
+       "key": "Ş"
+      },
+      {
+       "shown": "a1",
+       "key": "a1"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": ""
+      },
+      {
+       "shown": "--"
+      },
+      {
+       "shown": "12.11.2018",
+       "key": "2018-11-12"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "İl 10",
+       "key": "İl 10"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-117.9",
+       "key": "-117.9"
+      },
+      {
+       "shown": "823",
+       "key": "823"
+      },
+      {
+       "shown": "13.09.2008",
+       "key": "2008-09-13"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "?"
+      },
+      {
+       "shown": "ıl",
+       "key": "ıl"
+      }
+     ],
+     "selected": true,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "1914.00",
+       "key": "1914.00"
+      },
+      {
+       "shown": "-1.56",
+       "key": "-1.56"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "çam 2",
+       "key": "çam 2"
+      },
+      {
+       "shown": "x1"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "938",
+       "key": "938"
+      },
+      {
+       "shown": "992.0",
+       "key": "992.0"
+      },
+      {
+       "shown": "08.11.2007",
+       "key": "2007-11-08"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "ıl 10",
+       "key": "ıl 10"
+      },
+      {
+       "shown": "Konut 10",
+       "key": "Konut 10"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": ""
+      },
+      {
+       "shown": "-389",
+       "key": "-389"
+      },
+      {
+       "shown": "21.06.2023",
+       "key": "2023-06-21"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "ıl 1",
+       "key": "ıl 1"
+      },
+      {
+       "shown": "Çam 10",
+       "key": "Çam 10"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": ""
+      },
+      {
+       "shown": "--"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "a2 10",
+       "key": "a2 10"
+      }
+     ],
+     "selected": true,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-12.970",
+       "key": "-12.970"
+      },
+      {
+       "shown": "1503",
+       "key": "1503"
+      },
+      {
+       "shown": "16.03.2023",
+       "key": "2023-03-16"
+      },
+      {
+       "shown": "Hayır",
+       "key": "false"
+      },
+      {
+       "shown": "çam 1",
+       "key": "çam 1"
+      },
+      {
+       "shown": "a1",
+       "key": "a1"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": ""
+      },
+      {
+       "shown": "-4",
+       "key": "-4"
+      },
+      {
+       "shown": "13.04.2021",
+       "key": "2021-04-13"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "konut 10",
+       "key": "konut 10"
+      }
+     ],
+     "selected": true,
+     "inView": true,
+     "passes": false
+    },
+    {
+     "cells": [
+      {
+       "shown": "136.000",
+       "key": "136.000"
+      },
+      {
+       "shown": "-124.1",
+       "key": "-124.1"
+      },
+      {
+       "shown": "14.11.2006",
+       "key": "2006-11-14"
+      },
+      {
+       "shown": ""
+      },
+      {
+       "shown": "ada 1",
+       "key": "ada 1"
+      },
+      {
+       "shown": "konut 2",
+       "key": "konut 2"
+      }
+     ],
+     "selected": false,
+     "inView": false,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "-5",
+       "key": "-5"
+      },
+      {
+       "shown": "1.812",
+       "key": "1.812"
+      },
+      {
+       "shown": "04.02.2023",
+       "key": "2023-02-04"
+      },
+      {
+       "shown": "Evet",
+       "key": "true"
+      },
+      {
+       "shown": "Ada 1",
+       "key": "Ada 1"
+      },
+      {
+       "shown": "--"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    }
+   ],
+   "queries": [
+    {
+     "name": "rastgele-1",
+     "query": {
+      "search": "a",
+      "show": "all",
+      "sort": 1,
+      "descending": true
+     },
+     "want": [
+      44,
+      10,
+      41,
+      19,
+      31,
+      13,
+      14,
+      27,
+      11,
+      34,
+      36,
+      47,
+      12,
+      21,
+      33,
+      3,
+      25,
+      40,
+      15,
+      22,
+      20,
+      5,
+      26,
+      46,
+      28,
+      42,
+      35,
+      9,
+      37,
+      4,
+      17,
+      43
+     ]
+    },
+    {
+     "name": "rastgele-2",
+     "query": {
+      "search": "evet",
+      "show": "all",
+      "sort": 3,
+      "descending": false
+     },
+     "want": [
+      2,
+      6,
+      8,
+      12,
+      13,
+      18,
+      21,
+      23,
+      24,
+      26,
+      27,
+      28,
+      30,
+      31,
+      38,
+      39,
+      47
+     ]
+    },
+    {
+     "name": "rastgele-3",
+     "query": {
+      "search": "İL",
+      "show": "all",
+      "sort": 5,
+      "descending": true
+     },
+     "want": [
+      38,
+      23,
+      18,
+      24
+     ]
+    },
+    {
+     "name": "rastgele-4",
+     "query": {
+      "search": "",
+      "show": "inView",
+      "sort": 0,
+      "descending": true
+     },
+     "want": [
+      40,
+      14,
+      15,
+      8,
+      30,
+      10,
+      29,
+      21,
+      18,
+      22,
+      47,
+      44,
+      2,
+      17,
+      32,
+      24,
+      35,
+      3,
+      11,
+      13,
+      20,
+      6,
+      12,
+      27,
+      34,
+      38
+     ]
+    },
+    {
+     "name": "rastgele-5",
+     "query": {
+      "search": "a",
+      "show": "all",
+      "sort": 0,
+      "descending": false
+     },
+     "want": [
+      20,
+      13,
+      11,
+      3,
+      35,
+      17,
+      44,
+      47,
+      22,
+      21,
+      31,
+      37,
+      10,
+      36,
+      33,
+      46,
+      15,
+      41,
+      28,
+      14,
+      40,
+      4,
+      5,
+      9,
+      12,
+      19,
+      25,
+      26,
+      27,
+      34,
+      42,
+      43
+     ]
+    },
+    {
+     "name": "rastgele-6",
+     "query": {
+      "search": "a",
+      "show": "inView",
+      "sort": 3,
+      "descending": true
+     },
+     "want": [
+      12,
+      13,
+      21,
+      27,
+      47,
+      3,
+      11,
+      14,
+      15,
+      20,
+      22,
+      35,
+      44,
+      10,
+      17,
+      34,
+      40
+     ]
+    },
+    {
+     "name": "rastgele-7",
+     "query": {
+      "search": "a",
+      "show": "selected",
+      "sort": 0,
+      "descending": true
+     },
+     "want": [
+      28,
+      10,
+      31,
+      22,
+      17,
+      11,
+      20,
+      4,
+      5,
+      25,
+      27,
+      43
+     ]
+    },
+    {
+     "name": "rastgele-8",
+     "query": {
+      "search": "A*",
+      "show": "inView",
+      "sort": 1,
+      "descending": true
+     },
+     "want": [
+      44,
+      10,
+      13,
+      27,
+      11,
+      34,
+      47,
+      12,
+      21,
+      20,
+      17
+     ]
+    },
+    {
+     "name": "rastgele-9",
+     "query": {
+      "search": "1.",
+      "show": "all",
+      "sort": 5,
+      "descending": true
+     },
+     "want": [
+      13,
+      41,
+      46,
+      29,
+      9,
+      38,
+      23,
+      28,
+      42,
+      18,
+      21,
+      11,
+      17,
+      12,
+      33,
+      3,
+      6,
+      14,
+      24,
+      25,
+      40,
+      47
+     ]
+    },
+    {
+     "name": "rastgele-10",
+     "query": {
+      "search": "*0*",
+      "show": "all",
+      "sort": 4,
+      "descending": false
+     },
+     "want": [
+      21,
+      26,
+      13,
+      17,
+      10,
+      36,
+      34,
+      47,
+      46,
+      33,
+      5,
+      4,
+      14,
+      9,
+      25,
+      20,
+      44,
+      40,
+      3,
+      12,
+      42,
+      41,
+      24,
+      18,
+      11,
+      22,
+      8,
+      37,
+      15,
+      28,
+      23,
+      32,
+      0,
+      2,
+      6,
+      19,
+      29,
+      30,
+      31,
+      35,
+      38,
+      39,
+      43
+     ]
+    },
+    {
+     "name": "rastgele-11",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 5,
+      "descending": false
+     },
+     "want": [
+      20,
+      37,
+      44,
+      10,
+      33,
+      12,
+      17,
+      43,
+      11,
+      19,
+      36,
+      21,
+      18,
+      32,
+      35,
+      15,
+      31,
+      42,
+      28,
+      39,
+      34,
+      23,
+      38,
+      9,
+      29,
+      26,
+      46,
+      41,
+      0,
+      5,
+      13,
+      2,
+      3,
+      4,
+      6,
+      8,
+      14,
+      22,
+      24,
+      25,
+      27,
+      30,
+      40,
+      47
+     ]
+    },
+    {
+     "name": "rastgele-12",
+     "query": {
+      "search": "A*",
+      "show": "all",
+      "sort": 5,
+      "descending": false
+     },
+     "want": [
+      20,
+      37,
+      44,
+      10,
+      33,
+      12,
+      17,
+      43,
+      11,
+      19,
+      36,
+      21,
+      34,
+      26,
+      46,
+      5,
+      13,
+      4,
+      27,
+      47
+     ]
+    },
+    {
+     "name": "rastgele-13",
+     "query": {
+      "search": "a",
+      "show": "inView",
+      "sort": 4,
+      "descending": false
+     },
+     "want": [
+      21,
+      13,
+      17,
+      10,
+      34,
+      47,
+      27,
+      14,
+      20,
+      44,
+      40,
+      3,
+      12,
+      11,
+      22,
+      15,
+      35
+     ]
+    },
+    {
+     "name": "rastgele-14",
+     "query": {
+      "search": "*0*",
+      "show": "inView",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      2,
+      3,
+      6,
+      8,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      17,
+      18,
+      20,
+      21,
+      22,
+      24,
+      29,
+      30,
+      32,
+      34,
+      35,
+      38,
+      40,
+      44,
+      47
+     ]
+    },
+    {
+     "name": "rastgele-15",
+     "query": {
+      "search": "ı",
+      "show": "all",
+      "sort": 3,
+      "descending": true
+     },
+     "want": [
+      39,
+      3,
+      4,
+      5,
+      9,
+      11,
+      14,
+      15,
+      20,
+      22,
+      25,
+      35,
+      36,
+      37,
+      41,
+      42,
+      43,
+      44,
+      34
+     ]
+    },
+    {
+     "name": "rastgele-16",
+     "query": {
+      "search": "evet",
+      "show": "all",
+      "sort": 2,
+      "descending": false
+     },
+     "want": [
+      24,
+      6,
+      30,
+      28,
+      39,
+      13,
+      38,
+      23,
+      47,
+      8,
+      31,
+      2,
+      12,
+      18,
+      21,
+      26,
+      27
+     ]
+    },
+    {
+     "name": "rastgele-17",
+     "query": {
+      "search": "A*",
+      "show": "all",
+      "sort": 3,
+      "descending": true
+     },
+     "want": [
+      12,
+      13,
+      21,
+      26,
+      27,
+      47,
+      4,
+      5,
+      11,
+      20,
+      36,
+      37,
+      43,
+      44,
+      10,
+      17,
+      19,
+      33,
+      34,
+      46
+     ]
+    },
+    {
+     "name": "rastgele-18",
+     "query": {
+      "search": "a",
+      "show": "all",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      3,
+      4,
+      5,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      17,
+      19,
+      20,
+      21,
+      22,
+      25,
+      26,
+      27,
+      28,
+      31,
+      33,
+      34,
+      35,
+      36,
+      37,
+      40,
+      41,
+      42,
+      43,
+      44,
+      46,
+      47
+     ]
+    },
+    {
+     "name": "rastgele-19",
+     "query": {
+      "search": "1.",
+      "show": "all",
+      "sort": null,
+      "descending": true
+     },
+     "want": [
+      3,
+      6,
+      9,
+      11,
+      12,
+      13,
+      14,
+      17,
+      18,
+      21,
+      23,
+      24,
+      25,
+      28,
+      29,
+      33,
+      38,
+      40,
+      41,
+      42,
+      46,
+      47
+     ]
+    },
+    {
+     "name": "rastgele-20",
+     "query": {
+      "search": "konut",
+      "show": "all",
+      "sort": 5,
+      "descending": false
+     },
+     "want": [
+      11,
+      9,
+      29,
+      26,
+      46,
+      41,
+      22
+     ]
+    },
+    {
+     "name": "rastgele-21",
+     "query": {
+      "search": "1.",
+      "show": "all",
+      "sort": 2,
+      "descending": true
+     },
+     "want": [
+      9,
+      17,
+      33,
+      42,
+      47,
+      23,
+      14,
+      38,
+      13,
+      41,
+      46,
+      3,
+      11,
+      28,
+      6,
+      24,
+      12,
+      18,
+      21,
+      25,
+      29,
+      40
+     ]
+    },
+    {
+     "name": "rastgele-22",
+     "query": {
+      "search": "İL",
+      "show": "inView",
+      "sort": 4,
+      "descending": true
+     },
+     "want": [
+      18,
+      24,
+      38
+     ]
+    },
+    {
+     "name": "rastgele-23",
+     "query": {
+      "search": "*1",
+      "show": "inView",
+      "sort": 0,
+      "descending": false
+     },
+     "want": [
+      20,
+      11,
+      3,
+      35,
+      24,
+      32,
+      17,
+      44,
+      47,
+      22,
+      21,
+      29,
+      30,
+      8,
+      14,
+      40,
+      12
+     ]
+    },
+    {
+     "name": "rastgele-24",
+     "query": {
+      "search": "evet",
+      "show": "inView",
+      "sort": null,
+      "descending": false
+     },
+     "want": [
+      2,
+      6,
+      8,
+      12,
+      13,
+      18,
+      21,
+      24,
+      27,
+      30,
+      38,
+      47
+     ]
+    },
+    {
+     "name": "rastgele-25",
+     "query": {
+      "search": "evet",
+      "show": "all",
+      "sort": 2,
+      "descending": false
+     },
+     "want": [
+      24,
+      6,
+      30,
+      28,
+      39,
+      13,
+      38,
+      23,
+      47,
+      8,
+      31,
+      2,
+      12,
+      18,
+      21,
+      26,
+      27
+     ]
+    },
+    {
+     "name": "rastgele-26",
+     "query": {
+      "search": "*1",
+      "show": "all",
+      "sort": 0,
+      "descending": true
+     },
+     "want": [
+      40,
+      14,
+      8,
+      46,
+      30,
+      29,
+      37,
+      31,
+      21,
+      23,
+      22,
+      47,
+      0,
+      44,
+      17,
+      32,
+      24,
+      35,
+      3,
+      11,
+      20,
+      12,
+      19,
+      42
+     ]
+    },
+    {
+     "name": "rastgele-27",
+     "query": {
+      "search": "evet",
+      "show": "inView",
+      "sort": 0,
+      "descending": false
+     },
+     "want": [
+      13,
+      24,
+      2,
+      47,
+      18,
+      21,
+      30,
+      8,
+      6,
+      12,
+      27,
+      38
+     ]
+    },
+    {
+     "name": "rastgele-28",
+     "query": {
+      "search": "ı",
+      "show": "all",
+      "sort": 4,
+      "descending": false
+     },
+     "want": [
+      36,
+      34,
+      5,
+      4,
+      14,
+      9,
+      25,
+      20,
+      44,
+      3,
+      42,
+      41,
+      11,
+      22,
+      37,
+      15,
+      35,
+      39,
+      43
+     ]
+    },
+    {
+     "name": "rastgele-29",
+     "query": {
+      "search": "konut",
+      "show": "all",
+      "sort": 0,
+      "descending": true
+     },
+     "want": [
+      41,
+      46,
+      29,
+      22,
+      11,
+      9,
+      26
+     ]
+    },
+    {
+     "name": "rastgele-30",
+     "query": {
+      "search": "İL",
+      "show": "all",
+      "sort": 4,
+      "descending": false
+     },
+     "want": [
+      24,
+      18,
+      23,
+      38
+     ]
+    }
+   ]
+  }
+ ]
+}

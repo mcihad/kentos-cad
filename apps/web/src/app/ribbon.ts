@@ -128,7 +128,14 @@ export const RIBBON_TABS: readonly RibbonTabSpec[] = [
     label: 'Harita',
     // CAD shows no map or coordinate menus: what is left is measuring.
     labels: { cad: 'Ölçme' },
-    sources: [{ menu: 'map' }, { menu: 'calc' }, { menu: 'crs' }, { menu: 'analysis' }],
+    sources: [
+      { menu: 'map' },
+      { menu: 'calc' },
+      { menu: 'crs' },
+      { menu: 'analysis' },
+      // Öznitelik tablosu, a layer's fields and the data sources (docs/adr/0199 §3, §4, §7).
+      { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'layer.fields', 'data.sources'] },
+    ],
     launchers: { 'Koordinat sistemi': { command: 'crs.set', title: 'Proje ayarları: koordinat sistemi' } },
   },
   {
@@ -244,7 +251,15 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
   {
     id: 'manage',
     label: 'Yönet',
-    sources: [{ pick: 'Temizlik', icon: 'cleanup', commands: ['tool.cleanup', 'tool.topology', 'block.purge', 'layer.purge'] }, { menu: 'analysis', sections: ['Karşılaştırma'] }, { menu: 'calc', sections: ['Kayıtlı ölçüler'] }, { menu: 'tools' }, { menu: 'help' }],
+    sources: [
+      { pick: 'Temizlik', icon: 'cleanup', commands: ['tool.cleanup', 'tool.topology', 'block.purge', 'layer.purge'] },
+      // Öznitelik tablosu and a layer's fields (docs/adr/0199 §3, §4).
+      { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'layer.fields', 'data.sources'] },
+      { menu: 'analysis', sections: ['Karşılaştırma'] },
+      { menu: 'calc', sections: ['Kayıtlı ölçüler'] },
+      { menu: 'tools' },
+      { menu: 'help' },
+    ],
     launchers: AIDS_LAUNCHER,
   },
   {
@@ -306,6 +321,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     label: 'Veri',
     sources: [
       { pick: 'Katman', icon: 'layerAdd', commands: ['layer.new', 'layer.newGroup', 'layer.showAll'] },
+      // Öznitelik tablosu, a layer's fields and the data sources (docs/adr/0199 §3, §4, §7).
+      { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'layer.fields', 'data.sources'] },
       // Veride ara (docs/adr/0178): a value in the layers' data, and a place by its coordinates.
       { pick: 'Ara', icon: 'dataSearch', commands: ['data.search', 'data.unmark'] },
       { menu: 'file', sections: ['Dosya alışverişi'] },

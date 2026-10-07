@@ -4,10 +4,11 @@
 //! cases of each (`fixtures/commands/v1`) hold them the same way. The web's
 //! counterpart is `apps/web/src/product/checks.ts`.
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
     CommandError, CommandResult, CommandWarning, Entity, LayerNodeType, MAX_LINE_WEIGHT,
+    check_value,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -50,6 +51,48 @@ pub(crate) fn line_weight(weight: Option<f64>, path: &str) -> Result<(), Stop> {
         ))),
         _ => Ok(()),
     }
+}
+
+/// The attributes written to an object on `layer`, by its fields
+/// (docs/adr/0199 §2): each value given to a field's key in its canonical
+/// text, a null (taken away) checked as empty; in the names' order, the first
+/// that does not keep its field's rules `invalid_attribute`, an empty value of
+/// a required field `attribute_required`, at `{at}.{name}`. Keys no field
+/// names, and every key on a layer without fields, stay as given.
+pub(crate) fn field_values(
+    doc: &Document,
+    layer: &str,
+    attrs: &BTreeMap<String, Option<String>>,
+    at: &str,
+) -> Result<BTreeMap<String, Option<String>>, Stop> {
+    let Some(node) = doc.layers().get(layer).filter(|n| !n.fields.is_empty()) else {
+        return Ok(attrs.clone());
+    };
+    let mut out = BTreeMap::new();
+    for (key, value) in attrs {
+        let Some(field) = node.fields.iter().find(|f| f.name == *key) else {
+            out.insert(key.clone(), value.clone());
+            continue;
+        };
+        match check_value(field, value.as_deref().unwrap_or_default()) {
+            Ok(canonical) => {
+                out.insert(key.clone(), value.as_ref().map(|_| canonical));
+            }
+            Err(refusal) => {
+                let code = if refusal.code == "required" {
+                    codes::ATTRIBUTE_REQUIRED
+                } else {
+                    codes::INVALID_ATTRIBUTE
+                };
+                return Err(Stop::Failed(error(
+                    code,
+                    refusal.message,
+                    Some(format!("{at}.{key}")),
+                )));
+            }
+        }
+    }
+    Ok(out)
 }
 
 /// A value that is NaN or ±∞, as a message names it: “2. noktanın doğu (Y)”.

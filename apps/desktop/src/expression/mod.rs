@@ -75,6 +75,8 @@ pub(crate) enum ViewMode {
 pub(crate) enum Target {
     /// The processing window's expression parameter of this name.
     Processing(String),
+    /// Öznitelik tablosu's İfade süzgeci (features/, docs/adr/0199 §4).
+    FeatureFilter,
 }
 
 /// A field's values listed in the help.
@@ -615,6 +617,43 @@ impl App {
         iced::widget::operation::focus(EDITOR)
     }
 
+    /// Öznitelik tablosu's ε: the builder on its filter, the layer's keys and objects.
+    pub(crate) fn open_builder_for_features(&mut self) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let rows = self.feature_rows(doc);
+        let fields: Vec<(String, usize)> = rows
+            .table
+            .columns
+            .iter()
+            .filter_map(|c| c.key.clone())
+            .map(|k| {
+                let n = rows
+                    .slots
+                    .iter()
+                    .filter(|&&s| doc.model.get(s).is_some_and(|e| e.base().attrs.contains_key(&k)))
+                    .count();
+                (k, n)
+            })
+            .collect();
+        let mut builder = Builder::new(
+            Target::FeatureFilter,
+            crate::features::texts::FILTER.to_owned(),
+            &self.features.filter,
+            attribute_fields(&fields),
+            Objects {
+                slots: rows.slots.clone(),
+            },
+        );
+        builder.preview_on(Some(&doc.model), self.spatial.store());
+        if self.builder_flow {
+            builder.set_mode(ViewMode::Flow);
+        }
+        self.builder = Some(builder);
+        iced::widget::operation::focus(EDITOR)
+    }
+
     pub(crate) fn builder_event(&mut self, e: Event) -> Task<Message> {
         if let Event::OpenProcessing(name) = &e {
             return self.open_builder_for_processing(name);
@@ -877,6 +916,9 @@ impl App {
                     window.touch(&name);
                 }
                 self.refresh_processing();
+            }
+            Target::FeatureFilter => {
+                return self.features_event(crate::features::Event::Filter(text));
             }
         }
         Task::none()

@@ -15,7 +15,10 @@
 //! GeoJSON has no blocks: an insert is its block's objects placed (the
 //! core's expansion, nested blocks opened), one GeometryCollection with the
 //! insert's attributes (docs/adr/0144 §5); it reads back as those objects.
-//! Attributes are written as text properties; layer and
+//! Attributes are written as text properties, but on a layer with fields
+//! (docs/adr/0199 §6) a number field's value in its canonical text is a JSON
+//! number when its nearest float64 reads back to the same value (else text),
+//! a yes or no field's a JSON boolean; layer and
 //! label ride in the `kentos` member, which KentOS reads back. A vertex with
 //! an elevation is a position of three numbers, one without a position of
 //! two (docs/adr/0142): RFC 7946 lets a list mix them; a point sampled along
@@ -24,7 +27,10 @@
 use std::collections::HashMap;
 use std::fmt::Write as _;
 
-use kentos_contracts::{Entity, ExportReport, GeoJsonLayer, GeoJsonWriteInput, Vec2};
+use kentos_contracts::{
+    Entity, ExportReport, GeoJsonLayer, GeoJsonWriteInput, LayerField, LayerFieldKind, Vec2,
+    check_value, compare_decimals,
+};
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::entity::{ellipse_geom, polygon_ring, tessellate_circle};
 use kentos_geometry_core::geom::arc::{ArcGeom, DEFAULT_STEP, tessellate_arc};
@@ -537,8 +543,41 @@ fn polygon(rings: &[Ring], out: &mut String) {
     out.push(']');
 }
 
+/// How an attribute is written on a layer with fields (docs/adr/0199 §6): a
+/// number field's value in its canonical text as a JSON number when its
+/// nearest float64's shortest text is the same value (a wider one stays
+/// text, so nothing is lost), a yes or no field's as a JSON boolean, any
+/// other as text.
+fn typed(field: Option<&LayerField>, value: &str, out: &mut String) {
+    let Some(f) = field else {
+        return quote(value, out);
+    };
+    let Ok(c) = check_value(f, value) else {
+        return quote(value, out);
+    };
+    if f.kind.is_number() && !c.is_empty() {
+        let exact = c
+            .parse::<f64>()
+            .ok()
+            .filter(|x| x.is_finite())
+            .is_some_and(|x| compare_decimals(&c, &x.to_string()) == Some(std::cmp::Ordering::Equal));
+        if exact {
+            return out.push_str(&c);
+        }
+    }
+    if f.kind == LayerFieldKind::Boolean && (c == "true" || c == "false") {
+        return out.push_str(&c);
+    }
+    quote(value, out);
+}
+
 /// Writes the objects as a GeoJSON FeatureCollection.
 pub fn write(input: &GeoJsonWriteInput) -> (Vec<u8>, ExportReport) {
+    let fields: HashMap<&str, &[LayerField]> = input
+        .layers
+        .iter()
+        .map(|l| (l.id.as_str(), l.fields.as_slice()))
+        .collect();
     let names: HashMap<&str, &str> = input
         .layers
         .iter()
@@ -590,13 +629,14 @@ pub fn write(input: &GeoJsonWriteInput) -> (Vec<u8>, ExportReport) {
         }
         first = false;
         out.push_str("{\"type\":\"Feature\",\"properties\":{");
+        let own = fields.get(b.layer_id.as_str()).copied().unwrap_or_default();
         for (i, (k, v)) in b.attrs.iter().enumerate() {
             if i > 0 {
                 out.push(',');
             }
             quote(k, &mut out);
             out.push(':');
-            quote(v, &mut out);
+            typed(own.iter().find(|f| f.name == *k), v, &mut out);
         }
         out.push_str("},\"geometry\":");
         write_geometry(&g, &mut out);

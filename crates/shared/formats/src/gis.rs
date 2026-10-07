@@ -11,10 +11,11 @@
 use std::collections::BTreeMap;
 
 use kentos_contracts::{
-    AreaPart, Bounds, DeclaredCrs, Entity, EntityBase, ImportLayer, ImportResult, LineEntity,
-    LineType, PathEntity, PointEntity, PointPart, RingGeometry, Vec2,
+    AreaPart, Bounds, DeclaredCrs, Entity, EntityBase, ImportLayer, ImportResult, LayerField,
+    LineEntity, LineType, PathEntity, PointEntity, PointPart, RingGeometry, Vec2,
 };
 
+use crate::fields::JsonKind;
 use crate::report::Report;
 
 /// Objects a reader makes when the caller sets no limit.
@@ -148,6 +149,9 @@ fn holes_of(holes: Vec<Ring>) -> Option<Vec<RingGeometry>> {
     })
 }
 
+/// A GeoJSON property value as read: its key, JSON kind and text.
+pub type SeenValue = (String, JsonKind, String);
+
 /// The objects read so far and what was said about them.
 pub struct Collect {
     pub entities: Vec<Entity>,
@@ -156,6 +160,11 @@ pub struct Collect {
     limit: usize,
     /// Objects left out for the limit.
     over: u32,
+    /// By layer (empty: the default one), each GeoJSON property value's key,
+    /// JSON kind and text in reading order: the layers' fields (docs/adr/0199 §6).
+    seen: Vec<(String, Vec<SeenValue>)>,
+    /// The fields the file gives a layer itself (a Shapefile's DBF).
+    given: Vec<(String, Vec<LayerField>)>,
 }
 
 impl Collect {
@@ -171,7 +180,23 @@ impl Collect {
                 max as usize
             },
             over: 0,
+            seen: Vec::new(),
+            given: Vec::new(),
         }
+    }
+
+    /// A feature's property values on `layer`, for the layers' fields
+    /// (docs/adr/0199 §6); a feature that gave no object gives none.
+    pub fn observe(&mut self, layer: &str, values: Vec<SeenValue>) {
+        match self.seen.iter_mut().find(|(l, _)| l == layer) {
+            Some((_, list)) => list.extend(values),
+            None => self.seen.push((layer.to_owned(), values)),
+        }
+    }
+
+    /// The fields the file gives `layer` itself (a Shapefile's DBF).
+    pub fn give_fields(&mut self, layer: &str, fields: Vec<LayerField>) {
+        self.given.push((layer.to_owned(), fields));
     }
 
     fn extend(&mut self, p: Vec2) {
@@ -348,10 +373,41 @@ impl Collect {
                     count: 0,
                     kinds: BTreeMap::new(),
                     bounds: None,
+                    fields: Vec::new(),
                 });
                 layers.len() - 1
             });
             layers[i].count += 1;
+        }
+        // The layers' fields (docs/adr/0199 §6): the file's own, else from the properties' kinds; a
+        // number field's values in their canonical text.
+        let name_of = |layer: &str| {
+            if layer.is_empty() {
+                default_layer.to_owned()
+            } else {
+                layer.to_owned()
+            }
+        };
+        for (layer, fields) in std::mem::take(&mut self.given) {
+            if let Some(l) = layers.iter_mut().find(|l| l.name == name_of(&layer)) {
+                l.fields = fields;
+            }
+        }
+        for (layer, values) in std::mem::take(&mut self.seen) {
+            if let Some(l) = layers
+                .iter_mut()
+                .find(|l| l.name == name_of(&layer) && l.fields.is_empty())
+            {
+                l.fields = crate::fields::geojson_fields(&values);
+            }
+        }
+        if layers.iter().any(|l| !l.fields.is_empty()) {
+            for e in &mut self.entities {
+                let base = Entity::base_mut(e);
+                if let Some(l) = layers.iter().find(|l| l.name == base.layer_id) {
+                    crate::fields::canonical_attrs(&l.fields, &mut base.attrs);
+                }
+            }
         }
         let mut result = ImportResult {
             entities: self.entities,

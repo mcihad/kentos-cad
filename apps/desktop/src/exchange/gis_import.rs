@@ -446,6 +446,8 @@ impl App {
                         }),
                         visible: l.visible,
                         locked: l.locked,
+                        // The file's fields (docs/adr/0199 §6): a DBF's, a GeoJSON's properties' kinds.
+                        fields: l.fields.clone(),
                     },
                 };
                 (l.name.clone(), target)

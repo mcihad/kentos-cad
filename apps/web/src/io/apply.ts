@@ -1,4 +1,5 @@
 import type { BlockDefinition as ContractBlock } from '../contracts/generated/BlockDefinition';
+import type { LayerField } from '../contracts/generated/LayerField';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
 import { foldTurkish } from '../core/text';
 import { uuidv7 } from '../core/uuid';
@@ -21,7 +22,8 @@ import { readBlockDefinitions, readEntityList } from '../model/snapshot';
 /** Where the objects of one source layer go. */
 export type LayerTarget =
   | { kind: 'existing'; id: string }
-  | { kind: 'new'; name: string; style: Partial<LayerStyle>; visible: boolean; locked: boolean };
+  /** A new layer; with the fields the file gives (docs/adr/0199 §6). */
+  | { kind: 'new'; name: string; style: Partial<LayerStyle>; visible: boolean; locked: boolean; fields?: readonly LayerField[] };
 
 export interface ImportPlan {
   /** The undo step's name ("Koordinat listesi: noktalar.ncn"). */
@@ -253,7 +255,7 @@ export function makeLayers(doc: CadDocument, plan: ImportPlan, prepared: Prepare
   }
   for (const [source, t] of plan.layers) {
     if (t.kind !== 'new') continue;
-    doc.addLayer({ id: prepared.newIds.get(source), name: t.name, style: t.style, visible: t.visible, locked: t.locked }, parent);
+    doc.addLayer({ id: prepared.newIds.get(source), name: t.name, style: t.style, visible: t.visible, locked: t.locked, ...(t.fields?.length ? { fields: [...t.fields] } : {}) }, parent);
     created.push(t.name);
   }
   return created;

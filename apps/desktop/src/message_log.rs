@@ -162,7 +162,11 @@ impl App {
         match self.bottom_tab {
             BottomTab::History => Some(Listing::History),
             BottomTab::Messages => Some(Listing::Messages),
-            BottomTab::Coords | BottomTab::Points | BottomTab::Search | BottomTab::Python => None,
+            BottomTab::Coords
+            | BottomTab::Points
+            | BottomTab::Table
+            | BottomTab::Search
+            | BottomTab::Python => None,
         }
     }
 

@@ -229,6 +229,20 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{:?}", (&want.count, &want.rows)),
         );
     }
+    if let Some(want) = &expect.feature_table {
+        let have = got.feature_table.clone();
+        let same = have.as_ref().is_some_and(|(count, columns, rows)| {
+            *count == want.count
+                && *rows == want.rows
+                && want.columns.as_ref().is_none_or(|c| c == columns)
+        });
+        check(
+            "featureTable",
+            same,
+            format!("{have:?}"),
+            format!("{:?}", (&want.count, &want.columns, &want.rows)),
+        );
+    }
     if let Some(want) = &expect.mark {
         let have = got
             .mark

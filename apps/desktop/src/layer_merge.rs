@@ -10,9 +10,10 @@
 //!   active layer gives that to the target first (a tree change, as the eye:
 //!   outside the step). What keeps it from writing is said above the list.
 //! - Kopyasını oluştur: a new layer last in the same group, named “<ad>
-//!   kopyası” (one of its kind in the tree), with the same style and
+//!   kopyası” (one of its kind in the tree), with the same style, fields and
 //!   visibility, unlocked, and the copies of its objects through
-//!   `cad.entities.create`; one undo step “Katmanı kopyala”. A locked layer is
+//!   `cad.entities.create` (the fields given after them, docs/adr/0199 §1);
+//!   one undo step “Katmanı kopyala”. A locked layer is
 //!   not copied (nor are its objects).
 //!
 //! Both change the layer tree: a cloud project without `project.edit`
@@ -364,7 +365,7 @@ impl App {
         let mut warnings = Vec::new();
         if !objects.is_empty() {
             let input = EntitiesCreate {
-                layer_id: layer,
+                layer_id: layer.clone(),
                 objects,
                 operation: None,
                 expected_revision: None,
@@ -383,6 +384,15 @@ impl App {
                     return;
                 }
             }
+        }
+        // Its fields after the copies (docs/adr/0199 §1): their values go as
+        // they are, kept or not.
+        if !source.fields.is_empty()
+            && let Err(refused) = model.set_layer_fields(&layer, source.fields.clone(), &[])
+        {
+            model.cancel_group(group);
+            self.warn(refused.to_string());
+            return;
         }
         model.end_group(group);
         for text in warnings {
@@ -627,6 +637,48 @@ mod tests {
         assert_eq!(
             last_said(&app),
             "“Bina” katmanı kilitli; kopyası oluşturulmaz. Kilidini Katmanlar panelinden açın."
+        );
+    }
+
+    #[test]
+    fn a_copy_takes_the_fields_and_the_values_as_they_are() {
+        use kentos_contracts::{LayerField, LayerFieldKind};
+        let mut app = app_with_drawing();
+        {
+            let model = &mut app.document.as_mut().expect("a drawing").model;
+            let slot = model
+                .entities()
+                .find(|e| e.base().layer_id == "parsel")
+                .map(|e| kentos_domain::Slot(e.base().id))
+                .expect("the parcel");
+            let mut e = model.get(slot).cloned().expect("the parcel");
+            e.base_mut().attrs.insert("Kat".into(), "3a".into());
+            model.update(slot, e);
+            let fields = vec![LayerField::new("Kat", LayerFieldKind::Integer)];
+            assert_eq!(model.set_layer_fields("parsel", fields, &[]), Ok(true));
+        }
+        app.duplicate_layer(Some("parsel".to_owned()));
+        assert_eq!(
+            last_said(&app),
+            "“Parsel” katmanı “Parsel kopyası” olarak kopyalandı: 1 nesne."
+        );
+        let model = &app.document.as_ref().expect("a drawing").model;
+        let copy = model
+            .layers()
+            .leaves()
+            .into_iter()
+            .find(|l| l.name == "Parsel kopyası")
+            .cloned()
+            .expect("the copy");
+        assert_eq!(copy.fields.len(), 1);
+        let value = model
+            .entities()
+            .find(|e| e.base().layer_id == copy.id)
+            .and_then(|e| e.base().attrs.get("Kat").cloned());
+        assert_eq!(
+            value.as_deref(),
+            Some("3a"),
+            "a value against the rules goes as it is"
         );
     }
 

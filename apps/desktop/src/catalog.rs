@@ -276,6 +276,11 @@ pub const PORTED: &[&str] = &[
     "tool.planRoad",
     "tool.roadJunctions",
     "tool.medianClose",
+    // Katman alanları, öznitelik tablosu ve veri kaynakları (docs/adr/0199): the Tablo tab
+    // (features/), the Alanlar window (layer_fields.rs), the Kaynaklar panel (sources/).
+    "data.featureTable",
+    "layer.fields",
+    "data.sources",
     // docs/adr/0195: Görünüm kipleri.
     "view.colorMode.color",
     "view.colorMode.mono",

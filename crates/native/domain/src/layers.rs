@@ -8,7 +8,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use kentos_contracts::{LayerNode, LayerNodeType, LayerSnap, LayerStyle, LineType};
+use kentos_contracts::{LayerField, LayerNode, LayerNodeType, LayerSnap, LayerStyle, LineType};
 
 #[derive(Clone, Debug)]
 pub struct LayerTree {
@@ -36,6 +36,9 @@ pub struct NewLayer {
     /// A layer's own snapping (docs/adr/0163 §4), kept by the node it makes
     /// (Başka çizimden al's layers, docs/adr/0193 §2); a group keeps none.
     pub snap: Option<LayerSnap>,
+    /// A layer's fields (docs/adr/0199 §1): an import's file gives them
+    /// (§6), Başka çizimden al keeps them; a group keeps none.
+    pub fields: Vec<LayerField>,
 }
 
 impl NewLayer {
@@ -49,6 +52,7 @@ impl NewLayer {
             locked: false,
             style: default_style(),
             snap: None,
+            fields: Vec::new(),
         }
     }
 
@@ -359,6 +363,13 @@ impl LayerTree {
         }
     }
 
+    /// A layer's fields (docs/adr/0199 §1), as an undo or a redo puts them.
+    pub(crate) fn replace_fields(&mut self, id: &str, fields: &[LayerField]) {
+        if let Some(node) = self.node_mut(id) {
+            node.fields = fields.to_vec();
+        }
+    }
+
     /// A node as the document's `add_layer` makes it, not yet in the tree:
     /// open, with no children, its id the given one (the counter kept ahead
     /// of a `layer-N`) or the next `layer-N` (the web's `LayerStore.make`).
@@ -378,6 +389,11 @@ impl LayerTree {
             locked: new.locked,
             expanded: true,
             snap: new.snap.filter(|_| new.kind == LayerNodeType::Layer),
+            fields: if new.kind == LayerNodeType::Layer {
+                new.fields
+            } else {
+                Vec::new()
+            },
             style: new.style,
             children: Vec::new(),
         }

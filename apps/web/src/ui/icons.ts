@@ -565,6 +565,18 @@ export const ICONS = {
   numberVertices: `<path d="M3 13V4.5l6.5-2L13 6"/>${grip(3, 13)}${grip(3, 4.5)}${grip(9.5, 2.5)}<path d="M12 10v7.5M15.5 10v7.5M10.5 12.5H17M10.5 15H17"/>`,
   edgeLengths: `<path d="M3 16.5 10 3.5l7 13z"/><path d="M4.4 8.6 7.3 3.2M12.7 3.2l2.9 5.4M5.5 19h9" stroke-dasharray="1.6 1.4"/>`,
   selectExpression: '<path d="M3.5 3 12 8.2l-3.7 1-1.9 3.6z"/><path d="M11 13.2h6.5M11 16.4h6.5"/>',
+  // Öznitelik tablosu (docs/adr/0199 §4): a table and its layer's object (the owner's choice A).
+  featureTable:
+    '<rect x="2" y="2.5" width="11.5" height="10" rx="1"/><path d="M2 6h11.5M2 9.25h11.5M6 6v6.5"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z"/>',
+  // Alanlar (docs/adr/0199 §3): a form of labelled boxes, the last a list (the owner's choice B).
+  layerFields:
+    '<path d="M2.5 4h4M2.5 9h4M2.5 14h4" stroke-width="1.2"/><rect x="8.5" y="2.5" width="9" height="3" rx=".8"/><rect x="8.5" y="7.5" width="9" height="3" rx=".8"/><rect x="8.5" y="12.5" width="9" height="3" rx=".8"/><path d="m15 13.5.9.9.9-.9" stroke-width="1"/>',
+  // Verilerden al (docs/adr/0199 §3): the rows' keys go up into the header (the owner's choice A).
+  fieldsFromData:
+    '<rect x="2.5" y="3" width="15" height="4" fill="currentColor" fill-opacity=".28" stroke="none"/><rect x="2.5" y="3" width="15" height="14" rx="1"/><path d="M2.5 7h15M5 11h3M5 14.5h3"/><path d="M13 15.5v-6M10.8 11.6 13 9.4l2.2 2.2" stroke-width="1.3"/>',
+  // Veri kaynakları (docs/adr/0199 §7): folders and KentOS's projects (the owner's choice A).
+  dataSources:
+    '<path d="M2 15.5v-9h4.2l1.3 1.6H11" stroke-width="1.3"/><path d="M2 15.5h7"/><ellipse cx="14.5" cy="5.5" rx="3.5" ry="1.6"/><path d="M11 5.5v10c0 .9 1.6 1.6 3.5 1.6s3.5-.7 3.5-1.6v-10M11 10.5c0 .9 1.6 1.6 3.5 1.6s3.5-.7 3.5-1.6"/>',
   fieldCalc: '<rect x="2.5" y="3.5" width="15" height="13" rx="1"/><path d="M2.5 7.5h15M8 7.5v9"/><path d="M11 12h4M13 10v4"/>',
   // The expression builder: ε, as QGIS marks it.
   expression: '<path d="M13.6 6.1A4.9 4.9 0 0 0 10 4.6c-2.3 0-3.8 1.2-3.8 2.8 0 1.6 1.4 2.6 3.3 2.6h1.8M9.5 10c-2.2 0-3.8 1.2-3.8 2.9 0 1.7 1.6 2.9 4 2.9 1.5 0 2.8-.5 3.9-1.4"/>',

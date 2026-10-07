@@ -933,6 +933,17 @@ impl App {
             Some(Dialog::AttributeValues) => self.attribute_values_closed(),
             Some(Dialog::FindReplace) => self.find_replace = None,
             Some(Dialog::LayerMerge) => self.layer_merge = None,
+            // The value list's window first, then Alanlar.
+            Some(Dialog::LayerFields)
+                if self
+                    .layer_fields
+                    .as_ref()
+                    .is_some_and(crate::layer_fields::Window::listing) =>
+            {
+                let _ = self.layer_fields_event(crate::layer_fields::Event::ListCancel);
+                self.dialog = Some(Dialog::LayerFields);
+            }
+            Some(Dialog::LayerFields) => self.layer_fields = None,
             Some(Dialog::LayerStates) => self.layer_states_window = None,
             // Sil's question first, then the window.
             Some(Dialog::AnnotationStyles)

@@ -1,5 +1,25 @@
 {
  "declaredSrid": 5256,
+ "fields": {
+  "Kot cizgisi": [
+   {
+    "name": "tur",
+    "kind": "text"
+   }
+  ],
+  "kotlu": [
+   {
+    "name": "tur",
+    "kind": "text"
+   }
+  ],
+  "Parsel": [
+   {
+    "name": "tur",
+    "kind": "text"
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "line",

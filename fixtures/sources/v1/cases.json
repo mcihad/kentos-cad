@@ -1,0 +1,558 @@
+{
+ "format": "kentos.source-list-cases",
+ "version": 1,
+ "source": "scripts/fixtures/source_list_cases.py (docs/adr/0199 §7)",
+ "labels": {
+  "geojson": "GeoJSON",
+  "shapefile": "Shapefile",
+  "dxf": "DXF",
+  "ncz": "Netcad NCZ",
+  "gnss": "GNSS (GPX, NMEA)",
+  "coords": "Koordinat listesi"
+ },
+ "cases": [
+  {
+   "name": "desteklenen dosyalar ve klasörler doğal sırayla; gizliler ve desteklenmeyenler yok",
+   "entries": [
+    {
+     "name": "Pafta 10",
+     "dir": true
+    },
+    {
+     "name": "Pafta 2",
+     "dir": true
+    },
+    {
+     "name": ".git",
+     "dir": true
+    },
+    {
+     "name": "arşiv",
+     "dir": true
+    },
+    {
+     "name": "yol.dxf",
+     "dir": false
+    },
+    {
+     "name": "imar.NCZ",
+     "dir": false
+    },
+    {
+     "name": "rota.gpx",
+     "dir": false
+    },
+    {
+     "name": "alim.nmea",
+     "dir": false
+    },
+    {
+     "name": "eski.nma",
+     "dir": false
+    },
+    {
+     "name": "noktalar.ncn",
+     "dir": false
+    },
+    {
+     "name": "liste.csv",
+     "dir": false
+    },
+    {
+     "name": "not.txt",
+     "dir": false
+    },
+    {
+     "name": "olcu.xyz",
+     "dir": false
+    },
+    {
+     "name": "veri.dat",
+     "dir": false
+    },
+    {
+     "name": "kot.asc",
+     "dir": false
+    },
+    {
+     "name": "veri.geojson",
+     "dir": false
+    },
+    {
+     "name": "ayarlar.json",
+     "dir": false
+    },
+    {
+     "name": "rapor.pdf",
+     "dir": false
+    },
+    {
+     "name": ".gizli.dxf",
+     "dir": false
+    },
+    {
+     "name": "parsel.shp",
+     "dir": false
+    },
+    {
+     "name": "parsel.shx",
+     "dir": false
+    },
+    {
+     "name": "parsel.dbf",
+     "dir": false
+    },
+    {
+     "name": "parsel.prj",
+     "dir": false
+    },
+    {
+     "name": "kayit.log",
+     "dir": false
+    }
+   ],
+   "expect": {
+    "folders": [
+     "arşiv",
+     "Pafta 2",
+     "Pafta 10"
+    ],
+    "files": [
+     {
+      "name": "alim.nmea",
+      "kind": "gnss",
+      "parts": [
+       "alim.nmea"
+      ]
+     },
+     {
+      "name": "ayarlar.json",
+      "kind": "geojson",
+      "parts": [
+       "ayarlar.json"
+      ]
+     },
+     {
+      "name": "eski.nma",
+      "kind": "gnss",
+      "parts": [
+       "eski.nma"
+      ]
+     },
+     {
+      "name": "imar.NCZ",
+      "kind": "ncz",
+      "parts": [
+       "imar.NCZ"
+      ]
+     },
+     {
+      "name": "kot.asc",
+      "kind": "coords",
+      "parts": [
+       "kot.asc"
+      ]
+     },
+     {
+      "name": "liste.csv",
+      "kind": "coords",
+      "parts": [
+       "liste.csv"
+      ]
+     },
+     {
+      "name": "noktalar.ncn",
+      "kind": "coords",
+      "parts": [
+       "noktalar.ncn"
+      ]
+     },
+     {
+      "name": "not.txt",
+      "kind": "coords",
+      "parts": [
+       "not.txt"
+      ]
+     },
+     {
+      "name": "olcu.xyz",
+      "kind": "coords",
+      "parts": [
+       "olcu.xyz"
+      ]
+     },
+     {
+      "name": "parsel.shp",
+      "kind": "shapefile",
+      "parts": [
+       "parsel.shp",
+       "parsel.shx",
+       "parsel.dbf",
+       "parsel.prj"
+      ]
+     },
+     {
+      "name": "rota.gpx",
+      "kind": "gnss",
+      "parts": [
+       "rota.gpx"
+      ]
+     },
+     {
+      "name": "veri.dat",
+      "kind": "coords",
+      "parts": [
+       "veri.dat"
+      ]
+     },
+     {
+      "name": "veri.geojson",
+      "kind": "geojson",
+      "parts": [
+       "veri.geojson"
+      ]
+     },
+     {
+      "name": "yol.dxf",
+      "kind": "dxf",
+      "parts": [
+       "yol.dxf"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Shapefile'ın parçaları: aynı ad, uzantının büyük küçük harfi önemsiz; parçası olmayan .dbf gösterilmez",
+   "entries": [
+    {
+     "name": "Bina.SHP",
+     "dir": false
+    },
+    {
+     "name": "Bina.shx",
+     "dir": false
+    },
+    {
+     "name": "Bina.DBF",
+     "dir": false
+    },
+    {
+     "name": "Bina.prj",
+     "dir": false
+    },
+    {
+     "name": "Bina.cpg",
+     "dir": false
+    },
+    {
+     "name": "bina.dbf",
+     "dir": false
+    },
+    {
+     "name": "binalar.dbf",
+     "dir": false
+    },
+    {
+     "name": "Bina.sbn",
+     "dir": false
+    }
+   ],
+   "expect": {
+    "folders": [],
+    "files": [
+     {
+      "name": "Bina.SHP",
+      "kind": "shapefile",
+      "parts": [
+       "Bina.SHP",
+       "Bina.shx",
+       "Bina.DBF",
+       "Bina.prj",
+       "Bina.cpg"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "parçasız Shapefile ve sahipsiz parçalar",
+   "entries": [
+    {
+     "name": "yalniz.shp",
+     "dir": false
+    },
+    {
+     "name": "yetim.shx",
+     "dir": false
+    },
+    {
+     "name": "yetim.dbf",
+     "dir": false
+    },
+    {
+     "name": "yetim.prj",
+     "dir": false
+    },
+    {
+     "name": "yetim.cpg",
+     "dir": false
+    }
+   ],
+   "expect": {
+    "folders": [],
+    "files": [
+     {
+      "name": "yalniz.shp",
+      "kind": "shapefile",
+      "parts": [
+       "yalniz.shp"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "büyük küçük harfle iki ayrı Shapefile, her biri kendi parçalarıyla",
+   "entries": [
+    {
+     "name": "a.shp",
+     "dir": false
+    },
+    {
+     "name": "A.shp",
+     "dir": false
+    },
+    {
+     "name": "a.dbf",
+     "dir": false
+    },
+    {
+     "name": "A.dbf",
+     "dir": false
+    },
+    {
+     "name": "A.shx",
+     "dir": false
+    }
+   ],
+   "expect": {
+    "folders": [],
+    "files": [
+     {
+      "name": "A.shp",
+      "kind": "shapefile",
+      "parts": [
+       "A.shp",
+       "A.shx",
+       "A.dbf"
+      ]
+     },
+     {
+      "name": "a.shp",
+      "kind": "shapefile",
+      "parts": [
+       "a.shp",
+       "a.dbf"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "uzantı büyük küçük harfsiz, birden çok nokta, noktasız ad",
+   "entries": [
+    {
+     "name": "X.GeoJSON",
+     "dir": false
+    },
+    {
+     "name": "Y.Json",
+     "dir": false
+    },
+    {
+     "name": "pafta.2026.dxf",
+     "dir": false
+    },
+    {
+     "name": "dxf",
+     "dir": false
+    },
+    {
+     "name": "README",
+     "dir": false
+    },
+    {
+     "name": "nokta.",
+     "dir": false
+    },
+    {
+     "name": "Tablo.CSV",
+     "dir": false
+    }
+   ],
+   "expect": {
+    "folders": [],
+    "files": [
+     {
+      "name": "pafta.2026.dxf",
+      "kind": "dxf",
+      "parts": [
+       "pafta.2026.dxf"
+      ]
+     },
+     {
+      "name": "Tablo.CSV",
+      "kind": "coords",
+      "parts": [
+       "Tablo.CSV"
+      ]
+     },
+     {
+      "name": "X.GeoJSON",
+      "kind": "geojson",
+      "parts": [
+       "X.GeoJSON"
+      ]
+     },
+     {
+      "name": "Y.Json",
+      "kind": "geojson",
+      "parts": [
+       "Y.Json"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "sayılar değerleriyle, Türkçe harfler",
+   "entries": [
+    {
+     "name": "P10",
+     "dir": true
+    },
+    {
+     "name": "P2",
+     "dir": true
+    },
+    {
+     "name": "Çamlık",
+     "dir": true
+    },
+    {
+     "name": "cadde",
+     "dir": true
+    },
+    {
+     "name": "İmar",
+     "dir": true
+    },
+    {
+     "name": "ılgaz",
+     "dir": true
+    },
+    {
+     "name": "P10.dxf",
+     "dir": false
+    },
+    {
+     "name": "P2.dxf",
+     "dir": false
+    },
+    {
+     "name": "P1.dxf",
+     "dir": false
+    },
+    {
+     "name": "Çizim.dxf",
+     "dir": false
+    },
+    {
+     "name": "cizim.dxf",
+     "dir": false
+    }
+   ],
+   "expect": {
+    "folders": [
+     "cadde",
+     "Çamlık",
+     "ılgaz",
+     "İmar",
+     "P2",
+     "P10"
+    ],
+    "files": [
+     {
+      "name": "cizim.dxf",
+      "kind": "dxf",
+      "parts": [
+       "cizim.dxf"
+      ]
+     },
+     {
+      "name": "Çizim.dxf",
+      "kind": "dxf",
+      "parts": [
+       "Çizim.dxf"
+      ]
+     },
+     {
+      "name": "P1.dxf",
+      "kind": "dxf",
+      "parts": [
+       "P1.dxf"
+      ]
+     },
+     {
+      "name": "P2.dxf",
+      "kind": "dxf",
+      "parts": [
+       "P2.dxf"
+      ]
+     },
+     {
+      "name": "P10.dxf",
+      "kind": "dxf",
+      "parts": [
+       "P10.dxf"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "boş klasör",
+   "entries": [],
+   "expect": {
+    "folders": [],
+    "files": []
+   }
+  },
+  {
+   "name": "yalnız desteklenmeyen dosyalar",
+   "entries": [
+    {
+     "name": "a.pdf",
+     "dir": false
+    },
+    {
+     "name": "b.docx",
+     "dir": false
+    },
+    {
+     "name": "c.zip",
+     "dir": false
+    },
+    {
+     "name": "d.kcad",
+     "dir": false
+    }
+   ],
+   "expect": {
+    "folders": [],
+    "files": []
+   }
+  }
+ ]
+}

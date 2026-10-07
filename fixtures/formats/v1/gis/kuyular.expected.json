@@ -1,6 +1,28 @@
 {
  "declaredSrid": null,
  "encoding": "ISO-8859-9",
+ "fields": {
+  "kuyular": [
+   {
+    "name": "AD",
+    "kind": "text",
+    "length": 25
+   },
+   {
+    "name": "DERINLIK",
+    "kind": "decimal",
+    "scale": 2
+   },
+   {
+    "name": "SU",
+    "kind": "boolean"
+   },
+   {
+    "name": "OLCUM",
+    "kind": "date"
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "point",

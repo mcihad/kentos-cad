@@ -382,6 +382,8 @@ export class LayersPanel extends Panel {
           icon: 'layerStyle',
           run: () => void import('../style/LayerStyleDialog').then((m) => m.openLayerStyle(this.ctx, n.id)),
         },
+        // Alanlar (docs/adr/0199 §3): the schema of its objects' attributes.
+        { label: n.fields?.length ? `Alanlar… (${n.fields.length})` : 'Alanlar…', icon: 'layerFields', run: () => void this.ctx.commands.execute('layer.fields', n.id) },
         { kind: 'separator' },
       );
     }

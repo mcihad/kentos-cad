@@ -28,8 +28,17 @@ import type { PropertiesOperation } from "./PropertiesOperation";
  * `invalid_revision`, `revision_conflict` (status `conflict`),
  * `entity_not_found` (each id in order), `layer_not_found` and
  * `not_a_layer` (the `layerId` given), `layer_locked` (each object's layer
- * in the input's order, then the `layerId` given). Warning: `layer_hidden`
- * (the `layerId` given is hidden and at least one object moves to it).
+ * in the input's order, then the `layerId` given), then `invalid_attribute`
+ * and `attribute_required` (the attributes given, by the fields of each
+ * object's layer, the one it moves to else its own, objects in the input's
+ * order, names in theirs, at `attrs.<name>`; docs/adr/0199 §2). Warning:
+ * `layer_hidden` (the `layerId` given is hidden and at least one object
+ * moves to it).
+ *
+ * A layer with fields (docs/adr/0199 §2): a value given to a field's key is
+ * written in its canonical text; a value that does not keep the field's
+ * rules is refused (`invalid_attribute`), an empty or removed one of a
+ * required field too (`attribute_required`). Keys no field names are free.
  * White space is Unicode's `White_Space` (Rust's `char::is_whitespace`).
  */
 export type EntitiesSetProperties = { 

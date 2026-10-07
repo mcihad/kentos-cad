@@ -11,8 +11,8 @@
  */
 
 export type Theme = 'dark' | 'light';
-export type BottomTab = 'history' | 'coords' | 'points' | 'search' | 'messages';
-export type DockTab = 'layers' | 'processing' | 'blocks' | 'templates';
+export type BottomTab = 'history' | 'coords' | 'points' | 'table' | 'search' | 'messages';
+export type DockTab = 'layers' | 'processing' | 'blocks' | 'templates' | 'sources';
 export type ProcessingTab = 'tools' | 'history';
 
 export interface UiLayoutData {
@@ -90,8 +90,8 @@ export const LAYOUT_FIELDS: { readonly [K in keyof UiLayoutData]: FieldRule } = 
   layersFraction: { kind: 'number', min: LAYERS_FRACTION.min, max: LAYERS_FRACTION.max },
   bottomExpanded: { kind: 'boolean' },
   bottomHeight: { kind: 'number', min: BOTTOM_HEIGHT.min },
-  bottomTab: { kind: 'enum', values: ['history', 'coords', 'points', 'search', 'messages'] },
-  dockTab: { kind: 'enum', values: ['layers', 'processing', 'blocks', 'templates'] },
+  bottomTab: { kind: 'enum', values: ['history', 'coords', 'points', 'table', 'search', 'messages'] },
+  dockTab: { kind: 'enum', values: ['layers', 'processing', 'blocks', 'templates', 'sources'] },
   processingTab: { kind: 'enum', values: ['tools', 'history'] },
   processingFolded: { kind: 'texts' },
   ribbonTab: { kind: 'text' },

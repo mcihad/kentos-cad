@@ -1,3 +1,4 @@
+import { checkValue } from '../model/layerFields';
 import type { CommandError } from '../contracts/generated/CommandError';
 import type { CommandResult } from '../contracts/generated/CommandResult';
 import type { CommandWarning } from '../contracts/generated/CommandWarning';
@@ -145,6 +146,40 @@ export function findObjects(doc: CadDocument, uids: readonly string[]): Stop | {
  * what Rust's `char::is_whitespace` takes, so the desktop answers the same.
  * Not `String.trim`, which also takes U+FEFF and leaves U+0085.
  */
+/** Two names in their code points' order (Rust's `BTreeMap<String, _>`, UTF-8 bytes). */
+export function codePointOrder(a: string, b: string): number {
+  const x = [...a];
+  const y = [...b];
+  for (let i = 0; i < Math.min(x.length, y.length); i++) {
+    const d = x[i].codePointAt(0)! - y[i].codePointAt(0)!;
+    if (d) return d < 0 ? -1 : 1;
+  }
+  return x.length - y.length;
+}
+
+/**
+ * The attributes written to an object on `layerId`, by its fields (docs/adr/0199 §2; the desktop's
+ * `checks::field_values`): each value given to a field's key in its canonical text, a null (taken away) checked as
+ * empty; in the names' order, the first that does not keep its field's rules `invalid_attribute`, an empty value of a
+ * required field `attribute_required`, at `{at}.{name}`. Keys no field names, and every key on a layer without fields,
+ * stay as given. Entries, not an object: a name may be `__proto__`.
+ */
+export function fieldValues(doc: CadDocument, layerId: string, attrs: Iterable<readonly [string, string | null]>, at: string): Stop | [string, string | null][] {
+  const fields = doc.layers.get(layerId)?.fields ?? [];
+  const out: [string, string | null][] = [];
+  for (const [key, value] of [...attrs].sort((a, b) => codePointOrder(a[0], b[0]))) {
+    const field = fields.find((f) => f.name === key);
+    if (!field) {
+      out.push([key, value]);
+      continue;
+    }
+    const r = checkValue(field, value ?? '');
+    if ('error' in r) return failed(error(r.error === 'required' ? 'attribute_required' : 'invalid_attribute', r.message, `${at}.${key}`));
+    out.push([key, value === null ? null : r.value]);
+  }
+  return out;
+}
+
 export const isBlank = (text: string): boolean => /^[\t-\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]*$/.test(text);
 
 /** `validate`'s answer from the checks: nothing, with the warnings, or why not. */

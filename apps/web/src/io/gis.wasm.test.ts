@@ -77,7 +77,9 @@ function canonical(r: ImportResult, encoding?: string): unknown {
     o.attrs = e.attrs;
     return o;
   });
-  return { declaredSrid: r.declaredCrs?.srid ?? null, ...(encoding ? { encoding } : {}), objects };
+  // The layers' fields (docs/adr/0199 §6), by layer, only layers that have any.
+  const fields = Object.fromEntries(r.layers.filter((l) => l.fields?.length).map((l) => [l.name, l.fields]));
+  return { declaredSrid: r.declaredCrs?.srid ?? null, ...(encoding ? { encoding } : {}), ...(Object.keys(fields).length ? { fields } : {}), objects };
 }
 
 /** Equal as JSON, numbers by Object.is (−0 is not 0); the first difference's path. */

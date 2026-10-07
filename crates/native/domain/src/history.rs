@@ -19,7 +19,7 @@
 use std::collections::{HashSet, VecDeque};
 use std::sync::Arc;
 
-use kentos_contracts::{BlockDefinition, BlockId, Entity, LayerNode, LayerStyle};
+use kentos_contracts::{BlockDefinition, BlockId, Entity, LayerField, LayerNode, LayerStyle};
 
 use crate::changes::Journal;
 use crate::document::Document;
@@ -57,6 +57,12 @@ pub(crate) enum Op {
         layer: String,
         before: Box<LayerStyle>,
         after: Box<LayerStyle>,
+    },
+    /// A layer's fields (docs/adr/0199 §3), before and after.
+    LayerFields {
+        layer: String,
+        before: Vec<LayerField>,
+        after: Vec<LayerField>,
     },
     /// A layer or a group taken out of the tree with everything under it
     /// (`Document::remove_layer`), and its inverse, which puts it back; a
@@ -117,6 +123,15 @@ impl Op {
                 before,
                 after,
             } => Op::LayerStyle {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerFields {
+                layer,
+                before,
+                after,
+            } => Op::LayerFields {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
@@ -409,6 +424,7 @@ impl Document {
                 Op::Add(s) | Op::Remove(s) => hit(s),
                 Op::Update { before, .. } => hit(before),
                 Op::LayerStyle { .. }
+                | Op::LayerFields { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
                 | Op::LayerActive { .. }
@@ -514,6 +530,10 @@ impl Document {
             }
             Op::LayerStyle { layer, after, .. } => {
                 self.layers.replace_style(layer, after);
+                return;
+            }
+            Op::LayerFields { layer, after, .. } => {
+                self.layers.replace_fields(layer, after);
                 return;
             }
             // A node still holding objects stays: taking it away would leave

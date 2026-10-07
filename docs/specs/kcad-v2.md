@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `25`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-26.kcad`) |
+| `version` | tam sayı | `2`'den `26`'ya bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-27.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -245,7 +245,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 25**, şema 24'ün kendisi ve eğri boyunca yazıdır: yazının `path` alanı (§6.6; ADR 0196), belgede ve blok tanımında. Yazıcı `25`'i **yalnız bir yazının eğrisi varken** yazar. Başka her çizim şema 2–24'tür ve eskisiyle bayt bayt aynıdır. Şema 2–24 yükünde `path` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/text-path-in-schema-24.kcad`): eski okuyucu yazıyı sessizce düzleştirmez, dosyayı açmaz. Şema 25 şema 24'ü kapsar. Örnek dosya `text-paths.kcad`.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 26**, şema 25'in kendisi ve katmanın alanlarıdır: katman düğümünün `fields` alanı (§6.5; ADR 0199 §1). Yazıcı `26`'yı **yalnız bir katmanın alanı varken** yazar. Başka her çizim şema 2–25'tir ve eskisiyle bayt bayt aynıdır. Şema 2–25 yükünde `fields` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/layer-fields-in-schema-25.kcad`): eski okuyucu katmanın şemasını bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 26 şema 25'i kapsar. Örnek dosya `layer-fields.kcad`.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -410,6 +412,7 @@ Bilinmeyen anahtar `unknown_field`'dır (`broken/style-table-unknown-field.kcad`
 | `snap` | katman keneti | | şema 10'da: katmanın kendi keneti (aşağıda); yalnız katmanda, grupta `bad_value` |
 | `type` | numaralı metin | evet | `group`, `layer` |
 | `style` | katman stili | evet | |
+| `fields` | dizi: alan | | şema 26'da: katmanın nesnelerinin özniteliklerinin şeması (aşağıda); boş değil; yalnız katmanda, grupta `bad_value` |
 | `locked` | bool | evet | |
 | `visible` | bool | evet | |
 | `children` | dizi: katman | evet | alt düğümler (katmanda boş dizi) |
@@ -423,6 +426,23 @@ Bilinmeyen anahtar `unknown_field`'dır (`broken/style-table-unknown-field.kcad`
 | `kinds` | dizi: numaralı metin | | yalnız bu türlerle kenetlenilir (genel türlerle kesişimi): `endpoint` (çeyrek noktalarını da getirir), `midpoint`, `center`, `node`, `intersection`, `perpendicular`, `tangent`, `nearest`, `centroid`, `extension`, `parallel`, `grid` |
 
 İkisi birden, ikisi de yok, `off: false`, boş, yinelenen ya da bilinmeyen tür `bad_value`'dur (`fixtures/kcad/v2/broken/layer-snap-*.kcad`). Kesişim kenedi iki nesneden birinin katmanında kesişim türü açıksa çalışır.
+
+**Alan** (şema 26; ADR 0199 §1): katmanın nesnelerinin bir özniteliği; adı özniteliğin anahtarıdır. Değerler nesnelerin `attrs`'ında metin olarak kalır; dosya biçimi değerleri alanlarla denetlemez (kurala uymayan değer okunur ve korunur).
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `max` | metin | | sayı alanının en büyük değeri, türünün tek biçiminde |
+| `min` | metin | | sayı alanının en küçük değeri, türünün tek biçiminde |
+| `kind` | numaralı metin | evet | `text`, `integer`, `decimal`, `date`, `boolean` |
+| `name` | metin | evet | özniteliğin anahtarı |
+| `alias` | metin | | tabloda ve formda gösterilen ad |
+| `scale` | u32 | | ondalık sayının en çok kesir basamağı (0–15) |
+| `length` | u32 | | metnin en çok karakteri (1–10 000) |
+| `values` | dizi: harita | | değer listesi: her biri `code` ve `label` metni (ikisi de zorunlu) |
+| `default` | metin | | yeni nesnenin değeri, alanın kurallarına uyan tek biçimde |
+| `required` | bool | | yalnız `true`: nesne alanı boş bırakamaz |
+
+Anahtarlar kodlanmış sırasıyladır. Tek biçimler ve alan listesinin kuralları ADR 0199 §1'dedir (`kentos_contracts::fields`): ad boş değil, başında ya da sonunda boşluk yok, en çok 64 karakter, denetim karakteri yok, Türkçe katlanarak bir kez; takma ad boş değil, en çok 64 karakter; uzunluk yalnız metinde, ondalık basamak yalnız ondalıkta, aralık yalnız sayılarda (uçları tek biçimde, en az en çoktan büyük değil), değer listesi yalnız metin ve sayılarda (boş değil, kodlar boş değil ve sayılarda tek biçimde, kodlar ve katlanmış etiketler bir kez); varsayılan alanın kurallarına uyan tek biçim. Kuralı kıran liste, boş liste, `required: false`, bilinmeyen tür ve negatif sayı `bad_value`'dur; bilinmeyen anahtar `unknown_field`, türü ya da etiketi olmayan `missing_field`'dır (`fixtures/kcad/v2/broken/layer-fields-*.kcad`).
 
 **Katman stili:**
 

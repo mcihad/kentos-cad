@@ -126,11 +126,11 @@ pub(crate) const FIELDS: [(&str, Rule); 17] = [
     ),
     (
         "bottomTab",
-        Rule::Enum(&["history", "coords", "points", "search", "messages"]),
+        Rule::Enum(&["history", "coords", "points", "table", "search", "messages"]),
     ),
     (
         "dockTab",
-        Rule::Enum(&["layers", "processing", "blocks", "templates"]),
+        Rule::Enum(&["layers", "processing", "blocks", "templates", "sources"]),
     ),
     ("processingTab", Rule::Enum(&["tools", "history"])),
     ("processingFolded", Rule::Texts),

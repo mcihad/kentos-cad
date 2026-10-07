@@ -1,6 +1,24 @@
 {
  "declaredSrid": 2320,
  "encoding": "UTF-8",
+ "fields": {
+  "yollar": [
+   {
+    "name": "AD",
+    "kind": "text",
+    "length": 50
+   },
+   {
+    "name": "ŞERİT",
+    "kind": "integer"
+   },
+   {
+    "name": "KAPLAMA",
+    "kind": "text",
+    "length": 20
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "polyline",

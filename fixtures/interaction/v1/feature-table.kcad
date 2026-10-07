@@ -1,0 +1,325 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Öznitelik tablosu",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 500,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "kadastro",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "parsel",
+          "name": "Parsel",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#3E63DD",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+            {
+              "name": "Ada",
+              "kind": "text",
+              "required": true
+            },
+            {
+              "name": "Parsel",
+              "kind": "integer",
+              "min": "1"
+            },
+            {
+              "name": "Alan",
+              "alias": "Tapu alanı",
+              "kind": "decimal",
+              "scale": 2
+            },
+            {
+              "name": "Kullanım",
+              "kind": "text",
+              "values": [
+                {
+                  "code": "K",
+                  "label": "Konut"
+                },
+                {
+                  "code": "T",
+                  "label": "Ticaret"
+                },
+                {
+                  "code": "İ",
+                  "label": "İşyeri"
+                }
+              ]
+            },
+            {
+              "name": "Ruhsat",
+              "kind": "boolean"
+            },
+            {
+              "name": "Tescil",
+              "alias": "Tescil tarihi",
+              "kind": "date"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#F76B15",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "id": 1,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "101",
+        "Parsel": "7",
+        "Alan": "400.50",
+        "Kullanım": "K",
+        "Ruhsat": "true",
+        "Tescil": "2026-10-07"
+      },
+      "pts": [
+        {
+          "x": 486960,
+          "y": 4420000
+        },
+        {
+          "x": 486975,
+          "y": 4420000
+        },
+        {
+          "x": 486975,
+          "y": 4420010
+        },
+        {
+          "x": 486960,
+          "y": 4420010
+        }
+      ],
+      "label": "101/7"
+    },
+    {
+      "id": 2,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "101",
+        "Parsel": "12",
+        "Alan": "98.25",
+        "Kullanım": "T",
+        "Ruhsat": "false",
+        "Tescil": "2026-01-02"
+      },
+      "pts": [
+        {
+          "x": 486978,
+          "y": 4420000
+        },
+        {
+          "x": 486993,
+          "y": 4420000
+        },
+        {
+          "x": 486993,
+          "y": 4420010
+        },
+        {
+          "x": 486978,
+          "y": 4420010
+        }
+      ],
+      "label": "101/12"
+    },
+    {
+      "id": 3,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "102",
+        "Parsel": "3",
+        "Alan": "1200",
+        "Kullanım": "İ",
+        "Tescil": "1999-12-31"
+      },
+      "pts": [
+        {
+          "x": 486996,
+          "y": 4420000
+        },
+        {
+          "x": 487011,
+          "y": 4420000
+        },
+        {
+          "x": 487011,
+          "y": 4420010
+        },
+        {
+          "x": 486996,
+          "y": 4420010
+        }
+      ],
+      "label": "102/3"
+    },
+    {
+      "id": 4,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "102",
+        "Parsel": "7a",
+        "Alan": "55.5",
+        "Ruhsat": "true"
+      },
+      "pts": [
+        {
+          "x": 487014,
+          "y": 4420000
+        },
+        {
+          "x": 487029,
+          "y": 4420000
+        },
+        {
+          "x": 487029,
+          "y": 4420010
+        },
+        {
+          "x": 487014,
+          "y": 4420010
+        }
+      ],
+      "label": "102/7a"
+    },
+    {
+      "id": 5,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "1",
+        "Alan": "12,5",
+        "Kullanım": "K",
+        "Not": "köşe"
+      },
+      "pts": [
+        {
+          "x": 487032,
+          "y": 4420000
+        },
+        {
+          "x": 487047,
+          "y": 4420000
+        },
+        {
+          "x": 487047,
+          "y": 4420010
+        },
+        {
+          "x": 487032,
+          "y": 4420010
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "kind": "polygon",
+      "layerId": "yapi",
+      "attrs": {
+        "Kat": "3",
+        "Yapı": "Konut"
+      },
+      "pts": [
+        {
+          "x": 486964,
+          "y": 4419984
+        },
+        {
+          "x": 486972,
+          "y": 4419984
+        },
+        {
+          "x": 486972,
+          "y": 4419990
+        },
+        {
+          "x": 486964,
+          "y": 4419990
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "kind": "polygon",
+      "layerId": "yapi",
+      "attrs": {
+        "Kat": "5",
+        "Yapı": "Ticaret",
+        "Not": "köşe"
+      },
+      "pts": [
+        {
+          "x": 486982,
+          "y": 4419984
+        },
+        {
+          "x": 486990,
+          "y": 4419984
+        },
+        {
+          "x": 486990,
+          "y": 4419990
+        },
+        {
+          "x": 486982,
+          "y": 4419990
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

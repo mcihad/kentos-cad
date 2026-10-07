@@ -30,6 +30,18 @@ points that read: a point of one, else the first point's `p` and `z` and the
 others in `parts` (`p`, `z`). A GeometryCollection's members are still objects
 of their own.
 
+Layer fields (docs/adr/0199 §6): a Shapefile's DBF fields and the kinds of a
+GeoJSON's properties are the layers' fields, listed under `fields` by layer
+(only layers that have any), and the values of a number field are written in
+their canonical text (an exponent written out in full, exactly; one that does
+not keep the field's rules stays as read). A DBF C field is text (its width
+its length), N without decimals an integer (a decimal of no fraction when it
+is wider than 15), N with decimals a decimal of as many (at most 15), F a
+decimal, D a date, L a yes or no. A GeoJSON key whose values are all JSON
+integers is an integer field, all numbers written without an exponent a
+decimal (of the most fraction digits, at most 15, else text), all booleans a
+yes or no, any other mix text; a key with only nulls is none.
+
     python3 tools/formats/gis.py read PATH [--layer NAME]
 
 PATH is a GeoJSON file or a `.shp`; the .dbf, .prj and .cpg beside a .shp are
@@ -158,6 +170,98 @@ def dumps(result):
     return json.dumps(result, indent=1, ensure_ascii=False, allow_nan=False) + "\n"
 
 
+# ── Layer fields (docs/adr/0199 §6) ─────────────────────────────────────
+
+MAX_INTEGER = 9007199254740991
+
+
+def plain_number(text):
+    """An exponent's number written out in full, exactly (`1.2e3` → `1200`); other text as it is."""
+    m = re.fullmatch(r"([+-]?)([0-9]+)(?:\.([0-9]*))?[eE]([+-]?[0-9]+)", text)
+    if not m or abs(int(m.group(4))) > 400:
+        return text
+    whole, frac, exp = m.group(2), m.group(3) or "", int(m.group(4))
+    digits, point = whole + frac, len(whole) + exp
+    if point <= 0:
+        body = "0." + "0" * -point + digits
+    elif point >= len(digits):
+        body = digits + "0" * (point - len(digits))
+    else:
+        body = digits[:point] + "." + digits[point:]
+    return m.group(1) + body
+
+
+def field_value(field, text):
+    """`text`'s canonical text as a value of `field`, or None when it does not keep the field's rules."""
+    kind, s = field["kind"], text.strip()
+    if kind == "integer":
+        m = re.fullmatch(r"([+-]?)([0-9]+)", s)
+        if not m or int(m.group(2)) > MAX_INTEGER:
+            return None
+        return str(-int(m.group(2)) if m.group(1) == "-" else int(m.group(2)))
+    if kind == "decimal":
+        # The separator a point or a comma (the field's rule, docs/adr/0199 §1).
+        m = re.fullmatch(r"([+-]?)([0-9]*)(?:[.,]([0-9]*))?", s)
+        if not m or not (m.group(2) or m.group(3)):
+            return None
+        whole, frac = m.group(2), m.group(3) or ""
+        if len(whole) + len(frac) > 30 or ("scale" in field and len(frac) > field["scale"]):
+            return None
+        whole = whole.lstrip("0") or "0"
+        zero = set(whole + frac) <= {"0"}
+        return ("-" if m.group(1) == "-" and not zero else "") + whole + ("." + frac if frac else "")
+    if kind == "text":
+        return text if "length" not in field or len(text) <= field["length"] else None
+    return text  # a date and a yes or no are read in their canonical text already
+
+
+def dbf_field(name, kind, width, decimals):
+    """The layer field of a DBF field, or None for a type the reading leaves out."""
+    if kind == "C":
+        return {"name": name, "kind": "text", **({"length": width} if 1 <= width <= 10000 else {})}
+    if kind == "N" and decimals == 0:
+        return {"name": name, "kind": "integer"} if width <= 15 else {"name": name, "kind": "decimal", "scale": 0}
+    if kind == "N":
+        return {"name": name, "kind": "decimal", **({"scale": decimals} if decimals <= 15 else {})}
+    if kind == "F":
+        return {"name": name, "kind": "decimal"}
+    if kind == "D":
+        return {"name": name, "kind": "date"}
+    if kind == "L":
+        return {"name": name, "kind": "boolean"}
+    return None
+
+
+def fold(text):
+    return "".join("ı" if c == "I" else "i" if c == "İ" else (c.lower() if len(c.lower()) == 1 else c) for c in text)
+
+
+def usable_name(name, taken):
+    """Whether a field may take this name: not blank, no space at its ends, at most 64 letters, no control
+    character, not one taken (folded)."""
+    return (
+        bool(name.strip())
+        and name.strip() == name
+        and len(name) <= 64
+        and not any(ord(c) < 32 or 127 <= ord(c) < 160 for c in name)
+        and fold(name) not in taken
+    )
+
+
+def canonical_attrs(fields, attrs):
+    """The attributes with each field's value in its canonical text (one the field refuses as it is)."""
+    out = dict(attrs)
+    for f in fields:
+        if f["name"] in out:
+            text = out[f["name"]]
+            if f["kind"] in ("integer", "decimal"):
+                text = plain_number(text.strip())
+            v = field_value(f, text)
+            if v is not None:
+                out[f["name"]] = v
+    return out
+
+
 class Target:
     """Where a feature's (or a record's) objects go, with the layer, label and attributes each carries."""
 
@@ -263,8 +367,9 @@ def compact(value):
     raise TypeError(type(value))
 
 
-def geojson_attrs(properties):
-    """A feature's attributes: each member of an object `properties` (a repeated key: the last), null ones left out, as text."""
+def geojson_attrs(properties, kinds=None):
+    """A feature's attributes: each member of an object `properties` (a repeated key: the last), null ones left out, as
+    text; `kinds` hears each value's JSON kind ("n" a number, "b" a boolean, "s" anything else)."""
     if not isinstance(properties, dict):
         return {}
     attrs = {}
@@ -272,14 +377,38 @@ def geojson_attrs(properties):
         if value is None:
             continue
         if isinstance(value, str):
-            attrs[key] = value
+            attrs[key], kind = value, "s"
         elif isinstance(value, Num):
-            attrs[key] = value.text
+            attrs[key], kind = value.text, "n"
         elif value is True or value is False:
-            attrs[key] = "true" if value else "false"
+            attrs[key], kind = ("true" if value else "false"), "b"
         else:
-            attrs[key] = compact(value)
+            attrs[key], kind = compact(value), "s"
+        if kinds is not None:
+            kinds.append((key, kind, attrs[key]))
     return attrs
+
+
+def geojson_fields(seen):
+    """A layer's fields from its properties' kinds, `seen` the (key, kind, text) of its values in reading order: the
+    keys in their first order, each an integer, a decimal, a yes or no or a text field by all its values."""
+    by_key = {}
+    for key, kind, text in seen:
+        by_key.setdefault(key, []).append((kind, text))
+    out = []
+    for key, values in by_key.items():
+        kinds = {k for k, _ in values}
+        texts = [t for _, t in values]
+        if kinds == {"b"}:
+            out.append({"name": key, "kind": "boolean"})
+        elif kinds == {"n"} and all(re.fullmatch(r"-?[0-9]+", t) and int(t.lstrip("-")) <= MAX_INTEGER for t in texts):
+            out.append({"name": key, "kind": "integer"})
+        elif kinds == {"n"} and all(re.fullmatch(r"-?[0-9]+(\.[0-9]+)?", t) and len(t.lstrip("-").replace(".", "")) <= 30 for t in texts):
+            scale = max(len(t.split(".")[1]) if "." in t else 0 for t in texts)
+            out.append({"name": key, "kind": "decimal", "scale": scale} if scale <= 15 else {"name": key, "kind": "text"})
+        else:
+            out.append({"name": key, "kind": "text"})
+    return out
 
 
 def position(value):
@@ -390,7 +519,7 @@ def gj_geometry(geometry, target):
         read(geometry.get("coordinates"), target)
 
 
-def gj_feature(feature, default_layer, out):
+def gj_feature(feature, default_layer, out, seen):
     if not isinstance(feature, dict) or feature.get("type") != "Feature":
         return  # not a Feature: nothing
     layer, label = default_layer, None
@@ -400,7 +529,13 @@ def gj_feature(feature, default_layer, out):
             layer = kentos["layer"]
         if isinstance(kentos.get("label"), str) and kentos["label"]:
             label = kentos["label"]
-    gj_geometry(feature.get("geometry"), Target(out, layer, label, geojson_attrs(feature.get("properties"))))
+    kinds = []
+    attrs = geojson_attrs(feature.get("properties"), kinds)
+    before = len(out)
+    gj_geometry(feature.get("geometry"), Target(out, layer, label, attrs))
+    # A feature that gives no object gives its layer no field either.
+    if len(out) > before:
+        seen.setdefault(layer, []).extend(kinds)
 
 
 _EPSG_NAME = re.compile(r"EPSG::?([0-9]+)\Z", re.IGNORECASE | re.ASCII)
@@ -438,21 +573,29 @@ def read_geojson(data, layer):
         raise GisError("GeoJSON'un kökü bir nesne olmalı")
     name = root.get("name")
     default_layer = name if isinstance(name, str) and name else layer
-    out = []
+    out, seen = [], {}
     kind = root.get("type")
     if kind == "FeatureCollection":
         features = root.get("features", [])  # without `features`: no objects
         if not isinstance(features, list):
             raise GisError("FeatureCollection'ın features üyesi bir dizi olmalı")
         for feature in features:
-            gj_feature(feature, default_layer, out)
+            gj_feature(feature, default_layer, out, seen)
     elif kind == "Feature":
-        gj_feature(root, default_layer, out)
+        gj_feature(root, default_layer, out, seen)
     elif kind in GEOMETRY_TYPES:
         gj_geometry(root, Target(out, default_layer, None, {}))
     else:
         raise GisError(f"GeoJSON'un kök türü tanınmıyor: {kind!r}")
-    return {"declaredSrid": geojson_srid(root), "objects": out}
+    fields = {layer: geojson_fields(values) for layer, values in seen.items()}
+    fields = {layer: f for layer, f in fields.items() if f}
+    for o in out:
+        o["attrs"] = canonical_attrs(fields.get(o["layer"], []), o["attrs"])
+    result = {"declaredSrid": geojson_srid(root)}
+    if fields:
+        result["fields"] = fields
+    result["objects"] = out
+    return result
 
 
 # ── Shapefile (ESRI Shapefile Technical Description, July 1998) ─────────
@@ -665,10 +808,17 @@ def dbf_rows(dbf, codec):
         if at + 32 > len(dbf):
             raise GisError(".dbf alan tanımı yarım")
         field = dbf[at : at + 32]
-        fields.append((field[:11].split(b"\0", 1)[0].decode(codec, errors="replace"), chr(field[11]), field[16]))
+        fields.append((field[:11].split(b"\0", 1)[0].decode(codec, errors="replace"), chr(field[11]), field[16], field[17]))
         at += 32
-    if 1 + sum(width for _, _, width in fields) > record_length:
+    if 1 + sum(width for _, _, width, _ in fields) > record_length:
         raise GisError(".dbf alanları kayıt uzunluğuna sığmıyor")
+    # The layer's fields (docs/adr/0199 §6): of the known types, a name usable once.
+    schema, taken = [], set()
+    for name, kind, width, decimals in fields:
+        f = dbf_field(name, kind, width, decimals)
+        if f is not None and usable_name(name, taken):
+            schema.append(f)
+            taken.add(fold(name))
     rows = []
     for n in range(count):
         start = header_length + n * record_length
@@ -676,13 +826,13 @@ def dbf_rows(dbf, codec):
             break  # only complete records count
         record = dbf[start : start + record_length]
         attrs, pos = {}, 1
-        for name, kind, width in fields:
+        for name, kind, width, _ in fields:
             value = dbf_value(kind, record[pos : pos + width], codec)
             pos += width
             if name and value is not None:  # a field without a name is left out
                 attrs[name] = value
-        rows.append((record[0] == 0x2A, attrs))  # `*`: deleted
-    return rows
+        rows.append((record[0] == 0x2A, canonical_attrs(schema, attrs)))  # `*`: deleted
+    return rows, schema
 
 
 # ── .prj: WKT 1 (ESRI or OGC) ───────────────────────────────────────────
@@ -838,7 +988,7 @@ def read_shapefile(shp, shx, dbf, prj_text, cpg_text, layer):
     """A Shapefile set's canonical dict; dbf, prj_text and cpg_text are None when the file is absent.
     `shx` is accepted for the set's sake but not read: the records come from the .shp in order."""
     encoding = shapefile_encoding(cpg_text, dbf)
-    rows = dbf_rows(dbf, CODECS[encoding]) if dbf is not None else []
+    rows, schema = dbf_rows(dbf, CODECS[encoding]) if dbf is not None else ([], [])
     out = []
     for n, content in enumerate(shp_records(shp)):
         deleted, attrs = rows[n] if n < len(rows) else (False, {})  # the n-th .dbf record gives the n-th shape's attrs
@@ -846,7 +996,12 @@ def read_shapefile(shp, shx, dbf, prj_text, cpg_text, layer):
             target = Target(out, layer, None, attrs)
             for kind, geometry in shp_objects(content):
                 target.add(kind, geometry)
-    return {"declaredSrid": prj_srid(prj_text), "encoding": encoding, "objects": out}
+    result = {"declaredSrid": prj_srid(prj_text), "encoding": encoding}
+    # Only a layer that holds objects has its fields.
+    if schema and out:
+        result["fields"] = {layer: schema}
+    result["objects"] = out
+    return result
 
 
 def read_shapefile_files(files, layer):

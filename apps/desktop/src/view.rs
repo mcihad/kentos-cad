@@ -110,6 +110,8 @@ impl App {
                     }
                     (Panel::Blocks, Some(_)) => pane.actions(self.blocks_panel_actions()),
                     (Panel::Templates, _) => pane.actions(self.templates_panel_actions()),
+                    // Kaynaklar's list scrolls itself (sources/view.rs).
+                    (Panel::Sources, _) => pane,
                     (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
                         Some(meta) => pane.actions(label::caption(meta)).scrollable(),
                         None => pane.scrollable(),
@@ -861,6 +863,8 @@ impl App {
             Panel::Blocks => self.blocks_panel_view(),
             // Şablonlar: the library's object templates (templates_panel.rs, docs/adr/0176 §4).
             Panel::Templates => self.templates_panel_view(),
+            // Kaynaklar: folders and KentOS projects to add layers from (sources/, docs/adr/0199 §7).
+            Panel::Sources => self.sources_view(),
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
             Panel::Properties => self.properties_view(doc),
         }
@@ -1481,6 +1485,7 @@ impl App {
             Asking::AttributeValues => self.attribute_values_view(),
             Asking::FindReplace => self.find_replace_view(),
             Asking::LayerMerge => self.layer_merge_view(),
+            Asking::LayerFields => self.layer_fields_view(),
             Asking::LayerStates => self.layer_states_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::LayerPurge => self.layer_purge_view(),

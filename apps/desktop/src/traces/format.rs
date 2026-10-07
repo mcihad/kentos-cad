@@ -126,6 +126,9 @@ pub struct Step {
     pub(super) sort: Option<String>,
     /// Its n-th result row, pressed (1 first); `shift` and `ctrl` held.
     pub(super) row: Option<usize>,
+    /// Öznitelik tablosu's cell (docs/adr/0199 §4): the n-th row's value
+    /// under the header, double-clicked, typed over and written with Enter.
+    pub(super) edit: Option<CellEdit>,
     pub(super) ctrl: Option<bool>,
     /// Genel bakış's picture pressed where it shows this point of the
     /// drawing, east and north of `view.center` (docs/adr/0181).
@@ -197,6 +200,10 @@ pub struct Expect {
     /// Arama's count line and rows (Katman, Tür, Alan, Değer joined by “ | ”),
     /// exact (docs/adr/0178).
     pub(super) search: Option<SearchExpect>,
+    /// Öznitelik tablosu's count, headers (when given) and rows (the cells
+    /// after Sıra joined by “ | ”), exact (docs/adr/0199 §4).
+    #[serde(rename = "featureTable")]
+    pub(super) feature_table: Option<FeatureTableExpect>,
     /// The place the data search's Git marked, east and north of
     /// `view.center`, within `clickTolerance`; `null` none, and absent differ.
     #[serde(default, deserialize_with = "present")]
@@ -249,6 +256,26 @@ pub struct MagnifierExpect {
 pub struct SearchExpect {
     pub(super) count: String,
     pub(super) rows: Vec<String>,
+}
+
+/// Öznitelik tablosu as a step sees it: the count, the headers after Sıra
+/// (when the step names them) and every row.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FeatureTableExpect {
+    pub(super) count: String,
+    pub(super) columns: Option<Vec<String>>,
+    pub(super) rows: Vec<String>,
+}
+
+/// A cell of Öznitelik tablosu edited: its row (1 first), its column's
+/// header and the text typed over its value.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CellEdit {
+    pub(super) row: usize,
+    pub(super) column: String,
+    pub(super) text: String,
 }
 
 /// The expected lock: its point (within `clickTolerance`) and its lines in

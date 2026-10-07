@@ -143,6 +143,19 @@ fn the_blocks_tab_in_front_is_kept_and_shown_again() {
     assert_eq!(in_front(&opened(&dir)), Some(Panel::Blocks));
 }
 
+/// Kaynaklar in front (`data.sources`) is kept as the web keeps it (docs/adr/0199 §7).
+#[test]
+fn the_sources_tab_in_front_is_kept_and_shown_again() {
+    let dir = scratch("kaynaklar");
+    let mut app = opened(&dir);
+    let _ = app.update(Message::Run("data.sources"));
+    assert_eq!(in_front(&app), Some(Panel::Sources));
+    assert_eq!(app.layout.kept()["dockTab"], "sources");
+    let due = app.layout.due().expect("a change waits");
+    app.layout.write(due, false);
+    assert_eq!(in_front(&opened(&dir)), Some(Panel::Sources));
+}
+
 #[test]
 fn a_narrower_window_shows_less_and_keeps_the_wish() {
     let dir = scratch("dar");

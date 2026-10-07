@@ -50,6 +50,8 @@ pub enum Panel {
     Blocks,
     /// Şablonlar: the library's object templates, a tab beside Bloklar (templates_panel.rs, docs/adr/0176 §4).
     Templates,
+    /// Kaynaklar: folders and KentOS projects to add layers from, a tab beside Şablonlar (sources/, docs/adr/0199 §7).
+    Sources,
     Properties,
 }
 
@@ -60,6 +62,7 @@ impl Panel {
             Panel::Processing => "İşlemler",
             Panel::Blocks => "Bloklar",
             Panel::Templates => "Şablonlar",
+            Panel::Sources => "Kaynaklar",
             Panel::Properties => "Öznitelikler",
         }
     }
@@ -70,6 +73,7 @@ impl Panel {
             Panel::Processing => crate::icons::from_web(Some("processing")),
             Panel::Blocks => crate::icons::from_web(Some("blocks")),
             Panel::Templates => crate::icons::from_web(Some("templates")),
+            Panel::Sources => crate::icons::from_web(Some("dataSources")),
             Panel::Properties => Icon::Properties,
         }
     }
@@ -77,10 +81,11 @@ impl Panel {
     fn layout() -> Docks<Panel> {
         let mut docks = Docks::new();
         docks.dock(Panel::Layers, Side::Right);
-        // İşlemler, Bloklar and Şablonlar share the top slot with Katmanlar, as the web's tabs; Katmanlar in front.
+        // İşlemler, Bloklar, Şablonlar and Kaynaklar share the top slot with Katmanlar, as the web's tabs; Katmanlar in front.
         docks.dock(Panel::Processing, Side::Right);
         docks.dock(Panel::Blocks, Side::Right);
         docks.dock(Panel::Templates, Side::Right);
+        docks.dock(Panel::Sources, Side::Right);
         docks.update(kentos_ui::widget::docking::Event::Selected(Panel::Layers));
         docks.split(Panel::Properties, Side::Right);
         docks.set_size(Side::Right, DOCK_WIDTH);
@@ -161,6 +166,8 @@ pub enum Dialog {
     FindReplace,
     /// Katmanları birleştir (layer_merge.rs, docs/adr/0177 §3); the window is `App::layer_merge`.
     LayerMerge,
+    /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
+    LayerFields,
     /// Katman durumları (layer_states.rs, docs/adr/0177 §4); the window is `App::layer_states_window`.
     LayerStates,
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
@@ -272,6 +279,10 @@ pub enum Message {
     BottomTab(crate::bottom::BottomTab),
     /// The Noktalar tab (points/, docs/adr/0153).
     Points(crate::points::Event),
+    /// The Tablo tab, Öznitelik tablosu (features/, docs/adr/0199 §4).
+    Features(crate::features::Event),
+    /// Alanlar, a layer's fields (layer_fields.rs, docs/adr/0199 §3).
+    LayerFields(crate::layer_fields::Event),
     /// The Arama tab (search/, docs/adr/0178).
     Search(crate::search::Event),
     /// Köşe tablosu in the Koordinat listesi tab (vertices/, docs/adr/0172).
@@ -310,6 +321,8 @@ pub enum Message {
     BlocksPanel(crate::blocks_panel::Event),
     /// Şablonlar panel (templates_panel.rs).
     TemplatesPanel(crate::templates_panel::Event),
+    /// Kaynaklar panel (sources/, docs/adr/0199 §7).
+    Sources(crate::sources::Event),
     /// Şablon düzenleyici (template_editor.rs).
     TemplateEditor(crate::template_editor::Event),
     /// Blok öznitelikleri's window (block_attributes.rs).
@@ -507,6 +520,8 @@ pub struct App {
     /// The Şablonlar panel (templates_panel.rs), and the templates drawn with
     /// in this session, the newest first (templates.rs).
     pub(crate) templates_panel: crate::templates_panel::PanelState,
+    /// Kaynaklar (sources/, docs/adr/0199 §7): its folders, what is open and read.
+    pub(crate) sources: crate::sources::SourcesPanel,
     pub(crate) recent_templates: Vec<String>,
     /// Şablon düzenleyici while it is open (template_editor.rs).
     pub(crate) template_editor: Option<crate::template_editor::Editor>,
@@ -528,6 +543,10 @@ pub struct App {
     pub(crate) properties_cache: crate::properties::PanelCache,
     /// The bottom panel's Noktalar tab: its query and rows (points/, docs/adr/0153).
     pub(crate) points: crate::points::PointsPanel,
+    /// The bottom panel's Tablo tab: its choices and rows (features/, docs/adr/0199 §4).
+    pub(crate) features: crate::features::FeaturesPanel,
+    /// Alanlar, while it is open (layer_fields.rs, docs/adr/0199 §3).
+    pub(crate) layer_fields: Option<crate::layer_fields::Window>,
     /// The bottom panel's Arama tab: its choices and rows, and the place it marked (search/, docs/adr/0178).
     pub(crate) search: crate::search::SearchPanel,
     /// Köşe tablosu's rows selected and cell edited (vertices/, docs/adr/0172).
@@ -821,6 +840,7 @@ impl App {
             blocks: crate::blocks::Blocks::default(),
             blocks_panel: crate::blocks_panel::PanelState::default(),
             templates_panel: crate::templates_panel::PanelState::default(),
+            sources: crate::sources::SourcesPanel::default(),
             recent_templates: Vec::new(),
             template_editor: None,
             block_attributes: None,
@@ -833,6 +853,8 @@ impl App {
             props_closed: std::collections::HashSet::new(),
             properties_cache: Default::default(),
             points: Default::default(),
+            features: Default::default(),
+            layer_fields: None,
             search: Default::default(),
             vertices: Default::default(),
             label_spots: Default::default(),
@@ -1230,6 +1252,8 @@ impl App {
             Message::CommandHistoryToggled => self.toggle_bottom(),
             Message::BottomTab(tab) => self.show_bottom(tab),
             Message::Points(event) => return self.points_event(event),
+            Message::Features(event) => return self.features_event(event),
+            Message::LayerFields(event) => return self.layer_fields_event(event),
             Message::Search(event) => return self.data_event(event),
             Message::Vertices(event) => return self.vertices_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
@@ -1285,6 +1309,7 @@ impl App {
             Message::Blocks(event) => self.blocks_event(event),
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::TemplatesPanel(event) => return self.templates_panel_event(event),
+            Message::Sources(event) => return self.sources_event(event),
             Message::TemplateEditor(event) => return self.template_editor_event(event),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::AttributeValues(event) => self.attribute_values_event(event),
@@ -1865,6 +1890,20 @@ impl App {
             "view.coords" => self.show_bottom(crate::bottom::BottomTab::Coords),
             // Nokta editörü: the bottom panel's Noktalar tab (points/, docs/adr/0153).
             "point.editor" => self.show_bottom(crate::bottom::BottomTab::Points),
+            // Öznitelik tablosu: the bottom panel's Tablo tab (features/, docs/adr/0199 §4).
+            "data.featureTable" => self.open_feature_table(),
+            // Veri kaynakları: the dock's Kaynaklar tab (sources/, docs/adr/0199 §7).
+            "data.sources" => self.show_sources(),
+            // Alanlar: the active layer's fields (layer_fields.rs; the layer tree's menu gives its layer).
+            "layer.fields" => {
+                let layer = self
+                    .document
+                    .as_ref()
+                    .map(|d| d.model.layers().active().to_owned());
+                if let Some(layer) = layer {
+                    return self.open_layer_fields(&layer);
+                }
+            }
             // Veride ara: the bottom panel's Arama tab, its box taking the keyboard (search/, docs/adr/0178).
             "data.search" => return self.open_data_search(),
             "data.unmark" => return self.data_event(crate::search::Event::Unmark),

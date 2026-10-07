@@ -6,7 +6,8 @@
 // questions; renaming the open project; a file project's conflict; a file project's revisions (someone else's
 // revision heard, over unsaved work, the questions, the conflict, the history's marks, the log line, offline); the
 // access-lost notice; the status bar's cloud cells and the server cell's account menu; a block definition's
-// conflict and the Bloklar panel after it (docs/adr/0144 §5); an invitation's page.
+// conflict and the Bloklar panel after it (docs/adr/0144 §5); an invitation's page; Kaynaklar's KentOS projects, one
+// opened and one of its layers taken (docs/adr/0199 §7).
 // Pictures go to scripts/e2e/out/shots/cloud/<scene>-<theme>-<width>.png.
 //
 //   cargo build -q -p kentos-api --bin kentosd --example e2e_database
@@ -146,7 +147,8 @@ const LAYERS = [
   { id: 'nokta', name: 'Poligon noktaları', type: 'layer', visible: true, locked: false, expanded: true, style: { color: '#3E9BF0', lineType: 'continuous', lineWeight: 0.25, point: { symbol: 'cross', size: 7 } }, children: [] },
 ];
 const base = (extra = {}) => ({
-  settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000 },
+  // A CBS project: opening it asks no project type (docs/adr/0165).
+  settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'gis' },
   origin: O,
   layers: LAYERS,
   activeLayer: 'parsel',
@@ -355,6 +357,31 @@ const ids = (p) => `{ tenantId: ${JSON.stringify(p.tenantId)}, projectId: ${JSON
 
 /** Scenes in order; each leaves the app as the next expects (the catalog closed unless said). */
 const SCENES = [
+  // ── Kaynaklar (docs/adr/0199 §7): her projects in the dock, one opened (its drawing downloaded, its layers listed),
+  // a layer taken with its objects into the open drawing as one undo step, then taken back ──
+  async (ui) => {
+    if (only && !only.some((id) => id.startsWith('sources-'))) return;
+    const row = (name) => `[...document.querySelectorAll('.panel--sources .tree__row')].find((r) => r.querySelector('.tree__name')?.textContent === ${JSON.stringify(name)})`;
+    const centreOf = (name) =>
+      ui.eval(`(() => { const r = ${row(name)}; if (!r) return null; r.scrollIntoView({ block: 'nearest' }); const b = r.getBoundingClientRect(); return [Math.round(b.left + b.width / 2), Math.round(b.top + b.height / 2)]; })()`);
+    // The scenes after this one open projects: the drawing is left as clean as it was found.
+    const clean = await ui.eval(`!window.kentos.doc.dirty.value`);
+    await ui.run('data.sources');
+    await sleep(300);
+    await ui.b.click(...(await centreOf('Projelerim')));
+    await ui.waitFor(`!!${row(P.survey.name)}`);
+    await ui.b.click(...(await centreOf(P.survey.name)));
+    await ui.waitFor(`!!${row('Poligon noktaları')}`, 20000);
+    await ui.b.click(...(await centreOf('Parsel')));
+    await sleep(300);
+    await ui.snap('sources-project');
+    await ui.eval(`${row('Parsel')}.querySelector('.src__add').click()`);
+    await ui.waitFor(`window.kentos.doc.layers.leaves().some((l) => l.name === 'Parsel')`);
+    await ui.eval(`window.kentos.ui.dockTab.set('layers')`);
+    await sleep(400);
+    await ui.snap('sources-added');
+    await ui.eval(`(() => { const k = window.kentos; k.doc.undo(); k.ui.dockTab.set('layers'); if (${clean}) k.doc.markSaved(k.doc.revision); })()`);
+  },
   // ── The catalog: a project's details, its history, the forms and questions on it ──
   async (ui) => {
     await ui.openCatalog();
@@ -457,7 +484,7 @@ const SCENES = [
   async (ui) => {
     await ui.list('Projelerim');
     for (const [label, id] of [
-      ['Proje türü', 'catalog-select-type-open'],
+      ['İş türü', 'catalog-select-type-open'],
       ['Sıralama', 'catalog-select-sort-open'],
     ]) {
       await ui.openSelect(label);

@@ -1570,6 +1570,22 @@
               }
             ]
           },
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
           "GeographicDefinition": {
             "description": "Latitude and longitude on a datum.",
             "properties": {
@@ -2211,6 +2227,93 @@
             ],
             "type": "object"
           },
+          "LayerField": {
+            "description": "A field of a layer (docs/adr/0199 §1): its name is the attribute's key.",
+            "properties": {
+              "alias": {
+                "description": "The name the table and the form show.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "default": {
+                "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind"
+              },
+              "length": {
+                "description": "A text's most characters (1–10 000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "max": {
+                "description": "A number's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "A number's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "description": "An object may not leave it empty; written only as `true`.",
+                "type": "boolean"
+              },
+              "scale": {
+                "description": "A decimal's most fraction digits (0–15).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "The values a text or a number takes, when only some.",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "enum": [
+              "text",
+              "integer",
+              "decimal",
+              "date",
+              "boolean"
+            ],
+            "type": "string"
+          },
           "LayerNode": {
             "description": "A node of the layer tree: a group or a layer.",
             "properties": {
@@ -2222,6 +2325,13 @@
               },
               "expanded": {
                 "type": "boolean"
+              },
+              "fields": {
+                "description": "A layer's fields (docs/adr/0199 §1): the schema of its objects'\nattributes, in the order the table and the form show them; empty, no\nschema (and nothing written). Only a layer has them, never a group.",
+                "items": {
+                  "$ref": "#/$defs/LayerField"
+                },
+                "type": "array"
               },
               "id": {
                 "type": "string"
@@ -4915,6 +5025,22 @@
             ],
             "type": "object"
           },
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
           "GeographicDefinition": {
             "description": "Latitude and longitude on a datum.",
             "properties": {
@@ -5112,6 +5238,93 @@
             ],
             "type": "object"
           },
+          "LayerField": {
+            "description": "A field of a layer (docs/adr/0199 §1): its name is the attribute's key.",
+            "properties": {
+              "alias": {
+                "description": "The name the table and the form show.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "default": {
+                "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind"
+              },
+              "length": {
+                "description": "A text's most characters (1–10 000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "max": {
+                "description": "A number's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "A number's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "description": "An object may not leave it empty; written only as `true`.",
+                "type": "boolean"
+              },
+              "scale": {
+                "description": "A decimal's most fraction digits (0–15).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "The values a text or a number takes, when only some.",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "enum": [
+              "text",
+              "integer",
+              "decimal",
+              "date",
+              "boolean"
+            ],
+            "type": "string"
+          },
           "LayerNode": {
             "description": "A node of the layer tree: a group or a layer.",
             "properties": {
@@ -5123,6 +5336,13 @@
               },
               "expanded": {
                 "type": "boolean"
+              },
+              "fields": {
+                "description": "A layer's fields (docs/adr/0199 §1): the schema of its objects'\nattributes, in the order the table and the form show them; empty, no\nschema (and nothing written). Only a layer has them, never a group.",
+                "items": {
+                  "$ref": "#/$defs/LayerField"
+                },
+                "type": "array"
               },
               "id": {
                 "type": "string"
@@ -7389,6 +7609,22 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
           "GeographicDefinition": {
             "description": "Latitude and longitude on a datum.",
             "properties": {
@@ -8030,6 +8266,93 @@
             ],
             "type": "object"
           },
+          "LayerField": {
+            "description": "A field of a layer (docs/adr/0199 §1): its name is the attribute's key.",
+            "properties": {
+              "alias": {
+                "description": "The name the table and the form show.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "default": {
+                "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind"
+              },
+              "length": {
+                "description": "A text's most characters (1–10 000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "max": {
+                "description": "A number's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "A number's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "description": "An object may not leave it empty; written only as `true`.",
+                "type": "boolean"
+              },
+              "scale": {
+                "description": "A decimal's most fraction digits (0–15).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "The values a text or a number takes, when only some.",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "enum": [
+              "text",
+              "integer",
+              "decimal",
+              "date",
+              "boolean"
+            ],
+            "type": "string"
+          },
           "LayerNode": {
             "description": "A node of the layer tree: a group or a layer.",
             "properties": {
@@ -8041,6 +8364,13 @@
               },
               "expanded": {
                 "type": "boolean"
+              },
+              "fields": {
+                "description": "A layer's fields (docs/adr/0199 §1): the schema of its objects'\nattributes, in the order the table and the form show them; empty, no\nschema (and nothing written). Only a layer has them, never a group.",
+                "items": {
+                  "$ref": "#/$defs/LayerField"
+                },
+                "type": "array"
               },
               "id": {
                 "type": "string"
@@ -44774,7 +45104,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.create` v1: new objects on a named layer, written\nas one undo step. Everything the command depends on is here (TODOS.md\nCMD-07): the tool fills `layerId` from the active layer and each object's\n`color` from the current colour; the command reads neither.\n\nThe objects are written in their order, each with a new persistent id.\nThe undo step is named after `operation`, or “Ekle”.\n\nRefusals (`CommandError.code`), checked in this order: `no_objects`, then\neach object's geometry in order: `too_few_points` (a polyline),\n`too_few_corners` (a closed area's or a hatch's ring or hole, by\n`cad.entities.edit`'s rule: a closed area's may have 2 corners when an\nedge is an arc), `empty_text` (a text whose text is empty or only white space),\n`invalid_elevations`, `not_finite`, `invalid_radius`, `invalid_scale` (an\ninsert's), `invalid_line_weight` (the object's weight not from 0 to 100\nmm), `invalid_link` (`labelOf` or `labelScale` on an object that is not\na text, one without the other, an id that is not lowercase UUID text\nwith hyphens, a scale not finite or not over 0; docs/adr/0175 §4); then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`layer_not_found`, `not_a_layer`, `layer_locked`, `unknown_block` (each\ninsert's block, in order; docs/adr/0144), `link_not_found` (each linked\ntext's object, in order: no object of the drawing has that id); on the\ndesktop also `slots_exhausted`. Warning: `layer_hidden` (they are\nwritten all the same).",
+        "description": "Input of `cad.entities.create` v1: new objects on a named layer, written\nas one undo step. Everything the command depends on is here (TODOS.md\nCMD-07): the tool fills `layerId` from the active layer and each object's\n`color` from the current colour; the command reads neither.\n\nThe objects are written in their order, each with a new persistent id.\nThe undo step is named after `operation`, or “Ekle”.\n\nRefusals (`CommandError.code`), checked in this order: `no_objects`, then\neach object's geometry in order: `too_few_points` (a polyline),\n`too_few_corners` (a closed area's or a hatch's ring or hole, by\n`cad.entities.edit`'s rule: a closed area's may have 2 corners when an\nedge is an arc), `empty_text` (a text whose text is empty or only white space),\n`invalid_elevations`, `not_finite`, `invalid_radius`, `invalid_scale` (an\ninsert's), `invalid_line_weight` (the object's weight not from 0 to 100\nmm), `invalid_link` (`labelOf` or `labelScale` on an object that is not\na text, one without the other, an id that is not lowercase UUID text\nwith hyphens, a scale not finite or not over 0; docs/adr/0175 §4); then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`layer_not_found`, `not_a_layer`, `layer_locked`, `unknown_block` (each\ninsert's block, in order; docs/adr/0144), `link_not_found` (each linked\ntext's object, in order: no object of the drawing has that id), then\n`invalid_attribute` and `attribute_required` (each object's attributes by\nthe layer's fields, objects in order, names in theirs, at\n`objects[i].attrs.<name>`; docs/adr/0199 §2); on the desktop also\n`slots_exhausted`. Warning: `layer_hidden` (they are written all the same).\n\nA layer with fields (docs/adr/0199 §2): a value given to a field's key is\nwritten in its canonical text; a value that does not keep the field's\nrules is refused (`invalid_attribute`), an empty one of a required field\ntoo (`attribute_required`); a field an object does not give takes its\ndefault. A required field without a value or a default is not refused.",
         "properties": {
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
@@ -47606,7 +47936,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.set` v1: properties set for objects named by their\npersistent ids (docs/adr/0014), written as one undo step named after\n`operation`. Everything the command depends on is here (TODOS.md CMD-07):\nÖznitelikler fills `uids` from the selection and the property from the\nrow; the command reads no selection, library or view.\n\nA property absent from the input stays as it is (`unlink`: false). `color`, `lineWeight`,\n`symbol` and `label` are removed with null: the object is drawn in its\nlayer's colour, weight and style again, and shows no label. An attribute is set by its name, or\nremoved with null; the attributes not named stay. What an object already\nhas is not a change: an object as the input asks is left alone and is\nnot in the output, and when no object changes nothing is written (no\nundo step, the revision stays).\n\nAn object on a locked layer (by itself or a group above it) is not\nchanged, and no object moves to a locked layer: when one is named,\nnothing is written and the answer is `layer_locked`. Objects move to a\nhidden layer with the warning `layer_hidden`.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `nothing_to_set` (no property given),\n`invalid_attribute` (an attribute name empty or only white space),\n`invalid_line_weight` (a weight not a number from 0 to 100 mm), then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `layer_not_found` and\n`not_a_layer` (the `layerId` given), `layer_locked` (each object's layer\nin the input's order, then the `layerId` given). Warning: `layer_hidden`\n(the `layerId` given is hidden and at least one object moves to it).\nWhite space is Unicode's `White_Space` (Rust's `char::is_whitespace`).",
+        "description": "Input of `cad.entities.set` v1: properties set for objects named by their\npersistent ids (docs/adr/0014), written as one undo step named after\n`operation`. Everything the command depends on is here (TODOS.md CMD-07):\nÖznitelikler fills `uids` from the selection and the property from the\nrow; the command reads no selection, library or view.\n\nA property absent from the input stays as it is (`unlink`: false). `color`, `lineWeight`,\n`symbol` and `label` are removed with null: the object is drawn in its\nlayer's colour, weight and style again, and shows no label. An attribute is set by its name, or\nremoved with null; the attributes not named stay. What an object already\nhas is not a change: an object as the input asks is left alone and is\nnot in the output, and when no object changes nothing is written (no\nundo step, the revision stays).\n\nAn object on a locked layer (by itself or a group above it) is not\nchanged, and no object moves to a locked layer: when one is named,\nnothing is written and the answer is `layer_locked`. Objects move to a\nhidden layer with the warning `layer_hidden`.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `nothing_to_set` (no property given),\n`invalid_attribute` (an attribute name empty or only white space),\n`invalid_line_weight` (a weight not a number from 0 to 100 mm), then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `layer_not_found` and\n`not_a_layer` (the `layerId` given), `layer_locked` (each object's layer\nin the input's order, then the `layerId` given), then `invalid_attribute`\nand `attribute_required` (the attributes given, by the fields of each\nobject's layer, the one it moves to else its own, objects in the input's\norder, names in theirs, at `attrs.<name>`; docs/adr/0199 §2). Warning:\n`layer_hidden` (the `layerId` given is hidden and at least one object\nmoves to it).\n\nA layer with fields (docs/adr/0199 §2): a value given to a field's key is\nwritten in its canonical text; a value that does not keep the field's\nrules is refused (`invalid_attribute`), an empty or removed one of a\nrequired field too (`attribute_required`). Keys no field names are free.\nWhite space is Unicode's `White_Space` (Rust's `char::is_whitespace`).",
         "properties": {
           "attrs": {
             "additionalProperties": {

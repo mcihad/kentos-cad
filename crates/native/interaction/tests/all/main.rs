@@ -49,6 +49,7 @@ mod select;
 mod select_query;
 mod shapes;
 mod snap_extras;
+mod sources;
 mod splitting;
 mod survey_points;
 mod templates;

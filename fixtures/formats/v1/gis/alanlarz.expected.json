@@ -1,6 +1,19 @@
 {
  "declaredSrid": 32636,
  "encoding": "Windows-1252",
+ "fields": {
+  "alanlarz": [
+   {
+    "name": "AD",
+    "kind": "text",
+    "length": 30
+   },
+   {
+    "name": "KOD",
+    "kind": "integer"
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "polygon",

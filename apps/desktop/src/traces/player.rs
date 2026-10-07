@@ -401,6 +401,8 @@ pub struct Observation {
     pub panel: Option<String>,
     /// Arama's count line and rows, while its tab is open.
     pub search: Option<(String, Vec<String>)>,
+    /// Öznitelik tablosu's count, headers and rows, while its tab is open.
+    pub feature_table: Option<(String, Vec<String>, Vec<String>)>,
     /// The place the data search marked, absolute.
     pub mark: Option<[f64; 2]>,
     /// Genel bakış's extent, absolute, while it shows (docs/adr/0181).
@@ -948,7 +950,8 @@ impl<'a> Player<'a> {
     /// header and a row pressed, a button pressed and a key sent to the box,
     /// each through the message the control sends (search/mod.rs).
     fn answer_panel(&mut self, title: &str, step: &Step) -> Result<(), String> {
-        if title != crate::log_plan::TAB_SEARCH {
+        let table = title == crate::log_plan::TAB_TABLE;
+        if title != crate::log_plan::TAB_SEARCH && !table {
             return Err(format!("“{title}” sekmesi izden yanıtlanamıyor"));
         }
         if self.app.bottom_tab_title() != Some(title) {
@@ -980,8 +983,19 @@ impl<'a> Player<'a> {
         controls.extend(step.row.map(Control::Row));
         controls.extend(step.press.as_deref().map(Control::Press));
         controls.extend(step.key.as_deref().map(Control::Key));
+        // Öznitelik tablosu's cell (docs/adr/0199 §4): double-clicked, typed over, Enter.
+        if let (true, Some(cell)) = (table, &step.edit) {
+            for message in self.app.features_edit(cell.row, &cell.column, &cell.text)? {
+                self.apply(message)?;
+            }
+        }
         for control in controls {
-            let Some(message) = self.app.data_control(control)? else {
+            let answered = if table {
+                self.app.features_control(control)?
+            } else {
+                self.app.data_control(control)?
+            };
+            let Some(message) = answered else {
                 continue;
             };
             // A row is pressed with the keys the step holds.
@@ -1153,6 +1167,7 @@ impl<'a> Player<'a> {
             dialog: app.dialog_title(),
             panel: app.bottom_tab_title().map(str::to_owned),
             search: app.data_seen(),
+            feature_table: app.features_seen(),
             mark: app.data_mark().map(|p| [p.x, p.y]),
             overview: app.overview_extent(),
             magnifier: app.magnifier_state(),

@@ -248,6 +248,7 @@ fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
         style,
         children: Vec::new(),
         snap: None,
+        fields: Vec::new(),
     }
 }
 

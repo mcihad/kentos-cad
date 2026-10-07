@@ -107,6 +107,8 @@ SCHEMA_WITH_HATCH_PATTERNS = 23
 SCHEMA_WITH_IMAGES = 24
 # Schema 25: schema 24 and a text's curve, `path`, in the drawing and in block definitions (docs/adr/0196 §1).
 SCHEMA_WITH_TEXT_PATHS = 25
+# Schema 26: schema 25 and a layer's fields, a layer node's `fields` (docs/adr/0199 §1).
+SCHEMA_WITH_LAYER_FIELDS = 26
 # A picture's bounds (kentos_contracts::image): its opacity, its clip's corners, a side (m), a linked file's letters.
 MIN_IMAGE_OPACITY = 0.1
 MAX_IMAGE_OPACITY = 1.0
@@ -154,7 +156,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -224,6 +226,118 @@ def crs_problem(d, base=False):
     if "srid" in b:
         return "yerel sistemin tabanı kayıttaki bir sistem olmalı" if b["srid"] == 0 else plane_problem(s["plane"])
     return crs_problem(b["definition"], True) or plane_problem(s["plane"])
+
+
+# A layer's fields (docs/adr/0199 §1): kinds, and the rules a field list keeps.
+FIELD_KINDS = ("text", "integer", "decimal", "date", "boolean")
+JS_SPACE = " \t\n\v\f\r\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff"
+
+
+def _fold(text):
+    out = []
+    for c in text:
+        low = "ı" if c == "I" else "i" if c == "İ" else c.lower()
+        out.append(low if len(low) == 1 else c)
+    return "".join(out)
+
+
+def _canonical(kind, scale, v):
+    """The canonical text of `v` in a field of `kind` (None: it is no value of the kind)."""
+    s = v.strip(JS_SPACE)
+    if kind == "integer":
+        m = re.fullmatch(r"([+-]?)([0-9]+)", s)
+        if not m or int(m.group(2)) > 9007199254740991:
+            return None
+        n = int(m.group(2)) * (-1 if m.group(1) == "-" else 1)
+        return str(n)
+    if kind == "decimal":
+        m = re.fullmatch(r"([+-]?)([0-9]*)(?:[.,]([0-9]*))?", s)
+        if not m or not (m.group(2) or m.group(3)) or len(m.group(2)) + len(m.group(3) or "") > 30:
+            return None
+        frac = m.group(3) or ""
+        if scale is not None and len(frac) > scale:
+            return None
+        whole = m.group(2).lstrip("0") or "0"
+        zero = set(whole + frac) <= {"0"}
+        return ("-" if m.group(1) == "-" and not zero else "") + whole + ("." + frac if frac else "")
+    return s
+
+
+def _number(text):
+    from fractions import Fraction
+
+    return Fraction(text)
+
+
+def fields_problem(fields):
+    """The contract's `layer_fields_problem` (kentos_contracts::fields): a list that is not empty, each field's own
+    rules, no name twice (folded)."""
+    if not fields:
+        return "katmanın alan listesi boş olamaz"
+    seen = set()
+    for f in fields:
+        name, kind = f["name"], f["kind"]
+        if not name.strip(JS_SPACE) or name.strip(JS_SPACE) != name or len(name) > 64:
+            return f"“{name}” alanının adı geçersiz"
+        if any(ord(c) < 32 or 127 <= ord(c) < 160 for c in name):
+            return f"“{name}” alanının adında denetim karakteri var"
+        if "alias" in f and (not f["alias"].strip(JS_SPACE) or len(f["alias"]) > 64):
+            return f"“{name}” alanının takma adı geçersiz"
+        if "length" in f and (kind != "text" or not 1 <= f["length"] <= 10000):
+            return f"“{name}” alanının uzunluğu geçersiz"
+        if "scale" in f and (kind != "decimal" or f["scale"] > 15):
+            return f"“{name}” alanının ondalık basamağı geçersiz"
+        ends = [f[k] for k in ("min", "max") if k in f]
+        if ends:
+            if kind not in ("integer", "decimal") or any(_canonical(kind, f.get("scale"), v) != v for v in ends):
+                return f"“{name}” alanının aralığı geçersiz"
+            if len(ends) == 2 and _number(ends[0]) > _number(ends[1]):
+                return f"“{name}” alanının en azı en çoğundan büyük"
+        if "values" in f:
+            vs = f["values"]
+            if kind not in ("text", "integer", "decimal") or not vs:
+                return f"“{name}” alanının değer listesi geçersiz"
+            codes = [c["code"] for c in vs]
+            labels = [_fold(c["label"].strip(JS_SPACE)) for c in vs]
+            if any(c == "" or (kind != "text" and _canonical(kind, f.get("scale"), c) != c) for c in codes):
+                return f"“{name}” alanının değer listesinde geçersiz kod var"
+            if any(not lb for lb in labels) or len(set(codes)) != len(codes) or len(set(labels)) != len(labels):
+                return f"“{name}” alanının değer listesinde boş ya da iki kez yazılmış değer var"
+        if "default" in f and not _default_fits(f, f["default"]):
+            return f"“{name}” alanının varsayılanı alanın kurallarına uymuyor"
+        key = _fold(name)
+        if key in seen:
+            return f"“{name}” adlı iki alan var"
+        seen.add(key)
+    return None
+
+
+def _default_fits(f, d):
+    """Whether a default is a value of its field in its canonical text."""
+    kind = f["kind"]
+    s = d.strip(JS_SPACE)
+    if not s:
+        return False
+    if kind == "text":
+        ok = "length" not in f or len(d) <= f["length"]
+        return ok and ("values" not in f or d in [c["code"] for c in f["values"]])
+    if kind == "date":
+        m = re.fullmatch(r"([0-9]{4})-([0-9]{2})-([0-9]{2})", d)
+        if not m:
+            return False
+        y, mo, da = (int(x) for x in m.groups())
+        import calendar
+
+        return 1 <= y <= 9999 and 1 <= mo <= 12 and 1 <= da <= calendar.monthrange(y, mo)[1]
+    if kind == "boolean":
+        return d in ("true", "false")
+    if _canonical(kind, f.get("scale"), d) != d:
+        return False
+    if "values" in f and d not in [c["code"] for c in f["values"]]:
+        return False
+    if "min" in f and _number(d) < _number(f["min"]):
+        return False
+    return not ("max" in f and _number(d) > _number(f["max"]))
 
 
 def choices_problem(choices):
@@ -652,6 +766,7 @@ class _Schema:
         self.hatches = version >= SCHEMA_WITH_HATCH_PATTERNS
         self.images = version >= SCHEMA_WITH_IMAGES
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
+        self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
         self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
         self.leaders = version >= SCHEMA_WITH_LEADERS
@@ -963,6 +1078,7 @@ class _Schema:
                 "id": (self.text, True),
                 "name": (self.text, True),
                 **({"snap": (self.layer_snap_, False)} if self.layer_snap else {}),
+                **({"fields": (self.layer_fields_, False)} if self.layer_fields else {}),
                 "type": (self.enum(("group", "layer")), True),
                 "style": (self.layer_style, True),
                 "locked": (self.bool, True),
@@ -973,7 +1089,34 @@ class _Schema:
         )(v)
         if "snap" in n and n["type"] == "group":
             self.fail("bad_value", "grubun keneti olmaz; kenet yalnız katmanındır")
+        if "fields" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun alanları olmaz; alanlar yalnız katmanındır")
         return n
+
+    def layer_fields_(self, v):
+        """A layer's fields (schema 26, docs/adr/0199 §1): each its name and kind and what it has, `required` only
+        true; the list checked whole."""
+        field = self.fields(
+            {
+                "max": (self.text, False),
+                "min": (self.text, False),
+                "kind": (self.enum(FIELD_KINDS), True),
+                "name": (self.text, True),
+                "alias": (self.text, False),
+                "scale": (self.uint(32), False),
+                "length": (self.uint(32), False),
+                "values": (self.array(self.fields({"code": (self.text, True), "label": (self.text, True)})), False),
+                "default": (self.text, False),
+                "required": (self.bool, False),
+            }
+        )
+        all_ = self.array(field)(v)
+        if any(f.get("required") is False for f in all_):
+            self.fail("bad_value", "required yalnız true yazılır")
+        problem = fields_problem(all_)
+        if problem:
+            self.fail("bad_value", problem)
+        return all_
 
     # The project's coordinate systems and datum choices (schema 13, spec §6.4.1, docs/adr/0168).
 

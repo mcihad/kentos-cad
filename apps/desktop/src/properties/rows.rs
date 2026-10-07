@@ -74,6 +74,9 @@ pub(crate) struct Row {
     /// A note under the row above it, quiet: no name, no cell (Kot's “(bazı
     /// köşeler kotsuz)”, docs/adr/0142).
     pub note: bool,
+    /// The note warns (a value its layer's field refuses, docs/adr/0199 §5):
+    /// in the warning colour.
+    pub warn: bool,
 }
 
 /// How a row is edited.
@@ -140,6 +143,7 @@ impl Row {
             unit: None,
             editor: None,
             note: false,
+            warn: false,
         }
     }
 
@@ -1010,14 +1014,28 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     unit: None,
                     editor: edit(Editor::Text(Field::Attribute(slot, tag.clone()))),
                     note: false,
+                    warn: false,
                 })
                 .collect(),
+        });
+    }
+    // The layer's fields first, each by its kind (docs/adr/0199 §5); the keys no field names after them, as text.
+    let fields = layers
+        .get(&base.layer_id)
+        .map(|n| n.fields.clone())
+        .unwrap_or_default();
+    if !fields.is_empty() {
+        sections.push(Section {
+            id: "fields",
+            title: "Alanlar".into(),
+            rows: field_rows(slot, base, &fields, locked),
         });
     }
     let others: Vec<(&String, &String)> = base
         .attrs
         .iter()
         .filter(|(key, _)| !tags.iter().any(|(tag, _)| tag == *key))
+        .filter(|(key, _)| !fields.iter().any(|f| f.name == **key))
         .collect();
     if !others.is_empty() {
         sections.push(Section {
@@ -1032,11 +1050,101 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     unit: None,
                     editor: edit(Editor::Text(Field::Attribute(slot, key.clone()))),
                     note: false,
+                    warn: false,
                 })
                 .collect(),
         });
     }
     sections
+}
+
+/// Öznitelikler's form of a layer's fields (docs/adr/0199 §5; the web's
+/// `ui/properties/fieldRows.ts`): a row per field, in order, its alias and a
+/// mark when it is required; a value list and yes or no in a list, anything
+/// else in a cell showing the value as the field displays it; a value the
+/// field refuses as written, why under it in the warning colour. Written
+/// through `cad.entities.set` (“Değiştir”), which checks the value by the
+/// same rules.
+fn field_rows(
+    slot: Slot,
+    base: &kentos_contracts::EntityBase,
+    fields: &[kentos_contracts::LayerField],
+    locked: bool,
+) -> Vec<Row> {
+    use kentos_contracts::{LayerFieldKind, check_value, display_value};
+    let mut rows = Vec::new();
+    for f in fields {
+        let raw = base.attrs.get(&f.name).cloned().unwrap_or_default();
+        let checked = check_value(f, &raw);
+        let (value, shown) = match &checked {
+            Ok(v) => (v.clone(), display_value(f, v)),
+            Err(_) => (raw.clone(), raw.clone()),
+        };
+        let field = Field::Attribute(slot, f.name.clone());
+        let listed = f.kind == LayerFieldKind::Boolean
+            || f.values.as_ref().is_some_and(|v| !v.is_empty());
+        let editor = if locked {
+            None
+        } else if listed {
+            let pairs: Vec<(String, String)> = match &f.values {
+                Some(list) if !list.is_empty() => list
+                    .iter()
+                    .map(|c| (c.code.clone(), c.label.clone()))
+                    .collect(),
+                _ => vec![
+                    ("true".to_owned(), "Evet".to_owned()),
+                    ("false".to_owned(), "Hayır".to_owned()),
+                ],
+            };
+            let pick = |label: String, code: String, chosen: bool| Choice::Pick {
+                label,
+                swatch: None,
+                icon: None,
+                wide: false,
+                chosen,
+                enabled: true,
+                message: Message::Properties(Event::Commit(field.clone(), code)),
+            };
+            let mut items = vec![pick("—".to_owned(), String::new(), value.is_empty())];
+            items.extend(
+                pairs
+                    .into_iter()
+                    .map(|(code, label)| pick(label, code.clone(), code == value)),
+            );
+            Some(Editor::Select {
+                text: if shown.is_empty() {
+                    "—".to_owned()
+                } else {
+                    shown.clone()
+                },
+                swatch: None,
+                icon: None,
+                items,
+            })
+        } else {
+            Some(Editor::Text(field))
+        };
+        rows.push(Row {
+            label: Cow::Owned(if f.required {
+                format!("{} *", f.label())
+            } else {
+                f.label().to_owned()
+            }),
+            value: shown,
+            numeric: f.kind.is_number() && !listed,
+            unit: None,
+            editor,
+            note: false,
+            warn: false,
+        });
+        if let Err(refused) = checked {
+            rows.push(Row {
+                warn: true,
+                ..Row::note(&refused.message)
+            });
+        }
+    }
+    rows
 }
 
 /// Öznitelikler's Yazı stili or Ölçü stili row (docs/adr/0183 §6), a CAD

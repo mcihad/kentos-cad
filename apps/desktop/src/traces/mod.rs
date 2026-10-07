@@ -200,6 +200,7 @@ mod tests {
             sort: None,
             row: None,
             ctrl: None,
+            edit: None,
             overview: None,
             magnifier: None,
             paragraph: None,

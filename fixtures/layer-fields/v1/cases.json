@@ -1,0 +1,1525 @@
+{
+  "format": "kentos.layer-field-cases",
+  "version": 1,
+  "generatedBy": "scripts/fixtures/layer_field_cases.py",
+  "title": "Katman alanları: değerin tek biçimi ya da reddi, alan listesinin ilk sorunu, verilerden alanlar, gösterim (ADR 0199)",
+  "checks": [
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer"
+      },
+      "text": "12",
+      "want": {
+        "value": "12"
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer"
+      },
+      "text": "+012",
+      "want": {
+        "value": "12"
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer"
+      },
+      "text": "-0",
+      "want": {
+        "value": "0"
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer"
+      },
+      "text": " 42 ",
+      "want": {
+        "value": "42"
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer"
+      },
+      "text": "1.5",
+      "want": {
+        "error": "type",
+        "message": "“Kat” alanı tam sayı ister; “1.5” verildi. Rakamlarla, ondalıksız yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer"
+      },
+      "text": "1,000",
+      "want": {
+        "error": "type",
+        "message": "“Kat” alanı tam sayı ister; “1,000” verildi. Rakamlarla, ondalıksız yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer"
+      },
+      "text": "9007199254740991",
+      "want": {
+        "value": "9007199254740991"
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer"
+      },
+      "text": "-9007199254740992",
+      "want": {
+        "error": "magnitude",
+        "message": "“Kat” alanının sayısı çok büyük; “-9007199254740992” verildi. Mutlak değeri en çok 9007199254740991 olabilir."
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer"
+      },
+      "text": "",
+      "want": {
+        "value": ""
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer"
+      },
+      "text": "١٢",
+      "want": {
+        "error": "type",
+        "message": "“Kat” alanı tam sayı ister; “١٢” verildi. Rakamlarla, ondalıksız yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "alias": "Kat sayısı",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+      },
+      "text": "0",
+      "want": {
+        "error": "range",
+        "message": "“Kat sayısı” alanı 1 ile 40 arasında olmalı; 0 verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "alias": "Kat sayısı",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+      },
+      "text": "40",
+      "want": {
+        "value": "40"
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "alias": "Kat sayısı",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+      },
+      "text": "41",
+      "want": {
+        "error": "range",
+        "message": "“Kat sayısı” alanı 1 ile 40 arasında olmalı; 41 verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal"
+      },
+      "text": "12,50",
+      "want": {
+        "value": "12.50"
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal"
+      },
+      "text": "+0012.3",
+      "want": {
+        "value": "12.3"
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal"
+      },
+      "text": ",5",
+      "want": {
+        "value": "0.5"
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal"
+      },
+      "text": "5.",
+      "want": {
+        "value": "5"
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal"
+      },
+      "text": "-0.00",
+      "want": {
+        "value": "0.00"
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal"
+      },
+      "text": "-0,5",
+      "want": {
+        "value": "-0.5"
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal"
+      },
+      "text": "1e3",
+      "want": {
+        "error": "type",
+        "message": "“Alan” alanı ondalık sayı ister; “1e3” verildi. Rakamlarla, ondalığı nokta ya da virgülle yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal"
+      },
+      "text": ".",
+      "want": {
+        "error": "type",
+        "message": "“Alan” alanı ondalık sayı ister; “.” verildi. Rakamlarla, ondalığı nokta ya da virgülle yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal"
+      },
+      "text": "1234567890123456789012345678901",
+      "want": {
+        "error": "magnitude",
+        "message": "“Alan” alanının sayısı çok uzun; “1234567890123456789012345678901” verildi. En çok 30 rakam olabilir."
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal",
+        "scale": 2,
+        "min": "0"
+      },
+      "text": "12.345",
+      "want": {
+        "error": "scale",
+        "message": "“Alan” alanı en çok 2 ondalık basamak alır; “12.345” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal",
+        "scale": 2,
+        "min": "0"
+      },
+      "text": "12.34",
+      "want": {
+        "value": "12.34"
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal",
+        "scale": 2,
+        "min": "0"
+      },
+      "text": "-1",
+      "want": {
+        "error": "range",
+        "message": "“Alan” alanı en az 0 olmalı; -1 verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal",
+        "scale": 2,
+        "min": "0"
+      },
+      "text": "007",
+      "want": {
+        "value": "7"
+      }
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "text": "07.10.2026",
+      "want": {
+        "value": "2026-10-07"
+      }
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "text": "7.1.2026",
+      "want": {
+        "value": "2026-01-07"
+      }
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "text": "2026-10-07",
+      "want": {
+        "value": "2026-10-07"
+      }
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "text": "2026-02-29",
+      "want": {
+        "error": "type",
+        "message": "“Tarih” alanı tarih ister; “2026-02-29” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "text": "2024-02-29",
+      "want": {
+        "value": "2024-02-29"
+      }
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "text": "29.02.2023",
+      "want": {
+        "error": "type",
+        "message": "“Tarih” alanı tarih ister; “29.02.2023” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "text": "2026-1-7",
+      "want": {
+        "error": "type",
+        "message": "“Tarih” alanı tarih ister; “2026-1-7” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "text": "0000-01-01",
+      "want": {
+        "error": "type",
+        "message": "“Tarih” alanı tarih ister; “0000-01-01” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "text": "31.04.2026",
+      "want": {
+        "error": "type",
+        "message": "“Tarih” alanı tarih ister; “31.04.2026” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "text": "1900-02-29",
+      "want": {
+        "error": "type",
+        "message": "“Tarih” alanı tarih ister; “1900-02-29” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "text": "2000-02-29",
+      "want": {
+        "value": "2000-02-29"
+      }
+    },
+    {
+      "field": {
+        "name": "Ruhsat",
+        "kind": "boolean"
+      },
+      "text": "Evet",
+      "want": {
+        "value": "true"
+      }
+    },
+    {
+      "field": {
+        "name": "Ruhsat",
+        "kind": "boolean"
+      },
+      "text": "HAYIR",
+      "want": {
+        "value": "false"
+      }
+    },
+    {
+      "field": {
+        "name": "Ruhsat",
+        "kind": "boolean"
+      },
+      "text": "true",
+      "want": {
+        "value": "true"
+      }
+    },
+    {
+      "field": {
+        "name": "Ruhsat",
+        "kind": "boolean"
+      },
+      "text": "0",
+      "want": {
+        "value": "false"
+      }
+    },
+    {
+      "field": {
+        "name": "Ruhsat",
+        "kind": "boolean"
+      },
+      "text": "yes",
+      "want": {
+        "error": "type",
+        "message": "“Ruhsat” alanı evet ya da hayır ister; “yes” verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Ruhsat",
+        "kind": "boolean"
+      },
+      "text": " İ",
+      "want": {
+        "error": "type",
+        "message": "“Ruhsat” alanı evet ya da hayır ister; “ İ” verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Kod",
+        "kind": "text",
+        "length": 5
+      },
+      "text": "abcde",
+      "want": {
+        "value": "abcde"
+      }
+    },
+    {
+      "field": {
+        "name": "Kod",
+        "kind": "text",
+        "length": 5
+      },
+      "text": "abcdef",
+      "want": {
+        "error": "length",
+        "message": "“Kod” alanı en çok 5 karakter alır; 6 karakter verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Kod",
+        "kind": "text",
+        "length": 5
+      },
+      "text": "  ab  ",
+      "want": {
+        "error": "length",
+        "message": "“Kod” alanı en çok 5 karakter alır; 6 karakter verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Kod",
+        "kind": "text",
+        "length": 5
+      },
+      "text": "çğıöşü",
+      "want": {
+        "error": "length",
+        "message": "“Kod” alanı en çok 5 karakter alır; 6 karakter verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Ada",
+        "kind": "text",
+        "required": true
+      },
+      "text": "",
+      "want": {
+        "error": "required",
+        "message": "“Ada” alanı zorunlu; boş bırakılamaz."
+      }
+    },
+    {
+      "field": {
+        "name": "Ada",
+        "kind": "text",
+        "required": true
+      },
+      "text": "   ",
+      "want": {
+        "error": "required",
+        "message": "“Ada” alanı zorunlu; boş bırakılamaz."
+      }
+    },
+    {
+      "field": {
+        "name": "Ada",
+        "kind": "text",
+        "required": true
+      },
+      "text": "101",
+      "want": {
+        "value": "101"
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "text": "K",
+      "want": {
+        "value": "K"
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "text": "konut",
+      "want": {
+        "value": "K"
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "text": "TİCARET",
+      "want": {
+        "value": "T"
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "text": "işyeri",
+      "want": {
+        "value": "İ"
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "text": "k",
+      "want": {
+        "error": "choice",
+        "message": "“Kullanım” alanı listedeki değerlerden birini ister; “k” listede yok."
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "text": "Sanayi",
+      "want": {
+        "error": "choice",
+        "message": "“Kullanım” alanı listedeki değerlerden birini ister; “Sanayi” listede yok."
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "text": "İ",
+      "want": {
+        "value": "İ"
+      }
+    },
+    {
+      "field": {
+        "name": "Tür",
+        "kind": "integer",
+        "values": [
+          {
+            "code": "1",
+            "label": "Mesken"
+          },
+          {
+            "code": "2",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "text": "1",
+      "want": {
+        "value": "1"
+      }
+    },
+    {
+      "field": {
+        "name": "Tür",
+        "kind": "integer",
+        "values": [
+          {
+            "code": "1",
+            "label": "Mesken"
+          },
+          {
+            "code": "2",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "text": "01",
+      "want": {
+        "value": "1"
+      }
+    },
+    {
+      "field": {
+        "name": "Tür",
+        "kind": "integer",
+        "values": [
+          {
+            "code": "1",
+            "label": "Mesken"
+          },
+          {
+            "code": "2",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "text": "işyeri",
+      "want": {
+        "value": "2"
+      }
+    },
+    {
+      "field": {
+        "name": "Tür",
+        "kind": "integer",
+        "values": [
+          {
+            "code": "1",
+            "label": "Mesken"
+          },
+          {
+            "code": "2",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "text": "3",
+      "want": {
+        "error": "choice",
+        "message": "“Tür” alanı listedeki değerlerden birini ister; “3” listede yok."
+      }
+    },
+    {
+      "field": {
+        "name": "Tür",
+        "kind": "integer",
+        "values": [
+          {
+            "code": "1",
+            "label": "Mesken"
+          },
+          {
+            "code": "2",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "text": "x",
+      "want": {
+        "error": "type",
+        "message": "“Tür” alanı tam sayı ister; “x” verildi. Rakamlarla, ondalıksız yazın."
+      }
+    }
+  ],
+  "problems": [
+    {
+      "name": "geçerli",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer"
+        },
+        {
+          "name": "Alan",
+          "kind": "decimal",
+          "scale": 2,
+          "min": "0"
+        },
+        {
+          "name": "Tarih",
+          "kind": "date"
+        },
+        {
+          "name": "Ruhsat",
+          "kind": "boolean"
+        },
+        {
+          "name": "Kod",
+          "kind": "text",
+          "length": 5
+        },
+        {
+          "name": "Ada",
+          "kind": "text",
+          "required": true
+        },
+        {
+          "name": "Kullanım",
+          "kind": "text",
+          "values": [
+            {
+              "code": "K",
+              "label": "Konut"
+            },
+            {
+              "code": "T",
+              "label": "Ticaret"
+            },
+            {
+              "code": "İ",
+              "label": "İşyeri"
+            }
+          ]
+        },
+        {
+          "name": "Tür",
+          "kind": "integer",
+          "values": [
+            {
+              "code": "1",
+              "label": "Mesken"
+            },
+            {
+              "code": "2",
+              "label": "İşyeri"
+            }
+          ]
+        }
+      ],
+      "want": null
+    },
+    {
+      "name": "boş-ad",
+      "fields": [
+        {
+          "name": "",
+          "kind": "text"
+        }
+      ],
+      "want": "Alanın adı boş olamaz."
+    },
+    {
+      "name": "boşluklu-ad",
+      "fields": [
+        {
+          "name": " Ada",
+          "kind": "text"
+        }
+      ],
+      "want": "“ Ada” alanının adının başında ya da sonunda boşluk var."
+    },
+    {
+      "name": "uzun-ad",
+      "fields": [
+        {
+          "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind": "text"
+        }
+      ],
+      "want": "“aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa” alanının adı en çok 64 karakter olabilir."
+    },
+    {
+      "name": "denetim-karakteri",
+      "fields": [
+        {
+          "name": "A\tda",
+          "kind": "text"
+        }
+      ],
+      "want": "“A\tda” alanının adında denetim karakteri var."
+    },
+    {
+      "name": "boş-takma-ad",
+      "fields": [
+        {
+          "name": "Ada",
+          "alias": " ",
+          "kind": "text"
+        }
+      ],
+      "want": "“Ada” alanının takma adı boş olamaz."
+    },
+    {
+      "name": "aynı-ad",
+      "fields": [
+        {
+          "name": "Kullanım",
+          "kind": "text"
+        },
+        {
+          "name": "KULLANIM",
+          "kind": "text"
+        }
+      ],
+      "want": "“KULLANIM” adlı iki alan var; alan adları bir kez kullanılır."
+    },
+    {
+      "name": "aynı-ad-i",
+      "fields": [
+        {
+          "name": "il",
+          "kind": "text"
+        },
+        {
+          "name": "İL",
+          "kind": "text"
+        }
+      ],
+      "want": "“İL” adlı iki alan var; alan adları bir kez kullanılır."
+    },
+    {
+      "name": "sayıda-uzunluk",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "length": 3
+        }
+      ],
+      "want": "“Kat” alanında uzunluk yalnız metin alanında olur."
+    },
+    {
+      "name": "uzunluk-sınırı",
+      "fields": [
+        {
+          "name": "Kod",
+          "kind": "text",
+          "length": 0
+        }
+      ],
+      "want": "“Kod” alanının uzunluğu 1 ile 10000 arasında olmalı."
+    },
+    {
+      "name": "metinde-basamak",
+      "fields": [
+        {
+          "name": "Kod",
+          "kind": "text",
+          "scale": 2
+        }
+      ],
+      "want": "“Kod” alanında ondalık basamak yalnız ondalık sayı alanında olur."
+    },
+    {
+      "name": "basamak-sınırı",
+      "fields": [
+        {
+          "name": "Alan",
+          "kind": "decimal",
+          "scale": 16
+        }
+      ],
+      "want": "“Alan” alanının ondalık basamağı 0 ile 15 arasında olmalı."
+    },
+    {
+      "name": "tarihte-aralık",
+      "fields": [
+        {
+          "name": "Tarih",
+          "kind": "date",
+          "min": "2026-01-01"
+        }
+      ],
+      "want": "“Tarih” alanında aralık yalnız sayı alanlarında olur."
+    },
+    {
+      "name": "aralık-türü",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1.5"
+        }
+      ],
+      "want": "“Kat” alanının en azı “1.5” alanın türüne uymuyor."
+    },
+    {
+      "name": "aralık-tek-biçim",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "max": "+5"
+        }
+      ],
+      "want": "“Kat” alanının en çoğu “+5” alanın türüne uymuyor."
+    },
+    {
+      "name": "ters-aralık",
+      "fields": [
+        {
+          "name": "Alan",
+          "kind": "decimal",
+          "min": "10.5",
+          "max": "2"
+        }
+      ],
+      "want": "“Alan” alanının en azı en çoğundan büyük olamaz."
+    },
+    {
+      "name": "tarihte-liste",
+      "fields": [
+        {
+          "name": "Tarih",
+          "kind": "date",
+          "values": [
+            {
+              "code": "2026-01-01",
+              "label": "Yılbaşı"
+            }
+          ]
+        }
+      ],
+      "want": "“Tarih” alanında değer listesi yalnız metin ve sayı alanlarında olur."
+    },
+    {
+      "name": "boş-liste",
+      "fields": [
+        {
+          "name": "Kod",
+          "kind": "text",
+          "values": []
+        }
+      ],
+      "want": "“Kod” alanının değer listesi boş; listeyi kaldırın ya da değer ekleyin."
+    },
+    {
+      "name": "boş-kod",
+      "fields": [
+        {
+          "name": "Kod",
+          "kind": "text",
+          "values": [
+            {
+              "code": "",
+              "label": "Hiç"
+            }
+          ]
+        }
+      ],
+      "want": "“Kod” alanının değer listesinde boş kod var."
+    },
+    {
+      "name": "kod-türü",
+      "fields": [
+        {
+          "name": "Tür",
+          "kind": "integer",
+          "values": [
+            {
+              "code": "1",
+              "label": "A"
+            },
+            {
+              "code": "02",
+              "label": "B"
+            }
+          ]
+        }
+      ],
+      "want": "“Tür” alanının değer listesindeki “02” kodu alanın türüne uymuyor."
+    },
+    {
+      "name": "boş-etiket",
+      "fields": [
+        {
+          "name": "Kod",
+          "kind": "text",
+          "values": [
+            {
+              "code": "A",
+              "label": " "
+            }
+          ]
+        }
+      ],
+      "want": "“Kod” alanının değer listesinde “A” kodunun etiketi boş."
+    },
+    {
+      "name": "aynı-kod",
+      "fields": [
+        {
+          "name": "Kod",
+          "kind": "text",
+          "values": [
+            {
+              "code": "A",
+              "label": "Bir"
+            },
+            {
+              "code": "A",
+              "label": "İki"
+            }
+          ]
+        }
+      ],
+      "want": "“Kod” alanının değer listesinde “A” kodu iki kez var."
+    },
+    {
+      "name": "aynı-etiket",
+      "fields": [
+        {
+          "name": "Kod",
+          "kind": "text",
+          "values": [
+            {
+              "code": "A",
+              "label": "Konut"
+            },
+            {
+              "code": "B",
+              "label": "KONUT"
+            }
+          ]
+        }
+      ],
+      "want": "“Kod” alanının değer listesinde “KONUT” etiketi iki kez var."
+    },
+    {
+      "name": "varsayılan",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "default": "3"
+        },
+        {
+          "name": "Alan",
+          "kind": "decimal",
+          "scale": 1,
+          "default": "2.5"
+        }
+      ],
+      "want": null
+    },
+    {
+      "name": "varsayılan-tek-biçim",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "default": "03"
+        }
+      ],
+      "want": "“Kat” alanının varsayılanı “03” alanın kurallarına uymuyor."
+    },
+    {
+      "name": "varsayılan-aralık",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1",
+          "default": "0"
+        }
+      ],
+      "want": "“Kat” alanının varsayılanı “0” alanın kurallarına uymuyor."
+    },
+    {
+      "name": "varsayılan-boş",
+      "fields": [
+        {
+          "name": "Ada",
+          "kind": "text",
+          "default": ""
+        }
+      ],
+      "want": "“Ada” alanının varsayılanı “” alanın kurallarına uymuyor."
+    },
+    {
+      "name": "varsayılan-liste",
+      "fields": [
+        {
+          "name": "Kullanım",
+          "kind": "text",
+          "values": [
+            {
+              "code": "K",
+              "label": "Konut"
+            }
+          ],
+          "default": "Konut"
+        }
+      ],
+      "want": "“Kullanım” alanının varsayılanı “Konut” alanın kurallarına uymuyor."
+    },
+    {
+      "name": "ilk-sorun",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "length": 3
+        },
+        {
+          "name": "",
+          "kind": "text"
+        }
+      ],
+      "want": "“Kat” alanında uzunluk yalnız metin alanında olur."
+    }
+  ],
+  "infer": [
+    {
+      "name": "karışık",
+      "rows": [
+        {
+          "Kat": "3",
+          "Alan": "120.5",
+          "Tarih": "07.10.2026",
+          "Ruhsat": "Evet",
+          "Not": "köşe"
+        },
+        {
+          "Kat": "12",
+          "Alan": "98,25",
+          "Tarih": "2026-01-02",
+          "Ruhsat": "hayır",
+          "Not": "12"
+        },
+        {
+          "Kat": "",
+          "Ad": "  "
+        }
+      ],
+      "want": [
+        {
+          "name": "Ad",
+          "kind": "text"
+        },
+        {
+          "name": "Alan",
+          "kind": "decimal",
+          "scale": 2
+        },
+        {
+          "name": "Kat",
+          "kind": "integer"
+        },
+        {
+          "name": "Not",
+          "kind": "text"
+        },
+        {
+          "name": "Ruhsat",
+          "kind": "boolean"
+        },
+        {
+          "name": "Tarih",
+          "kind": "date"
+        }
+      ]
+    },
+    {
+      "name": "sayıdan-metne",
+      "rows": [
+        {
+          "No": "1"
+        },
+        {
+          "No": "1a"
+        }
+      ],
+      "want": [
+        {
+          "name": "No",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "name": "tam-ve-ondalık",
+      "rows": [
+        {
+          "V": "1"
+        },
+        {
+          "V": "2.0"
+        }
+      ],
+      "want": [
+        {
+          "name": "V",
+          "kind": "decimal",
+          "scale": 1
+        }
+      ]
+    },
+    {
+      "name": "bir-ve-sıfır",
+      "rows": [
+        {
+          "B": "1"
+        },
+        {
+          "B": "0"
+        }
+      ],
+      "want": [
+        {
+          "name": "B",
+          "kind": "integer"
+        }
+      ]
+    },
+    {
+      "name": "doğal-sıra",
+      "rows": [
+        {
+          "a10": "x",
+          "a2": "y",
+          "B": "z",
+          "ç": "w"
+        }
+      ],
+      "want": [
+        {
+          "name": "a2",
+          "kind": "text"
+        },
+        {
+          "name": "a10",
+          "kind": "text"
+        },
+        {
+          "name": "B",
+          "kind": "text"
+        },
+        {
+          "name": "ç",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "name": "çok-basamak",
+      "rows": [
+        {
+          "V": "0.1234567890123456"
+        }
+      ],
+      "want": [
+        {
+          "name": "V",
+          "kind": "text"
+        }
+      ]
+    }
+  ],
+  "display": [
+    {
+      "field": {
+        "name": "Ruhsat",
+        "kind": "boolean"
+      },
+      "value": "true",
+      "want": "Evet"
+    },
+    {
+      "field": {
+        "name": "Ruhsat",
+        "kind": "boolean"
+      },
+      "value": "false",
+      "want": "Hayır"
+    },
+    {
+      "field": {
+        "name": "Ruhsat",
+        "kind": "boolean"
+      },
+      "value": "evet",
+      "want": "evet"
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "value": "2026-10-07",
+      "want": "07.10.2026"
+    },
+    {
+      "field": {
+        "name": "Tarih",
+        "kind": "date"
+      },
+      "value": "07.10.2026",
+      "want": "07.10.2026"
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "value": "T",
+      "want": "Ticaret"
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "value": "X",
+      "want": "X"
+    },
+    {
+      "field": {
+        "name": "Tür",
+        "kind": "integer",
+        "values": [
+          {
+            "code": "1",
+            "label": "Mesken"
+          },
+          {
+            "code": "2",
+            "label": "İşyeri"
+          }
+        ]
+      },
+      "value": "2",
+      "want": "İşyeri"
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal"
+      },
+      "value": "12.50",
+      "want": "12.50"
+    }
+  ]
+}

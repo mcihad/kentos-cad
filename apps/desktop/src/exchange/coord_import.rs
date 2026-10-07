@@ -362,6 +362,7 @@ impl App {
                 style: Box::new(point_layer_style()),
                 visible: true,
                 locked: false,
+                fields: Vec::new(),
             },
         })
     }

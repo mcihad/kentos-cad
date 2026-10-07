@@ -469,6 +469,11 @@ impl App {
             };
             return self.points_event(crate::points::Event::Finish(Some(walk)));
         }
+        // Öznitelik tablosu's cell editor, the same way (features/).
+        if self.features.editing() && press.named() == Some(Named::Tab) {
+            let walk = crate::features::walk(press.modifiers.shift());
+            return self.features_event(crate::features::Event::Finish(Some(walk)));
+        }
         // Köşe tablosu's cell editor, the same way (vertices/).
         if self.vertices.editing() && press.named() == Some(Named::Tab) {
             let walk = if press.modifiers.shift() {

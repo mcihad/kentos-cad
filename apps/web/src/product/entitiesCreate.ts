@@ -8,7 +8,7 @@ import type { NewObject } from '../contracts/generated/NewObject';
 import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
-import { checkLineWeight, checkLayer, checkRevision, error, failed, validated, type Stop } from './checks';
+import { checkLineWeight, checkLayer, checkRevision, error, failed, fieldValues, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 import { checkBlocks, checkGeometry, checkStyles, geometryOf } from './entitiesEdit';
 
@@ -95,7 +95,13 @@ function checkLink(o: NewObject, i: number): Stop | null {
 }
 
 /** The checks in the contract's order: why nothing may be written, or the warnings when it may. */
-function check(doc: CadDocument, input: EntitiesCreate): Stop | CommandWarning[] {
+/** What the checks give when the input may be written: the warnings, and each object's attributes as they will be stored. */
+interface Checked {
+  warnings: CommandWarning[];
+  attrs: Record<string, string>[];
+}
+
+function check(doc: CadDocument, input: EntitiesCreate): Stop | Checked {
   if (!input.objects.length) return failed(error('no_objects', 'Eklenecek nesne verilmedi. En az bir nesne verin.', 'objects'));
   for (const [i, o] of input.objects.entries()) {
     const stop = checkGeometry(o.geometry, i, 'objects', 'nesnenin') ?? checkLineWeight(o.lineWeight, `objects[${i}].lineWeight`) ?? checkLink(o, i);
@@ -125,17 +131,28 @@ function check(doc: CadDocument, input: EntitiesCreate): Stop | CommandWarning[]
       return failed(
         error('link_not_found', `“${o.labelOf}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Çizimdeki bir nesnenin kimliğini verin.`, `objects[${i}].labelOf`),
       );
-  return layer;
+  // The values given to the layer's fields in their canonical text, and its defaults where an object gives none
+  // (docs/adr/0199 §2).
+  const defaults = (doc.layers.get(input.layerId)?.fields ?? []).flatMap((f) => (f.default !== undefined ? [[f.name, f.default] as const] : []));
+  const attrs: Record<string, string>[] = [];
+  for (const [i, o] of input.objects.entries()) {
+    const values = fieldValues(doc, input.layerId, Object.entries(o.attrs ?? {}), `objects[${i}].attrs`);
+    if ('status' in values) return values;
+    const own = new Map(values.flatMap(([k, v]) => (v === null ? [] : [[k, v] as const])));
+    for (const [name, value] of defaults) if (!own.has(name)) own.set(name, value);
+    attrs.push(Object.fromEntries(own));
+  }
+  return { warnings: layer, attrs };
 }
 
 /** An object as the document stores it: its own copies of every field, never the caller's objects. */
-function entityOf(o: NewObject, layerId: string): NewEntity {
+function entityOf(o: NewObject, layerId: string, attrs: Record<string, string>): NewEntity {
   return {
     ...geometryOf(o.geometry),
     layerId,
     ...(o.color != null && { color: o.color }),
     ...(o.lineWeight != null && { lineWeight: o.lineWeight }),
-    attrs: { ...o.attrs },
+    attrs: { ...attrs },
     ...(o.label != null && { label: o.label }),
     ...(o.symbol != null && { symbol: o.symbol }),
     // A linked text knows its object (docs/adr/0175 §4).
@@ -148,15 +165,16 @@ export const entitiesCreate: ProductCommand<EntitiesCreate, EntitiesCreated, Ent
   version: 1,
 
   validate(cx, input) {
-    return validated(check(cx.doc, input));
+    const checked = check(cx.doc, input);
+    return validated('status' in checked ? checked : checked.warnings);
   },
 
   plan(cx, input) {
     const checked = check(cx.doc, input);
-    if (!Array.isArray(checked)) return checked;
+    if ('status' in checked) return checked;
     // The slots are given when they are written: 0 until then.
-    const entities = input.objects.map((o) => ({ ...entityOf(o, input.layerId), id: 0 }) as unknown as PlannedEntity);
-    return { status: 'completed', output: { entities, revision: String(cx.doc.revision) }, warnings: checked };
+    const entities = input.objects.map((o, i) => ({ ...entityOf(o, input.layerId, checked.attrs[i]), id: 0 }) as unknown as PlannedEntity);
+    return { status: 'completed', output: { entities, revision: String(cx.doc.revision) }, warnings: checked.warnings };
   },
 
   /**
@@ -166,16 +184,16 @@ export const entitiesCreate: ProductCommand<EntitiesCreate, EntitiesCreated, Ent
    */
   execute(cx, input) {
     const checked = check(cx.doc, input);
-    if (!Array.isArray(checked)) return checked;
+    if ('status' in checked) return checked;
     const label = input.operation ? CREATE_LABEL[input.operation] : 'Ekle';
     const written = cx.doc.addMany(
-      input.objects.map((o) => entityOf(o, input.layerId)),
+      input.objects.map((o, i) => entityOf(o, input.layerId, checked.attrs[i])),
       label,
     );
     return {
       status: 'completed',
       output: { created: written.map((e) => e.uid), ids: written.map((e) => e.id), revision: String(cx.doc.revision) },
-      warnings: checked,
+      warnings: checked.warnings,
     };
   },
 };

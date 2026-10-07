@@ -82,7 +82,10 @@ use crate::layer::LineType;
 ///    kind; DXF and GeoJSON leave pictures out and say so.
 /// 35: texts along a curve (docs/adr/0196): `.kcad` document schema 25 and the typed columns'
 ///    text curve; DXF writes one as an anonymous block of its letters with its KENTOS data.
-pub const FORMATS_VERSION: u32 = 35;
+/// 36: a layer's fields (docs/adr/0199): `.kcad` document schema 26 and the layer node's
+///    `fields`; Shapefile's DBF fields and GeoJSON's properties read as the new layer's fields,
+///    a field layer's numbers and yes or no values written to GeoJSON as JSON numbers and booleans.
+pub const FORMATS_VERSION: u32 = 36;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -114,6 +117,12 @@ pub struct ImportLayer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub bounds: Option<Bounds>,
+    /// The fields the file gives the layer's attributes (docs/adr/0199 §6): a
+    /// Shapefile's DBF fields, the kinds of a GeoJSON's properties; a new
+    /// layer takes them. Empty: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::fields::LayerField>>", optional))]
+    pub fields: Vec<crate::fields::LayerField>,
 }
 
 /// One line of an import or export report: what, how many, and what happened to it.
@@ -824,6 +833,11 @@ pub struct GeoJsonLayer {
     /// What the objects' `layerId` holds.
     pub id: String,
     pub name: String,
+    /// The layer's fields (docs/adr/0199 §6): a number's and a yes or no
+    /// value's attribute is written as a JSON number or boolean.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::fields::LayerField>>", optional))]
+    pub fields: Vec<crate::fields::LayerField>,
 }
 
 /// What `file.export.geojson` writes: a FeatureCollection. A WGS 84

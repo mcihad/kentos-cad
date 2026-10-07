@@ -29,6 +29,8 @@ pub enum LayerTarget {
         style: Box<LayerStyle>,
         visible: bool,
         locked: bool,
+        /// The fields the file gives the layer (docs/adr/0199 §6).
+        fields: Vec<kentos_contracts::LayerField>,
     },
 }
 
@@ -395,6 +397,7 @@ fn make_layers(
             style,
             visible,
             locked,
+            fields,
         } = t
         else {
             continue;
@@ -412,6 +415,7 @@ fn make_layers(
             locked: *locked,
             style: (**style).clone(),
             snap: None,
+            fields: fields.clone(),
         };
         doc.add_layer(new, parent.as_deref(), false)
             .map_err(|r| r.to_string())?;
@@ -851,6 +855,7 @@ mod tests {
                         style: Box::new(style("#FF0000")),
                         visible: true,
                         locked: false,
+                        fields: Vec::new(),
                     },
                 ),
                 (
@@ -860,6 +865,7 @@ mod tests {
                         style: Box::new(style("fg")),
                         visible: false,
                         locked: true,
+                        fields: Vec::new(),
                     },
                 ),
             ],
@@ -976,6 +982,7 @@ mod tests {
                             style: Box::new(style("fg")),
                             visible: true,
                             locked: false,
+                            fields: Vec::new(),
                         },
                     ),
                     ("0".into(), LayerTarget::Existing("yok".into())),

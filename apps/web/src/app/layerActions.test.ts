@@ -63,6 +63,18 @@ describe('Katmanları birleştir', () => {
 });
 
 describe('Kopyasını oluştur', () => {
+  it('gives the copy the layer’s fields, the values going as they are (docs/adr/0199 §1)', () => {
+    const { ctx, doc, said, parcel } = setup();
+    doc.update(parcel, { attrs: { Kat: '3a' } });
+    doc.setLayerFields('parsel', [{ name: 'Kat', kind: 'integer' }]);
+    duplicateLayer(ctx, 'parsel');
+    expect(said.at(-1)).toBe('“Parsel” katmanı “Parsel kopyası” olarak kopyalandı: 1 nesne.');
+    const copy = doc.layers.leaves().find((l) => l.name === 'Parsel kopyası')!;
+    expect(copy.fields).toEqual([{ name: 'Kat', kind: 'integer' }]);
+    expect(doc.byLayer(copy.id).map((e) => e.attrs.Kat)).toEqual(['3a']);
+  });
+
+
   it('gives every copy a name of its own, last in the layer’s group', () => {
     const { ctx, doc, said } = setup();
     duplicateLayer(ctx, 'parsel');

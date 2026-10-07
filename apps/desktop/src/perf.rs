@@ -130,6 +130,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             },
             children: Vec::new(),
             snap: None,
+            fields: Vec::new(),
         }],
         active_layer: "parsel".into(),
         entities,

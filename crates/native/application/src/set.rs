@@ -17,10 +17,15 @@
 //! 5. every id names an object of the document (in order);
 //! 6. the layer given is one, not a group;
 //! 7. no object on a locked layer (in the input's order), then the layer
-//!    given not locked.
+//!    given not locked;
+//! 8. the attributes given, by the fields of each object's layer (the one
+//!    it moves to, else its own; docs/adr/0199 §2), objects in the input's
+//!    order, names in theirs: written in their canonical text.
 //!
 //! An object already as asked is left alone; when none changes nothing is
 //! written: no undo step, and the revision stays.
+
+use std::collections::BTreeMap;
 
 use kentos_contracts::{
     CommandResult, CommandWarning, EntitiesPropertiesSet, EntitiesSetProperties,
@@ -129,10 +134,15 @@ struct Checked {
     warnings: Vec<CommandWarning>,
 }
 
-/// `e` as the input asks, or `None` when it already is: only the fields
-/// every object has change, so only they are compared, and a linked text's
-/// link (docs/adr/0175 §4) and an associative hatch's tie (docs/adr/0186 §6).
-fn changed(e: &Entity, input: &EntitiesSetProperties) -> Option<Entity> {
+/// `e` as the input asks, its attributes `attrs` (the input's in their
+/// canonical text), or `None` when it already is: only the fields every
+/// object has change, so only they are compared, and a linked text's link
+/// (docs/adr/0175 §4) and an associative hatch's tie (docs/adr/0186 §6).
+fn changed(
+    e: &Entity,
+    input: &EntitiesSetProperties,
+    attrs: Option<&BTreeMap<String, Option<String>>>,
+) -> Option<Entity> {
     let mut next = e.clone();
     let mut unlinked = false;
     if input.unlink {
@@ -166,7 +176,7 @@ fn changed(e: &Entity, input: &EntitiesSetProperties) -> Option<Entity> {
     if let Some(label) = &input.label {
         base.label.clone_from(label);
     }
-    for (key, value) in input.attrs.iter().flatten() {
+    for (key, value) in attrs.into_iter().flatten() {
         match value {
             Some(value) => {
                 base.attrs.insert(key.clone(), value.clone());
@@ -261,10 +271,22 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             at_layer(),
         )));
     }
+    // The values given to a layer's fields, in their canonical text (docs/adr/0199 §2).
+    let mut given = Vec::with_capacity(found.len());
+    for (_, _, e, _) in &found {
+        given.push(match attrs {
+            Some(attrs) => {
+                let layer = input.layer_id.as_deref().unwrap_or(&e.base().layer_id);
+                Some(checks::field_values(doc, layer, attrs, "attrs")?)
+            }
+            None => None,
+        });
+    }
     let changes: Vec<Change> = found
         .iter()
-        .filter_map(|&(_, slot, e, uid)| {
-            let entity = changed(e, input)?;
+        .zip(&given)
+        .filter_map(|(&(_, slot, e, uid), attrs)| {
+            let entity = changed(e, input, attrs.as_ref())?;
             Some(Change {
                 slot,
                 uid: uid.clone(),

@@ -112,6 +112,7 @@ fn opened(n: usize) -> Opened {
         },
         children: Vec::new(),
         snap: None,
+        fields: Vec::new(),
     }];
     let project = Uuid::now_v7();
     let snapshot = DocumentSnapshotV2 {

@@ -46,6 +46,8 @@ pub enum BottomTab {
     Coords,
     /// Nokta editörü (points/, docs/adr/0153).
     Points,
+    /// Öznitelik tablosu (features/, docs/adr/0199 §4).
+    Table,
     /// Veride ara (search/, docs/adr/0178).
     Search,
     Messages,
@@ -53,10 +55,11 @@ pub enum BottomTab {
 }
 
 impl BottomTab {
-    const ALL: [BottomTab; 6] = [
+    const ALL: [BottomTab; 7] = [
         BottomTab::History,
         BottomTab::Coords,
         BottomTab::Points,
+        BottomTab::Table,
         BottomTab::Search,
         BottomTab::Messages,
         BottomTab::Python,
@@ -125,6 +128,9 @@ impl App {
                 Tab::new(plan::TAB_POINTS)
                     .icon(from_web(Some("pointEditor")))
                     .closable(false),
+                Tab::new(plan::TAB_TABLE)
+                    .icon(from_web(Some("featureTable")))
+                    .closable(false),
                 Tab::new(plan::TAB_SEARCH)
                     .icon(from_web(Some("dataSearch")))
                     .closable(false),
@@ -156,6 +162,7 @@ impl App {
             BottomTab::History => self.log_list(LogListing::History),
             BottomTab::Coords => self.coordinate_list(),
             BottomTab::Points => self.points_tab(),
+            BottomTab::Table => self.features_tab(),
             BottomTab::Search => self.data_tab(),
             BottomTab::Messages => self.log_list(LogListing::Messages),
             BottomTab::Python => self.python_tab(),
@@ -183,6 +190,7 @@ impl App {
             BottomTab::History => plan::TAB_HISTORY,
             BottomTab::Coords => plan::TAB_COORDS,
             BottomTab::Points => plan::TAB_POINTS,
+            BottomTab::Table => plan::TAB_TABLE,
             BottomTab::Search => plan::TAB_SEARCH,
             BottomTab::Messages => plan::TAB_MESSAGES,
             BottomTab::Python => "Python",

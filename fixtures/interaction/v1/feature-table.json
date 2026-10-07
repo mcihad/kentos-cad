@@ -1,0 +1,437 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "feature-table",
+  "title": "Öznitelik tablosu ve katmanın alanları (ADR 0199): alt panelin Tablo sekmesi bir katmanın nesnelerini alanlarıyla gösterir; türe göre sıralama (tam ve ondalık sayılar kesin, uymayan sonda), arama gösterilen değerde, Göster ve İfade süzgeci; hücre düzenleme alanın kuralıyla (reddedilen açık kalır, yazılan tek biçimiyle, değer listesi açılır listede), her hücre bir adım; Alanlar penceresinde Verilerden al, takma ad, zorunlu ve Kaydet tek adımda",
+  "source": "Web'in FeatureTable'ı ve LayerFieldsDialog'u, masaüstünün features/ ve layer_fields.rs'i, kentos_interaction::feature_table, çekirdeğin ops::feature_table'ı, sözleşmenin fields'ı, ADR 0199",
+  "covers": [
+    "GIS-01"
+  ],
+  "document": "feature-table.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.125
+  },
+  "clickTolerance": 0.2,
+  "steps": [
+    {
+      "run": "data.featureTable",
+      "note": "Öznitelik tablosu: etkin katman Parsel; sütunlar Tür, alanlar (takma adlarıyla, zorunlu *) ve şemada olmayan Not; uymayan değerler (Ada boş, Parsel 7a) yazıldığı gibi",
+      "expect": {
+        "panel": "Tablo",
+        "featureTable": {
+          "count": "5 / 5",
+          "columns": [
+            "Tür",
+            "Ada *",
+            "Parsel",
+            "Tapu alanı",
+            "Kullanım",
+            "Ruhsat",
+            "Tescil tarihi",
+            "Not"
+          ],
+          "rows": [
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 101 | 12 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | ",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | ",
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe"
+          ]
+        }
+      }
+    },
+    {
+      "shot": "tablo-acik",
+      "note": "Tablo sekmesi: Katman ▾, Ara, Göster ▾, İfade süzgeci; uymayan hücreler uyarı renginde"
+    },
+    {
+      "panel": "Tablo",
+      "sort": "Parsel",
+      "note": "Tam sayı sıralaması: 1, 3, 7, 12; kurala uymayan 7a sonda",
+      "expect": {
+        "featureTable": {
+          "count": "5 / 5",
+          "rows": [
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | ",
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 101 | 12 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | "
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "sort": "Parsel",
+      "note": "Azalan: uymayan yine sonda",
+      "expect": {
+        "featureTable": {
+          "count": "5 / 5",
+          "rows": [
+            "Kapalı alan | 101 | 12 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | ",
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | "
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "sort": "Tapu alanı",
+      "note": "Ondalık sayılar kesin değerleriyle: 12,5 tek biçimiyle 12.5",
+      "expect": {
+        "featureTable": {
+          "count": "5 / 5",
+          "rows": [
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | ",
+            "Kapalı alan | 101 | 12 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | "
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "sort": "Sıra",
+      "note": "Sıra: çizimin sırası",
+      "expect": {
+        "featureTable": {
+          "count": "5 / 5",
+          "rows": [
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 101 | 12 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | ",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | ",
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe"
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "fill": {
+        "Ara": "konut"
+      },
+      "note": "Ara: gösterilen değerlerde, büyük küçük harf ayrımsız (Kullanım K → Konut)",
+      "expect": {
+        "featureTable": {
+          "count": "2 / 5",
+          "rows": [
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe"
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "fill": {
+        "Ara": ""
+      },
+      "expect": {
+        "featureTable": {
+          "count": "5 / 5",
+          "rows": [
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 101 | 12 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | ",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | ",
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe"
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "row": 3,
+      "note": "Satıra tıklamak nesneyi seçer",
+      "expect": {
+        "selected": [
+          3
+        ]
+      }
+    },
+    {
+      "shot": "tablo-secili",
+      "note": "Satırı seçili nesne: Öznitelikler alanları takma adlarıyla ve türlerine göre gösterir (değer listesi ve evet/hayır açılır listede, tarih ve sayılar kutuda)"
+    },
+    {
+      "panel": "Tablo",
+      "pick": {
+        "Göster": "Seçililer"
+      },
+      "expect": {
+        "featureTable": {
+          "count": "1 / 5",
+          "rows": [
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | "
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "pick": {
+        "Göster": "Tümü"
+      },
+      "expect": {
+        "featureTable": {
+          "count": "5 / 5",
+          "rows": [
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 101 | 12 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | ",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | ",
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe"
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "fill": {
+        "İfade süzgeci": "Parsel > 5"
+      },
+      "note": "İfade süzgeci: koşulu sağlayanlar; 7a sayı değil, ifade dilinin kuralıyla metin olarak karşılaştırılır (Türkçe sırada 7a, 5'ten sonra)",
+      "expect": {
+        "featureTable": {
+          "count": "3 / 5",
+          "rows": [
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 101 | 12 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | "
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "fill": {
+        "İfade süzgeci": ""
+      },
+      "expect": {
+        "featureTable": {
+          "count": "5 / 5",
+          "rows": [
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 101 | 12 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | ",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | ",
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe"
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "edit": {
+        "row": 2,
+        "column": "Parsel",
+        "text": "x"
+      },
+      "note": "Alanın kuralına uymayan değer yazılmaz; hücre açık kalır, neden söylenir",
+      "expect": {
+        "canUndo": false,
+        "log": "warn",
+        "logged": [
+          "“Parsel” alanı tam sayı ister; “x” verildi. Rakamlarla, ondalıksız yazın."
+        ]
+      }
+    },
+    {
+      "panel": "Tablo",
+      "key": "Esc",
+      "note": "Esc vazgeçer",
+      "expect": {
+        "featureTable": {
+          "count": "5 / 5",
+          "rows": [
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 101 | 12 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | ",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | ",
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe"
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "edit": {
+        "row": 2,
+        "column": "Parsel",
+        "text": "015"
+      },
+      "note": "Tek biçimiyle yazılır (015 → 15), adım “Değiştir”",
+      "expect": {
+        "canUndo": true,
+        "featureTable": {
+          "count": "5 / 5",
+          "rows": [
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 101 | 15 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | ",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | ",
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe"
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "edit": {
+        "row": 4,
+        "column": "Kullanım",
+        "text": "Ticaret"
+      },
+      "note": "Değer listesi açılır listede: etiket seçilir, kod (T) yazılır",
+      "expect": {
+        "featureTable": {
+          "count": "5 / 5",
+          "rows": [
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 101 | 15 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | ",
+            "Kapalı alan | 102 | 7a | 55.5 | Ticaret | Evet |  | ",
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Her hücre kendi adımıdır",
+      "expect": {
+        "featureTable": {
+          "count": "5 / 5",
+          "rows": [
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 101 | 15 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | ",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | ",
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe"
+          ]
+        }
+      }
+    },
+    {
+      "run": "layer.fields",
+      "note": "Alanlar: etkin katmanın (Parsel) alanları",
+      "expect": {
+        "dialog": "Alanlar"
+      }
+    },
+    {
+      "shot": "alanlar-pencere",
+      "note": "Alanlar penceresi: ad, takma ad, tür, uzunluk ya da basamak, zorunlu, varsayılan, aralık, değer listesi"
+    },
+    {
+      "dialog": "Alanlar",
+      "press": "Vazgeç",
+      "expect": {
+        "dialog": null
+      }
+    },
+    {
+      "panel": "Tablo",
+      "pick": {
+        "Katman": "Yapı (2)"
+      },
+      "note": "Alanı olmayan katman: sütunlar anahtarların doğal sırasıyla",
+      "expect": {
+        "featureTable": {
+          "count": "2 / 2",
+          "columns": [
+            "Tür",
+            "Kat",
+            "Not",
+            "Yapı"
+          ],
+          "rows": [
+            "Kapalı alan | 3 |  | Konut",
+            "Kapalı alan | 5 | köşe | Ticaret"
+          ]
+        }
+      }
+    },
+    {
+      "panel": "Tablo",
+      "press": "Alanlar…",
+      "expect": {
+        "dialog": "Alanlar"
+      }
+    },
+    {
+      "dialog": "Alanlar",
+      "press": "Verilerden al",
+      "note": "Verilerden al: Kat tam sayı, Not ve Yapı metin"
+    },
+    {
+      "dialog": "Alanlar",
+      "fill": {
+        "Takma ad": "Kat sayısı"
+      },
+      "check": {
+        "Zorunlu": true
+      },
+      "note": "İlk alan: takma adı ve zorunlu"
+    },
+    {
+      "shot": "alanlar-verilerden",
+      "note": "Verilerden al'ın alanları, ilkinin takma adı ve zorunlusu"
+    },
+    {
+      "dialog": "Alanlar",
+      "press": "Kaydet",
+      "note": "Kaydet tek adımdır (“Alanlar”); tablo şemanın sütunlarını alır",
+      "expect": {
+        "dialog": null,
+        "canUndo": true,
+        "logged": [
+          "“Yapı” katmanının alanları kaydedildi."
+        ],
+        "featureTable": {
+          "count": "2 / 2",
+          "columns": [
+            "Tür",
+            "Kat sayısı *",
+            "Not",
+            "Yapı"
+          ],
+          "rows": [
+            "Kapalı alan | 3 |  | Konut",
+            "Kapalı alan | 5 | köşe | Ticaret"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Geri al alanları kaldırır",
+      "expect": {
+        "featureTable": {
+          "count": "2 / 2",
+          "columns": [
+            "Tür",
+            "Kat",
+            "Not",
+            "Yapı"
+          ],
+          "rows": [
+            "Kapalı alan | 3 |  | Konut",
+            "Kapalı alan | 5 | köşe | Ticaret"
+          ]
+        }
+      }
+    }
+  ]
+}

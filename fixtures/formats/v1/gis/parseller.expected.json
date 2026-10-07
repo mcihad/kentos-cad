@@ -1,6 +1,28 @@
 {
  "declaredSrid": 4326,
  "encoding": "CP857",
+ "fields": {
+  "parseller": [
+   {
+    "name": "ADA",
+    "kind": "integer"
+   },
+   {
+    "name": "PARSEL",
+    "kind": "integer"
+   },
+   {
+    "name": "MALİK",
+    "kind": "text",
+    "length": 30
+   },
+   {
+    "name": "NİTELİK",
+    "kind": "text",
+    "length": 25
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "polygon",

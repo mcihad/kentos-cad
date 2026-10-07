@@ -239,8 +239,15 @@ pub const SCHEMA_WITH_IMAGES: u32 = 24;
 /// curve rather than set the text straight.
 pub const SCHEMA_WITH_TEXT_PATHS: u32 = 25;
 
+/// Document schema 26 (docs/specs/kcad-v2.md §6.1): schema 25 and a layer's
+/// fields, a layer node's `fields` (docs/adr/0199 §1). A writer writes it
+/// only when a layer has them: any other drawing stays 25 or older, byte for
+/// byte; a reader of those refuses a drawing that has them rather than drop
+/// its layers' schemas on its next save.
+pub const SCHEMA_WITH_LAYER_FIELDS: u32 = 26;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 24] = [
+pub const SCHEMAS: [u32; 25] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -265,6 +272,7 @@ pub const SCHEMAS: [u32; 24] = [
     SCHEMA_WITH_HATCH_PATTERNS,
     SCHEMA_WITH_IMAGES,
     SCHEMA_WITH_TEXT_PATHS,
+    SCHEMA_WITH_LAYER_FIELDS,
 ];
 
 /// The file a drawing is saved as.

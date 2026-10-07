@@ -606,6 +606,7 @@ fn read_once(
                 count,
                 kinds: BTreeMap::new(),
                 bounds: None,
+                fields: Vec::new(),
             });
         }
     }
@@ -626,6 +627,7 @@ fn read_once(
             count,
             kinds: BTreeMap::new(),
             bounds: None,
+            fields: Vec::new(),
         });
     }
     if out.truncated > 0 {

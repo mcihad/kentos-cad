@@ -129,6 +129,11 @@ export const MAIN_MENU: TopMenu[] = [
       'layer.stateSave',
       'layer.purge',
       'layer.list',
+      // A layer's fields, its objects' table and the data sources (docs/adr/0199).
+      sec('Tablo'),
+      'data.featureTable',
+      'layer.fields',
+      'data.sources',
     ],
   },
   {

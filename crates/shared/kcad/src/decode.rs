@@ -13,10 +13,11 @@ mod styles;
 
 use kentos_contracts::{
     AngleUnit, AreaUnit, Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
-    DocumentSnapshotV2, DrawingFont, DrawingUnit, LabelInk, LabelPlacement, LabelStyle, LayerNode,
-    LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, LineType, MigrationSource,
-    PointStyle, PointSymbol, ProjectId, ProjectSettings, ProjectStyles, SurveySettings, Vec2,
-    Workspace, layer_states_problem,
+    DocumentSnapshotV2, DrawingFont, DrawingUnit, FieldChoice, LabelInk, LabelPlacement,
+    LabelStyle, LayerField, LayerFieldKind, LayerNode, LayerNodeType, LayerSnap, LayerState,
+    LayerStateNode, LayerStyle, LineType, MigrationSource, PointStyle, PointSymbol, ProjectId,
+    ProjectSettings, ProjectStyles, SurveySettings, Vec2, Workspace, layer_fields_problem,
+    layer_states_problem,
 };
 
 use crate::SCHEMAS;
@@ -585,12 +586,13 @@ fn project_styles(r: &mut Reader<'_>) -> Result<ProjectStyles, KcadError> {
 fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut id, mut name, mut kind, mut style) = (None, None, None, None);
     let (mut locked, mut visible, mut children, mut expanded) = (None, None, None, None);
-    let mut snap = None;
+    let (mut snap, mut fields) = (None, None);
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
             "name" => name = Some(text(r)?),
             "snap" if has.layer_snap => snap = Some(layer_snap(r)?),
+            "fields" if has.layer_fields => fields = Some(layer_fields(r)?),
             "type" => {
                 kind = Some(named(
                     r,
@@ -627,6 +629,88 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             }
             (snap, _) => snap,
         },
+        fields: match (fields, kind) {
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grubun alanları olmaz; alanlar yalnız katmanındır",
+                ));
+            }
+            (fields, _) => fields.unwrap_or_default(),
+        },
+    })
+}
+
+/// Schema 26's fields of a layer (docs/adr/0199 §1), checked whole
+/// (`layer_fields_problem`): a list that is not empty, each field by its
+/// kind's rules, no name twice.
+fn layer_fields(r: &mut Reader<'_>) -> Result<Vec<LayerField>, KcadError> {
+    let at = r.position();
+    let all = list(r, |r, _| layer_field(r))?;
+    match layer_fields_problem(&all) {
+        Some(problem) => Err(r.fail_at(Code::BadValue, at, &problem)),
+        None => Ok(all),
+    }
+}
+
+fn layer_field(r: &mut Reader<'_>) -> Result<LayerField, KcadError> {
+    let (mut name, mut kind, mut alias, mut length, mut scale) = (None, None, None, None, None);
+    let (mut min, mut max, mut values, mut default, mut must) = (None, None, None, None, None);
+    let count = |r: &mut Reader<'_>| r.uint(u64::from(u32::MAX)).map(|n| n as u32);
+    map(r, |r, key| {
+        match key {
+            "max" => max = Some(text(r)?),
+            "min" => min = Some(text(r)?),
+            "kind" => {
+                kind = Some(named(
+                    r,
+                    &LayerFieldKind::ALL.map(|k| (k.name(), k)),
+                )?)
+            }
+            "name" => name = Some(text(r)?),
+            "alias" => alias = Some(text(r)?),
+            "scale" => scale = Some(count(r)?),
+            "length" => length = Some(count(r)?),
+            "values" => values = Some(list(r, |r, _| field_choice(r))?),
+            "default" => default = Some(text(r)?),
+            "required" => must = Some(r.bool()?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    if must == Some(false) {
+        return Err(r.fail(
+            Code::BadValue,
+            "required yalnız true yazılır; alan zorunlu değilse yazılmaz",
+        ));
+    }
+    Ok(LayerField {
+        name: required(r, name, "name")?,
+        alias,
+        kind: required(r, kind, "kind")?,
+        length,
+        scale,
+        min,
+        max,
+        values,
+        required: must == Some(true),
+        default,
+    })
+}
+
+fn field_choice(r: &mut Reader<'_>) -> Result<FieldChoice, KcadError> {
+    let (mut code, mut label) = (None, None);
+    map(r, |r, key| {
+        match key {
+            "code" => code = Some(text(r)?),
+            "label" => label = Some(text(r)?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    Ok(FieldChoice {
+        code: required(r, code, "code")?,
+        label: required(r, label, "label")?,
     })
 }
 

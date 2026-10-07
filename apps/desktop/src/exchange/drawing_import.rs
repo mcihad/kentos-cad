@@ -512,6 +512,7 @@ impl App {
                         }),
                         visible: l.visible,
                         locked: l.locked,
+                        fields: l.fields.clone(),
                     },
                 };
                 (l.name.clone(), target)

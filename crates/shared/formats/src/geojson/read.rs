@@ -26,6 +26,7 @@ use std::collections::BTreeMap;
 
 use kentos_contracts::{CrsSource, DeclaredCrs, GeoJsonReadOptions, ImportResult, Vec2};
 
+use crate::fields::JsonKind;
 use crate::gis::{CLOSING_Z, Collect, Ring, Shape, open_ring};
 use crate::json::{JsonError, Reader, Value};
 
@@ -94,6 +95,9 @@ struct Feature {
     /// Nested values written as JSON text, and null values left out.
     nested: u32,
     nulls: u32,
+    /// Each key's last value's JSON kind and text (none: null), at the key's
+    /// first place, for the layer's fields (docs/adr/0199 §6).
+    kinds: Vec<(String, Option<(JsonKind, String)>)>,
 }
 
 fn nest(r: &mut Reader) -> Result<Nest, JsonError> {
@@ -201,37 +205,41 @@ fn members(r: &mut Reader) -> Result<Result<Vec<Geom>, ()>, JsonError> {
 /// A feature's `properties` as text attributes (the last of a repeated key wins).
 fn properties(r: &mut Reader, f: &mut Feature) -> Result<(), JsonError> {
     f.attrs.clear();
+    f.kinds.clear();
     f.nested = 0;
     f.nulls = 0;
     if r.peek() != Some(b'{') {
         return r.skip();
     }
     r.object(|r, key| {
-        match r.peek() {
-            Some(b'"') => {
-                let s = r.string()?;
-                f.attrs.insert(key, s);
-            }
-            Some(b'-' | b'0'..=b'9') => {
-                let n = r.number()?;
-                f.attrs.insert(key, n.to_string());
-            }
+        let (text, kind) = match r.peek() {
+            Some(b'"') => (r.string()?, JsonKind::Other),
+            Some(b'-' | b'0'..=b'9') => (r.number()?.to_string(), JsonKind::Number),
             Some(b'{' | b'[') => {
                 let mut s = String::new();
                 r.compact(&mut s)?;
-                f.attrs.insert(key, s);
                 f.nested += 1;
+                (s, JsonKind::Other)
             }
             _ => match r.value()? {
-                Value::Bool(b) => {
-                    f.attrs.insert(key, b.to_string());
-                }
+                Value::Bool(b) => (b.to_string(), JsonKind::Boolean),
                 _ => {
                     f.attrs.remove(&key);
                     f.nulls += 1;
+                    match f.kinds.iter_mut().find(|(k, _)| *k == key) {
+                        Some((_, v)) => *v = None,
+                        None => f.kinds.push((key, None)),
+                    }
+                    return Ok(());
                 }
             },
+        };
+        // A repeated key keeps its first place and its last value, as the attributes do.
+        match f.kinds.iter_mut().find(|(k, _)| *k == key) {
+            Some((_, v)) => *v = Some((kind, text.clone())),
+            None => f.kinds.push((key.clone(), Some((kind, text.clone())))),
         }
+        f.attrs.insert(key, text);
         Ok(())
     })
 }
@@ -591,6 +599,13 @@ fn emit(f: Feature, c: &mut Collect, line: u32) {
     for shape in out {
         c.add(shape, &layer, &f.attrs, f.label.as_deref());
     }
+    // Its values give its layer's fields (docs/adr/0199 §6).
+    let values = f
+        .kinds
+        .into_iter()
+        .filter_map(|(k, v)| v.map(|(kind, text)| (k, kind, text)))
+        .collect();
+    c.observe(&layer, values);
 }
 
 /// The coordinate system a GeoJSON file declares: none is RFC 7946's WGS 84

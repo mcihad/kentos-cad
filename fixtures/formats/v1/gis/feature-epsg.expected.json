@@ -1,5 +1,17 @@
 {
  "declaredSrid": 2320,
+ "fields": {
+  "feature-epsg": [
+   {
+    "name": "yol",
+    "kind": "text"
+   },
+   {
+    "name": "serit",
+    "kind": "integer"
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "polyline",

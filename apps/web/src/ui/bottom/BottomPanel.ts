@@ -13,6 +13,7 @@ import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { CommandLine } from './CommandLine';
 import { vertexListing } from './coordinates';
+import { FeatureTable } from './FeatureTable';
 import { PointTable } from './PointTable';
 import { SearchPanel } from './SearchPanel';
 import { isEditable } from './vertexEdit';
@@ -43,6 +44,8 @@ export class BottomPanel extends Component {
   private vertices: VertexTable | null = null;
   /** Arama, the data search (docs/adr/0178), while its tab is on screen. */
   private search: SearchPanel | null = null;
+  /** Tablo, the attribute table (docs/adr/0199 §4), while its tab is on screen. */
+  private features: FeatureTable | null = null;
 
   constructor(ctx: AppContext) {
     super();
@@ -127,6 +130,7 @@ export class BottomPanel extends Component {
     this.d.add(() => this.points?.dispose());
     this.d.add(() => this.vertices?.dispose());
     this.d.add(() => this.search?.dispose());
+    this.d.add(() => this.features?.dispose());
   }
 
   /**
@@ -184,6 +188,8 @@ export class BottomPanel extends Component {
     this.vertices = null;
     this.search?.dispose();
     this.search = null;
+    this.features?.dispose();
+    this.features = null;
     this.log = null;
     if (!this.ctx.ui.bottomExpanded.value) return;
     const tab = this.ctx.ui.bottomTab.value;
@@ -195,6 +201,10 @@ export class BottomPanel extends Component {
     if (tab === 'search') {
       this.search = new SearchPanel(this.ctx);
       return replaceChildren(this.content, this.search.el);
+    }
+    if (tab === 'table') {
+      this.features = new FeatureTable(this.ctx);
+      return replaceChildren(this.content, this.features.el);
     }
     const entries = this.entriesOf(tab);
     if (!entries.length) {

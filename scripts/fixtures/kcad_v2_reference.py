@@ -459,8 +459,31 @@ def layer_snap(s):
     return cmap({"off": boolean(True)})
 
 
+FIELD_KINDS = ("text", "integer", "decimal", "date", "boolean")
+
+
+def layer_field(f):
+    """A layer's field (schema 26, docs/adr/0199 §1): its name and kind, then what it has; `required` only when true."""
+    assert f.get("required", True) is True, f"alan {f.get('name')}: required yalnız true yazılır"
+    choice = lambda c: cmap(fields(c, {"code": (text, True), "label": (text, True)}, "değer"))
+    table = {
+        "name": (text, True),
+        "alias": (text, False),
+        "kind": (enum(FIELD_KINDS), True),
+        "length": (uint, False),
+        "scale": (uint, False),
+        "min": (text, False),
+        "max": (text, False),
+        "values": (lambda vs: array([choice(c) for c in vs]), False),
+        "required": (boolean, False),
+        "default": (text, False),
+    }
+    return cmap(fields(f, table, f"alan {f.get('name')}"))
+
+
 def layer(n):
     assert "snap" not in n or n["type"] == "layer", f"layer {n.get('id')}: grubun keneti olmaz"
+    assert "fields" not in n or (n["type"] == "layer" and n["fields"]), f"layer {n.get('id')}: alanlar yalnız katmanın, boş değil"
     return cmap(
         fields(
             n,
@@ -468,6 +491,8 @@ def layer(n):
                 "id": (text, True),
                 "name": (text, True),
                 "snap": (layer_snap, False),
+                # Schema 26 (docs/adr/0199 §1): the schema of its objects' attributes.
+                "fields": (lambda fs: array([layer_field(f) for f in fs]), False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -800,7 +825,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 25 with a text along a curve, in the drawing or a block definition
+    """The oldest schema that holds the drawing: 26 with a layer's fields (docs/adr/0199 §1), 25 with a text along a
+    curve, in the drawing or a block definition
     (docs/adr/0196), 24 with a picture, only in the drawing (docs/adr/0192), 23 with a hatch's pattern of families or gradient (a field of theirs) or
     its tie, in the drawing or a block definition (docs/adr/0186), 22 with a table, only in the drawing (docs/adr/0184), 21 with a text or a dimension style or a text's face or a dimension's look,
     in the drawing or a block definition (docs/adr/0183), 20 with a multi-line text's box, line spacing or letter formats, in the
@@ -841,6 +867,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
             for e in es
         )
 
+    def schemas(nodes):
+        return any("fields" in n or schemas(n["children"]) for n in nodes)
+
+    if schemas(layers):
+        return 26
     if any(e["kind"] == "text" and "path" in e for e in [*entities, *(x for b in blocks or [] for x in b["entities"])]):
         return 25
     if any(e["kind"] == "image" for e in entities):
@@ -1082,7 +1113,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-26.kcad"] = container(root(cmap(parts), version=uint(26)))
+    files["schema-version-27.kcad"] = container(root(cmap(parts), version=uint(27)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1430,6 +1461,39 @@ def broken(minimal_content, minimal_file):
     files["layer-snap-empty-kinds.kcad"] = container(root(snapped(cmap({"kinds": array([])})), version=uint(10)))
     files["layer-snap-unknown-kind.kcad"] = container(root(snapped(cmap({"kinds": array([text("quadrant")])})), version=uint(10)))
     files["layer-snap-repeated-kind.kcad"] = container(root(snapped(cmap({"kinds": array([text("endpoint"), text("endpoint")])})), version=uint(10)))
+    # A layer's fields are schema 26's (docs/adr/0199 §1): in schema 25 an unknown field; on a group, an empty list, a
+    # name twice (folded), a default that is not the canonical text, `required: false`, an unknown kind, a fraction
+    # digit count on a text, a negative length a bad value; an unknown key, a field without its kind, a value without
+    # its label refused as such.
+    def with_fields(field_list, kind="layer", version=26):
+        node = {
+            "id": text(top["id"]),
+            "name": text(top["name"]),
+            "fields": array(field_list),
+            "type": text(kind),
+            "visible": boolean(top["visible"]),
+            "locked": boolean(top["locked"]),
+            "expanded": boolean(top["expanded"]),
+            "style": cmap(layer_style_parts(top["style"])),
+            "children": array([]),
+        }
+        return container(root(cmap({**parts, "layers": array([cmap(node)])}), version=uint(version)))
+
+    def field(name="Ada", kind="text", **extra):
+        return cmap({"name": text(name), "kind": text(kind), **extra})
+
+    files["layer-fields-in-schema-25.kcad"] = with_fields([field()], version=25)
+    files["layer-fields-on-group.kcad"] = with_fields([field()], kind="group")
+    files["layer-fields-empty.kcad"] = with_fields([])
+    files["layer-fields-repeated-name.kcad"] = with_fields([field("İl"), field("il")])
+    files["layer-fields-bad-default.kcad"] = with_fields([field("Kat", "integer", default=text("03"))])
+    files["layer-fields-required-false.kcad"] = with_fields([field(required=boolean(False))])
+    files["layer-fields-unknown-kind.kcad"] = with_fields([field(kind="time")])
+    files["layer-fields-scale-on-text.kcad"] = with_fields([field(scale=uint(2))])
+    files["layer-fields-negative-length.kcad"] = with_fields([field(length=integer(-1))])
+    files["layer-fields-unknown-field.kcad"] = with_fields([field(unit=text("m"))])
+    files["layer-fields-without-kind.kcad"] = with_fields([cmap({"name": text("Ada")})])
+    files["layer-fields-choice-without-label.kcad"] = with_fields([field(values=array([cmap({"code": text("K")})]))])
     files["big-negative.kcad"] = container(with_parts({**parts, "styles": cmap({"items": array([b"\x3b" + b"\xff" * 8]), "categories": array([])})}))
     files["bytes-in-opaque.kcad"] = container(with_parts({**parts, "styles": cmap({"items": array([blob(b"\x01")]), "categories": array([])})}))
     files["bad-enum.kcad"] = container(with_parts({**parts, "settings": cmap({**settings_parts(m["settings"]), "areaUnit": text("acre")})}))
@@ -1574,6 +1638,7 @@ def build():
     out["hatches.kcad"] = container(document(load("hatches.json")))
     out["images.kcad"] = container(document(load("images.json")))
     out["text-paths.kcad"] = container(document(load("text-paths.json")))
+    out["layer-fields.kcad"] = container(document(load("layer-fields.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

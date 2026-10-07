@@ -44,6 +44,7 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
         },
         children: Vec::new(),
         snap: None,
+        fields: Vec::new(),
     }
 }
 

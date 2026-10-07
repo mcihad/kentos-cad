@@ -1,3 +1,4 @@
+import { fieldRows } from './fieldRows';
 import type { AppContext } from '../../app/context';
 import { textAlongCurveLength } from '../../model/textAlong';
 import { watchAll } from '../../core/signal';
@@ -512,7 +513,11 @@ export class PropertiesPanel extends Panel {
       });
     }
     const tags = new Set(shown.map((r) => r.tag));
-    const keys = Object.keys(e.attrs).filter((k) => !tags.has(k));
+    // The layer's fields first, each by its kind (docs/adr/0199 §5); the keys no field names after them, as text.
+    const fields = this.ctx.doc.layers.get(e.layerId)?.fields ?? [];
+    if (fields.length) sections.push({ id: 'fields', title: 'Alanlar', rows: fieldRows(this.ctx, e, fields, locked) });
+    const named = new Set(fields.map((f) => f.name));
+    const keys = Object.keys(e.attrs).filter((k) => !tags.has(k) && !named.has(k));
     if (keys.length) {
       sections.push({
         id: 'attrs',

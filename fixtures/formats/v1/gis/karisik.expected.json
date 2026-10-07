@@ -1,6 +1,19 @@
 {
  "declaredSrid": null,
  "encoding": "Windows-1254",
+ "fields": {
+  "karisik": [
+   {
+    "name": "AD",
+    "kind": "text",
+    "length": 10
+   },
+   {
+    "name": "NO",
+    "kind": "integer"
+   }
+  ]
+ },
  "objects": [
   {
    "kind": "point",

@@ -654,6 +654,92 @@
         {"op": "uniqueLayerName", "base": "bina", "returns": "bina"},
         {"op": "check", "expect": {"dirty": true}}
       ]
+    },
+    {
+      "name": "Katmanın alanları geri alınabilir bir adımdır (Alanlar); yeniden adlandırılan alanın değerleri nesnelerde taşınır",
+      "note": "docs/adr/0199 §3. Alanlar ve yeni adlar tek adımdır; silinen alanın değerleri şemasız öznitelik olarak kalır. Grup, kuralı kırılan alan listesi ve bir nesnede iki özniteliği aynı adda bırakacak yeni ad reddedilir, hiçbir şey değişmez. Değişmeyen alanlar ve bilinmeyen katman düzenleme değildir.",
+      "steps": [
+        {"op": "update", "id": 3, "patch": {"attrs": {"Ada": "101", "No": "7", "Not": "köşe"}}},
+        {
+          "op": "setLayerFields",
+          "id": "c",
+          "fields": [{"name": "Ada", "kind": "text", "required": true}, {"name": "Parsel", "kind": "integer", "min": "1"}],
+          "renames": [["No", "Parsel"]],
+          "returns": true,
+          "expect": {
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "layers": {"c": {"fields": [{"name": "Ada", "kind": "text", "required": true}, {"name": "Parsel", "kind": "integer", "min": "1"}]}, "a": {"fields": []}},
+            "entities": {"3": {"id": 3, "kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {"Ada": "101", "Not": "köşe", "Parsel": "7"}}}
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alanlar",
+          "expect": {
+            "layers": {"c": {"fields": []}},
+            "entities": {"3": {"id": 3, "kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {"Ada": "101", "No": "7", "Not": "köşe"}}}
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Alanlar",
+          "expect": {
+            "layers": {"c": {"fields": [{"name": "Ada", "kind": "text", "required": true}, {"name": "Parsel", "kind": "integer", "min": "1"}]}},
+            "entities": {"3": {"id": 3, "kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {"Ada": "101", "Not": "köşe", "Parsel": "7"}}}
+          }
+        },
+        {
+          "op": "setLayerFields",
+          "id": "c",
+          "fields": [{"name": "Ada", "kind": "text", "required": true}, {"name": "Parsel", "kind": "integer", "min": "1"}],
+          "returns": false,
+          "note": "Aynı alanlar, yeni ad yok: düzenleme değildir.",
+          "expect": {"revision": "same"}
+        },
+        {
+          "op": "setLayerFields",
+          "id": "g",
+          "fields": [{"name": "Ad", "kind": "text"}],
+          "catch": "“Yapılar” bir grup; alanlar yalnız katmanın olur.",
+          "expect": {"revision": "same", "layers": {"g": {"fields": []}}}
+        },
+        {
+          "op": "setLayerFields",
+          "id": "c",
+          "fields": [{"name": "Ada", "kind": "text"}, {"name": "ADA", "kind": "integer"}],
+          "catch": "“ADA” adlı iki alan var; alan adları bir kez kullanılır.",
+          "expect": {"revision": "same"}
+        },
+        {
+          "op": "setLayerFields",
+          "id": "c",
+          "fields": [{"name": "Not", "kind": "text"}, {"name": "Parsel", "kind": "integer", "min": "1"}],
+          "renames": [["Ada", "Not"]],
+          "catch": "Yeniden adlandırma bir nesnede “Not” adlı iki öznitelik yapıyor; alana başka bir ad verin.",
+          "expect": {"revision": "same", "entities": {"3": {"id": 3, "kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {"Ada": "101", "Not": "köşe", "Parsel": "7"}}}}
+        },
+        {
+          "op": "setLayerFields",
+          "id": "c",
+          "fields": [{"name": "Not", "kind": "text", "required": true}, {"name": "Ada", "kind": "text"}, {"name": "Parsel", "kind": "integer", "min": "1"}],
+          "renames": [["Ada", "Not"], ["Not", "Ada"]],
+          "returns": true,
+          "note": "Yeni adlar birlikte uygulanır: iki alan adlarını değiştirebilir.",
+          "expect": {"entities": {"3": {"id": 3, "kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {"Ada": "köşe", "Not": "101", "Parsel": "7"}}}}
+        },
+        {
+          "op": "setLayerFields",
+          "id": "c",
+          "fields": [],
+          "returns": true,
+          "note": "Şema kalkar; değerler kalır.",
+          "expect": {"layers": {"c": {"fields": []}}, "entities": {"3": {"id": 3, "kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {"Ada": "köşe", "Not": "101", "Parsel": "7"}}}}
+        },
+        {"op": "undo", "returns": "Alanlar", "expect": {"layers": {"c": {"fields": [{"name": "Not", "kind": "text", "required": true}, {"name": "Ada", "kind": "text"}, {"name": "Parsel", "kind": "integer", "min": "1"}]}}}},
+        {"op": "setLayerFields", "id": "yok", "fields": [{"name": "Ad", "kind": "text"}], "returns": false, "expect": {"revision": "same"}}
+      ]
     }
   ]
 }

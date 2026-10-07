@@ -611,10 +611,106 @@ cases.append({
     ],
 })
 
+# A layer's fields (docs/adr/0199 §2): the values given to a field's key are written in their canonical text; one
+# that does not keep its rules is `invalid_attribute`, an empty or removed one of a required field
+# `attribute_required` (path attrs.<name>); objects in the input's order, names in theirs. The rules and their words
+# are the independent reference's (scripts/fixtures/layer_field_cases.py).
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+from layer_field_cases import check as field_check  # noqa: E402
+
+PARSEL_FIELDS = [
+    {"name": "Ada", "kind": "text", "length": 10, "required": True},
+    {"name": "Parsel", "kind": "integer", "min": "1"},
+    {"name": "Alan", "alias": "Tapu alanı", "kind": "decimal", "scale": 2},
+    {"name": "Kullanım", "kind": "text", "values": [{"code": "K", "label": "Konut"}, {"code": "T", "label": "Ticaret"}]},
+    {"name": "Ruhsat", "kind": "boolean"},
+]
+F_LAYER = {**layer("parsel", "Parsel"), "fields": PARSEL_FIELDS}
+F_ENTITIES = ENTITIES + [
+    {"kind": "polygon", "id": 9, "layerId": "parsel", "attrs": {"Ada": "101", "Parsel": "7"}, "pts": [P(487080, 4420000), P(487090, 4420000), P(487090, 4420010), P(487080, 4420010)]},
+]
+F_SETUP = {**SETUP, "layers": SETUP["layers"] + [F_LAYER], "entities": F_ENTITIES}
+F_IDS = [e["id"] for e in F_ENTITIES]
+FIELD = {f["name"]: f for f in PARSEL_FIELDS}
+
+
+def F(i):
+    return json.loads(json.dumps(next(e for e in F_ENTITIES if e["id"] == i)))
+
+
+def F_after(i, attrs):
+    e = F(i)
+    for key, value in attrs.items():
+        if value is None:
+            e["attrs"].pop(key, None)
+        else:
+            e["attrs"][key] = value
+    return e
+
+
+def refused(name, text):
+    r = field_check(FIELD[name], text)
+    assert "error" in r, (name, text)
+    return failed("attribute_required" if r["error"] == "required" else "invalid_attribute", r["message"], f"attrs.{name}")
+
+
+def canonical(name, text):
+    r = field_check(FIELD[name], text)
+    assert "value" in r, (name, text, r)
+    return r["value"]
+
+
+GIVEN = {"Parsel": "+007", "Alan": "12,5", "Ruhsat": "Evet", "Kullanım": "konut", "Not": " serbest "}
+WRITTEN = {k: (canonical(k, v) if k in FIELD else v) for k, v in GIVEN.items()}
+assert WRITTEN == {"Parsel": "7", "Alan": "12.5", "Ruhsat": "true", "Kullanım": "K", "Not": " serbest "}, WRITTEN
+
+cases.append({
+    "name": "Katmanın alanları: alanın anahtarına yazılan değer tek biçimiyle yazılır, şemada olmayan anahtar olduğu gibi; adım “Değiştir”",
+    "note": "ADR 0199 §2. 9, alanları olan Parsel katmanında; 2 alanı olmayan Yapı katmanında: aynı değer ona verildiği gibi yazılır.",
+    "setup": F_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(9), "attrs": GIVEN, "operation": "attributes"}, "result": done([9]),
+         "expect": {"ids": F_IDS, "entities": {"9": F_after(9, WRITTEN)}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"9": F(9)}, "canUndo": False}},
+        {"op": "execute", "input": {"uids": uids(2, 9), "attrs": {"Parsel": "08"}, "operation": "attributes"}, "result": done([2, 9]),
+         "expect": {"entities": {"2": F_after(2, {"Parsel": "08"}), "9": F_after(9, {"Parsel": "8"})}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(9), "attrs": {"Parsel": "8"}, "operation": "attributes"}, "result": done([]),
+         "note": "Tek biçimi zaten yazılı: değişiklik değildir.", "expect": {"revision": "same"}},
+    ],
+})
+
+cases.append({
+    "name": "Katmanın alanları: kurala uymayan değer invalid_attribute, zorunlu alana boş ya da silme attribute_required; ilk uymayan adların sırasıyla; hiçbir şey yazılmaz",
+    "note": "ADR 0199 §2. Yol attrs.<ad>; ileti alanın takma adıyla.",
+    "setup": F_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(9), "attrs": {"Parsel": "7a"}, "operation": "attributes"}, "result": refused("Parsel", "7a"), "expect": {"ids": F_IDS, "revision": "same", "canUndo": False}},
+        {"op": "execute", "input": {"uids": uids(9), "attrs": {"Parsel": "0"}, "operation": "attributes"}, "result": refused("Parsel", "0"), "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(9), "attrs": {"Parsel": "x", "Alan": "1.234"}, "operation": "attributes"}, "result": refused("Alan", "1.234"),
+         "note": "İki uymayan: adların sırasıyla ilki (Alan, Parsel'den önce).", "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(9), "attrs": {"Ada": None}, "operation": "attributes"}, "result": refused("Ada", ""),
+         "note": "Zorunlu alanı silmek boş yazmaktır.", "expect": {"revision": "same"}},
+        {"op": "validate", "input": {"uids": uids(9), "attrs": {"Ada": "   "}, "operation": "attributes"}, "result": refused("Ada", "   ")},
+        {"op": "execute", "input": {"uids": uids(9), "attrs": {"Kullanım": "Sanayi"}, "operation": "attributes"}, "result": refused("Kullanım", "Sanayi"), "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(9), "attrs": {"Ada": "12345678901"}, "operation": "attributes"}, "result": refused("Ada", "12345678901"), "expect": {"revision": "same"}},
+    ],
+})
+
+cases.append({
+    "name": "Katmanın alanları: katmanına taşınırken yazılan değer gittiği katmanın alanlarıyla denetlenir",
+    "note": "ADR 0199 §2. 3, Yapı'dan Parsel'e: Parsel alanı orada en az 1'dir.",
+    "setup": F_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(3), "layerId": "parsel", "attrs": {"Parsel": "0"}, "operation": "attributes"}, "result": refused("Parsel", "0"), "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(3), "layerId": "parsel", "attrs": {"Ada": "102", "Parsel": "003"}, "operation": "attributes"}, "result": done([3]),
+         "expect": {"entities": {"3": {**F_after(3, {"Ada": "102", "Parsel": "3"}), "layerId": "parsel"}}, "revision": "changed"}},
+    ],
+})
+
 write(
     "cad.entities.set",
     "Nesnelerin özelliklerini değiştir: doğrulama, plan, yazma, geri alma",
-    "Denetim sırası: en az bir kimlik; her kimliğin yazımı; bir özellik verilmesi (katman, renk, sembol, öznitelik ya da etiket); öznitelik adlarının boş olmaması (yalnız boşluk da boştur, Unicode White_Space); beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; verilen katmanın var ve grup değil olması; nesnelerin katmanının, sonra verilen katmanın kilitli olmaması (biri kilitliyse hiçbir şey yazılmaz). Verilmeyen özellik değişmez; renk, sembol ve etiket null ile kaldırılır; öznitelik adıyla yazılır, null ile silinir, adı geçmeyenler kalır. Zaten istendiği gibi olan nesne değişmez ve çıktıda yoktur; hiçbiri değişmezse adım yazılmaz. Gizli katmana taşınan olursa layer_hidden uyarısı. Adım işlemin adıdır: Katman değiştir, Renk değiştir, Sembol ata (sembol null ise Sembolü kaldır), Değiştir (öznitelik), Etiket değiştir, Bağı kopar (unlink: bağlı yazının labelOf ve labelScale'i kalkar, ADR 0175 §4; unlink false bir şey vermez). Kurulumdaki en büyük kimlik 8; Bağı kopar'ın kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "Denetim sırası: en az bir kimlik; her kimliğin yazımı; bir özellik verilmesi (katman, renk, sembol, öznitelik ya da etiket); öznitelik adlarının boş olmaması (yalnız boşluk da boştur, Unicode White_Space); beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; verilen katmanın var ve grup değil olması; nesnelerin katmanının, sonra verilen katmanın kilitli olmaması (biri kilitliyse hiçbir şey yazılmaz). Verilmeyen özellik değişmez; renk, sembol ve etiket null ile kaldırılır; öznitelik adıyla yazılır, null ile silinir, adı geçmeyenler kalır. Zaten istendiği gibi olan nesne değişmez ve çıktıda yoktur; hiçbiri değişmezse adım yazılmaz. Gizli katmana taşınan olursa layer_hidden uyarısı. Adım işlemin adıdır: Katman değiştir, Renk değiştir, Sembol ata (sembol null ise Sembolü kaldır), Değiştir (öznitelik), Etiket değiştir, Bağı kopar (unlink: bağlı yazının labelOf ve labelScale'i kalkar, ADR 0175 §4; unlink false bir şey vermez). Katmanın alanları (ADR 0199 §2): verilen öznitelikler nesnenin katmanının (taşınıyorsa gittiği katmanın) alanlarıyla denetlenir ve tek biçimleriyle yazılır; kurala uymayan invalid_attribute, zorunlu alana boş ya da silme attribute_required (yol attrs.<ad>), nesneler girdinin sırasıyla, adlar kendi sıralarıyla; kilit denetiminden sonra. Kurulumdaki en büyük kimlik 8; Bağı kopar'ın ve katman alanlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

@@ -21,8 +21,9 @@ mod styles;
 
 use kentos_contracts::{
     DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DimensionStyle, DocumentSnapshotV2,
-    Entity, LabelStyle, LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode,
-    LayerStyle, MigrationSource, ProjectSettings, SurveySettings, Vec2, layer_states_problem,
+    Entity, LabelStyle, LayerField, LayerNode, LayerNodeType, LayerSnap, LayerState,
+    LayerStateNode, LayerStyle, MigrationSource, ProjectSettings, SurveySettings, Vec2,
+    layer_fields_problem, layer_states_problem,
 };
 use serde_json::Value;
 
@@ -32,7 +33,7 @@ use crate::watch::{Step, Watch, report};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES,
-    SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
+    SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TABLES,
     SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
@@ -497,8 +498,10 @@ impl<'d> Encoder<'d> {
     }
 
     fn layer(&mut self, n: &'d LayerNode) -> Result<(), KcadError> {
-        self.open(if n.snap.is_some() { 9 } else { 8 }, true)?;
-        // id (2), name snap type (4), style (5), locked (6), visible (7), children expanded (8).
+        let fields = !n.fields.is_empty();
+        self.open(8 + usize::from(n.snap.is_some()) + usize::from(fields), true)?;
+        // id (2), name snap type (4), style (5), fields locked (6), visible (7),
+        // children expanded (8).
         self.key("id");
         self.at(Seg::Name("id"), |e| e.text(&n.id))?;
         self.key("name");
@@ -514,6 +517,10 @@ impl<'d> Encoder<'d> {
         });
         self.key("style");
         self.at(Seg::Name("style"), |e| e.layer_style(&n.style))?;
+        if fields {
+            self.key("fields");
+            self.at(Seg::Name("fields"), |e| e.layer_fields(n.kind, &n.fields))?;
+        }
         self.key("locked");
         self.w.bool(n.locked);
         self.key("visible");
@@ -551,6 +558,97 @@ impl<'d> Encoder<'d> {
                 }
                 self.close();
             }
+        }
+        self.close();
+        Ok(())
+    }
+
+    /// A layer's fields (docs/adr/0199 §1), on a layer only, checked whole.
+    fn layer_fields(
+        &mut self,
+        kind: LayerNodeType,
+        fields: &'d [LayerField],
+    ) -> Result<(), KcadError> {
+        if kind == LayerNodeType::Group {
+            return Err(self.fail(
+                Code::BadValue,
+                "grubun alanları yazılmaz; alanlar yalnız katmanındır",
+            ));
+        }
+        if let Some(problem) = layer_fields_problem(fields) {
+            return Err(self.fail(Code::BadValue, &problem));
+        }
+        self.open(fields.len(), false)?;
+        for (i, f) in fields.iter().enumerate() {
+            self.at(Seg::Index(i), |e| e.layer_field(f))?;
+        }
+        self.close();
+        Ok(())
+    }
+
+    /// A field: max, min (3), kind, name (4), alias, scale (5), length,
+    /// values (6), default (7), required (8); only what it has.
+    fn layer_field(&mut self, f: &'d LayerField) -> Result<(), KcadError> {
+        let n = 2
+            + usize::from(f.max.is_some())
+            + usize::from(f.min.is_some())
+            + usize::from(f.alias.is_some())
+            + usize::from(f.scale.is_some())
+            + usize::from(f.length.is_some())
+            + usize::from(f.values.is_some())
+            + usize::from(f.default.is_some())
+            + usize::from(f.required);
+        self.open(n, true)?;
+        if let Some(max) = &f.max {
+            self.key("max");
+            self.at(Seg::Name("max"), |e| e.text(max))?;
+        }
+        if let Some(min) = &f.min {
+            self.key("min");
+            self.at(Seg::Name("min"), |e| e.text(min))?;
+        }
+        self.key("kind");
+        self.w.text(f.kind.name());
+        self.key("name");
+        self.at(Seg::Name("name"), |e| e.text(&f.name))?;
+        if let Some(alias) = &f.alias {
+            self.key("alias");
+            self.at(Seg::Name("alias"), |e| e.text(alias))?;
+        }
+        if let Some(scale) = f.scale {
+            self.key("scale");
+            self.w.uint(u64::from(scale));
+        }
+        if let Some(length) = f.length {
+            self.key("length");
+            self.w.uint(u64::from(length));
+        }
+        if let Some(values) = &f.values {
+            self.key("values");
+            self.at(Seg::Name("values"), |e| {
+                e.open(values.len(), false)?;
+                for (i, c) in values.iter().enumerate() {
+                    e.at(Seg::Index(i), |e| {
+                        e.open(2, true)?;
+                        e.key("code");
+                        e.at(Seg::Name("code"), |e| e.text(&c.code))?;
+                        e.key("label");
+                        e.at(Seg::Name("label"), |e| e.text(&c.label))?;
+                        e.close();
+                        Ok(())
+                    })?;
+                }
+                e.close();
+                Ok(())
+            })?;
+        }
+        if let Some(default) = &f.default {
+            self.key("default");
+            self.at(Seg::Name("default"), |e| e.text(default))?;
+        }
+        if f.required {
+            self.key("required");
+            self.w.bool(true);
         }
         self.close();
         Ok(())
@@ -707,7 +805,10 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 22 when it has a table
+/// The oldest schema that holds the drawing: 26 when a layer has fields
+/// (docs/adr/0199 §1), 25 when a text of it or of a block definition has a
+/// curve (docs/adr/0196), 24 when it has a picture (docs/adr/0192), 23 when a
+/// hatch has a pattern, a gradient or a tie (docs/adr/0186), 22 when it has a table
 /// (docs/adr/0184), 21 when the project has a text
 /// or a dimension style or a text or a dimension of it or of a block
 /// definition a face or a look (docs/adr/0183), 20 when a text of it or of a
@@ -729,6 +830,14 @@ impl<'d> Encoder<'d> {
 fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     fn snaps(nodes: &[LayerNode]) -> bool {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
+    }
+    fn schemas(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| !n.fields.is_empty() || schemas(&n.children))
+    }
+    if schemas(&doc.layers) {
+        return SCHEMA_WITH_LAYER_FIELDS;
     }
     let line_parts = |list: &[Entity]| {
         list.iter().any(|e| match e {
@@ -904,7 +1013,7 @@ mod tests {
     #[test]
     fn the_fixed_keys_are_in_encoded_order() {
         // The maps whose keys the writer writes by hand, in the order it writes them.
-        let maps: [&[&str]; 29] = [
+        let maps: [&[&str]; 31] = [
             &["format", "version", "document"],
             &[
                 "name",
@@ -941,9 +1050,16 @@ mod tests {
             &["id", "name", "nodes"],
             &["node", "style", "locked", "visible"],
             &[
-                "id", "name", "snap", "type", "style", "locked", "visible", "children", "expanded",
+                "id", "name", "snap", "type", "style", "fields", "locked", "visible", "children",
+                "expanded",
             ],
             &["off", "kinds"],
+            // A layer's field and its value list's entry (docs/adr/0199 §1).
+            &[
+                "max", "min", "kind", "name", "alias", "scale", "length", "values", "default",
+                "required",
+            ],
+            &["code", "label"],
             &[
                 "fill",
                 "color",

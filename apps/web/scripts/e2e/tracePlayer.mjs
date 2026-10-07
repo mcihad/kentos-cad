@@ -439,11 +439,15 @@ async function answer(step) {
  */
 async function panelAnswer(step) {
   const missing = (what) => new Error(`“${step.panel}” sekmesinde ${what} yok`);
-  const open = await b.eval(`(() => { const p = document.querySelector('.bottom__panel'); return !!p && !p.hidden && !!document.querySelector('.dsearch'); })()`);
+  // Arama's root, or Öznitelik tablosu's (docs/adr/0199 §4); a row is pressed on its first value after Sıra.
+  const table = step.panel === 'Tablo';
+  const rootSel = table ? '.ftable' : '.dsearch';
+  const rowCell = table ? 2 : 3;
+  const open = await b.eval(`(() => { const p = document.querySelector('.bottom__panel'); return !!p && !p.hidden && !!document.querySelector('${rootSel}'); })()`);
   if (!open) throw new Error(`“${step.panel}” sekmesi açık değil`);
   const find = (selector, words) =>
     b.eval(`(() => {
-      const root = document.querySelector('.dsearch');
+      const root = document.querySelector('${rootSel}');
       const words = (el) => (el.getAttribute('aria-label') ?? el.closest('label')?.textContent ?? el.textContent ?? '').trim();
       const el = [...root.querySelectorAll(${JSON.stringify(selector)})].find((el) => words(el) === ${JSON.stringify(words)});
       if (!el) return null;
@@ -466,7 +470,13 @@ async function panelAnswer(step) {
     if (at.checked !== on) await clickAt(at);
   }
   for (const [list, item] of Object.entries(step.pick ?? {})) {
-    const at = await find('button.dropdown', list);
+    // A list by its aria-label (Arama's) or its label's words (Öznitelik tablosu's Katman ▾, Göster ▾).
+    const at = (await find('button.dropdown', list)) ?? (await b.eval(`(() => {
+      const el = [...document.querySelectorAll('${rootSel} button.dropdown')].find((el) => el.getAttribute('aria-label') === ${JSON.stringify(list)});
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    })()`));
     if (!at) throw missing(`“${list}” listesi`);
     await clickAt(at);
     await sleep(80);
@@ -486,7 +496,7 @@ async function panelAnswer(step) {
   }
   if (step.row !== undefined) {
     const at = await b.eval(`(() => {
-      const el = document.querySelectorAll('.dsearch tbody tr[data-at]')[${step.row - 1}]?.children[3];
+      const el = document.querySelectorAll('${rootSel} tbody tr[data-at]')[${step.row - 1}]?.children[${rowCell}];
       if (!el) return null;
       el.scrollIntoView({ block: 'nearest' });
       const r = el.getBoundingClientRect();
@@ -502,6 +512,45 @@ async function panelAnswer(step) {
     const at = await find('button', step.press);
     if (!at) throw missing(`“${step.press}” düğmesi`);
     await clickAt(at);
+  }
+  // Öznitelik tablosu's cell (docs/adr/0199 §4): the row's value under the header double-clicked; a list's item
+  // chosen by its words, a field's text typed over and written with Enter.
+  if (table && step.edit) {
+    const { row, column, text } = step.edit;
+    const at = await b.eval(`(() => {
+      const root = document.querySelector('.ftable');
+      const col = [...root.querySelectorAll('thead th')].findIndex((th) => th.textContent.trim() === ${JSON.stringify(column)});
+      const td = col > 1 ? root.querySelectorAll('tbody tr[data-at]')[${row - 1}]?.children[col] : null;
+      if (!td) return null;
+      td.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      const r = td.getBoundingClientRect();
+      return { x: r.left + Math.min(r.width / 2, 30), y: r.top + r.height / 2 };
+    })()`);
+    if (!at) throw missing(`${row}. satırın “${column}” hücresi`);
+    await mouse('mouseMoved', at.x, at.y);
+    await mouse('mousePressed', at.x, at.y, { button: 'left', clickCount: 1 });
+    await mouse('mouseReleased', at.x, at.y, { button: 'left', clickCount: 1 });
+    await mouse('mousePressed', at.x, at.y, { button: 'left', clickCount: 2 });
+    await mouse('mouseReleased', at.x, at.y, { button: 'left', clickCount: 2 });
+    await sleep(80);
+    const select = await b.eval(`!!document.querySelector('.ftable select.ptable__edit')`);
+    if (select) {
+      const ok = await b.eval(`(() => {
+        const el = document.querySelector('.ftable select.ptable__edit');
+        const o = [...el.options].find((o) => o.textContent === ${JSON.stringify(text)});
+        if (!o) return false;
+        el.value = o.value;
+        el.dispatchEvent(new Event('change'));
+        return true;
+      })()`);
+      if (!ok) throw missing(`“${column}” listesinde “${text}”`);
+    } else {
+      await chooseAll();
+      if (text) await b.send('Input.insertText', { text });
+      else await press('Delete');
+      await press('Enter');
+    }
+    await sleep(80);
   }
   if (step.key !== undefined) await press(step.key);
   // The typing's pause (120 ms) and the drawing's redraw; the pointer goes off the panel's buttons (a tooltip stays
@@ -767,6 +816,16 @@ const observe = (mark) =>
           rows: [...root.querySelectorAll('tbody tr[data-at]')].map((tr) => [...tr.children].slice(1).map((td) => td.textContent.trim()).join(' | ')),
         };
       })(),
+      // Öznitelik tablosu's count, headers after Sıra and rows (the cells after Sıra) (docs/adr/0199 §4).
+      featureTable: (() => {
+        const root = document.querySelector('.ftable');
+        if (!root) return null;
+        return {
+          count: root.querySelector('.ptable__count')?.textContent ?? '',
+          columns: [...root.querySelectorAll('thead th')].slice(1).map((th) => th.textContent.trim()),
+          rows: [...root.querySelectorAll('tbody tr[data-at]')].map((tr) => [...tr.children].slice(1).map((td) => td.textContent).join(' | ')),
+        };
+      })(),
       mark: k.selection.mark.value && [k.selection.mark.value.x, k.selection.mark.value.y],
       // The active layer's groups and name, and the colour and line weight new objects take (docs/adr/0176 §3).
       activeLayer: (() => {
@@ -927,6 +986,10 @@ function compare(expect, got, t) {
             (want.side === undefined || have.side === want.side) &&
             (want.center === undefined || (c && Math.hypot(c[0] - want.center[0], c[1] - want.center[1]) <= t.clickTolerance));
       if (!ok) bad.push(`magnifier: ${JSON.stringify(have && { ...have, center: c })}, beklenen ${JSON.stringify(want)} (±${t.clickTolerance} m)`);
+    } else if (key === 'featureTable') {
+      // The headers only when the step names them (docs/adr/0199 §4).
+      const ok = have && have.count === want.count && same(have.rows, want.rows) && (want.columns === undefined || same(have.columns, want.columns));
+      if (!ok) bad.push(`featureTable: ${JSON.stringify(have)}, beklenen ${JSON.stringify(want)}`);
     } else if (key === 'newest') bad.push(...compareShape('newest', have, want, t));
     else if (key === 'objects') for (const w of want) bad.push(...compareShape(`objects[${w.id}]`, have[w.id] ?? null, w, t));
     else if (key === 'trackPoints') {

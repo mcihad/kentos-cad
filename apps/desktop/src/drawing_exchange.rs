@@ -358,6 +358,7 @@ fn put_nodes(
                     locked: n.locked,
                     style: n.style.clone(),
                     snap: n.snap.clone(),
+                    fields: n.fields.clone(),
                 };
                 model.add_layer(new, parent, false).map_err(|r| r.0)?;
                 counts.layers += 1;
@@ -700,6 +701,88 @@ impl App {
                         settings.join(", ")
                     )
                 }
+            ),
+        );
+        true
+    }
+
+    /// Kaynaklar's Katman olarak ekle (docs/adr/0199 §7; the web's
+    /// `takeLayerInto`): `theirs`'s layer at `path` with its objects into the
+    /// open drawing (`exchange::layer_take`): the layers, blocks and objects
+    /// as one undo step, the styles and library items as settings; `from`
+    /// names where it came from. The objects take new ids; a layer of ours
+    /// that is locked takes none. Whether it went in.
+    pub(crate) fn take_layer_into(
+        &mut self,
+        theirs: &DocumentSnapshotV2,
+        path: &str,
+        from: &str,
+    ) -> bool {
+        const TITLE: &str = "Katman olarak ekle";
+        let locked = self.tree_locked();
+        let Some(doc) = self.document.as_mut() else {
+            self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
+            return false;
+        };
+        let made = match exchange::layer_take(&doc.model.to_snapshot_v2(), theirs, path) {
+            Ok(made) => made,
+            Err(why) => {
+                self.warn(format!("{TITLE}: {why}"));
+                return false;
+            }
+        };
+        if let Some(locked) = locked.filter(|_| changes_tree(&doc.model, &made.drawing.layers)) {
+            self.warn(format!("{TITLE}: {locked}"));
+            return false;
+        }
+        let layers = doc.model.layers();
+        let shut = made
+            .objects
+            .iter()
+            .map(|e| e.base().layer_id.as_str())
+            .find(|id| layers.get(id).is_some() && layers.is_locked(id))
+            .map(|id| layers.path(id));
+        if let Some(shut) = shut {
+            self.warn(format!(
+                "{TITLE}: “{shut}” katmanı kilitli; kilidini açıp yeniden deneyin."
+            ));
+            return false;
+        }
+        let model = &mut doc.model;
+        let group = model.begin_group(TITLE);
+        let mut counts = Counts::default();
+        let objects = made.objects.len();
+        let done = put_nodes(model, &made.drawing.layers, None, &mut counts)
+            .and_then(|()| put_blocks(model, &made.drawing.blocks, &mut counts))
+            .and_then(|()| {
+                if made.objects.is_empty() {
+                    return Ok(());
+                }
+                model
+                    .add_many(made.objects.clone(), TITLE)
+                    .map(|_| ())
+                    .map_err(|_| "Çizimde yeni nesneye yer kalmadı.".to_owned())
+            });
+        if let Err(why) = done {
+            model.cancel_group(group);
+            self.warn(format!("{TITLE}: {why} Hiçbir şey alınmadı."));
+            return false;
+        }
+        model.end_group(group);
+        self.put_settings(&made.drawing, false);
+        let parts: Vec<String> = [
+            Some(format!("{objects} nesne")),
+            (counts.layers > 0).then(|| format!("{} yeni katman ya da grup", counts.layers)),
+            (counts.blocks > 0).then(|| format!("{} blok", counts.blocks)),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
+        self.say(
+            Level::Success,
+            format!(
+                "“{from}” içinden “{path}” alındı: {} (tek adımda geri alınır).",
+                parts.join(", ")
             ),
         );
         true

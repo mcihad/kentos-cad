@@ -8,6 +8,7 @@ import type { CrsDef } from '../geo/crs';
 import { ProjectSettings, type ProjectSettingsData } from './projectSettings';
 import { emptyBounds, isEmptyBounds, type Bounds, type Vec2 } from './geometry';
 import type { LayerInit, LayerNode, LayerStyle } from './layers';
+import { fieldsProblem, type LayerField } from './layerFields';
 import { LayerStore } from './layers';
 import { followHatches, tiesOf } from './hatchTies';
 import { followLinks } from './linkedTexts';
@@ -20,6 +21,8 @@ type Op =
   | { type: 'update'; before: DrawingEntity; after: DrawingEntity }
   /** A layer's look (colour, line type, renderer …) is project data: undoable like objects. */
   | { type: 'layerStyle'; layerId: string; before: LayerStyle; after: LayerStyle }
+  /** A layer's fields (docs/adr/0199 §3): undoable like its look. */
+  | { type: 'layerFields'; layerId: string; before: LayerField[]; after: LayerField[] }
   /**
    * A layer or a group taken out of the tree with everything under it
    * (`removeLayer`), and its inverse: `node` is a copy as it was (children,
@@ -52,8 +55,8 @@ interface LayerPlace {
 const isLayerTreeOp = (o: Op): o is Extract<Op, { type: 'layerRemove' | 'layerAdd' }> => o.type === 'layerRemove' || o.type === 'layerAdd';
 
 /** Whether an op is about layers (their tree, style or the active one) rather than an object. */
-const isLayerOp = (o: Op): o is Extract<Op, { type: 'layerStyle' | 'layerRemove' | 'layerAdd' | 'layerActive' }> =>
-  o.type === 'layerStyle' || o.type === 'layerActive' || isLayerTreeOp(o);
+const isLayerOp = (o: Op): o is Extract<Op, { type: 'layerStyle' | 'layerFields' | 'layerRemove' | 'layerAdd' | 'layerActive' }> =>
+  o.type === 'layerStyle' || o.type === 'layerFields' || o.type === 'layerActive' || isLayerTreeOp(o);
 
 /** Whether an op changes the block definitions. */
 const isBlockOp = (o: Op): o is Extract<Op, { type: 'blockAdd' | 'blockRemove' | 'blockUpdate' }> =>
@@ -470,6 +473,43 @@ export class CadDocument {
     for (const k of Object.keys(after) as (keyof LayerStyle)[]) if (after[k] === undefined) delete after[k];
     if (JSON.stringify(before) === JSON.stringify(after)) return;
     this.record({ type: 'layerStyle', layerId, before, after }, label);
+  }
+
+  /**
+   * Gives a layer its fields as one undo step “Alanlar” (docs/adr/0199 §3): the schema `fields` (empty: none), and the
+   * keys `renames` moves on the layer's objects (old → new, all at once, so two may swap), their values kept; a deleted
+   * field's values stay as attributes without a schema. Refused with nothing changed (`Refusal`, the desktop's
+   * `set_layer_fields`): a group, fields with a problem (`fieldsProblem`), renames that would give an object two
+   * attributes of one name. An unknown id changes nothing; returns whether anything changed.
+   */
+  setLayerFields(layerId: string, fields: readonly LayerField[], renames: readonly (readonly [string, string])[] = []): boolean {
+    const node = this.layers.get(layerId);
+    if (!node) return false;
+    if (node.type === 'group') throw new Refusal(`“${node.name}” bir grup; alanlar yalnız katmanın olur.`);
+    const problem = fieldsProblem(fields);
+    if (problem) throw new Refusal(problem);
+    const moved = new Map(renames.filter(([a, b]) => a !== b));
+    const patches: (Partial<Entity> & { id: number })[] = [];
+    if (moved.size)
+      for (const e of this.byLayer(layerId)) {
+        const keys = Object.keys(e.attrs).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+        if (!keys.some((k) => moved.has(k))) continue;
+        const next: Record<string, string> = {};
+        for (const k of keys) {
+          const key = moved.get(k) ?? k;
+          if (key in next) throw new Refusal(`Yeniden adlandırma bir nesnede “${key}” adlı iki öznitelik yapıyor; alana başka bir ad verin.`);
+          next[key] = e.attrs[k];
+        }
+        patches.push({ id: e.id, attrs: next });
+      }
+    const before = structuredClone(node.fields ?? []);
+    const after = structuredClone([...fields]);
+    if (sameJson(before, after) && !patches.length) return false;
+    this.transact('Alanlar', () => {
+      if (!sameJson(before, after)) this.record({ type: 'layerFields', layerId, before, after }, 'Alanlar');
+      if (patches.length) this.updateMany(patches, 'Alanlar');
+    });
+    return true;
   }
 
   /**
@@ -1029,6 +1069,7 @@ export class CadDocument {
         this.applyingLayers = true;
         try {
           if (op.type === 'layerStyle') this.layers.replaceStyle(op.layerId, op.after);
+          else if (op.type === 'layerFields') this.layers.replaceFields(op.layerId, op.after);
           else if (op.type === 'layerActive') {
             if (this.layers.active.value === op.before) this.layers.setActive(op.after);
           }
@@ -1184,6 +1225,7 @@ function invert(op: Op): Op {
   if (op.type === 'blockRemove') return { ...op, type: 'blockAdd' };
   if (op.type === 'blockUpdate') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerStyle') return { ...op, before: op.after, after: op.before };
+  if (op.type === 'layerFields') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerActive') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerRemove') return { ...op, type: 'layerAdd' };
   if (op.type === 'layerAdd') return { ...op, type: 'layerRemove' };

@@ -54,8 +54,8 @@ FIELDS = {
     'layersFraction': {'kind': 'number', 'min': LAYERS['min'], 'max': LAYERS['max']},
     'bottomExpanded': {'kind': 'boolean'},
     'bottomHeight': {'kind': 'number', 'min': BOTTOM['min']},
-    'bottomTab': {'kind': 'enum', 'values': ['history', 'coords', 'points', 'search', 'messages']},
-    'dockTab': {'kind': 'enum', 'values': ['layers', 'processing', 'blocks', 'templates']},
+    'bottomTab': {'kind': 'enum', 'values': ['history', 'coords', 'points', 'table', 'search', 'messages']},
+    'dockTab': {'kind': 'enum', 'values': ['layers', 'processing', 'blocks', 'templates', 'sources']},
     'processingTab': {'kind': 'enum', 'values': ['tools', 'history']},
     'processingFolded': {'kind': 'texts'},
     'ribbonTab': {'kind': 'text'},
@@ -184,6 +184,7 @@ READS = [
     })),
     ('the Bloklar tab in front is kept (docs/adr/0144)', compact({'dockTab': 'blocks'})),
     ('the Şablonlar tab in front is kept (docs/adr/0176 §4)', compact({'dockTab': 'templates'})),
+    ('the Kaynaklar tab in front is kept (docs/adr/0199 §7)', compact({'dockTab': 'sources'})),
     ('a dock tab the dock does not have is not taken', compact({'dockTab': 'styles'})),
     ('fields the layout does not know are dropped', compact({'theme': 'light', 'oldPanel': True, 'ribbonTabs': ['home']})),
     ('the toolbox of the classic shell is no longer kept: its fields are dropped (docs/adr/0155)', compact({

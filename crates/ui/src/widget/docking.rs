@@ -100,8 +100,29 @@ const DOUBLE_CLICK: Duration = Duration::from_millis(400);
 const STASH: usize = 24;
 /// Başlıktaki menü ve daraltma düğmelerinin genişliği.
 const BUTTON: f32 = 22.0;
+/// Yalnızca ikonu kalan sekmede ikonun iki yanındaki boşluk: beş sekmelik
+/// yuva da varsayılan genişliğe sığar (web'in ikon sekmesi kadar).
+const ICON_PAD: f32 = 7.0;
 /// Yalnızca ikonu kalan sekmenin genişliği.
-const ICON_TAB: f32 = 2.0 * tabs::PAD + 14.0;
+const ICON_TAB: f32 = 2.0 * ICON_PAD + 14.0;
+
+/// Yalnızca ikonu kalan sekme mi (ikonu var, tabanına inmiş).
+fn icon_only(icon: bool, tab: Rectangle) -> bool {
+    icon && tab.width <= ICON_TAB + 0.5
+}
+
+/// Başlığın çizildiği alan: yalnızca ikonu kalan sekmede ikonun kutusu.
+fn label_room(icon: bool, tab: Rectangle, trail: f32) -> Rectangle {
+    if icon_only(icon, tab) {
+        Rectangle {
+            x: tab.x + ICON_PAD,
+            width: (tab.width - 2.0 * ICON_PAD).max(0.0),
+            ..tab
+        }
+    } else {
+        tabs::room(tab, trail)
+    }
+}
 /// Arkadaki sekmede kapatma düğmesinin çıkması için gereken genişlik.
 const CLOSE_TAB: f32 = 2.0 * tabs::PAD + 14.0 + tabs::CLOSE + 9.0;
 
@@ -1304,7 +1325,7 @@ where
 
             frame
                 .clipped
-                .push(label.size().width > tabs::room(rect, trail).width + 0.5);
+                .push(label.size().width > label_room(head.icon, rect, trail).width + 0.5);
 
             if !visible.contains(&index) {
                 frame.tabs.push(None);
@@ -1327,7 +1348,12 @@ where
                     tabs::square(tabs::close_area(rect).center(), tabs::GLYPH).position() - origin,
                 );
 
-            let at = Point::new(rect.x + tabs::PAD, rect.y + label_y) - origin;
+            let pad = if icon_only(head.icon, rect) {
+                ICON_PAD
+            } else {
+                tabs::PAD
+            };
+            let at = Point::new(rect.x + pad, rect.y + label_y) - origin;
             let ghost = head.parts[2]
                 .as_widget_mut()
                 .layout(
@@ -3379,7 +3405,7 @@ where
             // düğmesi başlığın sonuna çıkar.
             if frame.clipped.get(tab).copied().unwrap_or(false) || (close && !active) {
                 let trail = if close { tabs::trail(true) } else { tabs::PAD };
-                let room = tabs::room(rect, trail);
+                let room = label_room(head.icon, rect, trail);
 
                 renderer.with_layer(room, draw_label);
 

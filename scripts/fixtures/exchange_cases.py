@@ -8,7 +8,11 @@ code, over two drawings in the contract's JSON form (`DocumentSnapshotV2`):
   their images, blocks by name with what they place and the symbols their objects draw with, layer states by name, the
   project's units and scale; the same names skipped or replaced;
 - a drawing as a block (Dosyadan blok ekle): its objects but pictures and tables, its base the lower left of their
-  extent, their layers by path (made when missing), their blocks and styles brought in under names the drawing has not.
+  extent, their layers by path (made when missing), their blocks and styles brought in under names the drawing has not;
+- a layer with its objects (Kaynaklar's Katman olarak ekle, docs/adr/0199 §7): the layer by path (made when missing,
+  with its groups; a met one kept as it is), its objects with the layers their blocks' objects are on, the blocks they
+  place by name (a met name is the drawing's own), the styles by name (the missing added), the library items the
+  objects and the made layers draw with; links, ties and a table's source dropped (the objects take new ids).
 
 The extent's corner is taken here from the objects whose bounds are plain (lines, paths without arcs, circles,
 points); the drawings keep every other object well inside them, which this script checks.
@@ -601,6 +605,74 @@ def file_block(ours, theirs, file_name):
     return ours, left
 
 
+# ── 4. A layer with its objects ───────────────────────────────────────
+
+def layer_take(ours, theirs, path):
+    """Their layer at `path` with its objects into `ours`: the new drawing (its objects as they were) and the objects
+    to add, numbered from 1; None when `path` is not a layer of theirs or our node at it is not a layer."""
+    ours = copy.deepcopy(ours)
+    target = next((n for n, here in walk(theirs["layers"]) if n["type"] == "layer" and " / ".join(here) == path), None)
+    if target is None:
+        return None
+    objects = [e for e in theirs["entities"] if e["layerId"] == target["id"]]
+    by_id = {b["id"]: b for b in theirs.get("blocks", [])}
+    nested = placed_blocks(objects, by_id)
+    nested_blocks = [b for b in theirs.get("blocks", []) if b["id"] in nested]
+    pieces = objects + [e for b in nested_blocks for e in b["entities"]]
+    their_paths = path_of(theirs["layers"])
+    wanted = {path} | {" / ".join(their_paths[e["layerId"]]) for e in pieces if e["layerId"] in their_paths}
+    before = all_ids(ours["layers"])
+    take_layers(ours, theirs, wanted, "skip", set(before))
+    if our_node_for(ours, their_paths, target["id"]) is None:
+        return None
+    made_styles = [n["style"] for n, _ in walk(ours["layers"]) if n["id"] not in before]
+    # Styles by name, the missing added (the import's rule, docs/adr/0183 §7).
+    styles = {}
+    for key, field in (("textStyles", "textStyle"), ("dimensionStyles", "dimStyle")):
+        used = {e[field] for e in pieces if field in e}
+        mine = ours["settings"].setdefault(key, [])
+        for s in theirs["settings"].get(key, []):
+            if s["id"] not in used:
+                continue
+            hit = next((m for m in mine if fold(m["name"]) == fold(s["name"])), None)
+            if hit is None:
+                assert s["id"] not in {m["id"] for m in mine}, "the cases give styles ids the drawing has not"
+                mine.append(copy.deepcopy(s))
+                styles[s["id"]] = s["id"]
+            else:
+                styles[s["id"]] = hit["id"]
+        if not mine:
+            ours["settings"].pop(key)
+    # The library items the objects, their pictures and the made layers draw with, when we have none such.
+    have = {it["id"] for it in ours["styles"]["items"]}
+    items = []
+    for e in objects:
+        if "symbol" in e:
+            items.append(e["symbol"])
+        if e["kind"] == "image" and "asset" in e:
+            items.append(e["asset"])
+    for st in made_styles:
+        items += sorted(strings_at(st, "ref", set())) + sorted(strings_at(st, "asset", set()))
+    take_items(ours, theirs, [i for i in items if i not in have], "skip")
+    # The blocks by name: a met one is ours, the others come with what they place.
+    take_blocks(ours, theirs, {b["name"] for b in nested_blocks}, "skip", their_paths)
+    block_of = {b["id"]: next(m["id"] for m in ours.get("blocks", []) if block_key(m["name"]) == block_key(b["name"])) for b in nested_blocks}
+    layer_of = lambda i: our_node_for(ours, their_paths, i) or ""  # noqa: E731
+    out = []
+    for i, e in enumerate(objects):
+        m = map_object(e, layer_of, block_of, styles)
+        m.pop("source", None)
+        m["id"] = i + 1
+        out.append(m)
+    return {"drawing": ours, "objects": out}
+
+
+# The source drawing with a layer whose look draws with a library symbol (its picture too).
+THEIRS_LOOK = copy.deepcopy(THEIRS)
+THEIRS_LOOK["name"] = "Kaynak (görünüş)"
+THEIRS_LOOK["layers"][1]["children"][1]["style"]["renderer"] = {"type": "single", "symbol": {"ref": "sym-parsel"}}
+
+
 # ── The cases ─────────────────────────────────────────────────────────
 
 def build():
@@ -617,7 +689,7 @@ def build():
         "format": "kentos.exchange-cases",
         "version": 1,
         "source": SOURCE,
-        "drawings": {"ours": OURS, "theirs": THEIRS},
+        "drawings": {"ours": OURS, "theirs": THEIRS, "theirsLook": THEIRS_LOOK},
         "selections": [
             {"name": "parsel, bağlı yazısı, lamba (iç içe Direk), ilişkisi kaydedilmeyen nesneye taramanın, tablo ve resim",
              "from": "theirs", "uids": [U(0x2001), U(0x2004), U(0x2005), U(0x2006), U(0x2007), U(0x2008)],
@@ -637,6 +709,16 @@ def build():
         "files": [
             {"name": "kaynak çizim blok olur: resim ve tablo kalır, katmanlar yoluyla açılır, Direk'in adı sayı alır",
              "into": "ours", "from": "theirs", "file": "Kaynak", "expect": file_drawing, "left": left},
+        ],
+        "layers": [
+            {"name": "bizde de olan katman: nesneler bizimkine, simgesi ve resmi kitaplığa, stil adıyla eşlenir ya da eklenir, bağ ve tablonun kaynağı düşer",
+             "into": "ours", "from": "theirs", "path": "Kadastro / Parsel", "expect": layer_take(OURS, THEIRS, "Kadastro / Parsel")},
+            {"name": "bizde olmayan katman açılır; lamba bloğu iç içe Direk'iyle, aynı adlı Direk bizimki",
+             "into": "ours", "from": "theirs", "path": "Yol", "expect": layer_take(OURS, THEIRS, "Yol")},
+            {"name": "açılan katmanın görünüşünün simgesi ve resmi de gelir, taramanın ilişkisi düşer",
+             "into": "ours", "from": "theirsLook", "path": "Kadastro / Bina", "expect": layer_take(OURS, THEIRS_LOOK, "Kadastro / Bina")},
+            {"name": "grup katman değildir", "into": "ours", "from": "theirs", "path": "Kadastro", "expect": layer_take(OURS, THEIRS, "Kadastro")},
+            {"name": "olmayan yol", "into": "ours", "from": "theirs", "path": "Yok", "expect": layer_take(OURS, THEIRS, "Yok")},
         ],
     }
 

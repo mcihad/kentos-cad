@@ -66,6 +66,7 @@ pub fn check_tree(tree: &[LayerNode], active: &str) -> AppResult<()> {
         ));
     }
     snaps(tree)?;
+    schemas(tree)?;
     match find_layer(tree, active) {
         Some((n, _)) if n.kind == LayerNodeType::Layer => Ok(()),
         _ => Err(AppError::invalid(format!(
@@ -93,6 +94,30 @@ fn snaps(nodes: &[LayerNode]) -> AppResult<()> {
             }
         }
         snaps(&n.children)?;
+    }
+    Ok(())
+}
+
+/// A layer's fields as the KCAD readers take them (docs/adr/0199 §1): on a
+/// layer only, by their rules (`kentos_contracts::fields_problem`). An empty
+/// list is none (the contract does not write one).
+fn schemas(nodes: &[LayerNode]) -> AppResult<()> {
+    for n in nodes {
+        if !n.fields.is_empty() {
+            if n.kind == LayerNodeType::Group {
+                return Err(AppError::invalid(format!(
+                    "“{}” bir grup; grubun alanları olmaz, alanlar yalnız katmanındır.",
+                    n.name
+                )));
+            }
+            if let Some(problem) = kentos_contracts::fields_problem(&n.fields) {
+                return Err(AppError::invalid(format!(
+                    "“{}” katmanının alanları: {problem}",
+                    n.name
+                )));
+            }
+        }
+        schemas(&n.children)?;
     }
     Ok(())
 }
@@ -558,6 +583,7 @@ mod tests {
             },
             children,
             snap,
+            fields: Vec::new(),
         }
     }
 
@@ -598,5 +624,24 @@ mod tests {
             vec![node("a", LayerNodeType::Layer, None, Vec::new())],
         )];
         assert!(check_tree(&group, "a").is_err(), "a group keeps none");
+    }
+
+    /// A layer's fields are checked as the files' readers check them (docs/adr/0199 §1).
+    #[test]
+    fn a_layers_fields_keep_their_rules_on_a_layer() {
+        use kentos_contracts::{LayerField, LayerFieldKind};
+        let with = |kind, fields: Vec<LayerField>| {
+            let mut n = node("a", kind, None, Vec::new());
+            n.fields = fields;
+            n
+        };
+        let ada = || LayerField::new("Ada", LayerFieldKind::Text);
+        assert!(check_tree(&[with(LayerNodeType::Layer, vec![ada()])], "a").is_ok());
+        let twice = vec![ada(), LayerField::new("ADA", LayerFieldKind::Integer)];
+        let e = check_tree(&[with(LayerNodeType::Layer, twice)], "a").expect_err("a name twice");
+        assert!(e.to_string().contains("adlı iki alan var"), "{e}");
+        let mut group = with(LayerNodeType::Group, vec![ada()]);
+        group.children = vec![node("b", LayerNodeType::Layer, None, Vec::new())];
+        assert!(check_tree(&[group], "b").is_err(), "a group keeps none");
     }
 }

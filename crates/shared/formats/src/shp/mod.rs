@@ -143,6 +143,18 @@ pub fn read(files: &Files, opts: &ShapefileReadOptions) -> Result<ImportResult, 
         }
     };
 
+    // The layer's fields (docs/adr/0199 §6): the table's, of the known types, a usable name once.
+    if let Some(t) = &table {
+        let fields = crate::fields::dbf_fields(
+            t.fields
+                .iter()
+                .filter(|f| !f.name.is_empty())
+                .map(|f| (f.name.as_str(), f.kind, f.len, f.decimals)),
+        );
+        if !fields.is_empty() {
+            c.give_fields(&layer, fields);
+        }
+    }
     let mut found = Found::default();
     let mut records = Records::new(files.shp);
     let mut n = 0usize;

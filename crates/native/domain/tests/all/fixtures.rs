@@ -388,6 +388,19 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
             );
             Value::Null
         }
+        // A layer's fields and the keys its objects' attributes move to (docs/adr/0199 §3).
+        "setLayerFields" => {
+            let fields: Vec<kentos_contracts::LayerField> =
+                serde_json::from_value(step.get("fields").cloned().unwrap_or(json!([])))
+                    .or_else(|e| fail(format!("{at}: alanlar okunamadı: {e}")))?;
+            let renames: Vec<(String, String)> =
+                serde_json::from_value(step.get("renames").cloned().unwrap_or(json!([])))
+                    .or_else(|e| fail(format!("{at}: yeni adlar okunamadı: {e}")))?;
+            match doc.set_layer_fields(id()?, fields, &renames) {
+                Ok(changed) => json!(changed),
+                Err(refusal) => return Err(Stop::Thrown(refusal.0)),
+            }
+        }
         // A refusal is caught as a fixture's own `throw` is (`catch`).
         "removeLayer" => match doc.remove_layer(id()?) {
             Ok(gone) => json!(gone),
@@ -426,6 +439,12 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
                     None => None,
                     Some(v) => serde_json::from_value(v.clone())
                         .or_else(|e| fail(format!("{at}: kenet okunamadı: {e}")))?,
+                },
+                // Its fields (docs/adr/0199 §1), as `LayerInit` carries them.
+                fields: match layer.get("fields") {
+                    None => Vec::new(),
+                    Some(v) => serde_json::from_value(v.clone())
+                        .or_else(|e| fail(format!("{at}: alanlar okunamadı: {e}")))?,
                 },
             };
             let parent = step.get("parent").and_then(Value::as_str);
@@ -590,6 +609,7 @@ fn check(
                             "isVisible" => json!(doc.layers().is_visible(id)),
                             "isLocked" => json!(doc.layers().is_locked(id)),
                             "snap" => serde_json::to_value(&node.snap).unwrap_or(Value::Null),
+                            "fields" => serde_json::to_value(&node.fields).unwrap_or(Value::Null),
                             other => {
                                 return fail(format!("{at}: bilinmeyen katman alanı “{other}”"));
                             }

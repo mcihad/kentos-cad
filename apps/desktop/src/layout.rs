@@ -184,6 +184,7 @@ fn tab_key(tab: BottomTab) -> &'static str {
         BottomTab::History => "history",
         BottomTab::Coords => "coords",
         BottomTab::Points => "points",
+        BottomTab::Table => "table",
         BottomTab::Search => "search",
         BottomTab::Messages => "messages",
         BottomTab::Python => "python",
@@ -215,6 +216,7 @@ impl App {
         self.bottom_tab = match keeper.text("bottomTab") {
             "coords" => BottomTab::Coords,
             "points" => BottomTab::Points,
+            "table" => BottomTab::Table,
             "search" => BottomTab::Search,
             "messages" => BottomTab::Messages,
             "python" => BottomTab::Python,
@@ -233,6 +235,7 @@ impl App {
             "processing" => Panel::Processing,
             "blocks" => Panel::Blocks,
             "templates" => Panel::Templates,
+            "sources" => Panel::Sources,
             _ => Panel::Layers,
         };
         let fraction = keeper.number("layersFraction");
@@ -336,6 +339,7 @@ impl App {
                 Some(Panel::Processing) => "processing",
                 Some(Panel::Blocks) => "blocks",
                 Some(Panel::Templates) => "templates",
+                Some(Panel::Sources) => "sources",
                 _ => "layers",
             }),
             now,

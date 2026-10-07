@@ -37,7 +37,9 @@
 // gnss (GNSS içe aktar: a GPX and an NMEA file, the points imported, a project without a coordinate system);
 // fieldsend (Cihaza gönder: Leica GSI-16, Trimble JobXML, Leica GSI-8 over TM coordinates); ground (docs/adr/0171 §4:
 // Ölçme's reduction to the grid switched on, Kutupsal alım, Aplikasyon and Poligon hesabı reducing at 850 m);
-// vertextable (docs/adr/0172: Köşe tablosu, a row selected, a value typed, a radius refused, a road, two objects).
+// vertextable (docs/adr/0172: Köşe tablosu, a row selected, a value typed, a radius refused, a road, two objects);
+// sources (docs/adr/0199 §7: Kaynaklar with a folder added and a folder inside it open, a file's menu); fields
+// (docs/adr/0199 §5: Öznitelikler's fields by their kinds).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -2242,6 +2244,79 @@ SCENES.templates = [
       await ui.sleep(300);
     },
     close: async (ui) => (await closeTemplates(ui), await ui.eval(`window.kentos.commands.execute('edit.deselect')`)),
+  },
+];
+
+// Kaynaklar (docs/adr/0199 §7): a folder added through the browser's folder access (here the page's own private
+// folder, written first: the browser's window cannot be answered headless) with its files and a folder inside, a file's
+// menu; KentOS without a server. The desktop's `sources::tests::screens`; KentOS's projects with a real server are
+// cloud-shots.mjs's “sources-*”.
+const SOURCE_FOLDER = `(async () => {
+  const root = await navigator.storage.getDirectory();
+  const dir = await root.getDirectoryHandle('Kaynak verisi', { create: true });
+  const put = async (folder, name, text) => {
+    const w = await (await folder.getFileHandle(name, { create: true })).createWritable();
+    await w.write(text);
+    await w.close();
+  };
+  for (const n of ['parsel.shp', 'parsel.shx', 'parsel.dbf', 'parsel.prj', 'yollar.geojson', 'imar.dxf', 'pafta.ncz', 'rota.gpx', 'alim.nmea', 'noktalar.ncn', 'rapor.pdf', '.gizli.dxf']) await put(dir, n, 'x');
+  await put(await dir.getDirectoryHandle('Pafta 2', { create: true }), 'kot.csv', 'x');
+  window.showDirectoryPicker = async () => dir;
+  window.kentos.commands.execute('data.sources');
+})()`;
+const sourceRow = (name) =>
+  `(() => { const r = [...document.querySelectorAll('.panel--sources .tree__row')].find((e) => e.querySelector('.tree__name')?.textContent === ${JSON.stringify(name)}); if (!r) return null; const b = r.getBoundingClientRect(); return [Math.round(b.left + b.width / 2), Math.round(b.top + b.height / 2)]; })()`;
+async function addSourceFolder(ui) {
+  await ui.eval(SOURCE_FOLDER);
+  await ui.sleep(300);
+  await ui.eval(`document.querySelector('.panel--sources .src__add-folder').click()`);
+  await ui.waitFor(`[...document.querySelectorAll('.panel--sources .tree__name')].some((e) => e.textContent === 'yollar.geojson')`);
+  // The folder inside opened (an earlier scene may have left it open).
+  const shown = `[...document.querySelectorAll('.panel--sources .tree__name')].some((e) => e.textContent === 'kot.csv')`;
+  if (!(await ui.eval(shown))) await ui.clickAt(...(await ui.eval(sourceRow('Pafta 2'))));
+  await ui.waitFor(shown);
+  await ui.sleep(300);
+}
+SCENES.sources = [
+  { id: 'folders', open: addSourceFolder, close: async (ui) => ui.eval(`window.kentos.ui.dockTab.set('layers')`) },
+  {
+    id: 'file-menu',
+    open: async (ui) => {
+      await addSourceFolder(ui);
+      await ui.contextClick(...(await ui.eval(sourceRow('imar.dxf'))));
+      await ui.waitFor(`!!document.querySelector('.menu')`);
+      await ui.sleep(300);
+    },
+    close: async (ui) => (await ui.escapeAll(1), await ui.eval(`window.kentos.ui.dockTab.set('layers')`)),
+  },
+];
+
+// Öznitelikler's fields (docs/adr/0199 §5): the sample's parcel layer given fields, its first parcel selected, Genel and
+// Geometri folded; the fields by their kinds (a value list as a list, numbers and text in boxes). The desktop's
+// `features::tests::screens`.
+const PARCEL_FIELDS = JSON.stringify([
+  { name: 'Ada', kind: 'integer', required: true },
+  { name: 'Parsel', kind: 'integer', min: '1' },
+  { name: 'Nitelik', kind: 'text', values: [{ code: 'Arsa', label: 'Arsa' }, { code: 'Kargir ev ve arsası', label: 'Kargir ev ve arsası' }] },
+  { name: 'Tapu alanı (m²)', alias: 'Tapu alanı', kind: 'decimal', scale: 2 },
+  { name: 'Mahalle', kind: 'text' },
+  { name: 'Pafta', kind: 'text' },
+]);
+SCENES.fields = [
+  {
+    id: 'properties',
+    open: async (ui) => {
+      await ui.eval(`(() => { const k = window.kentos; k.doc.setLayerFields('parsel', ${PARCEL_FIELDS}); k.selection.set([k.doc.byLayer('parsel')[0].id]); })()`);
+      await ui.sleep(300);
+      await ui.clickText('.props__section', 'Genel');
+      await ui.clickText('.props__section', 'Geometri');
+      await ui.sleep(300);
+    },
+    close: async (ui) => {
+      await ui.clickText('.props__section', 'Genel');
+      await ui.clickText('.props__section', 'Geometri');
+      await ui.eval(`(() => { const k = window.kentos; k.selection.clear(); while (k.doc.canUndo.value) k.doc.undo(); })()`);
+    },
   },
 ];
 

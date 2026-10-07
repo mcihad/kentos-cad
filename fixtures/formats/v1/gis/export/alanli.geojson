@@ -1,0 +1,6 @@
+{"type":"FeatureCollection","name":"Alanlı parseller","crs":{"type":"name","properties":{"name":"urn:ogc:def:crs:EPSG::5256"}},"features":[
+{"type":"Feature","properties":{"Ada":101,"Alan":400.50,"Büyük":"123456789012345678901234567890","Kullanım":"K","Not":"12","Ruhsat":true,"Tescil":"2026-10-07"},"geometry":{"type":"Polygon","coordinates":[[[500000,4400000],[500020,4400000],[500020,4400020],[500000,4400000]]]},"kentos":{"layer":"Parseller"}},
+{"type":"Feature","properties":{"Ada":12,"Alan":12.5,"Büyük":0.1,"Kullanım":"T","Ruhsat":true},"geometry":{"type":"Polygon","coordinates":[[[500020,4400000],[500040,4400000],[500040,4400020],[500020,4400000]]]},"kentos":{"layer":"Parseller"}},
+{"type":"Feature","properties":{"Ada":"3a","Alan":"1.234","Büyük":0.00,"Ruhsat":"belki","Tescil":"31.02.2026"},"geometry":{"type":"Polygon","coordinates":[[[500040,4400000],[500060,4400000],[500060,4400020],[500040,4400000]]]},"kentos":{"layer":"Parseller"}},
+{"type":"Feature","properties":{"Ad":"Atatürk","Şerit":"4"},"geometry":{"type":"LineString","coordinates":[[500000,4400030],[500060,4400030]]},"kentos":{"layer":"Yollar"}}
+]}

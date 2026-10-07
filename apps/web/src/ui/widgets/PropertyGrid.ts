@@ -15,6 +15,8 @@ export interface PropRow {
   unit?: string;
   /** A remark under the value, smaller and muted (Kot: “(bazı köşeler kotsuz)”): what does not fit beside it. */
   note?: string;
+  /** The note warns (a value its layer's field refuses, docs/adr/0199 §5): in the warning colour. */
+  warn?: boolean;
   editor?: PropEditor;
 }
 
@@ -58,7 +60,7 @@ export class PropertyGrid {
 
   private cell(r: PropRow, key: string): HTMLElement {
     const cell = this.field(r, key);
-    return r.note ? h('span', { class: 'props__with-note' }, cell, h('span', { class: 'props__note', title: r.note }, r.note)) : cell;
+    return r.note ? h('span', { class: 'props__with-note' }, cell, h('span', { class: `props__note${r.warn ? ' props__note--warn' : ''}`, title: r.note }, r.note)) : cell;
   }
 
   private field(r: PropRow, key: string): HTMLElement {

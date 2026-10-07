@@ -6,7 +6,7 @@ import type { Entity as PlannedEntity } from '../contracts/generated/Entity';
 import type { PropertiesOperation } from '../contracts/generated/PropertiesOperation';
 import type { CadDocument } from '../model/document';
 import type { Entity } from '../model/entities';
-import { checkLineWeight, checkRevision, checkUids, error, failed, findObjects, isBlank, validated, type Stop } from './checks';
+import { fieldValues, checkLineWeight, checkRevision, checkUids, error, failed, findObjects, isBlank, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
 /**
@@ -63,8 +63,8 @@ interface Checked {
 /** An attribute's value, or null when the object has none by that name (an own name only: “constructor” is one too). */
 const attrOf = (e: Entity, key: string): string | null => (Object.hasOwn(e.attrs, key) ? e.attrs[key] : null);
 
-/** What the input changes of `e`, or null when `e` already is as asked. */
-function patchOf(e: Entity, input: EntitiesSetProperties): Partial<Entity> | null {
+/** What the input changes of `e`, its attributes `attrs` (the input's in their canonical text), or null when `e` already is as asked. */
+function patchOf(e: Entity, input: EntitiesSetProperties, attrs: readonly (readonly [string, string | null])[]): Partial<Entity> | null {
   const patch: Record<string, unknown> = {};
   // A linked text follows its object no more (docs/adr/0175 §4).
   if (input.unlink && e.kind === 'text' && e.labelOf !== undefined) {
@@ -78,7 +78,6 @@ function patchOf(e: Entity, input: EntitiesSetProperties): Partial<Entity> | nul
     const want = input[key];
     if (want !== undefined && (e[key] ?? null) !== want) patch[key] = want ?? undefined;
   }
-  const attrs = Object.entries(input.attrs ?? {});
   if (attrs.some(([key, value]) => attrOf(e, key) !== value)) {
     // A Map keeps the names in their order and takes any name (`__proto__` too) as a plain key.
     const next = new Map(Object.entries(e.attrs));
@@ -121,9 +120,16 @@ function check(doc: CadDocument, input: EntitiesSetProperties): Stop | Checked {
   }
   if (target && layers.isLocked(target.id))
     return failed(error('layer_locked', `“${target.name}” katmanı kilitli; nesneler ona taşınamaz. Kilidi Katmanlar panelinden açın ya da başka bir katman seçin.`, 'layerId'));
-  const changes: Change[] = [];
+  // The values given to a layer's fields, in their canonical text (docs/adr/0199 §2).
+  const given: [string, string | null][][] = [];
   for (const f of found) {
-    const patch = patchOf(f.entity, input);
+    const values = attrs.length ? fieldValues(doc, input.layerId ?? f.entity.layerId, Object.entries(input.attrs ?? {}), 'attrs') : [];
+    if ('status' in values) return values;
+    given.push(values);
+  }
+  const changes: Change[] = [];
+  for (const [i, f] of found.entries()) {
+    const patch = patchOf(f.entity, input, given[i]);
     if (patch) changes.push({ id: f.entity.id, uid: f.uid, patch });
   }
   // On a hidden layer they vanish from the drawing: said when at least one moves there.

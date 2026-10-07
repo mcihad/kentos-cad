@@ -1,7 +1,8 @@
 //! Çizimler arası alışveriş (docs/adr/0193) against the shared cases
 //! fixtures/exchange/v1/cases.json (scripts/fixtures/exchange_cases.py, no
-//! KentOS code): the selection's drawing, taking from another drawing and a
-//! drawing as a block. The web plays the same file (`model/exchange.test.ts`).
+//! KentOS code): the selection's drawing, taking from another drawing, a
+//! drawing as a block and a layer with its objects (docs/adr/0199 §7). The
+//! web plays the same file (`model/exchange.wasm.test.ts`).
 
 use kentos_contracts::{BlockId, DocumentSnapshotV2, EntityId};
 use kentos_domain::exchange::{self, Picks, Same};
@@ -130,6 +131,30 @@ fn a_drawing_becomes_one_block() {
             .expect("an id");
     let refused = exchange::file_block(&ours, &empty, "Boş", id).expect_err("refused");
     assert!(refused.contains("blok yapılacak nesne yok"), "{refused}");
+}
+
+#[test]
+fn a_layer_comes_with_its_objects() {
+    let c = cases();
+    for case in c["layers"].as_array().expect("layers") {
+        let name = case["name"].as_str().expect("a name");
+        let ours = &c["drawings"][case["into"].as_str().expect("into")];
+        let theirs = &c["drawings"][case["from"].as_str().expect("from")];
+        let path = case["path"].as_str().expect("path");
+        let got = exchange::layer_take_json(ours, theirs, path).map(
+            |(drawing, objects)| serde_json::json!({ "drawing": drawing, "objects": objects }),
+        );
+        assert_eq!(got.unwrap_or(Value::Null), case["expect"], "{name}");
+    }
+    // Through the contract's types, as the panel takes it.
+    let ours: DocumentSnapshotV2 =
+        serde_json::from_value(c["drawings"]["ours"].clone()).expect("ours");
+    let theirs: DocumentSnapshotV2 =
+        serde_json::from_value(c["drawings"]["theirs"].clone()).expect("theirs");
+    let took = exchange::layer_take(&ours, &theirs, "Yol").expect("taken");
+    assert_eq!((took.objects.len(), took.layers, took.blocks), (2, 1, 1));
+    let refused = exchange::layer_take(&ours, &theirs, "Kadastro").expect_err("a group");
+    assert!(refused.contains("alınamadı"), "{refused}");
 }
 
 #[test]

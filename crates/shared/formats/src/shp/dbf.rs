@@ -67,7 +67,9 @@ pub struct Field {
     pub kind: u8,
     /// Where it starts in a record (after the deletion flag) and its width.
     offset: usize,
-    len: usize,
+    pub len: usize,
+    /// A number's decimal count (the descriptor's byte 17).
+    pub decimals: u8,
 }
 
 /// The table, read lazily record by record.
@@ -124,6 +126,7 @@ impl<'a> Table<'a> {
                 kind: d[11],
                 offset,
                 len,
+                decimals: d[17],
             });
             offset += len;
             at += 32;

@@ -31,6 +31,7 @@ mod document;
 mod edit;
 pub mod exchange;
 mod external;
+pub mod fields;
 mod hash;
 mod hatch_ties;
 mod history;

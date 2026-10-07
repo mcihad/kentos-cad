@@ -108,7 +108,8 @@ describe('project types (docs/adr/0165)', () => {
     expect(panels('map')).toEqual(expect.arrayContaining(['Koordinat sistemi', 'Parsel', 'Ölçme', 'Stil']));
     // Blocks are the drawing's library, on Veri, its pictures beside them (docs/adr/0192 §5): Düzenle keeps to
     // creating and changing objects.
-    expect(panels('data')).toEqual(['Katman', 'Ara', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Blok', 'Resim']);
+    // Öznitelik tablosu, Alanlar and Kaynaklar beside the layers (docs/adr/0199).
+    expect(panels('data')).toEqual(['Katman', 'Tablo', 'Ara', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Blok', 'Resim']);
     expect(panels('edit')).not.toContain('Blok');
     expect(panels('edit')).not.toContain('Resim');
   });
