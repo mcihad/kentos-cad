@@ -477,6 +477,107 @@ fn repeated_rows(
         .count()
 }
 
+// ── Apportioning (docs/adr/0201 §5) ──────────────────────────────────
+
+/// `a` × `b` (`b` below 2⁶⁴) as a 256-bit number: its high and low halves.
+fn mul_wide(a: u128, b: u64) -> (u128, u128) {
+    let (a_hi, a_lo) = (a >> 64, a & u128::from(u64::MAX));
+    let lo_part = a_lo * u128::from(b);
+    let hi_part = a_hi * u128::from(b);
+    let (lo, carry) = lo_part.overflowing_add(hi_part << 64);
+    ((hi_part >> 64) + u128::from(carry), lo)
+}
+
+/// The 256-bit number's lowest `s` bits (s ≤ 256).
+fn low_bits(hi: u128, lo: u128, s: u32) -> (u128, u128) {
+    match s {
+        0 => (0, 0),
+        1..=127 => (0, lo & ((1u128 << s) - 1)),
+        128 => (0, lo),
+        129..=255 => (hi & ((1u128 << (s - 128)) - 1), lo),
+        _ => (hi, lo),
+    }
+}
+
+/// The 256-bit number over 2^`s`, half to even; none when it does not fit 128 bits.
+fn shr_even(hi: u128, lo: u128, s: u32) -> Option<u128> {
+    if s == 0 {
+        return (hi == 0).then_some(lo);
+    }
+    // The number is below 2¹⁹² (a value's 100 bits, a double's 53 and 100's 7).
+    if s > 200 {
+        return Some(0);
+    }
+    let (q_hi, q_lo) = if s >= 128 {
+        (0, hi >> (s - 128))
+    } else {
+        (hi >> s, (lo >> s) | (hi << (128 - s)))
+    };
+    if q_hi != 0 {
+        return None;
+    }
+    let half = if s > 128 {
+        (1u128 << (s - 1 - 128), 0)
+    } else {
+        (0, 1u128 << (s - 1))
+    };
+    let up = match low_bits(hi, lo, s).cmp(&half) {
+        Ordering::Greater => true,
+        Ordering::Less => false,
+        Ordering::Equal => q_lo & 1 == 1,
+    };
+    if up { q_lo.checked_add(1) } else { Some(q_lo) }
+}
+
+/// A value's share of a piece (Kesişim's and Birleşim's Alan oranıyla
+/// paylaştır, docs/adr/0201 §5; the rule's addendum): the value read as a
+/// decimal number times `share` (the double, exactly), rounded half to even
+/// at two more fraction digits than the value has. None when the value is
+/// not read as a number, the share is not a number from 0 up, or the result
+/// does not fit.
+pub fn apportion(value: &str, share: f64) -> Option<String> {
+    let d = read_number(value)?;
+    if !(share >= 0.0) || !share.is_finite() {
+        return None;
+    }
+    let scale = d.scale + 2;
+    if share == 0.0 || d.m == 0 {
+        return Some(Dec { m: 0, scale }.text());
+    }
+    // The share as k · 2^e exactly, k odd.
+    let bits = share.to_bits();
+    let exp = ((bits >> 52) & 0x7ff) as i32;
+    let frac = bits & ((1u64 << 52) - 1);
+    let (mut k, mut e) = if exp == 0 {
+        (frac, -1074)
+    } else {
+        (frac | (1u64 << 52), exp - 1075)
+    };
+    while k % 2 == 0 {
+        k /= 2;
+        e += 1;
+    }
+    // |m| · 100 · k (below 2¹⁹²), then times 2^e.
+    let (hi, lo) = mul_wide(d.m.unsigned_abs(), k.checked_mul(100)?);
+    let q = if e >= 0 {
+        let e = e as u32;
+        if hi != 0 || e >= 128 || lo.leading_zeros() <= e {
+            return None;
+        }
+        lo << e
+    } else {
+        shr_even(hi, lo, e.unsigned_abs())?
+    };
+    let m = i128::try_from(q).ok()?;
+    Some(
+        Dec {
+            m: if d.m < 0 { -m } else { m },
+            scale,
+        }
+        .text(),
+    )
+}
+
 // ── The web's calls (`model/ops/statistics.ts`) ─────────────────────────
 
 /// One group's statistic for Bilgi al: its text (none: nothing to write) and the values skipped;
@@ -519,6 +620,12 @@ pub(crate) const OPS: &[Op] = &[
             summarize(&items, grouped)
         }
     ),
+    op!("apportion", |values: Vec<Option<String>>, share: f64| {
+        values
+            .iter()
+            .map(|v| v.as_deref().and_then(|v| apportion(v, share)))
+            .collect::<Vec<Option<String>>>()
+    }),
     op!(
         "joinPlan",
         |targets: Vec<Option<String>>, sources: Vec<Option<String>>| {

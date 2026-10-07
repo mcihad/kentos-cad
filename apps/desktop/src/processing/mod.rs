@@ -30,6 +30,8 @@ pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
     crate::app::Message::Processing(Event::Panel(event))
 }
 #[cfg(test)]
+mod geometry_tests;
+#[cfg(test)]
 mod query_tests;
 #[cfg(test)]
 mod tests;

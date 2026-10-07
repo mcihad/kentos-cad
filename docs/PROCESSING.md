@@ -150,7 +150,8 @@ run(values: ResolvedValues<Ds>, ctx: RunContext, feedback: Feedback): RunResult 
 RunContext { doc: DocumentSnapshot /* get, all, byLayer; salt okunur */, units: DefaultsContext,
              layerName(id): string, selection: readonly number[] /* çalıştırma başındaki seçim */,
              geometry: RunGeometry /* girdilerin geometrisi, kimlikten: measures, numberCorners, cornerTexts, edgeLengths, relatePairs */,
-             field(layerId, name): LayerField | undefined /* katmanın alanı (ADR 0199 §1) */ }
+             field(layerId, name): LayerField | undefined /* katmanın alanı (ADR 0199 §1) */,
+             crs: ProjectCrs | null /* projenin sistemi: srid, code, system, choices (ADR 0201 §8); masaüstünde ctx.doc.settings() */ }
 Feedback   { progress(fraction, label?), info(m), warn(m), canceled, yield() }
 ChangeSet  { add?: NewEntity[], update?: { id, patch }[], remove?: number[] }
 RunResult  { changes?, select?: readonly number[] /* çalıştırmadan sonraki seçim */, outputs?, summary?,
@@ -164,7 +165,8 @@ RunResult  { changes?, select?: readonly number[] /* çalıştırmadan sonraki s
 - **Geometri çekirdekten gelir** (`ctx.geometry`, `processing/geometry.ts`): çalıştırma, features girdilerinin nesnelerini kendi geometri deposuna paketler (ilk soruda; bitince bırakılır). Araç kimlikle sorar: ifadelerin geometri değerleri (`measures`, `measuredOf` ile bütün nesneler için bir kez), köşe numaralama (`numberCorners`: her köşenin yeri, dışa bakan yönü ve kimin numarasını aldığı; adları `nameCorners` verir), köşe yazısının yeri (`cornerTexts`), kenar ölçüsü yazıları ve ortak kenar testi (`edgeLengths`).
 - **Öznitelik değiştiren araçlar** `update` içinde `attrs` alanının tamamını verir (`{ ...e.attrs, [alan]: değer }`); yalnızca öznitelik değişirse belge `attrs` olayı yayar ve GPU tamponu kurulmaz.
 - **`features` çıktıları:** `outputs[ad]` bir kimlik dizisiyse o kullanılır (seçilenler, değişenler); yoksa çalıştırmanın eklediği nesneler çıktıdır. Modeller bu kimlikleri sonraki adıma `{ scope: 'ids' }` olarak verir.
-- **`table` çıktısı** (`{ columns, rows }`, metinler; Özet istatistik): pencere çalıştırmadan sonra formun altında gösterir (Panoya kopyala, CSV olarak kaydet); modelde sonraki adıma geçmez.
+- **`table` çıktısı** (`{ columns, rows }`, metinler; Özet istatistik, Geçerliliği denetle, Onar, Sadeleştir): pencere çalıştırmadan sonra formun altında gösterir (Panoya kopyala, CSV olarak kaydet); modelde sonraki adıma geçmez.
+- **Geometri işlemleri** (ADR 0201): hesap çekirdeğin `ops::geoprocess`'idir (web `model/ops/geoprocess.ts` ile nesneleri bütün verir, masaüstü işlevleri şekillerle çağırır); araç sonucu kendi Çıktı katmanına yeni nesne olarak yazar, girdi değişmez. Ortak notlar (`builtin/geometry/shared.ts`, `builtin/geometry/mod.rs`): elips ve eğrinin 0,1 mm'lik doğru parçalarıyla girdiği, kotların taşınmadığı, sonucu boş kalan nesneler.
 - **Katmanın alanları:** çalıştırıcı değişiklik kümesini uygulamadan önce öznitelik yazmalarını katmanın alanlarının kuralıyla denetler (`processing/writeCheck.ts`, masaüstünde `kentos_processing::writes`; ADR 0199 §1, 0200 §3): alana yazılan değer alanın tek biçimine çevrilir, uymayan ilk değer bütün çalıştırmayı reddeder ("Öznitelik yazılamadı (#id): …"). Araçlar değeri yazarken `ctx.field` ile aynı biçime çevirir; aynı kalan değeri yeniden yazmaz.
 
 ### 4.4 Çalıştırma akışı (`ProcessingRunner.run`)
@@ -327,6 +329,17 @@ türünün işaretidir (bkz. §10).
 | `attributes.fromEnclosing` | Çevreleyenden bilgi al | Her nesneye merkezinin içinde kaldığı alanın bir alanını yazar; birden çok alan: çizim sırasıyla ilki, hiçbiri: değişmez; ikisi de söylenir. |
 | `statistics.summary` | Özet istatistik | Bir alanın sayı, toplam, ortalama, en az, en çok ve standart sapmasını, isteğe bağlı bir alana göre gruplayarak tablo olarak verir; çizimi değiştirmez. |
 | `attributes.joinByField` | Anahtarla birleştir | Ortak anahtarla başka katmandan ya da CSV, TXT, XLSX dosyasından alan aktarır (sayı anahtarlar sayı olarak; kaynakta tekrarlanan anahtarın ilk satırı); önek, Üzerine yaz ya da Yalnız boşlara. |
+| `geometry.buffer` | Tampon | Nesnelerin çevresinde uzaklıktaki alan: noktada daire, çizgide kapsüller, alanda dışa ya da eksi uzaklıkla içe; Sol, Sağ (tek yanlı, uçları düz), Halka sayısı (k. halka (k − 1)·d ile k·d arası; “Uzaklık”, “Halka”), Birleştir, Uzaklık alanı. Yaylar kesin (ADR 0201 §2). |
+| `geometry.clip` | Kırp | Nesnelerin kesen alanların (birleşmiş) içinde ya da sınırında kalan kısmı, öznitelikleriyle (§3). |
+| `geometry.dissolve` | Gruplayarak birleştir | Bir alana göre grup grup birleştirme: alanların ortak sınırları kalkar, çizgi ve noktalar grubun çok parçalı nesnesi; “Nesne sayısı” ve Toplanacak alanların kesin toplamları; Çok parçalı ya da parça parça (§4). |
+| `geometry.intersection` | Kesişim | Her nesnenin kestiği her alanla parçası, iki tarafın öznitelikleri (Önek, aynı ad “ad (2)”); Alan oranıyla paylaştır (§5). |
+| `geometry.difference` | Fark | Nesnelerden çıkarılacak alanların kapladığı kısım atılır (§5). |
+| `geometry.symDifference` | Simetrik fark | İki alan kümesinin yalnız birinin kapladığı parçalar, kendi taraflarının öznitelikleriyle (§5). |
+| `geometry.union` | Birleşim | Ortak parçalar iki tarafın, kalanlar kendi tarafının öznitelikleriyle; Alan oranıyla paylaştır (§5). |
+| `geometry.validity` | Geçerliliği denetle | Yinelenen köşe, alanı sıfır halka, kendini kesen ya da kendine değen halka ve yol, taşan ve örtüşen delik; tablo (Nesne, Katman, Sorun, Doğu, Kuzey) ve sorunlular seçilir; çizim değişmez (§6). |
+| `geometry.repair` | Onar | Alan kendi halkalarından yeniden kurulur, yinelenen köşeler düşer; sorunsuz nesne olduğu gibi; rapor tablosu (§6). |
+| `geometry.simplify` | Sadeleştir | Çizimin Sadeleştir kuralı yeni katmana; köşe, alan değişimi ve en büyük sapma tablosu (§7). |
+| `geometry.reproject` | Koordinat sistemine dönüştür | Kayıttaki bir sistemden projenin sistemine, projenin datum seçimleriyle; yay ve daireler 1 mm içinde doğru parçaları (§8). |
 
 ## 12. Masaüstü
 

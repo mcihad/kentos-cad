@@ -2,7 +2,7 @@
 //! SVG metinlerinden çizilir: o setin kullandığı alt küme. `path` (M, L, H,
 //! V, C, S, Q, T, A, Z; büyük ve küçük harf), köşesi yuvarlatılabilen `rect`,
 //! `circle`, `rotate()` ile döndürülebilen `ellipse`; `fill="currentColor"`
-//! ve `fill-opacity`, `stroke="none"`, `stroke-width`, `stroke-dasharray`,
+//! ve `fill-opacity`, `stroke="none"`, `stroke-width`, `stroke-opacity`, `stroke-dasharray`,
 //! `stroke-linecap`, `fill-rule`. Web çizgiyi yazı rengiyle, 1,4 birim
 //! kalınlıkta, yuvarlak uç ve birleşimle çizer; burada da öyle. Çözülemeyen
 //! öğe atlanır, hiçbir girdi panik yaptırmaz.
@@ -34,6 +34,8 @@ pub(super) struct Paint {
     pub fill: Option<f32>,
     /// Stroke width in grid units, when the element gives its own.
     pub width: Option<f32>,
+    /// Stroke opacity (a wide faint band under a line: Tampon's, docs/adr/0201).
+    pub stroke_opacity: f32,
     pub dash: Vec<f32>,
     pub cap: LineCapKind,
     pub even_odd: bool,
@@ -97,7 +99,10 @@ pub(super) fn draw(frame: &mut Frame, markup: &str, color: Color, weight: Option
             frame.stroke(
                 &path,
                 Stroke {
-                    style: Style::Solid(color),
+                    style: Style::Solid(Color {
+                        a: color.a * paint.stroke_opacity,
+                        ..color
+                    }),
                     width,
                     line_cap: match paint.cap {
                         LineCapKind::Round => LineCap::Round,
@@ -206,6 +211,7 @@ impl<'a> Attrs<'a> {
             stroke: self.get("stroke") != Some("none"),
             fill: filled.then(|| self.num("fill-opacity").unwrap_or(1.0).clamp(0.0, 1.0)),
             width: self.num("stroke-width").filter(|w| *w > 0.0),
+            stroke_opacity: self.num("stroke-opacity").unwrap_or(1.0).clamp(0.0, 1.0),
             dash: self
                 .get("stroke-dasharray")
                 .map(|d| numbers(d).into_iter().filter(|v| *v >= 0.0).collect())

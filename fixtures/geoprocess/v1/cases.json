@@ -1,0 +1,5687 @@
+{
+ "format": "kentos.geoprocess-cases",
+ "version": 1,
+ "source": "scripts/fixtures/geoprocess_cases.py (docs/adr/0201)",
+ "tolerance": {
+  "area": 1e-06,
+  "length": 1e-06,
+  "point": 1e-06
+ },
+ "buffer": [
+  {
+   "id": "point",
+   "title": "Noktanın tamponu: yarıçapı d olan daire, π d²",
+   "shapes": [
+    {
+     "kind": "point",
+     "p": {
+      "x": 487000,
+      "y": 4420000
+     }
+    }
+   ],
+   "distances": [
+    "2"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "2",
+      "parts": 1,
+      "holes": 0,
+      "area": 12.566370614359172,
+      "inside": [
+       {
+        "x": 487001.999,
+        "y": 4420000
+       },
+       {
+        "x": 487000,
+        "y": 4419998.001
+       },
+       {
+        "x": 487001.4,
+        "y": 4420001.4
+       }
+      ],
+      "outside": [
+       {
+        "x": 487002.001,
+        "y": 4420000
+       },
+       {
+        "x": 487001.42,
+        "y": 4420001.42
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "segment",
+   "title": "Doğru parçasının tamponu: kapsül, 2dL + πd²",
+   "shapes": [
+    {
+     "kind": "line",
+     "a": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "b": {
+      "x": 487010,
+      "y": 4420000
+     }
+    }
+   ],
+   "distances": [
+    "1"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "1",
+      "parts": 1,
+      "holes": 0,
+      "area": 23.141592653589793,
+      "inside": [
+       {
+        "x": 487005,
+        "y": 4420000.999
+       },
+       {
+        "x": 486999.3,
+        "y": 4420000.7
+       },
+       {
+        "x": 487010.7,
+        "y": 4419999.3
+       }
+      ],
+      "outside": [
+       {
+        "x": 487005,
+        "y": 4420001.001
+       },
+       {
+        "x": 486999.29,
+        "y": 4420000.71
+       },
+       {
+        "x": 487010.75,
+        "y": 4420000.75
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "area",
+   "title": "Dışbükey alanın tamponu: A + Pd + πd²",
+   "shapes": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420006
+      },
+      {
+       "x": 487000,
+       "y": 4420006
+      }
+     ]
+    }
+   ],
+   "distances": [
+    "1"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "1",
+      "parts": 1,
+      "holes": 0,
+      "area": 95.1415926535898,
+      "inside": [
+       {
+        "x": 487005,
+        "y": 4419999.001
+       },
+       {
+        "x": 487010.7,
+        "y": 4420006.7
+       },
+       {
+        "x": 487005,
+        "y": 4420003
+       }
+      ],
+      "outside": [
+       {
+        "x": 487005,
+        "y": 4419998.999
+       },
+       {
+        "x": 487010.75,
+        "y": 4420006.75
+       },
+       {
+        "x": 486998.999,
+        "y": 4420003
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "inward",
+   "title": "Eksi uzaklık alanı içe küçültür: (w − 2d)(h − 2d), köşeler keskin",
+   "shapes": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420006
+      },
+      {
+       "x": 487000,
+       "y": 4420006
+      }
+     ]
+    }
+   ],
+   "distances": [
+    "-1"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "-1",
+      "parts": 1,
+      "holes": 0,
+      "area": 32,
+      "inside": [
+       {
+        "x": 487005,
+        "y": 4420003
+       },
+       {
+        "x": 487001.001,
+        "y": 4420001.001
+       },
+       {
+        "x": 487008.999,
+        "y": 4420004.999
+       }
+      ],
+      "outside": [
+       {
+        "x": 487000.999,
+        "y": 4420003
+       },
+       {
+        "x": 487005,
+        "y": 4420005.001
+       },
+       {
+        "x": 487005,
+        "y": 4420000.5
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "holed",
+   "title": "Delikli alanın tamponu: dışı büyür, deliği keskin köşelerle küçülür: 480 + π − 64",
+   "shapes": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420020
+      },
+      {
+       "x": 487000,
+       "y": 4420020
+      }
+     ],
+     "holes": [
+      {
+       "pts": [
+        {
+         "x": 487005,
+         "y": 4420005
+        },
+        {
+         "x": 487015,
+         "y": 4420005
+        },
+        {
+         "x": 487015,
+         "y": 4420015
+        },
+        {
+         "x": 487005,
+         "y": 4420015
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "distances": [
+    "1"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "1",
+      "parts": 1,
+      "holes": 1,
+      "area": 419.1415926535898,
+      "inside": [
+       {
+        "x": 487020.999,
+        "y": 4420010
+       },
+       {
+        "x": 487005.999,
+        "y": 4420010
+       },
+       {
+        "x": 486999.5,
+        "y": 4419999.5
+       }
+      ],
+      "outside": [
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487006.001,
+        "y": 4420006.001
+       },
+       {
+        "x": 487021.001,
+        "y": 4420010
+       },
+       {
+        "x": 486999.29,
+        "y": 4419999.29
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "turn",
+   "title": "Dönen yolun tamponu: 2d(L1 + L2) + πd² + θd²/2 − d² tan(θ/2)",
+   "shapes": [
+    {
+     "kind": "polyline",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420015
+      }
+     ]
+    }
+   ],
+   "distances": [
+    "2"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "2",
+      "parts": 1,
+      "holes": 0,
+      "area": 151.70796326794897,
+      "inside": [
+       {
+        "x": 487010,
+        "y": 4420001.999
+       },
+       {
+        "x": 487021.999,
+        "y": 4420007
+       },
+       {
+        "x": 487021.4,
+        "y": 4419998.6
+       }
+      ],
+      "outside": [
+       {
+        "x": 487010,
+        "y": 4420002.001
+       },
+       {
+        "x": 487022.001,
+        "y": 4420007
+       },
+       {
+        "x": 487021.42,
+        "y": 4419998.58
+       },
+       {
+        "x": 487017.9,
+        "y": 4420002.1
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "left",
+   "title": "Tek yanlı tampon, Sol: dL, uçları düz",
+   "shapes": [
+    {
+     "kind": "line",
+     "a": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "b": {
+      "x": 487010,
+      "y": 4420000
+     }
+    }
+   ],
+   "distances": [
+    "1"
+   ],
+   "side": "left",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "1",
+      "parts": 1,
+      "holes": 0,
+      "area": 10,
+      "inside": [
+       {
+        "x": 487005,
+        "y": 4420000.5
+       },
+       {
+        "x": 487000.001,
+        "y": 4420000.999
+       }
+      ],
+      "outside": [
+       {
+        "x": 487005,
+        "y": 4419999.5
+       },
+       {
+        "x": 487010.5,
+        "y": 4420000.5
+       },
+       {
+        "x": 486999.5,
+        "y": 4420000.5
+       },
+       {
+        "x": 487005,
+        "y": 4420001.001
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "left-outside-turn",
+   "title": "Sol, sağa dönen yol: dönüşün dışında çeyrek daire eklenir, d(L1 + L2) + πd²/4",
+   "shapes": [
+    {
+     "kind": "polyline",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4419992
+      }
+     ]
+    }
+   ],
+   "distances": [
+    "1"
+   ],
+   "side": "left",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "1",
+      "parts": 1,
+      "holes": 0,
+      "area": 18.78539816339745,
+      "inside": [
+       {
+        "x": 487010.5,
+        "y": 4420000.5
+       },
+       {
+        "x": 487010.5,
+        "y": 4419996
+       },
+       {
+        "x": 487005,
+        "y": 4420000.5
+       }
+      ],
+      "outside": [
+       {
+        "x": 487010.75,
+        "y": 4420000.75
+       },
+       {
+        "x": 487009.5,
+        "y": 4419996
+       },
+       {
+        "x": 487010.5,
+        "y": 4419991.5
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "left-inside-turn",
+   "title": "Sol, sola dönen yol: şeritler dönüşün içinde örtüşür, d(L1 + L2) − d²",
+   "shapes": [
+    {
+     "kind": "polyline",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420008
+      }
+     ]
+    }
+   ],
+   "distances": [
+    "1"
+   ],
+   "side": "left",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "1",
+      "parts": 1,
+      "holes": 0,
+      "area": 17,
+      "inside": [
+       {
+        "x": 487009.5,
+        "y": 4420004
+       },
+       {
+        "x": 487005,
+        "y": 4420000.5
+       }
+      ],
+      "outside": [
+       {
+        "x": 487010.5,
+        "y": 4420004
+       },
+       {
+        "x": 487010.5,
+        "y": 4420000.5
+       },
+       {
+        "x": 487005,
+        "y": 4420001.5
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "right-outside-turn",
+   "title": "Sağ, sola dönen yol: dönüşün dışı sağda, d(L1 + L2) + πd²/4",
+   "shapes": [
+    {
+     "kind": "polyline",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420008
+      }
+     ]
+    }
+   ],
+   "distances": [
+    "1"
+   ],
+   "side": "right",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "1",
+      "parts": 1,
+      "holes": 0,
+      "area": 18.78539816339745,
+      "inside": [
+       {
+        "x": 487010.5,
+        "y": 4419999.5
+       },
+       {
+        "x": 487010.5,
+        "y": 4420004
+       },
+       {
+        "x": 487005,
+        "y": 4419999.5
+       }
+      ],
+      "outside": [
+       {
+        "x": 487010.75,
+        "y": 4419999.25
+       },
+       {
+        "x": 487009.5,
+        "y": 4420004
+       },
+       {
+        "x": 487005,
+        "y": 4420000.5
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "arc",
+   "title": "Yayın tamponu: halka dilimi 2φrd ve uçlarında yarım daireler, πd²",
+   "shapes": [
+    {
+     "kind": "arc",
+     "c": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "r": 5,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    }
+   ],
+   "distances": [
+    "1"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "1",
+      "parts": 1,
+      "holes": 0,
+      "area": 18.84955592153876,
+      "inside": [
+       {
+        "x": 487000,
+        "y": 4420005.999
+       },
+       {
+        "x": 487005.999,
+        "y": 4420000
+       },
+       {
+        "x": 486999.001,
+        "y": 4420005
+       },
+       {
+        "x": 487004.2,
+        "y": 4420004.2
+       }
+      ],
+      "outside": [
+       {
+        "x": 486998.999,
+        "y": 4420005
+       },
+       {
+        "x": 487004.3,
+        "y": 4420004.3
+       },
+       {
+        "x": 487005,
+        "y": 4419998.999
+       },
+       {
+        "x": 487001,
+        "y": 4420001
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "circle",
+   "title": "Dairenin tamponu: π(r + d)²",
+   "shapes": [
+    {
+     "kind": "circle",
+     "c": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "r": 5
+    }
+   ],
+   "distances": [
+    "1"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "1",
+      "parts": 1,
+      "holes": 0,
+      "area": 113.09733552923255,
+      "inside": [
+       {
+        "x": 487005.999,
+        "y": 4420000
+       },
+       {
+        "x": 487000,
+        "y": 4420000
+       }
+      ],
+      "outside": [
+       {
+        "x": 487006.001,
+        "y": 4420000
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "circle-inward",
+   "title": "Daire içe: π(r − d)²",
+   "shapes": [
+    {
+     "kind": "circle",
+     "c": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "r": 5
+    }
+   ],
+   "distances": [
+    "-1"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "-1",
+      "parts": 1,
+      "holes": 0,
+      "area": 50.26548245743669,
+      "inside": [
+       {
+        "x": 487003.999,
+        "y": 4420000
+       }
+      ],
+      "outside": [
+       {
+        "x": 487004.001,
+        "y": 4420000
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "multipoint",
+   "title": "Çok noktalı nesne: iki daire birleşir, 18π − mercek",
+   "shapes": [
+    {
+     "kind": "point",
+     "p": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "parts": [
+      {
+       "p": {
+        "x": 487004,
+        "y": 4420000
+       }
+      }
+     ]
+    }
+   ],
+   "distances": [
+    "3"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "3",
+      "parts": 1,
+      "holes": 0,
+      "area": 50.35370360439269,
+      "inside": [
+       {
+        "x": 487002,
+        "y": 4420002.2
+       },
+       {
+        "x": 486998,
+        "y": 4420000
+       }
+      ],
+      "outside": [
+       {
+        "x": 487002,
+        "y": 4420002.3
+       },
+       {
+        "x": 487007.001,
+        "y": 4420000
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "rings",
+   "title": "Halka sayısı 3: k. halka (k − 1)d ile kd arası, “Uzaklık” kd",
+   "shapes": [
+    {
+     "kind": "point",
+     "p": {
+      "x": 487000,
+      "y": 4420000
+     }
+    }
+   ],
+   "distances": [
+    "2"
+   ],
+   "side": "both",
+   "rings": 3,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "2",
+      "parts": 1,
+      "holes": 0,
+      "area": 12.566370614359172,
+      "inside": [
+       {
+        "x": 487001,
+        "y": 4420000
+       }
+      ],
+      "outside": [
+       {
+        "x": 487002.001,
+        "y": 4420000
+       }
+      ]
+     },
+     {
+      "source": 0,
+      "ring": 2,
+      "distance": "4",
+      "parts": 1,
+      "holes": 1,
+      "area": 37.69911184307752,
+      "inside": [
+       {
+        "x": 487003,
+        "y": 4420000
+       },
+       {
+        "x": 487000,
+        "y": 4419996.001
+       }
+      ],
+      "outside": [
+       {
+        "x": 487001.999,
+        "y": 4420000
+       },
+       {
+        "x": 487004.001,
+        "y": 4420000
+       }
+      ]
+     },
+     {
+      "source": 0,
+      "ring": 3,
+      "distance": "6",
+      "parts": 1,
+      "holes": 1,
+      "area": 62.83185307179586,
+      "inside": [
+       {
+        "x": 487005.5,
+        "y": 4420000
+       }
+      ],
+      "outside": [
+       {
+        "x": 487003.999,
+        "y": 4420000
+       },
+       {
+        "x": 487006.001,
+        "y": 4420000
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "rings-decimal",
+   "title": "Virgüllü uzaklık 2,5 ve iki halka: uzaklıklar 2.5 ve 5.0",
+   "shapes": [
+    {
+     "kind": "point",
+     "p": {
+      "x": 487000,
+      "y": 4420000
+     }
+    }
+   ],
+   "distances": [
+    "2,5"
+   ],
+   "side": "both",
+   "rings": 2,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 0,
+      "ring": 1,
+      "distance": "2.5",
+      "parts": 1,
+      "holes": 0,
+      "area": 19.634954084936208,
+      "inside": [
+       {
+        "x": 487002.499,
+        "y": 4420000
+       }
+      ],
+      "outside": [
+       {
+        "x": 487002.501,
+        "y": 4420000
+       }
+      ]
+     },
+     {
+      "source": 0,
+      "ring": 2,
+      "distance": "5.0",
+      "parts": 1,
+      "holes": 1,
+      "area": 58.90486225480862,
+      "inside": [
+       {
+        "x": 487004.999,
+        "y": 4420000
+       }
+      ],
+      "outside": [
+       {
+        "x": 487002.499,
+        "y": 4420000
+       },
+       {
+        "x": 487005.001,
+        "y": 4420000
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "dissolve",
+   "title": "Birleştir: iki noktanın tamponları tek alan, uzaklık aynıysa yazılır",
+   "shapes": [
+    {
+     "kind": "point",
+     "p": {
+      "x": 487000,
+      "y": 4420000
+     }
+    },
+    {
+     "kind": "point",
+     "p": {
+      "x": 487004,
+      "y": 4420000
+     }
+    }
+   ],
+   "distances": [
+    "3",
+    "3"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": true,
+   "expect": {
+    "pieces": [
+     {
+      "source": null,
+      "ring": 1,
+      "distance": "3",
+      "parts": 1,
+      "holes": 0,
+      "area": 50.35370360439269,
+      "inside": [
+       {
+        "x": 487002,
+        "y": 4420002.2
+       }
+      ],
+      "outside": [
+       {
+        "x": 487002,
+        "y": 4420002.3
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "dissolve-mixed",
+   "title": "Birleştir, farklı uzaklıklar: iki parça, uzaklık yazılmaz",
+   "shapes": [
+    {
+     "kind": "point",
+     "p": {
+      "x": 487000,
+      "y": 4420000
+     }
+    },
+    {
+     "kind": "point",
+     "p": {
+      "x": 487010,
+      "y": 4420000
+     }
+    }
+   ],
+   "distances": [
+    "1",
+    "2"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": true,
+   "expect": {
+    "pieces": [
+     {
+      "source": null,
+      "ring": 1,
+      "distance": null,
+      "parts": 2,
+      "holes": 0,
+      "area": 15.707963267948966,
+      "inside": [
+       {
+        "x": 487000.999,
+        "y": 4420000
+       },
+       {
+        "x": 487011.999,
+        "y": 4420000
+       }
+      ],
+      "outside": [
+       {
+        "x": 487001.001,
+        "y": 4420000
+       },
+       {
+        "x": 487012.001,
+        "y": 4420000
+       }
+      ]
+     }
+    ],
+    "unread": [],
+    "inward": [],
+    "empty": []
+   }
+  },
+  {
+   "id": "left-out",
+   "title": "Okunamayan uzaklık, eksi uzaklıkta çizgi, ortasını aşan içe tampon yazılmaz",
+   "shapes": [
+    {
+     "kind": "point",
+     "p": {
+      "x": 487000,
+      "y": 4420000
+     }
+    },
+    {
+     "kind": "line",
+     "a": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "b": {
+      "x": 487010,
+      "y": 4420000
+     }
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "point",
+     "p": {
+      "x": 487020,
+      "y": 4420000
+     }
+    }
+   ],
+   "distances": [
+    "on",
+    "-1",
+    "-6",
+    "1"
+   ],
+   "side": "both",
+   "rings": 1,
+   "dissolve": false,
+   "expect": {
+    "pieces": [
+     {
+      "source": 3,
+      "ring": 1,
+      "distance": "1",
+      "parts": 1,
+      "holes": 0,
+      "area": 3.141592653589793,
+      "inside": [
+       {
+        "x": 487020,
+        "y": 4420000.999
+       }
+      ],
+      "outside": [
+       {
+        "x": 487020,
+        "y": 4420001.001
+       }
+      ]
+     }
+    ],
+    "unread": [
+     0
+    ],
+    "inward": [],
+    "empty": [
+     1,
+     2
+    ]
+   }
+  },
+  {
+   "id": "inward-rings",
+   "title": "Eksi uzaklık ve birden çok halka: alınmaz",
+   "shapes": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "distances": [
+    "-1"
+   ],
+   "side": "both",
+   "rings": 2,
+   "dissolve": false,
+   "expect": {
+    "pieces": [],
+    "unread": [],
+    "inward": [
+     0
+    ],
+    "empty": []
+   }
+  }
+ ],
+ "clip": [
+  {
+   "id": "area",
+   "title": "Alan kesen alanla kesişir",
+   "shapes": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "cut": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487005,
+       "y": 4419995
+      },
+      {
+       "x": 487015,
+       "y": 4419995
+      },
+      {
+       "x": 487015,
+       "y": 4420005
+      },
+      {
+       "x": 487005,
+       "y": 4420005
+      }
+     ]
+    }
+   ],
+   "expect": [
+    {
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 25
+    }
+   ]
+  },
+  {
+   "id": "path",
+   "title": "Yol kesen alanların içinde kalan parçalarına bölünür",
+   "shapes": [
+    {
+     "kind": "polyline",
+     "pts": [
+      {
+       "x": 486995,
+       "y": 4420005
+      },
+      {
+       "x": 487035,
+       "y": 4420005
+      }
+     ]
+    }
+   ],
+   "cut": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      },
+      {
+       "x": 487020,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "expect": [
+    {
+     "kind": "polyline",
+     "parts": 2,
+     "holes": 0,
+     "length": 20
+    }
+   ]
+  },
+  {
+   "id": "path-on-boundary",
+   "title": "Sınırdaki parça içeride sayılır",
+   "shapes": [
+    {
+     "kind": "line",
+     "a": {
+      "x": 486995,
+      "y": 4420000
+     },
+     "b": {
+      "x": 487015,
+      "y": 4420000
+     }
+    }
+   ],
+   "cut": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "expect": [
+    {
+     "kind": "polyline",
+     "parts": 1,
+     "holes": 0,
+     "length": 10
+    }
+   ]
+  },
+  {
+   "id": "path-hole",
+   "title": "Delikli kesen: delikteki parça düşer",
+   "shapes": [
+    {
+     "kind": "line",
+     "a": {
+      "x": 486995,
+      "y": 4420010
+     },
+     "b": {
+      "x": 487025,
+      "y": 4420010
+     }
+    }
+   ],
+   "cut": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420020
+      },
+      {
+       "x": 487000,
+       "y": 4420020
+      }
+     ],
+     "holes": [
+      {
+       "pts": [
+        {
+         "x": 487005,
+         "y": 4420005
+        },
+        {
+         "x": 487015,
+         "y": 4420005
+        },
+        {
+         "x": 487015,
+         "y": 4420015
+        },
+        {
+         "x": 487005,
+         "y": 4420015
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "expect": [
+    {
+     "kind": "polyline",
+     "parts": 2,
+     "holes": 0,
+     "length": 10
+    }
+   ]
+  },
+  {
+   "id": "arc",
+   "title": "Yay, kesen alanın içindeki dörtte biri",
+   "shapes": [
+    {
+     "kind": "arc",
+     "c": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "r": 5,
+     "a0": 0.0,
+     "a1": 3.141592653589793
+    }
+   ],
+   "cut": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "expect": [
+    {
+     "kind": "polyline",
+     "parts": 1,
+     "holes": 0,
+     "length": 7.853981633974483
+    }
+   ]
+  },
+  {
+   "id": "points",
+   "title": "İçinde ya da sınırında kalan noktalar",
+   "shapes": [
+    {
+     "kind": "point",
+     "p": {
+      "x": 487005,
+      "y": 4420005
+     },
+     "parts": [
+      {
+       "p": {
+        "x": 487015,
+        "y": 4420005
+       }
+      },
+      {
+       "p": {
+        "x": 487010,
+        "y": 4420005
+       }
+      }
+     ]
+    }
+   ],
+   "cut": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "expect": [
+    {
+     "kind": "point",
+     "parts": 2,
+     "holes": 0,
+     "points": [
+      {
+       "x": 487005,
+       "y": 4420005
+      },
+      {
+       "x": 487010,
+       "y": 4420005
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "outside",
+   "title": "Kesen alanın dışındaki nesneden bir şey kalmaz",
+   "shapes": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487050,
+       "y": 4420050
+      },
+      {
+       "x": 487060,
+       "y": 4420050
+      },
+      {
+       "x": 487060,
+       "y": 4420060
+      },
+      {
+       "x": 487050,
+       "y": 4420060
+      }
+     ]
+    }
+   ],
+   "cut": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "expect": [
+    null
+   ]
+  },
+  {
+   "id": "joined",
+   "title": "Kesen alanlar önce birleşir: örtüşen iki alan tek kesen",
+   "shapes": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "cut": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487015,
+       "y": 4420000
+      },
+      {
+       "x": 487015,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420010
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "expect": [
+    {
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 200
+    }
+   ]
+  }
+ ],
+ "overlay": [
+  {
+   "id": "intersection",
+   "title": "Kesişim: her A nesnesi değdiği her B alanıyla bir parça, payı A'nın alanına oranı",
+   "a": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      },
+      {
+       "x": 487020,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "b": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487005,
+       "y": 4419995
+      },
+      {
+       "x": 487025,
+       "y": 4419995
+      },
+      {
+       "x": 487025,
+       "y": 4420005
+      },
+      {
+       "x": 487005,
+       "y": 4420005
+      }
+     ]
+    }
+   ],
+   "mode": "intersection",
+   "expect": [
+    {
+     "a": 0,
+     "b": 0,
+     "share": 0.25,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 25
+    },
+    {
+     "a": 1,
+     "b": 0,
+     "share": 0.25,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 25
+    }
+   ]
+  },
+  {
+   "id": "difference",
+   "title": "Fark: her A nesnesinden B'nin birleşimi çıkar",
+   "a": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      },
+      {
+       "x": 487020,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "b": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487005,
+       "y": 4419995
+      },
+      {
+       "x": 487025,
+       "y": 4419995
+      },
+      {
+       "x": 487025,
+       "y": 4420005
+      },
+      {
+       "x": 487005,
+       "y": 4420005
+      }
+     ]
+    }
+   ],
+   "mode": "difference",
+   "expect": [
+    {
+     "a": 0,
+     "b": null,
+     "share": 0.75,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 75
+    },
+    {
+     "a": 1,
+     "b": null,
+     "share": 0.75,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 75
+    }
+   ]
+  },
+  {
+   "id": "sym-difference",
+   "title": "Simetrik fark: A − B'nin parçaları, sonra B − A'nınkiler",
+   "a": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      },
+      {
+       "x": 487020,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "b": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487005,
+       "y": 4419995
+      },
+      {
+       "x": 487025,
+       "y": 4419995
+      },
+      {
+       "x": 487025,
+       "y": 4420005
+      },
+      {
+       "x": 487005,
+       "y": 4420005
+      }
+     ]
+    }
+   ],
+   "mode": "symDifference",
+   "expect": [
+    {
+     "a": 0,
+     "b": null,
+     "share": 0.75,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 75
+    },
+    {
+     "a": 1,
+     "b": null,
+     "share": 0.75,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 75
+    },
+    {
+     "a": null,
+     "b": 0,
+     "share": null,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 150
+    }
+   ]
+  },
+  {
+   "id": "union",
+   "title": "Birleşim: kesişimler, sonra iki fark",
+   "a": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      },
+      {
+       "x": 487020,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "b": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487005,
+       "y": 4419995
+      },
+      {
+       "x": 487025,
+       "y": 4419995
+      },
+      {
+       "x": 487025,
+       "y": 4420005
+      },
+      {
+       "x": 487005,
+       "y": 4420005
+      }
+     ]
+    }
+   ],
+   "mode": "union",
+   "expect": [
+    {
+     "a": 0,
+     "b": 0,
+     "share": 0.25,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 25
+    },
+    {
+     "a": 1,
+     "b": 0,
+     "share": 0.25,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 25
+    },
+    {
+     "a": 0,
+     "b": null,
+     "share": 0.75,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 75
+    },
+    {
+     "a": 1,
+     "b": null,
+     "share": 0.75,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 75
+    },
+    {
+     "a": null,
+     "b": 0,
+     "share": null,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 150
+    }
+   ]
+  },
+  {
+   "id": "intersection-path",
+   "title": "Kesişim, yol: payı uzunluğunun oranı",
+   "a": [
+    {
+     "kind": "polyline",
+     "pts": [
+      {
+       "x": 486995,
+       "y": 4420002
+      },
+      {
+       "x": 487035,
+       "y": 4420002
+      }
+     ]
+    }
+   ],
+   "b": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487005,
+       "y": 4419995
+      },
+      {
+       "x": 487025,
+       "y": 4419995
+      },
+      {
+       "x": 487025,
+       "y": 4420005
+      },
+      {
+       "x": 487005,
+       "y": 4420005
+      }
+     ]
+    }
+   ],
+   "mode": "intersection",
+   "expect": [
+    {
+     "a": 0,
+     "b": 0,
+     "share": 0.5,
+     "kind": "polyline",
+     "parts": 1,
+     "holes": 0,
+     "length": 20
+    }
+   ]
+  },
+  {
+   "id": "intersection-points",
+   "title": "Kesişim, noktalar: payı sayısının oranı",
+   "a": [
+    {
+     "kind": "point",
+     "p": {
+      "x": 487006,
+      "y": 4420002
+     },
+     "parts": [
+      {
+       "p": {
+        "x": 487030,
+        "y": 4420030
+       }
+      }
+     ]
+    }
+   ],
+   "b": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487005,
+       "y": 4419995
+      },
+      {
+       "x": 487025,
+       "y": 4419995
+      },
+      {
+       "x": 487025,
+       "y": 4420005
+      },
+      {
+       "x": 487005,
+       "y": 4420005
+      }
+     ]
+    }
+   ],
+   "mode": "intersection",
+   "expect": [
+    {
+     "a": 0,
+     "b": 0,
+     "share": 0.5,
+     "kind": "point",
+     "parts": 1,
+     "holes": 0,
+     "points": [
+      {
+       "x": 487006,
+       "y": 4420002
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "intersection-two",
+   "title": "Kesişim, örtüşen iki B alanı: her biriyle ayrı parça",
+   "a": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "b": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487005,
+       "y": 4420005
+      },
+      {
+       "x": 487015,
+       "y": 4420005
+      },
+      {
+       "x": 487015,
+       "y": 4420015
+      },
+      {
+       "x": 487005,
+       "y": 4420015
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487008,
+       "y": 4420008
+      },
+      {
+       "x": 487020,
+       "y": 4420008
+      },
+      {
+       "x": 487020,
+       "y": 4420020
+      },
+      {
+       "x": 487008,
+       "y": 4420020
+      }
+     ]
+    }
+   ],
+   "mode": "intersection",
+   "expect": [
+    {
+     "a": 0,
+     "b": 0,
+     "share": 0.25,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 25
+    },
+    {
+     "a": 0,
+     "b": 1,
+     "share": 0.04,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 4
+    }
+   ]
+  },
+  {
+   "id": "difference-covered",
+   "title": "Fark, B'nin örttüğü A'dan parça kalmaz",
+   "a": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487001,
+       "y": 4420001
+      },
+      {
+       "x": 487002,
+       "y": 4420001
+      },
+      {
+       "x": 487002,
+       "y": 4420002
+      },
+      {
+       "x": 487001,
+       "y": 4420002
+      }
+     ]
+    }
+   ],
+   "b": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "mode": "difference",
+   "expect": []
+  }
+ ],
+ "dissolve": [
+  {
+   "id": "one-group",
+   "title": "Tek grup, çok parçalı: ortak kenar kalkar, ayrık alan parça olur",
+   "shapes": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420010
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487030,
+       "y": 4420000
+      },
+      {
+       "x": 487040,
+       "y": 4420000
+      },
+      {
+       "x": 487040,
+       "y": 4420010
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "groups": [
+    0,
+    0,
+    0
+   ],
+   "multi": true,
+   "expect": [
+    {
+     "group": 0,
+     "kind": "polygon",
+     "parts": 2,
+     "holes": 0,
+     "area": 300
+    }
+   ]
+  },
+  {
+   "id": "single-parts",
+   "title": "Çok parçalı değil: her bağlı parça ayrı nesne, büyükten küçüğe",
+   "shapes": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420010
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487030,
+       "y": 4420000
+      },
+      {
+       "x": 487040,
+       "y": 4420000
+      },
+      {
+       "x": 487040,
+       "y": 4420010
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "groups": [
+    0,
+    0,
+    0
+   ],
+   "multi": false,
+   "expect": [
+    {
+     "group": 0,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 200
+    },
+    {
+     "group": 0,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 100
+    }
+   ]
+  },
+  {
+   "id": "groups",
+   "title": "İki grup, ilk nesnelerinin sırasıyla",
+   "shapes": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487010,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420010
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487030,
+       "y": 4420000
+      },
+      {
+       "x": 487040,
+       "y": 4420000
+      },
+      {
+       "x": 487040,
+       "y": 4420010
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      }
+     ]
+    }
+   ],
+   "groups": [
+    0,
+    1,
+    0
+   ],
+   "multi": true,
+   "expect": [
+    {
+     "group": 0,
+     "kind": "polygon",
+     "parts": 2,
+     "holes": 0,
+     "area": 200
+    },
+    {
+     "group": 1,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 100
+    }
+   ]
+  },
+  {
+   "id": "frame",
+   "title": "Bir boşluğu çevreleyen dört alan: delikli tek alan",
+   "shapes": [
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420000
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      },
+      {
+       "x": 487000,
+       "y": 4420010
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420030
+      },
+      {
+       "x": 487000,
+       "y": 4420030
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420010
+      },
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487010,
+       "y": 4420020
+      },
+      {
+       "x": 487000,
+       "y": 4420020
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487020,
+       "y": 4420010
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      },
+      {
+       "x": 487030,
+       "y": 4420020
+      },
+      {
+       "x": 487020,
+       "y": 4420020
+      }
+     ]
+    }
+   ],
+   "groups": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "multi": true,
+   "expect": [
+    {
+     "group": 0,
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 1,
+     "area": 800
+    }
+   ]
+  },
+  {
+   "id": "lines",
+   "title": "Çizgiler grubun çok parçalı çoklu çizgisi olur",
+   "shapes": [
+    {
+     "kind": "line",
+     "a": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "b": {
+      "x": 487010,
+      "y": 4420000
+     }
+    },
+    {
+     "kind": "line",
+     "a": {
+      "x": 487010,
+      "y": 4420000
+     },
+     "b": {
+      "x": 487010,
+      "y": 4420005
+     }
+    }
+   ],
+   "groups": [
+    0,
+    0
+   ],
+   "multi": true,
+   "expect": [
+    {
+     "group": 0,
+     "kind": "polyline",
+     "parts": 2,
+     "holes": 0,
+     "length": 15
+    }
+   ]
+  },
+  {
+   "id": "lines-single",
+   "title": "Çizgiler, çok parçalı değil: sırasıyla ayrı",
+   "shapes": [
+    {
+     "kind": "line",
+     "a": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "b": {
+      "x": 487010,
+      "y": 4420000
+     }
+    },
+    {
+     "kind": "line",
+     "a": {
+      "x": 487010,
+      "y": 4420000
+     },
+     "b": {
+      "x": 487010,
+      "y": 4420005
+     }
+    }
+   ],
+   "groups": [
+    0,
+    0
+   ],
+   "multi": false,
+   "expect": [
+    {
+     "group": 0,
+     "kind": "polyline",
+     "parts": 1,
+     "holes": 0,
+     "length": 10
+    },
+    {
+     "group": 0,
+     "kind": "polyline",
+     "parts": 1,
+     "holes": 0,
+     "length": 5
+    }
+   ]
+  }
+ ],
+ "validity": [
+  {
+   "id": "square",
+   "title": "Geçerli alan: sorun yok",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "circle",
+   "title": "Daire: sorun yok",
+   "shape": {
+    "kind": "circle",
+    "c": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "r": 5
+   },
+   "expect": []
+  },
+  {
+   "id": "closed-path",
+   "title": "Başladığı yerde biten yol kendini kesmez",
+   "shape": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420000
+     }
+    ]
+   },
+   "expect": []
+  },
+  {
+   "id": "bow-tie",
+   "title": "Papyon: halka kendini (5, 5)'te keser",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "expect": [
+    {
+     "problem": "ringCrossing",
+     "at": {
+      "x": 487005,
+      "y": 4420005
+     }
+    }
+   ]
+  },
+  {
+   "id": "repeated",
+   "title": "Yinelenen köşe, ilk yerinde",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "expect": [
+    {
+     "problem": "repeated",
+     "at": {
+      "x": 487010,
+      "y": 4420000
+     }
+    }
+   ]
+  },
+  {
+   "id": "repeated-closing",
+   "title": "Son köşe ilkiyle aynı: kapanışta yinelenen köşe",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420000
+     }
+    ]
+   },
+   "expect": [
+    {
+     "problem": "repeated",
+     "at": {
+      "x": 487000,
+      "y": 4420000
+     }
+    }
+   ]
+  },
+  {
+   "id": "zero-area",
+   "title": "Bir doğru üstündeki köşeler: alanı sıfır olan halka",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487005,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     }
+    ]
+   },
+   "expect": [
+    {
+     "problem": "zeroArea",
+     "at": {
+      "x": 487000,
+      "y": 4420000
+     }
+    }
+   ]
+  },
+  {
+   "id": "spike",
+   "title": "Geri dönen kenar: halka kendi üstünden geçer",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487010,
+      "y": 4420005
+     },
+     {
+      "x": 487000,
+      "y": 4420005
+     }
+    ]
+   },
+   "expect": [
+    {
+     "problem": "ringCrossing",
+     "at": {
+      "x": 487010,
+      "y": 4420005
+     }
+    }
+   ]
+  },
+  {
+   "id": "hole-outside",
+   "title": "Dış halkadan taşan delik, ilk dışarıdaki köşesinde",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487008,
+        "y": 4420002
+       },
+       {
+        "x": 487012,
+        "y": 4420002
+       },
+       {
+        "x": 487012,
+        "y": 4420006
+       },
+       {
+        "x": 487008,
+        "y": 4420006
+       }
+      ]
+     }
+    ]
+   },
+   "expect": [
+    {
+     "problem": "holeOutside",
+     "at": {
+      "x": 487012,
+      "y": 4420002
+     }
+    }
+   ]
+  },
+  {
+   "id": "holes-overlap",
+   "title": "Örtüşen delikler, birincinin kenarının ikinciyi kestiği yerde",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487020,
+      "y": 4420020
+     },
+     {
+      "x": 487000,
+      "y": 4420020
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487002,
+        "y": 4420002
+       },
+       {
+        "x": 487010,
+        "y": 4420002
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487002,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "pts": [
+       {
+        "x": 487006,
+        "y": 4420006
+       },
+       {
+        "x": 487014,
+        "y": 4420006
+       },
+       {
+        "x": 487014,
+        "y": 4420014
+       },
+       {
+        "x": 487006,
+        "y": 4420014
+       }
+      ]
+     }
+    ]
+   },
+   "expect": [
+    {
+     "problem": "holesOverlap",
+     "at": {
+      "x": 487010,
+      "y": 4420006
+     }
+    }
+   ]
+  },
+  {
+   "id": "hole-inside-hole",
+   "title": "Deliğin içindeki delik: köşesi öbürünün içinde",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487020,
+      "y": 4420020
+     },
+     {
+      "x": 487000,
+      "y": 4420020
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487002,
+        "y": 4420002
+       },
+       {
+        "x": 487018,
+        "y": 4420002
+       },
+       {
+        "x": 487018,
+        "y": 4420018
+       },
+       {
+        "x": 487002,
+        "y": 4420018
+       }
+      ]
+     },
+     {
+      "pts": [
+       {
+        "x": 487005,
+        "y": 4420005
+       },
+       {
+        "x": 487008,
+        "y": 4420005
+       },
+       {
+        "x": 487008,
+        "y": 4420008
+       },
+       {
+        "x": 487005,
+        "y": 4420008
+       }
+      ]
+     }
+    ]
+   },
+   "expect": [
+    {
+     "problem": "holesOverlap",
+     "at": {
+      "x": 487005,
+      "y": 4420005
+     }
+    }
+   ]
+  },
+  {
+   "id": "path-crossing",
+   "title": "Kendini kesen yol, ilk kenarın üstünde",
+   "shape": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487005,
+      "y": 4419995
+     }
+    ]
+   },
+   "expect": [
+    {
+     "problem": "pathCrossing",
+     "at": {
+      "x": 487006.6666666667,
+      "y": 4420000
+     }
+    }
+   ]
+  },
+  {
+   "id": "path-repeated",
+   "title": "Yolda yinelenen köşe",
+   "shape": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487005,
+      "y": 4420000
+     },
+     {
+      "x": 487005,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     }
+    ]
+   },
+   "expect": [
+    {
+     "problem": "repeated",
+     "at": {
+      "x": 487005,
+      "y": 4420000
+     }
+    }
+   ]
+  },
+  {
+   "id": "parts",
+   "title": "Çok parçalı alan: her parça kendi sorunlarıyla, sırasıyla",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ]
+     }
+    ]
+   },
+   "expect": [
+    {
+     "problem": "ringCrossing",
+     "at": {
+      "x": 487025,
+      "y": 4420005
+     }
+    }
+   ]
+  }
+ ],
+ "repair": [
+  {
+   "id": "valid",
+   "title": "Geçerli alan olduğu gibi kalır",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "expect": {
+    "parts": [
+     1,
+     1
+    ],
+    "holes": [
+     0,
+     0
+    ],
+    "vertices": [
+     4,
+     4
+    ],
+    "area": [
+     100,
+     100
+    ],
+    "problems": [],
+    "after": {
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 100
+    }
+   }
+  },
+  {
+   "id": "bow-tie",
+   "title": "Papyon iki üçgene ayrılır: yazıldığı gibi alanı 0, sonra 50",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "expect": {
+    "parts": [
+     1,
+     2
+    ],
+    "holes": [
+     0,
+     0
+    ],
+    "vertices": [
+     4,
+     6
+    ],
+    "area": [
+     0,
+     50
+    ],
+    "problems": [
+     "ringCrossing"
+    ],
+    "after": {
+     "kind": "polygon",
+     "parts": 2,
+     "holes": 0,
+     "area": 50
+    }
+   }
+  },
+  {
+   "id": "repeated",
+   "title": "Yinelenen köşe düşer",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "expect": {
+    "parts": [
+     1,
+     1
+    ],
+    "holes": [
+     0,
+     0
+    ],
+    "vertices": [
+     5,
+     4
+    ],
+    "area": [
+     100,
+     100
+    ],
+    "problems": [
+     "repeated"
+    ],
+    "after": {
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 100
+    }
+   }
+  },
+  {
+   "id": "hole-outside",
+   "title": "Taşan delik dış halkayla kesilir: 84 → 92",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487008,
+        "y": 4420002
+       },
+       {
+        "x": 487012,
+        "y": 4420002
+       },
+       {
+        "x": 487012,
+        "y": 4420006
+       },
+       {
+        "x": 487008,
+        "y": 4420006
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "parts": [
+     1,
+     1
+    ],
+    "holes": [
+     1,
+     0
+    ],
+    "vertices": [
+     8,
+     8
+    ],
+    "area": [
+     84,
+     92
+    ],
+    "problems": [
+     "holeOutside"
+    ],
+    "after": {
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 0,
+     "area": 92
+    }
+   }
+  },
+  {
+   "id": "holes-overlap",
+   "title": "Örtüşen delikler tek delik olur: 272 → 288",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487020,
+      "y": 4420020
+     },
+     {
+      "x": 487000,
+      "y": 4420020
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487002,
+        "y": 4420002
+       },
+       {
+        "x": 487010,
+        "y": 4420002
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487002,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "pts": [
+       {
+        "x": 487006,
+        "y": 4420006
+       },
+       {
+        "x": 487014,
+        "y": 4420006
+       },
+       {
+        "x": 487014,
+        "y": 4420014
+       },
+       {
+        "x": 487006,
+        "y": 4420014
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "parts": [
+     1,
+     1
+    ],
+    "holes": [
+     2,
+     1
+    ],
+    "vertices": [
+     12,
+     12
+    ],
+    "area": [
+     272,
+     288
+    ],
+    "problems": [
+     "holesOverlap"
+    ],
+    "after": {
+     "kind": "polygon",
+     "parts": 1,
+     "holes": 1,
+     "area": 288
+    }
+   }
+  },
+  {
+   "id": "zero-area",
+   "title": "Alanı sıfır olan halkadan bir şey kalmaz",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487005,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     }
+    ]
+   },
+   "expect": {
+    "parts": [
+     1,
+     0
+    ],
+    "holes": [
+     0,
+     0
+    ],
+    "vertices": [
+     3,
+     0
+    ],
+    "area": [
+     0,
+     0
+    ],
+    "problems": [
+     "zeroArea"
+    ],
+    "after": null
+   }
+  },
+  {
+   "id": "path",
+   "title": "Yolun yinelenen köşesi düşer",
+   "shape": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487005,
+      "y": 4420000
+     },
+     {
+      "x": 487005,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     }
+    ]
+   },
+   "expect": {
+    "parts": [
+     1,
+     1
+    ],
+    "holes": [
+     0,
+     0
+    ],
+    "vertices": [
+     4,
+     3
+    ],
+    "area": null,
+    "problems": [
+     "repeated"
+    ],
+    "after": {
+     "kind": "polyline",
+     "parts": 1,
+     "holes": 0,
+     "length": 10
+    }
+   }
+  },
+  {
+   "id": "path-crossing",
+   "title": "Kendini kesen yol onarılmaz, olduğu gibi",
+   "shape": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487005,
+      "y": 4419995
+     }
+    ]
+   },
+   "expect": {
+    "parts": [
+     1,
+     1
+    ],
+    "holes": [
+     0,
+     0
+    ],
+    "vertices": [
+     4,
+     4
+    ],
+    "area": null,
+    "problems": [
+     "pathCrossing"
+    ],
+    "after": {
+     "kind": "polyline",
+     "parts": 1,
+     "holes": 0,
+     "length": 35.8113883008419
+    }
+   }
+  }
+ ],
+ "simplify": [
+  {
+   "id": "dent",
+   "title": "Alanın 2 cm'lik çentiği 5 cm toleransla düşer: 99.9 → 100",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487005,
+      "y": 4420000.02
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "tolerance": 0.05,
+   "expect": {
+    "changed": true,
+    "vertices": [
+     5,
+     4
+    ],
+    "area": [
+     99.9,
+     100
+    ],
+    "deviation": 0.02,
+    "after": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   }
+  },
+  {
+   "id": "path",
+   "title": "Yolun 1 cm'lik kırığı düşer",
+   "shape": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487005,
+      "y": 4420000.01
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487015,
+      "y": 4420005
+     }
+    ]
+   },
+   "tolerance": 0.05,
+   "expect": {
+    "changed": true,
+    "vertices": [
+     4,
+     3
+    ],
+    "area": null,
+    "deviation": 0.01,
+    "after": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487015,
+      "y": 4420005
+     }
+    ]
+   }
+  },
+  {
+   "id": "tight",
+   "title": "Toleranstan büyük sapma kalır: değişmez",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487005,
+      "y": 4420000.02
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "tolerance": 0.01,
+   "expect": {
+    "changed": false,
+    "vertices": [
+     5,
+     5
+    ],
+    "area": [
+     99.9,
+     99.9
+    ],
+    "deviation": 0,
+    "after": null
+   }
+  }
+ ],
+ "reproject": [
+  {
+   "id": "tm-zone",
+   "title": "TM30'dan TM33'e: köşeler tek tek",
+   "shape": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 470000,
+      "y": 4420000
+     },
+     {
+      "x": 470100,
+      "y": 4420000
+     },
+     {
+      "x": 470100,
+      "y": 4420100
+     },
+     {
+      "x": 470000,
+      "y": 4420100
+     }
+    ]
+   },
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "expect": {
+    "points": [
+     {
+      "x": 213466.90046904032,
+      "y": 4425320.508909398
+     },
+     {
+      "x": 213566.9438048341,
+      "y": 4425317.14406109
+     },
+     {
+      "x": 213570.30868241546,
+      "y": 4425417.187363093
+     },
+     {
+      "x": 213470.26535113808,
+      "y": 4425420.552274465
+     }
+    ],
+    "chorded": 0
+   }
+  },
+  {
+   "id": "geographic",
+   "title": "WGS 84 enlem ve boylamından TUREF / TM30'a",
+   "shape": {
+    "kind": "point",
+    "p": {
+     "x": 29.5,
+     "y": 39.75
+    }
+   },
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "expect": {
+    "points": [
+     {
+      "x": 457147.6709550527,
+      "y": 4401890.535357541
+     }
+    ],
+    "chorded": 0
+   }
+  },
+  {
+   "id": "circle-datum",
+   "title": "ED50 / TM30'daki daire TUREF / TM30'a: iki yarım daire 1 mm içinde doğru parçaları",
+   "shape": {
+    "kind": "circle",
+    "c": {
+     "x": 480000.0,
+     "y": 4400000.0
+    },
+    "r": 20.0
+   },
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "expect": {
+    "points": [
+     {
+      "x": 479985.51574050466,
+      "y": 4399814.7288874965
+     },
+     {
+      "x": 479985.51178651885,
+      "y": 4399815.12652901
+     },
+     {
+      "x": 479985.4999273317,
+      "y": 4399815.524013306
+     },
+     {
+      "x": 479985.4801676305,
+      "y": 4399815.921183246
+     },
+     {
+      "x": 479985.45251522935,
+      "y": 4399816.317881812
+     },
+     {
+      "x": 479985.41698105604,
+      "y": 4399816.713952172
+     },
+     {
+      "x": 479985.3735791625,
+      "y": 4399817.109237743
+     },
+     {
+      "x": 479985.3223267062,
+      "y": 4399817.503582254
+     },
+     {
+      "x": 479985.2632439491,
+      "y": 4399817.896829803
+     },
+     {
+      "x": 479985.19635424943,
+      "y": 4399818.288824922
+     },
+     {
+      "x": 479985.1216840502,
+      "y": 4399818.679412646
+     },
+     {
+      "x": 479985.0392628726,
+      "y": 4399819.068438553
+     },
+     {
+      "x": 479984.949123302,
+      "y": 4399819.45574885
+     },
+     {
+      "x": 479984.85130097263,
+      "y": 4399819.841190414
+     },
+     {
+      "x": 479984.7458345577,
+      "y": 4399820.224610865
+     },
+     {
+      "x": 479984.6327657528,
+      "y": 4399820.605858624
+     },
+     {
+      "x": 479984.51213925995,
+      "y": 4399820.984782966
+     },
+     {
+      "x": 479984.3840027655,
+      "y": 4399821.361234087
+     },
+     {
+      "x": 479984.24840692687,
+      "y": 4399821.735063163
+     },
+     {
+      "x": 479984.1054053521,
+      "y": 4399822.106122401
+     },
+     {
+      "x": 479983.955054574,
+      "y": 4399822.474265106
+     },
+     {
+      "x": 479983.7974140349,
+      "y": 4399822.8393457355
+     },
+     {
+      "x": 479983.63254605397,
+      "y": 4399823.201219967
+     },
+     {
+      "x": 479983.4605158102,
+      "y": 4399823.559744726
+     },
+     {
+      "x": 479983.2813913165,
+      "y": 4399823.914778279
+     },
+     {
+      "x": 479983.09524338593,
+      "y": 4399824.266180268
+     },
+     {
+      "x": 479982.9021456103,
+      "y": 4399824.613811764
+     },
+     {
+      "x": 479982.70217432984,
+      "y": 4399824.957535341
+     },
+     {
+      "x": 479982.49540860124,
+      "y": 4399825.297215107
+     },
+     {
+      "x": 479982.28193016665,
+      "y": 4399825.632716769
+     },
+     {
+      "x": 479982.0618234236,
+      "y": 4399825.963907698
+     },
+     {
+      "x": 479981.83517538646,
+      "y": 4399826.290656959
+     },
+     {
+      "x": 479981.60207566293,
+      "y": 4399826.612835365
+     },
+     {
+      "x": 479981.3626164046,
+      "y": 4399826.9303155625
+     },
+     {
+      "x": 479981.1168922785,
+      "y": 4399827.242972026
+     },
+     {
+      "x": 479980.8650004305,
+      "y": 4399827.550681153
+     },
+     {
+      "x": 479980.60704044334,
+      "y": 4399827.853321296
+     },
+     {
+      "x": 479980.34311429865,
+      "y": 4399828.150772808
+     },
+     {
+      "x": 479980.07332633657,
+      "y": 4399828.44291809
+     },
+     {
+      "x": 479979.7977832159,
+      "y": 4399828.729641652
+     },
+     {
+      "x": 479979.5165938725,
+      "y": 4399829.010830135
+     },
+     {
+      "x": 479979.22986946715,
+      "y": 4399829.286372378
+     },
+     {
+      "x": 479978.93772335787,
+      "y": 4399829.556159446
+     },
+     {
+      "x": 479978.6402710379,
+      "y": 4399829.82008468
+     },
+     {
+      "x": 479978.33763010614,
+      "y": 4399830.078043742
+     },
+     {
+      "x": 479978.02992020635,
+      "y": 4399830.329934649
+     },
+     {
+      "x": 479977.71726298786,
+      "y": 4399830.575657823
+     },
+     {
+      "x": 479977.3997820583,
+      "y": 4399830.815116109
+     },
+     {
+      "x": 479977.07760293235,
+      "y": 4399831.048214849
+     },
+     {
+      "x": 479976.7508529768,
+      "y": 4399831.274861887
+     },
+     {
+      "x": 479976.4196613715,
+      "y": 4399831.494967621
+     },
+     {
+      "x": 479976.0841590494,
+      "y": 4399831.708445031
+     },
+     {
+      "x": 479975.74447864835,
+      "y": 4399831.915209724
+     },
+     {
+      "x": 479975.40075445786,
+      "y": 4399832.115179956
+     },
+     {
+      "x": 479975.0531223645,
+      "y": 4399832.308276672
+     },
+     {
+      "x": 479974.701719803,
+      "y": 4399832.494423531
+     },
+     {
+      "x": 479974.34668569604,
+      "y": 4399832.673546943
+     },
+     {
+      "x": 479973.9881604026,
+      "y": 4399832.845576095
+     },
+     {
+      "x": 479973.62628566555,
+      "y": 4399833.010442972
+     },
+     {
+      "x": 479973.2612045435,
+      "y": 4399833.168082399
+     },
+     {
+      "x": 479972.893061373,
+      "y": 4399833.318432057
+     },
+     {
+      "x": 479972.52200169064,
+      "y": 4399833.4614325045
+     },
+     {
+      "x": 479972.1481721956,
+      "y": 4399833.5970272
+     },
+     {
+      "x": 479971.7717206748,
+      "y": 4399833.725162549
+     },
+     {
+      "x": 479971.3927959576,
+      "y": 4399833.845787892
+     },
+     {
+      "x": 479971.01154784585,
+      "y": 4399833.958855536
+     },
+     {
+      "x": 479970.62812706234,
+      "y": 4399834.064320785
+     },
+     {
+      "x": 479970.2426851926,
+      "y": 4399834.162141942
+     },
+     {
+      "x": 479969.8553746126,
+      "y": 4399834.252280336
+     },
+     {
+      "x": 479969.46634844446,
+      "y": 4399834.33470033
+     },
+     {
+      "x": 479969.07576048526,
+      "y": 4399834.409369342
+     },
+     {
+      "x": 479968.6837651507,
+      "y": 4399834.476257851
+     },
+     {
+      "x": 479968.290517411,
+      "y": 4399834.535339412
+     },
+     {
+      "x": 479967.8961727347,
+      "y": 4399834.586590671
+     },
+     {
+      "x": 479967.5008870213,
+      "y": 4399834.629991366
+     },
+     {
+      "x": 479967.10481654294,
+      "y": 4399834.665524333
+     },
+     {
+      "x": 479966.7081178834,
+      "y": 4399834.693175532
+     },
+     {
+      "x": 479966.310947873,
+      "y": 4399834.712934028
+     },
+     {
+      "x": 479965.91346352955,
+      "y": 4399834.724792007
+     },
+     {
+      "x": 479965.51582199294,
+      "y": 4399834.728744788
+     },
+     {
+      "x": 479965.11818046914,
+      "y": 4399834.7247908
+     },
+     {
+      "x": 479964.7206961612,
+      "y": 4399834.712931615
+     },
+     {
+      "x": 479964.3235262112,
+      "y": 4399834.693171915
+     },
+     {
+      "x": 479963.92682763503,
+      "y": 4399834.665519512
+     },
+     {
+      "x": 479963.53075726505,
+      "y": 4399834.629985342
+     },
+     {
+      "x": 479963.1354716836,
+      "y": 4399834.586583448
+     },
+     {
+      "x": 479962.7411271621,
+      "y": 4399834.535330993
+     },
+     {
+      "x": 479962.34787960304,
+      "y": 4399834.476248238
+     },
+     {
+      "x": 479961.955884471,
+      "y": 4399834.409358541
+     },
+     {
+      "x": 479961.56529673905,
+      "y": 4399834.334688346
+     },
+     {
+      "x": 479961.1762708196,
+      "y": 4399834.252267169
+     },
+     {
+      "x": 479960.78896051407,
+      "y": 4399834.1621276
+     },
+     {
+      "x": 479960.40351893945,
+      "y": 4399834.064305273
+     },
+     {
+      "x": 479960.02009847766,
+      "y": 4399833.958838862
+     },
+     {
+      "x": 479959.63885070913,
+      "y": 4399833.845770061
+     },
+     {
+      "x": 479959.25992635684,
+      "y": 4399833.725143568
+     },
+     {
+      "x": 479958.8834752262,
+      "y": 4399833.59700708
+     },
+     {
+      "x": 479958.5096461415,
+      "y": 4399833.461411243
+     },
+     {
+      "x": 479958.1385868946,
+      "y": 4399833.318409674
+     },
+     {
+      "x": 479957.7704441779,
+      "y": 4399833.168058899
+     },
+     {
+      "x": 479957.40536353586,
+      "y": 4399833.010418364
+     },
+     {
+      "x": 479957.043489299,
+      "y": 4399832.845550387
+     },
+     {
+      "x": 479956.68496452767,
+      "y": 4399832.673520149
+     },
+     {
+      "x": 479956.3299309656,
+      "y": 4399832.494395661
+     },
+     {
+      "x": 479955.97852896847,
+      "y": 4399832.308247735
+     },
+     {
+      "x": 479955.63089746004,
+      "y": 4399832.115149963
+     },
+     {
+      "x": 479955.2871738761,
+      "y": 4399831.915178688
+     },
+     {
+      "x": 479954.9474941031,
+      "y": 4399831.708412965
+     },
+     {
+      "x": 479954.61199242884,
+      "y": 4399831.494934536
+     },
+     {
+      "x": 479954.2808014918,
+      "y": 4399831.274827798
+     },
+     {
+      "x": 479953.9540522239,
+      "y": 4399831.048179771
+     },
+     {
+      "x": 479953.6318738047,
+      "y": 4399830.81508005
+     },
+     {
+      "x": 479953.3143936025,
+      "y": 4399830.575620799
+     },
+     {
+      "x": 479953.00173713086,
+      "y": 4399830.329896681
+     },
+     {
+      "x": 479952.6940279948,
+      "y": 4399830.078004838
+     },
+     {
+      "x": 479952.39138784475,
+      "y": 4399829.820044858
+     },
+     {
+      "x": 479952.0939363263,
+      "y": 4399829.556118722
+     },
+     {
+      "x": 479951.8017910359,
+      "y": 4399829.286330766
+     },
+     {
+      "x": 479951.5150674676,
+      "y": 4399829.010787653
+     },
+     {
+      "x": 479951.2338789764,
+      "y": 4399828.729598317
+     },
+     {
+      "x": 479950.9583367256,
+      "y": 4399828.442873921
+     },
+     {
+      "x": 479950.6885496519,
+      "y": 4399828.150727819
+     },
+     {
+      "x": 479950.4246244099,
+      "y": 4399827.853275509
+     },
+     {
+      "x": 479950.1666653409,
+      "y": 4399827.5506345825
+     },
+     {
+      "x": 479949.9147744264,
+      "y": 4399827.242924691
+     },
+     {
+      "x": 479949.669051249,
+      "y": 4399826.93026748
+     },
+     {
+      "x": 479949.42959295365,
+      "y": 4399826.612786559
+     },
+     {
+      "x": 479949.1964942074,
+      "y": 4399826.290607441
+     },
+     {
+      "x": 479948.96984716353,
+      "y": 4399825.963857496
+     },
+     {
+      "x": 479948.74974142615,
+      "y": 4399825.6326659
+     },
+     {
+      "x": 479948.5362640084,
+      "y": 4399825.297163586
+     },
+     {
+      "x": 479948.32949930977,
+      "y": 4399824.957483195
+     },
+     {
+      "x": 479948.1295290735,
+      "y": 4399824.613759013
+     },
+     {
+      "x": 479947.93643235165,
+      "y": 4399824.266126929
+     },
+     {
+      "x": 479947.7502854884,
+      "y": 4399823.914724379
+     },
+     {
+      "x": 479947.57116207137,
+      "y": 4399823.559690279
+     },
+     {
+      "x": 479947.3991329164,
+      "y": 4399823.201164995
+     },
+     {
+      "x": 479947.2342660335,
+      "y": 4399822.83929027
+     },
+     {
+      "x": 479947.0766266022,
+      "y": 4399822.474209158
+     },
+     {
+      "x": 479946.92627694167,
+      "y": 4399822.106065994
+     },
+     {
+      "x": 479946.783276493,
+      "y": 4399821.735006323
+     },
+     {
+      "x": 479946.64768178895,
+      "y": 4399821.36117684
+     },
+     {
+      "x": 479946.5195464365,
+      "y": 4399820.984725328
+     },
+     {
+      "x": 479946.39892109385,
+      "y": 4399820.60580062
+     },
+     {
+      "x": 479946.28585344576,
+      "y": 4399820.22455252
+     },
+     {
+      "x": 479946.1803881945,
+      "y": 4399819.841131747
+     },
+     {
+      "x": 479946.0825670344,
+      "y": 4399819.455689884
+     },
+     {
+      "x": 479945.9924286385,
+      "y": 4399819.0683793165
+     },
+     {
+      "x": 479945.91000864137,
+      "y": 4399818.679353157
+     },
+     {
+      "x": 479945.835339628,
+      "y": 4399818.288765209
+     },
+     {
+      "x": 479945.7684511178,
+      "y": 4399817.896769886
+     },
+     {
+      "x": 479945.70936955424,
+      "y": 4399817.503522158
+     },
+     {
+      "x": 479945.6581182942,
+      "y": 4399817.109177489
+     },
+     {
+      "x": 479945.61471760186,
+      "y": 4399816.713891789
+     },
+     {
+      "x": 479945.5791846303,
+      "y": 4399816.317821321
+     },
+     {
+      "x": 479945.5515334312,
+      "y": 4399815.921122674
+     },
+     {
+      "x": 479945.5317749365,
+      "y": 4399815.523952671
+     },
+     {
+      "x": 479945.5199169549,
+      "y": 4399815.126468338
+     },
+     {
+      "x": 479945.51596417587,
+      "y": 4399814.728826812
+     },
+     {
+      "x": 479945.51991816267,
+      "y": 4399814.331185301
+     },
+     {
+      "x": 479945.5317773494,
+      "y": 4399813.933701002
+     },
+     {
+      "x": 479945.55153705145,
+      "y": 4399813.536531063
+     },
+     {
+      "x": 479945.57918945246,
+      "y": 4399813.139832496
+     },
+     {
+      "x": 479945.61472362524,
+      "y": 4399812.743762136
+     },
+     {
+      "x": 479945.6581255178,
+      "y": 4399812.348476566
+     },
+     {
+      "x": 479945.7093779764,
+      "y": 4399811.954132057
+     },
+     {
+      "x": 479945.76846073236,
+      "y": 4399811.560884507
+     },
+     {
+      "x": 479945.8353504323,
+      "y": 4399811.168889387
+     },
+     {
+      "x": 479945.9100206314,
+      "y": 4399810.778301664
+     },
+     {
+      "x": 479945.99244180805,
+      "y": 4399810.389275754
+     },
+     {
+      "x": 479946.0825813789,
+      "y": 4399810.00196546
+     },
+     {
+      "x": 479946.1804037083,
+      "y": 4399809.616523895
+     },
+     {
+      "x": 479946.28587012313,
+      "y": 4399809.233103443
+     },
+     {
+      "x": 479946.39893892844,
+      "y": 4399808.851855684
+     },
+     {
+      "x": 479946.51956542215,
+      "y": 4399808.472931344
+     },
+     {
+      "x": 479946.6477019163,
+      "y": 4399808.0964802215
+     },
+     {
+      "x": 479946.78329775436,
+      "y": 4399807.722651147
+     },
+     {
+      "x": 479946.9262993297,
+      "y": 4399807.351591909
+     },
+     {
+      "x": 479947.0766501069,
+      "y": 4399806.983449205
+     },
+     {
+      "x": 479947.2342906477,
+      "y": 4399806.618368573
+     },
+     {
+      "x": 479947.3991586281,
+      "y": 4399806.256494343
+     },
+     {
+      "x": 479947.57118887175,
+      "y": 4399805.897969582
+     },
+     {
+      "x": 479947.7503133655,
+      "y": 4399805.542936028
+     },
+     {
+      "x": 479947.9364612967,
+      "y": 4399805.191534042
+     },
+     {
+      "x": 479948.1295590719,
+      "y": 4399804.843902544
+     },
+     {
+      "x": 479948.3295303533,
+      "y": 4399804.50017897
+     },
+     {
+      "x": 479948.5362960814,
+      "y": 4399804.160499202
+     },
+     {
+      "x": 479948.7497745155,
+      "y": 4399803.824997539
+     },
+     {
+      "x": 479948.96988125937,
+      "y": 4399803.493806613
+     },
+     {
+      "x": 479949.1965292935,
+      "y": 4399803.167057352
+     },
+     {
+      "x": 479949.42962901876,
+      "y": 4399802.844878941
+     },
+     {
+      "x": 479949.6690882786,
+      "y": 4399802.527398748
+     },
+     {
+      "x": 479949.91481240373,
+      "y": 4399802.214742283
+     },
+     {
+      "x": 479950.1667042516,
+      "y": 4399801.907033156
+     },
+     {
+      "x": 479950.4246642385,
+      "y": 4399801.604393014
+     },
+     {
+      "x": 479950.6885903844,
+      "y": 4399801.306941505
+     },
+     {
+      "x": 479950.95837834565,
+      "y": 4399801.014796219
+     },
+     {
+      "x": 479951.23392146593,
+      "y": 4399800.72807266
+     },
+     {
+      "x": 479951.5151108105,
+      "y": 4399800.446884177
+     },
+     {
+      "x": 479951.8018352137,
+      "y": 4399800.171341931
+     },
+     {
+      "x": 479952.0939813261,
+      "y": 4399799.901554866
+     },
+     {
+      "x": 479952.3914336442,
+      "y": 4399799.63762963
+     },
+     {
+      "x": 479952.694074576,
+      "y": 4399799.379670569
+     },
+     {
+      "x": 479953.00178447587,
+      "y": 4399799.12777966
+     },
+     {
+      "x": 479953.314441694,
+      "y": 4399798.88205649
+     },
+     {
+      "x": 479953.6319226224,
+      "y": 4399798.642598201
+     },
+     {
+      "x": 479953.95410174935,
+      "y": 4399798.40949946
+     },
+     {
+      "x": 479954.2808517041,
+      "y": 4399798.182852422
+     },
+     {
+      "x": 479954.61204330967,
+      "y": 4399797.962746691
+     },
+     {
+      "x": 479954.94754563173,
+      "y": 4399797.74926928
+     },
+     {
+      "x": 479955.28722603316,
+      "y": 4399797.542504586
+     },
+     {
+      "x": 479955.6309502229,
+      "y": 4399797.342534354
+     },
+     {
+      "x": 479955.9785823177,
+      "y": 4399797.14943764
+     },
+     {
+      "x": 479956.32998487796,
+      "y": 4399796.963290777
+     },
+     {
+      "x": 479956.6850189848,
+      "y": 4399796.784167368
+     },
+     {
+      "x": 479957.043544278,
+      "y": 4399796.612138216
+     },
+     {
+      "x": 479957.4054190159,
+      "y": 4399796.447271337
+     },
+     {
+      "x": 479957.77050013776,
+      "y": 4399796.28963191
+     },
+     {
+      "x": 479958.1386433085,
+      "y": 4399796.139282256
+     },
+     {
+      "x": 479958.5097029897,
+      "y": 4399795.996281808
+     },
+     {
+      "x": 479958.8835324853,
+      "y": 4399795.860687108
+     },
+     {
+      "x": 479959.2599840067,
+      "y": 4399795.732551762
+     },
+     {
+      "x": 479959.6389087239,
+      "y": 4399795.611926419
+     },
+     {
+      "x": 479960.02015683486,
+      "y": 4399795.498858775
+     },
+     {
+      "x": 479960.4035776179,
+      "y": 4399795.393393528
+     },
+     {
+      "x": 479960.78901948954,
+      "y": 4399795.29557237
+     },
+     {
+      "x": 479961.1763300689,
+      "y": 4399795.205433976
+     },
+     {
+      "x": 479961.5653562367,
+      "y": 4399795.123013981
+     },
+     {
+      "x": 479961.95594419626,
+      "y": 4399795.04834497
+     },
+     {
+      "x": 479962.34793953085,
+      "y": 4399794.981456462
+     },
+     {
+      "x": 479962.7411872701,
+      "y": 4399794.9223748995
+     },
+     {
+      "x": 479963.13553194655,
+      "y": 4399794.87112364
+     },
+     {
+      "x": 479963.53081765975,
+      "y": 4399794.827722948
+     },
+     {
+      "x": 479963.9268881371,
+      "y": 4399794.792189978
+     },
+     {
+      "x": 479964.323586797,
+      "y": 4399794.764538779
+     },
+     {
+      "x": 479964.7207568081,
+      "y": 4399794.744780283
+     },
+     {
+      "x": 479965.1182411515,
+      "y": 4399794.732922304
+     },
+     {
+      "x": 479965.5158826884,
+      "y": 4399794.728969523
+     },
+     {
+      "x": 479965.9135242112,
+      "y": 4399794.732923511
+     },
+     {
+      "x": 479966.31100851856,
+      "y": 4399794.744782697
+     },
+     {
+      "x": 479966.7081784694,
+      "y": 4399794.764542397
+     },
+     {
+      "x": 479967.10487704456,
+      "y": 4399794.792194799
+     },
+     {
+      "x": 479967.5009474156,
+      "y": 4399794.82772897
+     },
+     {
+      "x": 479967.89623299695,
+      "y": 4399794.871130862
+     },
+     {
+      "x": 479968.2905775183,
+      "y": 4399794.922383317
+     },
+     {
+      "x": 479968.68382507685,
+      "y": 4399794.981466074
+     },
+     {
+      "x": 479969.0758202097,
+      "y": 4399795.048355773
+     },
+     {
+      "x": 479969.4664079419,
+      "y": 4399795.123025968
+     },
+     {
+      "x": 479969.85543386056,
+      "y": 4399795.205447141
+     },
+     {
+      "x": 479970.2427441658,
+      "y": 4399795.295586712
+     },
+     {
+      "x": 479970.62818574044,
+      "y": 4399795.393409037
+     },
+     {
+      "x": 479971.01160620234,
+      "y": 4399795.498875448
+     },
+     {
+      "x": 479971.39285397046,
+      "y": 4399795.611944251
+     },
+     {
+      "x": 479971.7717783224,
+      "y": 4399795.732570742
+     },
+     {
+      "x": 479972.1482294534,
+      "y": 4399795.860707233
+     },
+     {
+      "x": 479972.52205853816,
+      "y": 4399795.996303067
+     },
+     {
+      "x": 479972.89311778505,
+      "y": 4399796.139304637
+     },
+     {
+      "x": 479973.26126050093,
+      "y": 4399796.289655412
+     },
+     {
+      "x": 479973.62634114345,
+      "y": 4399796.447295946
+     },
+     {
+      "x": 479973.98821538244,
+      "y": 4399796.612163922
+     },
+     {
+      "x": 479974.34674015234,
+      "y": 4399796.784194161
+     },
+     {
+      "x": 479974.7017737143,
+      "y": 4399796.963318651
+     },
+     {
+      "x": 479975.0531757114,
+      "y": 4399797.149466577
+     },
+     {
+      "x": 479975.40080721915,
+      "y": 4399797.342564346
+     },
+     {
+      "x": 479975.7445308027,
+      "y": 4399797.542535623
+     },
+     {
+      "x": 479976.08421057725,
+      "y": 4399797.749301346
+     },
+     {
+      "x": 479976.41971225146,
+      "y": 4399797.962779774
+     },
+     {
+      "x": 479976.75090318767,
+      "y": 4399798.18288651
+     },
+     {
+      "x": 479977.07765245484,
+      "y": 4399798.40953454
+     },
+     {
+      "x": 479977.399830875,
+      "y": 4399798.642634259
+     },
+     {
+      "x": 479977.7173110773,
+      "y": 4399798.882093513
+     },
+     {
+      "x": 479978.02996754885,
+      "y": 4399799.12781763
+     },
+     {
+      "x": 479978.337676685,
+      "y": 4399799.379709469
+     },
+     {
+      "x": 479978.64031683427,
+      "y": 4399799.637669451
+     },
+     {
+      "x": 479978.93776835373,
+      "y": 4399799.901595589
+     },
+     {
+      "x": 479979.2299136443,
+      "y": 4399800.171383544
+     },
+     {
+      "x": 479979.51663721306,
+      "y": 4399800.446926656
+     },
+     {
+      "x": 479979.79782570415,
+      "y": 4399800.728115994
+     },
+     {
+      "x": 479980.0733679538,
+      "y": 4399801.014840388
+     },
+     {
+      "x": 479980.3431550277,
+      "y": 4399801.306986491
+     },
+     {
+      "x": 479980.60708026943,
+      "y": 4399801.604438804
+     },
+     {
+      "x": 479980.86503934,
+      "y": 4399801.907079727
+     },
+     {
+      "x": 479981.11693025386,
+      "y": 4399802.21478962
+     },
+     {
+      "x": 479981.3626534311,
+      "y": 4399802.52744683
+     },
+     {
+      "x": 479981.60211172706,
+      "y": 4399802.84492775
+     },
+     {
+      "x": 479981.8352104712,
+      "y": 4399803.167106866
+     },
+     {
+      "x": 479982.0618575169,
+      "y": 4399803.493856814
+     },
+     {
+      "x": 479982.28196325514,
+      "y": 4399803.82504841
+     },
+     {
+      "x": 479982.49544067134,
+      "y": 4399804.160550723
+     },
+     {
+      "x": 479982.7022053696,
+      "y": 4399804.500231113
+     },
+     {
+      "x": 479982.9021756071,
+      "y": 4399804.843955297
+     },
+     {
+      "x": 479983.0952723269,
+      "y": 4399805.191587381
+     },
+     {
+      "x": 479983.28141919157,
+      "y": 4399805.54298993
+     },
+     {
+      "x": 479983.46054260863,
+      "y": 4399805.898024027
+     },
+     {
+      "x": 479983.63257176324,
+      "y": 4399806.256549313
+     },
+     {
+      "x": 479983.7974386463,
+      "y": 4399806.618424042
+     },
+     {
+      "x": 479983.955078079,
+      "y": 4399806.983505154
+     },
+     {
+      "x": 479984.10542773874,
+      "y": 4399807.351648314
+     },
+     {
+      "x": 479984.248428188,
+      "y": 4399807.722707986
+     },
+     {
+      "x": 479984.3840228916,
+      "y": 4399808.096537472
+     },
+     {
+      "x": 479984.51215824275,
+      "y": 4399808.472988982
+     },
+     {
+      "x": 479984.6327835877,
+      "y": 4399808.8519136915
+     },
+     {
+      "x": 479984.74585123546,
+      "y": 4399809.23316179
+     },
+     {
+      "x": 479984.8513164866,
+      "y": 4399809.616582565
+     },
+     {
+      "x": 479984.9491376464,
+      "y": 4399810.002024424
+     },
+     {
+      "x": 479985.0392760419,
+      "y": 4399810.389334993
+     },
+     {
+      "x": 479985.12169603887,
+      "y": 4399810.77836115
+     },
+     {
+      "x": 479985.1963650514,
+      "y": 4399811.168949098
+     },
+     {
+      "x": 479985.26325356256,
+      "y": 4399811.560944424
+     },
+     {
+      "x": 479985.3223351266,
+      "y": 4399811.954192153
+     },
+     {
+      "x": 479985.3735863854,
+      "y": 4399812.348536817
+     },
+     {
+      "x": 479985.41698707954,
+      "y": 4399812.743822519
+     },
+     {
+      "x": 479985.4525200505,
+      "y": 4399813.139892989
+     },
+     {
+      "x": 479985.48017124867,
+      "y": 4399813.536591638
+     },
+     {
+      "x": 479985.4999297444,
+      "y": 4399813.933761639
+     },
+     {
+      "x": 479985.51178772544,
+      "y": 4399814.331245972
+     }
+    ],
+    "chorded": 2
+   }
+  },
+  {
+   "id": "outside",
+   "title": "Enlemi 90°'yi aşan köşe dönüştürülemez (PROJ da dönüştürmez)",
+   "shape": {
+    "kind": "point",
+    "p": {
+     "x": 29.0,
+     "y": 95.0
+    }
+   },
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "expect": {
+    "error": "outside"
+   }
+  }
+ ],
+ "apportion": [
+  {
+   "value": "1000",
+   "share": 0.25,
+   "expect": "250.00"
+  },
+  {
+   "value": "10.5",
+   "share": 0.25,
+   "expect": "2.625"
+  },
+  {
+   "value": "7",
+   "share": 0.3333333333333333,
+   "expect": "2.33"
+  },
+  {
+   "value": "-3.10",
+   "share": 0.5,
+   "expect": "-1.5500"
+  },
+  {
+   "value": "12,5",
+   "share": 0.4,
+   "expect": "5.000"
+  },
+  {
+   "value": "abc",
+   "share": 0.5,
+   "expect": null
+  },
+  {
+   "value": "0.125",
+   "share": 0.5,
+   "expect": "0.06250"
+  },
+  {
+   "value": "1",
+   "share": 1.0,
+   "expect": "1.00"
+  },
+  {
+   "value": "999999999999999999.99",
+   "share": 0.1,
+   "expect": "100000000000000005.5501"
+  },
+  {
+   "value": "2",
+   "share": 0.0,
+   "expect": "0.00"
+  }
+ ]
+}

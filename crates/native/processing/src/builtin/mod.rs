@@ -2,6 +2,7 @@
 
 pub mod calculate_field;
 pub mod edge_lengths;
+pub mod geometry;
 pub mod info_from_enclosing;
 pub mod info_from_inside;
 pub mod join_by_field;
@@ -28,6 +29,17 @@ pub fn tools() -> Vec<Tool> {
         info_from_enclosing::tool(),
         summary_statistics::tool(),
         join_by_field::tool(),
+        geometry::buffer::tool(),
+        geometry::clip::tool(),
+        geometry::dissolve::tool(),
+        geometry::overlay::intersection(),
+        geometry::overlay::difference(),
+        geometry::overlay::sym_difference(),
+        geometry::overlay::union(),
+        geometry::validity::validity(),
+        geometry::validity::repair_tool(),
+        geometry::simplify::tool(),
+        geometry::reproject::tool(),
     ]
 }
 

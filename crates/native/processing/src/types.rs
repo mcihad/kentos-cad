@@ -121,6 +121,10 @@ impl EnumOption {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct NewLayerStyle {
     pub color: Option<String>,
+    /// The line weight, mm (the geometry tools' 0.25, docs/adr/0201).
+    pub line_weight: Option<f64>,
+    /// The areas' fill (hex with alpha).
+    pub fill: Option<String>,
     pub point: Option<PointStyle>,
     pub label: Option<LabelStyle>,
 }
@@ -130,6 +134,12 @@ impl NewLayerStyle {
     pub fn over(&self, mut base: LayerStyle) -> LayerStyle {
         if let Some(color) = &self.color {
             base.color.clone_from(color);
+        }
+        if let Some(weight) = self.line_weight {
+            base.line_weight = weight;
+        }
+        if self.fill.is_some() {
+            base.fill.clone_from(&self.fill);
         }
         if self.point.is_some() {
             base.point.clone_from(&self.point);

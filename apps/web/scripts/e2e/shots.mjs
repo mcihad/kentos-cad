@@ -2887,6 +2887,53 @@ SCENES.queries = [
   },
 ];
 
+// Geometri işlemleri (docs/adr/0201) on fixtures/processing/v1/geometry.kcad, the scenes the desktop's
+// `processing::geometry_tests::screens` draws: each tool's window after a run (the tables of Geçerliliği denetle, Onar
+// and Sadeleştir under the form) and two results in the drawing (Tampon's rings around the roads, Kesişim's pieces).
+const GEOMETRY_DRAWING = readFileSync(new URL('../../../../fixtures/processing/v1/geometry.kcad', import.meta.url), 'utf8');
+const openGeometry = async (ui, tool, values) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(GEOMETRY_DRAWING)}, null))) throw new Error('geometry.kcad did not load');
+    k.view.zoomExtents();
+    k.selection.clear();
+  })()`);
+  await ui.sleep(300);
+  await ui.eval(openTool(tool, values));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  await ui.clickSel('.ptool__run');
+  await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 8000);
+  await ui.sleep(300);
+};
+/** The run's result in the drawing: the window closed, the view on everything but the old sheet (17 km away); `hide`: input layers hidden. */
+const geometryDrawing = async (ui, hide = []) => {
+  await ui.escapeAll(2);
+  await ui.eval(`(() => {
+    const k = window.kentos;
+    k.selection.set([...k.doc.all()].filter((e) => e.layerId !== 'eski').map((e) => e.id));
+    k.commands.execute('view.zoomSelection');
+    k.selection.clear();
+    for (const id of ${JSON.stringify(hide)}) k.doc.layers.setVisible(id, false);
+  })()`);
+  await ui.move(2, 2);
+  await ui.sleep(400);
+};
+const BUFFER_ROADS = { input: QUERY_LAYER('yol'), distance: 3, rings: 2, dissolve: true };
+const INTERSECT_ZONES = { input: QUERY_LAYER('parsel'), overlay: QUERY_LAYER('imar'), prefix: 'İmar ', apportion: 'Değer' };
+SCENES.geometry = [
+  { id: 'geometri-tampon', open: (ui) => openGeometry(ui, 'geometry.buffer', BUFFER_ROADS), close: queryClose },
+  { id: 'geometri-tampon-cizim', open: async (ui) => (await openGeometry(ui, 'geometry.buffer', BUFFER_ROADS), await geometryDrawing(ui)), close: queryClose },
+  { id: 'geometri-kesisim', open: (ui) => openGeometry(ui, 'geometry.intersection', INTERSECT_ZONES), close: queryClose },
+  // Kesişim's pieces lie on the zoning areas: the inputs hidden, the pieces show.
+  { id: 'geometri-kesisim-cizim', open: async (ui) => (await openGeometry(ui, 'geometry.intersection', INTERSECT_ZONES), await geometryDrawing(ui, ['parsel', 'imar'])), close: queryClose },
+  { id: 'geometri-gecerlilik', open: async (ui) => (await openGeometry(ui, 'geometry.validity', { input: QUERY_LAYER('hatali') }), await formEnd(ui), await ui.sleep(200)), close: queryClose },
+  { id: 'geometri-onar', open: async (ui) => (await openGeometry(ui, 'geometry.repair', { input: QUERY_LAYER('hatali') }), await formEnd(ui), await ui.sleep(200)), close: queryClose },
+  { id: 'geometri-sadelestir', open: async (ui) => (await openGeometry(ui, 'geometry.simplify', { input: QUERY_LAYER('sinir'), tolerance: 0.05 }), await formEnd(ui), await ui.sleep(200)), close: queryClose },
+  { id: 'geometri-donustur', open: (ui) => openGeometry(ui, 'geometry.reproject', { input: QUERY_LAYER('eski'), source: '2320' }), close: queryClose },
+];
+
 SCENES.vectorfit = [
   { id: 'oturt', open: openFitScene },
   { id: 'oturt-adla-eslendi', open: async (ui) => (await matchFit(ui), await ui.move(2, 2), await ui.sleep(300)) },

@@ -1,6 +1,13 @@
 import type { ProcessingTool } from '../types';
 import { calculateField } from './calculateField';
 import { edgeLengths } from './edgeLengths';
+import { geometryBuffer } from './geometry/buffer';
+import { geometryClip } from './geometry/clip';
+import { geometryDissolve } from './geometry/dissolve';
+import { geometryDifference, geometryIntersection, geometrySymDifference, geometryUnion } from './geometry/overlay';
+import { geometryReproject } from './geometry/reproject';
+import { geometrySimplify } from './geometry/simplify';
+import { geometryRepair, geometryValidity } from './geometry/validity';
 import { infoFromEnclosing } from './infoFromEnclosing';
 import { infoFromInside } from './infoFromInside';
 import { joinByField } from './joinByField';
@@ -20,4 +27,15 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   infoFromEnclosing,
   summaryStatistics,
   joinByField,
+  geometryBuffer,
+  geometryClip,
+  geometryDissolve,
+  geometryIntersection,
+  geometryDifference,
+  geometrySymDifference,
+  geometryUnion,
+  geometryValidity,
+  geometryRepair,
+  geometrySimplify,
+  geometryReproject,
 ];

@@ -40,6 +40,9 @@ import {
 import { DIALOG_TEXTS as T } from './dialogTexts';
 import { paramControl, type FieldEnv } from './paramFields';
 
+/** A table cell that is a number: a sign, digits and one decimal point or comma. */
+const NUMBER_CELL = /^[-+]?\d+(?:[.,]\d+)?$/;
+
 /**
  * The dialog of one processing tool, generated from its definition: the
  * form on the left (Girdi, Ayarlar, Çıktı, Gelişmiş), what the tool does
@@ -242,9 +245,9 @@ class ToolDialog {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       log.success(`${this.tool.label}: tablo CSV olarak kaydedildi: ${a.download} (${table.rows.length} satır).`);
     });
-    // The first column names the row (a group); the figures are numbers.
-    const named = table.columns[0] === 'Grup';
-    const cell = (tag: 'th' | 'td', text: string, i: number) => h(tag, named && i === 0 ? null : { class: 'num' }, text);
+    // A column of numbers (every filled cell one) is right-aligned in figures; names and texts read from the left.
+    const numeric = table.columns.map((_, i) => table.rows.some((r) => !!r[i]) && table.rows.every((r) => !r[i] || NUMBER_CELL.test(r[i])));
+    const cell = (tag: 'th' | 'td', text: string, i: number) => h(tag, numeric[i] ? { class: 'num' } : null, text);
     replaceChildren(
       this.result,
       h('div', { class: 'pgroup__title ptool__result-title' }, h('span', null, T.result.title), h('span', { class: 'ptool__result-actions' }, copy, save)),

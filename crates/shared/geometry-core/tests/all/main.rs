@@ -20,6 +20,7 @@ mod image;
 mod field_reduce;
 mod field_traverse;
 mod geodesy;
+mod geoprocess;
 mod golden;
 mod hatch;
 mod label_text;

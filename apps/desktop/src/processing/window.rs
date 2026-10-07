@@ -154,9 +154,19 @@ fn form<'a>(window: &'a ToolDialog, env: &Env<'a, '_>) -> Element<'a, Message> {
     out.into()
 }
 
-/// The run's table under the form (Özet istatistik, docs/adr/0200 §7): its
-/// title with Panoya kopyala and CSV olarak kaydet, then the table; a
-/// group's name on the left, the figures right-aligned.
+/// Whether a table cell is a number: a sign, digits and one decimal point or comma.
+fn number_cell(text: &str) -> bool {
+    let body = text.strip_prefix(['-', '+']).unwrap_or(text);
+    let mut parts = body.splitn(2, ['.', ',']);
+    let whole = parts.next().unwrap_or("");
+    let digits = |s: &str| !s.is_empty() && s.chars().all(|c| c.is_ascii_digit());
+    digits(whole) && parts.next().is_none_or(digits)
+}
+
+/// The run's table under the form (Özet istatistik and the geometry tools'
+/// reports, docs/adr/0200 §7, 0201): its title with Panoya kopyala and CSV
+/// olarak kaydet, then the table; a column of numbers (every filled cell one)
+/// right-aligned in figures, names and texts from the left.
 fn result(t: &super::dialog::ResultTable) -> Element<'_, Message> {
     let small = |glyph: &str, text: &'static str, e: Event| {
         button(
@@ -171,7 +181,17 @@ fn result(t: &super::dialog::ResultTable) -> Element<'_, Message> {
         .style(style::button::ghost)
         .on_press(ev(e))
     };
-    let named = t.columns.first().is_some_and(|c| c == "Grup");
+    let numeric: Vec<bool> = (0..t.columns.len())
+        .map(|i| {
+            let cells = || {
+                t.rows
+                    .iter()
+                    .filter_map(|r| r.get(i))
+                    .filter(|c| !c.is_empty())
+            };
+            cells().next().is_some() && cells().all(|c| number_cell(c))
+        })
+        .collect();
     // Each column as wide as its widest text (the web's table sizes its columns so): the names in
     // the interface's face, the figures in mono.
     let size = typography::caption();
@@ -180,7 +200,7 @@ fn result(t: &super::dialog::ResultTable) -> Element<'_, Message> {
         .iter()
         .enumerate()
         .map(|(i, head)| {
-            let text = named && i == 0;
+            let text = !numeric[i];
             let widest = t
                 .rows
                 .iter()
@@ -204,21 +224,17 @@ fn result(t: &super::dialog::ResultTable) -> Element<'_, Message> {
         .enumerate()
         .map(|(i, (c, w))| {
             let col = table::Column::new(c.as_str()).width(*w);
-            if named && i == 0 {
-                col
-            } else {
-                col.align_right()
-            }
+            if numeric[i] { col.align_right() } else { col }
         });
     let body: Vec<table::Row<'_, Message>> = t
         .rows
         .iter()
         .map(|r| {
             table::Row::new(r.iter().enumerate().map(|(i, c)| {
-                if named && i == 0 {
-                    label::caption(c.clone()).into()
-                } else {
+                if numeric.get(i).copied().unwrap_or(false) {
                     label::mono_caption(c.clone()).into()
+                } else {
+                    label::caption(c.clone()).into()
                 }
             }))
         })

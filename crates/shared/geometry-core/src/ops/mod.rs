@@ -20,6 +20,7 @@ pub mod explode;
 pub mod feature_table;
 pub mod fillet;
 pub mod fit;
+pub mod geoprocess;
 pub mod grips;
 pub mod hatch_region;
 pub mod holes;

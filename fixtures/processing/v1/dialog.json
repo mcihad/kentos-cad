@@ -1507,6 +1507,1142 @@
     ]
    }
   },
+  "geometry.buffer": {
+   "title": "Tampon",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Tamponu çizilecek alanlar, çizgiler ve noktalar; yazı, ölçü ve blok gibi nesneler alınmaz.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "distance",
+     "label": "Uzaklık",
+     "description": "Alanlarda eksi değer alanı içe küçültür.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "side",
+     "label": "Yan",
+     "description": "Yalnız çizgilerde; alanlar ve noktalar iki yandan alınır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "both",
+        "label": "İki yan",
+        "hint": "Çizginin iki yanı ve uçları"
+       },
+       {
+        "value": "left",
+        "label": "Sol",
+        "hint": "Çizildiği yöne göre solu; uçları düz"
+       },
+       {
+        "value": "right",
+        "label": "Sağ",
+        "hint": "Çizildiği yöne göre sağı; uçları düz"
+       }
+      ]
+     }
+    },
+    {
+     "name": "rings",
+     "label": "Halka sayısı",
+     "description": "Birden çoksa her halka (k − 1)·d ile k·d arasıdır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "dissolve",
+     "label": "Birleştir",
+     "description": "Bütün tamponlar halka başına tek alan olur; öznitelikler yazılmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "distanceField",
+     "label": "Uzaklık alanı",
+     "description": "Seçilirse her nesnenin uzaklığı bu alandan okunur; Uzaklık kullanılmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "polygon",
+     "text": "Geometri"
+    },
+    "icon": "geoBuffer",
+    "about": "Nesnelerin çevresinde verilen uzaklıktaki alanı çizer: noktada daire, çizgide koridor, alanda dışa ya da (eksi uzaklıkla) içe; halkalarla ya da tek yandan da.",
+    "help": [
+     "Noktanın tamponu dairedir; çizginin her kenarı iki yanından uzaklık kadar genişler, uçları yarım dairedir; alanın tamponu alanı da içine alır. Yaylar ve daireler kesin kalır; elips ve eğri 0,1 mm içinde doğru parçalarıyla girer.",
+     "Eksi uzaklık yalnız alanlarda anlamlıdır: alan kenarlarından içe küçülür, köşeleri keskin kalır; ortasını aşan küçültme bir şey bırakmaz. Tek yanlı tampon (Sol, Sağ) çizginin çizildiği yöne göredir, uçları düzdür; alan ve noktalar iki yandan alınır.",
+     "Halka sayısı birden çoksa her halka (k − 1)·d ile k·d arasındaki şerittir; her parçaya “Uzaklık” (k·d) ve “Halka” (k) yazılır. Birleştir açıkken bütün tamponlar halka başına tek alandır ve nesnelerin öznitelikleri yazılmaz.",
+     "Uzaklık alanı seçilirse her nesnenin uzaklığı bu alandan okunur (ondalık nokta ya da virgül); okunamayan nesne alınmaz ve söylenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": true,
+    "aliases": [
+     "TAMPON",
+     "TAMPONBOLGE",
+     "BUFFER"
+    ]
+   }
+  },
+  "geometry.clip": {
+   "title": "Kırp",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Kesilecek alanlar, çizgiler ve noktalar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "cut",
+     "label": "Kesen alanlar",
+     "description": "Kapalı alanlar, daireler, tam elipsler ve kapalı eğriler; birleşerek keser.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "polygon",
+     "text": "Geometri"
+    },
+    "icon": "geoClip",
+    "about": "Nesnelerin kesen alanların içinde kalan parçalarını yeni katmana yazar; öznitelikler olduğu gibi kalır.",
+    "help": [
+     "Kesen alanlar önce birleşir; her nesnenin onların içinde ya da sınırında kalan kısmı yazılır: alanın ortak kısmı, çizginin içerideki parçaları, içerideki noktalar. Sınır üstündeki çizgi parçası içeride sayılır.",
+     "Bir nesnenin birden çok parçası kalırsa sonuç tek, çok parçalı nesnedir. Kesen alanların dışında kalan nesne yazılmaz ve söylenir. Kesen alanların öznitelikleri alınmaz; onları da isteyen Kesişim'i kullanır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KIRP",
+     "CLIP"
+    ]
+   }
+  },
+  "geometry.dissolve": {
+   "title": "Gruplayarak birleştir",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Birleştirilecek alanlar, çizgiler ve noktalar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "group",
+     "label": "Grupla",
+     "description": "Değeri aynı olan nesneler bir grup olur; boşsa hepsi tek grup.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "sums",
+     "label": "Toplanacak alanlar",
+     "description": "Her grubun bu alanlardaki değerleri toplanır.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin",
+      "multiple": true
+     }
+    },
+    {
+     "name": "multi",
+     "label": "Çok parçalı",
+     "description": "Açıkken grup başına tek nesne; kapalıyken her bağlı parça ayrı nesne.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "polygon",
+     "text": "Geometri"
+    },
+    "icon": "geoDissolve",
+    "about": "Nesneleri bir alanın değerine göre gruplayıp her grubu tek nesnede birleştirir: alanların ortak sınırları kalkar, istenen alanların değerleri toplanır.",
+    "help": [
+     "Örnekler: parselleri ada numarasına göre birleştirip adaları elde etmek; aynı kullanım türündeki alanları tek alan yapmak.",
+     "Grupla boşsa bütün nesneler tek gruptur. Alanlar birleşir, ortak sınırları kalkar; çizgiler ve noktalar grubun çok parçalı nesnesi olur. Çok parçalı kapalıysa her bağlı parça ayrı nesne olarak, büyükten küçüğe yazılır.",
+     "Sonucun öznitelikleri: grup alanı ve değeri, “Nesne sayısı” ve Toplanacak alanların toplamları. Toplamlar kesindir; sayı olarak okunamayan değerler atlanır ve söylenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "GRUPBIRLESTIR",
+     "DISSOLVE"
+    ]
+   }
+  },
+  "geometry.intersection": {
+   "title": "Kesişim",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Kesilecek alanlar, çizgiler ve noktalar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "overlay",
+     "label": "Kesen alanlar",
+     "description": "Her nesne kesiştiği her alanla ayrı parça verir.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "prefix",
+     "label": "Önek",
+     "description": "İkinci tarafın öznitelik adlarının önüne yazılır; ad birinci tarafta da varsa “ad (2)” olur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "maxLength": 24
+     }
+    },
+    {
+     "name": "apportion",
+     "label": "Alan oranıyla paylaştır",
+     "description": "Bu alanların sayı değerleri parçanın payıyla çarpılır: alanda alan, çizgide uzunluk oranı.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin",
+      "multiple": true
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "polygon",
+     "text": "Geometri"
+    },
+    "icon": "geoIntersection",
+    "about": "Her nesnenin kesen alanlarla ortak parçalarını, iki tarafın öznitelikleriyle yeni katmana yazar.",
+    "help": [
+     "Her nesne, kesiştiği her alanla ayrı bir parça verir: alanda ortak alan, çizgide içerideki parçalar, noktada içerideki noktalar. Parça nesnenin ve kesen alanın özniteliklerini taşır; kesen alanınkiler Önek ile yazılır.",
+     "Alan oranıyla paylaştır: seçilen alanların sayı değerleri, parçanın birinci taraftaki nesnenin alanına (çizgide uzunluğuna, noktada sayısına) oranıyla çarpılır ve değerin basamağından iki fazla basamağa yarım çifte yuvarlanır; sayı olarak okunamayan değer olduğu gibi kalır ve söylenir.",
+     "Örnek: imar adalarıyla kesişen parsellerin her adadaki parçası, parselin ve adanın bilgileriyle; parselin değeri parçanın alan oranıyla."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KESISIMAL",
+     "GEOINTERSECT"
+    ]
+   }
+  },
+  "geometry.difference": {
+   "title": "Fark",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Kısımları çıkarılacak alanlar, çizgiler ve noktalar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "overlay",
+     "label": "Çıkarılacak alanlar",
+     "description": "Kapladıkları kısım nesnelerden atılır.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "polygon",
+     "text": "Geometri"
+    },
+    "icon": "geoDifference",
+    "about": "Her nesneden çıkarılacak alanların kapladığı kısmı atar, kalanı öznitelikleriyle yeni katmana yazar.",
+    "help": [
+     "Çıkarılacak alanlar önce birleşir; her nesnenin onların dışında kalan kısmı yazılır: alanın kalan parçaları, çizginin dışarıdaki parçaları, dışarıdaki noktalar. Sınır üstündeki çizgi parçası atılır.",
+     "Bütünüyle örtülen nesne yazılmaz ve söylenir. Öznitelikler nesnenin kendisinindir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "FARKAL",
+     "GEOERASE"
+    ]
+   }
+  },
+  "geometry.symDifference": {
+   "title": "Simetrik fark",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Birinci alanlar",
+     "description": "Kapalı alanlar, daireler, tam elipsler ve kapalı eğriler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "overlay",
+     "label": "İkinci alanlar",
+     "description": "Birincilerle karşılaştırılan alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "prefix",
+     "label": "Önek",
+     "description": "İkinci tarafın öznitelik adlarının önüne yazılır; ad birinci tarafta da varsa “ad (2)” olur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "maxLength": 24
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "polygon",
+     "text": "Geometri"
+    },
+    "icon": "geoSymDifference",
+    "about": "İki alan kümesinin yalnız birinin kapladığı parçaları, kendi taraflarının öznitelikleriyle yeni katmana yazar.",
+    "help": [
+     "Önce birinci alanların ikincilerin dışında kalan parçaları, sonra ikincilerin birincilerin dışında kalanları yazılır; ortak kısımlar atılır.",
+     "Birinci taraftan gelen parça kendi özniteliklerini, ikinciden gelen kendininkileri Önek ile taşır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "SIMFARK",
+     "SYMDIFF"
+    ]
+   }
+  },
+  "geometry.union": {
+   "title": "Birleşim",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Birinci alanlar",
+     "description": "Kapalı alanlar, daireler, tam elipsler ve kapalı eğriler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "overlay",
+     "label": "İkinci alanlar",
+     "description": "Birincilerle bindirilen alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "prefix",
+     "label": "Önek",
+     "description": "İkinci tarafın öznitelik adlarının önüne yazılır; ad birinci tarafta da varsa “ad (2)” olur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "maxLength": 24
+     }
+    },
+    {
+     "name": "apportion",
+     "label": "Alan oranıyla paylaştır",
+     "description": "Bu alanların sayı değerleri parçanın payıyla çarpılır: alanda alan, çizgide uzunluk oranı.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin",
+      "multiple": true
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "polygon",
+     "text": "Geometri"
+    },
+    "icon": "geoUnion",
+    "about": "İki alan kümesini bindirir: ortak parçalar iki tarafın, kalan parçalar kendi taraflarının öznitelikleriyle yeni katmana yazılır.",
+    "help": [
+     "Önce her birinci alanın her ikinciyle ortak parçası (iki tarafın öznitelikleriyle), sonra birincilerin ikincilerin dışında kalan, en son ikincilerin birincilerin dışında kalan parçaları yazılır. İkinci tarafın öznitelikleri Önek ile yazılır.",
+     "Alan oranıyla paylaştır: seçilen alanların sayı değerleri, parçanın birinci taraftaki nesnenin alanına (çizgide uzunluğuna, noktada sayısına) oranıyla çarpılır ve değerin basamağından iki fazla basamağa yarım çifte yuvarlanır; sayı olarak okunamayan değer olduğu gibi kalır ve söylenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "BIRLESIM",
+     "GEOUNION"
+    ]
+   }
+  },
+  "geometry.validity": {
+   "title": "Geçerliliği denetle",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Denetlenecek kapalı alanlar, çoklu çizgiler ve çizgiler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "polygon",
+     "text": "Geometri"
+    },
+    "icon": "geoValidity",
+    "about": "Alan ve çizgilerin geometri sorunlarını bulup tabloda gösterir ve sorunlu nesneleri seçer; çizim değişmez.",
+    "help": [
+     "Bulunan sorunlar: yinelenen köşe (art arda aynı yerde iki köşe), alanı sıfır olan halka (köşeleri bir doğru üstünde), kendini kesen, kendine değen ya da kendi üstünden geri dönen halka ya da yol, dış halkanın dışına taşan delik, örtüşen delikler. Başladığı yerde biten yol kendini kesmiş sayılmaz.",
+     "Her sorun her halkada bir kez, ilk göründüğü yerle yazılır; yer tablonun Doğu ve Kuzey sütunlarındadır. Aynı yerde sayılma payı 1 mikrometredir (çekirdeğin örtüşme toleransı); başka gizli yuvarlama yoktur.",
+     "Sorunlu nesneleri yeni katmana düzeltilmiş olarak yazmak için Onar'ı kullanın."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "GECERLILIK",
+     "CHECKGEOMETRY"
+    ]
+   }
+  },
+  "geometry.repair": {
+   "title": "Onar",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Onarılacak kapalı alanlar, çoklu çizgiler ve çizgiler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "polygon",
+     "text": "Geometri"
+    },
+    "icon": "geoRepair",
+    "about": "Alan ve çizgilerin geometri sorunlarını düzeltip nesneleri öznitelikleriyle yeni katmana yazar; neyin değiştiğini tabloda gösterir.",
+    "help": [
+     "Sorunlu alan kendi halkalarından yeniden kurulur: kendini kesen halka parçalarına ayrılır, dış halkadan taşan delik halkayla kesilir, örtüşen delikler tek delik olur, yinelenen köşeler düşer; alanı kalmayan halka yazılmaz. Çizgilerde yinelenen köşeler düşer; kendini kesen yol onarılmaz, olduğu gibi yazılır.",
+     "Sorunu olmayan nesne olduğu gibi yazılır. Tablo her sorunlu nesnenin önceki ve sonraki parça, delik ve alan sayılarını (çizgide köşe sayısını) ve sorunlarını gösterir. Girdi değişmez."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ONAR",
+     "REPAIRGEOMETRY"
+    ]
+   }
+  },
+  "geometry.simplify": {
+   "title": "Sadeleştir",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Sadeleştirilecek kapalı alanlar ve çoklu çizgiler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "tolerance",
+     "label": "Tolerans",
+     "description": "Bundan az sapan köşeler atılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "polygon",
+     "text": "Geometri"
+    },
+    "icon": "geoSimplify",
+    "about": "Alan ve çoklu çizgilerden toleranstan az sapan köşeleri atarak yeni katmana yazar; köşe sayılarını, alan değişimini ve en büyük sapmayı tabloda verir.",
+    "help": [
+     "Çizimdeki Sadeleştir’in kuralıdır: atılacak köşe, onun yerine geçecek doğrudan toleranstan az uzaktır; yay kenarlar bütün kalır, alan en az üç köşesini korur.",
+     "Her nesne sonuçta bir kez yazılır (değişmeyen olduğu gibi). Komşu alanların ortak sınırları ayrı ayrı sadeleşir; ortak sınırı koruyan sadeleştirme ayrı bir iştir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "SADELESTIRKATMAN",
+     "GENERALIZE"
+    ]
+   }
+  },
+  "geometry.reproject": {
+   "title": "Koordinat sistemine dönüştür",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Koordinatları kaynak sistemde olan alanlar, çizgiler ve noktalar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "source",
+     "label": "Kaynak sistem",
+     "description": "Nesnelerin koordinatlarının sistemi; hedef projenin sistemidir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "5253",
+        "label": "TUREF / TM27 (EPSG:5253)",
+        "hint": "25.5°–28.5° D (3° dilim)"
+       },
+       {
+        "value": "5254",
+        "label": "TUREF / TM30 (EPSG:5254)",
+        "hint": "28.5°–31.5° D (3° dilim)"
+       },
+       {
+        "value": "5255",
+        "label": "TUREF / TM33 (EPSG:5255)",
+        "hint": "31.5°–34.5° D (3° dilim)"
+       },
+       {
+        "value": "5256",
+        "label": "TUREF / TM36 (EPSG:5256)",
+        "hint": "34.5°–37.5° D (3° dilim)"
+       },
+       {
+        "value": "5257",
+        "label": "TUREF / TM39 (EPSG:5257)",
+        "hint": "37.5°–40.5° D (3° dilim)"
+       },
+       {
+        "value": "5258",
+        "label": "TUREF / TM42 (EPSG:5258)",
+        "hint": "40.5°–43.5° D (3° dilim)"
+       },
+       {
+        "value": "5259",
+        "label": "TUREF / TM45 (EPSG:5259)",
+        "hint": "43.5°–46.5° D (3° dilim)"
+       },
+       {
+        "value": "5252",
+        "label": "TUREF (EPSG:5252)",
+        "hint": "Türkiye, coğrafi (enlem/boylam)"
+       },
+       {
+        "value": "2319",
+        "label": "ED50 / TM27 (EPSG:2319)",
+        "hint": "25.5°–28.5° D (3° dilim)"
+       },
+       {
+        "value": "2320",
+        "label": "ED50 / TM30 (EPSG:2320)",
+        "hint": "28.5°–31.5° D (3° dilim)"
+       },
+       {
+        "value": "2321",
+        "label": "ED50 / TM33 (EPSG:2321)",
+        "hint": "31.5°–34.5° D (3° dilim)"
+       },
+       {
+        "value": "2322",
+        "label": "ED50 / TM36 (EPSG:2322)",
+        "hint": "34.5°–37.5° D (3° dilim)"
+       },
+       {
+        "value": "2323",
+        "label": "ED50 / TM39 (EPSG:2323)",
+        "hint": "37.5°–40.5° D (3° dilim)"
+       },
+       {
+        "value": "2324",
+        "label": "ED50 / TM42 (EPSG:2324)",
+        "hint": "40.5°–43.5° D (3° dilim)"
+       },
+       {
+        "value": "2325",
+        "label": "ED50 / TM45 (EPSG:2325)",
+        "hint": "43.5°–46.5° D (3° dilim)"
+       },
+       {
+        "value": "23035",
+        "label": "ED50 / UTM 35N (EPSG:23035)",
+        "hint": "24°–30° D (6° dilim)"
+       },
+       {
+        "value": "23036",
+        "label": "ED50 / UTM 36N (EPSG:23036)",
+        "hint": "30°–36° D (6° dilim)"
+       },
+       {
+        "value": "23037",
+        "label": "ED50 / UTM 37N (EPSG:23037)",
+        "hint": "36°–42° D (6° dilim)"
+       },
+       {
+        "value": "23038",
+        "label": "ED50 / UTM 38N (EPSG:23038)",
+        "hint": "42°–48° D (6° dilim)"
+       },
+       {
+        "value": "32635",
+        "label": "WGS 84 / UTM 35N (EPSG:32635)",
+        "hint": "24°–30° D (6° dilim)"
+       },
+       {
+        "value": "32636",
+        "label": "WGS 84 / UTM 36N (EPSG:32636)",
+        "hint": "30°–36° D (6° dilim)"
+       },
+       {
+        "value": "32637",
+        "label": "WGS 84 / UTM 37N (EPSG:32637)",
+        "hint": "36°–42° D (6° dilim)"
+       },
+       {
+        "value": "32638",
+        "label": "WGS 84 / UTM 38N (EPSG:32638)",
+        "hint": "42°–48° D (6° dilim)"
+       },
+       {
+        "value": "4326",
+        "label": "WGS 84 (EPSG:4326)",
+        "hint": "Dünya, coğrafi (enlem/boylam)"
+       },
+       {
+        "value": "3857",
+        "label": "WGS 84 / Pseudo-Mercator (EPSG:3857)",
+        "hint": "Web haritaları (altlık karolar)"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "polygon",
+     "text": "Geometri"
+    },
+    "icon": "geoReproject",
+    "about": "Koordinatları başka bir sistemde olan nesneleri projenin koordinat sistemine dönüştürüp yeni katmana yazar.",
+    "help": [
+     "Kaynak sistem, nesnelerin koordinatlarının bugün hangi sistemde olduğudur (örneğin ED50 / TM30 ile alınmış eski bir pafta); hedef her zaman projenin sistemidir. Projenin datum seçimleri (Proje ayarları › Datum dönüşümleri) uygulanır.",
+     "Köşeler tek tek dönüştürülür. Yay ve daire kenarları önce 1 mm içinde doğru parçalarına çevrilir, çünkü izdüşüm daireyi daire olarak korumaz. Noktanın kotu korunur; çizgi ve alanların köşe kotları taşınmaz.",
+     "Bir köşesi projenin sisteminde değeri olmayan nesne (dilimin çok dışında, datumlar arasında yol ya da ızgara yok) yazılmaz ve nedeniyle söylenir. Projenin koordinat sistemi yoksa araç çalışmaz."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "IZDUSUMDEGISTIR",
+     "REPROJECT"
+    ]
+   }
+  },
   "model:builtin.parcelSheet": {
    "title": "Parsel ölçü yazıları",
    "rows": [

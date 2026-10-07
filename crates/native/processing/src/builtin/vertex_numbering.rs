@@ -182,6 +182,7 @@ pub fn tool() -> Tool {
                             max_scale: None,
                             ink: None,
                         }),
+                        ..NewLayerStyle::default()
                     },
                 },
             )

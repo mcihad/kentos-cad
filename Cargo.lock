@@ -2782,6 +2782,7 @@ dependencies = [
  "kentos-formats",
  "kentos-geometry-core",
  "kentos-native-application",
+ "kentos-project",
  "kentos-style-core",
  "serde",
  "serde_json",

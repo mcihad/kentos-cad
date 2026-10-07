@@ -4,6 +4,7 @@ import type { CompiledExpression } from '../model/expression/expression';
 import type { Vec2 } from '../model/geometry';
 import type { LayerField } from '../model/layerFields';
 import type { LayerStyle } from '../model/layers';
+import type { DatumChoice, System } from '../model/geom/crsTransform';
 import type { RunGeometry } from './geometry';
 
 /**
@@ -293,6 +294,19 @@ export interface RunContext {
   readonly geometry: RunGeometry;
   /** A layer's field of that name (docs/adr/0199 §1): what a value written to the attribute becomes. */
   field(layerId: string, name: string): LayerField | undefined;
+  /** The project's coordinate system as the transforms read it (docs/adr/0201 §8); null without one. */
+  readonly crs: ProjectCrs | null;
+}
+
+/**
+ * The project's coordinate system for a run (Koordinat sistemine dönüştür, docs/adr/0201 §8): its SRID (0 for a
+ * definition of the project's own), its code (“EPSG:5254”, “Özel sistem”), the system and the project's datum choices.
+ */
+export interface ProjectCrs {
+  readonly srid: number;
+  readonly code: string;
+  readonly system: System;
+  readonly choices: readonly DatumChoice[];
 }
 
 /** Progress, messages and cancellation, shared with the dialog. */

@@ -2,9 +2,10 @@
 //! fixtures/processing/README.md): each case runs a built-in tool or model
 //! on a drawing through the native runner, and what the run did is compared
 //! with what the case says. The web plays the same files
-//! (apps/web/src/processing/cases.test.ts): cases.json, and queries.json
+//! (apps/web/src/processing/cases.test.ts): cases.json, queries.json
 //! (docs/adr/0200), whose file values name files beside it, read through the
-//! formats core as the dialog reads a chosen file.
+//! formats core as the dialog reads a chosen file, and geometry.json
+//! (docs/adr/0201), whose new objects are measured (`addedShapes`).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -137,6 +138,75 @@ fn same_object(have: &Value, want: &Value, tol: f64) -> bool {
                 same(got, v)
             }
         })
+}
+
+/// The fields a geometry tool's new object may have: its kind, layer and
+/// attributes, and its geometry's.
+const SHAPE_FIELDS: [&str; 12] = [
+    "kind", "layerId", "attrs", "pts", "bulges", "holes", "parts", "p", "a", "b", "c", "r",
+];
+
+/// An object's vertices in order: an area's ring then its holes, a path's, a point's and its points'.
+fn vertices_of(e: &Value) -> Value {
+    let list = |v: &Value| v.as_array().cloned().unwrap_or_default();
+    if e["kind"] == "point" {
+        let mut out = vec![e["p"].clone()];
+        out.extend(list(&e["parts"]).iter().map(|q| q["p"].clone()));
+        return Value::Array(out);
+    }
+    let mut out = list(&e["pts"]);
+    for h in list(&e["holes"]) {
+        out.extend(list(&h["pts"]));
+    }
+    Value::Array(out)
+}
+
+/// A geometry tool's new object against the case (`addedShapes`, docs/adr/0201):
+/// its kind, layer and attributes exactly, no other fields, and its measures
+/// (the core's `measured`: parts, holes, area, length, points) and vertices
+/// within the tolerances; why not, when it is not.
+fn same_shape(have: &Value, want: &Value, tol: f64, measure_tol: f64) -> Option<String> {
+    use kentos_geometry_core::api::json::{FromJson, Json};
+    use kentos_geometry_core::ops::geoprocess::calls::measured;
+    if let Some(extra) = have
+        .as_object()
+        .and_then(|o| o.keys().find(|k| !SHAPE_FIELDS.contains(&k.as_str())))
+    {
+        return Some(format!("fazla alan “{extra}”"));
+    }
+    for key in ["kind", "layerId", "attrs"] {
+        if !same(&have[key], &want[key]) {
+            return Some(key.to_owned());
+        }
+    }
+    let json = Json::parse(&have.to_string()).ok()?;
+    let e = kentos_geometry_core::entity::Entity::from_json(&json).ok()?;
+    let m = measured(&e.shape);
+    if json!(m.parts) != want["parts"] || json!(m.holes) != want["holes"] {
+        return Some(format!("parça {}, delik {}", m.parts, m.holes));
+    }
+    for (key, got) in [("area", m.area), ("length", m.length)] {
+        if let Some(w) = want[key].as_f64()
+            && got.is_none_or(|g| (g - w).abs() > measure_tol)
+        {
+            return Some(format!("{key} {got:?}"));
+        }
+    }
+    if !want["points"].is_null() {
+        let points: Vec<Value> = m
+            .points
+            .unwrap_or_default()
+            .iter()
+            .map(|p| json!({ "x": p.x, "y": p.y }))
+            .collect();
+        if !close(&Value::Array(points), &want["points"], tol) {
+            return Some("noktalar".to_owned());
+        }
+    }
+    if !want["vertices"].is_null() && !close(&vertices_of(have), &want["vertices"], tol) {
+        return Some("köşeler".to_owned());
+    }
+    None
 }
 
 struct Seen {
@@ -380,7 +450,11 @@ fn observed(s: &Seen) -> Value {
     }
 }
 
-fn check(c: &Value, mut s: Seen, tol: f64) -> Vec<String> {
+fn check(c: &Value, s: Seen, tol: f64) -> Vec<String> {
+    check_measured(c, s, tol, tol)
+}
+
+fn check_measured(c: &Value, mut s: Seen, tol: f64, measure_tol: f64) -> Vec<String> {
     let id = c["id"].as_str().unwrap_or("?");
     let got = observed(&s);
     let want = &c["expect"];
@@ -441,7 +515,11 @@ fn check(c: &Value, mut s: Seen, tol: f64) -> Vec<String> {
         &got["layers"],
         &want["layers"],
     );
-    let (have, wanted) = (or_empty(&got["added"]), or_empty(&want["added"]));
+    let shapes = !want["addedShapes"].is_null();
+    let (have, wanted) = (
+        or_empty(&got["added"]),
+        or_empty(&want[if shapes { "addedShapes" } else { "added" }]),
+    );
     let (have, wanted) = (
         have.as_array().cloned().unwrap_or_default(),
         wanted.as_array().cloned().unwrap_or_default(),
@@ -455,7 +533,13 @@ fn check(c: &Value, mut s: Seen, tol: f64) -> Vec<String> {
         );
     } else {
         for (i, (h, w)) in have.iter().zip(&wanted).enumerate() {
-            expect(same_object(h, w, tol), &format!("added[{i}]"), h, w);
+            if shapes {
+                let why = same_shape(h, w, tol, measure_tol);
+                let what = format!("addedShapes[{i}]: {}", why.as_deref().unwrap_or(""));
+                expect(why.is_none(), &what, h, w);
+            } else {
+                expect(same_object(h, w, tol), &format!("added[{i}]"), h, w);
+            }
         }
     }
     expect(
@@ -574,13 +658,56 @@ fn the_query_cases_do_what_they_say() {
     );
 }
 
+/// The geometry tools' cases (docs/adr/0201): the same run here and on the
+/// drawing's reading copy as the background runs it; new objects measured.
+#[test]
+fn the_geometry_cases_do_what_they_say() {
+    let file = case_file("geometry.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let measure_tol = file["measureTolerance"]
+        .as_f64()
+        .expect("a measure tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check_measured(c, play(c, &registry, false, &json!({})), tol, measure_tol);
+        found.extend(check_measured(
+            c,
+            play(c, &registry, true, &json!({})),
+            tol,
+            measure_tol,
+        ));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 19, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
 /// Each drawing's defaults and each tool's default values on it, as the web reads them.
 #[test]
 fn the_defaults_the_tools_take_from_the_drawing() {
-    let file = cases();
+    let (file, geometry) = (cases(), case_file("geometry.json"));
     let registry = Registry::builtin();
     let lookup = |id: &str| registry.tool(id);
-    for (name, d) in file["documents"].as_object().expect("documents") {
+    let documents = file["documents"]
+        .as_object()
+        .expect("documents")
+        .iter()
+        .chain(geometry["documents"].as_object().expect("documents"));
+    for (name, d) in documents {
         let doc = load(name);
         let defaults = Defaults::of(&doc);
         assert!(

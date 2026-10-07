@@ -86,16 +86,25 @@ pub fn param_from_json(v: &Value) -> Option<ParamDef> {
                 })
                 .collect(),
         },
-        "layer" => ParamKind::Layer {
-            new_layer_style: NewLayerStyle {
-                color: o
-                    .get("newLayerStyle")
-                    .and_then(|s| s.get("color"))
+        "layer" => {
+            let style = o.get("newLayerStyle");
+            let text = |key: &str| {
+                style
+                    .and_then(|s| s.get(key))
                     .and_then(Value::as_str)
-                    .map(str::to_owned),
-                ..NewLayerStyle::default()
-            },
-        },
+                    .map(str::to_owned)
+            };
+            ParamKind::Layer {
+                new_layer_style: NewLayerStyle {
+                    color: text("color"),
+                    line_weight: style
+                        .and_then(|s| s.get("lineWeight"))
+                        .and_then(Value::as_f64),
+                    fill: text("fill"),
+                    ..NewLayerStyle::default()
+                },
+            }
+        }
         "point" => ParamKind::Point,
         "expression" => ParamKind::Expression {
             returns: if o.get("returns").and_then(Value::as_str) == Some("condition") {

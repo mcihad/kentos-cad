@@ -596,9 +596,9 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     let _ = app.update(Message::Run("processing.toolbox"));
     assert!(app.docks.is_shown(Panel::Processing));
     assert_eq!(app.processing.panel.tab, Tab::Tools);
-    assert_eq!(app.processing_meta(), "9 araç");
-    // Turkish letters folded: “kose” finds Köşe noktalarını numarala only.
-    event(&mut app, Event::Panel(PanelEvent::Search("kose".into())));
+    assert_eq!(app.processing_meta(), "20 araç");
+    // Turkish letters folded: “kose numara” finds Köşe noktalarını numarala only (as the web's test).
+    event(&mut app, Event::Panel(PanelEvent::Search("kose numara".into())));
     let hits: Vec<String> = app
         .processing
         .registry

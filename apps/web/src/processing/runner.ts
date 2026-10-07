@@ -3,11 +3,12 @@ import { foldTurkish } from '../core/text';
 import type { Entity, NewEntity } from '../model/entities';
 import { entityObjects, type BuilderObjects } from '../model/expression/builderObjects';
 import { compileExpression, previewExpression } from '../model/expression/expression';
+import { crsSettings, datumChoices, ownSystem } from '../model/projectCrs';
 import { resolveFeatures, summarizeFeatures, type FeatureHost, type InputSummary } from './features';
 import { withObjects } from './geometry';
 import { clientExecutor, type Executor, type FeatureRef, type RunJob } from './job';
 import { fileTable, isVisible, validateValues, type ValidationIssue } from './parameters';
-import type { DefaultsContext, ExecutionTarget, Feedback, FeaturesValue, FileValue, LayerParam, LayerValue, ProcessingTool, RunResult, TargetLayer } from './types';
+import type { DefaultsContext, ExecutionTarget, Feedback, FeaturesValue, FileValue, LayerParam, LayerValue, ProcessingTool, ProjectCrs, RunResult, TargetLayer } from './types';
 import { checkWrites } from './writeCheck';
 
 /**
@@ -131,6 +132,13 @@ export class ProcessingRunner {
       drawingFont: s.drawingFont.value,
       activeLayer: this.host.doc.layers.active.value,
     };
+  }
+
+  /** The project's coordinate system for a run (docs/adr/0201 §8): its own system and datum choices; null without one. */
+  projectCrs(): ProjectCrs | null {
+    const settings = crsSettings(this.host.doc.settings);
+    const own = ownSystem(settings);
+    return own?.system ? { srid: settings.srid, code: own.code, system: own.system, choices: datumChoices(settings) } : null;
   }
 
   validate(tool: ProcessingTool, values: Record<string, unknown>): ValidationIssue[] {
@@ -305,6 +313,7 @@ export class ProcessingRunner {
       selection: [...this.host.selectedIds()],
       layers: layers.leaves().map((l) => [l.id, l.name] as const),
       fields: layers.leaves().flatMap((l) => (l.fields?.length ? [[l.id, l.fields] as const] : [])),
+      crs: this.projectCrs(),
     };
 
     this.canceled = false;

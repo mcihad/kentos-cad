@@ -578,6 +578,32 @@ export const ICONS = {
     '<path d="M9 3.2H2.8l3.4 4.6-3.4 4.6H9" stroke-width="1.4"/><path d="M11.8 17v-5M14.8 17V8.5M17.8 17v-6.5" stroke-width="2"/><path d="M10.3 17.2h8.5" stroke-width="1.1"/>',
   joinField:
     '<circle cx="5.2" cy="5.2" r="2.7"/><path d="m7.1 7.1 4 4M9.3 9.3l1.3-1.3M10.6 10.6l1.3-1.3" stroke-width="1.3"/><rect x="10.5" y="11" width="7.5" height="6.5" rx=".8"/><path d="M10.5 14.2h7.5M14.2 11v6.5" stroke-width="1.1"/>',
+  // Geometri işlemleri (docs/adr/0201), the owner's choices (7 October): a path and its buffer's band; crop marks
+  // about a clipped area; a 2 × 2 block, three of a group joined; Venn circles for Kesişim, Fark, Simetrik fark and
+  // Birleşim, the result filled; a ring crossing itself under a magnifier; the ring fallen into its two triangles,
+  // checked; a jagged outline and its simple area; a parcel moved from a skewed grid onto a square one.
+  geoBuffer:
+    '<path d="M4.2 14.6 9 7.6l6.8 3.4" stroke-width="7" stroke-opacity=".28"/><path d="M4.2 14.6 9 7.6l6.8 3.4" stroke-width="1.5"/><circle cx="4.2" cy="14.6" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.8" cy="11" r="1.1" fill="currentColor" stroke="none"/>',
+  geoClip:
+    '<path d="M5.5 2.5v3h-3M14.5 2.5v3h3M5.5 17.5v-3h-3M14.5 17.5v-3h3" stroke-width="1.3"/><path d="M5.5 9.2 9.5 3.6l7 4.4-2.6 8.6H7.3z" stroke-width="1" stroke-dasharray="1.8 1.4"/><path d="M5.5 9.2 8.6 5.5h5.9v9H5.5z" fill="currentColor" fill-opacity=".5" stroke="none"/><path d="M5.5 9.2 8.6 5.5h5.9v9H5.5z" stroke-width="1.3"/>',
+  geoDissolve:
+    '<path d="M2.5 2.5h15v7.5h-7.5v7.5h-7.5z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M2.5 2.5h15v7.5h-7.5v7.5h-7.5z"/><path d="M10 2.5v7.5M2.5 10H10" stroke-width="1" stroke-dasharray="1.8 1.4"/><path d="M10 10h7.5v7.5H10z" stroke-width="1.1"/>',
+  geoIntersection:
+    '<circle cx="7.5" cy="10" r="5.5"/><circle cx="12.5" cy="10" r="5.5"/><path d="M10 5.1A5.5 5.5 0 0 1 10 14.9A5.5 5.5 0 0 1 10 5.1z" fill="currentColor" fill-opacity=".5" stroke="none"/>',
+  geoDifference:
+    '<circle cx="12.5" cy="10" r="5.5" stroke-width="1" stroke-dasharray="1.8 1.4"/><path d="M10 5.1A5.5 5.5 0 1 0 10 14.9A5.5 5.5 0 0 1 10 5.1z" fill="currentColor" fill-opacity=".5" stroke="none"/><path d="M10 5.1A5.5 5.5 0 1 0 10 14.9A5.5 5.5 0 0 1 10 5.1z"/>',
+  geoSymDifference:
+    '<circle cx="7.5" cy="10" r="5.5"/><circle cx="12.5" cy="10" r="5.5"/><path d="M10 5.1A5.5 5.5 0 1 0 10 14.9A5.5 5.5 0 0 1 10 5.1z" fill="currentColor" fill-opacity=".5" stroke="none"/><path d="M10 5.1A5.5 5.5 0 1 1 10 14.9A5.5 5.5 0 0 0 10 5.1z" fill="currentColor" fill-opacity=".5" stroke="none"/>',
+  geoUnion:
+    '<path d="M10 5.1A5.5 5.5 0 1 0 10 14.9A5.5 5.5 0 0 1 10 5.1z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M10 5.1A5.5 5.5 0 1 1 10 14.9A5.5 5.5 0 0 0 10 5.1z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M10 5.1A5.5 5.5 0 0 1 10 14.9A5.5 5.5 0 0 1 10 5.1z" fill="currentColor" fill-opacity=".28" stroke="none"/><circle cx="7.5" cy="10" r="5.5"/><circle cx="12.5" cy="10" r="5.5"/>',
+  geoValidity:
+    '<path d="M9.98 10.56 2.5 4.5V13L13 4.5v4.71" stroke-width="1.2"/><circle cx="12.8" cy="12.8" r="3.6"/><path d="m15.4 15.4 2.6 2.6" stroke-width="2"/><circle cx="12.8" cy="12.8" r="1" fill="currentColor" stroke="none"/>',
+  geoRepair:
+    '<path d="M2.5 3.5 8.6 9.5 2.5 15.5z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M2.5 3.5 8.6 9.5 2.5 15.5z"/><path d="M14.6 3.5 8.6 9.5l6 6z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M14.6 3.5 8.6 9.5l6 6z"/><path d="m13.5 16 1.8 1.8 3.2-3.6" stroke-width="1.5"/>',
+  geoSimplify:
+    '<path d="M3 15.5 4.6 4.4l10.6-.9 2.3 10.8z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M3 15.5 4.6 4.4l10.6-.9 2.3 10.8z"/><path d="M3 15.5 3.6 9.5l1.6-.9.7-3.6 2.6.9 1.9-2.4 2.9 1.3.8 2.9 2.4 1.4-.9 4.6-3.4.6-1.7 1.9z" stroke-width=".9" stroke-dasharray="1.8 1.4"/>',
+  geoReproject:
+    '<path d="M2.5 9.5 5 3.5h6l-2.5 6z" stroke-width="1.1"/><path d="M3.75 6.5h6M8 3.5l-2.5 6" stroke-width=".9"/><path d="M11.5 11h6v6.5h-6z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M11.5 11h6v6.5h-6z"/><path d="M8 12.5h2.5M9.2 11.2l1.3 1.3-1.3 1.3" stroke-width="1.2"/>',
   // Öznitelik tablosu (docs/adr/0199 §4): a table and its layer's object (the owner's choice A).
   featureTable:
     '<rect x="2" y="2.5" width="11.5" height="10" rx="1"/><path d="M2 6h11.5M2 9.25h11.5M6 6v6.5"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z"/>',

@@ -97,4 +97,5 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::tools::hatch::OPS,
     crate::ops::feature_table::OPS,
     crate::ops::statistics::OPS,
+    crate::ops::geoprocess::calls::OPS,
 ];

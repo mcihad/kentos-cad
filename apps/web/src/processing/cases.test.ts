@@ -14,15 +14,18 @@ import type { WorkerRequest } from './worker/protocol';
 import { workerExecutor, type WorkerLike } from './worker/workerExecutor';
 import type { FileValue, ProcessingTool } from './types';
 import type { TableFileRead } from '../contracts/generated/TableFileRead';
+import { geoMeasure } from '../model/ops/geoprocess';
 
 /**
  * The shared processing cases (fixtures/processing/v1, format in
  * fixtures/processing/README.md): each case runs a built-in tool or model on a drawing through
  * ProcessingRunner, in the page and again through the worker's path
  * (handleJob), and what the run did is compared with what the case says.
- * The desktop's kentos-processing plays the same files: cases.json, and
+ * The desktop's kentos-processing plays the same files: cases.json,
  * queries.json (docs/adr/0200), whose file values name files beside it,
- * read through the formats module as the dialog reads a chosen file.
+ * read through the formats module as the dialog reads a chosen file, and
+ * geometry.json (docs/adr/0201), whose new objects are measured
+ * (`addedShapes`).
  */
 
 const files = import.meta.glob<string>('../../../../fixtures/processing/v1/*', { query: '?raw', import: 'default', eager: true });
@@ -50,11 +53,14 @@ interface CaseFile {
   documents: Record<string, { defaults: Json; tools: Record<string, Json> }>;
   /** A file parameter's value names one of these files (the value → the file beside the cases). */
   files?: Record<string, string>;
+  /** How far an added object's area or length may be from the reference's (`addedShapes`). */
+  measureTolerance?: number;
   cases: Case[];
 }
 
 const CASES = JSON.parse(file('cases.json')) as CaseFile;
 const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
+const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
 
 interface Formats {
   initSync(o: { module: BufferSource }): unknown;
@@ -137,11 +143,41 @@ function close(a: unknown, b: unknown, tol: number): boolean {
 }
 
 /** Numbers other than coordinates are exact: only objects' geometry fields get the tolerance. */
-const GEOMETRY = new Set(['p', 'a', 'b', 'c', 'pts', 'holes']);
+const GEOMETRY_FIELDS = new Set(['p', 'a', 'b', 'c', 'pts', 'holes']);
 function sameObject(have: Json, want: Json, tol: number): boolean {
   const keys = (o: Json) => JSON.stringify(Object.keys(o).sort());
   if (keys(have) !== keys(want)) return false;
-  return Object.keys(want).every((k) => (GEOMETRY.has(k) ? close(have[k], want[k], tol) : JSON.stringify(have[k]) === JSON.stringify(want[k])));
+  return Object.keys(want).every((k) => (GEOMETRY_FIELDS.has(k) ? close(have[k], want[k], tol) : JSON.stringify(have[k]) === JSON.stringify(want[k])));
+}
+
+/** The fields a geometry tool's new object may have: its kind, layer and attributes, and its geometry's. */
+const SHAPE_FIELDS = new Set(['kind', 'layerId', 'attrs', 'pts', 'bulges', 'holes', 'parts', 'p', 'a', 'b', 'c', 'r']);
+
+/** An object's vertices in order: an area's ring then its holes, a path's, a point's and its points'. */
+function vertices(e: Json): unknown[] {
+  if (e.kind === 'point') return [e.p, ...((e.parts as Json[] | undefined) ?? []).map((q) => q.p)];
+  return [...(e.pts as unknown[]), ...((e.holes as Json[] | undefined) ?? []).flatMap((h) => h.pts as unknown[])];
+}
+
+/**
+ * A geometry tool's new object against the case (`addedShapes`, docs/adr/0201): its kind, layer and attributes
+ * exactly (in any order), no other fields, and its measures (parts, holes, area, length, points; the core's
+ * `geoMeasure`) and vertices within the tolerances.
+ */
+function sameShape(id: string, i: number, have: Json, want: Json, tol: number, measureTol: number): void {
+  const at = `${id}: addedShapes[${i}] ${JSON.stringify(have)}`;
+  expect(Object.keys(have).filter((k) => !SHAPE_FIELDS.has(k)), at).toEqual([]);
+  expect(have.kind, at).toBe(want.kind);
+  expect(have.layerId, at).toBe(want.layerId);
+  expect(have.attrs, at).toEqual(want.attrs);
+  const m = geoMeasure([have as never])[0];
+  expect([m.parts, m.holes], `${at}: parça, delik`).toEqual([want.parts, want.holes]);
+  for (const k of ['area', 'length'] as const) {
+    const w = want[k];
+    if (typeof w === 'number') expect(Math.abs((m[k] ?? NaN) - w), `${at}: ${k} ${m[k]}, beklenen ${w}`).toBeLessThanOrEqual(measureTol);
+  }
+  if (want.points) expect(close(m.points, want.points, tol), `${at}: noktalar`).toBe(true);
+  if (want.vertices) expect(close(vertices(have), want.vertices, tol), `${at}: köşeler`).toBe(true);
 }
 
 interface Seen {
@@ -209,7 +245,7 @@ function observed(s: Seen): Json {
   };
 }
 
-function check(c: Case, s: Seen, tol: number): void {
+function check(c: Case, s: Seen, tol: number, measureTol = tol): void {
   const got = observed(s);
   const want = c.expect;
   const where = `${c.id}: ${JSON.stringify(got, null, 1)}`;
@@ -220,9 +256,15 @@ function check(c: Case, s: Seen, tol: number): void {
   expect(got.log, where).toEqual(want.log ?? []);
   expect(got.layers, where).toEqual(want.layers ?? []);
   const added = got.added as Json[];
-  const wantAdded = (want.added ?? []) as Json[];
-  expect(added.length, where).toBe(wantAdded.length);
-  wantAdded.forEach((w, i) => expect(sameObject(added[i], w, tol), `${c.id}: added[${i}] ${JSON.stringify(added[i])}`).toBe(true));
+  if (want.addedShapes) {
+    const shapes = want.addedShapes as Json[];
+    expect(added.length, where).toBe(shapes.length);
+    shapes.forEach((w, i) => sameShape(c.id, i, added[i], w, tol, measureTol));
+  } else {
+    const wantAdded = (want.added ?? []) as Json[];
+    expect(added.length, where).toBe(wantAdded.length);
+    wantAdded.forEach((w, i) => expect(sameObject(added[i], w, tol), `${c.id}: added[${i}] ${JSON.stringify(added[i])}`).toBe(true));
+  }
   expect(got.updated, where).toEqual(want.updated ?? []);
   expect(got.removed, where).toEqual(want.removed ?? []);
   if (want.selection) expect(got.selection, where).toEqual(want.selection);
@@ -245,7 +287,7 @@ describe('processing cases (fixtures/processing/v1)', () => {
   });
 
   // Each drawing's defaults (DefaultsContext) and each tool's default values on it, as the desktop must read them.
-  for (const [name, d] of Object.entries(CASES.documents)) {
+  for (const [name, d] of [...Object.entries(CASES.documents), ...Object.entries(GEOMETRY.documents)]) {
     it(`${name}: the defaults the tools take from the drawing`, () => {
       const runner = new ProcessingRunner({ doc: load(name), selectedIds: () => [], visibleBounds: () => null });
       expect(runner.defaults()).toEqual(d.defaults);
@@ -275,6 +317,19 @@ describe.skipIf(!loader)('query cases (fixtures/processing/v1/queries.json, docs
     it(`${c.id}: ${c.title}`, async () => {
       check(c, await play(QUERIES, c, 'client'), QUERIES.tolerance);
       check(c, await play(QUERIES, c, 'worker'), QUERIES.tolerance);
+    });
+  }
+});
+
+describe('geometry cases (fixtures/processing/v1/geometry.json, docs/adr/0201)', () => {
+  it('is a v1 case file', () => {
+    expect([GEOMETRY.format, GEOMETRY.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of GEOMETRY.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      check(c, await play(GEOMETRY, c, 'client'), GEOMETRY.tolerance, GEOMETRY.measureTolerance);
+      check(c, await play(GEOMETRY, c, 'worker'), GEOMETRY.tolerance, GEOMETRY.measureTolerance);
     });
   }
 });

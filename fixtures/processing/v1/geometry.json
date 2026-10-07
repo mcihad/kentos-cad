@@ -1,0 +1,2620 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-06,
+ "measureTolerance": 1e-06,
+ "documents": {
+  "geometry.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "drawingFont": "barlow",
+    "activeLayer": "cizim"
+   },
+   "tools": {
+    "geometry.buffer": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "distance": 5,
+     "side": "both",
+     "rings": 1,
+     "dissolve": false,
+     "distanceField": "",
+     "layer": {
+      "newName": "Tampon"
+     }
+    },
+    "geometry.clip": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "cut": {
+      "scope": "selection"
+     },
+     "layer": {
+      "newName": "Kırpılan"
+     }
+    },
+    "geometry.dissolve": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "group": "",
+     "sums": "",
+     "multi": true,
+     "layer": {
+      "newName": "Birleştirilen"
+     }
+    },
+    "geometry.intersection": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "overlay": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "prefix": "",
+     "apportion": "",
+     "layer": {
+      "newName": "Kesişim"
+     }
+    },
+    "geometry.difference": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "overlay": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "layer": {
+      "newName": "Fark"
+     }
+    },
+    "geometry.symDifference": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "overlay": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "prefix": "",
+     "layer": {
+      "newName": "Simetrik fark"
+     }
+    },
+    "geometry.union": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "overlay": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "prefix": "",
+     "apportion": "",
+     "layer": {
+      "newName": "Birleşim"
+     }
+    },
+    "geometry.validity": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     }
+    },
+    "geometry.repair": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "layer": {
+      "newName": "Onarılan"
+     }
+    },
+    "geometry.simplify": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "tolerance": 0.1,
+     "layer": {
+      "newName": "Sadeleştirilen"
+     }
+    },
+    "geometry.reproject": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "source": "4326",
+     "layer": {
+      "newName": "Dönüştürülen"
+     }
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "buffer-points",
+   "title": "Tampon, noktalar 2 m: üç daire, π d²; kotlu nokta söylenir",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.buffer"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "agac"
+    },
+    "distance": 2
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 nesnenin tamponu yazıldı (3 alan).",
+    "undo": "Tampon",
+    "layers": [
+     {
+      "id": "islem-tampon",
+      "name": "Tampon",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Tür": "Çam",
+       "Yarıçap": "1,5",
+       "Uzaklık": "2"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 12.566370614359172
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Tür": "Meşe",
+       "Yarıçap": "geniş",
+       "Uzaklık": "2"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 12.566370614359172
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Tür": "Çınar",
+       "Yarıçap": "3",
+       "Uzaklık": "2"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 12.566370614359172
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin kotları sonuca taşınmadı."
+     }
+    ],
+    "outputs": {
+     "count": 3
+    }
+   }
+  },
+  {
+   "id": "buffer-rings",
+   "title": "Tampon, iki halka, birleştirerek: halka başına tek alan, “Uzaklık” ve “Halka”",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.buffer"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "agac"
+    },
+    "distance": 2,
+    "rings": 2,
+    "dissolve": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 nesnenin tamponu birleştirilerek yazıldı (2 alan).",
+    "undo": "Tampon",
+    "layers": [
+     {
+      "id": "islem-tampon",
+      "name": "Tampon",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Uzaklık": "2",
+       "Halka": "1"
+      },
+      "parts": 3,
+      "holes": 0,
+      "area": 37.69911184307752
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Uzaklık": "4",
+       "Halka": "2"
+      },
+      "parts": 3,
+      "holes": 3,
+      "area": 113.09733552923255
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin kotları sonuca taşınmadı."
+     }
+    ],
+    "outputs": {
+     "count": 2
+    }
+   }
+  },
+  {
+   "id": "buffer-inward",
+   "title": "Tampon, eksi uzaklık: parseller 1 m içe küçülür",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.buffer"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "distance": -1
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 nesnenin tamponu yazıldı (4 alan).",
+    "undo": "Tampon",
+    "layers": [
+     {
+      "id": "islem-tampon",
+      "name": "Tampon",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Değer": "1000.00",
+       "Tür": "Konut",
+       "Uzaklık": "-1"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 504
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Değer": "1500",
+       "Tür": "Konut",
+       "Uzaklık": "-1"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 644
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Değer": "bilinmiyor",
+       "Tür": "Ticaret",
+       "Uzaklık": "-1"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 364
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Değer": "800,5",
+       "Tür": "Konut",
+       "Uzaklık": "-1"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 504
+     }
+    ],
+    "outputs": {
+     "count": 4
+    }
+   }
+  },
+  {
+   "id": "buffer-field",
+   "title": "Tampon, Uzaklık alanından: virgüllü değer okunur, okunamayan söylenir",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.buffer"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "agac"
+    },
+    "distanceField": "Yarıçap"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 nesnenin tamponu yazıldı (2 alan).",
+    "undo": "Tampon",
+    "layers": [
+     {
+      "id": "islem-tampon",
+      "name": "Tampon",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Tür": "Çam",
+       "Yarıçap": "1,5",
+       "Uzaklık": "1.5"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 7.0685834705770345
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Tür": "Çınar",
+       "Yarıçap": "3",
+       "Uzaklık": "3"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 28.274333882308138
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin kotları sonuca taşınmadı."
+     },
+     {
+      "level": "warn",
+      "text": "1 nesnenin uzaklığı “Yarıçap” alanından sayı olarak okunamadı; alınmadı."
+     }
+    ],
+    "outputs": {
+     "count": 2
+    }
+   }
+  },
+  {
+   "id": "buffer-left",
+   "title": "Tampon, Sol: sağa dönen sokağın solu, dönüşte çeyrek daire, uçları düz",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.buffer"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "distance": 1,
+    "side": "left"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesnenin tamponu yazıldı (1 alan).",
+    "undo": "Tampon",
+    "layers": [
+     {
+      "id": "islem-tampon",
+      "name": "Tampon",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Ad": "Okul Sokağı",
+       "Uzaklık": "1"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 105.78539816339745
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   },
+   "selection": [
+    8
+   ]
+  },
+  {
+   "id": "refuse-buffer-rings",
+   "title": "Eksi uzaklıkla birden çok halka çizilmez",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.buffer"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "distance": -1,
+    "rings": 2
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "message": "Halkalar yalnız artı uzaklıkla çizilir; Halka sayısını 1 yapın ya da uzaklığı artı yazın."
+     }
+    ]
+   }
+  },
+  {
+   "id": "clip-roads",
+   "title": "Kırp, yollar parsellerle: sokağın parseldeki parçası; caddeden bir şey kalmaz",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.clip"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "cut": {
+     "scope": "layer",
+     "layerId": "parsel"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne kırpılarak yazıldı.",
+    "undo": "Kırp",
+    "layers": [
+     {
+      "id": "islem-kirpilan",
+      "name": "Kırpılan",
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#30A46C26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-kirpilan",
+      "attrs": {
+       "Ad": "Okul Sokağı"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 30
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin sonucu boş; yazılmadı."
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "clip-trees",
+   "title": "Kırp, ağaçlar parsellerle: içerideki iki ağaç, kotu söylenir",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.clip"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "agac"
+    },
+    "cut": {
+     "scope": "layer",
+     "layerId": "parsel"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 nesne kırpılarak yazıldı.",
+    "undo": "Kırp",
+    "layers": [
+     {
+      "id": "islem-kirpilan",
+      "name": "Kırpılan",
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#30A46C26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "point",
+      "layerId": "islem-kirpilan",
+      "attrs": {
+       "Tür": "Çam",
+       "Yarıçap": "1,5"
+      },
+      "parts": 1,
+      "holes": 0,
+      "points": [
+       {
+        "x": 487005,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-kirpilan",
+      "attrs": {
+       "Tür": "Meşe",
+       "Yarıçap": "geniş"
+      },
+      "parts": 1,
+      "holes": 0,
+      "points": [
+       {
+        "x": 487030,
+        "y": 4420005
+       }
+      ]
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin kotları sonuca taşınmadı."
+     },
+     {
+      "level": "warn",
+      "text": "1 nesnenin sonucu boş; yazılmadı."
+     }
+    ],
+    "outputs": {
+     "count": 2
+    }
+   }
+  },
+  {
+   "id": "dissolve-ada",
+   "title": "Gruplayarak birleştir, Ada'ya göre: komşu parseller tek alan, Değer toplanır",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.dissolve"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "group": "Ada",
+    "sums": "Değer"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 nesne 2 grupta birleştirildi; 2 nesne yazıldı.",
+    "undo": "Gruplayarak birleştir",
+    "layers": [
+     {
+      "id": "islem-birlestirilen",
+      "name": "Birleştirilen",
+      "style": {
+       "color": "#6E56CF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#6E56CF26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlestirilen",
+      "attrs": {
+       "Ada": "101",
+       "Nesne sayısı": "3",
+       "Değer": "2500.00"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 1800
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlestirilen",
+      "attrs": {
+       "Ada": "102",
+       "Nesne sayısı": "1",
+       "Değer": "800.5"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 600
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 değer sayı olarak okunamadığı için toplanmadı."
+     }
+    ],
+    "outputs": {
+     "count": 2
+    }
+   }
+  },
+  {
+   "id": "dissolve-parts",
+   "title": "Gruplayarak birleştir, gruplamasız ve tek parçalı: büyükten küçüğe iki nesne",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.dissolve"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "multi": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 nesne birleştirildi; 2 nesne yazıldı.",
+    "undo": "Gruplayarak birleştir",
+    "layers": [
+     {
+      "id": "islem-birlestirilen",
+      "name": "Birleştirilen",
+      "style": {
+       "color": "#6E56CF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#6E56CF26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlestirilen",
+      "attrs": {
+       "Nesne sayısı": "4"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 1800
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlestirilen",
+      "attrs": {
+       "Nesne sayısı": "4"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 600
+     }
+    ],
+    "outputs": {
+     "count": 2
+    }
+   }
+  },
+  {
+   "id": "intersection",
+   "title": "Kesişim, parseller imar adalarıyla: önek boş, aynı ad “Ada (2)”; Değer alan oranıyla",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.intersection"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "overlay": {
+     "scope": "layer",
+     "layerId": "imar"
+    },
+    "prefix": "",
+    "apportion": "Değer"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 kesişim parçası yazıldı.",
+    "undo": "Kesişim",
+    "layers": [
+     {
+      "id": "islem-kesisim",
+      "name": "Kesişim",
+      "style": {
+       "color": "#F76B15",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#F76B1526"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-kesisim",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Değer": "166.6667",
+       "Tür": "Konut",
+       "Ada (2)": "Y1",
+       "Kullanım": "Yol"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 100
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-kesisim",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Değer": "500.00",
+       "Tür": "Konut",
+       "Ada (2)": "Y1",
+       "Kullanım": "Yol"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 250
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-kesisim",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Değer": "bilinmiyor",
+       "Tür": "Ticaret",
+       "Ada (2)": "Y1",
+       "Kullanım": "Yol"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 50
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-kesisim",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Değer": "100.062",
+       "Tür": "Konut",
+       "Ada (2)": "Y2",
+       "Kullanım": "Park"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 75
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 değer sayı olarak okunamadığı için paylaştırılmadı."
+     }
+    ],
+    "outputs": {
+     "count": 4
+    }
+   }
+  },
+  {
+   "id": "difference",
+   "title": "Fark, parsellerden imar adaları: ortasından kesilen parsel iki parça",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.difference"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "overlay": {
+     "scope": "layer",
+     "layerId": "imar"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 nesnenin farkı yazıldı.",
+    "undo": "Fark",
+    "layers": [
+     {
+      "id": "islem-fark",
+      "name": "Fark",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-fark",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Değer": "1000.00",
+       "Tür": "Konut"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 500
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-fark",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Değer": "1500",
+       "Tür": "Konut"
+      },
+      "parts": 2,
+      "holes": 0,
+      "area": 500
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-fark",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Değer": "bilinmiyor",
+       "Tür": "Ticaret"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 400
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-fark",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Değer": "800,5",
+       "Tür": "Konut"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 525
+     }
+    ],
+    "outputs": {
+     "count": 4
+    }
+   }
+  },
+  {
+   "id": "sym-difference",
+   "title": "Simetrik fark: parsellerin adaların dışı, parkın parsel dışı; yol adası tümüyle örtülü",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.symDifference"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "overlay": {
+     "scope": "layer",
+     "layerId": "imar"
+    },
+    "prefix": "İmar "
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "5 parça yazıldı: 4 birinci, 1 ikinci alanlardan.",
+    "undo": "Simetrik fark",
+    "layers": [
+     {
+      "id": "islem-simetrik-fark",
+      "name": "Simetrik fark",
+      "style": {
+       "color": "#E93D82",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E93D8226"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-simetrik-fark",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Değer": "1000.00",
+       "Tür": "Konut"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 500
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-simetrik-fark",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Değer": "1500",
+       "Tür": "Konut"
+      },
+      "parts": 2,
+      "holes": 0,
+      "area": 500
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-simetrik-fark",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Değer": "bilinmiyor",
+       "Tür": "Ticaret"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 400
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-simetrik-fark",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Değer": "800,5",
+       "Tür": "Konut"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 525
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-simetrik-fark",
+      "attrs": {
+       "İmar Ada": "Y2",
+       "İmar Kullanım": "Park"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 175
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin sonucu boş; yazılmadı."
+     }
+    ],
+    "outputs": {
+     "count": 5
+    }
+   }
+  },
+  {
+   "id": "union",
+   "title": "Birleşim: ortaklar iki tarafın, kalanlar kendi tarafının öznitelikleriyle; Değer paylaşılır",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.union"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "overlay": {
+     "scope": "layer",
+     "layerId": "imar"
+    },
+    "prefix": "İmar ",
+    "apportion": "Değer"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "9 parça yazıldı: 4 ortak, 4 yalnız birinci, 1 yalnız ikinci alanlarda.",
+    "undo": "Birleşim",
+    "layers": [
+     {
+      "id": "islem-birlesim",
+      "name": "Birleşim",
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#3E63DD26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesim",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Değer": "166.6667",
+       "Tür": "Konut",
+       "İmar Ada": "Y1",
+       "İmar Kullanım": "Yol"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 100
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesim",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Değer": "500.00",
+       "Tür": "Konut",
+       "İmar Ada": "Y1",
+       "İmar Kullanım": "Yol"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 250
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesim",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Değer": "bilinmiyor",
+       "Tür": "Ticaret",
+       "İmar Ada": "Y1",
+       "İmar Kullanım": "Yol"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 50
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesim",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Değer": "100.062",
+       "Tür": "Konut",
+       "İmar Ada": "Y2",
+       "İmar Kullanım": "Park"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 75
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesim",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Değer": "833.3333",
+       "Tür": "Konut"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 500
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesim",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Değer": "1000.00",
+       "Tür": "Konut"
+      },
+      "parts": 2,
+      "holes": 0,
+      "area": 500
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesim",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Değer": "bilinmiyor",
+       "Tür": "Ticaret"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 400
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesim",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Değer": "700.438",
+       "Tür": "Konut"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 525
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesim",
+      "attrs": {
+       "İmar Ada": "Y2",
+       "İmar Kullanım": "Park"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 175
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "2 değer sayı olarak okunamadığı için paylaştırılmadı."
+     }
+    ],
+    "outputs": {
+     "count": 9
+    }
+   }
+  },
+  {
+   "id": "validity",
+   "title": "Geçerliliği denetle: beş nesnede beş sorun, yerleriyle; sorunlular seçilir, çizim değişmez",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.validity"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "hatali"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesneden 5 nesnede 5 sorun bulundu; sorunlu nesneler seçildi.",
+    "undo": null,
+    "layers": [],
+    "addedShapes": [],
+    "selection": [
+     12,
+     13,
+     14,
+     15,
+     16
+    ],
+    "outputs": {
+     "count": 5,
+     "invalid": [
+      12,
+      13,
+      14,
+      15,
+      16
+     ],
+     "problems": {
+      "columns": [
+       "Nesne",
+       "Katman",
+       "Sorun",
+       "Doğu",
+       "Kuzey"
+      ],
+      "rows": [
+       [
+        "#12",
+        "Hatalı",
+        "Kendini kesen halka",
+        "487075.000",
+        "4420005.000"
+       ],
+       [
+        "#13",
+        "Hatalı",
+        "Yinelenen köşe",
+        "487095.000",
+        "4420000.000"
+       ],
+       [
+        "#14",
+        "Hatalı",
+        "Delik dış halkanın dışına taşıyor",
+        "487112.000",
+        "4420002.000"
+       ],
+       [
+        "#15",
+        "Hatalı",
+        "Yinelenen köşe",
+        "487075.000",
+        "4420020.000"
+       ],
+       [
+        "#16",
+        "Hatalı",
+        "Kendini kesen yol",
+        "487091.667",
+        "4420020.000"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "repair",
+   "title": "Onar: papyon iki üçgen, yinelenen köşe düşer, taşan delik kesilir; kendini kesen yol olduğu gibi",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.repair"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "hatali"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesne yazıldı; 4 nesne onarıldı.",
+    "undo": "Onar",
+    "layers": [
+     {
+      "id": "islem-onarilan",
+      "name": "Onarılan",
+      "style": {
+       "color": "#12A594",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#12A59426"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-onarilan",
+      "attrs": {
+       "Ad": "Papyon"
+      },
+      "parts": 2,
+      "holes": 0,
+      "area": 50
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-onarilan",
+      "attrs": {
+       "Ad": "Yinelenen köşe"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 100
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-onarilan",
+      "attrs": {
+       "Ad": "Taşan delik"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 92
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-onarilan",
+      "attrs": {
+       "Ad": "Yinelenen çizgi"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 10
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-onarilan",
+      "attrs": {
+       "Ad": "Kendini kesen"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 35.8113883008419
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-onarilan",
+      "attrs": {
+       "Ad": "Geçerli"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 100
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 kendini kesen yol onarılmadı; olduğu gibi yazıldı."
+     }
+    ],
+    "outputs": {
+     "count": 4,
+     "report": {
+      "columns": [
+       "Nesne",
+       "Önce",
+       "Sonra",
+       "Değişiklik"
+      ],
+      "rows": [
+       [
+        "#12",
+        "1 parça, 0 delik, 0.00 m²",
+        "2 parça, 0 delik, 50.00 m²",
+        "Kendini kesen halka"
+       ],
+       [
+        "#13",
+        "1 parça, 0 delik, 100.00 m²",
+        "1 parça, 0 delik, 100.00 m²",
+        "Yinelenen köşe"
+       ],
+       [
+        "#14",
+        "1 parça, 1 delik, 84.00 m²",
+        "1 parça, 0 delik, 92.00 m²",
+        "Delik dış halkanın dışına taşıyor"
+       ],
+       [
+        "#15",
+        "4 köşe",
+        "3 köşe",
+        "Yinelenen köşe"
+       ],
+       [
+        "#16",
+        "4 köşe",
+        "4 köşe",
+        "Kendini kesen yol (onarılmaz)"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "simplify",
+   "title": "Sadeleştir 5 cm: alanın çentiği ve çizginin kırığı düşer; rapor",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.simplify"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "sinir"
+    },
+    "tolerance": 0.05
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 nesne yazıldı; 2 nesnede 2 köşe atıldı, en büyük sapma 0.020 m.",
+    "undo": "Sadeleştir",
+    "layers": [
+     {
+      "id": "islem-sadelestirilen",
+      "name": "Sadeleştirilen",
+      "style": {
+       "color": "#AD7F58",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AD7F5826"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-sadelestirilen",
+      "attrs": {
+       "Ad": "Çentikli"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 100,
+      "vertices": [
+       {
+        "x": 487000,
+        "y": 4420100
+       },
+       {
+        "x": 487010,
+        "y": 4420100
+       },
+       {
+        "x": 487010,
+        "y": 4420110
+       },
+       {
+        "x": 487000,
+        "y": 4420110
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-sadelestirilen",
+      "attrs": {
+       "Ad": "Kırıklı"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 17.071067811865476,
+      "vertices": [
+       {
+        "x": 487020,
+        "y": 4420100
+       },
+       {
+        "x": 487030,
+        "y": 4420100
+       },
+       {
+        "x": 487035,
+        "y": 4420105
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "report": {
+      "columns": [
+       "Nesne",
+       "Köşe (önce)",
+       "Köşe (sonra)",
+       "Alan değişimi (m²)",
+       "Alan değişimi (%)",
+       "En büyük sapma (m)"
+      ],
+      "rows": [
+       [
+        "#18",
+        "5",
+        "4",
+        "0.10",
+        "0.10",
+        "0.020"
+       ],
+       [
+        "#19",
+        "4",
+        "3",
+        "",
+        "",
+        "0.010"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "reproject",
+   "title": "Koordinat sistemine dönüştür, ED50 / TM30'dan: köşeler PROJ'la, kuyu 1 mm içinde doğru parçalarıyla",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "eski"
+    },
+    "source": "2320"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 nesne dönüştürüldü: EPSG:2320 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Eski parsel"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 469965.5408390072,
+        "y": 4419814.601675226
+       },
+       {
+        "x": 470065.5402849972,
+        "y": 4419814.601830168
+       },
+       {
+        "x": 470065.5401300342,
+        "y": 4419914.601273539
+       },
+       {
+        "x": 469965.54068401793,
+        "y": 4419914.6011185935
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Eski kuyu"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 470175.539365719,
+        "y": 4420014.600887343
+       },
+       {
+        "x": 470175.53543157055,
+        "y": 4420014.881348341
+       },
+       {
+        "x": 470175.52363308816,
+        "y": 4420015.161588673
+       },
+       {
+        "x": 470175.50397955393,
+        "y": 4420015.44138786
+       },
+       {
+        "x": 470175.47648643155,
+        "y": 4420015.720525777
+       },
+       {
+        "x": 470175.44117535115,
+        "y": 4420015.998782808
+       },
+       {
+        "x": 470175.39807409164,
+        "y": 4420016.275940035
+       },
+       {
+        "x": 470175.34721656545,
+        "y": 4420016.551779409
+       },
+       {
+        "x": 470175.28864278237,
+        "y": 4420016.826083911
+       },
+       {
+        "x": 470175.222398826,
+        "y": 4420017.098637732
+       },
+       {
+        "x": 470175.1485368155,
+        "y": 4420017.369226447
+       },
+       {
+        "x": 470175.0671148578,
+        "y": 4420017.637637163
+       },
+       {
+        "x": 470174.9781970144,
+        "y": 4420017.903658711
+       },
+       {
+        "x": 470174.8818532388,
+        "y": 4420018.167081803
+       },
+       {
+        "x": 470174.7781593322,
+        "y": 4420018.427699191
+       },
+       {
+        "x": 470174.66719687294,
+        "y": 4420018.685305829
+       },
+       {
+        "x": 470174.54905316065,
+        "y": 4420018.939699051
+       },
+       {
+        "x": 470174.4238211484,
+        "y": 4420019.190678714
+       },
+       {
+        "x": 470174.29159935506,
+        "y": 4420019.43804736
+       },
+       {
+        "x": 470174.1524918124,
+        "y": 4420019.68161037
+       },
+       {
+        "x": 470174.0066079589,
+        "y": 4420019.921176123
+       },
+       {
+        "x": 470173.85406257084,
+        "y": 4420020.156556143
+       },
+       {
+        "x": 470173.6949756594,
+        "y": 4420020.387565241
+       },
+       {
+        "x": 470173.5294723895,
+        "y": 4420020.614021677
+       },
+       {
+        "x": 470173.35768296965,
+        "y": 4420020.83574728
+       },
+       {
+        "x": 470173.1797425529,
+        "y": 4420021.052567616
+       },
+       {
+        "x": 470172.995791135,
+        "y": 4420021.264312098
+       },
+       {
+        "x": 470172.80597343756,
+        "y": 4420021.470814133
+       },
+       {
+        "x": 470172.61043880036,
+        "y": 4420021.671911265
+       },
+       {
+        "x": 470172.40934105974,
+        "y": 4420021.867445272
+       },
+       {
+        "x": 470172.2028384289,
+        "y": 4420022.057262324
+       },
+       {
+        "x": 470171.99109337217,
+        "y": 4420022.2412130805
+       },
+       {
+        "x": 470171.77427248156,
+        "y": 4420022.4191528205
+       },
+       {
+        "x": 470171.55254633835,
+        "y": 4420022.590941549
+       },
+       {
+        "x": 470171.32608938543,
+        "y": 4420022.756444116
+       },
+       {
+        "x": 470171.0950797866,
+        "y": 4420022.915530305
+       },
+       {
+        "x": 470170.85969928885,
+        "y": 4420023.068074961
+       },
+       {
+        "x": 470170.62013307656,
+        "y": 4420023.213958069
+       },
+       {
+        "x": 470170.3765696293,
+        "y": 4420023.353064853
+       },
+       {
+        "x": 470170.1292005683,
+        "y": 4420023.485285873
+       },
+       {
+        "x": 470169.8782205115,
+        "y": 4420023.610517109
+       },
+       {
+        "x": 470169.62382691615,
+        "y": 4420023.728660028
+       },
+       {
+        "x": 470169.36621992424,
+        "y": 4420023.839621686
+       },
+       {
+        "x": 470169.10560221033,
+        "y": 4420023.943314782
+       },
+       {
+        "x": 470168.84217881376,
+        "y": 4420024.039657739
+       },
+       {
+        "x": 470168.5761569803,
+        "y": 4420024.128574755
+       },
+       {
+        "x": 470168.30774600495,
+        "y": 4420024.209995879
+       },
+       {
+        "x": 470168.0371570566,
+        "y": 4420024.2838570485
+       },
+       {
+        "x": 470167.7646030227,
+        "y": 4420024.35010016
+       },
+       {
+        "x": 470167.49029833096,
+        "y": 4420024.408673091
+       },
+       {
+        "x": 470167.21445879346,
+        "y": 4420024.459529763
+       },
+       {
+        "x": 470166.93730142404,
+        "y": 4420024.502630161
+       },
+       {
+        "x": 470166.65904427756,
+        "y": 4420024.537940379
+       },
+       {
+        "x": 470166.3799062686,
+        "y": 4420024.565432635
+       },
+       {
+        "x": 470166.10010701144,
+        "y": 4420024.585085303
+       },
+       {
+        "x": 470165.819866636,
+        "y": 4420024.596882916
+       },
+       {
+        "x": 470165.53940562054,
+        "y": 4420024.600816196
+       },
+       {
+        "x": 470165.2589446171,
+        "y": 4420024.596882048
+       },
+       {
+        "x": 470164.97870427964,
+        "y": 4420024.585083566
+       },
+       {
+        "x": 470164.6989050822,
+        "y": 4420024.565430033
+       },
+       {
+        "x": 470164.4197671587,
+        "y": 4420024.53793691
+       },
+       {
+        "x": 470164.141510121,
+        "y": 4420024.502625831
+       },
+       {
+        "x": 470163.8643528851,
+        "y": 4420024.459524576
+       },
+       {
+        "x": 470163.58851350524,
+        "y": 4420024.4086670475
+       },
+       {
+        "x": 470163.3142089959,
+        "y": 4420024.350093267
+       },
+       {
+        "x": 470163.04165516596,
+        "y": 4420024.283849312
+       },
+       {
+        "x": 470162.7710664475,
+        "y": 4420024.209987304
+       },
+       {
+        "x": 470162.50265572406,
+        "y": 4420024.128565347
+       },
+       {
+        "x": 470162.236634167,
+        "y": 4420024.039647507
+       },
+       {
+        "x": 470161.97321106726,
+        "y": 4420023.943303733
+       },
+       {
+        "x": 470161.71259367437,
+        "y": 4420023.839609831
+       },
+       {
+        "x": 470161.4549870283,
+        "y": 4420023.728647372
+       },
+       {
+        "x": 470161.20059379976,
+        "y": 4420023.610503667
+       },
+       {
+        "x": 470160.94961412926,
+        "y": 4420023.485271654
+       },
+       {
+        "x": 470160.70224547887,
+        "y": 4420023.353049865
+       },
+       {
+        "x": 470160.4586824615,
+        "y": 4420023.213942327
+       },
+       {
+        "x": 470160.2191167027,
+        "y": 4420023.06805848
+       },
+       {
+        "x": 470159.98373667704,
+        "y": 4420022.915513095
+       },
+       {
+        "x": 470159.7527275726,
+        "y": 4420022.756426186
+       },
+       {
+        "x": 470159.5262711323,
+        "y": 4420022.59092292
+       },
+       {
+        "x": 470159.3045455205,
+        "y": 4420022.419133506
+       },
+       {
+        "x": 470159.0877251807,
+        "y": 4420022.241193093
+       },
+       {
+        "x": 470158.8759806951,
+        "y": 4420022.05724168
+       },
+       {
+        "x": 470158.6694786522,
+        "y": 4420021.867423989
+       },
+       {
+        "x": 470158.468381518,
+        "y": 4420021.671889357
+       },
+       {
+        "x": 470158.2728475038,
+        "y": 4420021.470791622
+       },
+       {
+        "x": 470158.08303044713,
+        "y": 4420021.264288996
+       },
+       {
+        "x": 470157.8990796844,
+        "y": 4420021.052543945
+       },
+       {
+        "x": 470157.7211399394,
+        "y": 4420020.835723058
+       },
+       {
+        "x": 470157.54935120564,
+        "y": 4420020.613996922
+       },
+       {
+        "x": 470157.38384863705,
+        "y": 4420020.387539974
+       },
+       {
+        "x": 470157.2247624418,
+        "y": 4420020.156530381
+       },
+       {
+        "x": 470157.0722177835,
+        "y": 4420019.921149894
+       },
+       {
+        "x": 470156.9263346721,
+        "y": 4420019.681583687
+       },
+       {
+        "x": 470156.78722788364,
+        "y": 4420019.438020245
+       },
+       {
+        "x": 470156.655006859,
+        "y": 4420019.190651191
+       },
+       {
+        "x": 470156.5297756221,
+        "y": 4420018.93967114
+       },
+       {
+        "x": 470156.4116326997,
+        "y": 4420018.68527755
+       },
+       {
+        "x": 470156.30067103874,
+        "y": 4420018.427670568
+       },
+       {
+        "x": 470156.1969779391,
+        "y": 4420018.167052859
+       },
+       {
+        "x": 470156.1006349808,
+        "y": 4420017.903629471
+       },
+       {
+        "x": 470156.0117179614,
+        "y": 4420017.637607643
+       },
+       {
+        "x": 470155.9302968372,
+        "y": 4420017.369196676
+       },
+       {
+        "x": 470155.8564356617,
+        "y": 4420017.098607736
+       },
+       {
+        "x": 470155.79019255185,
+        "y": 4420016.826053706
+       },
+       {
+        "x": 470155.7316196191,
+        "y": 4420016.551749023
+       },
+       {
+        "x": 470155.6807629467,
+        "y": 4420016.275909493
+       },
+       {
+        "x": 470155.63766254677,
+        "y": 4420015.998752131
+       },
+       {
+        "x": 470155.6023523269,
+        "y": 4420015.720494991
+       },
+       {
+        "x": 470155.57486007025,
+        "y": 4420015.441356988
+       },
+       {
+        "x": 470155.55520740285,
+        "y": 4420015.161557739
+       },
+       {
+        "x": 470155.5434097892,
+        "y": 4420014.881317373
+       },
+       {
+        "x": 470155.53947650973,
+        "y": 4420014.600856364
+       },
+       {
+        "x": 470155.5434106595,
+        "y": 4420014.320395369
+       },
+       {
+        "x": 470155.55520914163,
+        "y": 4420014.040155036
+       },
+       {
+        "x": 470155.57486267487,
+        "y": 4420013.760355848
+       },
+       {
+        "x": 470155.6023557977,
+        "y": 4420013.481217931
+       },
+       {
+        "x": 470155.637666879,
+        "y": 4420013.2029609
+       },
+       {
+        "x": 470155.6807681372,
+        "y": 4420012.925803674
+       },
+       {
+        "x": 470155.7316256642,
+        "y": 4420012.649964299
+       },
+       {
+        "x": 470155.7901994476,
+        "y": 4420012.375659799
+       },
+       {
+        "x": 470155.85644340364,
+        "y": 4420012.103105975
+       },
+       {
+        "x": 470155.930305414,
+        "y": 4420011.8325172635
+       },
+       {
+        "x": 470156.0117273717,
+        "y": 4420011.564106547
+       },
+       {
+        "x": 470156.1006452154,
+        "y": 4420011.298084996
+       },
+       {
+        "x": 470156.196988991,
+        "y": 4420011.034661907
+       },
+       {
+        "x": 470156.300682898,
+        "y": 4420010.774044519
+       },
+       {
+        "x": 470156.41164535633,
+        "y": 4420010.516437881
+       },
+       {
+        "x": 470156.5297890673,
+        "y": 4420010.262044655
+       },
+       {
+        "x": 470156.65502108185,
+        "y": 4420010.011064994
+       },
+       {
+        "x": 470156.7872428739,
+        "y": 4420009.76369635
+       },
+       {
+        "x": 470156.9263504173,
+        "y": 4420009.52013334
+       },
+       {
+        "x": 470157.0722342699,
+        "y": 4420009.280567585
+       },
+       {
+        "x": 470157.22477966,
+        "y": 4420009.045187566
+       },
+       {
+        "x": 470157.3838665694,
+        "y": 4420008.814178467
+       },
+       {
+        "x": 470157.5493698405,
+        "y": 4420008.587722034
+       },
+       {
+        "x": 470157.72115926037,
+        "y": 4420008.365996427
+       },
+       {
+        "x": 470157.8990996778,
+        "y": 4420008.149176093
+       },
+       {
+        "x": 470158.0830510953,
+        "y": 4420007.937431611
+       },
+       {
+        "x": 470158.27286879194,
+        "y": 4420007.730929576
+       },
+       {
+        "x": 470158.4684034298,
+        "y": 4420007.529832447
+       },
+       {
+        "x": 470158.6695011693,
+        "y": 4420007.334298438
+       },
+       {
+        "x": 470158.876003801,
+        "y": 4420007.144481385
+       },
+       {
+        "x": 470159.0877488571,
+        "y": 4420006.9605306275
+       },
+       {
+        "x": 470159.30456974846,
+        "y": 4420006.782590889
+       },
+       {
+        "x": 470159.52629589156,
+        "y": 4420006.610802158
+       },
+       {
+        "x": 470159.7527528447,
+        "y": 4420006.445299594
+       },
+       {
+        "x": 470159.98376244283,
+        "y": 4420006.286213405
+       },
+       {
+        "x": 470160.2191429413,
+        "y": 4420006.13366875
+       },
+       {
+        "x": 470160.4587091525,
+        "y": 4420005.98778564
+       },
+       {
+        "x": 470160.7022726008,
+        "y": 4420005.848678857
+       },
+       {
+        "x": 470160.9496416604,
+        "y": 4420005.716457837
+       },
+       {
+        "x": 470161.20062171866,
+        "y": 4420005.5912266
+       },
+       {
+        "x": 470161.45501531305,
+        "y": 4420005.473083681
+       },
+       {
+        "x": 470161.71262230445,
+        "y": 4420005.362122023
+       },
+       {
+        "x": 470161.97324001836,
+        "y": 4420005.258428927
+       },
+       {
+        "x": 470162.2366634164,
+        "y": 4420005.16208597
+       },
+       {
+        "x": 470162.50268524827,
+        "y": 4420005.073168955
+       },
+       {
+        "x": 470162.77109622426,
+        "y": 4420004.99174783
+       },
+       {
+        "x": 470163.04168517236,
+        "y": 4420004.917886659
+       },
+       {
+        "x": 470163.31423920754,
+        "y": 4420004.851643549
+       },
+       {
+        "x": 470163.58854389784,
+        "y": 4420004.793070618
+       },
+       {
+        "x": 470163.864383435,
+        "y": 4420004.742213945
+       },
+       {
+        "x": 470164.1415408051,
+        "y": 4420004.699113549
+       },
+       {
+        "x": 470164.4197979524,
+        "y": 4420004.663803331
+       },
+       {
+        "x": 470164.69893595984,
+        "y": 4420004.636311073
+       },
+       {
+        "x": 470164.97873521753,
+        "y": 4420004.616658407
+       },
+       {
+        "x": 470165.2589755932,
+        "y": 4420004.604860793
+       },
+       {
+        "x": 470165.53943660797,
+        "y": 4420004.600927514
+       },
+       {
+        "x": 470165.81989761227,
+        "y": 4420004.604861662
+       },
+       {
+        "x": 470166.10013795056,
+        "y": 4420004.616660144
+       },
+       {
+        "x": 470166.3799371474,
+        "y": 4420004.636313678
+       },
+       {
+        "x": 470166.65907506883,
+        "y": 4420004.6638068
+       },
+       {
+        "x": 470166.9373321083,
+        "y": 4420004.699117879
+       },
+       {
+        "x": 470167.2144893428,
+        "y": 4420004.742219136
+       },
+       {
+        "x": 470167.4903287245,
+        "y": 4420004.793076663
+       },
+       {
+        "x": 470167.764633233,
+        "y": 4420004.851650443
+       },
+       {
+        "x": 470168.0371870628,
+        "y": 4420004.917894395
+       },
+       {
+        "x": 470168.3077757825,
+        "y": 4420004.991756408
+       },
+       {
+        "x": 470168.5761865053,
+        "y": 4420005.073178362
+       },
+       {
+        "x": 470168.8422080625,
+        "y": 4420005.162096204
+       },
+       {
+        "x": 470169.1056311619,
+        "y": 4420005.258439976
+       },
+       {
+        "x": 470169.36624855374,
+        "y": 4420005.362133879
+       },
+       {
+        "x": 470169.62385520124,
+        "y": 4420005.473096333
+       },
+       {
+        "x": 470169.87824842957,
+        "y": 4420005.591240043
+       },
+       {
+        "x": 470170.12922809937,
+        "y": 4420005.716472054
+       },
+       {
+        "x": 470170.3765967505,
+        "y": 4420005.848693844
+       },
+       {
+        "x": 470170.620159766,
+        "y": 4420005.987801381
+       },
+       {
+        "x": 470170.85972552694,
+        "y": 4420006.133685231
+       },
+       {
+        "x": 470171.09510555107,
+        "y": 4420006.286230615
+       },
+       {
+        "x": 470171.32611465646,
+        "y": 4420006.445317523
+       },
+       {
+        "x": 470171.5525710972,
+        "y": 4420006.610820788
+       },
+       {
+        "x": 470171.7742967078,
+        "y": 4420006.782610203
+       },
+       {
+        "x": 470171.99111704854,
+        "y": 4420006.960550616
+       },
+       {
+        "x": 470172.2028615346,
+        "y": 4420007.144502028
+       },
+       {
+        "x": 470172.4093635767,
+        "y": 4420007.334319721
+       },
+       {
+        "x": 470172.61046071077,
+        "y": 4420007.529854353
+       },
+       {
+        "x": 470172.8059947261,
+        "y": 4420007.730952089
+       },
+       {
+        "x": 470172.9958117818,
+        "y": 4420007.937454713
+       },
+       {
+        "x": 470173.1797625452,
+        "y": 4420008.149199764
+       },
+       {
+        "x": 470173.35770229006,
+        "y": 4420008.366020649
+       },
+       {
+        "x": 470173.52949102334,
+        "y": 4420008.587746787
+       },
+       {
+        "x": 470173.6949935922,
+        "y": 4420008.814203733
+       },
+       {
+        "x": 470173.854079786,
+        "y": 4420009.045213325
+       },
+       {
+        "x": 470174.00662444584,
+        "y": 4420009.280593817
+       },
+       {
+        "x": 470174.1525075567,
+        "y": 4420009.520160025
+       },
+       {
+        "x": 470174.2916143452,
+        "y": 4420009.763723465
+       },
+       {
+        "x": 470174.4238353707,
+        "y": 4420010.011092519
+       },
+       {
+        "x": 470174.5490666066,
+        "y": 4420010.26207257
+       },
+       {
+        "x": 470174.66720952943,
+        "y": 4420010.516466159
+       },
+       {
+        "x": 470174.7781711898,
+        "y": 4420010.774073141
+       },
+       {
+        "x": 470174.88186428946,
+        "y": 4420011.034690849
+       },
+       {
+        "x": 470174.97820724745,
+        "y": 4420011.298114237
+       },
+       {
+        "x": 470175.0671242689,
+        "y": 4420011.564136065
+       },
+       {
+        "x": 470175.1485453936,
+        "y": 4420011.832547033
+       },
+       {
+        "x": 470175.22240656655,
+        "y": 4420012.103135975
+       },
+       {
+        "x": 470175.2886496779,
+        "y": 4420012.375690003
+       },
+       {
+        "x": 470175.34722261043,
+        "y": 4420012.649994685
+       },
+       {
+        "x": 470175.39807928156,
+        "y": 4420012.925834217
+       },
+       {
+        "x": 470175.4411796824,
+        "y": 4420013.202991578
+       },
+       {
+        "x": 470175.4764899015,
+        "y": 4420013.481248717
+       },
+       {
+        "x": 470175.50398215913,
+        "y": 4420013.76038672
+       },
+       {
+        "x": 470175.52363482537,
+        "y": 4420014.040185969
+       },
+       {
+        "x": 470175.53543243936,
+        "y": 4420014.320426338
+       }
+      ]
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin yayları 1 mm içinde doğru parçalarına çevrildi."
+     }
+    ],
+    "outputs": {
+     "count": 2
+    }
+   }
+  },
+  {
+   "id": "refuse-reproject-same",
+   "title": "Kaynak sistem projeninkiyle aynıysa çalışmaz",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "eski"
+    },
+    "source": "5254"
+   },
+   "expect": {
+    "status": "error",
+    "message": "Kaynak sistem projenin sistemiyle aynı; dönüştürülecek bir şey yok."
+   }
+  }
+ ]
+}

@@ -12,6 +12,7 @@
 | `v1/parcels.kcad` | Durumların çizimi (`.kcad` v1): Parsel katmanında yan yana üç parsel (1: 0…20, 2: 20…45, 3: 45…60 doğu; 0…30 kuzey; 1 ile 2 x = 20'yi, 2 ile 3 x = 45'i paylaşır; Ada, Parsel, Nitelik öznitelikleri, etiketleri parsel numarası), kilitli katmanda parsel 4, gizli katmanda parsel 5, Çizim'de çoklu çizgi 6 (30 m ve 15 m) ve 20 m'lik çizgi 7, Mevcut noktalar katmanında parsel 1'in üç köşesinde P00001–P00003 (8–10). Koordinatlar (487000, 4420000)'e göre verilmiştir |
 | `v1/cases.json` | Durumlar |
 | `v1/queries.kcad`, `v1/queries.json`, `v1/malikler.csv` | Mekânsal ve öznitelik sorgusunun durumları (ADR 0200): Konuma göre seç, İçindekinden ve Çevreleyenden bilgi al, Özet istatistik, Anahtarla birleştir, katmanın alanlarının kuralıyla yazma. Çizim, durumlar ve CSV `scripts/fixtures/spatial_query_cases.py`'nin bağımsız başvurusundan yazılır (`--check` farkı arar): parseller (Parsel katmanının alanları: Ada metin, Parsel ve Ağaç sayısı tam sayı, Taban toplamı 2, Taban ortalaması 1 basamaklı ondalık), biri delikli; yapılar, ağaçlar, iki yol, tapu kayıtları, kilitli katmanda bir parsel |
+| `v1/geometry.kcad`, `v1/geometry.json` | Geometri işlemlerinin durumları (ADR 0201): Tampon, Kırp, Gruplayarak birleştir, Kesişim, Fark, Simetrik fark, Birleşim, Geçerliliği denetle, Onar, Sadeleştir, Koordinat sistemine dönüştür. Çizim ve durumlar `scripts/fixtures/geoprocess_cases.py`'nin bağımsız başvurusundan yazılır (`--check` farkı arar): parseller ve imar adaları, yollar, kotlu bir ağaç, hatalı geometriler (papyon, yinelenen köşe, taşan delik, kendini kesen yol), sadeleşecek sınırlar, ED50 / TM30 koordinatlı eski pafta; çizimin sistemi TUREF / TM30. Yeni nesneler ölçüleriyle beklenir (`addedShapes`) |
 | `v1/dialog.json` | İşlem penceresinin davranışı: formlar, oturumlar ve saf kuralların tabloları ([aşağıda](#pencere-kentosprocessing-dialog-sürüm-1)) |
 | `v1/designer.json` | Model tasarımcısı: modelin düzenlemeleri adım adım ve her adımdan sonraki denetim, tasarımcının bir modelden okudukları, sözleri ve diyagramın geometrisi ([aşağıda](#model-tasarımcısı-kentosmodeldesigner-sürüm-1)) |
 
@@ -21,6 +22,7 @@
 |---|---|
 | `format`, `version` | `"kentos.processing-cases"`, `1` |
 | `tolerance` | Koordinatların karşılaştırılacağı mesafe, metre (`1e-9`): iki platform aynı Rust çekirdeğini çağırır |
+| `measureTolerance` | İsteğe bağlı (`geometry.json`): `addedShapes`'in alan (m²) ve uzunluk (m) payı |
 | `documents` | Çizim başına `defaults`: araçların çizimden aldığı varsayılanlar (`DefaultsContext`: uzunluk ve alan ondalığı, açı birimi, çizim ölçeği, çizim yazı tipi, etkin katman) ve `tools`: her aracın ve modelin o çizimdeki varsayılan değerleri, pencerenin açtığı gibi |
 | `files` | İsteğe bağlı: dosya parametresinin (ADR 0200 §7) değerinde yazılan ad → bu klasördeki dosya. Oynatıcı dosyayı pencerenin okuduğu gibi Tablo ekle'nin okuyucusuyla okur (ilk sayfa) ve değeri `{ name, rows }` yapar |
 | `cases` | Durumlar |
@@ -49,6 +51,7 @@ Beklentiler:
 | `undo` | Çalıştırmanın tek geri alma adımının adı (aracın adı, modelde modelin adı); `null`: çizim değişmedi, geri alınacak adım yok |
 | `layers` | Oluşturulan katmanlar: `id`, `name`, `style` (aracın yeni katman stili, yeni katmanın varsayılanlarının üstüne) |
 | `added` | Eklenen nesneler, kimlik sırasıyla; her biri kimlikleri dışındaki bütün alanlarıyla (`kind`, `layerId`, geometri, `label`, `text`, `height`, `rotation`, `attrs` …) |
+| `addedShapes` | `added`'in yerine (geometri işlemleri, ADR 0201): eklenen nesneler kimlik sırasıyla, ölçüleriyle: `kind`, `layerId`, `attrs` tam; `parts`, `holes` (çekirdeğin `geoMeasure`'u, masaüstünde `measured`), `area` ya da `length` `measureTolerance` içinde, `points` (nokta nesnesinin noktaları) ve `vertices` (alanın halkası sonra delikleri, yolun ya da noktanın köşeleri) `tolerance` içinde; nesnenin bunlardan ve geometri alanlarından başka alanı olmaz. Örtüşmenin köşe sırası bağımsız başvurudan öngörülemediği için geometri ölçüleriyle denetlenir; ölçülerin doğruluğu ADR 0149'un bağımsız denetimindedir |
 | `updated` | Değişen nesneler: `id`, bütün `attrs` ve varsa `label` |
 | `removed` | Silinen nesnelerin kimlikleri |
 | `selection` | Çalıştırmadan sonraki seçim |
