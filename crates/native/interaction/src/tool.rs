@@ -537,6 +537,8 @@ pub struct Memory {
     pub text_width_factor: f64,
     pub text_mask: bool,
     pub text_increment: bool,
+    /// Eğri boyunca yazı's Hiza and Konum as one alignment (`TextAlongTool.align`, docs/adr/0196 §4).
+    pub along_align: kentos_contracts::TextAlign,
     /// Çok satırlı yazı's line spacing (`ParagraphTextTool.lineSpacing`, docs/adr/0182 §4): 1 none.
     pub paragraph_spacing: f64,
     /// Kılavuz's arrowhead (none: the filled arrow) and Zemin
@@ -834,6 +836,7 @@ impl Default for Memory {
             text_width_factor: 1.0,
             text_mask: false,
             text_increment: false,
+            along_align: kentos_contracts::TextAlign::BottomCenter,
             paragraph_spacing: 1.0,
             leader_arrow: None,
             leader_mask: false,

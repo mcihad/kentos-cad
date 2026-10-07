@@ -3,6 +3,7 @@
 //! Chrome with the bundled faces). Kerning is left out; a letter the tables do not hold counts as the
 //! face's average lowercase letter.
 
+pub mod along;
 pub mod edit;
 pub mod face;
 pub mod natural;

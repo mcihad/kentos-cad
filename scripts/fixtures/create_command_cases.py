@@ -1201,6 +1201,57 @@ cases.append({
 })
 
 
+# ── Eğri boyunca yazı (docs/adr/0196 §1, §4) ────────────────────────────
+
+CURVED = {**TEXT, "text": "Çamlıca Deresi", "rotation": 12.5, "align": "bottomCenter", "path": {"pts": [P(40, 0)], "bulges": [0.35]}}
+curved = [
+    O(CURVED),
+    O({**TEXT, "text": "Atatürk Bulvarı", "path": {"pts": [P(18, 0), P(30, -6.5)]}, "mask": True}),
+]
+
+
+def path_message(kind, *given):
+    return {
+        "empty": "Eğri boyunca yazının eğrisinde köşe yok. En az bir köşe verin ya da eğriyi kaldırın (düz yazı).",
+        "bulges": f"Eğri boyunca yazının kavis sayısı ({given[0] if given else 0}) köşe sayısından ({given[1] if len(given) > 1 else 0}) farklı. Her kenara bir kavis verin ya da kavisleri kaldırın (düz kenarlar).",
+        "zero": "Eğri boyunca yazının eğrisinin uzunluğu sıfır: bütün köşeleri yazının noktasında. Köşeleri yazının noktasından ayırın.",
+        "line": "Eğri boyunca yazı tek satırdır: satır sonu, kutu genişliği ve satır aralığı olmaz. Yazıyı tek satır yapın ya da eğriyi kaldırın.",
+        "linked": "Nesneye bağlı yazının eğrisi olmaz. Önce bağı koparın ya da eğriyi kaldırın.",
+    }[kind]
+
+
+cases.append({
+    "name": "eğri boyunca yazı eğrisiyle yazılır; adım “Eğri boyunca yazı” (ADR 0196 §1, §4)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "textAlong", "objects": curved}, "result": done([3, 4]),
+         "expect": {"ids": IDS + [3, 4], "entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(curved)}, "uids": {"3": "new", "4": "new"},
+                    "revision": "changed"}},
+        {"op": "undo", "returns": "Eğri boyunca yazı", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Eğri boyunca yazı", "expect": {"ids": IDS + [3, 4]}},
+    ],
+})
+
+cases.append({
+    "name": "eğrinin kuralları sırayla: invalid_path, yolu alanın; sonlu olmayan önce not_finite; bağlı yazının eğrisi bağdan sonra (ADR 0196 §1)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(CURVED), O({**CURVED, "path": {"pts": []}})]},
+         "result": failed("invalid_path", path_message("empty"), "objects[1].geometry.path"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**CURVED, "path": {"pts": [P(10, 0), P(20, 2)], "bulges": [0.2]}})]},
+         "result": failed("invalid_path", path_message("bulges", 1, 2), "objects[0].geometry.path"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**CURVED, "path": {"pts": [P(0, 0)]}})]},
+         "result": failed("invalid_path", path_message("zero"), "objects[0].geometry.path"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**CURVED, "text": "Çamlıca\nDeresi"})]},
+         "result": failed("invalid_path", path_message("line"), "objects[0].geometry.path"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**CURVED, "boxWidth": 30})]},
+         "result": failed("invalid_path", path_message("line"), "objects[0].geometry.path"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(CURVED, labelOf=uid(1), labelScale=1000)]},
+         "result": failed("invalid_path", path_message("linked"), "objects[0].geometry.path"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**CURVED, "path": {"pts": []}})]}, "nonFinite": {"objects[0].geometry.rotation": "NaN"},
+         "result": not_finite(1), "note": "Sonlu olmayan sayı eğriden önce.", "expect": NOTHING},
+    ],
+})
+
+
 # ── Kılavuz (docs/adr/0146) ─────────────────────────────────────────────
 
 LEADER = {"kind": "leader", "pts": [P(487060, 4420110), P(487066, 4420115)], "text": "Mevcut bina", "height": 2.5, "rotation": 0}

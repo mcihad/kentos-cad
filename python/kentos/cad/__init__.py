@@ -319,6 +319,7 @@ __all__ = [
     "TextAlignName",
     "TextEntity",
     "TextEntityGeometry",
+    "TextPath",
     "TextRun",
     "TextScript",
     "TextScriptName",

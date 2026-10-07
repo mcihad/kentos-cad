@@ -309,6 +309,7 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 line_spacing,
                 runs,
                 face,
+                path,
             },
             Shape::Text {
                 p: q,
@@ -322,6 +323,7 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 line_spacing: ls,
                 runs: rs,
                 face: f,
+                path: pa,
             },
         ) => {
             same_pt(*p, *q)
@@ -341,6 +343,19 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 && line_spacing == ls
                 && runs == rs
                 && face == f
+                && match (path, pa) {
+                    (Some(x), Some(y)) => {
+                        same_pts(&x.pts, &y.pts)
+                            && x.bulges.as_deref().unwrap_or_default().len()
+                                == y.bulges.as_deref().unwrap_or_default().len()
+                            && x.bulges
+                                .iter()
+                                .flatten()
+                                .zip(y.bulges.iter().flatten())
+                                .all(|(u, v)| same(*u, *v))
+                    }
+                    (x, y) => x.is_none() && y.is_none(),
+                }
         }
         _ => a == b,
     }

@@ -85,3 +85,9 @@ DXF yazıcısının (`crates/shared/formats/src/dxf/writer`) çıktısını Kent
 - Degrade düz dolgudur (2 SOLID, 70 1) ve degradedir (450 1): AutoCAD'in adı (470; ters doğrusal, yarım tur dönmüş LINEAR), açısı radyan (460), ortalanmış (461 0), iki renk (453 2): ilki taramanın kendi rengi (yoksa katmanınki), ikincisi degradenin; her biri ACI numarası (63) ve gerçek rengi (421: rengin kendisi, mürekkep için ACI 7'nin beyazı).
 - Desenin ve degradenin KentOS verisi onu tam taşır (`hatch`, sözleşmenin JSON'u); kullanıcı tanımlı desenin taşımaz.
 - Okuyucu dosyayı geri okuyunca her tarama deseni ve rengiyle aynen gelir; KentOS verisi olmadan DXF'in gruplarından 1e-9 içinde, ters doğrusal degrade yarım tur dönmüş doğrusal olarak (`hatches_read_back_as_they_were`).
+
+`curved.dxf`'te beklenenler (`curved.input.json`, ADR 0196 §5):
+- Eğri boyunca yazı adsız bir blok (*U) ve onun INSERT'idir: INSERT yazının noktasında, yazının dönüklüğüyle (50), katmanında ve renginde; blok yazının çerçevesinde (noktası başlangıçta, dönüksüz).
+- Blokta boşluk olmayan her harf bir TEXT'tir, sırayla, 0 katmanında BYBLOCK: yeri ve dönüklüğü bağımsız yerleşim başvurusunun (`scripts/fixtures/text_along_cases.py`) yazının yazı tipiyle, yoksa Arimo'yla (dosyanın Arial'ı) verdiği yer (1e-9 içinde), yüksekliği yazınınki, genişlik çarpanı (41) varsa yazınınki, stil kaydı (7) yazının yüzününki.
+- INSERT'in KentOS verisi (`along`) yazının kendi alanlarıdır (sözleşmenin JSON'u, anahtarlar sıralı, sayılar float): okuyucu yazıyı eğrisi, hizası, yüzü, genişlik çarpanı, zemini, rengi ve öznitelikleriyle aynen geri okur (`curved_texts_read_back_as_they_were`). Düz yazı TEXT olarak kalır.
+- Rapor iki yazı için bir kez söyler; zeminli yazının zemininin başka programlarda olmadığını ayrıca bir kez.

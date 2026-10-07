@@ -183,6 +183,10 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::TableUpdate => "Tabloyu güncelle",
         EditOperation::EdgeShift => "Paralel kaydır",
         EditOperation::ImageClip => "Resmi kırp",
+        // Eğri boyunca yazı (docs/adr/0196 §4).
+        EditOperation::TextPath => "Eğriye oturt",
+        EditOperation::TextTurn => "Doğrultuya döndür",
+        EditOperation::TextStraighten => "Düzleştir",
     }
 }
 
@@ -788,6 +792,14 @@ pub(crate) fn check_geometry(
                 at(&format!(".{field}")),
             )));
         }
+        // Its curve (docs/adr/0196 §1): a text of one line; a link is the create command's to refuse.
+        if let EntityGeometry::Text {
+            path: Some(path), ..
+        } = g
+            && let Some(words) = kentos_contracts::text_path_problem(path, text, &paragraph, false)
+        {
+            return Err(Stop::Failed(error(codes::INVALID_PATH, words, at(".path"))));
+        }
     }
     // A table's rows, columns, cells, merged ranges and source (docs/adr/0184 §6).
     if let EntityGeometry::Table {
@@ -1096,6 +1108,7 @@ fn finite(g: &EntityGeometry) -> bool {
             box_width,
             line_spacing,
             face,
+            path,
             ..
         } => {
             pt(p)
@@ -1105,6 +1118,9 @@ fn finite(g: &EntityGeometry) -> bool {
                 && box_width.is_none_or(f64::is_finite)
                 && line_spacing.is_none_or(f64::is_finite)
                 && face.oblique.is_none_or(f64::is_finite)
+                && path
+                    .as_ref()
+                    .is_none_or(|c| pts(&c.pts) && values(&c.bulges))
         }
         EntityGeometry::Dimension {
             a,

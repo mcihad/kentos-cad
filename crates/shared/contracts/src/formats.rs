@@ -80,7 +80,9 @@ use crate::layer::LineType;
 ///    pattern lines read whole and written turned and scaled, its gradient both ways.
 /// 34: pictures (docs/adr/0192): `.kcad` document schema 24 and the typed columns' `image`
 ///    kind; DXF and GeoJSON leave pictures out and say so.
-pub const FORMATS_VERSION: u32 = 34;
+/// 35: texts along a curve (docs/adr/0196): `.kcad` document schema 25 and the typed columns'
+///    text curve; DXF writes one as an anonymous block of its letters with its KENTOS data.
+pub const FORMATS_VERSION: u32 = 35;
 
 // ── Every import ────────────────────────────────────────────────────────
 

@@ -957,6 +957,7 @@ mod tests {
             line_spacing: None,
             runs: None,
             face: Default::default(),
+            path: None,
         };
         let wide = shapes_middle(std::slice::from_ref(&text), Font::from_id("courier-prime"));
         let narrow = shapes_middle(std::slice::from_ref(&text), Font::DEFAULT);

@@ -232,8 +232,15 @@ pub const SCHEMA_WITH_HATCH_PATTERNS: u32 = 23;
 /// byte for byte; a reader of those refuses a picture rather than lose it.
 pub const SCHEMA_WITH_IMAGES: u32 = 24;
 
+/// Document schema 25 (docs/specs/kcad-v2.md §6.1): schema 24 and the text
+/// along a curve, a text's `path` (docs/adr/0196 §1), in the drawing and in
+/// block definitions. A writer writes it only when a text has one: any other
+/// drawing stays 24 or older, byte for byte; a reader of those refuses a
+/// curve rather than set the text straight.
+pub const SCHEMA_WITH_TEXT_PATHS: u32 = 25;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 23] = [
+pub const SCHEMAS: [u32; 24] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -257,6 +264,7 @@ pub const SCHEMAS: [u32; 23] = [
     SCHEMA_WITH_TABLES,
     SCHEMA_WITH_HATCH_PATTERNS,
     SCHEMA_WITH_IMAGES,
+    SCHEMA_WITH_TEXT_PATHS,
 ];
 
 /// The file a drawing is saved as.

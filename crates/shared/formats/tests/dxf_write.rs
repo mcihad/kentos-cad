@@ -275,6 +275,7 @@ fn objects() -> Vec<Entity> {
             label_scale: None,
             paragraph: Default::default(),
             face: Default::default(),
+            path: None,
         }),
         Entity::Text(TextEntity {
             base: base("yazi"),
@@ -289,6 +290,7 @@ fn objects() -> Vec<Entity> {
             label_scale: None,
             paragraph: Default::default(),
             face: Default::default(),
+            path: None,
         }),
         Entity::Hatch(HatchEntity {
             base: base("yapi"),
@@ -934,6 +936,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
             label_scale: None,
             paragraph: Default::default(),
             face: Default::default(),
+            path: None,
         }),
         Entity::Circle(CircleEntity {
             base: base("parsel"),
@@ -2648,6 +2651,59 @@ fn tables_read_back_as_they_were() {
     let (got, mut want) = (tables(&r.entities), tables(&input.entities));
     assert_eq!(got.len(), 3, "{:?}", r.report);
     want[0].source = None;
+    assert_eq!(got, want);
+    assert!(r.blocks.is_empty(), "{:?}", r.blocks);
+}
+
+/// The curved texts' fixture (`fixtures/formats/v1/dxf-write/curved.input.json`,
+/// docs/adr/0196 §5) goes out as its committed bytes, which
+/// `scripts/fixtures/dxf_write_reference.py` checks without KentOS's code:
+/// each text along a curve an anonymous block of its letters where the
+/// reference's layout puts them, and its INSERT; said once for the two, the
+/// mask once.
+#[test]
+fn the_curved_fixture_is_written_to_its_committed_bytes() {
+    let report = written_as_committed("curved");
+    let notes: Vec<(&str, u32)> = report
+        .notes
+        .iter()
+        .map(|n| (n.what.as_str(), n.count))
+        .collect();
+    assert_eq!(
+        notes,
+        [("Eğri boyunca yazı", 2), ("Eğri boyunca yazı", 1)],
+        "{:?}",
+        report.notes
+    );
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+}
+
+/// Texts along a curve go out as anonymous blocks with their KENTOS data and
+/// come back as they were (docs/adr/0196 §5): words, height, turn, curve,
+/// alignment, face, width factor, mask, colour and attributes; the straight
+/// text stays a TEXT.
+#[test]
+fn curved_texts_read_back_as_they_were() {
+    let input = fixture_input("curved");
+    let (text, _) = write(&input);
+    let r = read(&text);
+    let texts = |entities: &[Entity]| -> Vec<kentos_contracts::TextEntity> {
+        entities
+            .iter()
+            .filter_map(|e| match e {
+                Entity::Text(t) => {
+                    let mut t = t.clone();
+                    t.base.id = 0;
+                    t.base.layer_id.clear();
+                    t.base.line_weight = None;
+                    Some(t)
+                }
+                _ => None,
+            })
+            .collect()
+    };
+    let (got, want) = (texts(&r.entities), texts(&input.entities));
+    assert_eq!(got.len(), 3, "{:?}", r.report);
     assert_eq!(got, want);
     assert!(r.blocks.is_empty(), "{:?}", r.blocks);
 }

@@ -269,6 +269,12 @@ export const ICONS = {
   arrangeBottom: '<path d="M2.5 17h15"/><rect x="4.5" y="3.5" width="4" height="11" rx="0.8"/><rect x="11.5" y="7.5" width="4" height="7" rx="0.8"/>',
   arrangeHorizontal: '<path d="M2 3v14M18 3v14"/><rect x="4" y="6" width="2.6" height="8" rx="0.8"/><rect x="8.7" y="4" width="2.6" height="12" rx="0.8"/><rect x="13.4" y="7" width="2.6" height="6" rx="0.8"/>',
   arrangeVertical: '<path d="M3 2h14M3 18h14"/><rect x="6" y="4" width="8" height="2.6" rx="0.8"/><rect x="4" y="8.7" width="12" height="2.6" rx="0.8"/><rect x="7" y="13.4" width="6" height="2.6" rx="0.8"/>',
+  // Eğri boyunca yazı (docs/adr/0196 §4), the recommended options while the owner was away (7 October): a T whose bar
+  // bends, a T going down onto an arc, a T turned along a slanted edge, a curved bar made straight.
+  textAlong: '<path d="M2.8 10.2C4.6 3 15.4 3 17.2 10.2"/><path d="M10 5.4v11.1M7.6 16.5h4.8"/>',
+  textFit: '<path d="M6.5 3h7M10 3v4.4"/><path d="m8.4 8.6 1.6 1.6 1.6-1.6" stroke-width="1.2"/><path d="M3 17.5C5.5 12 14.5 12 17 17.5"/><path d="M8 13.4h4" stroke-width="1.2"/>',
+  textTurn: '<path d="M3 16.5 17 5.5" stroke-width="1.1"/><g transform="rotate(-38 10 13)"><path d="M7 13h6M10 13v4.5"/></g><path d="M5.5 3.5h5M8 3.5v4" stroke-width="1.1" opacity=".55"/>',
+  textStraighten: '<path d="M3 6C6 2.8 14 2.8 17 6" stroke-width="1.2" stroke-dasharray="2 1.6"/><path d="M4.5 9.5h11M10 9.5v8"/><path d="m8.4 5.4 1.6 1.6 1.6-1.6" stroke-width="1.2"/>',
   lengthen: `<path d="M3 13h9"/><path d="M12 13h5.5" stroke-dasharray="2 1.5"/><path d="m15 10.5 2.5 2.5-2.5 2.5"/>${grip(12, 13)}`,
   // Sürdür (docs/adr/0173 §4): a polyline drawn, its end's grip, the new vertices going on from it dashed.
   continue: `<path d="M2.5 16.5 6 10.5l4 3"/><path d="m10 13.5 3.5-6.5 4 1.5" stroke-dasharray="1.8 1.4"/>${grip(10, 13.5)}${grip(13.5, 7)}${grip(17.5, 8.5)}`,

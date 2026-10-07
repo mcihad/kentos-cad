@@ -65,6 +65,8 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   centerline: 'Orta hat',
   // Resim ekle (docs/adr/0192 §6).
   image: 'Resim ekle',
+  // Eğri boyunca yazı (docs/adr/0196 §4).
+  textAlong: 'Eğri boyunca yazı',
 };
 
 /**
@@ -83,6 +85,8 @@ function checkLink(o: NewObject, i: number): Stop | null {
   if (!isUuid(of)) return failed(error('invalid_link', `Bağlı nesnenin kimliği küçük harfli, tireli bir UUID olmalı; “${of}” verildi.`, at('labelOf')));
   if (!(Number.isFinite(scale) && scale > 0))
     return failed(error('invalid_link', "Bağlı yazının ölçeği (1:N'deki N) sonlu ve sıfırdan büyük olmalı. Ölçeği düzeltin.", at('labelScale')));
+  // A linked text has no curve (docs/adr/0196 §1).
+  if (o.geometry.path !== undefined) return failed(error('invalid_path', 'Nesneye bağlı yazının eğrisi olmaz. Önce bağı koparın ya da eğriyi kaldırın.', at('geometry.path')));
   return null;
 }
 

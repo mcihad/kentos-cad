@@ -353,8 +353,14 @@ def written_kinds(e: dict) -> list[str]:
 
 
 def is_paragraph(e: dict) -> bool:
-    """A text written as an MTEXT (docs/adr/0182 §5): it has a line break, a box, a line spacing or letter formats."""
-    return e["kind"] == "text" and ("\n" in e["text"] or any(k in e for k in ("boxWidth", "lineSpacing", "runs")))
+    """A text written as an MTEXT (docs/adr/0182 §5): it has a line break, a box, a line spacing or letter formats;
+    not one along a curve (docs/adr/0196 §5)."""
+    return e["kind"] == "text" and "path" not in e and ("\n" in e["text"] or any(k in e for k in ("boxWidth", "lineSpacing", "runs")))
+
+
+def is_curved(e: dict) -> bool:
+    """A text along a curve (docs/adr/0196 §5): an anonymous block of its letters and its INSERT."""
+    return e["kind"] == "text" and "path" in e
 
 
 # MTEXT's attachment points (71) by KentOS's alignment; a baseline alignment goes out as the top's of its side.
@@ -516,6 +522,59 @@ def sums(sizes: list) -> list[float]:
     for s in sizes:
         out.append(out[-1] + float(s))
     return out
+
+
+CURVE_FLOATS = ("rotation", "height", "widthFactor", "oblique")
+
+
+def curve_data(e: dict) -> str:
+    """A curved text's own fields as KentOS's data holds them: the contract's JSON, keys in order, numbers as floats."""
+    t = {k: v for k, v in e.items() if k not in TABLE_BASE}
+    for k in CURVE_FLOATS:
+        if k in t:
+            t[k] = float(t[k])
+    t["p"] = {"x": float(t["p"]["x"]), "y": float(t["p"]["y"])}
+    path = {"pts": [{"x": float(q["x"]), "y": float(q["y"])} for q in t["path"]["pts"]]}
+    if "bulges" in t["path"]:
+        path["bulges"] = [float(b) for b in t["path"]["bulges"]]
+    t["path"] = path
+    return json.dumps(t, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def check_curved(o: list[tuple[int, str]], e: dict, blocks: list, by_name: dict, layers: dict, styled: tuple, where: str, n: int) -> None:
+    """A text along a curve (docs/adr/0196 §5): an INSERT of the anonymous block *Un at its point, turned as its frame,
+    KentOS's data its own fields; the block in the text's frame (its point the origin, unturned): a TEXT a letter that
+    is not a space, in order, where the layout of text_along_cases.py puts it (measured in the text's typeface, else
+    Arimo, the file's Arial), turned as the curve there, its height and width factor, on 0 in BYBLOCK."""
+    import text_along_cases as along
+
+    name = f"*U{n}"
+    ensure(group(o, 2) == name and group(o, 330) == "17" and group(o, 8) == layers[e["layerId"]], f"{where}: {name}'s INSERT in model space, on its layer")
+    ensure((float(group(o, 10)), float(group(o, 20))) == (float(e["p"]["x"]), float(e["p"]["y"])), f"{where}: at its point")
+    ensure((group(o, 50) is None) if e["rotation"] == 0 else float(group(o, 50)) == float(e["rotation"]), f"{where}: its turn")
+    if e.get("color"):
+        ensure(group(o, 420) == str(int(e["color"][1:], 16)), f"{where}: its true colour")
+    data = kentos(o).get("along")
+    ensure(data is not None and item_text(data) == curve_data(e), f"{where}: KentOS's data is its fields")
+    ensure(kentos_attrs(o) == e["attrs"], f"{where}: its attributes")
+    k = by_name[name]
+    end = next(i for i in range(k, len(blocks)) if blocks[i][0] == (0, "ENDBLK"))
+    head, objects = blocks[k], blocks[k + 1 : end]
+    ensure(group(head, 70) == "1" and (float(group(head, 10)), float(group(head, 20))) == (0.0, 0.0), f"{where}: anonymous, its base at the origin")
+    ensure(all(x[0] == (0, "TEXT") and group(x, 8) == "0" and group(x, 62) == "0" for x in objects), f"{where}: its block's TEXTs on 0 in BYBLOCK")
+    local = {**e, "p": {"x": 0.0, "y": 0.0}, "rotation": 0.0, "drawingFont": "arimo"}
+    laid, _ = along.letters(local)
+    shown = [(c, l) for c, l in zip(e["text"], laid) if not c.isspace()]
+    ensure(len(objects) == len(shown), f"{where}: a TEXT a letter ({len(shown)})")
+    for i, ((c, l), x) in enumerate(zip(shown, objects)):
+        w = f"{where} › {i + 1}. harf {c!r}"
+        ensure(group(x, 1) == table_text(c), f"{w}: its letter")
+        ensure(close(float(group(x, 10)), l["at"][0]) and close(float(group(x, 20)), l["at"][1]), f"{w}: where the layout puts it")
+        turn = float(group(x, 50) or 0.0)
+        ensure(abs((turn - l["turn"] + 180.0) % 360.0 - 180.0) <= 1e-9, f"{w}: turned as the curve ({l['turn']})")
+        ensure(float(group(x, 40)) == float(e["height"]), f"{w}: its height")
+        ensure((group(x, 41) is None) if "widthFactor" not in e else float(group(x, 41)) == float(e["widthFactor"]), f"{w}: its width factor")
+        check_face(x, e, styled, False, w, letter=True)
 
 
 def check_table(o: list[tuple[int, str]], e: dict, blocks: list, by_name: dict, layers: dict, where: str, n: int) -> None:
@@ -1127,8 +1186,9 @@ def check_vars(v: dict, look: dict, h: float, decimals: int, per_metre: float, w
         ensure(real(144) in (None, 1.0), f"{where}: no DIMLFAC of its own")
 
 
-def check_face(o: list[tuple[int, str]], e: dict, names: tuple, mtext: bool, where: str) -> None:
-    """A TEXT's or an MTEXT's style record (7), own slant (51) and face in KentOS's data."""
+def check_face(o: list[tuple[int, str]], e: dict, names: tuple, mtext: bool, where: str, letter: bool = False) -> None:
+    """A TEXT's or an MTEXT's style record (7), own slant (51) and face in KentOS's data; a curved text's letter only
+    its record (its face is the INSERT's data, docs/adr/0196 §5)."""
     text, _, synthetic = names
     if e.get("textStyle") in text:
         record = text[e["textStyle"]]
@@ -1140,6 +1200,8 @@ def check_face(o: list[tuple[int, str]], e: dict, names: tuple, mtext: bool, whe
         ensure(group(o, 7) == record, f"{where}: names its style's record {record!r} (7)")
     else:
         ensure(group(o, 7) is None, f"{where}: Standard left unsaid")
+    if letter:
+        return
     if not mtext:
         slant = e.get("oblique") if e.get("font") else None
         ensure((group(o, 51) is None) if slant is None else float(group(o, 51)) == slant, f"{where}: its own slant {slant} (51)")
@@ -1340,14 +1402,17 @@ def check(name: str) -> list[str]:
                 k += 1
                 want.append(f"*D{k}")
         want.append(names[b["id"]])
-    # The drawing's dimensions' blocks and its tables' (*U1, *U2 …, docs/adr/0184 §7), in the drawing's order.
+    # The drawing's dimensions' blocks and its tables' and curved texts' (*U1, *U2 …, docs/adr/0184 §7, 0196 §5), in
+    # the drawing's order.
     u = 0
-    for e in spec["entities"]:
+    anonymous = {}
+    for i, e in enumerate(spec["entities"]):
         if e["kind"] == "dimension":
             k += 1
             want.append(f"*D{k}")
-        elif e["kind"] == "table":
+        elif e["kind"] == "table" or is_curved(e):
             u += 1
+            anonymous[i] = u
             want.append(f"*U{u}")
     ensure([group(r, 2) for r in records] == want, f"block records {want}")
     blocks = split(section(p, "BLOCKS"))
@@ -1443,17 +1508,27 @@ def check(name: str) -> list[str]:
         said.append(f"{attributed} yerleştirmenin ATTRIB'leri")
 
     # The drawing's tables (docs/adr/0184 §7), in the input's order.
-    tables = [e for e in spec["entities"] if e["kind"] == "table"]
-    written = [e for e in drawn if e[0] == (0, "INSERT") and (group(e, 2) or "").startswith("*U")]
+    tables = [(i, e) for i, e in enumerate(spec["entities"]) if e["kind"] == "table"]
+    written = [e for e in drawn if e[0] == (0, "INSERT") and (group(e, 2) or "").startswith("*U") and "table" in kentos(e)]
     ensure(len(written) == len(tables), f"{len(tables)} tables")
     by_name = {group(b, 2): k for k, b in enumerate(blocks) if b[0] == (0, "BLOCK")}
-    for n, (e, o) in enumerate(zip(tables, written)):
-        check_table(o, e, blocks, by_name, layers, f"tablo {n + 1}", n + 1)
+    for n, ((i, e), o) in enumerate(zip(tables, written)):
+        check_table(o, e, blocks, by_name, layers, f"tablo {n + 1}", anonymous[i])
+    tables = [e for _, e in tables]
     if tables:
         said.append(f"{len(tables)} tablo ({sum(1 for e in tables if e.get('frame') and e.get('grid') != 'none')} kalın çerçeveli)")
 
+    # The drawing's texts along a curve (docs/adr/0196 §5), in the input's order.
+    curved = [(i, e) for i, e in enumerate(spec["entities"]) if is_curved(e)]
+    written = [e for e in drawn if e[0] == (0, "INSERT") and (group(e, 2) or "").startswith("*U") and "along" in kentos(e)]
+    ensure(len(written) == len(curved), f"{len(curved)} curved texts")
+    for n, ((i, e), o) in enumerate(zip(curved, written)):
+        check_curved(o, e, blocks, by_name, layers, styled, f"eğri boyunca yazı {n + 1}", anonymous[i])
+    if curved:
+        said.append(f"{len(curved)} eğri boyunca yazı ({sum(1 for _, e in curved if 'bulges' in e['path'])} yaylı)")
+
     # The drawing's texts (docs/adr/0145 §7), in the input's order.
-    texts = [e for e in spec["entities"] if e["kind"] == "text" and not is_paragraph(e)]
+    texts = [e for e in spec["entities"] if e["kind"] == "text" and not is_paragraph(e) and not is_curved(e)]
     written = [e for e in drawn if e[0] == (0, "TEXT")]
     ensure(len(written) == len(texts), f"{len(texts)} TEXTs")
     for n, (e, o) in enumerate(zip(texts, written)):

@@ -1,0 +1,363 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "text-along",
+  "title": "Eğri boyunca yazı: yola tıklanıp yerine tıklanan yazı yolun parçası boyunca, harfler üstünde yazılır; derenin yayında da; Esc çıkar. Yazıyı eğriye oturt: seçili iki düz yazı dereye oturur, Ctrl+Z geri alır; Doğrultuya döndür (D) 45°'lik kenara döndürür; Düzleştir (Z) seçili eğri boyunca yazıları düzleştirir, düz yazıyı atlar ve söyler",
+  "source": "docs/adr/0196 §4; web tools/textAlongTool.ts, masaüstü kentos_interaction::text_along; cad.entities.create textAlong, cad.entities.edit textPath, textTurn, textStraighten",
+  "covers": [
+    "CAD-34"
+  ],
+  "document": "text-along.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.06
+  },
+  "draft": {
+    "snap": false,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "clickTolerance": 0.1,
+  "steps": [
+    {
+      "run": "tool.textAlong",
+      "expect": {
+        "tool": "textAlong",
+        "prompt": "Eğri boyunca yazı: yazının izleyeceği çizgiye, yaya, daireye, alana ya da eğriye tıklayın [Stil (S): Standart / Yükseklik (Y): 2.5 mm / Hiza (H): Ortası / Konum (K): Üstünde]"
+      }
+    },
+    {
+      "click": [
+        -5,
+        6
+      ],
+      "note": "Yol seçilir.",
+      "expect": {
+        "prompt": "Eğri boyunca yazı: yazının yerine tıklayın; Esc başka eğri seçtirir [Stil (S): Standart / Yükseklik (Y): 2.5 mm / Hiza (H): Ortası / Konum (K): Üstünde]"
+      }
+    },
+    {
+      "click": [
+        0,
+        6.4
+      ],
+      "note": "Yazı kutusu tıklanan yerde açılır.",
+      "expect": {
+        "prompt": "Eğri boyunca yazı: yazıyı yazın; Enter eğri boyunca ekler, Esc vazgeçer",
+        "entities": 5
+      }
+    },
+    {
+      "text": "Atatürk Caddesi"
+    },
+    {
+      "key": "Enter",
+      "note": "Ortası tıklanan yerde, harfler yolun üstünde: yolun yazının boyu kadar parçası eğrisidir.",
+      "expect": {
+        "entities": 6,
+        "log": "success",
+        "logged": [
+          "Eğri boyunca yazı eklendi: “Atatürk Caddesi”"
+        ],
+        "newest": {
+          "kind": "text",
+          "text": "Atatürk Caddesi",
+          "align": "bottomCenter",
+          "curve": 1,
+          "points": [
+            [
+              -4.385625,
+              6
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "click": [
+        0,
+        -8
+      ],
+      "note": "Dere seçilir.",
+      "expect": {
+        "prompt": "Eğri boyunca yazı: yazının yerine tıklayın; Esc başka eğri seçtirir [Stil (S): Standart / Yükseklik (Y): 2.5 mm / Hiza (H): Ortası / Konum (K): Üstünde]"
+      }
+    },
+    {
+      "move": [
+        6,
+        -7.4
+      ],
+      "note": "Harfler imleçle derenin yayı boyunca kayar."
+    },
+    {
+      "shot": "onizleme",
+      "note": "Önizleme: son yazılan yazı, yayın imlece en yakın yerinde"
+    },
+    {
+      "click": [
+        3,
+        -7.6
+      ],
+      "note": "Kutu son yazıyla açılır; üstüne yazılır."
+    },
+    {
+      "text": "Çamlıca Deresi"
+    },
+    {
+      "key": "Enter",
+      "note": "Derenin yayı boyunca.",
+      "expect": {
+        "entities": 7,
+        "newest": {
+          "kind": "text",
+          "text": "Çamlıca Deresi",
+          "align": "bottomCenter",
+          "curve": 1
+        }
+      }
+    },
+    {
+      "shot": "yazilar",
+      "note": "Yolun ve derenin adları eğrileri boyunca"
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    },
+    {
+      "drag": [
+        [
+          -19,
+          0.5
+        ],
+        [
+          8,
+          4.5
+        ]
+      ],
+      "note": "Pencere iki düz yazıyı seçer.",
+      "expect": {
+        "selected": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "run": "tool.textCurve",
+      "expect": {
+        "tool": "textCurve",
+        "prompt": "Yazıyı eğriye oturt: yazıların oturacağı eğriye tıklayın [Eğriye oturt (O): açık / Doğrultuya döndür (D) / Düzleştir (Z)]"
+      }
+    },
+    {
+      "click": [
+        10,
+        -7.2
+      ],
+      "note": "İki yazı dereye oturur.",
+      "expect": {
+        "tool": "select",
+        "log": "success",
+        "logged": [
+          "2 yazı eğriye oturtuldu."
+        ],
+        "objects": [
+          {
+            "id": 4,
+            "kind": "text",
+            "curve": 1
+          },
+          {
+            "id": 5,
+            "kind": "text",
+            "curve": 1
+          }
+        ]
+      }
+    },
+    {
+      "shot": "oturtuldu",
+      "note": "İki düz yazı dereye oturtuldu"
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Tek adımda geri alınır.",
+      "expect": {
+        "objects": [
+          {
+            "id": 4,
+            "kind": "text",
+            "curve": null,
+            "points": [
+              [
+                -18,
+                1.5
+              ]
+            ]
+          },
+          {
+            "id": 5,
+            "kind": "text",
+            "curve": null,
+            "points": [
+              [
+                2,
+                1.5
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "run": "tool.textCurve",
+      "expect": {
+        "tool": "textCurve"
+      }
+    },
+    {
+      "key": "D",
+      "expect": {
+        "prompt": "Yazıyı eğriye oturt: doğrultusu alınacak kenara tıklayın [Eğriye oturt (O) / Doğrultuya döndür (D): açık / Düzleştir (Z)]"
+      }
+    },
+    {
+      "click": [
+        16.5,
+        0.5
+      ],
+      "note": "45°'lik kenarın doğrultusuna, her yazı kendi noktası çevresinde.",
+      "expect": {
+        "tool": "select",
+        "log": "success",
+        "logged": [
+          "2 yazı doğrultuya döndürüldü."
+        ],
+        "objects": [
+          {
+            "id": 4,
+            "kind": "text",
+            "rotation": 45,
+            "points": [
+              [
+                -18,
+                1.5
+              ]
+            ]
+          },
+          {
+            "id": 5,
+            "kind": "text",
+            "rotation": 45,
+            "points": [
+              [
+                2,
+                1.5
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "shot": "donduruldu",
+      "note": "Yazılar 45°'lik kenarın doğrultusunda"
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "drag": [
+        [
+          -12,
+          9
+        ],
+        [
+          12,
+          -9.5
+        ]
+      ],
+      "note": "Pencere iki eğri boyunca yazıyı ve döndürülmüş Lale'yi seçer.",
+      "expect": {
+        "selected": [
+          5,
+          6,
+          7
+        ]
+      }
+    },
+    {
+      "run": "tool.textCurve",
+      "expect": {
+        "tool": "textCurve"
+      }
+    },
+    {
+      "key": "Z",
+      "note": "Düzleştir hemen yazar; düz yazı atlanır, söylenir.",
+      "expect": {
+        "tool": "select",
+        "log": "success",
+        "logged": [
+          "1 yazı zaten düz; atlandı.",
+          "2 yazı düzleştirildi."
+        ],
+        "objects": [
+          {
+            "id": 6,
+            "kind": "text",
+            "curve": null,
+            "align": null,
+            "points": [
+              [
+                -4.385625,
+                6.25
+              ]
+            ]
+          },
+          {
+            "id": 7,
+            "kind": "text",
+            "curve": null,
+            "align": null
+          }
+        ]
+      }
+    },
+    {
+      "shot": "duzlestirildi",
+      "note": "Eğri boyunca yazılar düzleştirildi"
+    },
+    {
+      "key": "Ctrl+Z",
+      "expect": {
+        "objects": [
+          {
+            "id": 6,
+            "kind": "text",
+            "curve": 1,
+            "align": "bottomCenter"
+          }
+        ]
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "selected": []
+      }
+    }
+  ]
+}

@@ -1290,6 +1290,14 @@ fn shape(entity: &Entity) -> Shape {
             line_spacing: t.paragraph.line_spacing,
             runs: text_runs(&t.paragraph.runs),
             face: text_face(&t.face),
+            // Along a curve, in its frame (docs/adr/0196).
+            path: t
+                .path
+                .as_ref()
+                .map(|c| kentos_geometry_core::text::along::Curve {
+                    pts: c.pts.iter().map(v).collect(),
+                    bulges: c.bulges.clone(),
+                }),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: v(&d.a),

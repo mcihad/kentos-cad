@@ -210,6 +210,7 @@ impl PlaceTextFile {
                     runs: Vec::new(),
                     // Yazı's style (docs/adr/0183 §4).
                     face: face.clone(),
+                    path: None,
                 }
             })
             .collect();

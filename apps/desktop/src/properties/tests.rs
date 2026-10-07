@@ -340,6 +340,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             label_scale: None,
             paragraph: Default::default(),
             face: Default::default(),
+            path: None,
         }),
     );
     let s = Slot(text);
@@ -472,6 +473,7 @@ fn a_linked_text_names_its_object_and_bagi_kopar_breaks_the_link() {
             label_scale: label_of.map(|_| 1000.0),
             paragraph: Default::default(),
             face: Default::default(),
+            path: None,
         })
     };
     let linked = add(&mut app, text(Some(parcel), "12"));
@@ -656,6 +658,7 @@ fn what_the_commands_refuse_is_said_and_not_written() {
             label_scale: None,
             paragraph: Default::default(),
             face: Default::default(),
+            path: None,
         }),
     );
     event(
@@ -1566,6 +1569,7 @@ fn two_texts(app: &mut App) -> (u32, u32) {
         label_scale: None,
         paragraph: Default::default(),
         face: Default::default(),
+        path: None,
     };
     let a = add(
         app,

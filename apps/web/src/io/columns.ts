@@ -80,7 +80,7 @@ const WEIGHT = 8;
  * names them (point: z; line: za, zb; polyline and polygon: bulges, holes, zs;
  * polygon: parts; text: align, width factor, mask (docs/adr/0145), link, box
  * width, line spacing, runs, text style, font, bold, italic, oblique
- * (docs/adr/0183); dimension: text, style, angle, c, mask, za, zb, dimension
+ * (docs/adr/0183), curve, its bulges (docs/adr/0196); dimension: text, style, angle, c, mask, za, zb, dimension
  * style, arrow, arrow size, ext offset, ext beyond, text gap, centred,
  * decimals, unit, prefix, suffix, font; hatch: holes, name, scale, families,
  * gradient, tie (docs/adr/0186); insert: mirror; table:
@@ -469,6 +469,12 @@ class Packer {
         if (e.italic === true) flags |= OPT[10];
         else if (e.italic !== undefined) throw unwritable('bad_value', `${this.where}/italic`, 'italik yalnız true yazılır; alan yoksa yazı italik değildir');
         if (e.oblique !== undefined) (flags |= OPT[11]), this.float(e.oblique, 'oblique');
+        // Its curve (docs/adr/0196 §1): its vertices, then its bulges when one bends; the codec checks them.
+        if (e.path !== undefined) {
+          flags |= OPT[12];
+          this.points(e.path.pts, 'path', kind);
+          if (e.path.bulges !== undefined) (flags |= OPT[13]), this.numbers(e.path.bulges, 'path');
+        }
         break;
       case 'dimension': {
         this.point(e.a, 'a', kind);
@@ -942,6 +948,12 @@ export class ColumnsReader {
         if (has(9)) e.bold = true;
         if (has(10)) e.italic = true;
         if (has(11)) e.oblique = this.num();
+        // docs/adr/0196: the curve, its bulges when one bends.
+        if (has(12)) {
+          const path: { pts: { x: number; y: number }[]; bulges?: number[] } = { pts: this.pts() };
+          if (has(13)) path.bulges = this.nums();
+          e.path = path;
+        }
         break;
       case 'dimension':
         e.a = this.pt();

@@ -17,6 +17,7 @@ import type { TableAlign } from "./TableAlign";
 import type { TableGrid } from "./TableGrid";
 import type { TableSource } from "./TableSource";
 import type { TextAlign } from "./TextAlign";
+import type { TextPath } from "./TextPath";
 import type { TextRun } from "./TextRun";
 import type { Vec2 } from "./Vec2";
 
@@ -89,6 +90,10 @@ lineSpacing?: number,
  * Its letters' formats (`TextRun`), in order, not overlapping; absent: none.
  */
 runs?: Array<TextRun>, 
+/**
+ * The curve its letters stand on, in its own frame (docs/adr/0196 §1); absent: straight.
+ */
+path?: TextPath, 
 /**
  * The project's text style it follows, by its id; absent: Standart.
  */

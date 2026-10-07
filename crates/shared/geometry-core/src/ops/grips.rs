@@ -260,6 +260,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             line_spacing,
             runs,
             face,
+            path,
             ..
         } => Shape::Text {
             p,
@@ -273,6 +274,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             line_spacing: *line_spacing,
             runs: runs.clone(),
             face: face.clone(),
+            // Its curve is in its frame: it goes with its point (docs/adr/0196 §1).
+            path: path.clone(),
         },
         // Its corner moves it; a column's end on its top line sets the column's width (docs/adr/0184 §2).
         Shape::Table { .. } => crate::geom::table::table_geom(&e.shape)?.moved_grip(index, p)?,

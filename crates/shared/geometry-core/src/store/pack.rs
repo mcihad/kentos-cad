@@ -49,7 +49,9 @@
 //! tick): all cross, so a moved, copied or pasted object keeps them. A multi-part area (docs/adr/0143) is kind
 //! 13, its first part as a polygon's fields and its other parts after them;
 //! a one-part area stays kind 3, laid out as it always was. A multi-part
-//! polyline (16) and a multi-point object (17) likewise (docs/adr/0174).
+//! polyline (16) and a multi-point object (17) likewise (docs/adr/0174). A text's curve
+//! (docs/adr/0196) after its face: the vertex count (0 for none), then each vertex's x, y
+//! and its edge's bulge.
 //!
 //! The store answers in the same layout (`Packer`): moved, copied, arrayed
 //! and pasted objects come back as numbers, not JSON
@@ -376,6 +378,18 @@ impl Reader<'_> {
                 let font = self.font()?;
                 let (bold, italic) = (self.flag()?, self.flag()?);
                 let oblique = self.num()?;
+                // docs/adr/0196: the curve's vertex count (0 none), each vertex x, y and its edge's bulge.
+                let count = self.count()?;
+                let mut pts = Vec::with_capacity(count.min(1024));
+                let mut bulges = Vec::with_capacity(count.min(1024));
+                for _ in 0..count {
+                    pts.push(self.pt()?);
+                    bulges.push(self.num()?);
+                }
+                let path = (count > 0).then(|| crate::text::along::Curve {
+                    pts,
+                    bulges: bulges.iter().any(|&b| b != 0.0).then_some(bulges),
+                });
                 Shape::Text {
                     p,
                     text,
@@ -394,6 +408,7 @@ impl Reader<'_> {
                         italic,
                         oblique: (!oblique.is_nan()).then_some(oblique),
                     },
+                    path,
                 }
             }
             11 => {
@@ -846,6 +861,7 @@ impl Packer {
                 line_spacing,
                 runs,
                 face,
+                path,
             } => {
                 let t = self.string(text);
                 let a = align.map_or(-1.0, |a| {
@@ -883,6 +899,14 @@ impl Packer {
                     flag(face.italic),
                     face.oblique.unwrap_or(f64::NAN),
                 ]);
+                // docs/adr/0196: the curve's vertices, each with its edge's bulge.
+                let pts = path.as_ref().map_or(&[][..], |c| &c.pts[..]);
+                self.put(&[pts.len() as f64]);
+                if let Some(c) = path {
+                    for (i, q) in c.pts.iter().enumerate() {
+                        self.put(&[q.x, q.y, c.bulge(i)]);
+                    }
+                }
             }
             Shape::Dimension {
                 a,
@@ -1279,6 +1303,8 @@ mod tests {
             0.0,
             0.0,
             f64::NAN,
+            // No curve (docs/adr/0196).
+            0.0,
             // A linear dimension with an angle and no centre, mask or elevations (docs/adr/0147); no look
             // (docs/adr/0183).
             3.0,

@@ -3748,6 +3748,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -3796,6 +3807,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -9631,6 +9669,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -9679,6 +9728,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -17849,6 +17925,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -17897,6 +17984,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -20600,6 +20714,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -20648,6 +20773,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -23312,6 +23464,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -23360,6 +23523,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -26159,6 +26349,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -26207,6 +26408,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -28856,6 +29084,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -28904,6 +29143,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -31563,6 +31829,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -31611,6 +31888,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -34544,6 +34848,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -34592,6 +34907,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -35212,6 +35554,21 @@
                 "const": "imageClip",
                 "description": "Resmi kırp (docs/adr/0192 §5): a picture's clip boundary set or\ntaken away, the picture updated in place.",
                 "type": "string"
+              },
+              {
+                "const": "textPath",
+                "description": "Eğriye oturt (docs/adr/0196 §4): texts made to stand on a curve, each\nupdated in place with its new point, turn and curve.",
+                "type": "string"
+              },
+              {
+                "const": "textTurn",
+                "description": "Doğrultuya döndür (docs/adr/0196 §4): straight texts turned to an\nedge's direction, each about its own point.",
+                "type": "string"
+              },
+              {
+                "const": "textStraighten",
+                "description": "Düzleştir (docs/adr/0196 §4): texts along a curve made straight.",
+                "type": "string"
               }
             ]
           },
@@ -35773,6 +36130,17 @@
                   },
                   "p": {
                     "$ref": "#/$defs/Vec2"
+                  },
+                  "path": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/TextPath"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The curve its letters stand on, in its own frame (docs/adr/0196 §1); absent: straight."
                   },
                   "rotation": {
                     "format": "double",
@@ -36773,6 +37141,33 @@
               "topRight"
             ],
             "type": "string"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
           },
           "TextRun": {
             "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
@@ -39295,6 +39690,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -39343,6 +39749,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -42124,6 +42557,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -42172,6 +42616,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -42568,6 +43039,11 @@
               {
                 "const": "image",
                 "description": "Resim ekle (docs/adr/0192): a picture placed.",
+                "type": "string"
+              },
+              {
+                "const": "textAlong",
+                "description": "Eğri boyunca yazı (docs/adr/0196 §4): a text along a curve.",
                 "type": "string"
               }
             ]
@@ -43083,6 +43559,17 @@
                   },
                   "p": {
                     "$ref": "#/$defs/Vec2"
+                  },
+                  "path": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/TextPath"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The curve its letters stand on, in its own frame (docs/adr/0196 §1); absent: straight."
                   },
                   "rotation": {
                     "format": "double",
@@ -44153,6 +44640,33 @@
               "topRight"
             ],
             "type": "string"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
           },
           "TextRun": {
             "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
@@ -46680,6 +47194,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -46728,6 +47253,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -49519,6 +50071,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -49567,6 +50130,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -52345,6 +52935,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -52393,6 +52994,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },
@@ -55335,6 +55963,17 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),\nin its own frame; absent: a straight text."
+              },
               "rotation": {
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
@@ -55383,6 +56022,33 @@
               "text",
               "height",
               "rotation"
+            ],
+            "type": "object"
+          },
+          "TextPath": {
+            "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",
+            "properties": {
+              "bulges": {
+                "description": "Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):\nDXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:\nevery edge straight.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "description": "The vertices after `p`, at least one.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
             ],
             "type": "object"
           },

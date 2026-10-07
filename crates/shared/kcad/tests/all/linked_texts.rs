@@ -53,6 +53,7 @@ fn text(label_of: Option<EntityId>, label_scale: Option<f64>) -> Entity {
         label_scale,
         paragraph: Default::default(),
         face: Default::default(),
+        path: None,
     })
 }
 

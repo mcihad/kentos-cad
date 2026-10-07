@@ -551,6 +551,7 @@ pub fn shape(entity: &Entity) -> Shape {
             line_spacing: t.paragraph.line_spacing,
             runs: core_runs(&t.paragraph.runs),
             face: core_face(&t.face),
+            path: t.path.as_ref().map(core_curve),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: v(&d.a),
@@ -590,6 +591,22 @@ pub fn shape(entity: &Entity) -> Shape {
                     .collect(),
             )),
         },
+    }
+}
+
+/// A text's curve for the core (docs/adr/0196).
+pub fn core_curve(c: &kentos_contracts::TextPath) -> kentos_geometry_core::text::along::Curve {
+    kentos_geometry_core::text::along::Curve {
+        pts: points(&c.pts),
+        bulges: c.bulges.clone(),
+    }
+}
+
+/// A core curve as the contract's.
+pub fn contract_curve(c: kentos_geometry_core::text::along::Curve) -> kentos_contracts::TextPath {
+    kentos_contracts::TextPath {
+        pts: back(c.pts),
+        bulges: c.bulges,
     }
 }
 
@@ -797,6 +814,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 line_spacing,
                 runs,
                 face: _,
+                path,
             },
         ) => {
             // The face is the object's own (docs/adr/0183): the core carries it through unchanged.
@@ -812,6 +830,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 line_spacing,
                 runs: contract_runs(runs),
             };
+            e.path = path.map(contract_curve);
         }
         (
             Entity::Dimension(e),
@@ -1047,12 +1066,14 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             line_spacing,
             runs,
             face,
+            path,
         } => Entity::Text(TextEntity {
             base,
             p,
             text,
             height,
             rotation,
+            path,
             align,
             width_factor: width_factor.filter(|w| *w != 1.0),
             mask,
@@ -1253,6 +1274,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             line_spacing,
             runs,
             face,
+            path,
         } => EntityGeometry::Text {
             p: p(at),
             text,
@@ -1265,6 +1287,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             line_spacing,
             runs: contract_runs(runs),
             face: contract_face(face),
+            path: path.map(contract_curve),
         },
         Shape::Dimension {
             a,

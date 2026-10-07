@@ -40,8 +40,8 @@ export const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
   ray: ['p', 'dir'],
   spline: ['pts', 'closed'],
   // Its alignment, width factor and mask (docs/adr/0145), a multi-line text's box, spacing and formats
-  // (docs/adr/0182) and its style and face (docs/adr/0183 §2) go with its geometry.
-  text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask', 'boxWidth', 'lineSpacing', 'runs', ...FACE_FIELDS],
+  // (docs/adr/0182), its style and face (docs/adr/0183 §2) and its curve (docs/adr/0196) go with its geometry.
+  text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask', 'boxWidth', 'lineSpacing', 'runs', ...FACE_FIELDS, 'path'],
   // The value's mask and a slope's elevations (docs/adr/0147) and its style and look (docs/adr/0183 §3) go with its geometry.
   dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c', 'mask', 'za', 'zb', ...LOOK_FIELDS],
   hatch: ['ring', 'holes', 'pattern', 'assoc'],

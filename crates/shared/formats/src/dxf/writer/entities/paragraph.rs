@@ -176,6 +176,7 @@ impl Writer<'_> {
                     font: None,
                     bold: t.face.font.is_some() && t.face.bold,
                     lean: crate::blocks::core_face(&t.face).lean(),
+                    path: None,
                 };
                 let q = place.realigned(core_align(top), Font::from_id("arimo"));
                 self.report.note(

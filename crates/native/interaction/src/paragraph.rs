@@ -380,6 +380,7 @@ impl Tool for ParagraphText {
                     line_spacing: (m.paragraph_spacing != 1.0).then_some(m.paragraph_spacing),
                     runs,
                     face: styles::text_face(cx),
+                    path: None,
                 };
                 if let Some(out) = points::write_objects(vec![geometry], None, cx)
                     && let Some(&id) = out.ids.first()

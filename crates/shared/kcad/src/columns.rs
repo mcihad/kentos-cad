@@ -38,7 +38,7 @@
 //! | ellipse | | c, major, ratio, t0, t1 | |
 //! | spline | n, closed (0 or 1) | pts (2n) | |
 //! | xline, ray | | p, dir | |
-//! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`) | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any | text, label's object if linked, each run's colour if it has one, text style if any |
+//! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`); k if curved; b if its curve bends | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any, the curve's pts (2k) if curved, its bulges (b) if it bends | text, label's object if linked, each run's colour if it has one, text style if any |
 //! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any | text if any, dimension style if any, prefix if any, suffix if any |
 //! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer, islands (i) and cutouts (k) ids (UUID text) if tied |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
@@ -54,7 +54,7 @@
 //! (docs/adr/0175), box width, line spacing, runs (docs/adr/0182; a run's
 //! flags: 1 bold, 2 italic, 4 underline, 8 raised, 16 lowered, 32 colour),
 //! text style, font, bold (no value), italic (no value), oblique
-//! (docs/adr/0183); dimension: text, style, angle, c, mask (no value), za, zb
+//! (docs/adr/0183), curve, its bulges (docs/adr/0196); dimension: text, style, angle, c, mask (no value), za, zb
 //! (docs/adr/0147), dimension style, arrow, arrow size, ext offset, ext
 //! beyond, text gap, centred (no value), decimals, unit, prefix, suffix, font
 //! (docs/adr/0183);
@@ -523,6 +523,7 @@ impl Packer {
                 label_scale,
                 paragraph,
                 face,
+                path,
             }) => {
                 self.point(p);
                 self.out.floats.extend([*height, *rotation]);
@@ -586,6 +587,15 @@ impl Packer {
                 if let Some(o) = face.oblique {
                     flags |= OPT[11];
                     self.float(o);
+                }
+                // Its curve (docs/adr/0196 §1): its vertices, then its bulges when one bends.
+                if let Some(c) = path {
+                    flags |= OPT[12];
+                    self.points(&c.pts);
+                    if let Some(b) = &c.bulges {
+                        flags |= OPT[13];
+                        self.numbers(b);
+                    }
                 }
             }
             Entity::Dimension(DimensionEntity {
@@ -1234,8 +1244,9 @@ fn allowed(kind: u8) -> u32 {
         2 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         3 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         // A text's alignment, width factor and mask, schema 18's link (docs/adr/0175 §4), schema 20's box,
-        // spacing and runs, schema 21's face (docs/adr/0183); a leader's three.
-        10 => OPT[..12].iter().fold(0, |m, b| m | b),
+        // spacing and runs, schema 21's face (docs/adr/0183), schema 25's curve and its bulges
+        // (docs/adr/0196); a leader's three.
+        10 => OPT[..14].iter().fold(0, |m, b| m | b),
         14 => OPT[0] | OPT[1] | OPT[2],
         // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look.
         11 => OPT.iter().fold(0, |m, b| m | b),
@@ -1451,6 +1462,13 @@ fn geometry(
                 None
             };
             let oblique = if has(11) { Some(c.float()?) } else { None };
+            let path = if has(12) {
+                let pts = c.points()?;
+                let bulges = if has(13) { Some(c.numbers()?) } else { None };
+                Some(kentos_contracts::TextPath { pts, bulges })
+            } else {
+                None
+            };
             Entity::Text(TextEntity {
                 base,
                 p,
@@ -1474,6 +1492,7 @@ fn geometry(
                     italic: has(10),
                     oblique,
                 },
+                path,
             })
         }
         11 => {

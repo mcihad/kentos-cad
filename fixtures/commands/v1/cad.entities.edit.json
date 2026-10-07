@@ -567,6 +567,41 @@
       ]
     },
     {
+      "name": "Eğriye oturt, Doğrultuya döndür ve Düzleştir: yazının eğrisi, dönüşü ve noktası yazılır, adımlar adlarıyla; eğrinin kuralları invalid_path (ADR 0196 §1, §4)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "p": {"x": 487080, "y": 4420000}, "z": 12.5},
+          {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 0},
+          {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 3, "height": 0.5, "text": "20 m", "style": "linear", "angle": 0},
+          {"kind": "hatch", "id": 4, "layerId": "yapi", "attrs": {"Tür": "Yeşil"}, "symbol": "cim", "ring": [{"x": 487030, "y": 4420060}, {"x": 487050, "y": 4420060}, {"x": 487050, "y": 4420080}, {"x": 487030, "y": 4420080}], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}},
+          {"kind": "text", "id": 5, "layerId": "kilitli", "attrs": {}, "p": {"x": 487080, "y": 4420030}, "text": "Kilit", "height": 2.5, "rotation": 0}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "textPath", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 15, "align": "bottomCenter", "widthFactor": 0.8, "mask": true, "path": {"pts": []}}}]}, "result": {"status": "failed", "error": {"code": "invalid_path", "message": "Eğri boyunca yazının eğrisinde köşe yok. En az bir köşe verin ya da eğriyi kaldırın (düz yazı).", "path": "changes[0].geometry.path"}}, "expect": {"ids": [1, 2, 3, 4, 5], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "textPath", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "Ada\n101", "height": 2.5, "rotation": 15, "align": "bottomCenter", "widthFactor": 0.8, "mask": true, "path": {"pts": [{"x": 30, "y": 0}], "bulges": [0.3]}}}]}, "result": {"status": "failed", "error": {"code": "invalid_path", "message": "Eğri boyunca yazı tek satırdır: satır sonu, kutu genişliği ve satır aralığı olmaz. Yazıyı tek satır yapın ya da eğriyi kaldırın.", "path": "changes[0].geometry.path"}}, "expect": {"ids": [1, 2, 3, 4, 5], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "textPath", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 15, "align": "bottomCenter", "widthFactor": 0.8, "mask": true, "path": {"pts": [{"x": 30, "y": 0}], "bulges": [0.3]}}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 15, "align": "bottomCenter", "widthFactor": 0.8, "mask": true, "path": {"pts": [{"x": 30, "y": 0}], "bulges": [0.3]}}}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "textStraighten", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "text", "p": {"x": 487061.5, "y": 4420003.25}, "text": "Park", "height": 2.5, "rotation": 24.5, "widthFactor": 0.8, "mask": true}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "kind": "text", "p": {"x": 487061.5, "y": 4420003.25}, "text": "Park", "height": 2.5, "rotation": 24.5, "widthFactor": 0.8, "mask": true}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Düzleştir", "expect": {"entities": {"2": {"id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 15, "align": "bottomCenter", "widthFactor": 0.8, "mask": true, "path": {"pts": [{"x": 30, "y": 0}], "bulges": [0.3]}}}}},
+        {"op": "undo", "returns": "Eğriye oturt", "expect": {"entities": {"2": {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 0}}}},
+        {"op": "execute", "input": {"operation": "textTurn", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 33.75}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 33.75}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Doğrultuya döndür", "expect": {"entities": {"2": {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 0}}}}
+      ]
+    },
+    {
       "name": "Bul ve değiştir: yazının yeni metni yazılır; hizası, çarpanı ve zemini kalır; adım “Bul ve değiştir” (ADR 0145 §6)",
       "setup": {
         "format": "kentos.document",

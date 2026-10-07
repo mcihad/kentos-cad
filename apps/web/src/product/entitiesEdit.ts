@@ -10,7 +10,7 @@ import type { EntityGeometry } from '../contracts/generated/EntityGeometry';
 import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
 import { FACE_FIELDS, faceProblem, LOOK_FIELDS, lookProblem } from '../model/annotationStyles';
-import { MAX_WIDTH_FACTOR, paragraphProblem, widthFactorOk, type Entity, type NewEntity } from '../model/entities';
+import { MAX_WIDTH_FACTOR, paragraphProblem, textPathProblem, widthFactorOk, type Entity, type NewEntity } from '../model/entities';
 import { assocProblem, patternProblem } from '../model/hatchRules';
 import { imageProblem } from '../model/imageRules';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
@@ -97,6 +97,10 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   edgeShift: 'Paralel kaydır',
   // Resmi kırp (docs/adr/0192 §5).
   imageClip: 'Resmi kırp',
+  // Eğri boyunca yazı (docs/adr/0196 §4).
+  textPath: 'Eğriye oturt',
+  textTurn: 'Doğrultuya döndür',
+  textStraighten: 'Düzleştir',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
@@ -111,7 +115,8 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   spline: ['pts', 'closed'],
   xline: ['p', 'dir'],
   ray: ['p', 'dir'],
-  text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask', 'boxWidth', 'lineSpacing', 'runs', ...FACE_FIELDS],
+  // Its curve (docs/adr/0196 §1) goes with its geometry.
+  text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask', 'boxWidth', 'lineSpacing', 'runs', ...FACE_FIELDS, 'path'],
   dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c', 'mask', 'za', 'zb', ...LOOK_FIELDS],
   hatch: ['ring', 'holes', 'pattern', 'assoc'],
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
@@ -153,6 +158,8 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
     if (Array.isArray(out.runs) && !out.runs.length) delete out.runs;
     // Its face's (docs/adr/0183 §2): upright, not bold, not italic, the project's typeface, no style.
     for (const key of FACE_FIELDS) if (out[key] === null || out[key] === false) delete out[key];
+    // A straight text has no curve (docs/adr/0196 §1); a null is no value.
+    if (out.path === null) delete out.path;
   }
   // So are a leader's (docs/adr/0146 §1): no mask, a filled arrow, no note; a null is no value, as serde reads it.
   if (g.kind === 'leader') {
@@ -348,6 +355,9 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
   if (g.kind === 'text') {
     const problem = paragraphProblem(g.text, g);
     if (problem) return failed(error('invalid_paragraph', problem[1], at(`.${problem[0]}`)));
+    // Its curve (docs/adr/0196 §1): a text of one line; a link is the create command's to refuse.
+    const curve = g.path ? textPathProblem(g.path, g.text, g, false) : null;
+    if (curve) return failed(error('invalid_path', curve, at('.path')));
   }
   // A table's rows, columns, cells, merged ranges and source (docs/adr/0184 §6).
   if (g.kind === 'table') {

@@ -4,6 +4,7 @@ import type { EntityGeometry as EditGeometry } from '../contracts/generated/Enti
 import { TEXT_ALIGN_ROWS, textAlignFromName, textAlignName, textAlignShares, widthFactorOk, MAX_WIDTH_FACTOR, type Entity, type TextAlign, type TextEntity } from '../model/entities';
 import { angleDeg, dist, type Vec2 } from '../model/geometry';
 import { textIncrement, textReadable } from '../model/textEdit';
+import { textAlongReadable } from '../model/textAlong';
 import { geometryOf } from '../product/entitiesEdit';
 import type { ViewTransform } from '../viewport/Camera';
 import { textAngle } from './constructions';
@@ -362,6 +363,16 @@ export class ReadableTool extends SelectionActionTool {
     const font = this.ctx.doc.settings.drawingFont.value;
     const changes: EntityEdit[] = [];
     for (const t of texts) {
+      // Along a curve, its curve turns the other way and its alignment's shares swap (docs/adr/0196 §3).
+      if (t.path) {
+        const placed = textAlongReadable({ ...t, font: t.font ?? font });
+        if (!placed) continue;
+        const own = geometryOf(t as unknown as EditGeometry);
+        delete own.align;
+        const geometry = { ...own, p: placed.p, rotation: placed.rotation, path: placed.path, ...(placed.align && { align: placed.align }) } as unknown as EditGeometry;
+        changes.push({ kind: 'update', uid: uidOf(this.ctx, t), geometry });
+        continue;
+      }
       // Measured in its own typeface, else the project's (docs/adr/0183 §2).
       const turned = textReadable({ ...t, font: t.font ?? font });
       if (!turned) continue;

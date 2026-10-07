@@ -284,8 +284,9 @@ impl Store {
                             if px < 5.0 || px > 240.0 || text.is_empty() {
                                 continue;
                             }
-                            // A multi-line piece, line by line (docs/adr/0182 §3).
-                            if let Some(t) = TextPlace::of(s).filter(TextPlace::is_paragraph) {
+                            // A multi-line piece, line by line (docs/adr/0182 §3); one along a
+                            // curve, letter by letter (docs/adr/0196 §2.6).
+                            if let Some(t) = TextPlace::of(s).filter(TextPlace::by_records) {
                                 let piece = Some(i as f64);
                                 self.paragraph_labels(
                                     it.id,
@@ -389,8 +390,9 @@ impl Store {
                     if px < 5.0 || px > 240.0 {
                         continue;
                     }
-                    // A multi-line text, line by line (docs/adr/0182 §3).
-                    if let Some(t) = TextPlace::of(&it.shape).filter(TextPlace::is_paragraph) {
+                    // A multi-line text, line by line (docs/adr/0182 §3); one along a curve,
+                    // letter by letter (docs/adr/0196 §2.6).
+                    if let Some(t) = TextPlace::of(&it.shape).filter(TextPlace::by_records) {
                         self.paragraph_labels(it.id, &t, *mask == Some(true), None, &mut out);
                         continue;
                     }
@@ -605,7 +607,8 @@ impl Store {
 /// A multi-line text's label records (docs/adr/0182 §3) in `font`: its mask's
 /// box when it has one (`LABEL_PARAGRAPH_MASK`), then each line's where its
 /// baseline starts (`LABEL_LINE`, or `LABEL_PIECE_LINE` for a block's piece
-/// at `piece`). The store's labels and the tools' previews (`textLines`).
+/// at `piece`). A text along a curve gives a mask and a line a letter
+/// (docs/adr/0196 §2.6). The store's labels and the tools' previews (`textLines`).
 pub fn paragraph_records(
     t: &TextPlace<'_>,
     font: crate::text::Font,
@@ -614,6 +617,11 @@ pub fn paragraph_records(
     piece: Option<f64>,
     out: &mut Vec<f64>,
 ) {
+    if let Some(a) = t.along(font) {
+        let letters = a.letters();
+        a.records(&letters, masked, id, piece, out);
+        return;
+    }
     let laid = t.layout(font);
     let o = t.origin(font);
     let r = (t.rotation * crate::jsmath::PI) / 180.0;

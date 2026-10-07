@@ -119,13 +119,33 @@ impl ObjectAction {
         let changes: Vec<EntityEdit> = texts
             .iter()
             .filter_map(|(slot, t)| {
-                // A multi-line text turns about its box's middle too (docs/adr/0182).
+                // A multi-line text turns about its box's middle too (docs/adr/0182); one along a
+                // curve turns its curve the other way, its alignment's shares swapped (docs/adr/0196 §3).
                 let s = shape(&Entity::Text(t.clone()));
-                let (p, rotation) = TextPlace::of(&s)?.readable(font)?;
-                let turned = TextEntity {
-                    p: kentos_contracts::Vec2 { x: p.x, y: p.y },
-                    rotation,
-                    ..t.clone()
+                let place = TextPlace::of(&s)?;
+                let turned = if t.path.is_some() {
+                    let placed = place.along(font)?.readable()?;
+                    TextEntity {
+                        p: kentos_contracts::Vec2 {
+                            x: placed.p.x,
+                            y: placed.p.y,
+                        },
+                        rotation: placed.rotation,
+                        align: placed
+                            .align
+                            .and_then(|a| kentos_contracts::TextAlign::from_name(a.name())),
+                        path: Some(kentos_native_application::geometry::contract_curve(
+                            placed.curve,
+                        )),
+                        ..t.clone()
+                    }
+                } else {
+                    let (p, rotation) = place.readable(font)?;
+                    TextEntity {
+                        p: kentos_contracts::Vec2 { x: p.x, y: p.y },
+                        rotation,
+                        ..t.clone()
+                    }
                 };
                 Some(EntityEdit::Update {
                     uid: edge::uid(cx.doc, *slot),

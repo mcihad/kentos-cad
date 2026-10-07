@@ -1,0 +1,168 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Eğri boyunca yazılar",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 1000.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "yazi",
+      "name": "Yazı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#2F6FB0",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "yazi",
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2501",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2502",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2503"
+  ],
+  "entities": [
+    {
+      "kind": "text",
+      "id": 1,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 499980.5,
+        "y": 4399990.25
+      },
+      "text": "Çamlıca Deresi",
+      "height": 2.5,
+      "rotation": 12.5,
+      "align": "bottomCenter",
+      "path": {
+        "pts": [
+          {
+            "x": 40.0,
+            "y": 0.0
+          }
+        ],
+        "bulges": [
+          0.35
+        ]
+      }
+    },
+    {
+      "kind": "text",
+      "id": 2,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 500010.0,
+        "y": 4400005.0
+      },
+      "text": "Atatürk Bulvarı",
+      "height": 2.0,
+      "rotation": 0.0,
+      "mask": true,
+      "font": "arimo",
+      "bold": true,
+      "path": {
+        "pts": [
+          {
+            "x": 18.0,
+            "y": 0.0
+          },
+          {
+            "x": 30.0,
+            "y": -6.5
+          }
+        ]
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2510",
+      "p": {
+        "x": 500030.0,
+        "y": 4399970.0
+      },
+      "scale": 1.5,
+      "rotation": 0.5
+    }
+  ],
+  "blocks": [
+    {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2510",
+      "name": "Kıvrık etiket",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "text",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "p": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "text": "Kanal",
+          "height": 1.0,
+          "rotation": 0.0,
+          "align": "middleCenter",
+          "path": {
+            "pts": [
+              {
+                "x": 6.0,
+                "y": 0.0
+              },
+              {
+                "x": 12.0,
+                "y": 0.0
+              }
+            ],
+            "bulges": [
+              -0.2,
+              0.2
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

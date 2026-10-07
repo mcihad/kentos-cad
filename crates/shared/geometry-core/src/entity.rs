@@ -240,6 +240,8 @@ pub enum Shape {
         runs: Option<Vec<crate::text::paragraph::Run>>,
         /// Its style, typeface, bold, italic and slant (docs/adr/0183 §2).
         face: crate::text::face::Face,
+        /// The curve its letters stand on, in its frame (docs/adr/0196); none: straight.
+        path: Option<crate::text::along::Curve>,
     },
     Dimension {
         a: Vec2,
@@ -348,7 +350,7 @@ crate::json_tagged!(Shape, "kind",
     Xline => "xline" { p, dir },
     Ray => "ray" { p, dir },
     Spline => "spline" { pts, closed },
-    Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs & face: crate::text::face::Face },
+    Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs, path & face: crate::text::face::Face },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
     Hatch => "hatch" { ring, holes, pattern, assoc },
     Insert => "insert" { block, p, scale, rotation, mirror; attrs },
@@ -905,6 +907,8 @@ pub struct TextPlace<'a> {
     pub font: Option<Font>,
     pub bold: bool,
     pub lean: f64,
+    /// The curve its letters stand on (docs/adr/0196); none for a straight text.
+    pub path: Option<&'a crate::text::along::Curve>,
 }
 
 impl<'a> TextPlace<'a> {
@@ -922,6 +926,7 @@ impl<'a> TextPlace<'a> {
                 line_spacing,
                 runs,
                 face,
+                path,
                 ..
             } => Some(TextPlace {
                 p: *p,
@@ -936,6 +941,7 @@ impl<'a> TextPlace<'a> {
                 font: face.font,
                 bold: face.is_bold(),
                 lean: face.lean(),
+                path: path.as_ref(),
             }),
             _ => None,
         }
@@ -963,7 +969,32 @@ impl<'a> TextPlace<'a> {
             font: None,
             bold: false,
             lean: 0.0,
+            path: None,
         }
+    }
+
+    /// It along its curve (docs/adr/0196), measured in its typeface or
+    /// `font`; none for a straight text.
+    pub fn along(&self, font: Font) -> Option<crate::text::along::Along<'a>> {
+        Some(crate::text::along::Along {
+            p: self.p,
+            rotation: self.rotation,
+            curve: self.path?,
+            text: self.text,
+            runs: self.runs,
+            height: self.height,
+            width_factor: self.width_factor.unwrap_or(1.0),
+            align: self.align,
+            font: self.font_or(font),
+            bold: self.bold,
+            lean: self.lean,
+        })
+    }
+
+    /// Whether the store gives it records of its pieces rather than one
+    /// (`paragraph_records`): laid out in lines, or along a curve.
+    pub fn by_records(&self) -> bool {
+        self.is_paragraph() || self.path.is_some()
     }
 
     /// Whether it is laid out in lines (docs/adr/0182): it has a line break,
@@ -1044,6 +1075,10 @@ impl<'a> TextPlace<'a> {
     /// `p` less its alignment's share of its width along the baseline and
     /// of its height up from it.
     pub fn origin(&self, font: Font) -> Vec2 {
+        // Along a curve, its first letter's (docs/adr/0196 §2).
+        if let Some(a) = self.along(font) {
+            return a.letters().first().map_or(self.p, |l| l.at);
+        }
         if self.align.is_none() {
             return self.p;
         }
@@ -1080,6 +1115,13 @@ impl<'a> TextPlace<'a> {
     /// Its rotated box `margin` wider all round (a hatch leaves it open so,
     /// docs/adr/0186 §4).
     pub fn outline_grown(&self, font: Font, margin: f64) -> Vec<Vec2> {
+        // Along a curve, its letters' boxes as one ring (docs/adr/0196 §2.7).
+        if let Some(a) = self.along(font) {
+            let letters = a.letters();
+            if !letters.is_empty() {
+                return a.outline(&letters, margin);
+            }
+        }
         let h = self.height * 1.15;
         let (w, below, _, _) = self.extent(font);
         self.frame(
@@ -1094,6 +1136,10 @@ impl<'a> TextPlace<'a> {
     /// turned half round about the middle of its box, so the box stays where
     /// it was; its new point and turn. None for a text that reads.
     pub fn readable(&self, font: Font) -> Option<(Vec2, f64)> {
+        // Along a curve its curve turns instead (`Along::readable`, docs/adr/0196 §3).
+        if self.path.is_some() {
+            return None;
+        }
         if !self.is_paragraph() {
             return self.readable_at(self.width(font));
         }
@@ -1145,6 +1191,10 @@ impl<'a> TextPlace<'a> {
     /// Hizayı değiştir (docs/adr/0145 §6, Öznitelikler's Hiza): the point of
     /// its box `to` is, so it stays where it is with that alignment.
     pub fn realigned(&self, to: Option<TextAlign>, font: Font) -> Vec2 {
+        // Along a curve its point is the curve's start; its letters move along it (docs/adr/0196 §1).
+        if self.path.is_some() {
+            return self.p;
+        }
         if !self.is_paragraph() {
             return self.realigned_at(to, self.width(font));
         }
@@ -1539,6 +1589,8 @@ fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
     };
     let text: Option<String> = json::read_field(v, "text")?;
     let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
+    let path = curve_of(v)?;
+
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: text.as_deref().unwrap_or(""),
@@ -1552,6 +1604,7 @@ fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
+        path: path.as_ref(),
     };
     let width: Option<f64> = json::read_field(v, "width")?;
     let turned = match width {
@@ -1569,6 +1622,8 @@ fn text_realign_json(v: &Json, to: Option<TextAlign>) -> Result<Vec2, String> {
     };
     let text: Option<String> = json::read_field(v, "text")?;
     let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
+    let path = curve_of(v)?;
+
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: text.as_deref().unwrap_or(""),
@@ -1582,12 +1637,44 @@ fn text_realign_json(v: &Json, to: Option<TextAlign>) -> Result<Vec2, String> {
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
+        path: path.as_ref(),
     };
     let width: Option<f64> = json::read_field(v, "width")?;
     Ok(match width {
         Some(w) => place.realigned_at(to, w),
         None => place.realigned(to, font),
     })
+}
+
+/// A text's curve as the JSON ops read it (`path`, docs/adr/0196); none for a straight text.
+fn curve_of(v: &Json) -> Result<Option<crate::text::along::Curve>, String> {
+    json::read_field(v, "path")
+}
+
+/// A text along its curve from JSON, as `textBox` reads a text, in the
+/// typeface it names; none when it has no curve. The ops of docs/adr/0196.
+pub(crate) fn along_json<T>(
+    v: &Json,
+    with: impl FnOnce(crate::text::along::Along<'_>) -> T,
+) -> Result<Option<T>, String> {
+    let (text, runs, font) = text_place_json(v)?;
+    let path = curve_of(v)?;
+    let place = TextPlace {
+        p: json::read_field(v, "p")?,
+        text: &text,
+        height: json::read_field(v, "height")?,
+        rotation: json::read_field(v, "rotation")?,
+        align: json::read_field(v, "align")?,
+        width_factor: json::read_field(v, "widthFactor")?,
+        box_width: None,
+        line_spacing: None,
+        runs: &runs,
+        font: None,
+        bold: bold_of(v)?,
+        lean: lean_of(v)?,
+        path: path.as_ref(),
+    };
+    Ok(place.along(font).map(with))
 }
 
 /// A text's own bold as the JSON ops read it (docs/adr/0183 §2): with the
@@ -1617,6 +1704,8 @@ fn text_place_json(v: &Json) -> Result<(String, Vec<crate::text::paragraph::Run>
 /// `textLines` takes a text as `textBox` does, and `mask` when it has one.
 fn text_lines_json(v: &Json) -> Result<Vec<f64>, String> {
     let (text, runs, font) = text_place_json(v)?;
+    let path = curve_of(v)?;
+
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: &text,
@@ -1630,6 +1719,7 @@ fn text_lines_json(v: &Json) -> Result<Vec<f64>, String> {
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
+        path: path.as_ref(),
     };
     let mask: Option<bool> = json::read_field(v, "mask")?;
     let mut out = Vec::new();
@@ -1661,6 +1751,8 @@ crate::json_struct!(out LaidOut { lines, width, pitch, shares });
 /// `textLayout` takes a text as `textBox` does.
 fn text_layout_json(v: &Json) -> Result<LaidOut, String> {
     let (text, runs, font) = text_place_json(v)?;
+    let path = curve_of(v)?;
+
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: &text,
@@ -1674,6 +1766,7 @@ fn text_layout_json(v: &Json) -> Result<LaidOut, String> {
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
+        path: path.as_ref(),
     };
     let laid = place.layout(font);
     let (along, up) = place.shares(place.align, font);
@@ -1695,6 +1788,8 @@ fn text_box_json(v: &Json) -> Result<Vec<Vec2>, String> {
     };
     let text: String = json::read_field(v, "text")?;
     let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
+    let path = curve_of(v)?;
+
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: &text,
@@ -1708,6 +1803,7 @@ fn text_box_json(v: &Json) -> Result<Vec<Vec2>, String> {
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
+        path: path.as_ref(),
     };
     Ok(place.outline(font))
 }

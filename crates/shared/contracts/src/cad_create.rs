@@ -91,6 +91,8 @@ pub enum CreateOperation {
     Centerline,
     /// Resim ekle (docs/adr/0192): a picture placed.
     Image,
+    /// Eğri boyunca yazı (docs/adr/0196 §4): a text along a curve.
+    TextAlong,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

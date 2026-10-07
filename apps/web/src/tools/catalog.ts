@@ -24,6 +24,7 @@ import { ArrayTool, MirrorTool, MoveTool, RotateTool, ScaleTool } from './modify
 import { ParallelLineTool } from './parallelTool';
 import { AlignTool, PolarArrayTool } from './arrangeTools';
 import { AlignDistributeTool } from './alignDistributeTool';
+import { TextAlongTool, TextCurveTool } from './textAlongTool';
 import { LengthenTool } from './lengthenTool';
 import { CleanupTool } from './cleanupTool';
 import { LabelsToTextTool } from './labelsToTextTool';
@@ -170,6 +171,45 @@ const defs: Def[] = [
     ],
     productCommand: entitiesCreate.id,
     create: (c) => new CoordinateVerticesTool(c),
+  },
+  // Eğri boyunca yazı (docs/adr/0196 §4): a new text along a curve, and the selected texts put on one, turned to an
+  // edge or made straight; one split button.
+  {
+    id: 'textAlong',
+    family: 'textAlong',
+    label: 'Eğri boyunca yazı',
+    icon: 'textAlong',
+    group: 'annotate',
+    aliases: ['EGRIBOYUNCAYAZI', 'EGRIYAZI', 'KIVRIKYAZI', 'ARCTEXT'],
+    description: 'Yazıyı bir çizgi, yay, daire, alan ya da eğri boyunca harf harf kıvırarak yazar (dere, yol adı).',
+    steps: [
+      'Yazının izleyeceği çizgiye, yaya, daireye, alana ya da eğriye tıklayın.',
+      'Yazının yerine tıklayın: harfler imleçle eğri boyunca görünür.',
+      'Açılan kutuya yazıp Enter’a basın. Yükseklik (Y) Yazı ile ortak; Hiza (H): tıklanan yer yazının başı, ortası ya da sonu; Konum (K): harfler eğrinin üstünde, ortasında ya da altında.',
+    ],
+    productCommand: entitiesCreate.id,
+    create: (c) => new TextAlongTool(c),
+  },
+  {
+    id: 'textCurve',
+    family: 'textAlong',
+    label: 'Yazıyı eğriye oturt',
+    icon: 'textFit',
+    group: 'annotate',
+    aliases: ['YAZIYIEGRIYEOTURT', 'EGRIYEOTURT'],
+    description: 'Seçili yazıları bir eğriye oturtur, bir kenarın doğrultusuna döndürür ya da eğri boyunca yazıları düzleştirir.',
+    steps: [
+      'Yazıları seçin (önceden de olur), bitince sağ tıklayın.',
+      'Eğriye oturt: yazıların oturacağı eğriye tıklayın; her yazının ortası eğrinin en yakın yerine iner.',
+      'Doğrultuya döndür: doğrultusu alınacak kenara tıklayın. Düzleştir hemen yazar.',
+    ],
+    methods: [
+      { label: 'Eğriye oturt', option: 'O', icon: 'textFit', description: 'Seçili yazıları tıklanan eğriye oturtur', aliases: ['EGRIYEOTURT'] },
+      { label: 'Doğrultuya döndür', option: 'D', icon: 'textTurn', description: 'Yazıları kenarın doğrultusuna döndürür', aliases: ['DOGRULTUYADONDUR', 'TORIENT'] },
+      { label: 'Düzleştir', option: 'Z', icon: 'textStraighten', description: 'Eğri boyunca yazıyı düz yazı yapar', aliases: ['DUZLESTIR', 'YAZIDUZLESTIR'] },
+    ],
+    productCommand: entitiesEdit.id,
+    create: (c) => new TextCurveTool(c),
   },
   {
     id: 'stationLabels',

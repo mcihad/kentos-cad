@@ -163,6 +163,7 @@ class CreateOperation(_StrEnum):
     - ``stations``: Km yaz (docs/adr/0189): a route's stations: their ticks, km texts,
     - ``centerline``: Orta hat (docs/adr/0190): the axis between two sides, a polyline.
     - ``image``: Resim ekle (docs/adr/0192): a picture placed.
+    - ``textAlong``: Eğri boyunca yazı (docs/adr/0196 §4): a text along a curve.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -189,9 +190,10 @@ class CreateOperation(_StrEnum):
     STATIONS = "stations"
     CENTERLINE = "centerline"
     IMAGE = "image"
+    TEXT_ALONG = "textAlong"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -339,6 +341,9 @@ class EditOperation(_StrEnum):
     - ``tableUpdate``: Tabloyu güncelle (docs/adr/0184 §5): tables written again from their source.
     - ``edgeShift``: Paralel kaydır (docs/adr/0191): an area's or a polyline's straight
     - ``imageClip``: Resmi kırp (docs/adr/0192 §5): a picture's clip boundary set or
+    - ``textPath``: Eğriye oturt (docs/adr/0196 §4): texts made to stand on a curve, each
+    - ``textTurn``: Doğrultuya döndür (docs/adr/0196 §4): straight texts turned to an
+    - ``textStraighten``: Düzleştir (docs/adr/0196 §4): texts along a curve made straight.
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -384,9 +389,12 @@ class EditOperation(_StrEnum):
     TABLE_UPDATE = "tableUpdate"
     EDGE_SHIFT = "edgeShift"
     IMAGE_CLIP = "imageClip"
+    TEXT_PATH = "textPath"
+    TEXT_TURN = "textTurn"
+    TEXT_STRAIGHTEN = "textStraighten"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -6592,6 +6600,8 @@ class TextEntity(Entity):
             text is drawn (Netcad's “fon”): what lies under it does not show.
         oblique: How far its letters lean, degrees, positive with their tops to the
             right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
+        path: The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),
+            in its own frame; absent: a straight text.
         runs: The letters' formats: ranges of the text's Unicode scalar values (not
             UTF-16 units), in order, not overlapping, each with a format; a run
             with no format is not written, and touching runs of one format are one.
@@ -6622,6 +6632,7 @@ class TextEntity(Entity):
     line_weight: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
     oblique: float | None | Unset = UNSET
+    path: TextPath | None | Unset = UNSET
     runs: list[TextRun] | Unset = UNSET
     symbol: str | None | Unset = UNSET
     text_style: str | None | Unset = UNSET
@@ -6662,6 +6673,8 @@ class TextEntity(Entity):
             out["mask"] = self.mask
         if self.oblique is not UNSET:
             out["oblique"] = None if self.oblique is None else float(self.oblique)
+        if self.path is not UNSET:
+            out["path"] = None if self.path is None else self.path.to_json()
         if self.runs is not UNSET:
             out["runs"] = [e0.to_json() for e0 in self.runs]
         if self.symbol is not UNSET:
@@ -6695,10 +6708,42 @@ class TextEntity(Entity):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mask=data.get("mask", UNSET),
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
+            path=UNSET if "path" not in data else None if data["path"] is None else TextPath.from_json(data["path"]),
             runs=[TextRun.from_json(e0) for e0 in data["runs"]] if "runs" in data else UNSET,
             symbol=data.get("symbol", UNSET),
             text_style=data.get("textStyle", UNSET),
             width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TextPath(_Model):
+    """The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are
+    in the text's own frame: `p` its start, x along the text's `rotation`, y
+    square to it on the left, metres. The first vertex is `p` itself and is
+    not written; `pts` are the ones after it. The frame carries the curve with
+    the text when it moves, turns or scales.
+    Attributes:
+        pts: The vertices after `p`, at least one.
+        bulges: Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):
+            DXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:
+            every edge straight.
+    """
+    pts: list[Vec2]
+    bulges: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextPath:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
         )
 
 
@@ -7568,6 +7613,7 @@ class TextEntityGeometry(EntityGeometry):
         mask: Its box filled with the drawing area's colour before it is drawn.
         oblique: How far its letters lean, degrees, positive with their tops to the
             right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
+        path: The curve its letters stand on, in its own frame (docs/adr/0196 §1); absent: straight.
         runs: Its letters' formats (`TextRun`), in order, not overlapping; absent: none.
         text_style: The project's text style it follows, by its id; absent: Standart.
         width_factor: The letters' width times this, the height kept; absent: 1. Over 0, at most 100.
@@ -7585,6 +7631,7 @@ class TextEntityGeometry(EntityGeometry):
     line_spacing: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
     oblique: float | None | Unset = UNSET
+    path: TextPath | None | Unset = UNSET
     runs: list[TextRun] | Unset = UNSET
     text_style: str | None | Unset = UNSET
     width_factor: float | None | Unset = UNSET
@@ -7611,6 +7658,8 @@ class TextEntityGeometry(EntityGeometry):
             out["mask"] = self.mask
         if self.oblique is not UNSET:
             out["oblique"] = None if self.oblique is None else float(self.oblique)
+        if self.path is not UNSET:
+            out["path"] = None if self.path is None else self.path.to_json()
         if self.runs is not UNSET:
             out["runs"] = [e0.to_json() for e0 in self.runs]
         if self.text_style is not UNSET:
@@ -7634,6 +7683,7 @@ class TextEntityGeometry(EntityGeometry):
             line_spacing=UNSET if "lineSpacing" not in data else None if data["lineSpacing"] is None else float(data["lineSpacing"]),
             mask=data.get("mask", UNSET),
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
+            path=UNSET if "path" not in data else None if data["path"] is None else TextPath.from_json(data["path"]),
             runs=[TextRun.from_json(e0) for e0 in data["runs"]] if "runs" in data else UNSET,
             text_style=data.get("textStyle", UNSET),
             width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
@@ -8677,6 +8727,7 @@ __all__ = [
     "TextAlignName",
     "TextEntity",
     "TextEntityGeometry",
+    "TextPath",
     "TextRun",
     "TextScript",
     "TextScriptName",

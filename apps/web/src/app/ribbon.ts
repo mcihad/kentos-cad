@@ -222,7 +222,8 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
     label: 'Açıklama',
     // AutoCAD's Annotate tab, a panel a kind; a tool the draw menu's Açıklama block gains later shows in a panel of its own.
     sources: [
-      { pick: 'Yazı', icon: 'text', commands: ['tool.text', 'tool.mtext', 'tool.placeTextFile', 'tool.labelsToText', 'text.findReplace', 'style.textStyles'] },
+      // Eğri boyunca yazı (docs/adr/0196 §4) beside the texts.
+      { pick: 'Yazı', icon: 'text', commands: ['tool.text', 'tool.mtext', 'tool.textAlong', 'tool.textCurve', 'tool.placeTextFile', 'tool.labelsToText', 'text.findReplace', 'style.textStyles'] },
       { pick: 'Ölçü', icon: 'dimension', commands: ['tool.dimension', 'style.dimensionStyles'] },
       // Koordinat yaz (docs/adr/0185): a place's coordinates on the drawing, and every corner's with their schedule.
       { pick: 'Koordinat', icon: 'coordinateLabel', commands: ['tool.coordinateLabel', 'tool.coordinateVertices'] },
@@ -292,8 +293,9 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { menu: 'crs', sections: ['Koordinat sistemi'] },
       { menu: 'map', sections: ['Parsel', 'Ölçme'] },
       { menu: 'tools', sections: ['Stil'] },
-      // The layers' labels as texts (docs/adr/0175 §3), beside the styles that draw them.
-      { pick: 'Etiket', icon: 'labelsToText', commands: ['tool.labelsToText'] },
+      // The layers' labels as texts (docs/adr/0175 §3), beside the styles that draw them; a name along a creek or a
+      // road (docs/adr/0196 §4).
+      { pick: 'Etiket', icon: 'labelsToText', commands: ['tool.labelsToText', 'tool.textAlong', 'tool.textCurve'] },
     ],
     launchers: { 'Koordinat sistemi': { command: 'crs.set', title: 'Proje ayarları: koordinat sistemi' } },
   },

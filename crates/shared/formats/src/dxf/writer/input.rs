@@ -104,6 +104,8 @@ struct Fields {
     box_width: Option<f64>,
     line_spacing: Option<f64>,
     runs: Option<Vec<TextRun>>,
+    /// A text's curve (docs/adr/0196).
+    path: Option<kentos_contracts::TextPath>,
     /// A leader's or a dimension's arrowhead by its name (the kind says which).
     arrow: Option<String>,
     /// A text's face and a dimension's look (docs/adr/0183).
@@ -321,6 +323,7 @@ impl Fields {
                     italic: self.italic.unwrap_or(false),
                     oblique: self.oblique,
                 },
+                path: self.path,
             }),
             "dimension" => Entity::Dimension(DimensionEntity {
                 base,
@@ -487,6 +490,7 @@ impl<'de> Deserialize<'de> for Wire {
                         "boxWidth" => f.box_width = map.next_value()?,
                         "lineSpacing" => f.line_spacing = map.next_value()?,
                         "runs" => f.runs = map.next_value()?,
+                        "path" => f.path = map.next_value()?,
                         "arrow" => f.arrow = map.next_value()?,
                         "textStyle" => f.text_style = map.next_value()?,
                         "dimStyle" => f.dim_style = map.next_value()?,

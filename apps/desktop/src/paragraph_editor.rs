@@ -298,6 +298,7 @@ impl Open {
             font: None,
             bold: self.face.font.is_some() && self.face.bold,
             lean: core_face(&self.face).lean(),
+            path: None,
         };
         let mut records = Vec::new();
         paragraph_records(
@@ -332,6 +333,7 @@ impl Open {
             font: None,
             bold: self.face.font.is_some() && self.face.bold,
             lean: core_face(&self.face).lean(),
+            path: None,
         };
         let laid = place.layout(drawing_font(Some(font)));
         (laid.lines.len(), laid.pitch)
@@ -356,6 +358,7 @@ impl Open {
             font: None,
             bold: self.face.font.is_some() && self.face.bold,
             lean: core_face(&self.face).lean(),
+            path: None,
         };
         let o = place.origin(drawing_font(Some(font)));
         let r = self.rotation.to_radians();

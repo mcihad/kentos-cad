@@ -37,7 +37,7 @@ use crate::{
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TABLES,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -135,6 +135,8 @@ pub(super) struct Features {
     hatches: bool,
     /// Schema 24: the `image` kind (docs/adr/0192).
     images: bool,
+    /// Schema 25: a text's curve, `path` (docs/adr/0196).
+    text_paths: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -165,6 +167,7 @@ impl Features {
             tables: schema >= SCHEMA_WITH_TABLES,
             hatches: schema >= SCHEMA_WITH_HATCH_PATTERNS,
             images: schema >= SCHEMA_WITH_IMAGES,
+            text_paths: schema >= SCHEMA_WITH_TEXT_PATHS,
             uids: true,
         }
     }
@@ -211,6 +214,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.paragraphs && matches!(key, "boxWidth" | "lineSpacing" | "runs"))
                     || (has.styles
                         && matches!(key, "textStyle" | "font" | "bold" | "italic" | "oblique"))
+                    || (has.text_paths && key == "path")
             }
             Kind::Dimension => {
                 matches!(
@@ -340,6 +344,9 @@ struct Fields {
     asset: Option<String>,
     file: Option<String>,
     clip: Option<Vec<Vec2>>,
+    /// A text's curve and where it is (for a refusal; docs/adr/0196).
+    text_path: Option<kentos_contracts::TextPath>,
+    path_at: usize,
     opacity: Option<f64>,
     /// A linked text's object and scale (docs/adr/0175 §4), and where the first of them is.
     label_of: Option<EntityId>,
@@ -565,6 +572,10 @@ pub(super) fn object(
             "asset" => f.asset = Some(text(r)?),
             "file" => f.file = Some(text(r)?),
             "clip" => f.clip = Some(points(r)?),
+            "path" => {
+                f.path_at = r.position();
+                f.text_path = Some(text_path(r)?);
+            }
             "opacity" => f.opacity = Some(r.float()?),
             "rows" => {
                 f.table_at.rows = r.position();
@@ -1018,6 +1029,17 @@ fn build(
             if let Some((_, words)) = f.face.problem() {
                 return Err(r.fail_at(Code::BadValue, f.face_at, &words));
             }
+            // Its curve: a text of one line, not linked (docs/adr/0196 §1).
+            if let Some(path) = &f.text_path
+                && let Some(words) = kentos_contracts::text_path_problem(
+                    path,
+                    &text,
+                    &f.paragraph,
+                    f.label_of.is_some(),
+                )
+            {
+                return Err(r.fail_at(Code::BadValue, f.path_at, &words));
+            }
             Entity::Text(TextEntity {
                 base,
                 p: required(r, f.p, "p")?,
@@ -1031,6 +1053,7 @@ fn build(
                 label_scale: f.label_scale,
                 paragraph: std::mem::take(&mut f.paragraph),
                 face: std::mem::take(&mut f.face),
+                path: f.text_path.take(),
             })
         }
         Kind::Dimension => {
@@ -1548,6 +1571,23 @@ fn hatch_assoc(r: &mut Reader<'_>) -> Result<HatchAssoc, KcadError> {
 
 /// A multi-line text's run (§6.6, docs/adr/0182): its range and format;
 /// a false flag is not written (its absence is false).
+/// A text's curve (§6.6, docs/adr/0196): `pts` and, when an edge bends, `bulges`.
+fn text_path(r: &mut Reader<'_>) -> Result<kentos_contracts::TextPath, KcadError> {
+    let (mut pts, mut bulges) = (None, None);
+    map(r, |r, key| {
+        match key {
+            "pts" => pts = Some(points(r)?),
+            "bulges" => bulges = Some(floats(r)?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    Ok(kentos_contracts::TextPath {
+        pts: required(r, pts, "pts")?,
+        bulges,
+    })
+}
+
 fn text_run(r: &mut Reader<'_>) -> Result<TextRun, KcadError> {
     let (mut start, mut end) = (None, None);
     let mut run = TextRun::default();

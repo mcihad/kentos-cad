@@ -223,6 +223,7 @@ impl StationLabels {
                     line_spacing: None,
                     runs: Vec::new(),
                     face: self.face.clone(),
+                    path: None,
                 },
                 None,
             ));

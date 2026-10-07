@@ -77,7 +77,7 @@ GEOMETRY = {
     "spline": ["pts", "closed"],
     "xline": ["p", "dir"],
     "ray": ["p", "dir"],
-    "text": ["p", "text", "height", "rotation", "align", "widthFactor", "mask"],
+    "text": ["p", "text", "height", "rotation", "align", "widthFactor", "mask", "path"],
     "dimension": ["a", "b", "offset", "height", "text", "style", "angle", "c", "mask", "za", "zb"],
     "hatch": ["ring", "holes", "pattern"],
     "insert": ["block", "p", "scale", "rotation", "mirror"],
@@ -712,6 +712,32 @@ cases.append({
         {"op": "execute", "input": {"operation": "readable", "changes": [{"kind": "update", "uid": uid(2), "geometry": turned}]}, "result": done(changed=[uid(2)]),
          "expect": {"entities": {"2": reshaped(PE(2), turned)}, "revision": "changed"}},
         {"op": "undo", "returns": "Okunur yap", "expect": {"entities": {"2": reshaped(PE(2), dressed)}}},
+    ],
+})
+
+# Eğri boyunca yazı (docs/adr/0196 §4): the tool's geometry, written as given.
+curved = {**dressed, "align": "bottomCenter", "rotation": 15, "path": {"pts": [P(30, 0)], "bulges": [0.3]}}
+straightened = {**dressed, "p": P(487061.5, 4420003.25), "rotation": 24.5}
+straightened.pop("align")
+PATH_EMPTY = "Eğri boyunca yazının eğrisinde köşe yok. En az bir köşe verin ya da eğriyi kaldırın (düz yazı)."
+PATH_LINE = "Eğri boyunca yazı tek satırdır: satır sonu, kutu genişliği ve satır aralığı olmaz. Yazıyı tek satır yapın ya da eğriyi kaldırın."
+cases.append({
+    "name": "Eğriye oturt, Doğrultuya döndür ve Düzleştir: yazının eğrisi, dönüşü ve noktası yazılır, adımlar adlarıyla; eğrinin kuralları invalid_path (ADR 0196 §1, §4)",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "textPath", "changes": [{"kind": "update", "uid": uid(2), "geometry": {**curved, "path": {"pts": []}}}]},
+         "result": failed("invalid_path", PATH_EMPTY, "changes[0].geometry.path"), "expect": PROPS_NOTHING},
+        {"op": "execute", "input": {"operation": "textPath", "changes": [{"kind": "update", "uid": uid(2), "geometry": {**curved, "text": "Ada\n101"}}]},
+         "result": failed("invalid_path", PATH_LINE, "changes[0].geometry.path"), "expect": PROPS_NOTHING},
+        {"op": "execute", "input": {"operation": "textPath", "changes": [{"kind": "update", "uid": uid(2), "geometry": curved}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": reshaped(PE(2), curved)}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "textStraighten", "changes": [{"kind": "update", "uid": uid(2), "geometry": straightened}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": reshaped(PE(2), straightened)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Düzleştir", "expect": {"entities": {"2": reshaped(PE(2), curved)}}},
+        {"op": "undo", "returns": "Eğriye oturt", "expect": {"entities": {"2": PE(2)}}},
+        {"op": "execute", "input": {"operation": "textTurn", "changes": [{"kind": "update", "uid": uid(2), "geometry": geometry_of(2, rotation=33.75)}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": reshaped(PE(2), geometry_of(2, rotation=33.75))}, "revision": "changed"}},
+        {"op": "undo", "returns": "Doğrultuya döndür", "expect": {"entities": {"2": PE(2)}}},
     ],
 })
 

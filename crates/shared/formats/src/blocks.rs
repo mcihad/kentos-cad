@@ -103,6 +103,7 @@ impl Placing {
                     line_spacing,
                     runs,
                     face: _,
+                    path,
                 } = piece.shape
                 else {
                     return None;
@@ -135,6 +136,7 @@ impl Placing {
                             runs: contract_runs(runs.as_deref()),
                         },
                         face: Default::default(),
+                        path: path.map(contract_curve),
                     },
                 ))
             })
@@ -308,6 +310,22 @@ pub(crate) fn contract_look(l: &Look) -> kentos_contracts::DimensionLook {
     }
 }
 
+/// A text's curve for the core (docs/adr/0196).
+fn core_curve(c: &kentos_contracts::TextPath) -> kentos_geometry_core::text::along::Curve {
+    kentos_geometry_core::text::along::Curve {
+        pts: c.pts.iter().map(|q| core(*q)).collect(),
+        bulges: c.bulges.clone(),
+    }
+}
+
+/// A core curve as the contract's.
+fn contract_curve(c: kentos_geometry_core::text::along::Curve) -> kentos_contracts::TextPath {
+    kentos_contracts::TextPath {
+        pts: c.pts.into_iter().map(back).collect(),
+        bulges: c.bulges,
+    }
+}
+
 /// The core's runs as the contract writes them.
 pub(crate) fn contract_runs(runs: Option<&[Run]>) -> Vec<kentos_contracts::TextRun> {
     runs.unwrap_or_default()
@@ -403,7 +421,7 @@ fn contract_pattern(p: &CorePattern) -> HatchPattern {
 }
 
 /// An object's geometry as the core takes it.
-fn shape(e: &Entity) -> Shape {
+pub(crate) fn shape(e: &Entity) -> Shape {
     let path = |p: &PathEntity| {
         (
             points(&p.pts),
@@ -513,6 +531,7 @@ fn shape(e: &Entity) -> Shape {
             line_spacing: t.paragraph.line_spacing,
             runs: core_runs(&t.paragraph.runs),
             face: core_face(&t.face),
+            path: t.path.as_ref().map(core_curve),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: core(d.a),
@@ -716,8 +735,10 @@ fn entity(s: &Shape) -> Option<Entity> {
             line_spacing,
             runs,
             face,
+            path,
         } => Entity::Text(TextEntity {
             base,
+            path: path.clone().map(contract_curve),
             p: back(*p),
             text: text.clone(),
             height: *height,

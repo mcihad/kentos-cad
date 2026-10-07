@@ -452,6 +452,7 @@ impl Emitter {
                         label_scale: None,
                         paragraph: Default::default(),
                         face: Default::default(),
+                        path: None,
                     }),
                 );
             }
@@ -668,6 +669,7 @@ impl Emitter {
                                 label_scale: None,
                                 paragraph: Default::default(),
                                 face: Default::default(),
+                                path: None,
                             }),
                         );
                     }

@@ -53,6 +53,8 @@ pub(super) enum Val<'d> {
     Runs(&'d [TextRun]),
     /// A whole number (a dimension's decimals, docs/adr/0183).
     Uint(u64),
+    /// A text's curve (§6.6, docs/adr/0196): its vertices and bulges.
+    TextPath(&'d kentos_contracts::TextPath),
     /// A table's cells, row by row (§6.6, docs/adr/0184).
     Cells(&'d [Vec<String>]),
     /// A table's merged ranges.
@@ -355,6 +357,25 @@ impl<'d> Encoder<'d> {
                 }
                 if let Some(o) = face.oblique {
                     f.push(("oblique", Val::Float(o)));
+                }
+                // The curve its letters stand on (docs/adr/0196 §1): a text of one line, not linked.
+                // A number that is not finite meets the float's own refusal (`non_finite`).
+                if let Some(path) = &e.path {
+                    let finite = path.pts.iter().all(|q| q.x.is_finite() && q.y.is_finite())
+                        && path.bulges.iter().flatten().all(|b| b.is_finite());
+                    if finite
+                        && let Some(words) = kentos_contracts::text_path_problem(
+                            path,
+                            &e.text,
+                            &e.paragraph,
+                            e.label_of.is_some(),
+                        )
+                    {
+                        self.path.push(Seg::Name(kind));
+                        self.path.push(Seg::Name("path"));
+                        return Err(self.fail(Code::BadValue, &words));
+                    }
+                    f.push(("path", Val::TextPath(path)));
                 }
             }
             Entity::Dimension(e) => {
@@ -775,6 +796,18 @@ impl<'d> Encoder<'d> {
                 Ok(())
             }
             Val::Rings(rings) => self.rings(rings),
+            Val::TextPath(t) => {
+                self.open(1 + usize::from(t.bulges.is_some()), true)?;
+                // pts (3), bulges (6).
+                self.key("pts");
+                self.at(Seg::Name("pts"), |e| e.points(&t.pts))?;
+                if let Some(b) = &t.bulges {
+                    self.key("bulges");
+                    self.at(Seg::Name("bulges"), |e| e.floats(b))?;
+                }
+                self.close();
+                Ok(())
+            }
             Val::PointParts(parts) => {
                 self.open(parts.len(), false)?;
                 for (i, part) in parts.iter().enumerate() {

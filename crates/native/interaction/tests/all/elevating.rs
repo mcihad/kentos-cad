@@ -591,6 +591,7 @@ fn what_takes_no_elevation_is_counted_on_a_line_of_its_own_after_the_result() {
             label_scale: None,
             paragraph: Default::default(),
             face: Default::default(),
+            path: None,
         }),
     );
     let before_circle = b.doc.get(circle).cloned();

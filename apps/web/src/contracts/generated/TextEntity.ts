@@ -2,6 +2,7 @@
 import type { DrawingFont } from "./DrawingFont";
 import type { EntityId } from "./EntityId";
 import type { TextAlign } from "./TextAlign";
+import type { TextPath } from "./TextPath";
 import type { TextRun } from "./TextRun";
 import type { Vec2 } from "./Vec2";
 
@@ -38,7 +39,12 @@ labelOf?: EntityId,
 /**
  * The scale's denominator (1:N) the linked label is written at; finite, over 0.
  */
-labelScale?: number, id: number, layerId: string, 
+labelScale?: number, 
+/**
+ * The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),
+ * in its own frame; absent: a straight text.
+ */
+path?: TextPath, id: number, layerId: string, 
 /**
  * Colour override; absent = the layer's colour ("katmana göre").
  */

@@ -1302,6 +1302,15 @@ impl<'l> Emitter<'l> {
                         Err(why) => self.note("Tablo", why, e.line),
                     }
                 }
+                // A KentOS text along a curve (docs/adr/0196 §5): its INSERT carries it; else its block's letters.
+                if ctx.chain.is_empty()
+                    && let Some(json) = e.meta.as_ref().and_then(|m| m.along.as_deref())
+                {
+                    match self.curved_of(e, ctx, &layer, json, &placed) {
+                        Ok(t) => return self.push(Entity::Text(t)),
+                        Err(why) => self.note("Eğri boyunca yazı", why, e.line),
+                    }
+                }
                 if self.keep_insert(ctx, e, &layer, name, &placed, attrs) {
                     // Its values are the insert's attributes (docs/adr/0144 §7): the insert shows
                     // those its definition defines; any other shown one comes in as a text too.
@@ -2072,6 +2081,7 @@ impl<'l> Emitter<'l> {
                 ..paragraph
             },
             face: Default::default(),
+            path: None,
         }));
     }
 
@@ -2325,6 +2335,70 @@ impl<'l> Emitter<'l> {
         }
         if t.shape().problem().is_some() || t.face.problem().is_some() {
             return Err("KentOS verisindeki tablo geçersiz; çizgi ve yazıları alındı");
+        }
+        Ok(t)
+    }
+
+    /// A text along a curve from its INSERT's KentOS data (docs/adr/0196 §5):
+    /// where the INSERT is, turned and scaled (evenly) as it is; an
+    /// arrayed, mirrored, unevenly scaled or slanted INSERT keeps its letters.
+    fn curved_of(
+        &self,
+        e: &Parsed,
+        ctx: &Ctx,
+        layer: &str,
+        json: &str,
+        placed: &Placed,
+    ) -> Result<kentos_contracts::TextEntity, &'static str> {
+        let [sx, sy, _] = placed.scale;
+        let uniform = sx > 0.0 && (sx - sy).abs() <= sx * 1e-9;
+        if placed.array.0 * placed.array.1 > 1
+            || super::extrusion_z(e.common.extrusion) != 1.0
+            || !uniform
+        {
+            return Err(
+                "başka bir programda aynalanmış, eğik düzleme ya da eşit olmayan ölçekle yerleştirilmiş; harfleri alındı",
+            );
+        }
+        let broken = "KentOS verisi okunamadı; harfleri alındı";
+        let mut value: serde_json::Value = serde_json::from_str(json).map_err(|_| broken)?;
+        let map = value.as_object_mut().ok_or(broken)?;
+        map.insert("id".into(), 0.into());
+        map.insert("layerId".into(), layer.into());
+        map.insert(
+            "attrs".into(),
+            serde_json::Value::Object(Default::default()),
+        );
+        let mut t: kentos_contracts::TextEntity =
+            serde_json::from_value(value).map_err(|_| broken)?;
+        let near = |a: f64, b: f64| (a - b).abs() <= 1e-9 * a.abs().max(b.abs()).max(1.0);
+        if !(near(t.p.x, placed.p[0]) && near(t.p.y, placed.p[1])) {
+            t.p = v(placed.p[0], placed.p[1]);
+        }
+        if !near(t.rotation, placed.rotation) {
+            t.rotation = placed.rotation;
+        }
+        if !near(sx, 1.0) {
+            t.height *= sx;
+            if let Some(c) = t.path.as_mut() {
+                for q in &mut c.pts {
+                    *q = v(q.x * sx, q.y * sx);
+                }
+            }
+        }
+        t.base = base(layer, self.color_of(e, ctx), self.weight_of(e, ctx));
+        // The written file keeps no link (docs/adr/0175 §4).
+        t.label_of = None;
+        t.label_scale = None;
+        let Some(path) = t.path.as_ref() else {
+            return Err(broken);
+        };
+        if kentos_contracts::text_path_problem(path, &t.text, &t.paragraph, false).is_some()
+            || t.face.problem().is_some()
+            || t.text.trim().is_empty()
+            || !(t.height > 0.0)
+        {
+            return Err("KentOS verisindeki eğri boyunca yazı geçersiz; harfleri alındı");
         }
         Ok(t)
     }

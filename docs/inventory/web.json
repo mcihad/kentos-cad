@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 371,
-      "implemented": 359,
+      "total": 373,
+      "implemented": 361,
       "partial": 0,
       "pending": 12
     },
     "tools": {
-      "total": 113,
-      "implemented": 111,
+      "total": 115,
+      "implemented": 113,
       "partial": 0,
       "pending": 2
     },
@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 467,
-      "implemented": 467,
+      "total": 470,
+      "implemented": 470,
       "partial": 0,
       "pending": 0
     },
@@ -102,19 +102,19 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 126,
-    "commandsOnDesktop": 299,
+    "commandsOnDesktop": 301,
     "desktop": {
       "commands": {
-        "total": 371,
-        "implemented": 299,
+        "total": 373,
+        "implemented": 301,
         "partial": 0,
         "pending": 12,
         "none": 58,
         "n/a": 2
       },
       "tools": {
-        "total": 113,
-        "implemented": 111,
+        "total": 115,
+        "implemented": 113,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -161,8 +161,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 467,
-        "implemented": 467,
+        "total": 470,
+        "implemented": 470,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -10407,6 +10407,72 @@
       ]
     },
     {
+      "id": "tool.textAlong",
+      "title": "Eğri boyunca yazı",
+      "category": "Açıklama",
+      "icon": "textAlong",
+      "description": "Yazıyı bir çizgi, yay, daire, alan ya da eğri boyunca harf harf kıvırarak yazar (dere, yol adı).",
+      "aliases": [
+        "EGRIBOYUNCAYAZI",
+        "EGRIYAZI",
+        "KIVRIKYAZI",
+        "ARCTEXT"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Açıklama"
+      ],
+      "ribbon": [
+        "CAD › Açıklama › Yazı",
+        "CBS › Harita › Etiket",
+        "CBS › Düzenle › Açıklama"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/text-along.json"
+      ]
+    },
+    {
+      "id": "tool.textCurve",
+      "title": "Yazıyı eğriye oturt",
+      "category": "Açıklama",
+      "icon": "textFit",
+      "description": "Seçili yazıları bir eğriye oturtur, bir kenarın doğrultusuna döndürür ya da eğri boyunca yazıları düzleştirir.",
+      "aliases": [
+        "YAZIYIEGRIYEOTURT",
+        "EGRIYEOTURT"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Açıklama"
+      ],
+      "ribbon": [
+        "CAD › Açıklama › Yazı",
+        "CBS › Harita › Etiket",
+        "CBS › Düzenle › Açıklama"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/text-along.json"
+      ]
+    },
+    {
       "id": "tool.toArea",
       "title": "Alana çevir",
       "category": "Alan",
@@ -14844,6 +14910,62 @@
         "fixtures/interaction/v1/template-tools.json",
         "fixtures/interaction/v1/text-options.json",
         "fixtures/interaction/v1/text-styles.json"
+      ]
+    },
+    {
+      "id": "textAlong",
+      "label": "Eğri boyunca yazı",
+      "icon": "textAlong",
+      "group": "annotate",
+      "aliases": [
+        "EGRIBOYUNCAYAZI",
+        "EGRIYAZI",
+        "KIVRIKYAZI",
+        "ARCTEXT"
+      ],
+      "primary": false,
+      "family": "textAlong",
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Yazıyı bir çizgi, yay, daire, alan ya da eğri boyunca harf harf kıvırarak yazar (dere, yol adı).",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/text-along.json"
+      ]
+    },
+    {
+      "id": "textCurve",
+      "label": "Yazıyı eğriye oturt",
+      "icon": "textFit",
+      "group": "annotate",
+      "aliases": [
+        "YAZIYIEGRIYEOTURT",
+        "EGRIYEOTURT"
+      ],
+      "primary": false,
+      "family": "textAlong",
+      "rare": false,
+      "methods": [
+        "Eğriye oturt",
+        "Doğrultuya döndür",
+        "Düzleştir"
+      ],
+      "steps": 3,
+      "description": "Seçili yazıları bir eğriye oturtur, bir kenarın doğrultusuna döndürür ya da eğri boyunca yazıları düzleştirir.",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/text-along.json"
       ]
     },
     {
@@ -22766,6 +22888,19 @@
       }
     },
     {
+      "id": "TextEntity.path",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "path",
+      "type": "TextPath",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "TextEntity.rotation",
       "contract": "TextEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -22837,6 +22972,32 @@
       "field": "widthFactor",
       "type": "number",
       "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextPath.bulges",
+      "contract": "TextPath",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "bulges",
+      "type": "Array<number>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextPath.pts",
+      "contract": "TextPath",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "pts",
+      "type": "Array<Vec2>",
+      "optional": false,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -24857,6 +25018,8 @@
               "tool.placeTextFile",
               "tool.coordinateLabel",
               "tool.coordinateVertices",
+              "tool.textAlong",
+              "tool.textCurve",
               "tool.stationLabels",
               "tool.labelsToText",
               "tool.dimension",
@@ -25974,6 +26137,52 @@
               {
                 "command": "tool.labelsToText",
                 "size": "large"
+              },
+              {
+                "split": [
+                  {
+                    "command": "tool.textAlong",
+                    "title": "Eğri boyunca yazı",
+                    "label": "Eğri boyunca yazı"
+                  },
+                  {
+                    "command": "tool.textCurve",
+                    "option": "O",
+                    "title": "Yazıyı eğriye oturt",
+                    "label": "Eğriye oturt",
+                    "description": "Seçili yazıları tıklanan eğriye oturtur",
+                    "aliases": [
+                      "EGRIYEOTURT"
+                    ],
+                    "icon": "textFit"
+                  },
+                  {
+                    "command": "tool.textCurve",
+                    "option": "D",
+                    "title": "Yazıyı eğriye oturt",
+                    "label": "Doğrultuya döndür",
+                    "description": "Yazıları kenarın doğrultusuna döndürür",
+                    "aliases": [
+                      "DOGRULTUYADONDUR",
+                      "TORIENT"
+                    ],
+                    "icon": "textTurn"
+                  },
+                  {
+                    "command": "tool.textCurve",
+                    "option": "Z",
+                    "title": "Yazıyı eğriye oturt",
+                    "label": "Düzleştir",
+                    "description": "Eğri boyunca yazıyı düz yazı yapar",
+                    "aliases": [
+                      "DUZLESTIR",
+                      "YAZIDUZLESTIR"
+                    ],
+                    "icon": "textStraighten"
+                  }
+                ],
+                "key": "textAlong",
+                "size": "large"
               }
             ],
             "overflow": [],
@@ -26372,6 +26581,52 @@
               {
                 "command": "tool.text",
                 "size": "large"
+              },
+              {
+                "split": [
+                  {
+                    "command": "tool.textAlong",
+                    "title": "Eğri boyunca yazı",
+                    "label": "Eğri boyunca yazı"
+                  },
+                  {
+                    "command": "tool.textCurve",
+                    "option": "O",
+                    "title": "Yazıyı eğriye oturt",
+                    "label": "Eğriye oturt",
+                    "description": "Seçili yazıları tıklanan eğriye oturtur",
+                    "aliases": [
+                      "EGRIYEOTURT"
+                    ],
+                    "icon": "textFit"
+                  },
+                  {
+                    "command": "tool.textCurve",
+                    "option": "D",
+                    "title": "Yazıyı eğriye oturt",
+                    "label": "Doğrultuya döndür",
+                    "description": "Yazıları kenarın doğrultusuna döndürür",
+                    "aliases": [
+                      "DOGRULTUYADONDUR",
+                      "TORIENT"
+                    ],
+                    "icon": "textTurn"
+                  },
+                  {
+                    "command": "tool.textCurve",
+                    "option": "Z",
+                    "title": "Yazıyı eğriye oturt",
+                    "label": "Düzleştir",
+                    "description": "Eğri boyunca yazıyı düz yazı yapar",
+                    "aliases": [
+                      "DUZLESTIR",
+                      "YAZIDUZLESTIR"
+                    ],
+                    "icon": "textStraighten"
+                  }
+                ],
+                "key": "textAlong",
+                "size": "small"
               },
               {
                 "command": "tool.labelsToText",
@@ -28437,6 +28692,52 @@
                   "size": "small"
                 },
                 {
+                  "split": [
+                    {
+                      "command": "tool.textAlong",
+                      "title": "Eğri boyunca yazı",
+                      "label": "Eğri boyunca yazı"
+                    },
+                    {
+                      "command": "tool.textCurve",
+                      "option": "O",
+                      "title": "Yazıyı eğriye oturt",
+                      "label": "Eğriye oturt",
+                      "description": "Seçili yazıları tıklanan eğriye oturtur",
+                      "aliases": [
+                        "EGRIYEOTURT"
+                      ],
+                      "icon": "textFit"
+                    },
+                    {
+                      "command": "tool.textCurve",
+                      "option": "D",
+                      "title": "Yazıyı eğriye oturt",
+                      "label": "Doğrultuya döndür",
+                      "description": "Yazıları kenarın doğrultusuna döndürür",
+                      "aliases": [
+                        "DOGRULTUYADONDUR",
+                        "TORIENT"
+                      ],
+                      "icon": "textTurn"
+                    },
+                    {
+                      "command": "tool.textCurve",
+                      "option": "Z",
+                      "title": "Yazıyı eğriye oturt",
+                      "label": "Düzleştir",
+                      "description": "Eğri boyunca yazıyı düz yazı yapar",
+                      "aliases": [
+                        "DUZLESTIR",
+                        "YAZIDUZLESTIR"
+                      ],
+                      "icon": "textStraighten"
+                    }
+                  ],
+                  "key": "textAlong",
+                  "size": "small"
+                },
+                {
                   "command": "tool.placeTextFile",
                   "size": "small"
                 },
@@ -30481,6 +30782,52 @@
                 {
                   "command": "tool.labelsToText",
                   "size": "large"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.textAlong",
+                      "title": "Eğri boyunca yazı",
+                      "label": "Eğri boyunca yazı"
+                    },
+                    {
+                      "command": "tool.textCurve",
+                      "option": "O",
+                      "title": "Yazıyı eğriye oturt",
+                      "label": "Eğriye oturt",
+                      "description": "Seçili yazıları tıklanan eğriye oturtur",
+                      "aliases": [
+                        "EGRIYEOTURT"
+                      ],
+                      "icon": "textFit"
+                    },
+                    {
+                      "command": "tool.textCurve",
+                      "option": "D",
+                      "title": "Yazıyı eğriye oturt",
+                      "label": "Doğrultuya döndür",
+                      "description": "Yazıları kenarın doğrultusuna döndürür",
+                      "aliases": [
+                        "DOGRULTUYADONDUR",
+                        "TORIENT"
+                      ],
+                      "icon": "textTurn"
+                    },
+                    {
+                      "command": "tool.textCurve",
+                      "option": "Z",
+                      "title": "Yazıyı eğriye oturt",
+                      "label": "Düzleştir",
+                      "description": "Eğri boyunca yazıyı düz yazı yapar",
+                      "aliases": [
+                        "DUZLESTIR",
+                        "YAZIDUZLESTIR"
+                      ],
+                      "icon": "textStraighten"
+                    }
+                  ],
+                  "key": "textAlong",
+                  "size": "large"
                 }
               ],
               "overflow": [],
@@ -30879,6 +31226,52 @@
                 {
                   "command": "tool.text",
                   "size": "large"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.textAlong",
+                      "title": "Eğri boyunca yazı",
+                      "label": "Eğri boyunca yazı"
+                    },
+                    {
+                      "command": "tool.textCurve",
+                      "option": "O",
+                      "title": "Yazıyı eğriye oturt",
+                      "label": "Eğriye oturt",
+                      "description": "Seçili yazıları tıklanan eğriye oturtur",
+                      "aliases": [
+                        "EGRIYEOTURT"
+                      ],
+                      "icon": "textFit"
+                    },
+                    {
+                      "command": "tool.textCurve",
+                      "option": "D",
+                      "title": "Yazıyı eğriye oturt",
+                      "label": "Doğrultuya döndür",
+                      "description": "Yazıları kenarın doğrultusuna döndürür",
+                      "aliases": [
+                        "DOGRULTUYADONDUR",
+                        "TORIENT"
+                      ],
+                      "icon": "textTurn"
+                    },
+                    {
+                      "command": "tool.textCurve",
+                      "option": "Z",
+                      "title": "Yazıyı eğriye oturt",
+                      "label": "Düzleştir",
+                      "description": "Eğri boyunca yazıyı düz yazı yapar",
+                      "aliases": [
+                        "DUZLESTIR",
+                        "YAZIDUZLESTIR"
+                      ],
+                      "icon": "textStraighten"
+                    }
+                  ],
+                  "key": "textAlong",
+                  "size": "small"
                 },
                 {
                   "command": "tool.labelsToText",
@@ -32160,6 +32553,10 @@
     "arrangeBottom": "<path d=\"M2.5 17h15\"/><rect x=\"4.5\" y=\"3.5\" width=\"4\" height=\"11\" rx=\"0.8\"/><rect x=\"11.5\" y=\"7.5\" width=\"4\" height=\"7\" rx=\"0.8\"/>",
     "arrangeHorizontal": "<path d=\"M2 3v14M18 3v14\"/><rect x=\"4\" y=\"6\" width=\"2.6\" height=\"8\" rx=\"0.8\"/><rect x=\"8.7\" y=\"4\" width=\"2.6\" height=\"12\" rx=\"0.8\"/><rect x=\"13.4\" y=\"7\" width=\"2.6\" height=\"6\" rx=\"0.8\"/>",
     "arrangeVertical": "<path d=\"M3 2h14M3 18h14\"/><rect x=\"6\" y=\"4\" width=\"8\" height=\"2.6\" rx=\"0.8\"/><rect x=\"4\" y=\"8.7\" width=\"12\" height=\"2.6\" rx=\"0.8\"/><rect x=\"7\" y=\"13.4\" width=\"6\" height=\"2.6\" rx=\"0.8\"/>",
+    "textAlong": "<path d=\"M2.8 10.2C4.6 3 15.4 3 17.2 10.2\"/><path d=\"M10 5.4v11.1M7.6 16.5h4.8\"/>",
+    "textFit": "<path d=\"M6.5 3h7M10 3v4.4\"/><path d=\"m8.4 8.6 1.6 1.6 1.6-1.6\" stroke-width=\"1.2\"/><path d=\"M3 17.5C5.5 12 14.5 12 17 17.5\"/><path d=\"M8 13.4h4\" stroke-width=\"1.2\"/>",
+    "textTurn": "<path d=\"M3 16.5 17 5.5\" stroke-width=\"1.1\"/><g transform=\"rotate(-38 10 13)\"><path d=\"M7 13h6M10 13v4.5\"/></g><path d=\"M5.5 3.5h5M8 3.5v4\" stroke-width=\"1.1\" opacity=\".55\"/>",
+    "textStraighten": "<path d=\"M3 6C6 2.8 14 2.8 17 6\" stroke-width=\"1.2\" stroke-dasharray=\"2 1.6\"/><path d=\"M4.5 9.5h11M10 9.5v8\"/><path d=\"m8.4 5.4 1.6 1.6 1.6-1.6\" stroke-width=\"1.2\"/>",
     "lengthen": "<path d=\"M3 13h9\"/><path d=\"M12 13h5.5\" stroke-dasharray=\"2 1.5\"/><path d=\"m15 10.5 2.5 2.5-2.5 2.5\"/><rect x=\"10.5\" y=\"11.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "continue": "<path d=\"M2.5 16.5 6 10.5l4 3\"/><path d=\"m10 13.5 3.5-6.5 4 1.5\" stroke-dasharray=\"1.8 1.4\"/><rect x=\"8.5\" y=\"12\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"12\" y=\"5.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"16\" y=\"7\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "reshape": "<path d=\"M11.5 3.5h-8v13h8\"/><path d=\"M11.5 3.5v13\" stroke-dasharray=\"1.6 1.3\"/><path d=\"M11.5 3.5 17 6.5l-2.5 3.5 2.5 3.5-5.5 3\"/>",

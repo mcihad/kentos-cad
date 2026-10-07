@@ -265,6 +265,9 @@ pub const PORTED: &[&str] = &[
     "block.insertFile",
     // docs/adr/0194: Hizala ve dağıt (kentos_interaction::align_distribute).
     "tool.alignDistribute",
+    // Eğri boyunca yazı (docs/adr/0196 §4).
+    "tool.textAlong",
+    "tool.textCurve",
     // docs/adr/0195: Görünüm kipleri.
     "view.colorMode.color",
     "view.colorMode.mono",

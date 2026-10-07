@@ -828,6 +828,12 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.extend(text_rows(&[t], &ids, locked));
             // Bağlı nesne (docs/adr/0175 §4).
             geo.extend(link_rows(&doc.model, &[t], &ids, locked));
+            // Along a curve, its curve's length (docs/adr/0196 §4).
+            if let Some(path) = &t.path {
+                let curve = kentos_native_application::geometry::core_curve(path);
+                let p = kentos_geometry_core::Vec2::new(t.p.x, t.p.y);
+                geo.push(metres("Eğri", curve.length(p, t.rotation)));
+            }
             geo.extend([len("Konum Y", t.p.x), len("Konum X", t.p.y)]);
         }
         // Its style, size, turn and source (docs/adr/0184 §6); its cells are its editor's (a double click).

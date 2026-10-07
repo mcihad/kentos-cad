@@ -1,5 +1,5 @@
 import { op } from '../wasm/core';
-import type { TextAlign, TextRun } from './entities';
+import type { TextAlign, TextPath, TextRun } from './entities';
 import type { Vec2 } from './geometry';
 
 /**
@@ -29,6 +29,8 @@ export interface ParagraphText {
   /** Its face's bold and slant (docs/adr/0183 §2): bold measured in the bold table, the box leaning with its letters. */
   bold?: boolean;
   oblique?: number;
+  /** The curve its letters stand on (docs/adr/0196): a line record a letter. */
+  path?: TextPath;
 }
 
 /** One line: its letters start..end, its width, where it stands from the box's left and how far under the first. */

@@ -159,6 +159,8 @@
     "file.takeFrom",
     "block.insertFile",
     "tool.alignDistribute",
+    "tool.textAlong",
+    "tool.textCurve",
     "view.colorMode.color",
     "view.colorMode.mono",
     "view.colorMode.gray",

@@ -73,6 +73,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `cad.entities.transform`'un `arrange` türü (ADR 0194);
   görünüm kipleri: Renk kipi (Renkli, Tek renk, Gri), Dolgular, Alan sınırları ve Saydamlık açılıp kapanır, seçimin ve üzerine
   gelmenin vurgu rengi ve kalınlığı; kullanıcının tercihleri, çizim değişmez (ADR 0195);
+  eğri boyunca yazı: yazının eğrisi kendi çerçevesinde (`.kcad` şema 25), harfler eğri boyunca; Eğri boyunca yazı ▾ (Eğri boyunca
+  yazı, Eğriye oturt, Doğrultuya döndür, Düzleştir), Okunur yap eğriyi çevirir; DXF'e harflerinin bloğu ve KENTOS verisiyle (ADR 0196);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -273,7 +275,7 @@ python3 scripts/fonts/drawing_fonts.py --check   # masaüstünün çizim yazı t
 python3 scripts/fonts/ui_fonts.py --check   # KentOS UI'ın Noto Sans ve Roboto'sunu web'in WOFF2'lerinden denetle; --advance genişlik tahminlerini ölçer
 KENTOS_WRITE_GIS_EXPORTS=1 cargo test -p kentos-formats --test gis   # GeoJSON yazıcısının örnek çıktısını yeniden yaz; farkı okuyun
 KENTOS_WRITE_DXF=1 cargo test -p kentos-formats --test dxf_write   # DXF yazıcısının örnek çıktısını (fixtures/formats/v1/dxf-write) yeniden yaz; farkı okuyun
-python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok, öznitelik, yazı, kılavuz, çok satırlı yazı (MTEXT) ve yerel projenin birimi örneklerini KentOS kodu olmadan denetle (ADR 0144, 0145, 0146, 0165, 0182)
+python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok, öznitelik, yazı, kılavuz, çok satırlı yazı (MTEXT), eğri boyunca yazı ve yerel projenin birimi örneklerini KentOS kodu olmadan denetle (ADR 0144, 0145, 0146, 0165, 0182, 0196)
 python3 scripts/fixtures/text_cases.py --check   # yazı kurallarını (Artır, Bul ve değiştir, Okunur yap) kurallardan denetle (ADR 0145)
 python3 scripts/fixtures/annotation_style_cases.py --check   # yazı ve ölçü stillerinin kurallarını, uygulanmasını, izlenmesini ve ölçü değerinin yazımını bağımsız başvurudan denetle; durumlar fixtures/text/v1/styles.json (ADR 0183)
 python3 scripts/fixtures/paragraph_cases.py --check   # çok satırlı yazının satırlarını, sarmasını, kutusunu ve düzenleyicinin dilimlerini yazı tiplerinin ölçülmüş ilerlemeleriyle bağımsız başvurudan denetle; durumlar fixtures/text/v1/paragraph.json (ADR 0182)
@@ -292,6 +294,7 @@ KENTOS_SHOTS_ONLY=km-yaz,km-yaz-enkesit,km-yaz-yazildi cargo test -p kentos-desk
 python3 scripts/fixtures/centerline_cases.py --check   # Orta hat'ın eksenini (eşleşen düz ve yaylı kenarlar, ters çizilmiş kenar, örnekleme, harita koordinatları, retler) mpmath ile 50 basamaklı bağımsız başvurudan denetle; durumlar fixtures/centerline/v1/cases.json (ADR 0190)
 KENTOS_SHOTS_ONLY=orta-hat,orta-hat-dere,orta-hat-yazildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Orta hat'ın resimleri, .run/shots/arac-orta-hat-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs centerline); ADR 0190)
 python3 scripts/fixtures/arrange_cases.py --check   # Hizala ve dağıt'ın kaymalarını (altı hizalama, iki dağıtma, başvurunun kenarı ve ortası, seçimin kutusu) ADR'nin işlem sırasıyla çift duyarlıkta ve kesirlerle bağımsız başvurudan denetle; durumlar fixtures/arrange/v1/cases.json (ADR 0194)
+python3 scripts/fixtures/text_along_cases.py --check   # Eğri boyunca yazı'nın kurallarını (harflerin yeri ve dönüşü, kutu, kayıtlar, doğrultu, Okunur yap, aynalamalar, eğrinin parçası, Düzleştir, Doğrultuya döndür) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/text/v1/along.json (ADR 0196)
 python3 scripts/fixtures/exchange_cases.py --check   # Çizimler arası alışverişin kurallarını (seçimin çizimi: budanan ağaç, iç içe bloklar, kitaplığın kullanılanları, düşen bağlar; Başka çizimden al: yollar, katlanan adlar, Atla ve Değiştir, kimliklerin ekleri, katman durumlarının yolları; Dosyadan blok ekle: ad sayısı, sol alt köşe, resim ve tablo) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/exchange/v1/cases.json (ADR 0193)
 python3 scripts/fixtures/image_cases.py --check   # Resim ekle'nin çerçevesini (genişlik, yükseklik, dönüş) ve Resmi kırp'ın sınırını resmin kendi kesirleriyle (taşan, saran, saat yönünde, aynalı, dönük, dışarıda) kesirlerle bağımsız başvurudan denetle; durumlar fixtures/image/v1/cases.json (ADR 0192)
 KENTOS_SHOTS_ONLY=resim-ekle,resim-ekle-yazildi,resim-kirp,resim-kirpildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # resim nesnesinin resimleri, .run/shots/arac-resim-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs images), WebGPU'yla --renderer webgpu; ADR 0192)
@@ -1061,7 +1064,13 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   önerilen seçenekler, Tek renk'in ikinci seçenek): ayarlar `graphics.colorMode`, `.fills`, `.areaEdges`, `.transparency`,
   `.highlightColor`, `.highlightWidth`; stil çekirdeğinin `build::View`'u (`BatchSink::hide`), renk kuralı masaüstünde
   `kentos_native_style::color`'ın `ViewColors`'ı, web'de `render/color.ts`; vurgu masaüstünde wgpu'nun ikinci çerçeve bağlaması, web'de
-  `widenLines`; ortak durumlar `batches.json`'un görünüş durumları, ortak iz `view-modes.json`. Sıradaki `CAD-34` eğri boyunca yazı.
+  `widenLines`; ortak durumlar `batches.json`'un görünüş durumları, ortak iz `view-modes.json`. `CAD-34` eğri boyunca yazı
+  ([ADR 0196](docs/adr/0196-text-along-curve.md)) tek parçada bitti (7 Ekim; ikonlar önerilen seçenekler, Doğrultuya döndür'ün ikincisi):
+  sözleşmenin `TextPath`'i ve `text_path_problem`'i (`invalid_path`), `.kcad` şema 25 (`FORMATS_VERSION` 35), çekirdek `text::along`
+  (bağımsız başvuru `text_along_cases.py`, ortak `fixtures/text/v1/along.json`), deponun harf başına `LABEL_LINE` kayıtları
+  (`TextPlace::by_records`), DXF `writer/entities/curved.rs` ve `emit.rs`'in `curved_of`'u (`dxf-write/curved`); araçlar masaüstünde
+  `kentos_interaction::text_along`, web'de `tools/textAlongTool.ts`; ortak iz `text-along.json` (oynatıcılarda `curve` beklentisi).
+  Sıradaki `CAD-35` çizim ekleri.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

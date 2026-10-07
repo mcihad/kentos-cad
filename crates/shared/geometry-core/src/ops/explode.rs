@@ -74,6 +74,7 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                     line_spacing: None,
                     runs: None,
                     face: f,
+                    path: None,
                 }));
             }
             if pieces.is_empty() {
@@ -208,6 +209,7 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                     font: look.font,
                     ..Default::default()
                 },
+                path: None,
             }));
             Cut::Pieces(pieces)
         }
@@ -301,6 +303,7 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                     line_spacing: None,
                     runs: None,
                     face: Default::default(),
+                    path: None,
                 }));
             }
             Cut::Pieces(pieces)

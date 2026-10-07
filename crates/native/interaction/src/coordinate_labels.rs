@@ -200,6 +200,7 @@ fn geometries(labels: &Labels, look: &Look) -> Vec<EntityGeometry> {
                 line_spacing: None,
                 runs: Vec::new(),
                 face: look.face.clone(),
+                path: None,
             });
         }
     }

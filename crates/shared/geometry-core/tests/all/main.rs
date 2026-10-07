@@ -37,6 +37,7 @@ mod snap;
 mod stationing;
 mod template_members;
 mod text;
+mod text_along;
 mod topology;
 mod vertex_points;
 mod vertex_table;

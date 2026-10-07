@@ -1,4 +1,5 @@
 import type { AppContext } from '../../app/context';
+import { textAlongCurveLength } from '../../model/textAlong';
 import { watchAll } from '../../core/signal';
 import { attributeRows, turnOf } from '../../model/blocks';
 import { DIMENSION_STYLE_LABEL, layoutDimension } from '../../model/geom/dimension';
@@ -406,6 +407,8 @@ export class PropertiesPanel extends Panel {
           },
           // Hiza, Genişlik çarpanı and Zemin (docs/adr/0145 §6).
           ...textRows(this.ctx, [e], locked),
+          // Along a curve, its curve's length (docs/adr/0196 §4).
+          ...(e.path ? [num('Eğri', textAlongCurveLength({ ...e, font: e.font ?? this.ctx.doc.settings.drawingFont.value }) ?? 0, 'm')] : []),
           num('Konum Y', e.p.x),
           num('Konum X', e.p.y),
         );

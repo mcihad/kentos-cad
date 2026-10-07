@@ -360,6 +360,7 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             line_spacing,
             runs,
             face,
+            path: None,
         } => Shape::Text {
             p: apply(m, *p),
             text: text.clone(),
@@ -372,7 +373,40 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             line_spacing: *line_spacing,
             runs: runs.clone(),
             face: face.clone(),
+            path: None,
         },
+        // Along a curve: its frame moves and turns, its curve scales; mirrored,
+        // the curve is turned the other way so that it still reads (docs/adr/0196 §3).
+        Shape::Text {
+            p,
+            text,
+            height,
+            rotation,
+            align,
+            width_factor,
+            mask,
+            box_width,
+            line_spacing,
+            runs,
+            face,
+            path: Some(curve),
+        } => {
+            let placed = crate::text::along::transformed(*p, *rotation, curve, *align, m);
+            Shape::Text {
+                p: placed.p,
+                text: text.clone(),
+                height: height * s,
+                rotation: placed.rotation,
+                align: placed.align,
+                width_factor: *width_factor,
+                mask: *mask,
+                box_width: box_width.map(|w| w * s),
+                line_spacing: *line_spacing,
+                runs: runs.clone(),
+                face: face.clone(),
+                path: Some(placed.curve),
+            }
+        }
         // Its vertices move; its note turns as a text does (docs/adr/0146 §4).
         Shape::Leader {
             pts,

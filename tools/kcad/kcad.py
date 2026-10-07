@@ -105,6 +105,8 @@ SCHEMA_WITH_TABLES = 22
 SCHEMA_WITH_HATCH_PATTERNS = 23
 # Schema 24: schema 23 and the `image` kind, only in the drawing (docs/adr/0192 §1).
 SCHEMA_WITH_IMAGES = 24
+# Schema 25: schema 24 and a text's curve, `path`, in the drawing and in block definitions (docs/adr/0196 §1).
+SCHEMA_WITH_TEXT_PATHS = 25
 # A picture's bounds (kentos_contracts::image): its opacity, its clip's corners, a side (m), a linked file's letters.
 MIN_IMAGE_OPACITY = 0.1
 MAX_IMAGE_OPACITY = 1.0
@@ -152,7 +154,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -649,6 +651,7 @@ class _Schema:
         self.tables = version >= SCHEMA_WITH_TABLES
         self.hatches = version >= SCHEMA_WITH_HATCH_PATTERNS
         self.images = version >= SCHEMA_WITH_IMAGES
+        self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
         self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
         self.leaders = version >= SCHEMA_WITH_LEADERS
@@ -1170,6 +1173,10 @@ class _Schema:
                 self.path.append("runs")
                 self.runs_rules(fields["text"], fields["runs"])
                 self.path.pop()
+            if kind == "text" and "path" in fields:
+                self.path.append("path")
+                self.text_path_rules(fields)
+                self.path.pop()
             if kind == "table":
                 self.table_rules(fields)
             if kind == "image":
@@ -1368,6 +1375,25 @@ class _Schema:
                 self.path.append("objects")
                 self.fail("missing_field", "“objects” alanı yok")
         return d
+
+    def text_path(self, v):
+        """A text's curve (schema 25, §6.6, docs/adr/0196 §1): its vertices after its point, in its frame, and each
+        edge's bulge."""
+        return self.fields({"pts": (self.array(self.point), True), "bulges": (self.array(self.float), False)})(v)
+
+    def text_path_rules(self, t):
+        """The contract's `text_path_problem` (kentos_contracts::entity), in its order; the numbers are finite already."""
+        c = t["path"]
+        if not c["pts"]:
+            self.fail("bad_value", "Eğri boyunca yazının eğrisinde köşe yok.")
+        if "bulges" in c and len(c["bulges"]) != len(c["pts"]):
+            self.fail("bad_value", f"Eğri boyunca yazının kavis sayısı ({len(c['bulges'])}) köşe sayısından ({len(c['pts'])}) farklı.")
+        if all(q["x"] == 0.0 and q["y"] == 0.0 for q in c["pts"]):
+            self.fail("bad_value", "Eğri boyunca yazının eğrisinin uzunluğu sıfır: bütün köşeleri yazının noktasında.")
+        if "\n" in t["text"] or "boxWidth" in t or "lineSpacing" in t:
+            self.fail("bad_value", "Eğri boyunca yazı tek satırdır: satır sonu, kutu genişliği ve satır aralığı olmaz.")
+        if "labelOf" in t:
+            self.fail("bad_value", "Nesneye bağlı yazının eğrisi olmaz.")
 
     def image_rules(self, i):
         """The contract's `ImageFields::problem` (kentos_contracts::image), in its order; the numbers are finite already."""
@@ -1737,6 +1763,8 @@ ENTITY_KINDS = {
             if s.styles
             else {}
         ),
+        # Schema 25 (docs/adr/0196 §1): the curve its letters stand on.
+        **({"path": (s.text_path, False)} if s.text_paths else {}),
     },
     # Schema 9 (docs/adr/0147): five more kinds, `mask` only when true, a slope's two elevations.
     "dimension": lambda s: {

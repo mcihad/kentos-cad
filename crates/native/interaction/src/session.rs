@@ -96,6 +96,8 @@ pub const TOOLS: &[&str] = &[
     polar::ID,
     align::ID,
     crate::align_distribute::ID,
+    crate::text_along::ID,
+    crate::text_along::CURVE_ID,
     offset::ID,
     trim::TRIM_ID,
     trim::EXTEND_ID,
@@ -303,6 +305,8 @@ impl Session {
             array::ID => Box::new(Array::tool()),
             polar::ID => Box::new(Polar::tool()),
             align::ID => Box::new(Align::tool()),
+            crate::text_along::ID => Box::new(crate::text_along::TextAlong::new()),
+            crate::text_along::CURVE_ID => Box::new(crate::text_along::TextCurve::tool()),
             crate::align_distribute::ID => {
                 Box::new(crate::align_distribute::AlignDistribute::tool())
             }

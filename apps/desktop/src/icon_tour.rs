@@ -60,7 +60,7 @@ const fn on_sheet(name: &'static str, caption: &'static str, open: Open) -> Scen
     }
 }
 
-const SCENES: [Scene; 34] = [
+const SCENES: [Scene; 35] = [
     scene("daire", Some("Giriş"), "Daire", Open::Caption),
     scene("yay", Some("Giriş"), "Yay", Open::Caption),
     scene("buda", Some("Giriş"), "Buda", Open::Arrow),
@@ -80,6 +80,13 @@ const SCENES: [Scene; 34] = [
     scene("proje-turu", Some("Görünüm"), "Proje türü", Open::Caption),
     // Görünüm kipleri's colour modes (docs/adr/0195).
     scene("renk-kipi", Some("Görünüm"), "Renk kipi", Open::Caption),
+    // Eğri boyunca yazı and Yazıyı eğriye oturt's methods, one split (docs/adr/0196).
+    scene(
+        "egri-yazi",
+        Some("Açıklama"),
+        "Eğri boyunca yazı",
+        Open::Arrow,
+    ),
     scene(
         "sembol-boyutu",
         Some("Görünüm"),

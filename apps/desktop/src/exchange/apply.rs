@@ -1228,6 +1228,7 @@ mod tests {
                 bold: true,
                 ..Default::default()
             },
+            path: None,
         })
     }
 

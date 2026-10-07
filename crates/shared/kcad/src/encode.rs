@@ -35,7 +35,7 @@ use crate::{
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TABLES,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -753,6 +753,13 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             |e| matches!(e, Entity::Hatch(h) if h.pattern.has_definition() || h.assoc.is_some()),
         )
     };
+    let curved = |list: &[Entity]| {
+        list.iter()
+            .any(|e| matches!(e, Entity::Text(t) if t.path.is_some()))
+    };
+    if curved(&doc.entities) || doc.blocks.iter().any(|b| curved(&b.entities)) {
+        return SCHEMA_WITH_TEXT_PATHS;
+    }
     // A picture is the drawing's only (docs/adr/0192 §1).
     if doc.entities.iter().any(|e| matches!(e, Entity::Image(_))) {
         return SCHEMA_WITH_IMAGES;

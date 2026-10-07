@@ -100,6 +100,9 @@ pub struct Meta {
     /// A table's own fields as the contract's JSON (docs/adr/0184 §7): its
     /// INSERT draws it with lines and texts, KentOS reads the table back.
     pub table: Option<String>,
+    /// A text along a curve's own fields as the contract's JSON (docs/adr/0196
+    /// §5): its INSERT draws its letters, KentOS reads the text back.
+    pub along: Option<String>,
 }
 
 /// A STYLE record's `face` when KentOS wrote it for a styleless face
@@ -284,6 +287,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if let Some(t) = &meta.table {
         item("table", &mut out, |o| string(t, o));
+    }
+    if let Some(c) = &meta.along {
+        item("along", &mut out, |o| string(c, o));
     }
     if let Some(h) = &meta.hatch {
         item("hatch", &mut out, |o| string(h, o));
@@ -501,6 +507,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "face" => m.face = text(a).or(m.face),
             "look" => m.look = text(a).or(m.look),
             "table" => m.table = text(a).or(m.table),
+            "along" => m.along = text(a).or(m.along),
             "hatch" => m.hatch = text(a).or(m.hatch),
             "noteturn" => m.note_turn = real(a).or(m.note_turn),
             "dimension" => m.dimension = dimension(&values).or(m.dimension),
@@ -579,6 +586,7 @@ mod tests {
             face: Some(r#"{"textStyle":"a","font":"arimo","bold":true}"#.into()),
             look: Some(r#"{"arrow":"dot","prefix":"Ø ^ \\"}"#.into()),
             table: Some(r#"{"p":{"x":1,"y":2},"cells":[["Ad","ğ ^ \\"]]}"#.into()),
+            along: Some(r#"{"text":"Dere ^","height":2,"path":{"pts":[{"x":20,"y":0}],"bulges":[0.3]}}"#.into()),
             hatch: Some(r#"{"type":"pattern","angle":30,"spacing":1,"name":"ANSI31","scale":0.5,"lines":[{"angle":45,"origin":[0,0],"offset":[0,3.175]}]}"#.into()),
         };
         let out = groups(&meta);

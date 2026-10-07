@@ -292,6 +292,96 @@ pub struct TextEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub face: crate::TextFace,
+    /// The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),
+    /// in its own frame; absent: a straight text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub path: Option<TextPath>,
+}
+
+/// The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are
+/// in the text's own frame: `p` its start, x along the text's `rotation`, y
+/// square to it on the left, metres. The first vertex is `p` itself and is
+/// not written; `pts` are the ones after it. The frame carries the curve with
+/// the text when it moves, turns or scales.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TextPath {
+    /// The vertices after `p`, at least one.
+    pub pts: Vec<Vec2>,
+    /// Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):
+    /// DXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:
+    /// every edge straight.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub bulges: Option<Vec<f64>>,
+}
+
+impl TextPath {
+    /// What is wrong with the curve alone (docs/adr/0196 §1): the refusal's
+    /// words; none when it may be written.
+    pub fn problem(&self) -> Option<String> {
+        if self.pts.is_empty() {
+            return Some(
+                "Eğri boyunca yazının eğrisinde köşe yok. En az bir köşe verin ya da eğriyi kaldırın (düz yazı)."
+                    .into(),
+            );
+        }
+        let finite = self.pts.iter().all(|p| p.x.is_finite() && p.y.is_finite())
+            && self.bulges.iter().flatten().all(|b| b.is_finite());
+        if !finite {
+            return Some(
+                "Eğri boyunca yazının eğrisinde sonlu olmayan bir sayı var. Köşeleri ve kavisleri sonlu sayılarla verin."
+                    .into(),
+            );
+        }
+        if let Some(b) = &self.bulges
+            && b.len() != self.pts.len()
+        {
+            return Some(format!(
+                "Eğri boyunca yazının kavis sayısı ({}) köşe sayısından ({}) farklı. Her kenara bir kavis verin ya da kavisleri kaldırın (düz kenarlar).",
+                b.len(),
+                self.pts.len()
+            ));
+        }
+        if self.pts.iter().all(|p| p.x == 0.0 && p.y == 0.0) {
+            return Some(
+                "Eğri boyunca yazının eğrisinin uzunluğu sıfır: bütün köşeleri yazının noktasında. Köşeleri yazının noktasından ayırın."
+                    .into(),
+            );
+        }
+        None
+    }
+}
+
+/// What is wrong with a text's curve for the text (docs/adr/0196 §1): the
+/// curve's own problem, then a text of more than one line (a line break, a
+/// box width or a line spacing) or one linked to an object. None when it
+/// may be written.
+pub fn text_path_problem(
+    path: &TextPath,
+    text: &str,
+    paragraph: &Paragraph,
+    linked: bool,
+) -> Option<String> {
+    if let Some(why) = path.problem() {
+        return Some(why);
+    }
+    if text.contains('\n') || paragraph.box_width.is_some() || paragraph.line_spacing.is_some() {
+        return Some(
+            "Eğri boyunca yazı tek satırdır: satır sonu, kutu genişliği ve satır aralığı olmaz. Yazıyı tek satır yapın ya da eğriyi kaldırın."
+                .into(),
+        );
+    }
+    if linked {
+        return Some(
+            "Nesneye bağlı yazının eğrisi olmaz. Önce bağı koparın ya da eğriyi kaldırın.".into(),
+        );
+    }
+    None
 }
 
 /// A multi-line text's own fields (docs/adr/0182 §1): the width its lines

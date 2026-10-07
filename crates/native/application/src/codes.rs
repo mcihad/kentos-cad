@@ -69,7 +69,10 @@ pub const INVALID_SPACING: &str = "invalid_spacing";
 /// A polar array's fill of zero or past a full turn (`cad.entities.array`).
 pub const INVALID_FILL: &str = "invalid_fill";
 /// A path array's path that is not a line, an arc, a circle or a polyline,
-/// or has no length (`cad.entities.array`, docs/adr/0140).
+/// or has no length (`cad.entities.array`, docs/adr/0140); a text's curve
+/// out of its rules: no vertex, bulges not one an edge, no length, or a text
+/// of more than one line or linked to an object (`cad.entities.create` and
+/// `.edit`, docs/adr/0196 §1).
 pub const INVALID_PATH: &str = "invalid_path";
 /// A warning: an edit could not carry the elevations of an object's vertices
 /// to what it wrote (docs/adr/0142).

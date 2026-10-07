@@ -259,6 +259,20 @@ export interface TextEntity extends EntityBase, TextFace {
    * apart, each with a format, touching runs of one format joined; absent: none.
    */
   runs?: TextRun[];
+  /**
+   * The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1), in its own frame: `p` its start, x along
+   * `rotation`, metres; absent: a straight text.
+   */
+  path?: TextPath;
+}
+
+/**
+ * A text's curve (docs/adr/0196 §1): its vertices after `p` in the text's frame and, when an edge bends, each edge's
+ * bulge (DXF's tan(θ/4), counter-clockwise positive; as many as the vertices).
+ */
+export interface TextPath {
+  pts: Vec2[];
+  bulges?: number[];
 }
 
 /** A range of a text's letters and their format (docs/adr/0182 §1); a flag that is off is the field's absence. */
@@ -290,6 +304,25 @@ const sameFormat = (a: TextRun, b: TextRun): boolean =>
  * What is wrong with a multi-line text's fields for its `text` (docs/adr/0182 §1, the contracts' `Paragraph::problem`,
  * word for word): the field and the refusal's words; null when they may be written.
  */
+/**
+ * What is wrong with a text's curve for the text (docs/adr/0196 §1; the contract's `text_path_problem`, in its order):
+ * no vertex, a number not finite, bulges not one an edge, no length; then a text of more than one line (a line
+ * break, a box width or a line spacing), or one linked to an object. Null when it may be written.
+ */
+export function textPathProblem(path: TextPath, text: string, p: Pick<TextEntity, 'boxWidth' | 'lineSpacing'>, linked: boolean): string | null {
+  if (path.pts.length === 0) return 'Eğri boyunca yazının eğrisinde köşe yok. En az bir köşe verin ya da eğriyi kaldırın (düz yazı).';
+  if (!path.pts.every((q) => Number.isFinite(q.x) && Number.isFinite(q.y)) || !(path.bulges ?? []).every(Number.isFinite))
+    return 'Eğri boyunca yazının eğrisinde sonlu olmayan bir sayı var. Köşeleri ve kavisleri sonlu sayılarla verin.';
+  if (path.bulges !== undefined && path.bulges.length !== path.pts.length)
+    return `Eğri boyunca yazının kavis sayısı (${path.bulges.length}) köşe sayısından (${path.pts.length}) farklı. Her kenara bir kavis verin ya da kavisleri kaldırın (düz kenarlar).`;
+  if (path.pts.every((q) => q.x === 0 && q.y === 0))
+    return 'Eğri boyunca yazının eğrisinin uzunluğu sıfır: bütün köşeleri yazının noktasında. Köşeleri yazının noktasından ayırın.';
+  if (text.includes('\n') || p.boxWidth != null || p.lineSpacing != null)
+    return 'Eğri boyunca yazı tek satırdır: satır sonu, kutu genişliği ve satır aralığı olmaz. Yazıyı tek satır yapın ya da eğriyi kaldırın.';
+  if (linked) return 'Nesneye bağlı yazının eğrisi olmaz. Önce bağı koparın ya da eğriyi kaldırın.';
+  return null;
+}
+
 export function paragraphProblem(text: string, p: Pick<TextEntity, 'boxWidth' | 'lineSpacing' | 'runs'>): ['boxWidth' | 'lineSpacing' | 'runs', string] | null {
   const w = p.boxWidth;
   if (w !== undefined && !(Number.isFinite(w) && w > 0))

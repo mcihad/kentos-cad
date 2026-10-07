@@ -211,6 +211,7 @@ pub mod styles;
 pub mod table;
 pub mod table_place;
 pub mod text;
+pub mod text_along;
 pub mod text_file;
 pub mod topology;
 mod tool;

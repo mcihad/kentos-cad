@@ -137,6 +137,7 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::Stations) => "Km yaz",
         Some(CreateOperation::Centerline) => "Orta hat",
         Some(CreateOperation::Image) => "Resim ekle",
+        Some(CreateOperation::TextAlong) => "Eğri boyunca yazı",
     }
 }
 
@@ -249,6 +250,14 @@ fn check_link(object: &NewObject, i: usize) -> Result<(), Stop> {
             "Bağlı yazının ölçeği (1:N'deki N) sonlu ve sıfırdan büyük olmalı. Ölçeği düzeltin."
                 .into(),
         );
+    }
+    // A linked text has no curve (docs/adr/0196 §1).
+    if let EntityGeometry::Text { path: Some(_), .. } = &object.geometry {
+        return Err(Stop::Failed(error(
+            codes::INVALID_PATH,
+            "Nesneye bağlı yazının eğrisi olmaz. Önce bağı koparın ya da eğriyi kaldırın.".into(),
+            Some(format!("objects[{i}].geometry.path")),
+        )));
     }
     Ok(())
 }

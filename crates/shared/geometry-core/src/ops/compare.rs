@@ -332,6 +332,7 @@ fn defs(shape: &Shape) -> Defs {
             rotation,
             align,
             width_factor,
+            path,
             ..
         } => {
             comps.push(Comp::Fixed(vec![*p]));
@@ -343,6 +344,13 @@ fn defs(shape: &Shape) -> Defs {
                 // A width factor of 1 is no factor, as a file writes it.
                 num(width_factor.filter(|w| *w != 1.0)),
             ]);
+            // Along a curve (docs/adr/0196): its vertices in the world and its bulges.
+            if let Some(curve) = path {
+                comps.push(Comp::Fixed(
+                    curve.world(*p, *rotation).into_iter().skip(1).collect(),
+                ));
+                others.extend((0..curve.pts.len()).map(|i| Other::Num(curve.bulge(i))));
+            }
         }
         Shape::Dimension {
             a,

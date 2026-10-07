@@ -46,6 +46,7 @@ use super::blocks::{self, Written};
 use super::layers::Layers;
 use super::{Handles, Justified, Out};
 
+mod curved;
 mod leader;
 mod paragraph;
 use crate::geom::{has_arcs, v};
@@ -515,6 +516,8 @@ impl Writer<'_> {
                 self.end(Self::base_meta(&x.base));
                 true
             }
+            // A text along a curve is a block of its letters (docs/adr/0196 §5).
+            Entity::Text(t) if t.path.is_some() => self.curved(t),
             // A multi-line text is an MTEXT (docs/adr/0182 §5); a text of one line a TEXT.
             Entity::Text(t) if t.text.contains('\n') || !t.paragraph.is_plain() => {
                 self.paragraph(t, Self::base_meta(&t.base))

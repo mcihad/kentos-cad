@@ -225,6 +225,10 @@ export function packEntities(list: Iterable<object>): Packed {
         // the slant (NaN none).
         out.push(str(e.textStyle), place(FONTS, e.font), e.bold === true ? 1 : 0, e.italic === true ? 1 : 0);
         num(e.oblique);
+        // docs/adr/0196: the curve's vertex count (0 none), each vertex x, y and its edge's bulge.
+        const path = e.path as { pts: { x: number; y: number }[]; bulges?: number[] } | undefined;
+        out.push(path ? path.pts.length : 0);
+        if (path) path.pts.forEach((q, i) => out.push(q.x, q.y, path.bulges?.[i] ?? 0));
         break;
       }
       // docs/adr/0147: the mask a flag, the slope's elevations (NaN none).
@@ -554,6 +558,17 @@ export function unpackEntities(p: Packed): Unpacked[] {
         if (flag()) g.italic = true;
         const oblique = num();
         if (!Number.isNaN(oblique)) g.oblique = oblique;
+        // docs/adr/0196: the curve.
+        const vertices = num();
+        if (vertices > 0) {
+          const pts: XY[] = [];
+          const bulges: number[] = [];
+          for (let i = 0; i < vertices; i++) {
+            pts.push(pt());
+            bulges.push(num());
+          }
+          g.path = bulges.some((b) => b !== 0) ? { pts, bulges } : { pts };
+        }
         break;
       }
       case 'dimension': {

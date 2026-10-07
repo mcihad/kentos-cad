@@ -536,6 +536,15 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
     {
         bad.push(format!("{name}.mask: {:?}, beklenen {mask}", seen.mask));
     }
+    // A text's curve's vertex count (docs/adr/0196), exact.
+    if let Some(curve) = want.curve
+        && seen.curve != curve
+    {
+        bad.push(format!(
+            "{name}.curve: {:?}, beklenen {curve:?}",
+            seen.curve
+        ));
+    }
     // A linked text's object and scale (docs/adr/0175 §4), exact.
     if let Some(of) = want.label_of
         && seen.label_of != of

@@ -567,7 +567,7 @@ fn common<M: Map + ?Sized>(
             p,
             text,
             height: h0,
-            rotation,
+            rotation: rotation_was,
             align,
             width_factor,
             mask,
@@ -575,12 +575,29 @@ fn common<M: Map + ?Sized>(
             line_spacing,
             runs,
             face,
+            path,
         } => {
-            let (height, rotation, width) = text_rule(&m.jac(*p)?, *h0, *rotation, *width_factor);
+            let (height, rotation, width) =
+                text_rule(&m.jac(*p)?, *h0, *rotation_was, *width_factor);
             // A multi-line text's box takes its letters' change of width (docs/adr/0182).
             let along = height * width / (h0 * width_factor.unwrap_or(1.0));
+            let at = m.at(*p)?;
+            // Along a curve, its vertices move and its bulges stay; the curve is seen
+            // from the new frame (docs/adr/0196 §3).
+            let path = match path {
+                Some(curve) => {
+                    let vs = curve
+                        .world(*p, *rotation_was)
+                        .into_iter()
+                        .map(|v| m.at(v))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    let bulges: Vec<f64> = (0..curve.pts.len()).map(|i| curve.bulge(i)).collect();
+                    Some(crate::text::along::Curve::framed(&vs, &bulges, rotation))
+                }
+                None => None,
+            };
             kept(Shape::Text {
-                p: m.at(*p)?,
+                p: at,
                 text: text.clone(),
                 height,
                 rotation,
@@ -591,6 +608,7 @@ fn common<M: Map + ?Sized>(
                 line_spacing: *line_spacing,
                 runs: runs.clone(),
                 face: face.clone(),
+                path,
             })
         }
         Shape::Leader {

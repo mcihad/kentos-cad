@@ -155,6 +155,14 @@ pub enum EditOperation {
     /// Resmi kırp (docs/adr/0192 §5): a picture's clip boundary set or
     /// taken away, the picture updated in place.
     ImageClip,
+    /// Eğriye oturt (docs/adr/0196 §4): texts made to stand on a curve, each
+    /// updated in place with its new point, turn and curve.
+    TextPath,
+    /// Doğrultuya döndür (docs/adr/0196 §4): straight texts turned to an
+    /// edge's direction, each about its own point.
+    TextTurn,
+    /// Düzleştir (docs/adr/0196 §4): texts along a curve made straight.
+    TextStraighten,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
@@ -306,6 +314,10 @@ pub enum EntityGeometry {
         #[serde(flatten)]
         #[cfg_attr(feature = "ts", ts(flatten))]
         face: crate::TextFace,
+        /// The curve its letters stand on, in its own frame (docs/adr/0196 §1); absent: straight.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        path: Option<crate::TextPath>,
     },
     /// A dimension from `a` to `b` (an angular one's vertex is `c`), its line
     /// `offset` metres away, its text `height` metres high; `text` replaces

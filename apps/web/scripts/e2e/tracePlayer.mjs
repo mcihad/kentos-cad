@@ -665,6 +665,8 @@ const observe = (mark) =>
       widthFactor: e.kind === 'text' ? (e.widthFactor ?? 1) : null,
       mask: e.kind === 'text' || e.kind === 'leader' || e.kind === 'dimension' ? e.mask === true : null,
       rotation: e.kind === 'text' || e.kind === 'leader' ? e.rotation : null,
+      // A text's curve's vertices past its point, null a straight text (docs/adr/0196).
+      curve: e.kind === 'text' ? (e.path ? e.path.pts.length : null) : null,
       // A text's height on the ground (docs/adr/0175: from a label's size at a scale), a dimension's value's (docs/adr/0183).
       height: e.kind === 'text' || e.kind === 'dimension' ? e.height : null,
       // A leader's arrowhead (null: the filled arrow; docs/adr/0146).
@@ -831,7 +833,7 @@ function compareShape(name, have, want, t) {
   // An area's hole count (docs/adr/0173 §5), exact.
   // A linked text's object, by its slot, and its scale (docs/adr/0175 §4), exact.
   // An object template's symbol, colour, weight and layer (docs/adr/0176 §3), exact.
-  for (const key of ['align', 'widthFactor', 'mask', 'rotation', 'arrow', 'label', 'z', 'holes', 'labelOf', 'labelScale', 'lineSpacing', 'symbol', 'color', 'lineWeight', 'layer'])
+  for (const key of ['align', 'widthFactor', 'mask', 'rotation', 'curve', 'arrow', 'label', 'z', 'holes', 'labelOf', 'labelScale', 'lineSpacing', 'symbol', 'color', 'lineWeight', 'layer'])
     if (want[key] !== undefined && have[key] !== want[key]) bad.push(`${name}.${key}: ${JSON.stringify(have[key])}, beklenen ${JSON.stringify(want[key])}`);
   // A hatch's pattern (an absent member none) and how many objects it follows (docs/adr/0186), exact.
   if (want.pattern !== undefined) {

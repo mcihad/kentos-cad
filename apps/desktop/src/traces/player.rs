@@ -59,6 +59,8 @@ pub struct Seen {
     pub mask: Option<bool>,
     /// A text's turn in degrees.
     pub rotation: Option<f64>,
+    /// A text's curve's vertices past its point; none for a straight text (docs/adr/0196).
+    pub curve: Option<usize>,
     /// A text's height on the ground (docs/adr/0175).
     pub height: Option<f64>,
     /// A leader's arrowhead's name; none the filled arrow (docs/adr/0146).
@@ -232,6 +234,10 @@ impl Seen {
             rotation: match e {
                 Entity::Text(t) => Some(t.rotation),
                 Entity::Leader(l) => Some(l.rotation),
+                _ => None,
+            },
+            curve: match e {
+                Entity::Text(t) => t.path.as_ref().map(|c| c.pts.len()),
                 _ => None,
             },
             height: match e {

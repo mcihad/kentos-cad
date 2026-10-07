@@ -1,0 +1,91 @@
+{
+  "entities": [
+    {
+      "kind": "text",
+      "id": 1,
+      "layerId": "yazi",
+      "attrs": {},
+      "color": "#2F6FB0",
+      "p": {
+        "x": 100.0,
+        "y": 50.0
+      },
+      "text": "Çamlıca Deresi",
+      "height": 2.5,
+      "rotation": 12.5,
+      "align": "bottomCenter",
+      "path": {
+        "pts": [
+          {
+            "x": 40.0,
+            "y": 0.0
+          }
+        ],
+        "bulges": [
+          0.35
+        ]
+      }
+    },
+    {
+      "kind": "text",
+      "id": 2,
+      "layerId": "yazi",
+      "attrs": {
+        "tür": "yol"
+      },
+      "p": {
+        "x": 150.0,
+        "y": 40.0
+      },
+      "text": "Atatürk Bulvarı ^",
+      "height": 2.0,
+      "rotation": 0.0,
+      "mask": true,
+      "font": "arimo",
+      "bold": true,
+      "widthFactor": 0.9,
+      "path": {
+        "pts": [
+          {
+            "x": 18.0,
+            "y": 0.0
+          },
+          {
+            "x": 30.0,
+            "y": -6.5
+          }
+        ]
+      }
+    },
+    {
+      "kind": "text",
+      "id": 3,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 100.0,
+        "y": 20.0
+      },
+      "text": "Düz yazı",
+      "height": 2.0,
+      "rotation": 0.0
+    }
+  ],
+  "layers": [
+    {
+      "id": "yazi",
+      "name": "Yazı",
+      "path": [],
+      "color": "#2F6FB0",
+      "visible": true,
+      "locked": false,
+      "lineType": "continuous",
+      "lineWeight": 0.25
+    }
+  ],
+  "scale": 1000,
+  "lengthDecimals": 3,
+  "grads": false,
+  "dimensionValues": {},
+  "blocks": []
+}

@@ -112,7 +112,7 @@ pub fn advance(font: Font, c: char, bold: bool, script: bool) -> f64 {
 
 /// Each letter's width in thousandths of an em at the text's height (bold from the bold table, raised or
 /// lowered at 0.6).
-fn advances(letters: &[char], runs: &[Run], font: Font, all_bold: bool) -> Vec<f64> {
+pub(crate) fn advances(letters: &[char], runs: &[Run], font: Font, all_bold: bool) -> Vec<f64> {
     let mut out = Vec::with_capacity(letters.len());
     let mut run = runs.iter().peekable();
     for (i, &c) in letters.iter().enumerate() {

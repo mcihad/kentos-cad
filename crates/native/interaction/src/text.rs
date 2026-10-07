@@ -575,6 +575,7 @@ impl Tool for Text {
                 line_spacing: None,
                 runs: Vec::new(),
                 face: styles::text_face(cx),
+                path: None,
             };
             if let Some(out) = points::write_objects(vec![geometry], None, cx)
                 && let Some(&id) = out.ids.first()
