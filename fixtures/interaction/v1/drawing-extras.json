@@ -2,7 +2,7 @@
   "format": "kentos.interaction-trace",
   "version": 1,
   "id": "drawing-extras",
-  "title": "Çizim ekleri: İki daireye teğet tıklamalara en yakın dış ve iç teğeti yazar, iç içe borularda söyler; Dördüncü köşe nokta ve Çıktı (Ç) Alan ile paralelkenar; Menzil halkaları Aralık, Sayı ve Işın'la tek adımda, Ctrl+Z geri alır; bellek başladığı gibi bırakılır",
+  "title": "Çizim ekleri: İki daireye teğet tıklamalara en yakın dış ve iç teğeti yazar, iç içe borularda söyler; Dördüncü köşe nokta ve Çıktı (Ç) Alan ile paralelkenar; Menzil halkaları Aralık, Sayı ve Işın'la tek adımda yazar ve kapanır, Ctrl+Z geri alır; bellek başladığı gibi bırakılır",
   "source": "docs/adr/0197 §4; web tools/drawingExtrasTools.ts, masaüstü kentos_interaction::drawing_extras; cad.entities.create tangentLine, fourthCorner, rangeRings",
   "covers": [
     "CAD-35"
@@ -280,13 +280,13 @@
       "run": "tool.rangeRings",
       "expect": {
         "tool": "rangeRings",
-        "prompt": "Menzil halkaları: merkezi belirtin [Aralık (A): 10.000 m / Sayı (S): 5 / Işın (I): 0]"
+        "prompt": "Menzil halkaları: merkezi belirtin [Aralık (A): 5.000 m / Sayı (S): 3 / Işın (I): 0]"
       }
     },
     {
       "key": "A",
       "expect": {
-        "prompt": "Menzil halkaları: halkaların aralığını m olarak yazın (Enter: 10)"
+        "prompt": "Menzil halkaları: halkaların aralığını m olarak yazın (Enter: 5)"
       }
     },
     {
@@ -295,13 +295,13 @@
     {
       "key": "Enter",
       "expect": {
-        "prompt": "Menzil halkaları: merkezi belirtin [Aralık (A): 2.500 m / Sayı (S): 5 / Işın (I): 0]"
+        "prompt": "Menzil halkaları: merkezi belirtin [Aralık (A): 2.500 m / Sayı (S): 3 / Işın (I): 0]"
       }
     },
     {
       "key": "S",
       "expect": {
-        "prompt": "Menzil halkaları: halka sayısını yazın, 1 ile 100 arası (Enter: 5)"
+        "prompt": "Menzil halkaları: halka sayısını yazın, 1 ile 100 arası (Enter: 3)"
       }
     },
     {
@@ -344,7 +344,7 @@
         22,
         -8
       ],
-      "note": "Halkalar ve ışınlar tek adımda; en yenisi kuzeybatıdaki son ışın.",
+      "note": "Halkalar ve ışınlar tek adımda; en yenisi kuzeybatıdaki son ışın. Araç kapanır: bir takım çok nesnedir, yanlışlıkla ikinci tık yazmamalı.",
       "expect": {
         "entities": 19,
         "log": "success",
@@ -363,7 +363,8 @@
               -0.9289
             ]
           ]
-        }
+        },
+        "tool": "select"
       }
     },
     {
@@ -378,10 +379,18 @@
       }
     },
     {
+      "run": "tool.rangeRings",
+      "note": "Değerler bellekte kaldı; ilk hâllerine döndürülür.",
+      "expect": {
+        "tool": "rangeRings",
+        "prompt": "Menzil halkaları: merkezi belirtin [Aralık (A): 2.500 m / Sayı (S): 4 / Işın (I): 8]"
+      }
+    },
+    {
       "key": "A"
     },
     {
-      "text": "10"
+      "text": "5"
     },
     {
       "key": "Enter"
@@ -390,7 +399,7 @@
       "key": "S"
     },
     {
-      "text": "5"
+      "text": "3"
     },
     {
       "key": "Enter"
@@ -405,7 +414,7 @@
       "key": "Enter",
       "note": "Bellek başladığı gibi.",
       "expect": {
-        "prompt": "Menzil halkaları: merkezi belirtin [Aralık (A): 10.000 m / Sayı (S): 5 / Işın (I): 0]"
+        "prompt": "Menzil halkaları: merkezi belirtin [Aralık (A): 5.000 m / Sayı (S): 3 / Işın (I): 0]"
       }
     },
     {

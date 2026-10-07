@@ -45,8 +45,9 @@ köşesini bulmak; bir noktadan eşit aralıklı menzil (etki, güvenlik, hizmet
   Çözüm yoksa söylenir, birinci seçili kalır; Esc onu bırakır. Yardımcı çizgi ▾ ailesinde.
 - **Dördüncü köşe** (`fourthCorner`): üç köşeye tıklanır (kenet çalışır, yazılabilir); önizleme paralelkenarı kesikli, dördüncü köşeyi
   halkalı ve koordinatıyla çizer. Çıktı (Ç): Nokta ya da Alan, oturum boyu hatırlanır.
-- **Menzil halkaları** (`rangeRings`): merkeze tıklanır (kenet çalışır, yazılabilir); önizleme halkaları imleçle taşır. Aralık (A),
-  Sayı (S) ve Işın (I) yazılır, oturum boyu hatırlanır; ilk değerler 10 m, 5, 0.
+- **Menzil halkaları** (`rangeRings`): merkeze tıklanır (kenet çalışır, yazılabilir); önizleme halkaları imleçle taşır; tık takımı
+  yazar ve araç kapanır (Enter son komutu yineler). Aralık (A), Sayı (S) ve Işın (I) yazılır, oturum boyu hatırlanır; ilk değerler
+  5 m, 3, 0.
 - Üç araç da proje türünden bağımsızdır: CAD'de Giriş › Çizim ▾, CBS'de Düzenle'nin çizim bölümlerinde (Yardımcı, Eğri, Nokta).
 
 ## Kapsam dışı
@@ -68,6 +69,9 @@ Halkaların uzaklık yazıları, elips ve eğriye teğet doğru, nokta ile daire
   paralelkenar; menzil halkaları önce tam halkalar ve iki ışındı, 16 px'te Halka'ya ve Sahneden seç'in hedefine benzediği için tutamaçtan
   çıkan iki ışın arasında üç çeyrek halka (yelpaze) oldu.
 - **İkon turu:** `cizim-paneli` sahnesi CAD'in Giriş › Çizim ▾ listesini (üç yeni araç ve ikonları) resimler.
+- **7 Ekim eki (sahibin bildirimi):** Menzil halkaları ilk sürümde açık kalıyor, her tık bir takım daha yazıyordu; ilk değerler (10 m,
+  5 halka: 50 m) görünümün dışına taştığı için rastgele tıklamalar fark edilmeden halka yazdı ve bir tıklamanın adayları 46'yı buldu.
+  Araç artık bir takımdan sonra kapanır, ilk değerler 5 m ve 3 halkadır (15 m).
 
 ## Doğrulama
 

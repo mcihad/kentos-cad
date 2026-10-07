@@ -4,4 +4,4 @@
  * The drawing tool or Hesap window whose step has its own name; without
  * one the step is “Ekle”, as for every object a drawing tool adds.
  */
-export type CreateOperation = "parallel" | "perpendicularIn" | "perpendicularOut" | "divide" | "hatch" | "boundary" | "traverse" | "polarSurvey" | "forwardIntersection" | "resection" | "pointsBetween" | "intersectPoint" | "dimensionChain" | "dimensionBaseline" | "textFile" | "leader" | "polygonize" | "vertexPoints" | "adjoin" | "labels" | "table" | "coordinates" | "stations" | "centerline" | "image" | "textAlong" | "tangentLine" | "fourthCorner" | "rangeRings";
+export type CreateOperation = "parallel" | "perpendicularIn" | "perpendicularOut" | "divide" | "hatch" | "boundary" | "traverse" | "polarSurvey" | "forwardIntersection" | "resection" | "pointsBetween" | "intersectPoint" | "dimensionChain" | "dimensionBaseline" | "textFile" | "leader" | "polygonize" | "vertexPoints" | "adjoin" | "labels" | "table" | "coordinates" | "stations" | "centerline" | "image" | "textAlong" | "tangentLine" | "fourthCorner" | "rangeRings" | "planRoad";

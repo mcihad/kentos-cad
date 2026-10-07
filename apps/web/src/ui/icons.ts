@@ -210,6 +210,12 @@ export const ICONS = {
   tangentLine: `<circle cx="4.6" cy="13.2" r="2.6" stroke-width="1.1"/><circle cx="14.2" cy="11.6" r="4.2" stroke-width="1.1"/><path d="M1.68 11.45 14.92 6.91"/>${grip(3.76, 10.74)}${grip(12.84, 7.63)}`,
   fourthCorner: `<path d="M2.5 16h9l6-11"/><path d="M17.5 5h-9l-6 11" stroke-dasharray="2.2 1.6" stroke-width="1.2"/>${grip(2.5, 16)}${grip(11.5, 16)}${grip(17.5, 5)}<circle cx="8.5" cy="5" r="2" stroke-width="1.3"/>`,
   rangeRings: `<path d="M4 11.5A4.5 4.5 0 0 1 8.5 16M4 7.5A8.5 8.5 0 0 1 12.5 16M4 3.5A12.5 12.5 0 0 1 16.5 16" stroke-width="1.2"/><path d="M4 16V3.5M4 16h12.5" stroke-width="1.1"/>${grip(4, 16)}`,
+  // Plan yolu çizimi (docs/adr/0198), taken while the owner was away (7 October): the road an area, lightly filled between
+  // its edges with its axis dashed (the first option read as Paralel çizgi); a crossing's four rounded corners; a median
+  // closed at both ends.
+  planRoad: `<path d="M3.6 18.92 10.53 12.91 19.31 10.59 17.69 4.41 7.47 7.09 -0.6 14.08" fill="currentColor" fill-opacity=".16" stroke="none"/><path d="M3.6 18.92 10.53 12.91 19.31 10.59"/><path d="M-0.6 14.08 7.47 7.09 17.69 4.41"/><path d="M1.5 16.5 9 10 18.5 7.5" stroke-dasharray="2.2 1.6" stroke-width="1.1"/>`,
+  roadJunctions: `<path d="M7 1.5V4.5A2.5 2.5 0 0 1 4.5 7H1.5"/><path d="M13 1.5V4.5A2.5 2.5 0 0 0 15.5 7H18.5"/><path d="M7 18.5V15.5A2.5 2.5 0 0 0 4.5 13H1.5"/><path d="M13 18.5V15.5A2.5 2.5 0 0 1 15.5 13H18.5"/>`,
+  medianClose: `<path d="M6 7H14A3 3 0 0 1 14 13H6A3 3 0 0 1 6 7z"/>`,
   // Ara nokta by a distance along (measured) and by a ratio (%).
   pointsBetweenDistance: `<path d="M3 16.5 17 8.5"/><circle cx="10" cy="12.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="14.2" cy="10.1" r="1.3" fill="currentColor" stroke="none"/>${grip(3, 16.5)}${grip(17, 8.5)}<path d="M2.2 13.2 9.2 9.2M2.6 11.6l-.4 1.6 1.6.4M7.6 8.8l1.6.4-.4 1.6" stroke-width="1.1"/>`,
   pointsBetweenRatio: `<path d="M3 16 17 8"/><circle cx="10" cy="12" r="1.25" fill="currentColor" stroke="none"/>${grip(3, 16)}${grip(17, 8)}<circle cx="5" cy="4.5" r="1.3" stroke-width="1.1"/><circle cx="10" cy="7.5" r="1.3" stroke-width="1.1"/><path d="M10.5 3.5 4.5 8.5" stroke-width="1.1"/>`,

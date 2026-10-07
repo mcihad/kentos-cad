@@ -171,6 +171,7 @@ pub mod path;
 pub mod perpendicular;
 pub mod pick;
 pub mod pick_objects;
+pub mod plan_road;
 pub mod point;
 pub mod point_calc;
 pub mod polygonize;

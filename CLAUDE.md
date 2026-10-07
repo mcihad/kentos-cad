@@ -77,6 +77,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   yazı, Eğriye oturt, Doğrultuya döndür, Düzleştir), Okunur yap eğriyi çevirir; DXF'e harflerinin bloğu ve KENTOS verisiyle (ADR 0196);
   çizim ekleri: İki daireye teğet (tıklamalara en yakın dış ya da iç teğet), Dördüncü köşe (nokta ya da paralelkenar alanı), Menzil
   halkaları (Aralık, Sayı, Işın) (ADR 0197);
+  plan yolu çizimi: yol alan, türü ve genişliği öznitelik; Plan yolu (yol, yaya ve bisiklet yolu; kaldırımla taşıt yolu, refüj, eksen),
+  Kavşak temizle (türlere göre birleştirme, ada ve kaldırım köşelerinin yuvarlanması), Refüj kapat (ADR 0198);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -298,6 +300,7 @@ KENTOS_SHOTS_ONLY=orta-hat,orta-hat-dere,orta-hat-yazildi cargo test -p kentos-d
 python3 scripts/fixtures/arrange_cases.py --check   # Hizala ve dağıt'ın kaymalarını (altı hizalama, iki dağıtma, başvurunun kenarı ve ortası, seçimin kutusu) ADR'nin işlem sırasıyla çift duyarlıkta ve kesirlerle bağımsız başvurudan denetle; durumlar fixtures/arrange/v1/cases.json (ADR 0194)
 python3 scripts/fixtures/text_along_cases.py --check   # Eğri boyunca yazı'nın kurallarını (harflerin yeri ve dönüşü, kutu, kayıtlar, doğrultu, Okunur yap, aynalamalar, eğrinin parçası, Düzleştir, Doğrultuya döndür) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/text/v1/along.json (ADR 0196)
 python3 scripts/fixtures/drawing_extras_cases.py --check   # Çizim eklerinin kurallarını (iki dairenin ve yayın ortak teğetleri ve sırası, tıklamaların seçtiği teğet, dördüncü köşe, menzil halkalarının yarıçapları ve ışınları) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/drawing-extras/v1/cases.json (ADR 0197)
+python3 scripts/fixtures/plan_road_cases.py --check   # Plan yolu çiziminin kurallarını (yolun, taşıt yolunun ve refüjün alanları, iç köşelerin yuvarlanması ve sayıları, iki çizginin refüj olarak kapanması) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/plan-road/v1/cases.json (ADR 0198)
 python3 scripts/fixtures/exchange_cases.py --check   # Çizimler arası alışverişin kurallarını (seçimin çizimi: budanan ağaç, iç içe bloklar, kitaplığın kullanılanları, düşen bağlar; Başka çizimden al: yollar, katlanan adlar, Atla ve Değiştir, kimliklerin ekleri, katman durumlarının yolları; Dosyadan blok ekle: ad sayısı, sol alt köşe, resim ve tablo) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/exchange/v1/cases.json (ADR 0193)
 python3 scripts/fixtures/image_cases.py --check   # Resim ekle'nin çerçevesini (genişlik, yükseklik, dönüş) ve Resmi kırp'ın sınırını resmin kendi kesirleriyle (taşan, saran, saat yönünde, aynalı, dönük, dışarıda) kesirlerle bağımsız başvurudan denetle; durumlar fixtures/image/v1/cases.json (ADR 0192)
 KENTOS_SHOTS_ONLY=resim-ekle,resim-ekle-yazildi,resim-kirp,resim-kirpildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # resim nesnesinin resimleri, .run/shots/arac-resim-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs images), WebGPU'yla --renderer webgpu; ADR 0192)
@@ -1077,7 +1080,13 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   halkaları'nınki 16 px'te Halka'ya benzediği için yelpaze): çekirdek `tools::drawing_extras` (bağımsız başvuru
   `drawing_extras_cases.py`, ortak `fixtures/drawing-extras/v1/cases.json`), `cad.entities.create`'in `tangentLine`, `fourthCorner`,
   `rangeRings` adımları; araçlar masaüstünde `kentos_interaction::drawing_extras`, web'de `tools/drawingExtrasTools.ts`; ortak iz
-  `drawing-extras.json`. Sıradaki `CAD-36` plan yolu çizimi **[M]** (genişlik ve yarıçap değerleri sahibin tarifini bekler; geometrisi genel).
+  `drawing-extras.json`; 7 Ekim eki (sahibin bildirimi): Menzil halkaları bir takımdan sonra kapanır, ilk değerleri 5 m ve 3 halka. `CAD-36`
+  plan yolu çizimi ([ADR 0198](docs/adr/0198-plan-roads.md)) tek parçada bitti (7 Ekim; geometri genel, değer tablosu **[M]** sahibin
+  tarifini bekler): çekirdek `ops::road` (bağımsız başvuru `plan_road_cases.py`, ortak `fixtures/plan-road/v1/cases.json`; köşeler
+  `ops::reshape::corners_of_path_where` ve `turns_inward` ile), `cad.entities.create`'in `planRoad`, `cad.entities.edit`'in
+  `roadJunctions` ve `medianClose` adımları; araçlar masaüstünde `kentos_interaction::plan_road`, web'de `tools/planRoadTools.ts`; ortak iz
+  `plan-road.json`. §16.1'in sahibin sırası (CAD-27 … CAD-36) bitti; `CAD-18` ve `CAD-24` **[M]** sahibin tarifini bekler; sıradaki
+  §16.2 CBS (`GIS-01` …).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

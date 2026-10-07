@@ -28,6 +28,7 @@ mod locks;
 mod measure;
 mod navigation;
 mod numeric;
+mod plan_road;
 mod point_calc;
 mod point_editor;
 mod point_text;

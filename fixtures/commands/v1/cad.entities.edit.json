@@ -602,6 +602,18 @@
       ]
     },
     {
+      "name": "Kavşak temizle ve Refüj kapat: birleşik ve yuvarlanmış alan ilk alanın yerinde, öbürü silinir; refüj ilk çizginin yerinde verisiyle; adımlar adlarıyla (ADR 0198 §3, §4)",
+      "steps": [
+        {"op": "captureUid", "id": 1, "as": "cizgi"},
+        {"op": "captureUid", "id": 2, "as": "yol"},
+        {"op": "captureUid", "id": 8, "as": "daire"},
+        {"op": "execute", "input": {"operation": "roadJunctions", "changes": [{"kind": "update", "uid": "$uidOf:3", "geometry": {"kind": "polygon", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420015}, {"x": 487045, "y": 4420020}, {"x": 487030, "y": 4420020}], "bulges": [0, 0, -0.41421356237309503, 0, 0]}}, {"kind": "remove", "uid": "$uidOf:8"}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "created": [], "removed": ["$uid:daire"], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "entities": {"3": {"id": 3, "layerId": "yapi", "attrs": {"Ada": "101"}, "kind": "polygon", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420015}, {"x": 487045, "y": 4420020}, {"x": 487030, "y": 4420020}], "bulges": [0, 0, -0.41421356237309503, 0, 0]}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Kavşak temizle", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "entities": {"3": {"kind": "polygon", "id": 3, "layerId": "yapi", "attrs": {"Ada": "101"}, "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "holes": [{"pts": [{"x": 487038, "y": 4420008}, {"x": 487042, "y": 4420008}, {"x": 487042, "y": 4420012}, {"x": 487038, "y": 4420012}]}]}, "8": {"kind": "circle", "id": 8, "layerId": "yapi", "attrs": {}, "c": {"x": 487070, "y": 4420010}, "r": 3}}, "uids": {"8": "daire"}}},
+        {"op": "execute", "input": {"operation": "medianClose", "changes": [{"kind": "replace", "uid": "$uidOf:2", "geometry": {"kind": "polygon", "pts": [{"x": 487000, "y": 4420000}, {"x": 487020, "y": 4420000}, {"x": 487020, "y": 4420004}, {"x": 487000, "y": 4420004}], "bulges": [0, 1, 0, 1]}, "keepData": true}, {"kind": "remove", "uid": "$uidOf:1"}]}, "result": {"status": "completed", "output": {"changed": ["$uid:yol"], "created": [], "removed": ["$uid:cizgi"], "revision": "$current"}, "warnings": []}, "expect": {"ids": [2, 3, 4, 5, 6, 7, 8], "entities": {"2": {"kind": "polygon", "pts": [{"x": 487000, "y": 4420000}, {"x": 487020, "y": 4420000}, {"x": 487020, "y": 4420004}, {"x": 487000, "y": 4420004}], "bulges": [0, 1, 0, 1], "id": 2, "layerId": "yapi", "attrs": {"Ad": "Yol"}, "label": "Y1"}}, "uids": {"2": "yol"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Refüj kapat", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}, "2": {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {"Ad": "Yol"}, "label": "Y1", "pts": [{"x": 487000, "y": 4420010}, {"x": 487010, "y": 4420010}, {"x": 487010, "y": 4420020}]}}, "uids": {"1": "cizgi", "2": "yol"}}}
+      ]
+    },
+    {
       "name": "Bul ve değiştir: yazının yeni metni yazılır; hizası, çarpanı ve zemini kalır; adım “Bul ve değiştir” (ADR 0145 §6)",
       "setup": {
         "format": "kentos.document",

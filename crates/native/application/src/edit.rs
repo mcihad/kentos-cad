@@ -187,6 +187,8 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::TextPath => "Eğriye oturt",
         EditOperation::TextTurn => "Doğrultuya döndür",
         EditOperation::TextStraighten => "Düzleştir",
+        EditOperation::RoadJunctions => "Kavşak temizle",
+        EditOperation::MedianClose => "Refüj kapat",
     }
 }
 

@@ -547,6 +547,20 @@ pub struct Memory {
     pub ring_spacing: f64,
     pub ring_count: u32,
     pub ring_rays: u32,
+    /// Plan yolu's kind (an index of `plan_road::ROAD_KINDS`), each kind's
+    /// width, the kerbs and the median (metres, 0 none) and Eksen
+    /// (`PlanRoadTool.kind`, `.widths`, `.kerb`, `.median`, `.axis`; docs/adr/0198 §2).
+    pub road_kind: u8,
+    pub road_widths: [f64; 3],
+    pub road_kerb: f64,
+    pub road_median: f64,
+    pub road_axis: bool,
+    /// Kavşak temizle's Ada köşesi and Kaldırım köşesi, metres (0: not
+    /// rounded; `RoadJunctionsTool.ada`, `.kerb`; docs/adr/0198 §3).
+    pub junction_ada: f64,
+    pub junction_kerb: f64,
+    /// Refüj kapat's Uç: half circles, else straight (`MedianCloseTool.round`, docs/adr/0198 §4).
+    pub median_round: bool,
     /// Çok satırlı yazı's line spacing (`ParagraphTextTool.lineSpacing`, docs/adr/0182 §4): 1 none.
     pub paragraph_spacing: f64,
     /// Kılavuz's arrowhead (none: the filled arrow) and Zemin
@@ -846,9 +860,17 @@ impl Default for Memory {
             text_increment: false,
             along_align: kentos_contracts::TextAlign::BottomCenter,
             fourth_area: false,
-            ring_spacing: 10.0,
-            ring_count: 5,
+            ring_spacing: 5.0,
+            ring_count: 3,
             ring_rays: 0,
+            road_kind: 0,
+            road_widths: [10.0, 5.0, 2.5],
+            road_kerb: 0.0,
+            road_median: 0.0,
+            road_axis: false,
+            junction_ada: 5.0,
+            junction_kerb: 8.0,
+            median_round: true,
             paragraph_spacing: 1.0,
             leader_arrow: None,
             leader_mask: false,

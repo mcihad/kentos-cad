@@ -120,6 +120,10 @@ pub const TOOLS: &[&str] = &[
     crate::drawing_extras::TANGENT_ID,
     crate::drawing_extras::FOURTH_ID,
     crate::drawing_extras::RINGS_ID,
+    // Plan yolu çizimi (docs/adr/0198).
+    crate::plan_road::ROAD_ID,
+    crate::plan_road::JUNCTIONS_ID,
+    crate::plan_road::MEDIAN_ID,
     parallel::ID,
     perpendicular::IN_ID,
     perpendicular::OUT_ID,
@@ -338,6 +342,9 @@ impl Session {
                 Box::new(crate::drawing_extras::FourthCorner::new())
             }
             crate::drawing_extras::RINGS_ID => Box::new(crate::drawing_extras::RangeRings::new()),
+            crate::plan_road::ROAD_ID => Box::new(crate::plan_road::PlanRoad::new()),
+            crate::plan_road::JUNCTIONS_ID => Box::new(crate::plan_road::RoadJunctions::tool()),
+            crate::plan_road::MEDIAN_ID => Box::new(crate::plan_road::MedianClose::new()),
             parallel::ID => Box::new(crate::parallel::Parallel::new()),
             perpendicular::IN_ID => Box::new(Perpendicular::perpendicular_in()),
             perpendicular::OUT_ID => Box::new(Perpendicular::perpendicular_out()),

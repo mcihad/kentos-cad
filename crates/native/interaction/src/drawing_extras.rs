@@ -15,7 +15,9 @@
 //! - **Menzil halkaları** (`rangeRings`): the centre clicked (snapping) or
 //!   typed, the rings following the cursor; Aralık (A, in the project's
 //!   unit), Sayı (S, 1 to 100) and Işın (I, 0 to 360) typed (`range_rings`);
-//!   the circles and rays in one step (“Menzil halkaları”).
+//!   the circles and rays in one step (“Menzil halkaları”), and the tool
+//!   leaves: a set is many objects, a second click by mistake should not
+//!   write another (Enter repeats the tool).
 //!
 //! Çıktı, Aralık, Sayı and Işın stay for as long as the app lives
 //! ([`crate::tool::Memory`]).
@@ -536,6 +538,9 @@ pub struct RangeRings {
     d: Taken,
     asking: Asking,
     seen: Option<(Memory, Format)>,
+    /// A set was written: the tool leaves (one click writes up to 460
+    /// objects; a second one by mistake should not; Enter repeats it).
+    done: bool,
 }
 
 impl RangeRings {
@@ -581,6 +586,7 @@ impl RangeRings {
                 format!("{n} halka ve {k} ışın eklendi.")
             };
             cx.say(Level::Success, what);
+            self.done = true;
         }
     }
 
@@ -744,6 +750,10 @@ impl Tool for RangeRings {
 
     fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool {
         false
+    }
+
+    fn finished(&self) -> bool {
+        self.done
     }
 
     /// The rings and rays round the cursor, the outer radius beside it.

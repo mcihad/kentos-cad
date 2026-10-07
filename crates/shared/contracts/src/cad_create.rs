@@ -99,6 +99,8 @@ pub enum CreateOperation {
     FourthCorner,
     /// Menzil halkaları (docs/adr/0197 §3): rings round a centre and rays to the outer one.
     RangeRings,
+    /// Plan yolu (docs/adr/0198 §2): a road's areas from its axis, and the axis.
+    PlanRoad,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

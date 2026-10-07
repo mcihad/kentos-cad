@@ -163,6 +163,10 @@ pub enum EditOperation {
     TextTurn,
     /// Düzleştir (docs/adr/0196 §4): texts along a curve made straight.
     TextStraighten,
+    /// Kavşak temizle (docs/adr/0198 §3): road areas joined kind by kind, their inner corners rounded.
+    RoadJunctions,
+    /// Refüj kapat (docs/adr/0198 §4): two lines closed into a median, an area.
+    MedianClose,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and

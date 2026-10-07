@@ -23,7 +23,7 @@ import type { OptionChoice, Tool, ToolPointer } from './Tool';
  *   Alan the four corners as an area (step “Dördüncü köşe”).
  * - **Menzil halkaları** (`rangeRings`): the centre clicked (snapping) or typed, the rings following the cursor; Aralık
  *   (A, in the project's unit), Sayı (S, 1 to 100) and Işın (I, 0 to 360) typed; the circles and rays in one step
- *   (“Menzil halkaları”).
+ *   (“Menzil halkaları”), and the tool leaves (Enter repeats it).
  *
  * Çıktı, Aralık, Sayı and Işın stay for the session (the desktop's `Memory`).
  */
@@ -270,8 +270,8 @@ export class RangeRingsTool extends PointInputTool {
   readonly id = 'rangeRings';
   protected readonly label = 'Menzil halkaları';
   /** Aralık (metres), Sayı and Işın, kept for the session (the desktop's `Memory::ring_spacing`, `ring_count`, `ring_rays`). */
-  static spacing = 10;
-  static count = 5;
+  static spacing = 5;
+  static count = 3;
   static rays = 0;
   private asking: 'centre' | 'spacing' | 'count' | 'rays' = 'centre';
 
@@ -296,7 +296,10 @@ export class RangeRingsTool extends PointInputTool {
     if (!rings) return;
     const objects = [...rings.radii.map((r) => ({ kind: 'circle' as const, c: p, r })), ...rings.rays.map((end) => ({ kind: 'line' as const, a: p, b: end }))];
     const [n, k] = [rings.radii.length, rings.rays.length];
-    if (this.writeObjects(objects, 'rangeRings')) this.ctx.log.success(k ? `${n} halka ve ${k} ışın eklendi.` : `${n} halka eklendi.`);
+    if (!this.writeObjects(objects, 'rangeRings')) return;
+    this.ctx.log.success(k ? `${n} halka ve ${k} ışın eklendi.` : `${n} halka eklendi.`);
+    // A set is many objects: a second click by mistake should not write another; Enter repeats the tool.
+    queueMicrotask(() => this.ctx.tools.exit());
   }
 
   protected override option(key: string): boolean {

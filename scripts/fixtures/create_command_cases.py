@@ -1260,6 +1260,12 @@ extras = [
     ("rangeRings", "Menzil halkaları", [O({"kind": "circle", "c": P(487050, 4420050), "r": 10}), O({"kind": "circle", "c": P(487050, 4420050), "r": 20}),
                                         O({"kind": "line", "a": P(487050, 4420050), "b": P(487050, 4420070)}),
                                         O({"kind": "line", "a": P(487050, 4420050), "b": P(487050, 4420030)})]),
+    # Plan yolu (docs/adr/0198 §2): the road, its carriageway and its axis, their kinds and widths as attributes.
+    ("planRoad", "Plan yolu", [O({"kind": "polygon", "pts": [P(487000, 4420095), P(487060, 4420095), P(487060, 4420105), P(487000, 4420105)]},
+                                 attrs={"Tür": "Yol", "Genişlik": "10"}),
+                               O({"kind": "polygon", "pts": [P(487000, 4420097), P(487060, 4420097), P(487060, 4420103), P(487000, 4420103)]},
+                                 attrs={"Tür": "Taşıt yolu", "Genişlik": "6"}),
+                               O({"kind": "polyline", "pts": [P(487000, 4420100), P(487060, 4420100)]}, attrs={"Tür": "Yol ekseni"})]),
 ]
 for operation, step, objects in extras:
     new = [3 + i for i in range(len(objects))]

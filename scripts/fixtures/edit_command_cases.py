@@ -741,6 +741,27 @@ cases.append({
     ],
 })
 
+# Plan yolu çizimi (docs/adr/0198 §3, §4): the tools' geometry, written as given.
+junction = {"kind": "polygon", "pts": [P(487030, 4420000), P(487050, 4420000), P(487050, 4420015), P(487045, 4420020), P(487030, 4420020)],
+            "bulges": [0, 0, -0.41421356237309503, 0, 0]}
+median = {"kind": "polygon", "pts": [P(487000, 4420000), P(487020, 4420000), P(487020, 4420004), P(487000, 4420004)], "bulges": [0, 1, 0, 1]}
+cases.append({
+    "name": "Kavşak temizle ve Refüj kapat: birleşik ve yuvarlanmış alan ilk alanın yerinde, öbürü silinir; refüj ilk çizginin yerinde verisiyle; adımlar adlarıyla (ADR 0198 §3, §4)",
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "cizgi"},
+        {"op": "captureUid", "id": 2, "as": "yol"},
+        {"op": "captureUid", "id": 8, "as": "daire"},
+        {"op": "execute", "input": {"operation": "roadJunctions", "changes": [{"kind": "update", "uid": uid(3), "geometry": junction}, {"kind": "remove", "uid": uid(8)}]},
+         "result": done(changed=[uid(3)], removed=["$uid:daire"]),
+         "expect": {"ids": ids_after(removed=[8]), "entities": {"3": reshaped(E(3), junction)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Kavşak temizle", "expect": {"ids": IDS, "entities": {"3": E(3), "8": E(8)}, "uids": {"8": "daire"}}},
+        {"op": "execute", "input": {"operation": "medianClose", "changes": [{"kind": "replace", "uid": uid(2), "geometry": median, "keepData": True}, {"kind": "remove", "uid": uid(1)}]},
+         "result": done(changed=["$uid:yol"], removed=["$uid:cizgi"]),
+         "expect": {"ids": ids_after(removed=[1]), "entities": {"2": inherited(2, median, True, 2)}, "uids": {"2": "yol"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Refüj kapat", "expect": {"ids": IDS, "entities": {"1": E(1), "2": E(2)}, "uids": {"1": "cizgi", "2": "yol"}}},
+    ],
+})
+
 renamed = {**dressed, "text": "Parsel 7"}
 cases.append({
     "name": "Bul ve değiştir: yazının yeni metni yazılır; hizası, çarpanı ve zemini kalır; adım “Bul ve değiştir” (ADR 0145 §6)",

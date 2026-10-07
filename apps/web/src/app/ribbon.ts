@@ -292,6 +292,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { menu: 'view', sections: ['Yakınlaştır'] },
       { menu: 'crs', sections: ['Koordinat sistemi'] },
       { menu: 'map', sections: ['Parsel', 'Ölçme'] },
+      // Plan yolu çizimi (docs/adr/0198 §5): the roads beside the parcels.
+      { pick: 'Yol', icon: 'planRoad', commands: ['tool.planRoad', 'tool.roadJunctions', 'tool.medianClose'] },
       { menu: 'tools', sections: ['Stil'] },
       // The layers' labels as texts (docs/adr/0175 §3), beside the styles that draw them; a name along a creek or a
       // road (docs/adr/0196 §4).

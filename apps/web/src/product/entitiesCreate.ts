@@ -70,6 +70,7 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   tangentLine: 'İki daireye teğet',
   fourthCorner: 'Dördüncü köşe',
   rangeRings: 'Menzil halkaları',
+  planRoad: 'Plan yolu',
 };
 
 /**

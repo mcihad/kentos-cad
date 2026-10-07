@@ -37,7 +37,7 @@ describe('tool sections', () => {
   it('lists a group section by section in display order, then tools without one under the group name', () => {
     const extra: ToolDescriptor = { ...TOOL_CATALOG.find((t) => t.id === 'line')!, id: 'yeni', section: undefined };
     const sections = toolSections([...TOOL_CATALOG, extra], 'draw');
-    expect(sections.map((s) => s.label)).toEqual(['Çizgi', 'Eğri', 'Şekil', 'Yardımcı', 'Nokta', 'Çizim']);
+    expect(sections.map((s) => s.label)).toEqual(['Çizgi', 'Eğri', 'Şekil', 'Yardımcı', 'Nokta', 'Yol', 'Çizim']);
     expect(sections[0].tools.map((t) => t.id)).toEqual(['line', 'polyline', 'polygon', 'adjoin', 'parallel', 'centerline']);
     expect(sections.at(-1)!.tools.map((t) => t.id)).toEqual(['yeni']);
   });
@@ -53,7 +53,7 @@ describe('menus from the catalog', () => {
   it('turn tool sections into blocks and merge blocks with the same title', () => {
     const draw = menuBlocks(menuById('draw')!.items, TOOL_CATALOG);
     // Resim beside Blok (docs/adr/0192 §5).
-    expect(draw.map((b) => b.label)).toEqual(['Çizgi', 'Eğri', 'Şekil', 'Yardımcı', 'Nokta', 'Açıklama', 'Blok', 'Resim', 'Tablo']);
+    expect(draw.map((b) => b.label)).toEqual(['Çizgi', 'Eğri', 'Şekil', 'Yardımcı', 'Nokta', 'Yol', 'Açıklama', 'Blok', 'Resim', 'Tablo']);
     const map = menuBlocks(menuById('map')!.items, TOOL_CATALOG);
     expect(map.map((b) => b.label)).toEqual(['Parsel', 'Arazi', 'Ölçme', 'Pafta']);
     expect(map[0].items).toEqual(['tool.parcel', 'tool.subdivide', 'map.parcelReport', 'map.edgeLengths']);

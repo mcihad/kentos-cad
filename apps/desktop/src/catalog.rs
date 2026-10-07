@@ -272,6 +272,10 @@ pub const PORTED: &[&str] = &[
     "tool.tangentLine",
     "tool.fourthCorner",
     "tool.rangeRings",
+    // Plan yolu çizimi (docs/adr/0198 §5).
+    "tool.planRoad",
+    "tool.roadJunctions",
+    "tool.medianClose",
     // docs/adr/0195: Görünüm kipleri.
     "view.colorMode.color",
     "view.colorMode.mono",

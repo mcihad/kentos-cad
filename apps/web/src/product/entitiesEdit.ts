@@ -101,6 +101,8 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   textPath: 'Eğriye oturt',
   textTurn: 'Doğrultuya döndür',
   textStraighten: 'Düzleştir',
+  roadJunctions: 'Kavşak temizle',
+  medianClose: 'Refüj kapat',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */

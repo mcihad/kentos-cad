@@ -120,8 +120,49 @@ pub fn all_corners_of_path(
     closed: bool,
     op: &CornerOp,
 ) -> (BulgePath, usize, usize) {
+    corners_of_path_where(pts, bulges, closed, op, |_| true)
+}
+
+/// Whether vertex `i` of a closed ring turns into the area (Kavşak temizle's
+/// inner corners, docs/adr/0198 §3): right with the area's inside on the
+/// ring's left (`area_left`), left with it on the right. An arc edge's
+/// tangent there gives its direction.
+pub fn turns_inward(pts: &[Vec2], bulges: Option<&[f64]>, i: usize, area_left: bool) -> bool {
     let n = pts.len();
-    let vertices: Vec<Vertex> = (0..n).map(|i| vertex(pts, bulges, closed, i, op)).collect();
+    if n < 3 {
+        return false;
+    }
+    let (ip, inx) = ((i + n - 1) % n, (i + 1) % n);
+    let (Some(din), Some(dout)) = (
+        edge_direction(pts[ip], pts[i], bulge_at(bulges, ip), false),
+        edge_direction(pts[i], pts[inx], bulge_at(bulges, i), true),
+    ) else {
+        return false;
+    };
+    let cross = din.x * dout.y - din.y * dout.x;
+    if area_left { cross < 0.0 } else { cross > 0.0 }
+}
+
+/// [`all_corners_of_path`] for the corners `keep` takes (by vertex index):
+/// the others are no corners, and the counts are of the kept ones only
+/// (Kavşak temizle's inner corners, docs/adr/0198 §3).
+pub fn corners_of_path_where(
+    pts: &[Vec2],
+    bulges: Option<&[f64]>,
+    closed: bool,
+    op: &CornerOp,
+    keep: impl Fn(usize) -> bool,
+) -> (BulgePath, usize, usize) {
+    let n = pts.len();
+    let vertices: Vec<Vertex> = (0..n)
+        .map(|i| {
+            if keep(i) {
+                vertex(pts, bulges, closed, i, op)
+            } else {
+                Vertex::Plain
+            }
+        })
+        .collect();
     let edge_len = |i: usize| {
         let j = (i + 1) % n;
         js_hypot(pts[j].x - pts[i].x, pts[j].y - pts[i].y)

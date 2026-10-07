@@ -33,6 +33,7 @@ pub mod point_editor;
 pub mod polygonize;
 pub mod reshape;
 pub mod reshape_by;
+pub mod road;
 pub mod rubber;
 pub mod split;
 pub mod stationing;

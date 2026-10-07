@@ -142,7 +142,8 @@ export const TOOL_GROUP_LABEL: Record<ToolGroup, string> = {
  * under the group's own name, so a new tool always appears somewhere.
  */
 export const TOOL_SECTIONS = {
-  draw: { line: 'Çizgi', curve: 'Eğri', shape: 'Şekil', construction: 'Yardımcı', point: 'Nokta' },
+  // Plan yolu çizimi's tools (docs/adr/0198) after the points.
+  draw: { line: 'Çizgi', curve: 'Eğri', shape: 'Şekil', construction: 'Yardımcı', point: 'Nokta', road: 'Yol' },
   transform: { move: 'Dönüştür', array: 'Dizi' },
   modify: { edge: 'Kenar', corner: 'Köşe', object: 'Nesne', elevation: 'Kot' },
   area: { create: 'Oluştur ve çevir', boolean: 'Birleştir ve böl', hole: 'Delikler' },

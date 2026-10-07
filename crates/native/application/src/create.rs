@@ -141,6 +141,7 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::TangentLine) => "İki daireye teğet",
         Some(CreateOperation::FourthCorner) => "Dördüncü köşe",
         Some(CreateOperation::RangeRings) => "Menzil halkaları",
+        Some(CreateOperation::PlanRoad) => "Plan yolu",
     }
 }
 

@@ -167,6 +167,7 @@ class CreateOperation(_StrEnum):
     - ``tangentLine``: İki daireye teğet (docs/adr/0197 §1): a common tangent of two circles or arcs, a line.
     - ``fourthCorner``: Dördüncü köşe (docs/adr/0197 §2): a parallelogram's fourth corner, a point or the four as an area.
     - ``rangeRings``: Menzil halkaları (docs/adr/0197 §3): rings round a centre and rays to the outer one.
+    - ``planRoad``: Plan yolu (docs/adr/0198 §2): a road's areas from its axis, and the axis.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -197,9 +198,10 @@ class CreateOperation(_StrEnum):
     TANGENT_LINE = "tangentLine"
     FOURTH_CORNER = "fourthCorner"
     RANGE_RINGS = "rangeRings"
+    PLAN_ROAD = "planRoad"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -350,6 +352,8 @@ class EditOperation(_StrEnum):
     - ``textPath``: Eğriye oturt (docs/adr/0196 §4): texts made to stand on a curve, each
     - ``textTurn``: Doğrultuya döndür (docs/adr/0196 §4): straight texts turned to an
     - ``textStraighten``: Düzleştir (docs/adr/0196 §4): texts along a curve made straight.
+    - ``roadJunctions``: Kavşak temizle (docs/adr/0198 §3): road areas joined kind by kind, their inner corners rounded.
+    - ``medianClose``: Refüj kapat (docs/adr/0198 §4): two lines closed into a median, an area.
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -398,9 +402,11 @@ class EditOperation(_StrEnum):
     TEXT_PATH = "textPath"
     TEXT_TURN = "textTurn"
     TEXT_STRAIGHTEN = "textStraighten"
+    ROAD_JUNCTIONS = "roadJunctions"
+    MEDIAN_CLOSE = "medianClose"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
