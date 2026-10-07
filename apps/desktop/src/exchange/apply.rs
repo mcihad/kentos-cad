@@ -411,6 +411,7 @@ fn make_layers(
             visible: *visible,
             locked: *locked,
             style: (**style).clone(),
+            snap: None,
         };
         doc.add_layer(new, parent.as_deref(), false)
             .map_err(|r| r.to_string())?;

@@ -29,6 +29,7 @@ mod blocks;
 mod changes;
 mod document;
 mod edit;
+pub mod exchange;
 mod external;
 mod hash;
 mod hatch_ties;

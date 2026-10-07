@@ -168,6 +168,8 @@ pub enum Dialog {
     AnnotationStyles,
     /// Kullanılmayanları temizle (layer_purge.rs, docs/adr/0177 §5); the window is `App::layer_purge`.
     LayerPurge,
+    /// Başka çizimden al (drawing_exchange.rs, docs/adr/0193 §2); the window is `App::take_from`.
+    TakeFrom,
     /// Katman listesi (layer_list.rs, docs/adr/0177 §6); the window is `App::layer_list`.
     LayerList,
     /// Veri karşılaştır (data_compare.rs, docs/adr/0179); the window is `App::data_compare`.
@@ -321,6 +323,8 @@ pub enum Message {
     AnnotationStyles(crate::annotation_styles::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
+    /// Seçilenleri dosyaya kaydet, Başka çizimden al and Dosyadan blok ekle (drawing_exchange.rs).
+    DrawingExchange(crate::drawing_exchange::Event),
     /// Veri karşılaştır's window (data_compare.rs).
     DataCompare(crate::data_compare::Event),
     /// Kayıtlı ölçüleri denetle's window (cogo.rs).
@@ -654,6 +658,8 @@ pub struct App {
     pub(crate) annotation_styles: Option<crate::annotation_styles::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
     pub(crate) layer_purge: Option<crate::layer_purge::Window>,
+    /// Başka çizimden al's window (drawing_exchange.rs, docs/adr/0193 §2).
+    pub(crate) take_from: Option<crate::drawing_exchange::Window>,
     /// Katman listesi's window (layer_list.rs, docs/adr/0177 §6).
     pub(crate) layer_list: Option<crate::layer_list::Window>,
     /// Veri karşılaştır's window (data_compare.rs, docs/adr/0179).
@@ -900,6 +906,7 @@ impl App {
             layer_states_window: None,
             annotation_styles: None,
             layer_purge: None,
+            take_from: None,
             layer_list: None,
             data_compare: None,
             cogo: None,
@@ -1286,6 +1293,7 @@ impl App {
             Message::LayerStates(event) => return self.layer_states_event(event),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
+            Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
             Message::LayerList(event) => return self.layer_list_event(event),
             Message::DataCompare(event) => return self.data_compare_event(event),
             Message::Cogo(event) => return self.cogo_event(event),
@@ -1703,6 +1711,10 @@ impl App {
         // Önceki and Sonraki görünüm, Kapsam denetimi (navigation.rs, docs/adr/0141).
         if crate::navigation::COMMANDS.contains(&id) {
             return self.navigation_command(id);
+        }
+        // Çizimler arası alışveriş (drawing_exchange.rs, docs/adr/0193).
+        if crate::drawing_exchange::COMMANDS.contains(&id) {
+            return self.drawing_exchange_command(id);
         }
         match id {
             // The drawing on screen is left first: its unsent cloud work to its draft, or the question.

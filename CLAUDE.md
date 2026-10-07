@@ -64,6 +64,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   içeriğinden) ya da masaüstünde bağlı (dosya yolu); kırpma sınırı resmin kendi kesirleriyle, saydamlık; Resim ekle (ikinci nokta ya da
   yazılan genişlik, Bağlı) ve Resmi kırp (Dikdörtgen, Çokgen, Kaldır), CAD'de Ekle › Resim, CBS'de Veri › Resim; yalnız kenarından seçilir;
   Öznitelikler'de Kaynak ve Göm; resmin kendi dokusu mip katmanlarıyla üç çizim hattında (`.kcad` şema 24, ADR 0192);
+  çizimler arası alışveriş: Seçilenleri dosyaya kaydet (seçilenler kullandıkları katmanlar, bloklar, kitaplık ve ayarlarla yeni `.kcad`),
+  Başka çizimden al (katmanlar yollarıyla, bloklar, yazı ve ölçü stilleri, kitaplık, katman durumları, proje ayarları; Atla ya da
+  Değiştir; katmanlar ve bloklar tek adımda, ötekiler ayar), Dosyadan blok ekle (çizim dosyanın adıyla tek blok, sol alt köşesinden,
+  ardından Blok ekle) (ADR 0193);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -282,6 +286,7 @@ python3 scripts/fixtures/stationing_cases.py --check   # Km yaz'ın istasyonlar�
 KENTOS_SHOTS_ONLY=km-yaz,km-yaz-enkesit,km-yaz-yazildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Km yaz'ın resimleri, .run/shots/arac-km-yaz-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs stationing); ADR 0189)
 python3 scripts/fixtures/centerline_cases.py --check   # Orta hat'ın eksenini (eşleşen düz ve yaylı kenarlar, ters çizilmiş kenar, örnekleme, harita koordinatları, retler) mpmath ile 50 basamaklı bağımsız başvurudan denetle; durumlar fixtures/centerline/v1/cases.json (ADR 0190)
 KENTOS_SHOTS_ONLY=orta-hat,orta-hat-dere,orta-hat-yazildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Orta hat'ın resimleri, .run/shots/arac-orta-hat-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs centerline); ADR 0190)
+python3 scripts/fixtures/exchange_cases.py --check   # Çizimler arası alışverişin kurallarını (seçimin çizimi: budanan ağaç, iç içe bloklar, kitaplığın kullanılanları, düşen bağlar; Başka çizimden al: yollar, katlanan adlar, Atla ve Değiştir, kimliklerin ekleri, katman durumlarının yolları; Dosyadan blok ekle: ad sayısı, sol alt köşe, resim ve tablo) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/exchange/v1/cases.json (ADR 0193)
 python3 scripts/fixtures/image_cases.py --check   # Resim ekle'nin çerçevesini (genişlik, yükseklik, dönüş) ve Resmi kırp'ın sınırını resmin kendi kesirleriyle (taşan, saran, saat yönünde, aynalı, dönük, dışarıda) kesirlerle bağımsız başvurudan denetle; durumlar fixtures/image/v1/cases.json (ADR 0192)
 KENTOS_SHOTS_ONLY=resim-ekle,resim-ekle-yazildi,resim-kirp,resim-kirpildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # resim nesnesinin resimleri, .run/shots/arac-resim-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs images), WebGPU'yla --renderer webgpu; ADR 0192)
 python3 scripts/fixtures/edge_shift_cases.py --check   # Paralel kaydır'ın kenarlarını (dışarı ve içeri, saat yönü, delik, çoklu çizginin serbest ucu, harita koordinatları, irrasyonel boy, halkadaki yay, retler) ve hedef alanın uzaklığını kesirlerle ve 50 basamaklı mpmath ile bağımsız başvurudan denetle; durumlar fixtures/edge-shift/v1/cases.json (ADR 0191)
@@ -1037,8 +1042,12 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   (`FORMATS_VERSION` 34), çekirdek `geom::image`, `ops::image` (bağımsız başvuru `image_cases.py`, ortak `fixtures/image/v1`); stil
   motorunun `MODE_IMAGE`'i, stilli çizim hattının 5. sürümü (`imageFs`), resim dokuları `styled/pictures.rs`, web `render/pictures.ts`;
   masaüstü `kentos_interaction::image_insert`, `::image_clip`, `pictures.rs`; web `tools/imageTools.ts`, `tools/pictureFile.ts`,
-  `ui/properties/imageRows.ts`; ortak izler `image-insert.json`, `image-clip.json` (oynatıcılarda resmin gösterilen kısmı). Sıradaki
-  `CAD-31` çizimler arası alışveriş.
+  `ui/properties/imageRows.ts`; ortak izler `image-insert.json`, `image-clip.json` (oynatıcılarda resmin gösterilen kısmı). `CAD-31`
+  çizimler arası alışveriş ([ADR 0193](docs/adr/0193-drawing-exchange.md)) tek parçada bitti (7 Ekim; ikonlar önerilen seçenekler):
+  kurallar belge düzeyinde, sözleşmenin JSON'u üzerinde `kentos_domain::exchange` ve `model/exchange.ts` (bağımsız başvuru
+  `exchange_cases.py`, ortak `fixtures/exchange/v1`); masaüstü `drawing_exchange.rs` (`NewLayer`'ın `snap`'i), web
+  `app/drawingExchange.ts`, `ui/io/TakeFromDialog.ts`; ortak izler `take-from.json`, `block-insert-file.json` (web'in oynatıcısı dosya
+  okuyan komutun aracını bekler). Sıradaki `CAD-32` hizala ve dağıt.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

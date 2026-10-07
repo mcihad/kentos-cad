@@ -242,6 +242,16 @@
   color: var(--c-text-3);
   font-size: var(--fs-xs);
 }
+/* Başka çizimden al (docs/adr/0193 §2): the same names' choice under the list. */
+.take-same {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+
 
 /* Katman listesi (docs/adr/0177 §6): the rows as the file and the clipboard get them. */
 .layer-list {

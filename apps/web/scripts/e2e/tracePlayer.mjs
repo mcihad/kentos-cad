@@ -964,6 +964,9 @@ export async function play(t, { onShot } = {}) {
     if (!step.expect) continue;
     // A window opens once its module has loaded (CLAUDE.md §20) and closes at once: the step waits for it.
     if ('dialog' in step.expect) await b.waitFor(`${TOP_TITLE} === ${JSON.stringify(step.expect.dialog)}`, 8000).catch(() => {});
+    // A command that reads a file first starts its tool once the file is read (Dosyadan blok ekle, docs/adr/0193): the
+    // step waits for it.
+    if (step.run && 'tool' in step.expect) await b.waitFor(`window.kentos.tools.activeId.value === ${JSON.stringify(step.expect.tool)}`, 8000).catch(() => {});
     const bad = compare(step.expect, await observe(mark), t);
     if (bad.length) problems.push(`${label}: ${bad.join('; ')}`);
   }

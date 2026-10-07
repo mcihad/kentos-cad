@@ -33,6 +33,9 @@ pub struct NewLayer {
     pub visible: bool,
     pub locked: bool,
     pub style: LayerStyle,
+    /// A layer's own snapping (docs/adr/0163 §4), kept by the node it makes
+    /// (Başka çizimden al's layers, docs/adr/0193 §2); a group keeps none.
+    pub snap: Option<LayerSnap>,
 }
 
 impl NewLayer {
@@ -45,6 +48,7 @@ impl NewLayer {
             visible: true,
             locked: false,
             style: default_style(),
+            snap: None,
         }
     }
 
@@ -373,9 +377,9 @@ impl LayerTree {
             visible: new.visible,
             locked: new.locked,
             expanded: true,
+            snap: new.snap.filter(|_| new.kind == LayerNodeType::Layer),
             style: new.style,
             children: Vec::new(),
-            snap: None,
         }
     }
 

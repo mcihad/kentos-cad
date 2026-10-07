@@ -1,0 +1,22 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "block-insert-file",
+  "title": "Dosyadan blok ekle: “altyapi-projesi.kcad”ın nesneleri (resim alınmaz) iç bloklarıyla tek blok olur, adı dosyanın adı, taban noktası nesnelerin sol alt köşesi; nesnelerin olmayan katmanları yollarıyla aynı adımda açılır; Blok ekle bu blokla başlar, yerleştirme kendi adımıdır; iki Ctrl+Z hepsini geri alır",
+  "source": "docs/adr/0193 §3",
+  "covers": ["CAD-31"],
+  "document": "exchange.kcad",
+  "openFile": "altyapi-projesi.kcad",
+  "view": { "center": [487012, 4419995], "metresPerPixel": 0.16 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "clickTolerance": 0.16,
+  "steps": [
+    { "run": "block.insertFile", "note": "Dosya sorulur, iz altyapi-projesi.kcad'i verir.", "expect": { "tool": "blockInsert", "entities": 4, "layers": ["Çizim", "Kadastro", "Kadastro / Parsel", "Yapı", "Altyapı", "Altyapı / Su hattı", "Altyapı / Kanalizasyon", "Aydınlatma"], "prompt": "Blok ekle: “altyapi-projesi” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]", "logged": ["“altyapi-projesi.kcad” blok oldu: “altyapi-projesi”, 8 nesne, 3 iç blok, 4 yeni katman; 1 resim bloğa konamadığı için alınmadı. Yerleştirme noktasına tıklayın."] } },
+    { "move": [8, -12], "note": "Önizleme: imleçte bloğun hayaleti, taban noktası sol alt köşe." },
+    { "shot": "dosyadan-blok", "note": "Dosyadan blok ekle: dosyanın çizimi imleçte" },
+    { "click": [8, -12], "note": "Yerleştirme.", "expect": { "tool": "blockInsert", "entities": 5, "newest": { "kind": "insert", "points": [[8, -12], [9, -12], [8, -11]] } } },
+    { "key": "Enter", "note": "Enter bitirir.", "expect": { "tool": "select", "entities": 5 } },
+    { "key": "Ctrl+Z", "note": "Yerleştirme geri alınır.", "expect": { "entities": 4, "layers": ["Çizim", "Kadastro", "Kadastro / Parsel", "Yapı", "Altyapı", "Altyapı / Su hattı", "Altyapı / Kanalizasyon", "Aydınlatma"] } },
+    { "key": "Ctrl+Z", "note": "Blok tanımları ve açılan katmanlar tek adımda.", "expect": { "canUndo": false, "layers": ["Çizim", "Kadastro", "Kadastro / Parsel", "Yapı"] } }
+  ]
+}

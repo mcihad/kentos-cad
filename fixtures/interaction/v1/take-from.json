@@ -1,0 +1,20 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "take-from",
+  "title": "Başka çizimden al: “altyapi-projesi.kcad”ın katmanları, blokları, yazı ve ölçü stilleri, kitaplığı ve katman durumları bölüm bölüm işaretli, bu çizimde aynı adlı olanlar belirtilir, proje ayarları işaretsiz; Kroki'nin işareti kaldırılır, Değiştir'le Parsel'in stili ve Direk'in tanımı alınır; yeni katmanlar ve bloklar tek adımda geri alınır, stiller ayardır",
+  "source": "docs/adr/0193 §2",
+  "covers": ["CAD-31"],
+  "document": "exchange.kcad",
+  "openFile": "altyapi-projesi.kcad",
+  "view": { "center": [486988, 4419998], "metresPerPixel": 0.1 },
+  "clickTolerance": 0.2,
+  "steps": [
+    { "run": "file.takeFrom", "note": "Dosya sorulur, iz altyapi-projesi.kcad'i verir.", "expect": { "dialog": "Başka çizimden al" } },
+    { "shot": "al-pencere", "note": "Başka çizimden al: bölümler, işaretli satırlar, “bu çizimde var”, Aynı adlı olanlar" },
+    { "dialog": "Başka çizimden al", "check": { "Kroki": false }, "press": "Değiştir", "note": "Kroki alınmaz; aynı adlı olanlar değiştirilir." },
+    { "dialog": "Başka çizimden al", "press": "Al", "note": "Yeni katmanlar ebeveynlerinin sonuna; Parsel öbür çizimin stiliyle; Direk Lamba'lı tanımıyla.", "expect": { "dialog": null, "canUndo": true, "layers": ["Çizim", "Kadastro", "Kadastro / Parsel", "Yapı", "Altyapı", "Altyapı / Su hattı", "Altyapı / Kanalizasyon", "Aydınlatma"], "logged": ["“altyapi-projesi.kcad” çiziminden alındı: 4 katman ya da grup, 2 blok, 1 blok yeniden tanımlandı (tek adımda geri alınır); stiller, kitaplık, katman durumları ayar olarak (geri alma adımı değil)."] } },
+    { "shot": "al-sonuc", "note": "Alınan katmanlar Katmanlar panelinde; Direk yeni tanımıyla" },
+    { "key": "Ctrl+Z", "note": "Katmanlar, bloklar ve Parsel'in stili tek adımda döner.", "expect": { "canUndo": false, "layers": ["Çizim", "Kadastro", "Kadastro / Parsel", "Yapı"] } }
+  ]
+}

@@ -210,6 +210,8 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
       // Resim (docs/adr/0192 §5): AutoCAD's Insert › Reference.
       { menu: 'draw', sections: ['Resim'] },
       { pick: 'İçe aktar', icon: 'import', commands: IMPORTS },
+      // Çizimler arası alışveriş (docs/adr/0193): AutoCAD's DesignCenter and WBLOCK.
+      { pick: 'Alışveriş', icon: 'takeFrom', commands: ['file.takeFrom', 'file.saveSelection'] },
       { pick: 'Metin', icon: 'textFile', commands: ['tool.placeTextFile'] },
     ],
     // Blok ekle leads its panel, as AutoCAD's Insert.

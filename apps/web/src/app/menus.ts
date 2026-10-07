@@ -81,6 +81,9 @@ export const MAIN_MENU: TopMenu[] = [
       sec('Dosya alışverişi'),
       { label: 'İçe aktar', icon: 'import', items: ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', '-', 'file.import.ncn', 'file.import.gnss'] },
       { label: 'Dışa aktar', icon: 'export', items: ['file.export.dxf', 'file.export.geojson', 'file.export.pdf', '-', 'file.export.ncn'] },
+      // Çizimler arası alışveriş (docs/adr/0193).
+      'file.takeFrom',
+      'file.saveSelection',
       sec('Çıktı'),
       'file.print',
       sec('Ayarlar'),
@@ -163,7 +166,7 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'draw',
     label: 'Çizim',
-    items: ['@tools:draw', '@tools:annotate', '@tools:block', sec('Blok'), 'block.panel', 'block.attributes', 'block.purge', sec('Tablo'), 'table.insert', 'table.edit', 'table.update'],
+    items: ['@tools:draw', '@tools:annotate', '@tools:block', sec('Blok'), 'block.panel', 'block.insertFile', 'block.attributes', 'block.purge', sec('Tablo'), 'table.insert', 'table.edit', 'table.update'],
   },
   {
     id: 'modify',

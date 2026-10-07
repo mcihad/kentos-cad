@@ -258,6 +258,11 @@ pub const PORTED: &[&str] = &[
     // docs/adr/0192: Resim ekle and Resmi kırp.
     "tool.imageInsert",
     "tool.imageClip",
+    // docs/adr/0193: Seçilenleri dosyaya kaydet, Başka çizimden al and Dosyadan blok ekle
+    // (drawing_exchange.rs).
+    "file.saveSelection",
+    "file.takeFrom",
+    "block.insertFile",
     // Drawing and editing tools, phase 1 (docs/adr/0140): every corner at once, Parçala
     // with its three methods, direction, thinning, cleaning and property copying.
     "tool.filletAll",

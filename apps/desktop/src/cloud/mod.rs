@@ -943,6 +943,7 @@ impl App {
             }
             Some(Dialog::AnnotationStyles) => self.annotation_styles = None,
             Some(Dialog::LayerPurge) => self.layer_purge = None,
+            Some(Dialog::TakeFrom) => self.take_from = None,
             Some(Dialog::LayerList) => self.layer_list = None,
             Some(Dialog::DataCompare) => self.data_compare = None,
             Some(Dialog::Cogo) => self.cogo = None,

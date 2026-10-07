@@ -4,7 +4,7 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 361 | 349 | 0 | 12 |
+| Komutlar | 364 | 352 | 0 | 12 |
 | Araçlar | 112 | 110 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
@@ -12,7 +12,7 @@
 | Ayarlar | 86 | 86 | 0 | 0 |
 | Tarayıcı depoları | 11 | 11 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 467 | 467 | 0 | 0 |
-| Pencereler ve paneller | 108 | 108 | 0 | 0 |
+| Pencereler ve paneller | 109 | 109 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -49,7 +49,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 289 | 0 | 58 | 12 | 2 | 361 |
+| Komutlar | 292 | 0 | 58 | 12 | 2 | 364 |
 | Araçlar | 110 | 0 | 0 | 2 | 0 | 112 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -57,7 +57,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 82 | 0 | 3 | 0 | 1 | 86 |
 | Tarayıcı depoları | 9 | 0 | 0 | 0 | 2 | 11 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 467 | 0 | 0 | 0 | 0 | 467 |
-| Pencereler ve paneller | 89 | 2 | 16 | 0 | 1 | 108 |
+| Pencereler ve paneller | 89 | 2 | 17 | 0 | 1 | 109 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -76,7 +76,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 361; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 364; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -181,8 +181,9 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (18 / 108)
+#### Pencereler ve paneller (19 / 109)
 
+- `apps/web/src/ui/io/TakeFromDialog.ts#openTakeFrom` openTakeFrom
 - `apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog` openProjectTypeDialog
 - `apps/web/src/ui/sheet/ExportDialog.ts#openExportDialog` openExportDialog
 - `apps/web/src/ui/sheet/ExpressionDialog.ts#openExpressionDialog` openExpressionDialog
@@ -204,4 +205,4 @@ Yok.
 
 ## Test başvurusu
 
-125 / 361 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+126 / 364 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

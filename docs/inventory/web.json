@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 361,
-      "implemented": 349,
+      "total": 364,
+      "implemented": 352,
       "partial": 0,
       "pending": 12
     },
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 108,
-      "implemented": 108,
+      "total": 109,
+      "implemented": 109,
       "partial": 0,
       "pending": 0
     },
@@ -101,12 +101,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 125,
-    "commandsOnDesktop": 289,
+    "commandsWithoutTests": 126,
+    "commandsOnDesktop": 292,
     "desktop": {
       "commands": {
-        "total": 361,
-        "implemented": 289,
+        "total": 364,
+        "implemented": 292,
         "partial": 0,
         "pending": 12,
         "none": 58,
@@ -169,11 +169,11 @@
         "n/a": 0
       },
       "screens": {
-        "total": 108,
+        "total": 109,
         "implemented": 89,
         "partial": 2,
         "pending": 0,
-        "none": 16,
+        "none": 17,
         "n/a": 1
       }
     },
@@ -270,6 +270,39 @@
       "tests": [
         "fixtures/interaction/v1/block-attribute-define.json",
         "fixtures/interaction/v1/usage-block-attribute-define.json"
+      ]
+    },
+    {
+      "id": "block.insertFile",
+      "title": "Dosyadan blok ekle…",
+      "short": "Dosyadan blok",
+      "category": "Blok",
+      "icon": "blockInsertFile",
+      "description": "Bir .kcad dosyasının nesnelerini tek blok yapar (katmanları, blokları ve stilleriyle) ve Blok ekle ile yerleştirir; taban noktası nesnelerin sol alt köşesidir.",
+      "aliases": [
+        "DOSYADANBLOK",
+        "CIZIMIBLOKEKLE",
+        "INSERTFILE"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Blok"
+      ],
+      "ribbon": [
+        "CAD › Ekle › Blok",
+        "CBS › Veri › Blok"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/block-insert-file.json"
       ]
     },
     {
@@ -3615,6 +3648,40 @@
       "note": "`.kcad` v1 JSON yazar; binary v2 henüz yok (ADR 0011)."
     },
     {
+      "id": "file.saveSelection",
+      "title": "Seçilenleri dosyaya kaydet…",
+      "short": "Seçilenleri kaydet",
+      "category": "Dosya",
+      "icon": "saveSelection",
+      "description": "Seçili nesneleri, kullandıkları katmanlar, bloklar, kitaplık öğeleri ve projenin ayarlarıyla yeni bir .kcad dosyasına yazar; açık çizim değişmez.",
+      "aliases": [
+        "SECILENLERIKAYDET",
+        "WBLOCK",
+        "BLOKYAZ",
+        "SECIMKAYDET"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Dosya › Dosya alışverişi"
+      ],
+      "ribbon": [
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Ekle › Alışveriş",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "file.settings",
       "title": "Proje ayarları…",
       "category": "Dosya",
@@ -3680,6 +3747,42 @@
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs",
         "apps/web/scripts/e2e/visual.mjs"
+      ]
+    },
+    {
+      "id": "file.takeFrom",
+      "title": "Başka çizimden al…",
+      "short": "Başka çizimden al",
+      "category": "Dosya",
+      "icon": "takeFrom",
+      "description": "Bir .kcad dosyasının katmanlarını, bloklarını, yazı ve ölçü stillerini, kitaplık öğelerini, katman durumlarını ve proje ayarlarını bu çizime alır; aynı adlı olanlar atlanır ya da değiştirilir.",
+      "aliases": [
+        "BASKACIZIMDENAL",
+        "ADCENTER",
+        "OZELLIKEKLE",
+        "CIZIMDENAL"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Dosya › Dosya alışverişi"
+      ],
+      "ribbon": [
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Ekle › Alışveriş",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/take-from.json"
       ]
     },
     {
@@ -23417,6 +23520,17 @@
       "note": "Çizim açılırken: dosya, proje (ad, nesne, katman), aşama ve ilerleme; Vazgeç açık çizime dokunmaz (ADR 0030). Masaüstünde opening.rs."
     },
     {
+      "id": "apps/web/src/ui/io/TakeFromDialog.ts#openTakeFrom",
+      "name": "openTakeFrom",
+      "role": "window",
+      "source": "apps/web/src/ui/io/TakeFromDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
       "id": "apps/web/src/ui/layers/LayerListDialog.ts#openLayerList",
       "name": "openLayerList",
       "role": "window",
@@ -24115,7 +24229,9 @@
                     ]
                   }
                 ]
-              }
+              },
+              "file.takeFrom",
+              "file.saveSelection"
             ]
           },
           {
@@ -24395,6 +24511,7 @@
               "tool.blockDefine",
               "tool.blockInsert",
               "block.panel",
+              "block.insertFile",
               "block.attributes",
               "block.purge"
             ]
@@ -24844,7 +24961,7 @@
             "items": [
               {
                 "menu": "İçe aktar",
-                "size": "large",
+                "size": "small",
                 "blocks": [
                   {
                     "label": "",
@@ -24866,7 +24983,7 @@
               },
               {
                 "menu": "Dışa aktar",
-                "size": "large",
+                "size": "small",
                 "blocks": [
                   {
                     "label": "",
@@ -24883,6 +25000,14 @@
                     ]
                   }
                 ]
+              },
+              {
+                "command": "file.takeFrom",
+                "size": "small"
+              },
+              {
+                "command": "file.saveSelection",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -25538,7 +25663,7 @@
             "items": [
               {
                 "menu": "İçe aktar",
-                "size": "large",
+                "size": "small",
                 "blocks": [
                   {
                     "label": "",
@@ -25560,7 +25685,7 @@
               },
               {
                 "menu": "Dışa aktar",
-                "size": "large",
+                "size": "small",
                 "blocks": [
                   {
                     "label": "",
@@ -25577,6 +25702,14 @@
                     ]
                   }
                 ]
+              },
+              {
+                "command": "file.takeFrom",
+                "size": "small"
+              },
+              {
+                "command": "file.saveSelection",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -25644,6 +25777,10 @@
               },
               {
                 "command": "block.panel",
+                "size": "small"
+              },
+              {
+                "command": "block.insertFile",
                 "size": "small"
               },
               {
@@ -27023,7 +27160,7 @@
               "items": [
                 {
                   "menu": "İçe aktar",
-                  "size": "large",
+                  "size": "small",
                   "blocks": [
                     {
                       "label": "",
@@ -27045,7 +27182,7 @@
                 },
                 {
                   "menu": "Dışa aktar",
-                  "size": "large",
+                  "size": "small",
                   "blocks": [
                     {
                       "label": "",
@@ -27062,6 +27199,14 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "command": "file.takeFrom",
+                  "size": "small"
+                },
+                {
+                  "command": "file.saveSelection",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -27780,6 +27925,10 @@
                   "size": "small"
                 },
                 {
+                  "command": "block.insertFile",
+                  "size": "small"
+                },
+                {
                   "command": "block.attributes",
                   "size": "small"
                 },
@@ -27834,6 +27983,22 @@
                 {
                   "command": "file.import.gnss",
                   "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Alışveriş",
+              "icon": "takeFrom",
+              "items": [
+                {
+                  "command": "file.takeFrom",
+                  "size": "large"
+                },
+                {
+                  "command": "file.saveSelection",
+                  "size": "large"
                 }
               ],
               "overflow": [],
@@ -29227,7 +29392,7 @@
               "items": [
                 {
                   "menu": "İçe aktar",
-                  "size": "large",
+                  "size": "small",
                   "blocks": [
                     {
                       "label": "",
@@ -29249,7 +29414,7 @@
                 },
                 {
                   "menu": "Dışa aktar",
-                  "size": "large",
+                  "size": "small",
                   "blocks": [
                     {
                       "label": "",
@@ -29266,6 +29431,14 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "command": "file.takeFrom",
+                  "size": "small"
+                },
+                {
+                  "command": "file.saveSelection",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -29921,7 +30094,7 @@
               "items": [
                 {
                   "menu": "İçe aktar",
-                  "size": "large",
+                  "size": "small",
                   "blocks": [
                     {
                       "label": "",
@@ -29943,7 +30116,7 @@
                 },
                 {
                   "menu": "Dışa aktar",
-                  "size": "large",
+                  "size": "small",
                   "blocks": [
                     {
                       "label": "",
@@ -29960,6 +30133,14 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "command": "file.takeFrom",
+                  "size": "small"
+                },
+                {
+                  "command": "file.saveSelection",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -30027,6 +30208,10 @@
                 },
                 {
                   "command": "block.panel",
+                  "size": "small"
+                },
+                {
+                  "command": "block.insertFile",
                   "size": "small"
                 },
                 {
@@ -31374,6 +31559,9 @@
     "textColor": "<path d=\"M5.5 13 10 3l4.5 10M7.3 9.2h5.4\"/><rect x=\"3\" y=\"15\" width=\"14\" height=\"2.6\" rx=\".6\" fill=\"currentColor\" stroke=\"none\"/>",
     "textSymbol": "<path d=\"M3.8 16.5h3.9v-1.7a6 6 0 1 1 4.6 0v1.7h3.9\"/>",
     "textFile": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\"/><path d=\"M7.5 9.5h5M10 9.5v5\"/>",
+    "saveSelection": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><rect x=\"9.6\" y=\"8.6\" width=\"6\" height=\"6.2\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"1\"/><path d=\"m11 13.4 3.2-3.4\" stroke-width=\"1.1\"/><rect x=\"9.5\" y=\"11.9\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "takeFrom": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"m12.6 8.6 3 1.6-3 1.6-3-1.6z\" stroke-width=\"1\"/><path d=\"m9.6 12.6 3 1.6 3-1.6\" stroke-width=\"1\"/>",
+    "blockInsertFile": "<path d=\"M8.5 2.5h5.5l2.5 2.5v7.5h-8z\"/><path d=\"M14 2.5V5h2.5\"/><circle cx=\"12.5\" cy=\"8.6\" r=\"1.8\"/><path d=\"M3.5 16.5 8.5 11.5\"/><rect x=\"2\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "imageInsert": "<rect x=\"3\" y=\"4\" width=\"14\" height=\"11\" rx=\".8\"/><path d=\"m5.6 12.6 3-3.4 2.3 2.2 1.6-1.6 2.1 2.8\" stroke-width=\"1.2\"/><circle cx=\"13.2\" cy=\"7.2\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"1.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "imageClip": "<path d=\"M5.5 2.5v12h12\"/><path d=\"M2.5 5.5h12v12\"/><path d=\"m7.4 12 2.1-2.5 1.5 1.5 1.1-1.1 1.4 2.1\" stroke-width=\"1.1\"/>",
     "labelsToText": "<path d=\"M2.5 3.5h6.4l2.6 2.7-2.6 2.7H2.5z\"/><circle cx=\"4.7\" cy=\"6.2\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M6 10.5v4h4.3m-1.8-1.8 1.8 1.8-1.8 1.8\"/><path d=\"M12.3 10.8h5.2M14.9 10.8v6.7\"/>",

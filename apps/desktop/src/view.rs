@@ -1478,6 +1478,7 @@ impl App {
             Asking::LayerStates => self.layer_states_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::LayerPurge => self.layer_purge_view(),
+            Asking::TakeFrom => self.take_from_view(),
             Asking::LayerList => self.layer_list_view(),
             Asking::DataCompare => self.data_compare_view(),
             Asking::Cogo => self.cogo_view(),

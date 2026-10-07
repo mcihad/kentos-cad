@@ -91,6 +91,11 @@ export const ICONS = {
   textSymbol: '<path d="M3.8 16.5h3.9v-1.7a6 6 0 1 1 4.6 0v1.7h3.9"/>',
   // Metin dosyası yerleştir (docs/adr/0145 §6): a page with its corner turned, a T on it.
   textFile: '<path d="M5 2.5h7l3 3v12H5z"/><path d="M12 2.5v3h3"/><path d="M7.5 9.5h5M10 9.5v5"/>',
+  // Çizimler arası alışveriş (docs/adr/0193): the selection written out (a dashed box round a gripped object on the
+  // page), another drawing's layers brought in, a drawing file placed as a block (Blok ekle's square a page).
+  saveSelection: fileOut(`<rect x="9.6" y="8.6" width="6" height="6.2" stroke-dasharray="1.6 1.2" stroke-width="1"/><path d="m11 13.4 3.2-3.4" stroke-width="1.1"/>${grip(11, 13.4)}`),
+  takeFrom: fileIn('<path d="m12.6 8.6 3 1.6-3 1.6-3-1.6z" stroke-width="1"/><path d="m9.6 12.6 3 1.6 3-1.6" stroke-width="1"/>'),
+  blockInsertFile: `<path d="M8.5 2.5h5.5l2.5 2.5v7.5h-8z"/><path d="M14 2.5V5h2.5"/><circle cx="12.5" cy="8.6" r="1.8"/><path d="M3.5 16.5 8.5 11.5"/>${grip(3.5, 16.5)}`,
   // Resim ekle (docs/adr/0192 §5): a picture, its mountain and sun, the two clicks at its lower corners.
   imageInsert: `<rect x="3" y="4" width="14" height="11" rx=".8"/><path d="m5.6 12.6 3-3.4 2.3 2.2 1.6-1.6 2.1 2.8" stroke-width="1.2"/>${dot(13.2, 7.2, 1.1)}${grip(3, 15)}${grip(17, 15)}`,
   // Resmi kırp: the crop marks around a picture's mountain.

@@ -1,0 +1,2886 @@
+{
+ "format": "kentos.exchange-cases",
+ "version": 1,
+ "source": "scripts/fixtures/exchange_cases.py (docs/adr/0193)",
+ "drawings": {
+  "ours": {
+   "format": "kentos.document",
+   "version": 2,
+   "name": "Hedef",
+   "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 500.0,
+    "workspace": "cad",
+    "drawingFont": "barlow",
+    "textStyles": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5101",
+      "name": "ada NO ",
+      "font": "barlow",
+      "height": 2.5
+     }
+    ],
+    "layerStates": [
+     {
+      "id": "durum-k",
+      "name": "Eski",
+      "nodes": [
+       {
+        "node": "h-parsel",
+        "visible": false
+       }
+      ]
+     }
+    ]
+   },
+   "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+   },
+   "layers": [
+    {
+     "id": "0",
+     "name": "0",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "parsel",
+     "name": "Eski parsel",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "#3E63DD",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "h-kad",
+     "name": "kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "h-parsel",
+       "name": "PARSEL",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+       },
+       "children": []
+      }
+     ]
+    }
+   ],
+   "activeLayer": "0",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "0",
+     "attrs": {},
+     "a": {
+      "x": 487100.0,
+      "y": 4420000.0
+     },
+     "b": {
+      "x": 487110.0,
+      "y": 4420000.0
+     }
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "0",
+     "attrs": {},
+     "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001",
+     "p": {
+      "x": 487100.0,
+      "y": 4420010.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    }
+   ],
+   "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002"
+   ],
+   "styles": {
+    "items": [
+     {
+      "kind": "symbol",
+      "id": "sym-agac",
+      "name": "Ağaç (bizim)",
+      "path": [
+       "Semboller"
+      ],
+      "geometry": "marker",
+      "layers": [
+       {
+        "type": "shape",
+        "shape": "star"
+       }
+      ]
+     }
+    ],
+    "categories": []
+   },
+   "blocks": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001",
+     "name": "DİREK",
+     "base": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "entities": [
+      {
+       "kind": "point",
+       "id": 1,
+       "layerId": "0",
+       "attrs": {},
+       "p": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  "theirs": {
+   "format": "kentos.document",
+   "version": 2,
+   "name": "Kaynak",
+   "settings": {
+    "srid": 5256,
+    "lengthDecimals": 2,
+    "areaDecimals": 1,
+    "areaUnit": "donum",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis",
+    "drawingFont": "arimo",
+    "textStyles": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101",
+      "name": "Ada no",
+      "font": "arimo",
+      "bold": true,
+      "height": 3.5
+     },
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102",
+      "name": "Yol adı",
+      "font": "overpass",
+      "italic": true,
+      "height": 2.5
+     }
+    ],
+    "dimensionStyles": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3201",
+      "name": "Kadastro",
+      "height": 2.5,
+      "arrow": "none"
+     }
+    ],
+    "layerStates": [
+     {
+      "id": "durum-k",
+      "name": "Baskı",
+      "nodes": [
+       {
+        "node": "k-kadastro",
+        "visible": true
+       },
+       {
+        "node": "parsel",
+        "visible": true,
+        "locked": true
+       },
+       {
+        "node": "k-yol",
+        "visible": false
+       }
+      ]
+     }
+    ]
+   },
+   "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+   },
+   "layers": [
+    {
+     "id": "0",
+     "name": "0",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "k-kadastro",
+     "name": "Kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "parsel",
+       "name": "Parsel",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+       },
+       "children": []
+      },
+      {
+       "id": "k-bina",
+       "name": "Bina",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#8C9AAA",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+       },
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "k-yol",
+     "name": "Yol",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "#30A46C",
+      "lineType": "dashed",
+      "lineWeight": 0.35
+     },
+     "children": []
+    }
+   ],
+   "activeLayer": "k-yol",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "parsel",
+     "attrs": {
+      "Ada": "101"
+     },
+     "symbol": "sym-parsel",
+     "pts": [
+      {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487040.0,
+       "y": 4420000.0
+      },
+      {
+       "x": 487040.0,
+       "y": 4420030.0
+      },
+      {
+       "x": 487000.0,
+       "y": 4420030.0
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "id": 2,
+     "layerId": "k-bina",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 487010.0,
+       "y": 4420010.0
+      },
+      {
+       "x": 487020.0,
+       "y": 4420010.0
+      },
+      {
+       "x": 487020.0,
+       "y": 4420020.0
+      },
+      {
+       "x": 487010.0,
+       "y": 4420020.0
+      }
+     ]
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "k-yol",
+     "attrs": {},
+     "a": {
+      "x": 486990.0,
+      "y": 4419995.0
+     },
+     "b": {
+      "x": 487060.0,
+      "y": 4419995.0
+     }
+    },
+    {
+     "kind": "text",
+     "id": 4,
+     "layerId": "parsel",
+     "attrs": {},
+     "p": {
+      "x": 487025.0,
+      "y": 4420022.0
+     },
+     "text": "101",
+     "height": 2.0,
+     "rotation": 0.0,
+     "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101",
+     "labelOf": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+     "labelScale": 1000.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "k-yol",
+     "attrs": {},
+     "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002",
+     "p": {
+      "x": 487030.0,
+      "y": 4420005.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "hatch",
+     "id": 6,
+     "layerId": "k-bina",
+     "attrs": {},
+     "ring": [
+      {
+       "x": 487010.0,
+       "y": 4420010.0
+      },
+      {
+       "x": 487020.0,
+       "y": 4420010.0
+      },
+      {
+       "x": 487020.0,
+       "y": 4420020.0
+      },
+      {
+       "x": 487010.0,
+       "y": 4420020.0
+      }
+     ],
+     "pattern": {
+      "type": "solid",
+      "angle": 0.0,
+      "spacing": 1.0
+     },
+     "assoc": {
+      "outer": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2002",
+      "seed": {
+       "x": 487015.0,
+       "y": 4420015.0
+      }
+     }
+    },
+    {
+     "kind": "image",
+     "id": 7,
+     "layerId": "parsel",
+     "attrs": {},
+     "p": {
+      "x": 487022.0,
+      "y": 4420002.0
+     },
+     "width": 8.0,
+     "height": 6.0,
+     "rotation": 0.0,
+     "asset": "img-k-foto"
+    },
+    {
+     "kind": "table",
+     "id": 8,
+     "layerId": "parsel",
+     "attrs": {},
+     "p": {
+      "x": 487002.0,
+      "y": 4420028.0
+     },
+     "rotation": 0.0,
+     "height": 1.25,
+     "rows": [
+      2.5
+     ],
+     "columns": [
+      8.0
+     ],
+     "cells": [
+      [
+       "A"
+      ]
+     ],
+     "source": {
+      "kind": "areas",
+      "objects": [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2002"
+      ]
+     }
+    },
+    {
+     "kind": "dimension",
+     "id": 9,
+     "layerId": "parsel",
+     "attrs": {},
+     "a": {
+      "x": 487005.0,
+      "y": 4420025.0
+     },
+     "b": {
+      "x": 487015.0,
+      "y": 4420025.0
+     },
+     "offset": 1.0,
+     "height": 1.0,
+     "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3201"
+    },
+    {
+     "kind": "circle",
+     "id": 10,
+     "layerId": "0",
+     "attrs": {},
+     "c": {
+      "x": 487050.0,
+      "y": 4420020.0
+     },
+     "r": 4.0
+    }
+   ],
+   "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2002",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2003",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2004",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2005",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2006",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2007",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2008",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2009",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d200a"
+   ],
+   "styles": {
+    "items": [
+     {
+      "kind": "symbol",
+      "id": "sym-parsel",
+      "name": "Parsel dolgusu",
+      "path": [
+       "Semboller"
+      ],
+      "geometry": "fill",
+      "layers": [
+       {
+        "type": "imageFill",
+        "asset": "img-k-doku"
+       }
+      ]
+     },
+     {
+      "kind": "symbol",
+      "id": "sym-agac",
+      "name": "Ağaç",
+      "path": [
+       "Semboller"
+      ],
+      "geometry": "marker",
+      "layers": [
+       {
+        "type": "shape",
+        "shape": "circle"
+       }
+      ]
+     },
+     {
+      "kind": "asset",
+      "id": "img-k-doku",
+      "name": "Doku",
+      "path": [
+       "Görüntülerim"
+      ],
+      "format": "png",
+      "data": "data:image/png;base64,iVBORw0KGgo=",
+      "width": 4,
+      "height": 4
+     },
+     {
+      "kind": "asset",
+      "id": "img-k-foto",
+      "name": "Foto",
+      "path": [
+       "Resimler"
+      ],
+      "format": "png",
+      "data": "data:image/png;base64,iVBORw0KGgoAAA=",
+      "width": 8,
+      "height": 6
+     },
+     {
+      "kind": "template",
+      "id": "tpl-k",
+      "name": "Ağaç şablonu",
+      "path": [
+       "Şablonlar"
+      ],
+      "tool": "point",
+      "symbol": "sym-agac"
+     }
+    ],
+    "categories": []
+   },
+   "blocks": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001",
+     "name": "Direk",
+     "base": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "entities": [
+      {
+       "kind": "line",
+       "id": 1,
+       "layerId": "0",
+       "attrs": {},
+       "a": {
+        "x": 0.0,
+        "y": 0.0
+       },
+       "b": {
+        "x": 0.0,
+        "y": 3.0
+       }
+      },
+      {
+       "kind": "circle",
+       "id": 2,
+       "layerId": "0",
+       "attrs": {},
+       "c": {
+        "x": 0.0,
+        "y": 3.0
+       },
+       "r": 0.5
+      }
+     ]
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002",
+     "name": "Lamba",
+     "base": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "entities": [
+      {
+       "kind": "insert",
+       "id": 1,
+       "layerId": "k-yol",
+       "attrs": {},
+       "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001",
+       "p": {
+        "x": 0.0,
+        "y": 0.0
+       },
+       "scale": 1.0,
+       "rotation": 0.0
+      },
+      {
+       "kind": "text",
+       "id": 2,
+       "layerId": "k-yol",
+       "attrs": {},
+       "p": {
+        "x": 1.0,
+        "y": 3.0
+       },
+       "text": "L",
+       "height": 0.5,
+       "rotation": 0.0,
+       "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102"
+      }
+     ]
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4003",
+     "name": "Ağaç",
+     "base": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "entities": [
+      {
+       "kind": "circle",
+       "id": 1,
+       "layerId": "k-bina",
+       "attrs": {},
+       "symbol": "sym-agac",
+       "c": {
+        "x": 0.0,
+        "y": 0.0
+       },
+       "r": 1.0
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "selections": [
+  {
+   "name": "parsel, bağlı yazısı, lamba (iç içe Direk), ilişkisi kaydedilmeyen nesneye taramanın, tablo ve resim",
+   "from": "theirs",
+   "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2004",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2005",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2006",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2007",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2008"
+   ],
+   "expect": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Seçim",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 2,
+     "areaDecimals": 1,
+     "areaUnit": "donum",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "gis",
+     "drawingFont": "arimo",
+     "textStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101",
+       "name": "Ada no",
+       "font": "arimo",
+       "bold": true,
+       "height": 3.5
+      },
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102",
+       "name": "Yol adı",
+       "font": "overpass",
+       "italic": true,
+       "height": 2.5
+      }
+     ],
+     "dimensionStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3201",
+       "name": "Kadastro",
+       "height": 2.5,
+       "arrow": "none"
+      }
+     ],
+     "layerStates": [
+      {
+       "id": "durum-k",
+       "name": "Baskı",
+       "nodes": [
+        {
+         "node": "k-kadastro",
+         "visible": true
+        },
+        {
+         "node": "parsel",
+         "visible": true,
+         "locked": true
+        },
+        {
+         "node": "k-yol",
+         "visible": false
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "k-kadastro",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#E5484D",
+         "lineType": "continuous",
+         "lineWeight": 0.5
+        },
+        "children": []
+       },
+       {
+        "id": "k-bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#8C9AAA",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "k-yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "dashed",
+       "lineWeight": 0.35
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "k-yol",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "Ada": "101"
+      },
+      "symbol": "sym-parsel",
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {},
+      "p": {
+       "x": 487025.0,
+       "y": 4420022.0
+      },
+      "text": "101",
+      "height": 2.0,
+      "rotation": 0.0,
+      "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101",
+      "labelOf": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+      "labelScale": 1000.0
+     },
+     {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "k-yol",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002",
+      "p": {
+       "x": 487030.0,
+       "y": 4420005.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "hatch",
+      "id": 4,
+      "layerId": "k-bina",
+      "attrs": {},
+      "ring": [
+       {
+        "x": 487010.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420020.0
+       }
+      ],
+      "pattern": {
+       "type": "solid",
+       "angle": 0.0,
+       "spacing": 1.0
+      }
+     },
+     {
+      "kind": "image",
+      "id": 5,
+      "layerId": "parsel",
+      "attrs": {},
+      "p": {
+       "x": 487022.0,
+       "y": 4420002.0
+      },
+      "width": 8.0,
+      "height": 6.0,
+      "rotation": 0.0,
+      "asset": "img-k-foto"
+     },
+     {
+      "kind": "table",
+      "id": 6,
+      "layerId": "parsel",
+      "attrs": {},
+      "p": {
+       "x": 487002.0,
+       "y": 4420028.0
+      },
+      "rotation": 0.0,
+      "height": 1.25,
+      "rows": [
+       2.5
+      ],
+      "columns": [
+       8.0
+      ],
+      "cells": [
+       [
+        "A"
+       ]
+      ],
+      "source": {
+       "kind": "areas",
+       "objects": [
+        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001"
+       ]
+      }
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2004",
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2005",
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2006",
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2007",
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2008"
+    ],
+    "styles": {
+     "items": [
+      {
+       "kind": "symbol",
+       "id": "sym-parsel",
+       "name": "Parsel dolgusu",
+       "path": [
+        "Semboller"
+       ],
+       "geometry": "fill",
+       "layers": [
+        {
+         "type": "imageFill",
+         "asset": "img-k-doku"
+        }
+       ]
+      },
+      {
+       "kind": "asset",
+       "id": "img-k-doku",
+       "name": "Doku",
+       "path": [
+        "Görüntülerim"
+       ],
+       "format": "png",
+       "data": "data:image/png;base64,iVBORw0KGgo=",
+       "width": 4,
+       "height": 4
+      },
+      {
+       "kind": "asset",
+       "id": "img-k-foto",
+       "name": "Foto",
+       "path": [
+        "Resimler"
+       ],
+       "format": "png",
+       "data": "data:image/png;base64,iVBORw0KGgoAAA=",
+       "width": 8,
+       "height": 6
+      }
+     ],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001",
+      "name": "Direk",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 0.0,
+         "y": 3.0
+        }
+       },
+       {
+        "kind": "circle",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+         "x": 0.0,
+         "y": 3.0
+        },
+        "r": 0.5
+       }
+      ]
+     },
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002",
+      "name": "Lamba",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "insert",
+        "id": 1,
+        "layerId": "k-yol",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "text",
+        "id": 2,
+        "layerId": "k-yol",
+        "attrs": {},
+        "p": {
+         "x": 1.0,
+         "y": 3.0
+        },
+        "text": "L",
+        "height": 0.5,
+        "rotation": 0.0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "yalnız yol çizgisi: tek katman, etkin katman o",
+   "from": "theirs",
+   "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2003"
+   ],
+   "expect": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Seçim",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 2,
+     "areaDecimals": 1,
+     "areaUnit": "donum",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "gis",
+     "drawingFont": "arimo",
+     "textStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101",
+       "name": "Ada no",
+       "font": "arimo",
+       "bold": true,
+       "height": 3.5
+      },
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102",
+       "name": "Yol adı",
+       "font": "overpass",
+       "italic": true,
+       "height": 2.5
+      }
+     ],
+     "dimensionStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3201",
+       "name": "Kadastro",
+       "height": 2.5,
+       "arrow": "none"
+      }
+     ],
+     "layerStates": [
+      {
+       "id": "durum-k",
+       "name": "Baskı",
+       "nodes": [
+        {
+         "node": "k-yol",
+         "visible": false
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "k-yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "dashed",
+       "lineWeight": 0.35
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "k-yol",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "k-yol",
+      "attrs": {},
+      "a": {
+       "x": 486990.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487060.0,
+       "y": 4419995.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "bağlı yazı nesnesiyle, ilişkili tarama nesnesiyle: bağlar kalır",
+   "from": "theirs",
+   "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2002",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2006",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2004"
+   ],
+   "expect": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Seçim",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 2,
+     "areaDecimals": 1,
+     "areaUnit": "donum",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "gis",
+     "drawingFont": "arimo",
+     "textStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101",
+       "name": "Ada no",
+       "font": "arimo",
+       "bold": true,
+       "height": 3.5
+      },
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102",
+       "name": "Yol adı",
+       "font": "overpass",
+       "italic": true,
+       "height": 2.5
+      }
+     ],
+     "dimensionStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3201",
+       "name": "Kadastro",
+       "height": 2.5,
+       "arrow": "none"
+      }
+     ],
+     "layerStates": [
+      {
+       "id": "durum-k",
+       "name": "Baskı",
+       "nodes": [
+        {
+         "node": "k-kadastro",
+         "visible": true
+        },
+        {
+         "node": "parsel",
+         "visible": true,
+         "locked": true
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "k-kadastro",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#E5484D",
+         "lineType": "continuous",
+         "lineWeight": 0.5
+        },
+        "children": []
+       },
+       {
+        "id": "k-bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#8C9AAA",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "Ada": "101"
+      },
+      "symbol": "sym-parsel",
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "k-bina",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487010.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {},
+      "p": {
+       "x": 487025.0,
+       "y": 4420022.0
+      },
+      "text": "101",
+      "height": 2.0,
+      "rotation": 0.0,
+      "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101",
+      "labelOf": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+      "labelScale": 1000.0
+     },
+     {
+      "kind": "hatch",
+      "id": 4,
+      "layerId": "k-bina",
+      "attrs": {},
+      "ring": [
+       {
+        "x": 487010.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420020.0
+       }
+      ],
+      "pattern": {
+       "type": "solid",
+       "angle": 0.0,
+       "spacing": 1.0
+      },
+      "assoc": {
+       "outer": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2002",
+       "seed": {
+        "x": 487015.0,
+        "y": 4420015.0
+       }
+      }
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2002",
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2004",
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2006"
+    ],
+    "styles": {
+     "items": [
+      {
+       "kind": "symbol",
+       "id": "sym-parsel",
+       "name": "Parsel dolgusu",
+       "path": [
+        "Semboller"
+       ],
+       "geometry": "fill",
+       "layers": [
+        {
+         "type": "imageFill",
+         "asset": "img-k-doku"
+        }
+       ]
+      },
+      {
+       "kind": "asset",
+       "id": "img-k-doku",
+       "name": "Doku",
+       "path": [
+        "Görüntülerim"
+       ],
+       "format": "png",
+       "data": "data:image/png;base64,iVBORw0KGgo=",
+       "width": 4,
+       "height": 4
+      }
+     ],
+     "categories": []
+    }
+   }
+  }
+ ],
+ "takes": [
+  {
+   "name": "aynı adlılar atlanır",
+   "into": "ours",
+   "from": "theirs",
+   "picks": {
+    "layers": [
+     "Kadastro / Parsel",
+     "Kadastro / Bina",
+     "Yol"
+    ],
+    "blocks": [
+     "Lamba",
+     "Ağaç"
+    ],
+    "textStyles": [
+     "Ada no",
+     "Yol adı"
+    ],
+    "dimensionStyles": [
+     "Kadastro"
+    ],
+    "library": [
+     "sym-parsel",
+     "sym-agac",
+     "tpl-k"
+    ],
+    "layerStates": [
+     "Baskı"
+    ]
+   },
+   "same": "skip",
+   "expect": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Hedef",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 500.0,
+     "workspace": "cad",
+     "drawingFont": "barlow",
+     "textStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5101",
+       "name": "ada NO ",
+       "font": "barlow",
+       "height": 2.5
+      },
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102",
+       "name": "Yol adı",
+       "font": "overpass",
+       "italic": true,
+       "height": 2.5
+      }
+     ],
+     "layerStates": [
+      {
+       "id": "durum-k",
+       "name": "Eski",
+       "nodes": [
+        {
+         "node": "h-parsel",
+         "visible": false
+        }
+       ]
+      },
+      {
+       "id": "durum-k-2",
+       "name": "Baskı",
+       "nodes": [
+        {
+         "node": "h-kad",
+         "visible": true
+        },
+        {
+         "node": "h-parsel",
+         "visible": true,
+         "locked": true
+        },
+        {
+         "node": "k-yol",
+         "visible": false
+        }
+       ]
+      }
+     ],
+     "dimensionStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3201",
+       "name": "Kadastro",
+       "height": 2.5,
+       "arrow": "none"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Eski parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "h-kad",
+      "name": "kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "h-parsel",
+        "name": "PARSEL",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#3E63DD",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "k-bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#8C9AAA",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "k-yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "dashed",
+       "lineWeight": 0.35
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+       "x": 487100.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487110.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001",
+      "p": {
+       "x": 487100.0,
+       "y": 4420010.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001",
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002"
+    ],
+    "styles": {
+     "items": [
+      {
+       "kind": "symbol",
+       "id": "sym-agac",
+       "name": "Ağaç (bizim)",
+       "path": [
+        "Semboller"
+       ],
+       "geometry": "marker",
+       "layers": [
+        {
+         "type": "shape",
+         "shape": "star"
+        }
+       ]
+      },
+      {
+       "kind": "symbol",
+       "id": "sym-parsel",
+       "name": "Parsel dolgusu",
+       "path": [
+        "Semboller"
+       ],
+       "geometry": "fill",
+       "layers": [
+        {
+         "type": "imageFill",
+         "asset": "img-k-doku"
+        }
+       ]
+      },
+      {
+       "kind": "asset",
+       "id": "img-k-doku",
+       "name": "Doku",
+       "path": [
+        "Görüntülerim"
+       ],
+       "format": "png",
+       "data": "data:image/png;base64,iVBORw0KGgo=",
+       "width": 4,
+       "height": 4
+      },
+      {
+       "kind": "template",
+       "id": "tpl-k",
+       "name": "Ağaç şablonu",
+       "path": [
+        "Şablonlar"
+       ],
+       "tool": "point",
+       "symbol": "sym-agac"
+      }
+     ],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001",
+      "name": "DİREK",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "point",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        }
+       }
+      ]
+     },
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002",
+      "name": "Lamba",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "insert",
+        "id": 1,
+        "layerId": "k-yol",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "text",
+        "id": 2,
+        "layerId": "k-yol",
+        "attrs": {},
+        "p": {
+         "x": 1.0,
+         "y": 3.0
+        },
+        "text": "L",
+        "height": 0.5,
+        "rotation": 0.0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102"
+       }
+      ]
+     },
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4003",
+      "name": "Ağaç",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "k-bina",
+        "attrs": {},
+        "symbol": "sym-agac",
+        "c": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "r": 1.0
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "aynı adlılar değiştirilir, proje ayarları da",
+   "into": "ours",
+   "from": "theirs",
+   "picks": {
+    "layers": [
+     "Kadastro / Parsel",
+     "Kadastro / Bina",
+     "Yol"
+    ],
+    "blocks": [
+     "Lamba",
+     "Ağaç"
+    ],
+    "textStyles": [
+     "Ada no",
+     "Yol adı"
+    ],
+    "dimensionStyles": [
+     "Kadastro"
+    ],
+    "library": [
+     "sym-parsel",
+     "sym-agac",
+     "tpl-k"
+    ],
+    "layerStates": [
+     "Baskı"
+    ],
+    "settings": true
+   },
+   "same": "replace",
+   "expect": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Hedef",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 2,
+     "areaDecimals": 1,
+     "areaUnit": "donum",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "drawingFont": "arimo",
+     "textStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5101",
+       "name": "Ada no",
+       "font": "arimo",
+       "bold": true,
+       "height": 3.5
+      },
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102",
+       "name": "Yol adı",
+       "font": "overpass",
+       "italic": true,
+       "height": 2.5
+      }
+     ],
+     "layerStates": [
+      {
+       "id": "durum-k",
+       "name": "Eski",
+       "nodes": [
+        {
+         "node": "h-parsel",
+         "visible": false
+        }
+       ]
+      },
+      {
+       "id": "durum-k-2",
+       "name": "Baskı",
+       "nodes": [
+        {
+         "node": "h-kad",
+         "visible": true
+        },
+        {
+         "node": "h-parsel",
+         "visible": true,
+         "locked": true
+        },
+        {
+         "node": "k-yol",
+         "visible": false
+        }
+       ]
+      }
+     ],
+     "dimensionStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3201",
+       "name": "Kadastro",
+       "height": 2.5,
+       "arrow": "none"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Eski parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "h-kad",
+      "name": "kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "h-parsel",
+        "name": "PARSEL",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#E5484D",
+         "lineType": "continuous",
+         "lineWeight": 0.5
+        },
+        "children": []
+       },
+       {
+        "id": "k-bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#8C9AAA",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "k-yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "dashed",
+       "lineWeight": 0.35
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+       "x": 487100.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487110.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001",
+      "p": {
+       "x": 487100.0,
+       "y": 4420010.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001",
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002"
+    ],
+    "styles": {
+     "items": [
+      {
+       "kind": "symbol",
+       "id": "sym-agac",
+       "name": "Ağaç",
+       "path": [
+        "Semboller"
+       ],
+       "geometry": "marker",
+       "layers": [
+        {
+         "type": "shape",
+         "shape": "circle"
+        }
+       ]
+      },
+      {
+       "kind": "symbol",
+       "id": "sym-parsel",
+       "name": "Parsel dolgusu",
+       "path": [
+        "Semboller"
+       ],
+       "geometry": "fill",
+       "layers": [
+        {
+         "type": "imageFill",
+         "asset": "img-k-doku"
+        }
+       ]
+      },
+      {
+       "kind": "asset",
+       "id": "img-k-doku",
+       "name": "Doku",
+       "path": [
+        "Görüntülerim"
+       ],
+       "format": "png",
+       "data": "data:image/png;base64,iVBORw0KGgo=",
+       "width": 4,
+       "height": 4
+      },
+      {
+       "kind": "template",
+       "id": "tpl-k",
+       "name": "Ağaç şablonu",
+       "path": [
+        "Şablonlar"
+       ],
+       "tool": "point",
+       "symbol": "sym-agac"
+      }
+     ],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001",
+      "name": "DİREK",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 0.0,
+         "y": 3.0
+        }
+       },
+       {
+        "kind": "circle",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+         "x": 0.0,
+         "y": 3.0
+        },
+        "r": 0.5
+       }
+      ]
+     },
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002",
+      "name": "Lamba",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "insert",
+        "id": 1,
+        "layerId": "k-yol",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "text",
+        "id": 2,
+        "layerId": "k-yol",
+        "attrs": {},
+        "p": {
+         "x": 1.0,
+         "y": 3.0
+        },
+        "text": "L",
+        "height": 0.5,
+        "rotation": 0.0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102"
+       }
+      ]
+     },
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4003",
+      "name": "Ağaç",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "k-bina",
+        "attrs": {},
+        "symbol": "sym-agac",
+        "c": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "r": 1.0
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "yalnız proje ayarları",
+   "into": "ours",
+   "from": "theirs",
+   "picks": {
+    "settings": true
+   },
+   "same": "skip",
+   "expect": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Hedef",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 2,
+     "areaDecimals": 1,
+     "areaUnit": "donum",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "drawingFont": "arimo",
+     "textStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5101",
+       "name": "ada NO ",
+       "font": "barlow",
+       "height": 2.5
+      }
+     ],
+     "layerStates": [
+      {
+       "id": "durum-k",
+       "name": "Eski",
+       "nodes": [
+        {
+         "node": "h-parsel",
+         "visible": false
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Eski parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "h-kad",
+      "name": "kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "h-parsel",
+        "name": "PARSEL",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#3E63DD",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+       "x": 487100.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487110.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001",
+      "p": {
+       "x": 487100.0,
+       "y": 4420010.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001",
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002"
+    ],
+    "styles": {
+     "items": [
+      {
+       "kind": "symbol",
+       "id": "sym-agac",
+       "name": "Ağaç (bizim)",
+       "path": [
+        "Semboller"
+       ],
+       "geometry": "marker",
+       "layers": [
+        {
+         "type": "shape",
+         "shape": "star"
+        }
+       ]
+      }
+     ],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001",
+      "name": "DİREK",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "point",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "files": [
+  {
+   "name": "kaynak çizim blok olur: resim ve tablo kalır, katmanlar yoluyla açılır, Direk'in adı sayı alır",
+   "into": "ours",
+   "from": "theirs",
+   "file": "Kaynak",
+   "expect": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Hedef",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 500.0,
+     "workspace": "cad",
+     "drawingFont": "barlow",
+     "textStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5101",
+       "name": "ada NO ",
+       "font": "barlow",
+       "height": 2.5
+      },
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102",
+       "name": "Yol adı",
+       "font": "overpass",
+       "italic": true,
+       "height": 2.5
+      }
+     ],
+     "layerStates": [
+      {
+       "id": "durum-k",
+       "name": "Eski",
+       "nodes": [
+        {
+         "node": "h-parsel",
+         "visible": false
+        }
+       ]
+      }
+     ],
+     "dimensionStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3201",
+       "name": "Kadastro",
+       "height": 2.5,
+       "arrow": "none"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Eski parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "h-kad",
+      "name": "kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "h-parsel",
+        "name": "PARSEL",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#3E63DD",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "k-bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#8C9AAA",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "k-yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#30A46C",
+       "lineType": "dashed",
+       "lineWeight": 0.35
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+       "x": 487100.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487110.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001",
+      "p": {
+       "x": 487100.0,
+       "y": 4420010.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001",
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002"
+    ],
+    "styles": {
+     "items": [
+      {
+       "kind": "symbol",
+       "id": "sym-agac",
+       "name": "Ağaç (bizim)",
+       "path": [
+        "Semboller"
+       ],
+       "geometry": "marker",
+       "layers": [
+        {
+         "type": "shape",
+         "shape": "star"
+        }
+       ]
+      },
+      {
+       "kind": "symbol",
+       "id": "sym-parsel",
+       "name": "Parsel dolgusu",
+       "path": [
+        "Semboller"
+       ],
+       "geometry": "fill",
+       "layers": [
+        {
+         "type": "imageFill",
+         "asset": "img-k-doku"
+        }
+       ]
+      },
+      {
+       "kind": "asset",
+       "id": "img-k-doku",
+       "name": "Doku",
+       "path": [
+        "Görüntülerim"
+       ],
+       "format": "png",
+       "data": "data:image/png;base64,iVBORw0KGgo=",
+       "width": 4,
+       "height": 4
+      }
+     ],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001",
+      "name": "DİREK",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "point",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        }
+       }
+      ]
+     },
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001",
+      "name": "Direk (2)",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 0.0,
+         "y": 3.0
+        }
+       },
+       {
+        "kind": "circle",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+         "x": 0.0,
+         "y": 3.0
+        },
+        "r": 0.5
+       }
+      ]
+     },
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002",
+      "name": "Lamba",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "insert",
+        "id": 1,
+        "layerId": "k-yol",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "text",
+        "id": 2,
+        "layerId": "k-yol",
+        "attrs": {},
+        "p": {
+         "x": 1.0,
+         "y": 3.0
+        },
+        "text": "L",
+        "height": 0.5,
+        "rotation": 0.0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102"
+       }
+      ]
+     },
+     {
+      "id": "$new",
+      "name": "Kaynak",
+      "base": {
+       "x": 486990.0,
+       "y": 4419995.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "h-parsel",
+        "attrs": {
+         "Ada": "101"
+        },
+        "symbol": "sym-parsel",
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "k-bina",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       {
+        "kind": "line",
+        "id": 3,
+        "layerId": "k-yol",
+        "attrs": {},
+        "a": {
+         "x": 486990.0,
+         "y": 4419995.0
+        },
+        "b": {
+         "x": 487060.0,
+         "y": 4419995.0
+        }
+       },
+       {
+        "kind": "text",
+        "id": 4,
+        "layerId": "h-parsel",
+        "attrs": {},
+        "p": {
+         "x": 487025.0,
+         "y": 4420022.0
+        },
+        "text": "101",
+        "height": 2.0,
+        "rotation": 0.0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5101"
+       },
+       {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "k-yol",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002",
+        "p": {
+         "x": 487030.0,
+         "y": 4420005.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "hatch",
+        "id": 6,
+        "layerId": "k-bina",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420020.0
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0.0,
+         "spacing": 1.0
+        }
+       },
+       {
+        "kind": "dimension",
+        "id": 7,
+        "layerId": "h-parsel",
+        "attrs": {},
+        "a": {
+         "x": 487005.0,
+         "y": 4420025.0
+        },
+        "b": {
+         "x": 487015.0,
+         "y": 4420025.0
+        },
+        "offset": 1.0,
+        "height": 1.0,
+        "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3201"
+       },
+       {
+        "kind": "circle",
+        "id": 8,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+         "x": 487050.0,
+         "y": 4420020.0
+        },
+        "r": 4.0
+       }
+      ]
+     }
+    ]
+   },
+   "left": {
+    "images": 1,
+    "tables": 1
+   }
+  }
+ ]
+}

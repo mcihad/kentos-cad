@@ -11,6 +11,7 @@ import type { ProjectSettingsSection } from '../ui/settings/ProjectSettingsDialo
 import { AppShell } from '../ui/shell/AppShell';
 import { ViewportController } from '../viewport/ViewportController';
 import { createBlocks, registerBlockCommands } from './blocks';
+import { registerExchangeCommands } from './drawingExchange';
 import { registerTextCommands } from './texts';
 import { readTableFile, registerTableCommands } from './tables';
 import { Clipboard } from './clipboard';
@@ -154,6 +155,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   });
   registerStyleCommands(ctx);
   registerBlockCommands(ctx);
+  registerExchangeCommands(ctx);
   registerTextCommands(ctx, { findReplace: () => lazy(ctx, import('../ui/text/FindReplaceDialog'), (m) => m.openFindReplaceDialog(ctx)) });
   registerTableCommands(ctx, {
     insert: () => lazy(ctx, import('../ui/table/TableInsertDialog'), (m) => m.openTableInsert(ctx)),

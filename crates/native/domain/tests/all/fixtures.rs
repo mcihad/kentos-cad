@@ -421,6 +421,12 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
                     .and_then(Value::as_bool)
                     .unwrap_or(false),
                 style,
+                // A layer's own snapping, as the web's `LayerInit` carries it.
+                snap: match layer.get("snap") {
+                    None => None,
+                    Some(v) => serde_json::from_value(v.clone())
+                        .or_else(|e| fail(format!("{at}: kenet okunamadı: {e}")))?,
+                },
             };
             let parent = step.get("parent").and_then(Value::as_str);
             let activate = step

@@ -25,6 +25,7 @@ mod command_bar;
 mod crs;
 mod data_compare;
 mod document;
+mod drawing_exchange;
 mod drawing_fonts;
 mod drawing_menus;
 #[cfg(test)]
