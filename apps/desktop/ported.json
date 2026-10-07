@@ -91,6 +91,8 @@
     "point.editor",
     "data.search",
     "data.unmark",
+    "topology.check",
+    "topology.rules",
     "edit.cut",
     "edit.copy",
     "edit.paste",

@@ -1,0 +1,592 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Topoloji kuralları",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "drawingFont": "barlow",
+    "topology": {
+      "rules": [
+        {
+          "id": "kural-1",
+          "kind": "mustNotOverlap",
+          "layer": "parsel"
+        },
+        {
+          "id": "kural-2",
+          "kind": "mustNotHaveGaps",
+          "layer": "parsel"
+        },
+        {
+          "id": "kural-3",
+          "kind": "mustNotHaveSlivers",
+          "layer": "parsel"
+        },
+        {
+          "id": "kural-4",
+          "kind": "mustNotHaveMissingVertices",
+          "layer": "parsel"
+        },
+        {
+          "id": "kural-5",
+          "kind": "mustBeCoveredBy",
+          "layer": "bina",
+          "other": "parsel"
+        },
+        {
+          "id": "kural-6",
+          "kind": "mustNotHaveDangles",
+          "layer": "yol"
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "kadastro",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "parsel",
+          "name": "Parsel",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#3E63DD",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        },
+        {
+          "id": "bina",
+          "name": "Bina",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#E5484D",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#8E8C99",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "101",
+        "Parsel": "1"
+      },
+      "label": "1",
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4420000
+        },
+        {
+          "x": 487020,
+          "y": 4420000
+        },
+        {
+          "x": 487020,
+          "y": 4420030
+        },
+        {
+          "x": 487000,
+          "y": 4420030
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "101",
+        "Parsel": "2"
+      },
+      "label": "2",
+      "pts": [
+        {
+          "x": 487020,
+          "y": 4420000
+        },
+        {
+          "x": 487040.4,
+          "y": 4420000
+        },
+        {
+          "x": 487040.4,
+          "y": 4420030
+        },
+        {
+          "x": 487020,
+          "y": 4420030
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "101",
+        "Parsel": "3"
+      },
+      "label": "3",
+      "pts": [
+        {
+          "x": 487040,
+          "y": 4420000
+        },
+        {
+          "x": 487060,
+          "y": 4420000
+        },
+        {
+          "x": 487060,
+          "y": 4420030
+        },
+        {
+          "x": 487040,
+          "y": 4420030
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "102",
+        "Parsel": "1"
+      },
+      "label": "1",
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4420040
+        },
+        {
+          "x": 487020,
+          "y": 4420040
+        },
+        {
+          "x": 487020,
+          "y": 4420070
+        },
+        {
+          "x": 487000,
+          "y": 4420070
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "102",
+        "Parsel": "2"
+      },
+      "label": "2",
+      "pts": [
+        {
+          "x": 487020,
+          "y": 4420040
+        },
+        {
+          "x": 487040,
+          "y": 4420040
+        },
+        {
+          "x": 487040,
+          "y": 4420050
+        },
+        {
+          "x": 487020,
+          "y": 4420050
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "102",
+        "Parsel": "3"
+      },
+      "label": "3",
+      "pts": [
+        {
+          "x": 487020,
+          "y": 4420060
+        },
+        {
+          "x": 487040,
+          "y": 4420060
+        },
+        {
+          "x": 487040,
+          "y": 4420070
+        },
+        {
+          "x": 487020,
+          "y": 4420070
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "102",
+        "Parsel": "4"
+      },
+      "label": "4",
+      "pts": [
+        {
+          "x": 487040,
+          "y": 4420040
+        },
+        {
+          "x": 487060,
+          "y": 4420040
+        },
+        {
+          "x": 487060,
+          "y": 4420070
+        },
+        {
+          "x": 487040,
+          "y": 4420070
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "103",
+        "Parsel": "1"
+      },
+      "label": "1",
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4420080
+        },
+        {
+          "x": 487030,
+          "y": 4420080
+        },
+        {
+          "x": 487030,
+          "y": 4420100
+        },
+        {
+          "x": 487000,
+          "y": 4420100
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "103",
+        "Parsel": "2"
+      },
+      "label": "2",
+      "pts": [
+        {
+          "x": 487030,
+          "y": 4420080
+        },
+        {
+          "x": 487030.06,
+          "y": 4420080
+        },
+        {
+          "x": 487030.06,
+          "y": 4420100
+        },
+        {
+          "x": 487030,
+          "y": 4420100
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 10,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "103",
+        "Parsel": "3"
+      },
+      "label": "3",
+      "pts": [
+        {
+          "x": 487030.06,
+          "y": 4420080
+        },
+        {
+          "x": 487060,
+          "y": 4420080
+        },
+        {
+          "x": 487060,
+          "y": 4420100
+        },
+        {
+          "x": 487030.06,
+          "y": 4420100
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 11,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "104",
+        "Parsel": "1"
+      },
+      "label": "1",
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4420110
+        },
+        {
+          "x": 487030,
+          "y": 4420110
+        },
+        {
+          "x": 487030,
+          "y": 4420120
+        },
+        {
+          "x": 487030,
+          "y": 4420130
+        },
+        {
+          "x": 487000,
+          "y": 4420130
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 12,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "104",
+        "Parsel": "2"
+      },
+      "label": "2",
+      "pts": [
+        {
+          "x": 487030,
+          "y": 4420110
+        },
+        {
+          "x": 487060,
+          "y": 4420110
+        },
+        {
+          "x": 487060,
+          "y": 4420130
+        },
+        {
+          "x": 487030,
+          "y": 4420130
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 13,
+      "layerId": "bina",
+      "attrs": {
+        "Kat": "2"
+      },
+      "pts": [
+        {
+          "x": 487004,
+          "y": 4420004
+        },
+        {
+          "x": 487014,
+          "y": 4420004
+        },
+        {
+          "x": 487014,
+          "y": 4420014
+        },
+        {
+          "x": 487004,
+          "y": 4420014
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 14,
+      "layerId": "bina",
+      "attrs": {
+        "Kat": "3"
+      },
+      "pts": [
+        {
+          "x": 487052,
+          "y": 4420050
+        },
+        {
+          "x": 487066,
+          "y": 4420050
+        },
+        {
+          "x": 487066,
+          "y": 4420058
+        },
+        {
+          "x": 487052,
+          "y": 4420058
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 15,
+      "layerId": "bina",
+      "attrs": {
+        "Kat": "1"
+      },
+      "pts": [
+        {
+          "x": 487066,
+          "y": 4420010
+        },
+        {
+          "x": 487072,
+          "y": 4420010
+        },
+        {
+          "x": 487072,
+          "y": 4420018
+        },
+        {
+          "x": 487066,
+          "y": 4420018
+        }
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 16,
+      "layerId": "yol",
+      "attrs": {
+        "Ad": "Atatürk Cd."
+      },
+      "pts": [
+        {
+          "x": 486990,
+          "y": 4419992
+        },
+        {
+          "x": 487080,
+          "y": 4419992
+        }
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 17,
+      "layerId": "yol",
+      "attrs": {
+        "Ad": "1. Sk."
+      },
+      "pts": [
+        {
+          "x": 487064,
+          "y": 4419992
+        },
+        {
+          "x": 487064,
+          "y": 4420140
+        }
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 18,
+      "layerId": "yol",
+      "attrs": {
+        "Ad": "2. Sk."
+      },
+      "pts": [
+        {
+          "x": 486990,
+          "y": 4420140
+        },
+        {
+          "x": 487063.4,
+          "y": 4420140
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

@@ -189,6 +189,8 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::TextStraighten => "Düzleştir",
         EditOperation::RoadJunctions => "Kavşak temizle",
         EditOperation::MedianClose => "Refüj kapat",
+        // Topoloji sekmesinin düzeltmeleri (docs/adr/0202 §4).
+        EditOperation::TopologyFix => "Topoloji düzelt",
     }
 }
 

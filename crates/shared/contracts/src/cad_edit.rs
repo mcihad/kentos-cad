@@ -167,6 +167,8 @@ pub enum EditOperation {
     RoadJunctions,
     /// Refüj kapat (docs/adr/0198 §4): two lines closed into a median, an area.
     MedianClose,
+    /// Topoloji düzelt (docs/adr/0202 §4): a topology finding fixed, its objects updated in place or deleted.
+    TopologyFix,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and

@@ -3177,6 +3177,17 @@
                 },
                 "type": "array"
               },
+              "topology": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TopologySettings"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1)."
+              },
               "workspace": {
                 "anyOf": [
                   {
@@ -4119,6 +4130,166 @@
             ],
             "type": "object"
           },
+          "TopologyException": {
+            "description": "A finding marked as left on purpose: its rule, its objects' persistent\nids in the finding's order, and its place.",
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "objects": {
+                "description": "At least one.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "rule": {
+                "description": "The rule's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "objects",
+              "at"
+            ],
+            "type": "object"
+          },
+          "TopologyRule": {
+            "description": "A rule: its kind on a layer and, between layers, another layer.",
+            "properties": {
+              "id": {
+                "description": "One of its kind among the project's rules; exceptions name it.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/TopologyRuleKind"
+              },
+              "layer": {
+                "description": "The layer's id (a layer, not a group). A rule whose layer the project\nno longer has stays and is not checked.",
+                "type": "string"
+              },
+              "other": {
+                "description": "The other layer's id, for a rule between layers only.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "value": {
+                "description": "The value of a kind that takes one: a length in metres, an angle in\nradians; absent: the kind's default.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "layer"
+            ],
+            "type": "object"
+          },
+          "TopologyRuleKind": {
+            "description": "The thirteen kinds (docs/adr/0202 §1–§2).",
+            "oneOf": [
+              {
+                "const": "mustNotOverlap",
+                "description": "Çakışmamalı: the layer's areas do not overlap.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveGaps",
+                "description": "Boşluk olmamalı: no gap is closed in among the layer's areas.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveSlivers",
+                "description": "İnce alan olmamalı: no part of an area is thinner than the value.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveDuplicates",
+                "description": "Yinelenmemeli: no edge of a line lies on another line, no point on another point.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveDangles",
+                "description": "Sarkan uç olmamalı: every line end meets the layer's line work.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveShortEdges",
+                "description": "Kısa kenar olmamalı: no edge is shorter than the value.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveSmallAngles",
+                "description": "Küçük açı olmamalı: no corner is sharper than the value.",
+                "type": "string"
+              },
+              {
+                "const": "mustBeValid",
+                "description": "Geçerli olmalı: ADR 0201 §6's problems.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveMissingVertices",
+                "description": "Ortak sınırda köşe eksik olmamalı: an area's vertex on a neighbour's edge is the neighbour's too.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotOverlapWith",
+                "description": "… ile çakışmamalı: the layer's areas do not overlap the other's.",
+                "type": "string"
+              },
+              {
+                "const": "mustBeCoveredBy",
+                "description": "… içinde kalmalı: the layer's objects stay within the other's areas.",
+                "type": "string"
+              },
+              {
+                "const": "boundaryMustBeCoveredBy",
+                "description": "Sınırı … sınırlarında olmalı: the layer's areas' boundaries lie on the other's line work.",
+                "type": "string"
+              },
+              {
+                "const": "mustBeOnEndOf",
+                "description": "… çizgilerinin ucunda olmalı: the layer's points are at the other's line ends.",
+                "type": "string"
+              }
+            ]
+          },
+          "TopologySettings": {
+            "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).",
+            "properties": {
+              "exceptions": {
+                "description": "Findings marked as left on purpose (docs/adr/0202 §3).",
+                "items": {
+                  "$ref": "#/$defs/TopologyException"
+                },
+                "type": "array"
+              },
+              "rules": {
+                "description": "The rules, in the order they are checked and listed.",
+                "items": {
+                  "$ref": "#/$defs/TopologyRule"
+                },
+                "type": "array"
+              },
+              "tolerance": {
+                "description": "Metres, within [`TOPOLOGY_TOLERANCES`]; absent: [`TOPOLOGY_TOLERANCE`].",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -5025,6 +5196,11 @@
             ],
             "type": "object"
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "FieldChoice": {
             "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
             "properties": {
@@ -5701,6 +5877,17 @@
                 },
                 "type": "array"
               },
+              "topology": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TopologySettings"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1)."
+              },
               "workspace": {
                 "anyOf": [
                   {
@@ -5996,6 +6183,166 @@
               "falseEasting",
               "falseNorthing"
             ],
+            "type": "object"
+          },
+          "TopologyException": {
+            "description": "A finding marked as left on purpose: its rule, its objects' persistent\nids in the finding's order, and its place.",
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "objects": {
+                "description": "At least one.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "rule": {
+                "description": "The rule's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "objects",
+              "at"
+            ],
+            "type": "object"
+          },
+          "TopologyRule": {
+            "description": "A rule: its kind on a layer and, between layers, another layer.",
+            "properties": {
+              "id": {
+                "description": "One of its kind among the project's rules; exceptions name it.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/TopologyRuleKind"
+              },
+              "layer": {
+                "description": "The layer's id (a layer, not a group). A rule whose layer the project\nno longer has stays and is not checked.",
+                "type": "string"
+              },
+              "other": {
+                "description": "The other layer's id, for a rule between layers only.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "value": {
+                "description": "The value of a kind that takes one: a length in metres, an angle in\nradians; absent: the kind's default.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "layer"
+            ],
+            "type": "object"
+          },
+          "TopologyRuleKind": {
+            "description": "The thirteen kinds (docs/adr/0202 §1–§2).",
+            "oneOf": [
+              {
+                "const": "mustNotOverlap",
+                "description": "Çakışmamalı: the layer's areas do not overlap.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveGaps",
+                "description": "Boşluk olmamalı: no gap is closed in among the layer's areas.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveSlivers",
+                "description": "İnce alan olmamalı: no part of an area is thinner than the value.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveDuplicates",
+                "description": "Yinelenmemeli: no edge of a line lies on another line, no point on another point.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveDangles",
+                "description": "Sarkan uç olmamalı: every line end meets the layer's line work.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveShortEdges",
+                "description": "Kısa kenar olmamalı: no edge is shorter than the value.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveSmallAngles",
+                "description": "Küçük açı olmamalı: no corner is sharper than the value.",
+                "type": "string"
+              },
+              {
+                "const": "mustBeValid",
+                "description": "Geçerli olmalı: ADR 0201 §6's problems.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveMissingVertices",
+                "description": "Ortak sınırda köşe eksik olmamalı: an area's vertex on a neighbour's edge is the neighbour's too.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotOverlapWith",
+                "description": "… ile çakışmamalı: the layer's areas do not overlap the other's.",
+                "type": "string"
+              },
+              {
+                "const": "mustBeCoveredBy",
+                "description": "… içinde kalmalı: the layer's objects stay within the other's areas.",
+                "type": "string"
+              },
+              {
+                "const": "boundaryMustBeCoveredBy",
+                "description": "Sınırı … sınırlarında olmalı: the layer's areas' boundaries lie on the other's line work.",
+                "type": "string"
+              },
+              {
+                "const": "mustBeOnEndOf",
+                "description": "… çizgilerinin ucunda olmalı: the layer's points are at the other's line ends.",
+                "type": "string"
+              }
+            ]
+          },
+          "TopologySettings": {
+            "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).",
+            "properties": {
+              "exceptions": {
+                "description": "Findings marked as left on purpose (docs/adr/0202 §3).",
+                "items": {
+                  "$ref": "#/$defs/TopologyException"
+                },
+                "type": "array"
+              },
+              "rules": {
+                "description": "The rules, in the order they are checked and listed.",
+                "items": {
+                  "$ref": "#/$defs/TopologyRule"
+                },
+                "type": "array"
+              },
+              "tolerance": {
+                "description": "Metres, within [`TOPOLOGY_TOLERANCES`]; absent: [`TOPOLOGY_TOLERANCE`].",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "Vec2": {
@@ -9266,6 +9613,17 @@
                 },
                 "type": "array"
               },
+              "topology": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TopologySettings"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1)."
+              },
               "workspace": {
                 "anyOf": [
                   {
@@ -10258,6 +10616,166 @@
               "falseEasting",
               "falseNorthing"
             ],
+            "type": "object"
+          },
+          "TopologyException": {
+            "description": "A finding marked as left on purpose: its rule, its objects' persistent\nids in the finding's order, and its place.",
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "objects": {
+                "description": "At least one.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "rule": {
+                "description": "The rule's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "objects",
+              "at"
+            ],
+            "type": "object"
+          },
+          "TopologyRule": {
+            "description": "A rule: its kind on a layer and, between layers, another layer.",
+            "properties": {
+              "id": {
+                "description": "One of its kind among the project's rules; exceptions name it.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/TopologyRuleKind"
+              },
+              "layer": {
+                "description": "The layer's id (a layer, not a group). A rule whose layer the project\nno longer has stays and is not checked.",
+                "type": "string"
+              },
+              "other": {
+                "description": "The other layer's id, for a rule between layers only.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "value": {
+                "description": "The value of a kind that takes one: a length in metres, an angle in\nradians; absent: the kind's default.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "layer"
+            ],
+            "type": "object"
+          },
+          "TopologyRuleKind": {
+            "description": "The thirteen kinds (docs/adr/0202 §1–§2).",
+            "oneOf": [
+              {
+                "const": "mustNotOverlap",
+                "description": "Çakışmamalı: the layer's areas do not overlap.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveGaps",
+                "description": "Boşluk olmamalı: no gap is closed in among the layer's areas.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveSlivers",
+                "description": "İnce alan olmamalı: no part of an area is thinner than the value.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveDuplicates",
+                "description": "Yinelenmemeli: no edge of a line lies on another line, no point on another point.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveDangles",
+                "description": "Sarkan uç olmamalı: every line end meets the layer's line work.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveShortEdges",
+                "description": "Kısa kenar olmamalı: no edge is shorter than the value.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveSmallAngles",
+                "description": "Küçük açı olmamalı: no corner is sharper than the value.",
+                "type": "string"
+              },
+              {
+                "const": "mustBeValid",
+                "description": "Geçerli olmalı: ADR 0201 §6's problems.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotHaveMissingVertices",
+                "description": "Ortak sınırda köşe eksik olmamalı: an area's vertex on a neighbour's edge is the neighbour's too.",
+                "type": "string"
+              },
+              {
+                "const": "mustNotOverlapWith",
+                "description": "… ile çakışmamalı: the layer's areas do not overlap the other's.",
+                "type": "string"
+              },
+              {
+                "const": "mustBeCoveredBy",
+                "description": "… içinde kalmalı: the layer's objects stay within the other's areas.",
+                "type": "string"
+              },
+              {
+                "const": "boundaryMustBeCoveredBy",
+                "description": "Sınırı … sınırlarında olmalı: the layer's areas' boundaries lie on the other's line work.",
+                "type": "string"
+              },
+              {
+                "const": "mustBeOnEndOf",
+                "description": "… çizgilerinin ucunda olmalı: the layer's points are at the other's line ends.",
+                "type": "string"
+              }
+            ]
+          },
+          "TopologySettings": {
+            "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).",
+            "properties": {
+              "exceptions": {
+                "description": "Findings marked as left on purpose (docs/adr/0202 §3).",
+                "items": {
+                  "$ref": "#/$defs/TopologyException"
+                },
+                "type": "array"
+              },
+              "rules": {
+                "description": "The rules, in the order they are checked and listed.",
+                "items": {
+                  "$ref": "#/$defs/TopologyRule"
+                },
+                "type": "array"
+              },
+              "tolerance": {
+                "description": "Metres, within [`TOPOLOGY_TOLERANCES`]; absent: [`TOPOLOGY_TOLERANCE`].",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "Vec2": {
@@ -35908,6 +36426,11 @@
               {
                 "const": "medianClose",
                 "description": "Refüj kapat (docs/adr/0198 §4): two lines closed into a median, an area.",
+                "type": "string"
+              },
+              {
+                "const": "topologyFix",
+                "description": "Topoloji düzelt (docs/adr/0202 §4): a topology finding fixed, its objects updated in place or deleted.",
                 "type": "string"
               }
             ]

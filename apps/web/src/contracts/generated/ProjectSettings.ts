@@ -9,6 +9,7 @@ import type { DrawingUnit } from "./DrawingUnit";
 import type { LayerState } from "./LayerState";
 import type { SurveySettings } from "./SurveySettings";
 import type { TextStyleDef } from "./TextStyleDef";
+import type { TopologySettings } from "./TopologySettings";
 import type { Workspace } from "./Workspace";
 
 /**
@@ -69,4 +70,8 @@ textStyles?: Array<TextStyleDef>,
 /**
  * The project's named dimension styles (docs/adr/0183 §3).
  */
-dimensionStyles?: Array<DimensionStyleDef>, };
+dimensionStyles?: Array<DimensionStyleDef>, 
+/**
+ * The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
+ */
+topology?: TopologySettings, };

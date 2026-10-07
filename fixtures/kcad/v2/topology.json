@@ -1,0 +1,184 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Ada 101, topoloji kuralları",
+  "settings": {
+    "srid": 5254,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis",
+    "topology": {
+      "tolerance": 0.002,
+      "rules": [
+        {
+          "id": "kural-1",
+          "kind": "mustNotOverlap",
+          "layer": "parsel"
+        },
+        {
+          "id": "kural-2",
+          "kind": "mustNotHaveGaps",
+          "layer": "parsel"
+        },
+        {
+          "id": "kural-3",
+          "kind": "mustNotHaveShortEdges",
+          "layer": "parsel",
+          "value": 0.1
+        },
+        {
+          "id": "kural-4",
+          "kind": "mustNotHaveSmallAngles",
+          "layer": "parsel",
+          "value": 0.17453292519943295
+        },
+        {
+          "id": "kural-5",
+          "kind": "mustBeCoveredBy",
+          "layer": "bina",
+          "other": "parsel"
+        }
+      ],
+      "exceptions": [
+        {
+          "rule": "kural-1",
+          "objects": [
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5e01",
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5e02"
+          ],
+          "at": {
+            "x": 414129.5,
+            "y": 4540112.5
+          }
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 414000.0,
+    "y": 4540000.0
+  },
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "ada": "101",
+        "parsel": "7"
+      },
+      "pts": [
+        {
+          "x": 414100.0,
+          "y": 4540100.0
+        },
+        {
+          "x": 414130.0,
+          "y": 4540100.0
+        },
+        {
+          "x": 414130.0,
+          "y": 4540125.0
+        },
+        {
+          "x": 414100.0,
+          "y": 4540125.0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "ada": "101",
+        "parsel": "8"
+      },
+      "pts": [
+        {
+          "x": 414129.0,
+          "y": 4540100.0
+        },
+        {
+          "x": 414160.0,
+          "y": 4540100.0
+        },
+        {
+          "x": 414160.0,
+          "y": 4540125.0
+        },
+        {
+          "x": 414129.0,
+          "y": 4540125.0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "bina",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 414105.0,
+          "y": 4540105.0
+        },
+        {
+          "x": 414115.0,
+          "y": 4540105.0
+        },
+        {
+          "x": 414115.0,
+          "y": 4540115.0
+        },
+        {
+          "x": 414105.0,
+          "y": 4540115.0
+        }
+      ]
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5e01",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5e02",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5e03"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

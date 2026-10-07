@@ -186,6 +186,10 @@ pub struct ProjectSettings {
         ts(as = "Option<Vec<crate::DimensionStyleDef>>", optional)
     )]
     pub dimension_styles: Vec<crate::DimensionStyleDef>,
+    /// The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub topology: Option<crate::TopologySettings>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names
@@ -414,7 +418,8 @@ impl ProjectSettings {
     /// hold, a second system only where it may be (an EPSG code before a
     /// definition), a unit only without a system, the datum choices only
     /// when they all hold, the survey settings that hold (docs/adr/0169 §3),
-    /// the layer states that hold (docs/adr/0177 §4).
+    /// the layer states that hold (docs/adr/0177 §4), the topology rules
+    /// and exceptions that hold (docs/adr/0202 §1).
     pub fn sanitized(mut self) -> Self {
         if self.srid != 0
             || self
@@ -445,6 +450,7 @@ impl ProjectSettings {
         self.text_styles = crate::sanitized_text_styles(std::mem::take(&mut self.text_styles));
         self.dimension_styles =
             crate::sanitized_dimension_styles(std::mem::take(&mut self.dimension_styles));
+        self.topology = self.topology.and_then(crate::TopologySettings::sanitized);
         self
     }
 }

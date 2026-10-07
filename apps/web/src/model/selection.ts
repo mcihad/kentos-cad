@@ -1,5 +1,6 @@
 import { Signal } from '../core/signal';
 import type { Vec2 } from './geometry';
+import type { CoreArea, CoreEdge } from './ops/topologyRules';
 
 const sameSet = (a: ReadonlySet<number>, b: ReadonlySet<number>) => a.size === b.size && [...a].every((x) => b.has(x));
 
@@ -13,6 +14,17 @@ export interface Cycle {
   index: number;
 }
 
+/**
+ * A topology finding shown over the drawing (docs/adr/0202 §5): its regions filled, its edges drawn bold, its place
+ * marked with the problem's name; not part of the drawing.
+ */
+export interface ProblemMark {
+  readonly at: Vec2;
+  readonly label: string;
+  readonly regions: readonly CoreArea[];
+  readonly edges: readonly CoreEdge[];
+}
+
 export class Selection {
   readonly ids = new Signal<ReadonlySet<number>>(new Set(), sameSet);
   readonly hover = new Signal<number | null>(null);
@@ -20,6 +32,8 @@ export class Selection {
   readonly vertices = new Signal<readonly Vec2[]>([]);
   /** The place Koordinata git marked (docs/adr/0178 §6): a cross and ring over the drawing, not part of it. */
   readonly mark = new Signal<Vec2 | null>(null);
+  /** The Topoloji tab's finding shown over the drawing (docs/adr/0202 §5). */
+  readonly problem = new Signal<ProblemMark | null>(null);
   /** The last selection that held something and was replaced or cleared (Önceki seçim, docs/adr/0187 §3). */
   readonly previous = new Signal<readonly number[]>([]);
   /** Sıradakini seç's chip: null while the selection is not a click's among several objects. */

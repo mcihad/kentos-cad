@@ -174,6 +174,7 @@ mod text_scenes;
 mod tools_scenes;
 #[cfg(test)]
 mod tools_screens;
+mod topology;
 mod tracking;
 mod usage;
 mod vertices;

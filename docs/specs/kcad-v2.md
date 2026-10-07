@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `26`'ya bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-27.kcad`) |
+| `version` | tam sayı | `2`'den `27`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-28.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -247,7 +247,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 26**, şema 25'in kendisi ve katmanın alanlarıdır: katman düğümünün `fields` alanı (§6.5; ADR 0199 §1). Yazıcı `26`'yı **yalnız bir katmanın alanı varken** yazar. Başka her çizim şema 2–25'tir ve eskisiyle bayt bayt aynıdır. Şema 2–25 yükünde `fields` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/layer-fields-in-schema-25.kcad`): eski okuyucu katmanın şemasını bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 26 şema 25'i kapsar. Örnek dosya `layer-fields.kcad`.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 27**, şema 26'nın kendisi ve projenin topoloji kurallarıdır: proje ayarlarının `topology` alanı (§6.4, §6.4.5; ADR 0202 §7). Yazıcı `27`'yi **yalnız projenin topoloji ayarı varken** yazar. Başka her çizim şema 2–26'dır ve eskisiyle bayt bayt aynıdır. Şema 2–26 yükünde `topology` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/topology-in-schema-26.kcad`): eski okuyucu kuralları ve istisnaları bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 27 şema 26'yı kapsar. Örnek dosya `topology.kcad`.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -292,6 +294,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `srid` | u32 | evet | EPSG kodu; 0 yerel sistemdir (koordinat sistemi yok, ADR 0165 §2). Koordinat sistemi tahmin edilmez; SRID yalnız etikettir, dönüşüm değildir |
 | `survey` | harita (§6.4.2) | | şema 14'te: projenin ölçme ayarları (ADR 0169 §3) |
 | `areaUnit` | numaralı metin | evet | `m2`, `donum`, `ha` |
+| `topology` | harita (§6.4.5) | | şema 27'de: projenin topoloji kuralları, toleransı ve istisnaları (ADR 0202 §7) |
 | `angleUnit` | numaralı metin | evet | `grad`, `deg` |
 | `customCrs` | harita (§6.4.1) | | şema 13'te: projenin kendi sistemi bir tanımsa o (ADR 0168 §1); o zaman `srid` 0'dır, değilse `bad_value` (`broken/custom-crs-with-srid.kcad`). Böyle projenin ikinci sistemi olabilir (`secondSrid`), çizim birimi metredir |
 | `plotScale` | float | evet | çizim ölçeği paydası (1:1000 → `1000.0`) |
@@ -400,6 +403,36 @@ Düğüm bir haritadır, anahtarları `node` < `style` < `locked` < `visible`:
 | `font` | numaralı metin | | değerin yazı tipi; yokluğu projenin |
 
 Bilinmeyen anahtar `unknown_field`'dır (`broken/style-table-unknown-field.kcad`).
+
+#### 6.4.5 Topoloji kuralları
+
+Şema 27'de (ADR 0202). Harita, anahtarları kodlanmış sırasıyla `rules` < `tolerance` < `exceptions`; üçü de isteğe bağlıdır ama harita boş olamaz (`broken/topology-empty.kcad`). Bütünü denetlenir (`bad_value`).
+
+| Anahtar | Tür | Değerler |
+|---|---|---|
+| `rules` | dizi | kurallar, denetlenecekleri ve listelenecekleri sırayla; boş dizi yazılmaz |
+| `tolerance` | float | metre, 0,000001 ile 1 arası (`broken/topology-tolerance-range.kcad`); yokluğu 0,001 |
+| `exceptions` | dizi | bilerek bırakılan bulgular; boş dizi yazılmaz |
+
+**Kural** haritadır, anahtarları `id` < `kind` < `layer` < `other` < `value`:
+
+| Anahtar | Tür | Zorunlu | Değerler |
+|---|---|---|---|
+| `id` | metin | evet | boş olamaz, projede bir kez (`broken/topology-rule-same-id.kcad`); istisnalar onu anar |
+| `kind` | numaralı metin | evet | `mustNotOverlap`, `mustNotHaveGaps`, `mustNotHaveSlivers`, `mustNotHaveDuplicates`, `mustNotHaveDangles`, `mustNotHaveShortEdges`, `mustNotHaveSmallAngles`, `mustBeValid`, `mustNotHaveMissingVertices` (katman içi); `mustNotOverlapWith`, `mustBeCoveredBy`, `boundaryMustBeCoveredBy`, `mustBeOnEndOf` (katmanlar arası); başkası `bad_value` (`broken/topology-rule-unknown-kind.kcad`) |
+| `layer` | metin | evet | katmanın kimliği (§6.5), boş olamaz. Projede olmayan katman geçerlidir: kural denetlenmez |
+| `other` | metin | | katmanlar arası kuralda zorunlu, başkasında yazılamaz (`broken/topology-rule-without-other.kcad`, `broken/topology-rule-other-on-one-layer.kcad`); boş ya da `layer` ile aynı olamaz (`broken/topology-rule-other-itself.kcad`) |
+| `value` | float | | yalnız değer alan türde (`mustNotHaveSlivers`, `mustNotHaveShortEdges` metre; `mustNotHaveSmallAngles` radyan, dik açıdan küçük; `broken/topology-rule-value-not-taken.kcad`, `broken/topology-rule-angle-too-large.kcad`); sıfırdan büyük; yokluğu türün varsayılanı (0,1 m, 0,05 m, 5°) |
+
+**İstisna** haritadır, anahtarları `at` < `rule` < `objects`:
+
+| Anahtar | Tür | Zorunlu | Değerler |
+|---|---|---|---|
+| `at` | nokta | evet | bulgunun yeri |
+| `rule` | metin | evet | kuralın kimliği; listede olmayan kural `bad_value` (`broken/topology-exception-unknown-rule.kcad`) |
+| `objects` | dizi: kimlik | evet | bulgunun nesnelerinin kalıcı kimlikleri (§6.3), bulgunun sırasıyla; boş olamaz. Çizimde olmayan nesnenin kimliği geçerlidir: istisna bir bulguya uymaz |
+
+Bilinmeyen anahtar `unknown_field`'dır.
 
 ### 6.5 Katman ağacı
 

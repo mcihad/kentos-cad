@@ -8,6 +8,8 @@
 //!   drawing in a table, sorted, searched and filtered (points/, docs/adr/0153);
 //! - Arama (`data.search` opens it on this tab): the data search and the
 //!   place typed by its coordinates (search/, docs/adr/0178);
+//! - Topoloji (`topology.check` opens it on this tab): the topology rules'
+//!   findings, their fixes and exceptions (topology/, docs/adr/0202 §5);
 //! - Koordinat listesi (`view.coords` opens it on this tab): the selection's
 //!   points with Y, X, Z and layer; line work in Köşe tablosu (vertices/,
 //!   docs/adr/0172), which edits it; any other object's vertices with each
@@ -50,17 +52,20 @@ pub enum BottomTab {
     Table,
     /// Veride ara (search/, docs/adr/0178).
     Search,
+    /// Topoloji kuralları' findings (topology/, docs/adr/0202 §5).
+    Topology,
     Messages,
     Python,
 }
 
 impl BottomTab {
-    const ALL: [BottomTab; 7] = [
+    const ALL: [BottomTab; 8] = [
         BottomTab::History,
         BottomTab::Coords,
         BottomTab::Points,
         BottomTab::Table,
         BottomTab::Search,
+        BottomTab::Topology,
         BottomTab::Messages,
         BottomTab::Python,
     ];
@@ -134,6 +139,9 @@ impl App {
                 Tab::new(plan::TAB_SEARCH)
                     .icon(from_web(Some("dataSearch")))
                     .closable(false),
+                Tab::new(plan::TAB_TOPOLOGY)
+                    .icon(from_web(Some("topologyCheck")))
+                    .closable(false),
                 Tab::new(plan::TAB_MESSAGES)
                     .icon(from_web(Some("warning")))
                     .closable(false)
@@ -164,6 +172,7 @@ impl App {
             BottomTab::Points => self.points_tab(),
             BottomTab::Table => self.features_tab(),
             BottomTab::Search => self.data_tab(),
+            BottomTab::Topology => self.topology_tab(),
             BottomTab::Messages => self.log_list(LogListing::Messages),
             BottomTab::Python => self.python_tab(),
         };
@@ -192,6 +201,7 @@ impl App {
             BottomTab::Points => plan::TAB_POINTS,
             BottomTab::Table => plan::TAB_TABLE,
             BottomTab::Search => plan::TAB_SEARCH,
+            BottomTab::Topology => plan::TAB_TOPOLOGY,
             BottomTab::Messages => plan::TAB_MESSAGES,
             BottomTab::Python => "Python",
         })

@@ -16,7 +16,8 @@ use kentos_contracts::{
     DocumentSnapshotV2, DrawingFont, DrawingUnit, FieldChoice, LabelInk, LabelPlacement,
     LabelStyle, LayerField, LayerFieldKind, LayerNode, LayerNodeType, LayerSnap, LayerState,
     LayerStateNode, LayerStyle, LineType, MigrationSource, PointStyle, PointSymbol, ProjectId,
-    ProjectSettings, ProjectStyles, SurveySettings, Vec2, Workspace, layer_fields_problem,
+    ProjectSettings, ProjectStyles, SurveySettings, TopologyException, TopologyRule,
+    TopologyRuleKind, TopologySettings, Vec2, Workspace, layer_fields_problem,
     layer_states_problem,
 };
 
@@ -308,6 +309,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let (mut custom_crs, mut second_custom_crs, mut datum_transforms) = (None, None, Vec::new());
     let mut survey = None;
     let mut layer_states = Vec::new();
+    let mut topology = None;
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
@@ -375,6 +377,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "datumTransforms" if has.custom_crs => datum_transforms = crs::datum_transforms(r)?,
             "survey" if has.survey => survey = Some(survey_settings(r, has)?),
             "layerStates" if has.layer_states => layer_states = layer_states_list(r)?,
+            "topology" if has.topology => topology = Some(topology_settings(r)?),
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
             "dimensionStyles" if has.styles => dimension_styles = styles::dimension_styles(r)?,
             // `srid` and `customCrs` come first in the encoded order: the project's own system is known.
@@ -440,7 +443,84 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         layer_states,
         text_styles,
         dimension_styles,
+        topology,
     })
+}
+
+/// Schema 27's topology settings (docs/adr/0202 §7): the tolerance, the
+/// rules (`id`, `kind`, `layer`, `other`, `value`) and the exceptions (`at`,
+/// `rule`, `objects`), checked whole as the contract checks them
+/// (`TopologySettings::problem`).
+fn topology_settings(r: &mut Reader<'_>) -> Result<TopologySettings, KcadError> {
+    let at = r.position();
+    let mut t = TopologySettings::default();
+    map(r, |r, key| {
+        match key {
+            "rules" => {
+                t.rules = list(r, |r, _| {
+                    let (mut id, mut kind, mut layer, mut other, mut value) =
+                        (None, None, None, None, None);
+                    map(r, |r, key| {
+                        match key {
+                            "id" => id = Some(text(r)?),
+                            "kind" => {
+                                let at = r.position();
+                                let k = r.text()?;
+                                kind = Some(TopologyRuleKind::of_key(k).ok_or_else(|| {
+                                    r.fail_at(
+                                        Code::BadValue,
+                                        at,
+                                        &format!("“{k}” bilinen bir topoloji kuralı değil"),
+                                    )
+                                })?);
+                            }
+                            "layer" => layer = Some(text(r)?),
+                            "other" => other = Some(text(r)?),
+                            "value" => value = Some(r.float()?),
+                            _ => return Err(unknown(r)),
+                        }
+                        Ok(())
+                    })?;
+                    Ok(TopologyRule {
+                        id: required(r, id, "id")?,
+                        kind: required(r, kind, "kind")?,
+                        layer: required(r, layer, "layer")?,
+                        other,
+                        value,
+                    })
+                })?
+            }
+            "tolerance" => t.tolerance = Some(r.float()?),
+            "exceptions" => {
+                t.exceptions = list(r, |r, _| {
+                    let (mut at, mut rule, mut objects) = (None, None, None);
+                    map(r, |r, key| {
+                        match key {
+                            "at" => at = Some(point(r)?),
+                            "rule" => rule = Some(text(r)?),
+                            "objects" => {
+                                objects =
+                                    Some(list(r, |r, _| id16(r).map(kentos_contracts::EntityId))?)
+                            }
+                            _ => return Err(unknown(r)),
+                        }
+                        Ok(())
+                    })?;
+                    Ok(TopologyException {
+                        rule: required(r, rule, "rule")?,
+                        objects: required(r, objects, "objects")?,
+                        at: required(r, at, "at")?,
+                    })
+                })?
+            }
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    match t.problem() {
+        Some(problem) => Err(r.fail_at(Code::BadValue, at, &problem)),
+        None => Ok(t),
+    }
 }
 
 /// Schema 19's layer states (docs/adr/0177 §4): each its id, name and nodes,

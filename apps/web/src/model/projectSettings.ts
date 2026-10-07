@@ -7,9 +7,11 @@ import type { DrawingUnit } from '../contracts/generated/DrawingUnit';
 import type { LayerState } from '../contracts/generated/LayerState';
 import type { SurveySettings } from '../contracts/generated/SurveySettings';
 import type { TextStyleDef } from '../contracts/generated/TextStyleDef';
+import type { TopologySettings } from '../contracts/generated/TopologySettings';
 import type { Workspace } from '../contracts/generated/Workspace';
 import { crsBySrid, DEFAULT_SRID, type CrsDef } from '../geo/crs';
 import { sanitizedDimensionStyles, sanitizedTextStyles } from './annotationStyles';
+import { sameTopology, sanitizeTopology } from './topologyRules';
 
 export type AreaUnit = 'm2' | 'donum' | 'ha';
 export type AngleUnit = 'grad' | 'deg';
@@ -68,17 +70,20 @@ export interface ProjectSettingsData {
   textStyles?: TextStyleDef[];
   /** The project's dimension styles (docs/adr/0183 §3), in the list's order; absent: none (Standart only). */
   dimensionStyles?: DimensionStyleDef[];
+  /** The project's topology rules, tolerance and exceptions (docs/adr/0202 §1); absent: none. */
+  topology?: TopologySettings;
 }
 
 /**
- * A change to some settings: absent fields are kept; a null `secondSrid`, `customCrs`, `secondCustomCrs` or `survey`
- * removes it, an empty `datumTransforms` the datum choices.
+ * A change to some settings: absent fields are kept; a null `secondSrid`, `customCrs`, `secondCustomCrs`, `survey` or
+ * `topology` removes it, an empty `datumTransforms` the datum choices.
  */
-export type ProjectSettingsPatch = Partial<Omit<ProjectSettingsData, 'secondSrid' | 'customCrs' | 'secondCustomCrs' | 'survey'>> & {
+export type ProjectSettingsPatch = Partial<Omit<ProjectSettingsData, 'secondSrid' | 'customCrs' | 'secondCustomCrs' | 'survey' | 'topology'>> & {
   secondSrid?: number | null;
   customCrs?: CrsDefinition | null;
   secondCustomCrs?: CrsDefinition | null;
   survey?: SurveySettings | null;
+  topology?: TopologySettings | null;
 };
 
 /** The refraction coefficient of trigonometric heights when a project names none (docs/adr/0169 §3). */
@@ -184,6 +189,8 @@ export class ProjectSettings {
   readonly textStyles: Signal<readonly TextStyleDef[]>;
   /** The project's dimension styles, as a project keeps them (docs/adr/0183 §3; `sanitizedDimensionStyles`). */
   readonly dimensionStyles: Signal<readonly DimensionStyleDef[]>;
+  /** The project's topology rules, tolerance and exceptions, or null, as a project keeps them (docs/adr/0202 §1; `sanitizeTopology`). */
+  readonly topology: Signal<TopologySettings | null>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
 
@@ -207,6 +214,7 @@ export class ProjectSettings {
     this.layerStates = new Signal<readonly LayerState[]>(sanitizeLayerStates(d.layerStates ?? []));
     this.textStyles = new Signal<readonly TextStyleDef[]>(sanitizedTextStyles(d.textStyles ?? []));
     this.dimensionStyles = new Signal<readonly DimensionStyleDef[]>(sanitizedDimensionStyles(d.dimensionStyles ?? []));
+    this.topology = new Signal(sanitizeTopology(d.topology), sameTopology);
     watchAll(
       [
         this.crs,
@@ -226,6 +234,7 @@ export class ProjectSettings {
         this.layerStates,
         this.textStyles,
         this.dimensionStyles,
+        this.topology,
       ],
       () => this.changed.update((v) => v + 1),
     );
@@ -257,6 +266,8 @@ export class ProjectSettings {
       // Written only when there are (KCAD schema 21).
       ...(this.textStyles.value.length ? { textStyles: structuredClone([...this.textStyles.value]) } : {}),
       ...(this.dimensionStyles.value.length ? { dimensionStyles: structuredClone([...this.dimensionStyles.value]) } : {}),
+      // Written only when there are (KCAD schema 27).
+      ...(this.topology.value ? { topology: structuredClone(this.topology.value) } : {}),
     };
   }
 
@@ -304,6 +315,7 @@ export class ProjectSettings {
       layerStates: data.layerStates ?? [],
       textStyles: data.textStyles ?? [],
       dimensionStyles: data.dimensionStyles ?? [],
+      topology: data.topology ?? null,
     });
     this.workspace.set(typeOf(data.workspace));
     this.drawingUnit.set(data.drawingUnit ?? 'm');
@@ -342,6 +354,7 @@ export class ProjectSettings {
     if (data.layerStates !== undefined) this.layerStates.set(sanitizeLayerStates(data.layerStates));
     if (data.textStyles !== undefined) this.textStyles.set(sanitizedTextStyles(data.textStyles));
     if (data.dimensionStyles !== undefined) this.dimensionStyles.set(sanitizedDimensionStyles(data.dimensionStyles));
+    if (data.topology !== undefined) this.topology.set(sanitizeTopology(data.topology));
   }
 
   /** The project's text style `id`, or null (Standart, or one it no longer has). */

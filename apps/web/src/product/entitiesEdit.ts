@@ -103,6 +103,8 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   textStraighten: 'Düzleştir',
   roadJunctions: 'Kavşak temizle',
   medianClose: 'Refüj kapat',
+  // Topoloji sekmesinin düzeltmeleri (docs/adr/0202 §4).
+  topologyFix: 'Topoloji düzelt',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */

@@ -85,7 +85,8 @@ use crate::layer::LineType;
 /// 36: a layer's fields (docs/adr/0199): `.kcad` document schema 26 and the layer node's
 ///    `fields`; Shapefile's DBF fields and GeoJSON's properties read as the new layer's fields,
 ///    a field layer's numbers and yes or no values written to GeoJSON as JSON numbers and booleans.
-pub const FORMATS_VERSION: u32 = 36;
+/// 37: topology rules (docs/adr/0202): `.kcad` document schema 27 and the settings' `topology`.
+pub const FORMATS_VERSION: u32 = 37;
 
 // ── Every import ────────────────────────────────────────────────────────
 

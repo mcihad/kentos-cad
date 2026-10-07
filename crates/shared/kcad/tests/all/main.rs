@@ -16,3 +16,4 @@ mod linked_texts;
 mod parts;
 mod robustness;
 mod texts;
+mod topology;

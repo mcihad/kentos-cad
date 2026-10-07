@@ -354,6 +354,7 @@ class EditOperation(_StrEnum):
     - ``textStraighten``: Düzleştir (docs/adr/0196 §4): texts along a curve made straight.
     - ``roadJunctions``: Kavşak temizle (docs/adr/0198 §3): road areas joined kind by kind, their inner corners rounded.
     - ``medianClose``: Refüj kapat (docs/adr/0198 §4): two lines closed into a median, an area.
+    - ``topologyFix``: Topoloji düzelt (docs/adr/0202 §4): a topology finding fixed, its objects updated in place or deleted.
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -404,9 +405,10 @@ class EditOperation(_StrEnum):
     TEXT_STRAIGHTEN = "textStraighten"
     ROAD_JUNCTIONS = "roadJunctions"
     MEDIAN_CLOSE = "medianClose"
+    TOPOLOGY_FIX = "topologyFix"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -774,6 +776,42 @@ class TextScript(_StrEnum):
 
 TextScriptName = Literal["super", "sub"]
 """The names of :class:`TextScript`, for a plain string."""
+
+
+class TopologyRuleKind(_StrEnum):
+    """The thirteen kinds (docs/adr/0202 §1–§2).
+
+    - ``mustNotOverlap``: Çakışmamalı: the layer's areas do not overlap.
+    - ``mustNotHaveGaps``: Boşluk olmamalı: no gap is closed in among the layer's areas.
+    - ``mustNotHaveSlivers``: İnce alan olmamalı: no part of an area is thinner than the value.
+    - ``mustNotHaveDuplicates``: Yinelenmemeli: no edge of a line lies on another line, no point on another point.
+    - ``mustNotHaveDangles``: Sarkan uç olmamalı: every line end meets the layer's line work.
+    - ``mustNotHaveShortEdges``: Kısa kenar olmamalı: no edge is shorter than the value.
+    - ``mustNotHaveSmallAngles``: Küçük açı olmamalı: no corner is sharper than the value.
+    - ``mustBeValid``: Geçerli olmalı: ADR 0201 §6's problems.
+    - ``mustNotHaveMissingVertices``: Ortak sınırda köşe eksik olmamalı: an area's vertex on a neighbour's edge is the neighbour's too.
+    - ``mustNotOverlapWith``: … ile çakışmamalı: the layer's areas do not overlap the other's.
+    - ``mustBeCoveredBy``: … içinde kalmalı: the layer's objects stay within the other's areas.
+    - ``boundaryMustBeCoveredBy``: Sınırı … sınırlarında olmalı: the layer's areas' boundaries lie on the other's line work.
+    - ``mustBeOnEndOf``: … çizgilerinin ucunda olmalı: the layer's points are at the other's line ends.
+    """
+    MUST_NOT_OVERLAP = "mustNotOverlap"
+    MUST_NOT_HAVE_GAPS = "mustNotHaveGaps"
+    MUST_NOT_HAVE_SLIVERS = "mustNotHaveSlivers"
+    MUST_NOT_HAVE_DUPLICATES = "mustNotHaveDuplicates"
+    MUST_NOT_HAVE_DANGLES = "mustNotHaveDangles"
+    MUST_NOT_HAVE_SHORT_EDGES = "mustNotHaveShortEdges"
+    MUST_NOT_HAVE_SMALL_ANGLES = "mustNotHaveSmallAngles"
+    MUST_BE_VALID = "mustBeValid"
+    MUST_NOT_HAVE_MISSING_VERTICES = "mustNotHaveMissingVertices"
+    MUST_NOT_OVERLAP_WITH = "mustNotOverlapWith"
+    MUST_BE_COVERED_BY = "mustBeCoveredBy"
+    BOUNDARY_MUST_BE_COVERED_BY = "boundaryMustBeCoveredBy"
+    MUST_BE_ON_END_OF = "mustBeOnEndOf"
+
+
+TopologyRuleKindName = Literal["mustNotOverlap", "mustNotHaveGaps", "mustNotHaveSlivers", "mustNotHaveDuplicates", "mustNotHaveDangles", "mustNotHaveShortEdges", "mustNotHaveSmallAngles", "mustBeValid", "mustNotHaveMissingVertices", "mustNotOverlapWith", "mustBeCoveredBy", "boundaryMustBeCoveredBy", "mustBeOnEndOf"]
+"""The names of :class:`TopologyRuleKind`, for a plain string."""
 
 
 class Workspace(_StrEnum):
@@ -6156,6 +6194,7 @@ class ProjectSettings(_Model):
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
+        topology: The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
         workspace: The project's type; none while it is not asked (files written before
             types). The former Hibrit mode reads as written and means the same
             (see [`ProjectSettings::project_type`]).
@@ -6176,6 +6215,7 @@ class ProjectSettings(_Model):
     second_srid: int | None | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
+    topology: TopologySettings | None | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -6206,6 +6246,8 @@ class ProjectSettings(_Model):
             out["survey"] = None if self.survey is None else self.survey.to_json()
         if self.text_styles is not UNSET:
             out["textStyles"] = [e0.to_json() for e0 in self.text_styles]
+        if self.topology is not UNSET:
+            out["topology"] = None if self.topology is None else self.topology.to_json()
         if self.workspace is not UNSET:
             out["workspace"] = None if self.workspace is None else _enum_out(self.workspace)
         return out
@@ -6229,6 +6271,7 @@ class ProjectSettings(_Model):
             second_srid=data.get("secondSrid", UNSET),
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
+            topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
         )
 
@@ -7021,6 +7064,104 @@ class TmDefinition(_Model):
             custom_datum=UNSET if "customDatum" not in data else None if data["customDatum"] is None else CustomDatum.from_json(data["customDatum"]),
             datum=UNSET if "datum" not in data else None if data["datum"] is None else _enum_in(RegistryDatum, data["datum"]),
             latitude_of_origin=UNSET if "latitudeOfOrigin" not in data else None if data["latitudeOfOrigin"] is None else float(data["latitudeOfOrigin"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyException(_Model):
+    """A finding marked as left on purpose: its rule, its objects' persistent
+    ids in the finding's order, and its place.
+    Attributes:
+        rule: The rule's id.
+        objects: At least one.
+    """
+    rule: str
+    objects: list[str]
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rule"] = self.rule
+        out["objects"] = list(self.objects)
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyException:
+        return cls(
+            rule=data["rule"],
+            objects=list(data["objects"]),
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyRule(_Model):
+    """A rule: its kind on a layer and, between layers, another layer.
+    Attributes:
+        id: One of its kind among the project's rules; exceptions name it.
+        layer: The layer's id (a layer, not a group). A rule whose layer the project
+            no longer has stays and is not checked.
+        other: The other layer's id, for a rule between layers only.
+        value: The value of a kind that takes one: a length in metres, an angle in
+            radians; absent: the kind's default.
+    """
+    id: str
+    kind: TopologyRuleKind | TopologyRuleKindName
+    layer: str
+    other: str | None | Unset = UNSET
+    value: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["kind"] = _enum_out(self.kind)
+        out["layer"] = self.layer
+        if self.other is not UNSET:
+            out["other"] = self.other
+        if self.value is not UNSET:
+            out["value"] = None if self.value is None else float(self.value)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyRule:
+        return cls(
+            id=data["id"],
+            kind=_enum_in(TopologyRuleKind, data["kind"]),
+            layer=data["layer"],
+            other=data.get("other", UNSET),
+            value=UNSET if "value" not in data else None if data["value"] is None else float(data["value"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologySettings(_Model):
+    """The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
+    Attributes:
+        exceptions: Findings marked as left on purpose (docs/adr/0202 §3).
+        rules: The rules, in the order they are checked and listed.
+        tolerance: Metres, within [`TOPOLOGY_TOLERANCES`]; absent: [`TOPOLOGY_TOLERANCE`].
+    """
+    exceptions: list[TopologyException] | Unset = UNSET
+    rules: list[TopologyRule] | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.exceptions is not UNSET:
+            out["exceptions"] = [e0.to_json() for e0 in self.exceptions]
+        if self.rules is not UNSET:
+            out["rules"] = [e0.to_json() for e0 in self.rules]
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologySettings:
+        return cls(
+            exceptions=[TopologyException.from_json(e0) for e0 in data["exceptions"]] if "exceptions" in data else UNSET,
+            rules=[TopologyRule.from_json(e0) for e0 in data["rules"]] if "rules" in data else UNSET,
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
 
@@ -8871,6 +9012,11 @@ __all__ = [
     "TextStyleDef",
     "TmCrsSystem",
     "TmDefinition",
+    "TopologyException",
+    "TopologyRule",
+    "TopologyRuleKind",
+    "TopologyRuleKindName",
+    "TopologySettings",
     "Transform",
     "UpdateBlockChange",
     "UpdateEntityEdit",

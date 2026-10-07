@@ -16,6 +16,8 @@ import { vertexListing } from './coordinates';
 import { FeatureTable, resetFeatureTable } from './FeatureTable';
 import { PointTable } from './PointTable';
 import { SearchPanel } from './SearchPanel';
+import { TopologyPanel } from './TopologyPanel';
+import { resetTopology } from './topologyRun';
 import { isEditable } from './vertexEdit';
 import { VERTEX_TEXTS, VertexTable } from './VertexTable';
 import { BOTTOM_TABS, BOTTOM_TEXTS, FOLLOW_WITHIN, ICON_SIZE, LEVEL_ICON, listedIn, logTime } from './logPlan';
@@ -46,6 +48,8 @@ export class BottomPanel extends Component {
   private search: SearchPanel | null = null;
   /** Tablo, the attribute table (docs/adr/0199 §4), while its tab is on screen. */
   private features: FeatureTable | null = null;
+  /** Topoloji, the topology rules' findings (docs/adr/0202 §5), while its tab is on screen. */
+  private topology: TopologyPanel | null = null;
 
   constructor(ctx: AppContext) {
     super();
@@ -75,6 +79,8 @@ export class BottomPanel extends Component {
     this.d.add(listen(clear, 'click', () => ctx.log.clear()));
     // Another drawing: the table's choices (its layer, search, sort) start again, as they do for a new session.
     this.d.add(ctx.doc.events.on('reset', () => resetFeatureTable()));
+    // Another drawing: the last check is another drawing's (docs/adr/0202 §3).
+    this.d.add(ctx.doc.events.on('reset', () => resetTopology()));
     this.d.add(listen(collapse, 'click', () => ui.bottomExpanded.set(false)));
     this.d.add(tooltip(clear, () => ({ title: BOTTOM_TEXTS.clear }), 'top'));
     this.d.add(tooltip(collapse, () => ({ title: BOTTOM_TEXTS.close, shortcut: ctx.keymap.chordFor('view.bottomPanel') }), 'top'));
@@ -133,6 +139,7 @@ export class BottomPanel extends Component {
     this.d.add(() => this.vertices?.dispose());
     this.d.add(() => this.search?.dispose());
     this.d.add(() => this.features?.dispose());
+    this.d.add(() => this.topology?.dispose());
   }
 
   /**
@@ -192,6 +199,8 @@ export class BottomPanel extends Component {
     this.search = null;
     this.features?.dispose();
     this.features = null;
+    this.topology?.dispose();
+    this.topology = null;
     this.log = null;
     if (!this.ctx.ui.bottomExpanded.value) return;
     const tab = this.ctx.ui.bottomTab.value;
@@ -207,6 +216,10 @@ export class BottomPanel extends Component {
     if (tab === 'table') {
       this.features = new FeatureTable(this.ctx);
       return replaceChildren(this.content, this.features.el);
+    }
+    if (tab === 'topology') {
+      this.topology = new TopologyPanel(this.ctx);
+      return replaceChildren(this.content, this.topology.el);
     }
     const entries = this.entriesOf(tab);
     if (!entries.length) {

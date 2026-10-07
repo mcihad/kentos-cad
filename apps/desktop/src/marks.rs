@@ -84,6 +84,8 @@ pub struct Marks {
     /// The place the data search's Git marked and its coordinates' words
     /// (docs/adr/0178 §6).
     pub found: Option<(Vec2, String)>,
+    /// The Topoloji tab's finding (docs/adr/0202 §5).
+    pub problem: Option<crate::topology::ProblemMark>,
     /// Nesne izleme's points and the alignment the cursor is locked to (tracking.rs).
     pub tracking: Option<TrackingMarks>,
     /// The crosshair at the pointer, when the pointer is over the drawing.
@@ -182,6 +184,7 @@ impl Marks {
             && self.grips.is_empty()
             && self.marked.is_empty()
             && self.found.is_none()
+            && self.problem.is_none()
             && self.tracking.is_none()
             && self.crosshair.is_none()
             && self.locks.is_none()
@@ -205,6 +208,15 @@ impl<Message> canvas::Program<Message> for Marks {
         marked(&mut frame, &self.marked, &self.camera, &self.colors, accent);
         if let Some((p, words)) = &self.found {
             found(&mut frame, *p, words, &self.camera, &self.colors, accent);
+        }
+        if let Some(m) = &self.problem {
+            problem(
+                &mut frame,
+                m,
+                &self.camera,
+                &self.colors,
+                Tokens::of(theme).danger,
+            );
         }
         if let Some(b) = self.select {
             select_box(&mut frame, b, &self.colors);
@@ -376,6 +388,88 @@ fn found(
         color: accent,
         ..label
     });
+}
+
+/// An edge as points along it on the screen (arcs every 7.5° at most).
+fn edge_points(e: &kentos_geometry_core::geom::intersect::Edge, camera: &Camera) -> Vec<Point> {
+    use kentos_geometry_core::geom::intersect::Edge;
+    let screen = |x: f64, y: f64| {
+        let s = camera.world_to_screen(Vec2::new(x, y));
+        Point::new(s[0] as f32, s[1] as f32)
+    };
+    match *e {
+        Edge::Seg { a, b } => vec![screen(a.x, a.y), screen(b.x, b.y)],
+        Edge::Arc { c, r, a0, sweep } => {
+            let n = ((sweep.abs() / (std::f64::consts::PI / 24.0)).ceil() as usize).max(2);
+            (0..=n)
+                .map(|i| {
+                    let a = a0 + sweep * i as f64 / n as f64;
+                    screen(c.x + a.cos() * r, c.y + a.sin() * r)
+                })
+                .collect()
+        }
+    }
+}
+
+/// The web's `drawProblemMark` (docs/adr/0202 §5): a topology finding's
+/// regions filled and outlined, its edges bold, in the danger colour on a
+/// halo; its place marked as Koordinata git marks one, its problem's name
+/// beside it.
+fn problem(
+    frame: &mut canvas::Frame,
+    m: &crate::topology::ProblemMark,
+    camera: &Camera,
+    colors: &MarkColors,
+    danger: iced::Color,
+) {
+    use kentos_geometry_core::geom::region::ring_edges;
+    let stroke =
+        |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
+    if !m.regions.is_empty() {
+        let shape = Path::new(|b| {
+            for a in &m.regions {
+                for ring in std::iter::once(&a.outer).chain(&a.holes) {
+                    let mut first = true;
+                    for e in ring_edges(ring) {
+                        for (k, q) in edge_points(&e, camera).into_iter().enumerate() {
+                            if first {
+                                b.move_to(q);
+                                first = false;
+                            } else if k > 0 {
+                                b.line_to(q);
+                            }
+                        }
+                    }
+                    b.close();
+                }
+            }
+        });
+        frame.fill(
+            &shape,
+            canvas::Fill {
+                style: canvas::Style::Solid(danger.scale_alpha(0.3)),
+                rule: canvas::fill::Rule::EvenOdd,
+            },
+        );
+        frame.stroke(&shape, stroke(3.5, colors.halo));
+        frame.stroke(&shape, stroke(1.5, danger));
+    }
+    if !m.edges.is_empty() {
+        let shape = Path::new(|b| {
+            for e in &m.edges {
+                for (k, q) in edge_points(e, camera).into_iter().enumerate() {
+                    if k == 0 {
+                        b.move_to(q);
+                    } else {
+                        b.line_to(q);
+                    }
+                }
+            }
+        });
+        frame.stroke(&shape, stroke(6.0, colors.halo));
+        frame.stroke(&shape, stroke(3.0, danger));
+    }
+    found(frame, m.at, &m.label, camera, colors, danger);
 }
 
 /// The web's `drawCrosshair`: the drawing's ink at 85 %, 1 px on the

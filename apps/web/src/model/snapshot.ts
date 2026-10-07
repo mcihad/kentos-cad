@@ -7,6 +7,7 @@ import type { DatumTransform } from '../contracts/generated/DatumTransform';
 import type { DimensionStyleDef } from '../contracts/generated/DimensionStyleDef';
 import type { LayerState } from '../contracts/generated/LayerState';
 import type { SurveySettings } from '../contracts/generated/SurveySettings';
+import type { TopologySettings } from '../contracts/generated/TopologySettings';
 import type { TextStyleDef } from '../contracts/generated/TextStyleDef';
 import type { DocumentSnapshotV1 } from '../contracts/generated/DocumentSnapshotV1';
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
@@ -425,6 +426,12 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
         // The project's text and dimension styles (docs/adr/0183): kept as a project keeps them.
         ...(settings.textStyles === undefined ? {} : { textStyles: stylesOf<TextStyleDef>(settings.textStyles, 'text') }),
         ...(settings.dimensionStyles === undefined ? {} : { dimensionStyles: stylesOf<DimensionStyleDef>(settings.dimensionStyles, 'dimension') }),
+        // The project's topology rules (docs/adr/0202 §1): an object, kept as a project keeps it.
+        ...(settings.topology === undefined
+          ? {}
+          : isObj(settings.topology)
+            ? { topology: settings.topology as unknown as TopologySettings }
+            : fail('Proje ayarları › topoloji kuralları', 'nesne olmalı')),
       },
       origin: vec(data.origin, 'Yerel orijin'),
       homeView: isObj(hv) ? { minX: num(hv.minX, 'Başlangıç görünümü'), minY: num(hv.minY, 'Başlangıç görünümü'), maxX: num(hv.maxX, 'Başlangıç görünümü'), maxY: num(hv.maxY, 'Başlangıç görünümü') } : null,

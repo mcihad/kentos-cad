@@ -47,6 +47,7 @@ pub mod stretch;
 pub mod template_members;
 pub mod topology;
 pub mod topology_edit;
+pub mod topology_rules;
 pub mod trace;
 pub mod transform;
 pub mod trim;

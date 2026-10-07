@@ -22,8 +22,8 @@ mod styles;
 use kentos_contracts::{
     DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DimensionStyle, DocumentSnapshotV2,
     Entity, LabelStyle, LayerField, LayerNode, LayerNodeType, LayerSnap, LayerState,
-    LayerStateNode, LayerStyle, MigrationSource, ProjectSettings, SurveySettings, Vec2,
-    layer_fields_problem, layer_states_problem,
+    LayerStateNode, LayerStyle, MigrationSource, ProjectSettings, SurveySettings, TopologySettings,
+    Vec2, layer_fields_problem, layer_states_problem,
 };
 use serde_json::Value;
 
@@ -33,10 +33,11 @@ use crate::watch::{Step, Watch, report};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES,
-    SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
-    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TABLES,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
+    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
+    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
+    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -285,7 +286,8 @@ impl<'d> Encoder<'d> {
             + usize::from(s.survey.is_some())
             + usize::from(!s.layer_states.is_empty())
             + usize::from(!s.text_styles.is_empty())
-            + usize::from(!s.dimension_styles.is_empty());
+            + usize::from(!s.dimension_styles.is_empty())
+            + usize::from(s.topology.is_some());
         self.open(n, true)?;
         self.key("srid");
         self.w.uint(u64::from(s.srid));
@@ -295,6 +297,10 @@ impl<'d> Encoder<'d> {
         }
         self.key("areaUnit");
         self.w.text(area_unit(s.area_unit));
+        if let Some(t) = &s.topology {
+            self.key("topology");
+            self.at(Seg::Name("topology"), |e| e.topology(t))?;
+        }
         self.key("angleUnit");
         self.w.text(angle_unit(s.angle_unit));
         if let Some(d) = &s.custom_crs {
@@ -426,6 +432,87 @@ impl<'d> Encoder<'d> {
         }
         self.key("visible");
         self.w.bool(n.visible);
+        self.close();
+        Ok(())
+    }
+
+    /// The topology settings (docs/adr/0202 §7), checked whole as a reader
+    /// checks them: `rules` (`id`, `kind`, `layer`, `other`, `value`),
+    /// `tolerance`, `exceptions` (`at`, `rule`, `objects`).
+    fn topology(&mut self, t: &'d TopologySettings) -> Result<(), KcadError> {
+        if let Some(problem) = t.problem() {
+            return Err(self.fail(Code::BadValue, &problem));
+        }
+        self.open(
+            usize::from(!t.rules.is_empty())
+                + usize::from(t.tolerance.is_some())
+                + usize::from(!t.exceptions.is_empty()),
+            true,
+        )?;
+        if !t.rules.is_empty() {
+            self.key("rules");
+            self.at(Seg::Name("rules"), |e| {
+                e.open(t.rules.len(), false)?;
+                for (i, r) in t.rules.iter().enumerate() {
+                    e.at(Seg::Index(i), |e| {
+                        e.open(
+                            3 + usize::from(r.other.is_some()) + usize::from(r.value.is_some()),
+                            true,
+                        )?;
+                        e.key("id");
+                        e.text(&r.id)?;
+                        e.key("kind");
+                        e.w.text(r.kind.key());
+                        e.key("layer");
+                        e.text(&r.layer)?;
+                        if let Some(o) = &r.other {
+                            e.key("other");
+                            e.text(o)?;
+                        }
+                        if let Some(v) = r.value {
+                            e.key("value");
+                            e.at(Seg::Name("value"), |e| e.float(v))?;
+                        }
+                        e.close();
+                        Ok(())
+                    })?;
+                }
+                e.close();
+                Ok(())
+            })?;
+        }
+        if let Some(tol) = t.tolerance {
+            self.key("tolerance");
+            self.at(Seg::Name("tolerance"), |e| e.float(tol))?;
+        }
+        if !t.exceptions.is_empty() {
+            self.key("exceptions");
+            self.at(Seg::Name("exceptions"), |e| {
+                e.open(t.exceptions.len(), false)?;
+                for (i, x) in t.exceptions.iter().enumerate() {
+                    e.at(Seg::Index(i), |e| {
+                        e.open(3, true)?;
+                        e.key("at");
+                        e.at(Seg::Name("at"), |e| e.point(&x.at))?;
+                        e.key("rule");
+                        e.text(&x.rule)?;
+                        e.key("objects");
+                        e.at(Seg::Name("objects"), |e| {
+                            e.open(x.objects.len(), false)?;
+                            for (j, id) in x.objects.iter().enumerate() {
+                                e.at(Seg::Index(j), |e| e.id(&id.0))?;
+                            }
+                            e.close();
+                            Ok(())
+                        })?;
+                        e.close();
+                        Ok(())
+                    })?;
+                }
+                e.close();
+                Ok(())
+            })?;
+        }
         self.close();
         Ok(())
     }
@@ -805,7 +892,8 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 26 when a layer has fields
+/// The oldest schema that holds the drawing: 27 when the project has
+/// topology settings (docs/adr/0202 §7), 26 when a layer has fields
 /// (docs/adr/0199 §1), 25 when a text of it or of a block definition has a
 /// curve (docs/adr/0196), 24 when it has a picture (docs/adr/0192), 23 when a
 /// hatch has a pattern, a gradient or a tie (docs/adr/0186), 22 when it has a table
@@ -835,6 +923,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| !n.fields.is_empty() || schemas(&n.children))
+    }
+    if doc.settings.topology.is_some() {
+        return SCHEMA_WITH_TOPOLOGY;
     }
     if schemas(&doc.layers) {
         return SCHEMA_WITH_LAYER_FIELDS;

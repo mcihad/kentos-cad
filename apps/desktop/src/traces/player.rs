@@ -403,6 +403,8 @@ pub struct Observation {
     pub search: Option<(String, Vec<String>)>,
     /// Öznitelik tablosu's count, headers and rows, while its tab is open.
     pub feature_table: Option<(String, Vec<String>, Vec<String>)>,
+    /// Topoloji's count line and rows, while its tab is open.
+    pub topology: Option<(String, Vec<String>)>,
     /// The place the data search marked, absolute.
     pub mark: Option<[f64; 2]>,
     /// Genel bakış's extent, absolute, while it shows (docs/adr/0181).
@@ -951,7 +953,8 @@ impl<'a> Player<'a> {
     /// each through the message the control sends (search/mod.rs).
     fn answer_panel(&mut self, title: &str, step: &Step) -> Result<(), String> {
         let table = title == crate::log_plan::TAB_TABLE;
-        if title != crate::log_plan::TAB_SEARCH && !table {
+        let topology = title == crate::log_plan::TAB_TOPOLOGY;
+        if title != crate::log_plan::TAB_SEARCH && !table && !topology {
             return Err(format!("“{title}” sekmesi izden yanıtlanamıyor"));
         }
         if self.app.bottom_tab_title() != Some(title) {
@@ -992,6 +995,8 @@ impl<'a> Player<'a> {
         for control in controls {
             let answered = if table {
                 self.app.features_control(control)?
+            } else if topology {
+                self.app.topology_control(control)?
             } else {
                 self.app.data_control(control)?
             };
@@ -1168,6 +1173,7 @@ impl<'a> Player<'a> {
             panel: app.bottom_tab_title().map(str::to_owned),
             search: app.data_seen(),
             feature_table: app.features_seen(),
+            topology: app.topology_seen(),
             mark: app.data_mark().map(|p| [p.x, p.y]),
             overview: app.overview_extent(),
             magnifier: app.magnifier_state(),

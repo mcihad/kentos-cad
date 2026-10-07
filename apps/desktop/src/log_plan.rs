@@ -21,6 +21,8 @@ pub(crate) const TAB_POINTS: &str = "Noktalar";
 pub(crate) const TAB_TABLE: &str = "Tablo";
 /// Veride ara (search/, docs/adr/0178).
 pub(crate) const TAB_SEARCH: &str = "Arama";
+/// Topoloji kuralları (topology/, docs/adr/0202 §5).
+pub(crate) const TAB_TOPOLOGY: &str = "Topoloji";
 pub(crate) const TAB_MESSAGES: &str = "Uyarılar";
 
 /// The panel's words: its two buttons, the command line's button, the empty lists.

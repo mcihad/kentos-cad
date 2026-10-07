@@ -257,7 +257,7 @@ export function projectHead(head: DrawingHead): { head: DrawingHead; dropped: Dr
       format: same,
       version: same,
       name: same,
-      settings: (x, w) => p.fields(x, { srid: same, lengthDecimals: same, areaDecimals: same, areaUnit: same, angleUnit: same, plotScale: same, workspace: same, drawingFont: same, drawingUnit: same, secondSrid: same, customCrs: same, secondCustomCrs: same, datumTransforms: same, survey: same, layerStates: same, textStyles: same, dimensionStyles: same }, w),
+      settings: (x, w) => p.fields(x, { srid: same, lengthDecimals: same, areaDecimals: same, areaUnit: same, angleUnit: same, plotScale: same, workspace: same, drawingFont: same, drawingUnit: same, secondSrid: same, customCrs: same, secondCustomCrs: same, datumTransforms: same, survey: same, layerStates: same, textStyles: same, dimensionStyles: same, topology: same }, w),
       origin: vec,
       homeView: (x, w) => p.fields(x, { minX: same, minY: same, maxX: same, maxY: same }, w),
       layers: p.list(layer),

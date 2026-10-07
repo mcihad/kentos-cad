@@ -604,6 +604,17 @@ export const ICONS = {
     '<path d="M3 15.5 4.6 4.4l10.6-.9 2.3 10.8z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M3 15.5 4.6 4.4l10.6-.9 2.3 10.8z"/><path d="M3 15.5 3.6 9.5l1.6-.9.7-3.6 2.6.9 1.9-2.4 2.9 1.3.8 2.9 2.4 1.4-.9 4.6-3.4.6-1.7 1.9z" stroke-width=".9" stroke-dasharray="1.8 1.4"/>',
   geoReproject:
     '<path d="M2.5 9.5 5 3.5h6l-2.5 6z" stroke-width="1.1"/><path d="M3.75 6.5h6M8 3.5l-2.5 6" stroke-width=".9"/><path d="M11.5 11h6v6.5h-6z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M11.5 11h6v6.5h-6z"/><path d="M8 12.5h2.5M9.2 11.2l1.3 1.3-1.3 1.3" stroke-width="1.2"/>',
+  // Topoloji kuralları (docs/adr/0202; the owner's choices, all A): Topolojiyi denetle and the Topoloji tab, three parcels
+  // of a block with a check on their corner; Topoloji kuralları, a small block and the rules as lines; İstisna, a
+  // flag; Düzelt, a parcel's corner and a wrench.
+  topologyCheck:
+    '<path d="M2.5 2.5h6.5v7h-6.5zM9 2.5h6.5v5.2M2.5 9.5v6h6" stroke-width="1.3"/><circle cx="14" cy="14" r="4.2" stroke-width="1.3"/><path d="m12 14.1 1.4 1.4 2.7-2.9" stroke-width="1.4"/>',
+  topologyRules:
+    '<path d="M2.5 2.5h7v6h-7zM6 2.5v6" stroke-width="1.2"/><path d="M8 12h9.5M8 15.5h9.5M2.5 12h2M2.5 15.5h2" stroke-width="1.3"/><path d="M12 5.5h5.5" stroke-width="1.3"/>',
+  topologyException:
+    '<path d="M5 17.5V2.5" stroke-width="1.5"/><path d="M5 3h10.5l-2.4 3.6 2.4 3.6H5z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M5 3h10.5l-2.4 3.6 2.4 3.6H5z" stroke-width="1.3"/>',
+  topologyFix:
+    '<path d="M2.5 17.5V8.5h6" stroke-width="1.3"/><path d="M2.5 17.5h9" stroke-width="1.3"/><path d="M17.3 5.6a3 3 0 0 1-3.9 3L7 15l-1.6-1.6 6.4-6.4a3 3 0 0 1 3-3.9l-1.8 1.8.4 1.6 1.6.4z" stroke-width="1.2"/>',
   // Öznitelik tablosu (docs/adr/0199 §4): a table and its layer's object (the owner's choice A).
   featureTable:
     '<rect x="2" y="2.5" width="11.5" height="10" rx="1"/><path d="M2 6h11.5M2 9.25h11.5M6 6v6.5"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z"/>',

@@ -21,7 +21,7 @@ import type { BackendKind, RenderBackend } from '../render/types';
 import { webgpuSupported } from '../render/webgpu/support';
 import type { ToolPointer } from '../tools/Tool';
 import { Camera } from './Camera';
-import { drawCrosshair, drawGrips, drawLabels, drawMarkedVertices, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSearchMark, drawSnap, drawUcsIcon, GRIP_HIT_PX, midGripVisible, paragraphRecords } from './overlay';
+import { drawCrosshair, drawGrips, drawLabels, drawMarkedVertices, drawNorthArrow, drawObjectTracking, drawProblemMark, drawScaleBar, drawSearchMark, drawSnap, drawUcsIcon, GRIP_HIT_PX, midGripVisible, paragraphRecords } from './overlay';
 import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTracking';
 import { ViewNavigation } from './viewHistory';
 import { NavigationCards } from './navigationCards';
@@ -817,6 +817,8 @@ export class ViewportController {
     // The place Koordinata git marked is no more once another drawing is open (docs/adr/0178 §6).
     d.add(selection.mark.subscribe(() => this.requestOverlay()));
     d.add(doc.events.on('reset', () => selection.mark.set(null)));
+    d.add(selection.problem.subscribe(() => this.requestOverlay()));
+    d.add(doc.events.on('reset', () => selection.problem.set(null)));
     d.add(
       this.camera.changed.subscribe(() => {
         this.requestRender();
@@ -1569,6 +1571,9 @@ export class ViewportController {
     drawMarkedVertices(g, this.ctx.selection.vertices.value, cam, pal);
     const mark = this.ctx.selection.mark.value;
     if (mark) drawSearchMark(g, mark, this.ctx.format.point(mark), cam, pal);
+    // The Topoloji tab's finding (docs/adr/0202 §5).
+    const problem = this.ctx.selection.problem.value;
+    if (problem) drawProblemMark(g, problem, cam, pal);
     const d0 = import.meta.env.DEV ? performance.now() : 0;
     this.ctx.tools.active.draw?.(g, cam);
     // The digitizing locks over the tool's preview (docs/adr/0166 §6).

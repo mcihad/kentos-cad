@@ -1,0 +1,176 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "topology-rules",
+ "title": "Topoloji kuralları (ADR 0202): Topolojiyi denetle alt panelin Topoloji sekmesini açar ve projenin altı kuralını çalıştırır (çakışma, boşluk, ince alan, ortak sınırda eksik köşe, parsel içinde kalma, sarkan uç); satıra tıklamak nesneleri seçer; Düzelt ▾ Birinci nesneden çıkar çakışmayı tek adımda giderir ve denetim yinelenir (çakışmanın dört T birleşimi de kalkar); iki sarkan uç Ctrl ile seçilip İstisna yap ile bırakılır, İstisna ve Hepsi süzgeçleri",
+ "source": "Web'in TopologyPanel'i ve topologyRun'ı (ui/bottom/), masaüstünün topology/ modülü, çekirdeğin ops::topology_rules'ı, sözleşmenin topology'si, ADR 0202",
+ "covers": [
+  "GIS-04"
+ ],
+ "document": "topology-rules.kcad",
+ "view": {
+  "center": [
+   487030,
+   4420065
+  ],
+  "metresPerPixel": 0.25
+ },
+ "clickTolerance": 0.2,
+ "steps": [
+  {
+   "run": "topology.check",
+   "note": "Topolojiyi denetle: sekme açılır, altı kural 18 nesnede 19 bulgu verir; kuralların sırasıyla",
+   "expect": {
+    "panel": "Topoloji",
+    "topology": {
+     "count": "19 bulgu (açık 19, istisna 0)",
+     "rows": [
+      "Parsel | Çakışmamalı | Çakışma | #2, #3 | 12.00 m²",
+      "Parsel | Boşluk olmamalı | Boşluk | #5, #6, #4, #7 | 200.00 m²",
+      "Parsel | İnce alan olmamalı | İnce alan | #9 | 0.060 m",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #3, #2 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #3, #2 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #2, #3 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #2, #3 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #4, #5 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #7, #5 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #4, #6 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #7, #6 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #12, #11 | ",
+      "Bina | Parsel içinde kalmalı | Dışarıda kalan | #14 | 48.00 m²",
+      "Bina | Parsel içinde kalmalı | Dışarıda kalan | #15 | 48.00 m²",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #16 | 74.000 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #16 | 16.000 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #17 | 0.600 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #18 | 74.000 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #18 | 0.600 m"
+     ]
+    }
+   }
+  },
+  {
+   "shot": "topoloji-bulgular",
+   "note": "Topoloji sekmesi: Denetle, Kurallar…, Kural, Açık / İstisna / Hepsi; Düzelt ▾ ve İstisna yap"
+  },
+  {
+   "panel": "Topoloji",
+   "row": 1,
+   "note": "Çakışma satırı: iki parsel seçilir, görünüm çakışmaya gelir ve çakışma çizimde gösterilir",
+   "expect": {
+    "selected": [
+     2,
+     3
+    ]
+   }
+  },
+  {
+   "panel": "Topoloji",
+   "pick": {
+    "Düzelt": "Birinci nesneden çıkar (#2)"
+   },
+   "note": "Birinci nesneden çıkar: #2'den #3'ün kapladığı kısım çıkar (tek adım, Topoloji düzelt); denetim yinelenir, çakışma ve onun dört eksik köşesi kalkar",
+   "expect": {
+    "topology": {
+     "count": "14 bulgu (açık 14, istisna 0)",
+     "rows": [
+      "Parsel | Boşluk olmamalı | Boşluk | #5, #6, #4, #7 | 200.00 m²",
+      "Parsel | İnce alan olmamalı | İnce alan | #9 | 0.060 m",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #4, #5 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #7, #5 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #4, #6 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #7, #6 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #12, #11 | ",
+      "Bina | Parsel içinde kalmalı | Dışarıda kalan | #14 | 48.00 m²",
+      "Bina | Parsel içinde kalmalı | Dışarıda kalan | #15 | 48.00 m²",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #16 | 74.000 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #16 | 16.000 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #17 | 0.600 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #18 | 74.000 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #18 | 0.600 m"
+     ]
+    },
+    "canUndo": true
+   }
+  },
+  {
+   "panel": "Topoloji",
+   "row": 10,
+   "note": "Atatürk Cd.'nin batı ucu",
+   "expect": {
+    "selected": [
+     16
+    ]
+   }
+  },
+  {
+   "panel": "Topoloji",
+   "row": 13,
+   "ctrl": true,
+   "note": "Ctrl: 2. Sk.'nin batı ucu da seçilir"
+  },
+  {
+   "panel": "Topoloji",
+   "press": "İstisna yap",
+   "note": "Pafta kenarındaki iki uç bilerek bırakılır: projede saklanır, Açık süzgecinden çıkar",
+   "expect": {
+    "topology": {
+     "count": "12 bulgu (açık 12, istisna 2)",
+     "rows": [
+      "Parsel | Boşluk olmamalı | Boşluk | #5, #6, #4, #7 | 200.00 m²",
+      "Parsel | İnce alan olmamalı | İnce alan | #9 | 0.060 m",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #4, #5 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #7, #5 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #4, #6 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #7, #6 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #12, #11 | ",
+      "Bina | Parsel içinde kalmalı | Dışarıda kalan | #14 | 48.00 m²",
+      "Bina | Parsel içinde kalmalı | Dışarıda kalan | #15 | 48.00 m²",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #16 | 16.000 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #17 | 0.600 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #18 | 0.600 m"
+     ]
+    }
+   }
+  },
+  {
+   "panel": "Topoloji",
+   "press": "İstisna",
+   "note": "İstisna süzgeci: bırakılan iki uç",
+   "expect": {
+    "topology": {
+     "count": "2 bulgu (açık 12, istisna 2)",
+     "rows": [
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #16 | 74.000 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #18 | 74.000 m"
+     ]
+    }
+   }
+  },
+  {
+   "panel": "Topoloji",
+   "press": "Hepsi",
+   "note": "Hepsi: açıkları ve istisnaları birlikte",
+   "expect": {
+    "topology": {
+     "count": "14 bulgu (açık 12, istisna 2)",
+     "rows": [
+      "Parsel | Boşluk olmamalı | Boşluk | #5, #6, #4, #7 | 200.00 m²",
+      "Parsel | İnce alan olmamalı | İnce alan | #9 | 0.060 m",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #4, #5 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #7, #5 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #4, #6 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #7, #6 | ",
+      "Parsel | Ortak sınırda köşe eksik olmamalı | Komşuda eksik köşe | #12, #11 | ",
+      "Bina | Parsel içinde kalmalı | Dışarıda kalan | #14 | 48.00 m²",
+      "Bina | Parsel içinde kalmalı | Dışarıda kalan | #15 | 48.00 m²",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #16 | 74.000 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #16 | 16.000 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #17 | 0.600 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #18 | 74.000 m",
+      "Yol | Sarkan uç olmamalı | Sarkan uç | #18 | 0.600 m"
+     ]
+    }
+   }
+  }
+ ]
+}

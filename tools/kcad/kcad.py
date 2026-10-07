@@ -109,6 +109,24 @@ SCHEMA_WITH_IMAGES = 24
 SCHEMA_WITH_TEXT_PATHS = 25
 # Schema 26: schema 25 and a layer's fields, a layer node's `fields` (docs/adr/0199 §1).
 SCHEMA_WITH_LAYER_FIELDS = 26
+# Schema 27: schema 26 and the project's topology rules, tolerance and exceptions, the settings' `topology` (docs/adr/0202 §7).
+SCHEMA_WITH_TOPOLOGY = 27
+# The topology rules' kinds (docs/adr/0202 §1): whether each is between two layers and what value it takes.
+TOPOLOGY_KINDS = {
+    "mustNotOverlap": (False, None),
+    "mustNotHaveGaps": (False, None),
+    "mustNotHaveSlivers": (False, "length"),
+    "mustNotHaveDuplicates": (False, None),
+    "mustNotHaveDangles": (False, None),
+    "mustNotHaveShortEdges": (False, "length"),
+    "mustNotHaveSmallAngles": (False, "angle"),
+    "mustBeValid": (False, None),
+    "mustNotHaveMissingVertices": (False, None),
+    "mustNotOverlapWith": (True, None),
+    "mustBeCoveredBy": (True, None),
+    "boundaryMustBeCoveredBy": (True, None),
+    "mustBeOnEndOf": (True, None),
+}
 # A picture's bounds (kentos_contracts::image): its opacity, its clip's corners, a side (m), a linked file's letters.
 MIN_IMAGE_OPACITY = 0.1
 MAX_IMAGE_OPACITY = 1.0
@@ -156,7 +174,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -779,6 +797,7 @@ class _Schema:
         self.traverse_tolerances = version >= SCHEMA_WITH_TRAVERSE_TOLERANCES
         self.ground = version >= SCHEMA_WITH_GROUND
         self.layer_states = version >= SCHEMA_WITH_LAYER_STATES
+        self.topology = version >= SCHEMA_WITH_TOPOLOGY
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -845,6 +864,7 @@ class _Schema:
                 **({"survey": (self.survey, False)} if self.survey_fields else {}),
                 **({"layerStates": (self.layer_states_, False)} if self.layer_states else {}),
                 **({"textStyles": (self.text_styles, False), "dimensionStyles": (self.dimension_styles, False)} if self.styles else {}),
+                **({"topology": (self.topology_, False)} if self.topology else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -861,6 +881,48 @@ class _Schema:
             self.path.append("secondCustomCrs")
             self.fail("bad_value", "ikinci sistem ya EPSG kodu ya tanımdır; koordinat sistemi olmayan projenin ikinci sistemi olmaz")
         return s
+
+    def topology_(self, v):
+        # The project's topology settings (schema 27, spec §6.4.5, docs/adr/0202 §7): a tolerance within [1e-6, 1] m; rules
+        # with an id neither empty nor twice, a known kind, a layer, another layer only between two layers (neither empty
+        # nor the rule's own), a value only for a kind that takes one (finite, above zero, an angle below a right
+        # angle); exceptions of a rule there is, with objects; not all empty.
+        rule = self.fields({"id": (self.text, True), "kind": (self.enum(tuple(TOPOLOGY_KINDS)), True), "layer": (self.text, True),
+                            "other": (self.text, False), "value": (self.float, False)})
+        exception = self.fields({"at": (self.point, True), "rule": (self.text, True), "objects": (self.array(self.id16), True)})
+        t = self.fields({"rules": (self.array(rule), False), "tolerance": (self.float, False), "exceptions": (self.array(exception), False)})(v)
+        rules, exceptions = t.get("rules", []), t.get("exceptions", [])
+        if not rules and not exceptions and "tolerance" not in t:
+            self.fail("bad_value", "topoloji ayarı boş; ayarı olmayan proje alanı yazmaz")
+        if "tolerance" in t and not (1e-6 <= t["tolerance"] <= 1):
+            self.fail("bad_value", f"topoloji toleransı {t['tolerance']} m; 0,000001 ile 1 arasında olmalı")
+        ids = set()
+        for r in rules:
+            between, value = TOPOLOGY_KINDS[r["kind"]]
+            if not r["id"]:
+                self.fail("bad_value", "topoloji kuralının kimliği boş")
+            if r["id"] in ids:
+                self.fail("bad_value", f"“{r['id']}” kimlikli topoloji kuralı iki kez var")
+            ids.add(r["id"])
+            if not r["layer"]:
+                self.fail("bad_value", f"“{r['id']}” kuralının katmanı boş")
+            if between and "other" not in r:
+                self.fail("bad_value", f"“{r['id']}” kuralının öbür katmanı yok")
+            if between and (not r["other"] or r["other"] == r["layer"]):
+                self.fail("bad_value", f"“{r['id']}” kuralının öbür katmanı boş ya da kendi katmanı")
+            if not between and "other" in r:
+                self.fail("bad_value", f"“{r['id']}” kuralı tek katmanlıdır; öbür katmanı olmaz")
+            if "value" in r:
+                if value is None:
+                    self.fail("bad_value", f"“{r['id']}” kuralı değer almaz")
+                if not (r["value"] > 0 and (value != "angle" or r["value"] < math.pi / 2)):
+                    self.fail("bad_value", f"“{r['id']}” kuralının değeri {r['value']}; sıfırdan büyük olmalı (açı dik açıdan küçük)")
+        for x in exceptions:
+            if x["rule"] not in ids:
+                self.fail("bad_value", f"istisnanın kuralı “{x['rule']}” yok")
+            if not x["objects"]:
+                self.fail("bad_value", "istisnanın nesnesi yok")
+        return t
 
     def layer_states_(self, v):
         # The project's named layer states (schema 19, spec §6.4.3, docs/adr/0177 §4): an id and a name, neither empty

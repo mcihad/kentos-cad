@@ -168,6 +168,8 @@ pub enum Dialog {
     LayerMerge,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
     LayerFields,
+    /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6); the window is `App::topology_rules`.
+    TopologyRules,
     /// Katman durumları (layer_states.rs, docs/adr/0177 §4); the window is `App::layer_states_window`.
     LayerStates,
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
@@ -285,6 +287,10 @@ pub enum Message {
     LayerFields(crate::layer_fields::Event),
     /// The Arama tab (search/, docs/adr/0178).
     Search(crate::search::Event),
+    /// The Topoloji tab (topology/, docs/adr/0202 §5).
+    Topology(crate::topology::Event),
+    /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6).
+    TopologyRules(crate::topology::rules::Event),
     /// Köşe tablosu in the Koordinat listesi tab (vertices/, docs/adr/0172).
     Vertices(crate::vertices::Event),
     /// The bottom panel's top edge dragged: the open history's new height.
@@ -549,6 +555,10 @@ pub struct App {
     pub(crate) layer_fields: Option<crate::layer_fields::Window>,
     /// The bottom panel's Arama tab: its choices and rows, and the place it marked (search/, docs/adr/0178).
     pub(crate) search: crate::search::SearchPanel,
+    /// The bottom panel's Topoloji tab: the last check, the chosen rows and the filter (topology/, docs/adr/0202 §5).
+    pub(crate) topology: crate::topology::TopologyPanel,
+    /// Topoloji kuralları, while it is open (topology/rules.rs, docs/adr/0202 §6).
+    pub(crate) topology_rules: Option<crate::topology::rules::Window>,
     /// Köşe tablosu's rows selected and cell edited (vertices/, docs/adr/0172).
     pub(crate) vertices: crate::vertices::VertexPanel,
     /// The labels the view shows, as last asked of the geometry store (labels.rs).
@@ -856,6 +866,8 @@ impl App {
             features: Default::default(),
             layer_fields: None,
             search: Default::default(),
+            topology: Default::default(),
+            topology_rules: None,
             vertices: Default::default(),
             label_spots: Default::default(),
             last_click: None,
@@ -1255,6 +1267,8 @@ impl App {
             Message::Features(event) => return self.features_event(event),
             Message::LayerFields(event) => return self.layer_fields_event(event),
             Message::Search(event) => return self.data_event(event),
+            Message::Topology(event) => return self.topology_event(event),
+            Message::TopologyRules(event) => return self.topology_rules_event(event),
             Message::Vertices(event) => return self.vertices_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
@@ -1907,6 +1921,9 @@ impl App {
             // Veride ara: the bottom panel's Arama tab, its box taking the keyboard (search/, docs/adr/0178).
             "data.search" => return self.open_data_search(),
             "data.unmark" => return self.data_event(crate::search::Event::Unmark),
+            // Topoloji kuralları (topology/, docs/adr/0202 §5, §6).
+            "topology.check" => return self.open_topology_check(),
+            "topology.rules" => return self.open_topology_rules(),
             crate::catalog::PYTHON_CONSOLE => self.toggle_python(),
             // The navigation commands keep the view they leave (navigation.rs, docs/adr/0141).
             "view.zoomIn" => self.navigating(Self::zoom_in),

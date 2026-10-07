@@ -44,5 +44,6 @@ mod spatial_query;
 mod text;
 mod text_along;
 mod topology;
+mod topology_rules;
 mod vertex_points;
 mod vertex_table;

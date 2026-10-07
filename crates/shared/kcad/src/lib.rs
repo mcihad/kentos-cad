@@ -246,8 +246,16 @@ pub const SCHEMA_WITH_TEXT_PATHS: u32 = 25;
 /// its layers' schemas on its next save.
 pub const SCHEMA_WITH_LAYER_FIELDS: u32 = 26;
 
+/// Document schema 27 (docs/specs/kcad-v2.md §6.1): schema 26 and the
+/// project's topology rules, tolerance and exceptions, the settings'
+/// `topology` (docs/adr/0202 §7). A writer writes it only when a project has
+/// them: any other drawing stays 26 or older, byte for byte; a reader of
+/// those refuses a drawing that has them rather than drop the rules and the
+/// exceptions on its next save.
+pub const SCHEMA_WITH_TOPOLOGY: u32 = 27;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 25] = [
+pub const SCHEMAS: [u32; 26] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -273,6 +281,7 @@ pub const SCHEMAS: [u32; 25] = [
     SCHEMA_WITH_IMAGES,
     SCHEMA_WITH_TEXT_PATHS,
     SCHEMA_WITH_LAYER_FIELDS,
+    SCHEMA_WITH_TOPOLOGY,
 ];
 
 /// The file a drawing is saved as.

@@ -944,6 +944,7 @@ impl App {
                 self.dialog = Some(Dialog::LayerFields);
             }
             Some(Dialog::LayerFields) => self.layer_fields = None,
+            Some(Dialog::TopologyRules) => self.topology_rules = None,
             Some(Dialog::LayerStates) => self.layer_states_window = None,
             // Sil's question first, then the window.
             Some(Dialog::AnnotationStyles)

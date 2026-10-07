@@ -120,6 +120,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             layer_states: Vec::new(),
             survey: None,
             dimension_styles: Vec::new(),
+            topology: None,
             text_styles: Vec::new(),
         },
         origin: Vec2 {

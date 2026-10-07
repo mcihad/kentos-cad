@@ -253,6 +253,8 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
     label: 'Yönet',
     sources: [
       { pick: 'Temizlik', icon: 'cleanup', commands: ['tool.cleanup', 'tool.topology', 'block.purge', 'layer.purge'] },
+      // Topoloji kuralları (docs/adr/0202 §8): the rules and their check beside the cleaning.
+      { pick: 'Topoloji', icon: 'topologyCheck', commands: ['topology.check', 'topology.rules'] },
       // Öznitelik tablosu and a layer's fields (docs/adr/0199 §3, §4).
       { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'layer.fields', 'data.sources'] },
       { menu: 'analysis', sections: ['Karşılaştırma'] },
@@ -343,7 +345,19 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     ],
     launchers: AIDS_LAUNCHER,
   },
-  { id: 'analysis', label: 'Analiz', sources: [{ menu: 'processing' }, { menu: 'map', sections: ['Arazi'] }, { menu: 'analysis', sections: ['Arazi analizi', 'Karşılaştırma'] }, { menu: 'tools', sections: ['Komut'] }] },
+  {
+    id: 'analysis',
+    label: 'Analiz',
+    sources: [
+      { menu: 'processing' },
+      { menu: 'map', sections: ['Arazi'] },
+      { menu: 'analysis', sections: ['Arazi analizi'] },
+      // Topoloji kuralları (docs/adr/0202 §8): the data's checks together, beside Karşılaştırma (Düzenle is full).
+      { pick: 'Topoloji', icon: 'topologyCheck', commands: ['topology.check', 'topology.rules'] },
+      { menu: 'analysis', sections: ['Karşılaştırma'] },
+      { menu: 'tools', sections: ['Komut'] },
+    ],
+  },
   {
     id: 'survey',
     label: 'Ölçme',

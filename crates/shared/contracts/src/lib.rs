@@ -59,6 +59,7 @@ pub mod project_files;
 pub mod settings;
 pub mod style;
 pub mod table;
+pub mod topology;
 
 pub use annotation::*;
 pub use api::*;
@@ -90,6 +91,7 @@ pub use project_files::*;
 pub use settings::*;
 pub use style::*;
 pub use table::*;
+pub use topology::*;
 pub use image::*;
 
 /// Version of this set of contracts, reported by the API's health endpoint.

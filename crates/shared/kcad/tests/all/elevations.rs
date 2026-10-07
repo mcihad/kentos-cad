@@ -344,8 +344,8 @@ fn the_readers_errors_name_their_places() {
     let e = refused("broken/elevation-in-schema-3.kcad");
     assert_eq!(e.code, Code::UnknownField);
     assert!(e.message.contains("document/entities/0/polyline/zs"), "{e}");
-    // The newest schema this codec knows is 26 (a layer's fields, docs/adr/0199).
-    let e = refused("broken/schema-version-27.kcad");
+    // The newest schema this codec knows is 27 (the topology rules, docs/adr/0202).
+    let e = refused("broken/schema-version-28.kcad");
     assert_eq!(e.code, Code::SchemaVersion);
     assert!(
         e.message

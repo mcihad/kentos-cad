@@ -46,6 +46,20 @@ impl Kind {
         }
     }
 
+    /// The kind a key names.
+    pub fn of_key(key: &str) -> Option<Kind> {
+        [
+            Kind::Repeated,
+            Kind::ZeroArea,
+            Kind::RingCrossing,
+            Kind::PathCrossing,
+            Kind::HoleOutside,
+            Kind::HolesOverlap,
+        ]
+        .into_iter()
+        .find(|k| k.key() == key)
+    }
+
     /// As the report says it.
     pub fn text(self) -> &'static str {
         match self {

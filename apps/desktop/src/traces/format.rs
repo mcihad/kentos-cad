@@ -204,6 +204,9 @@ pub struct Expect {
     /// after Sıra joined by “ | ”), exact (docs/adr/0199 §4).
     #[serde(rename = "featureTable")]
     pub(super) feature_table: Option<FeatureTableExpect>,
+    /// Topoloji's count line and rows (Katman, Kural, Sorun, Nesneler, Ölçü
+    /// joined by “ | ”), exact (docs/adr/0202 §5).
+    pub(super) topology: Option<SearchExpect>,
     /// The place the data search's Git marked, east and north of
     /// `view.center`, within `clickTolerance`; `null` none, and absent differ.
     #[serde(default, deserialize_with = "present")]

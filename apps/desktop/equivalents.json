@@ -157,6 +157,8 @@
     "apps/web/src/ui/bottom/FeatureTable.ts#FeatureTable": { "desktop": "implemented", "where": "apps/desktop/src/features/ (ADR 0199 §4)" },
     "apps/web/src/ui/layers/LayerFieldsDialog.ts#openLayerFields": { "desktop": "implemented", "where": "apps/desktop/src/layer_fields.rs (ADR 0199 §3)" },
     "apps/web/src/ui/sources/SourcesPanel.ts#SourcesPanel": { "desktop": "implemented", "where": "apps/desktop/src/sources/ (ADR 0199 §7)" },
+    "apps/web/src/ui/bottom/TopologyPanel.ts#TopologyPanel": { "desktop": "implemented", "where": "apps/desktop/src/topology/ (ADR 0202 §5)" },
+    "apps/web/src/ui/topology/TopologyRulesDialog.ts#openTopologyRules": { "desktop": "implemented", "where": "apps/desktop/src/topology/rules.rs (ADR 0202 §6)" },
     "apps/web/src/ui/bottom/VertexTable.ts#VertexTable": { "desktop": "implemented", "where": "apps/desktop/src/vertices/ (ADR 0172)" },
     "apps/web/src/ui/bottom/PointBatchDialog.ts#openPointBatchDialog": { "desktop": "implemented", "where": "apps/desktop/src/points/batch_view.rs (ADR 0153 §5)" },
     "apps/web/src/ui/calc/FitDialog.ts#openFit": { "desktop": "implemented", "where": "apps/desktop/src/calc/fit/ (ADR 0156)" },

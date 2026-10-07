@@ -166,6 +166,7 @@ impl App {
             | BottomTab::Points
             | BottomTab::Table
             | BottomTab::Search
+            | BottomTab::Topology
             | BottomTab::Python => None,
         }
     }

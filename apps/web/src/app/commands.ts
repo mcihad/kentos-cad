@@ -20,6 +20,8 @@ import { duplicateLayer, unisolateLayers } from './layerActions';
 import { quickSaveLayerState, statesLocked } from './layerStates';
 import { focusSearch } from '../ui/bottom/SearchPanel';
 import { SEARCH_PANEL_HEIGHT } from '../ui/bottom/searchPlan';
+import { runTopologyCheck } from '../ui/bottom/topologyRun';
+import { openTopologyRules } from '../ui/topology/TopologyRulesDialog';
 
 /** Features that exist in the menu but are not built yet say so plainly. */
 function pending(ctx: AppContext, id: string, title: string, category: string, icon?: string): Command {
@@ -688,6 +690,36 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
         ui.bottomExpanded.set(true);
         focusSearch();
       },
+    },
+    {
+      // Topoloji kuralları (docs/adr/0202 §5, §8): the bottom panel's Topoloji tab, the check run.
+      id: 'topology.check',
+      title: 'Topolojiyi denetle',
+      short: 'Denetle',
+      category: V,
+      icon: 'topologyCheck',
+      aliases: ['TOPOLOJIDENETLE', 'TOPOLOJIKONTROL', 'VALIDATETOPOLOGY'],
+      description:
+        'Projenin topoloji kurallarını (çakışma, boşluk, ince alan, sarkan uç, kısa kenar, içinde kalma …) çizimde denetler; bulgular alt panelin Topoloji sekmesinde. Satıra tıklamak bulguya gider; Düzelt ve İstisna yap oradadır.',
+      run: () => {
+        ui.bottomTab.set('topology');
+        if (ui.bottomHeight.value < SEARCH_PANEL_HEIGHT) ui.bottomHeight.set(SEARCH_PANEL_HEIGHT);
+        ui.bottomExpanded.set(true);
+        if (doc.settings.topology.value?.rules?.length) runTopologyCheck(ctx);
+        else log.warn('Projede topoloji kuralı yok; Topoloji kuralları ile ekleyin.');
+      },
+    },
+    {
+      id: 'topology.rules',
+      title: 'Topoloji kuralları',
+      short: 'Kurallar',
+      category: V,
+      icon: 'topologyRules',
+      aliases: ['TOPOLOJIKURALLARI', 'TOPOLOGYRULES'],
+      description: 'Katmanlara topoloji kuralları koyar: katman içi (çakışmamalı, boşluk olmamalı, ince alan, yinelenme, sarkan uç, kısa kenar, küçük açı, geçerlilik, ortak sınırda köşe) ve katmanlar arası (ile çakışmamalı, içinde kalmalı, sınırı sınırlarında, çizgi ucunda); tolerans ve istisnalar projede saklanır.',
+      run: () => openTopologyRules(ctx),
+      isEnabled: () => doc.layers.leaves().length > 0,
+      watch: [doc.layers.version],
     },
     {
       id: 'data.unmark',

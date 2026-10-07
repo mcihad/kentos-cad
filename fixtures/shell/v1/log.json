@@ -29,6 +29,11 @@
    "icon": "dataSearch"
   },
   {
+   "id": "topology",
+   "label": "Topoloji",
+   "icon": "topologyCheck"
+  },
+  {
    "id": "messages",
    "label": "Uyarılar",
    "icon": "warning"

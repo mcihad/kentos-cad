@@ -1,12 +1,14 @@
 import type { CrosshairSize } from '../app/state';
 import { pieceText, type BlockPiece } from '../model/blocks';
 import type { CadDocument } from '../model/document';
-import type { TextRun } from '../model/entities';
+import { polygonRing, type TextRun } from '../model/entities';
 import type { DimensionLook } from '../model/annotationStyles';
 import type { DrawingFont } from '../model/projectSettings';
 import { dist, type Vec2 } from '../model/geometry';
 import { dimensionMeasure, type DimensionLayout } from '../model/geom/dimension';
 import { fillTemplate } from '../model/ops/labelText';
+import type { CoreEdge } from '../model/ops/topologyRules';
+import type { ProblemMark } from '../model/selection';
 import { resolveColor, type CanvasPalette } from '../render/color';
 import { faceFont, leanOf, valueFont, type Face } from '../render/drawingFaces';
 import type { ToolCursor } from '../tools/Tool';
@@ -506,6 +508,65 @@ export function drawSearchMark(g: CanvasRenderingContext2D, p: Vec2, label: stri
   g.textBaseline = 'top';
   haloText(g, label, x + 12, y + 12, pal.accent, pal.labelHalo);
   g.restore();
+}
+
+/** An edge the core writes as points along it (arcs every 7.5° at most). */
+function edgePoints(e: CoreEdge): Vec2[] {
+  if (e.kind === 'seg') return [e.a, e.b];
+  const n = Math.max(2, Math.ceil(Math.abs(e.sweep) / (Math.PI / 24)));
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const a = e.a0 + (e.sweep * i) / n;
+    return { x: e.c.x + Math.cos(a) * e.r, y: e.c.y + Math.sin(a) * e.r };
+  });
+}
+
+/**
+ * A topology finding over the drawing (docs/adr/0202 §5): its regions filled and outlined, its edges drawn bold, in the
+ * danger colour on a halo; its place marked as Koordinata git marks one, the problem's name beside it.
+ */
+export function drawProblemMark(g: CanvasRenderingContext2D, m: ProblemMark, cam: Camera, pal: CanvasPalette): void {
+  g.save();
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+  if (m.regions.length) {
+    g.beginPath();
+    for (const a of m.regions) {
+      for (const r of [a.outer, ...a.holes]) {
+        polygonRing({ pts: [...r.pts], ...(r.bulges ? { bulges: [...r.bulges] } : {}) }).forEach((p, i) => {
+          const s = cam.worldToScreen(p);
+          i ? g.lineTo(s.x, s.y) : g.moveTo(s.x, s.y);
+        });
+        g.closePath();
+      }
+    }
+    g.globalAlpha = 0.3;
+    g.fillStyle = pal.danger;
+    g.fill('evenodd');
+    g.globalAlpha = 1;
+    g.lineWidth = 3.5;
+    g.strokeStyle = pal.labelHalo;
+    g.stroke();
+    g.lineWidth = 1.5;
+    g.strokeStyle = pal.danger;
+    g.stroke();
+  }
+  if (m.edges.length) {
+    g.beginPath();
+    for (const e of m.edges) {
+      edgePoints(e).forEach((p, i) => {
+        const s = cam.worldToScreen(p);
+        i ? g.lineTo(s.x, s.y) : g.moveTo(s.x, s.y);
+      });
+    }
+    g.lineWidth = 6;
+    g.strokeStyle = pal.labelHalo;
+    g.stroke();
+    g.lineWidth = 3;
+    g.strokeStyle = pal.danger;
+    g.stroke();
+  }
+  g.restore();
+  drawSearchMark(g, m.at, m.label, cam, { ...pal, accent: pal.danger });
 }
 
 /** The snap marker; `label` is what it says instead of its kind's name (“Uzantı 12.063 m”, docs/adr/0163 §2). */

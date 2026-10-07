@@ -1080,3 +1080,77 @@
 .dsearch tbody tr.dsearch__row--quiet td {
   color: var(--c-text-3);
 }
+
+/* ── Topoloji (docs/adr/0202 §5): the point editor's bar and table, a rule, the filter, a stale or missing note ── */
+.topo__filter .seg__opt {
+  height: calc(22px * var(--ui-scale));
+  padding: 0 10px;
+}
+.topo__banner {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--c-line);
+  background: color-mix(in srgb, var(--c-warn) 14%, transparent);
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+}
+.topo__banner[hidden] {
+  display: none;
+}
+.topo__note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.topo__note .icon {
+  flex: none;
+  color: var(--c-warn);
+}
+.topo__head {
+  display: block;
+  padding: 0 12px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.topo .topo__table {
+  table-layout: fixed;
+  min-width: calc(640px * var(--ui-scale));
+}
+.topo__th--0 {
+  width: calc(56px * var(--ui-scale));
+}
+.topo__th--1 {
+  width: 14%;
+}
+.topo__th--2 {
+  width: 24%;
+}
+.topo__th--3 {
+  width: 18%;
+}
+.topo__th--4 {
+  width: 18%;
+}
+.topo td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.topo__problem {
+  font-weight: 500;
+}
+.topo__problem .icon {
+  display: inline-block;
+  margin-right: 5px;
+  vertical-align: -2px;
+  color: var(--c-text-3);
+}
+/* A finding left on purpose is quiet. */
+.topo tbody tr.topo__row--exception td {
+  color: var(--c-text-3);
+}

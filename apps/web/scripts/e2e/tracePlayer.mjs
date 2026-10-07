@@ -439,9 +439,11 @@ async function answer(step) {
  */
 async function panelAnswer(step) {
   const missing = (what) => new Error(`“${step.panel}” sekmesinde ${what} yok`);
-  // Arama's root, or Öznitelik tablosu's (docs/adr/0199 §4); a row is pressed on its first value after Sıra.
+  // Arama's root, Öznitelik tablosu's (docs/adr/0199 §4) or Topoloji's (docs/adr/0202 §5); a row is pressed on its
+  // first value after Sıra (Topoloji's on its problem).
   const table = step.panel === 'Tablo';
-  const rootSel = table ? '.ftable' : '.dsearch';
+  const topology = step.panel === 'Topoloji';
+  const rootSel = table ? '.ftable' : topology ? '.topo' : '.dsearch';
   const rowCell = table ? 2 : 3;
   const open = await b.eval(`(() => { const p = document.querySelector('.bottom__panel'); return !!p && !p.hidden && !!document.querySelector('${rootSel}'); })()`);
   if (!open) throw new Error(`“${step.panel}” sekmesi açık değil`);
@@ -470,8 +472,9 @@ async function panelAnswer(step) {
     if (at.checked !== on) await clickAt(at);
   }
   for (const [list, item] of Object.entries(step.pick ?? {})) {
-    // A list by its aria-label (Arama's) or its label's words (Öznitelik tablosu's Katman ▾, Göster ▾).
-    const at = (await find('button.dropdown', list)) ?? (await b.eval(`(() => {
+    // A list by its aria-label (Arama's) or its label's words (Öznitelik tablosu's Katman ▾, Göster ▾); a menu
+    // button by its words (Topoloji's Düzelt ▾).
+    const at = (await find('button.dropdown, button.ptable__btn', list)) ?? (await b.eval(`(() => {
       const el = [...document.querySelectorAll('${rootSel} button.dropdown')].find((el) => el.getAttribute('aria-label') === ${JSON.stringify(list)});
       if (!el) return null;
       const r = el.getBoundingClientRect();
@@ -813,6 +816,15 @@ const observe = (mark) =>
         if (!root) return null;
         return {
           count: root.querySelector('.dsearch__count')?.textContent ?? '',
+          rows: [...root.querySelectorAll('tbody tr[data-at]')].map((tr) => [...tr.children].slice(1).map((td) => td.textContent.trim()).join(' | ')),
+        };
+      })(),
+      // Topoloji's count and rows (Katman, Kural, Sorun, Nesneler, Ölçü) (docs/adr/0202 §5).
+      topology: (() => {
+        const root = document.querySelector('.topo');
+        if (!root) return null;
+        return {
+          count: root.querySelector('.ptable__count')?.textContent ?? '',
           rows: [...root.querySelectorAll('tbody tr[data-at]')].map((tr) => [...tr.children].slice(1).map((td) => td.textContent.trim()).join(' | ')),
         };
       })(),

@@ -760,3 +760,31 @@
   flex: 1 1 0;
   min-width: 0;
 }
+
+/* Topoloji kuralları (docs/adr/0202 §6): the tolerance and the rules' table, a value with its unit. */
+.topo-rules__col--layer,
+.topo-rules__col--other {
+  width: 21%;
+}
+.topo-rules__col--kind {
+  width: 32%;
+}
+.topo-rules__col--value {
+  width: 17%;
+}
+.topo-rules__col--exceptions {
+  width: 9%;
+}
+.topo-rules__value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.topo-rules__unit {
+  flex: none;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.topo-rules__tolerance {
+  width: calc(110px * var(--ui-scale));
+}

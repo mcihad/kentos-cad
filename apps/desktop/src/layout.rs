@@ -186,6 +186,7 @@ fn tab_key(tab: BottomTab) -> &'static str {
         BottomTab::Points => "points",
         BottomTab::Table => "table",
         BottomTab::Search => "search",
+        BottomTab::Topology => "topology",
         BottomTab::Messages => "messages",
         BottomTab::Python => "python",
     }
@@ -218,6 +219,7 @@ impl App {
             "points" => BottomTab::Points,
             "table" => BottomTab::Table,
             "search" => BottomTab::Search,
+            "topology" => BottomTab::Topology,
             "messages" => BottomTab::Messages,
             "python" => BottomTab::Python,
             _ => BottomTab::History,

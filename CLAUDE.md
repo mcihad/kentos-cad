@@ -93,6 +93,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   yaylar kesin), Kırp, Gruplayarak birleştir (kesin toplamlar), Kesişim, Fark, Simetrik fark ve Birleşim (Önek, Alan oranıyla paylaştır),
   Geçerliliği denetle (tablo ve seçim) ve Onar (rapor), Sadeleştir (rapor), Koordinat sistemine dönüştür (kayıttaki sistemden projeninkine,
   datum seçimleriyle); sonuç yeni katmana, kayıplar söylenir; çekirdek `ops::geoprocess` (ADR 0201);
+  topoloji kuralları: projenin toleransı, kuralları ve istisnaları (`.kcad` şema 27); on üç kural, katman içi dokuzu (Çakışmamalı,
+  Boşluk olmamalı, İnce alan, Yinelenmemeli, Sarkan uç, Kısa kenar, Küçük açı, Geçerli olmalı, Ortak sınırda köşe eksik olmamalı) ve
+  katmanlar arası dördü (… ile çakışmamalı, … içinde kalmalı, Sınırı … sınırlarında olmalı, … çizgilerinin ucunda olmalı); Topolojiyi
+  denetle alt panelin Topoloji sekmesinde (Kural, Açık / İstisna / Hepsi; satır bulguya gider ve onu çizimde gösterir), Düzelt ▾ tek adımda
+  (`topologyFix`) ve denetim yinelenir, İstisna yap projede; Topoloji kuralları penceresi; çekirdek `ops::topology_rules` (ADR 0202);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -324,6 +329,9 @@ KENTOS_SHOTS_ONLY=ozet,birlestir cargo test -p kentos-desktop processing::query_
 python3 scripts/fixtures/geoprocess_cases.py --check   # geometri işlemlerini (tamponun kapalı biçimli alanları ve iç ve dış yerleri, Kırp, örtüşmeler kesirlerle, Gruplayarak birleştir, geçerlilik sorunlarının yerleri, Onar, Sadeleştir, PROJ'la dönüştürme, paylaştırma) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/geoprocess/v1/cases.json, araçların çalıştırmaları fixtures/processing/v1/geometry.json ve geometry.kcad (ADR 0201)
 KENTOS_SHOTS_ONLY=tampon,gecerlilik cargo test -p kentos-desktop processing::geometry_tests::screens -- --ignored --nocapture   # geometri araçlarının pencereleri ve iki sonucu çizimde, .run/shots/islem-geometri-* (değişken yoksa bütün durumlar; web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs geometry); ADR 0201)
 cargo test --release -p kentos-geometry-core --test all geoprocess::timing -- --ignored --nocapture   # 400 parselde Tampon, Gruplayarak birleştir ve Kesişim'in süreleri (ADR 0201)
+python3 scripts/fixtures/topology_rules_cases.py --check   # topoloji kurallarının bulgularını (nesneler, yer, ölçü, düzeltmeler) ve düzeltmelerin şekillerini çekirdeğin örtüşmesine dayanmayan başvurudan (eksenlere paralel alanlar hücreleriyle kesirlerde, dairelerin örtüşmesi kapalı biçimde) denetle; durumlar fixtures/topology-rules/v1/cases.json (ADR 0202)
+KENTOS_SHOTS_ONLY=bulgular,duzelt cargo test -p kentos-desktop topology::tests::screens -- --ignored --nocapture   # Topoloji sekmesi, Düzelt ▾, Topoloji kuralları penceresi ve şeridin Topoloji paneli, .run/shots/topoloji-* (değişken yoksa bütün durumlar; web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs topologyrules); ADR 0202)
+cargo test --release -p kentos-geometry-core --test all topology_rules::timing -- --ignored --nocapture   # 10 000 parselde katman içi kuralların süreleri (ADR 0202)
 python3 scripts/fixtures/exchange_cases.py --check   # Çizimler arası alışverişin kurallarını (seçimin çizimi: budanan ağaç, iç içe bloklar, kitaplığın kullanılanları, düşen bağlar; Başka çizimden al: yollar, katlanan adlar, Atla ve Değiştir, kimliklerin ekleri, katman durumlarının yolları; Dosyadan blok ekle: ad sayısı, sol alt köşe, resim ve tablo; Kaynaklar'ın Katman olarak ekle'si: katman nesneleriyle, aynı adlı blok ve stil, açılan katmanın görünüşünün simgesi) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/exchange/v1/cases.json (ADR 0193, 0199 §7)
 python3 scripts/fixtures/image_cases.py --check   # Resim ekle'nin çerçevesini (genişlik, yükseklik, dönüş) ve Resmi kırp'ın sınırını resmin kendi kesirleriyle (taşan, saran, saat yönünde, aynalı, dönük, dışarıda) kesirlerle bağımsız başvurudan denetle; durumlar fixtures/image/v1/cases.json (ADR 0192)
 KENTOS_SHOTS_ONLY=resim-ekle,resim-ekle-yazildi,resim-kirp,resim-kirpildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # resim nesnesinin resimleri, .run/shots/arac-resim-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs images), WebGPU'yla --renderer webgpu; ADR 0192)
@@ -1129,7 +1137,14 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `geoprocess_cases.py`, ortak `fixtures/geoprocess/v1` ve `fixtures/processing/v1/geometry.json`: yeni nesneler ölçüleriyle `addedShapes`,
   araçların varsayılanları); on bir araç web'de `processing/builtin/geometry/`, masaüstünde `kentos-processing`'in `builtin/geometry/`'sinde;
   web'de `RunJob.crs`, masaüstünde araç `kentos_project::systems`'ten (işlem grubu artık `project`'e bağlanır); sonuç tablolarında sayı
-  sütunları sağda; KentOS UI'ın simge çizicisi `stroke-opacity` okur. Sıradaki `GIS-04`. `GIS-06` ve `GIS-07` mevzuatla
+  sütunları sağda; KentOS UI'ın simge çizicisi `stroke-opacity` okur. `GIS-04` topoloji kuralları
+  ([ADR 0202](docs/adr/0202-topology-rules.md); kapsam sahibin kararları: katman içi ve katmanlar arası kurallar, alt panelde sekme,
+  bulgudan düzeltme, kurallar ve istisnalar projede; simgeler sahibin seçtikleri) tek parçada bitti (7 Ekim): sözleşmenin `topology`'si,
+  `.kcad` şema 27 (`FORMATS_VERSION` 37), çekirdek `ops::topology_rules` (`check`, `fix`; bağımsız başvuru `topology_rules_cases.py`,
+  ortak `fixtures/topology-rules/v1`), `cad.entities.edit`'in `topologyFix`'i; sekme web'de `ui/bottom/TopologyPanel.ts` (`topologyRun.ts`,
+  `topologyPlan.ts`), masaüstünde `topology/`; pencere `ui/topology/TopologyRulesDialog.ts`, `topology/rules.rs`; bulgunun işareti
+  `drawProblemMark`, `marks.rs`; ortak iz `topology-rules.json` (oynatıcılarda `topology` beklentisi, sekmede `pick`). Sıradaki `GIS-05`.
+  `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri

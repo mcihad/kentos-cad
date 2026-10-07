@@ -762,6 +762,19 @@ cases.append({
     ],
 })
 
+# Topoloji düzelt (docs/adr/0202 §4): the fix's shapes written in place, what it deletes deleted.
+fixed = {"kind": "polygon", "pts": [P(487030, 4420000), P(487040, 4420000), P(487040, 4420020), P(487030, 4420020)]}
+cases.append({
+    "name": "Topoloji düzelt: düzeltmenin şekli nesnenin yerinde yazılır, sildiği silinir; adım “Topoloji düzelt” (ADR 0202 §4)",
+    "steps": [
+        {"op": "captureUid", "id": 8, "as": "daire"},
+        {"op": "execute", "input": {"operation": "topologyFix", "changes": [{"kind": "update", "uid": uid(3), "geometry": fixed}, {"kind": "remove", "uid": uid(8)}]},
+         "result": done(changed=[uid(3)], removed=["$uid:daire"]),
+         "expect": {"ids": ids_after(removed=[8]), "entities": {"3": reshaped(E(3), fixed)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Topoloji düzelt", "expect": {"ids": IDS, "entities": {"3": E(3), "8": E(8)}, "uids": {"8": "daire"}}},
+    ],
+})
+
 renamed = {**dressed, "text": "Parsel 7"}
 cases.append({
     "name": "Bul ve değiştir: yazının yeni metni yazılır; hizası, çarpanı ve zemini kalır; adım “Bul ve değiştir” (ADR 0145 §6)",

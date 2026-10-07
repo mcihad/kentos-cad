@@ -2934,6 +2934,54 @@ SCENES.geometry = [
   { id: 'geometri-donustur', open: (ui) => openGeometry(ui, 'geometry.reproject', { input: QUERY_LAYER('eski'), source: '2320' }), close: queryClose },
 ];
 
+// Topoloji kuralları (docs/adr/0202) on fixtures/interaction/v1/topology-rules.kcad, the scenes the desktop's
+// `topology::tests::screens` draws: the Topoloji tab after Denetle with the overlap chosen, the gap chosen (its region
+// over the drawing), Düzelt ▾ on it, the rules window.
+const TOPOLOGY_DRAWING = readFileSync(new URL('../../../../fixtures/interaction/v1/topology-rules.kcad', import.meta.url), 'utf8');
+const openTopology = async (ui, row = 0) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(TOPOLOGY_DRAWING)}, null))) throw new Error('topology-rules.kcad did not load: ' + k.log.entries.value.slice(-3).map((e) => e.text).join(' | '));
+    k.view.zoomExtents();
+    k.selection.clear();
+    k.commands.execute('topology.check');
+  })()`);
+  await ui.waitFor(`!!document.querySelector('.topo__table tbody tr[data-at]')`, 8000);
+  await ui.sleep(300);
+  await ui.clickSel(`.topo__table tbody tr[data-at="${row}"]`);
+  await ui.move(2, 2);
+  await ui.sleep(400);
+};
+const topologyClose = async (ui) => {
+  await ui.escapeAll(2);
+  await ui.eval(`(() => { const k = window.kentos; k.selection.clear(); k.selection.problem.set(null); k.ui.bottomTab.set('history'); })()`);
+};
+SCENES.topologyrules = [
+  { id: 'topoloji-bulgular', open: (ui) => openTopology(ui, 0), close: topologyClose },
+  { id: 'topoloji-bosluk', open: (ui) => openTopology(ui, 1), close: topologyClose },
+  {
+    id: 'topoloji-duzelt',
+    open: async (ui) => {
+      await openTopology(ui, 1);
+      await ui.clickText('.ptable__btn', 'Düzelt');
+      await ui.waitFor(`!!document.querySelector('.menu')`);
+      await ui.sleep(300);
+    },
+    close: topologyClose,
+  },
+  {
+    id: 'topoloji-kurallar',
+    open: async (ui) => {
+      await openTopology(ui, 0);
+      await ui.eval(`window.kentos.commands.execute('topology.rules')`);
+      await ui.waitFor(`!!document.querySelector('.dialog--topology-rules')`);
+      await ui.sleep(300);
+    },
+    close: topologyClose,
+  },
+];
+
 SCENES.vectorfit = [
   { id: 'oturt', open: openFitScene },
   { id: 'oturt-adla-eslendi', open: async (ui) => (await matchFit(ui), await ui.move(2, 2), await ui.sleep(300)) },

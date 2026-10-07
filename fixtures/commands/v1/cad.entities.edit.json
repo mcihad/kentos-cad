@@ -614,6 +614,14 @@
       ]
     },
     {
+      "name": "Topoloji düzelt: düzeltmenin şekli nesnenin yerinde yazılır, sildiği silinir; adım “Topoloji düzelt” (ADR 0202 §4)",
+      "steps": [
+        {"op": "captureUid", "id": 8, "as": "daire"},
+        {"op": "execute", "input": {"operation": "topologyFix", "changes": [{"kind": "update", "uid": "$uidOf:3", "geometry": {"kind": "polygon", "pts": [{"x": 487030, "y": 4420000}, {"x": 487040, "y": 4420000}, {"x": 487040, "y": 4420020}, {"x": 487030, "y": 4420020}]}}, {"kind": "remove", "uid": "$uidOf:8"}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "created": [], "removed": ["$uid:daire"], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "entities": {"3": {"id": 3, "layerId": "yapi", "attrs": {"Ada": "101"}, "kind": "polygon", "pts": [{"x": 487030, "y": 4420000}, {"x": 487040, "y": 4420000}, {"x": 487040, "y": 4420020}, {"x": 487030, "y": 4420020}]}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Topoloji düzelt", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "entities": {"3": {"kind": "polygon", "id": 3, "layerId": "yapi", "attrs": {"Ada": "101"}, "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "holes": [{"pts": [{"x": 487038, "y": 4420008}, {"x": 487042, "y": 4420008}, {"x": 487042, "y": 4420012}, {"x": 487038, "y": 4420012}]}]}, "8": {"kind": "circle", "id": 8, "layerId": "yapi", "attrs": {}, "c": {"x": 487070, "y": 4420010}, "r": 3}}, "uids": {"8": "daire"}}}
+      ]
+    },
+    {
       "name": "Bul ve değiştir: yazının yeni metni yazılır; hizası, çarpanı ve zemini kalır; adım “Bul ve değiştir” (ADR 0145 §6)",
       "setup": {
         "format": "kentos.document",

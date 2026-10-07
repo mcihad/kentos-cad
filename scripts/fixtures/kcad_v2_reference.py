@@ -295,10 +295,60 @@ def settings(s):
                 "layerStates": (layer_states, False),
                 "textStyles": (text_styles, False),
                 "dimensionStyles": (dimension_styles, False),
+                "topology": (topology, False),
             },
             "settings",
         )
     )
+
+
+TOPOLOGY_KINDS = {
+    "mustNotOverlap": (False, None),
+    "mustNotHaveGaps": (False, None),
+    "mustNotHaveSlivers": (False, "length"),
+    "mustNotHaveDuplicates": (False, None),
+    "mustNotHaveDangles": (False, None),
+    "mustNotHaveShortEdges": (False, "length"),
+    "mustNotHaveSmallAngles": (False, "angle"),
+    "mustBeValid": (False, None),
+    "mustNotHaveMissingVertices": (False, None),
+    "mustNotOverlapWith": (True, None),
+    "mustBeCoveredBy": (True, None),
+    "boundaryMustBeCoveredBy": (True, None),
+    "mustBeOnEndOf": (True, None),
+}
+
+
+def topology(t):
+    """The project's topology settings (schema 27, spec §6.4.5, docs/adr/0202 §7): a tolerance within [1e-6, 1] m; rules
+    with an id neither empty nor twice, a known kind, a layer, another layer only between two layers (neither empty nor
+    the rule's own), a value only for a kind that takes one (above zero, an angle below a right angle); exceptions of a
+    rule there is, with objects (16-byte ids) and a place; not all empty."""
+    assert t.get("rules") or t.get("exceptions") or "tolerance" in t, "boş topoloji ayarı yazılmaz"
+    assert "tolerance" not in t or 1e-6 <= t["tolerance"] <= 1, t
+    ids = set()
+    rules = []
+    for r in t.get("rules", []):
+        between, value = TOPOLOGY_KINDS[r["kind"]]
+        assert r["id"] and r["id"] not in ids and r["layer"], r
+        ids.add(r["id"])
+        assert ("other" in r) == between and (not between or (r["other"] and r["other"] != r["layer"])), r
+        assert "value" not in r or (value is not None and r["value"] > 0 and (value != "angle" or r["value"] < math.pi / 2)), r
+        rules.append(cmap(fields(r, {"id": (text, True), "kind": (enum(tuple(TOPOLOGY_KINDS)), True), "layer": (text, True),
+                                     "other": (text, False), "value": (finite, False)}, "topologyRule")))
+    exceptions = []
+    for x in t.get("exceptions", []):
+        assert x["rule"] in ids and x["objects"], x
+        exceptions.append(cmap({"at": point(x["at"]), "rule": text(x["rule"]), "objects": array([blob(uid_bytes(u)) for u in x["objects"]])}))
+    out = {}
+    if rules:
+        out["rules"] = array(rules)
+    if "tolerance" in t:
+        out["tolerance"] = finite(t["tolerance"])
+    if exceptions:
+        out["exceptions"] = array(exceptions)
+    assert set(t) <= {"rules", "tolerance", "exceptions"}, t
+    return cmap(out)
 
 
 def style_names(styles):
@@ -825,7 +875,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 26 with a layer's fields (docs/adr/0199 §1), 25 with a text along a
+    """The oldest schema that holds the drawing: 27 with the project's topology settings (docs/adr/0202 §7), 26 with a
+    layer's fields (docs/adr/0199 §1), 25 with a text along a
     curve, in the drawing or a block definition
     (docs/adr/0196), 24 with a picture, only in the drawing (docs/adr/0192), 23 with a hatch's pattern of families or gradient (a field of theirs) or
     its tie, in the drawing or a block definition (docs/adr/0186), 22 with a table, only in the drawing (docs/adr/0184), 21 with a text or a dimension style or a text's face or a dimension's look,
@@ -870,6 +921,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def schemas(nodes):
         return any("fields" in n or schemas(n["children"]) for n in nodes)
 
+    if settings and "topology" in settings:
+        return 27
     if schemas(layers):
         return 26
     if any(e["kind"] == "text" and "path" in e for e in [*entities, *(x for b in blocks or [] for x in b["entities"])]):
@@ -1113,7 +1166,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-27.kcad"] = container(root(cmap(parts), version=uint(27)))
+    files["schema-version-28.kcad"] = container(root(cmap(parts), version=uint(28)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1584,6 +1637,22 @@ def broken(minimal_content, minimal_file):
     files["layer-states-same-node.kcad"] = with_settings(19, layerStates=array([state("a", "Görünüm", [node("0"), node("0")])]))
     files["layer-states-visible-not-bool.kcad"] = with_settings(19, layerStates=array([state("a", "Görünüm", [cmap({"node": text("0"), "visible": uint(1)})])]))
     files["layer-states-without-visible.kcad"] = with_settings(19, layerStates=array([state("a", "Görünüm", [cmap({"node": text("0")})])]))
+    # The topology settings are schema 27's (docs/adr/0202 §7): an unknown field in schema 26; not empty, a tolerance in
+    # range, a rule's id neither empty nor twice, a known kind, another layer only and always between two layers and
+    # never the rule's own, a value only where a kind takes one, an angle below a right angle, an exception's rule there.
+    trule = lambda i="r1", kind="mustNotOverlap", **more: cmap({"id": text(i), "kind": text(kind), "layer": text("0"), **more})
+    files["topology-in-schema-26.kcad"] = with_settings(26, topology=cmap({"rules": array([trule()])}))
+    files["topology-empty.kcad"] = with_settings(27, topology=cmap({}))
+    files["topology-tolerance-range.kcad"] = with_settings(27, topology=cmap({"tolerance": f64(2.0)}))
+    files["topology-rule-same-id.kcad"] = with_settings(27, topology=cmap({"rules": array([trule(), trule()])}))
+    files["topology-rule-unknown-kind.kcad"] = with_settings(27, topology=cmap({"rules": array([trule(kind="mustBeNice")])}))
+    files["topology-rule-without-other.kcad"] = with_settings(27, topology=cmap({"rules": array([trule(kind="mustBeCoveredBy")])}))
+    files["topology-rule-other-itself.kcad"] = with_settings(27, topology=cmap({"rules": array([trule(kind="mustBeCoveredBy", other=text("0"))])}))
+    files["topology-rule-other-on-one-layer.kcad"] = with_settings(27, topology=cmap({"rules": array([trule(other=text("1"))])}))
+    files["topology-rule-value-not-taken.kcad"] = with_settings(27, topology=cmap({"rules": array([trule(value=f64(1.0))])}))
+    files["topology-rule-angle-too-large.kcad"] = with_settings(27, topology=cmap({"rules": array([trule(kind="mustNotHaveSmallAngles", value=f64(2.0))])}))
+    files["topology-exception-unknown-rule.kcad"] = with_settings(27, topology=cmap({"rules": array([trule()]), "exceptions": array([cmap({
+        "at": array([f64(500000.0), f64(4400000.0)]), "rule": text("r9"), "objects": array([blob(uid_bytes(m["uids"][0]))])})])}))
     files["bad-source.kcad"] = container(with_parts({**parts, "migratedFrom": cmap({"format": text("kentos.document"), "version": uint(1), "sourceSha256": blob(bytes(31))})}))
     return files
 
@@ -1639,6 +1708,7 @@ def build():
     out["images.kcad"] = container(document(load("images.json")))
     out["text-paths.kcad"] = container(document(load("text-paths.json")))
     out["layer-fields.kcad"] = container(document(load("layer-fields.json")))
+    out["topology.kcad"] = container(document(load("topology.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

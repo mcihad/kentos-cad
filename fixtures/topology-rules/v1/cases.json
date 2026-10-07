@@ -1,0 +1,3475 @@
+{
+ "format": "kentos.topology-rule-cases",
+ "version": 1,
+ "source": "scripts/fixtures/topology_rules_cases.py (docs/adr/0202)",
+ "note": "Konumlar ve ölçüler 1e-6 göreli payla karşılaştırılır; fixed'deki pts ve p tam, alan ve uzunluk 1e-9 göreli.",
+ "cases": [
+  {
+   "id": "overlap",
+   "title": "Çakışmamalı: iki parselin 2 × 6 m'lik ortak parçası; iki düzeltme",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "parsel",
+     "uid": "01900001-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900001-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487008,
+        "y": 4420002
+       },
+       {
+        "x": 487018,
+        "y": 4420002
+       },
+       {
+        "x": 487018,
+        "y": 4420008
+       },
+       {
+        "x": 487008,
+        "y": 4420008
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900001-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotOverlap",
+     "layer": "parsel"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "overlap",
+     "objects": [
+      0,
+      1
+     ],
+     "at": {
+      "x": 487009.0,
+      "y": 4420005.0
+     },
+     "measure": 12.0,
+     "measureKind": "area",
+     "fixes": [
+      "subtractFirst",
+      "subtractSecond"
+     ],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "subtractFirst",
+     "changes": [
+      {
+       "object": 0,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 0,
+       "area": 88
+      }
+     ]
+    },
+    {
+     "finding": 0,
+     "fix": "subtractSecond",
+     "changes": [
+      {
+       "object": 1,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 0,
+       "area": 48
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "overlap-noise",
+   "title": "Çakışmamalı: toleranstan dar (0,4 mm) parça sayılmaz, 2 mm'lik sayılır",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "parsel",
+     "uid": "01900002-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900002-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487009.9996,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       },
+       {
+        "x": 487009.9996,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900002-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487019.998,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487019.998,
+        "y": 4420010
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotOverlap",
+     "layer": "parsel"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "overlap",
+     "objects": [
+      1,
+      2
+     ],
+     "at": {
+      "x": 487019.999,
+      "y": 4420005.0
+     },
+     "measure": 0.02,
+     "measureKind": "area",
+     "fixes": [
+      "subtractFirst",
+      "subtractSecond"
+     ],
+     "exception": false
+    }
+   ]
+  },
+  {
+   "id": "overlap-pieces",
+   "title": "Çakışmamalı: iki ayrı parça; ölçü ikisinin toplamı, yer büyüğünün ağırlık merkezi",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "parsel",
+     "uid": "01900003-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420004
+       },
+       {
+        "x": 487010,
+        "y": 4420004
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900003-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487005,
+        "y": 4420006
+       },
+       {
+        "x": 487026,
+        "y": 4420006
+       },
+       {
+        "x": 487026,
+        "y": 4420012
+       },
+       {
+        "x": 487005,
+        "y": 4420012
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotOverlap",
+     "layer": "parsel"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "overlap",
+     "objects": [
+      0,
+      1
+     ],
+     "at": {
+      "x": 487023.0,
+      "y": 4420008.0
+     },
+     "measure": 44.0,
+     "measureKind": "area",
+     "fixes": [
+      "subtractFirst",
+      "subtractSecond"
+     ],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "subtractFirst",
+     "changes": [
+      {
+       "object": 0,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 0,
+       "area": 196
+      }
+     ]
+    },
+    {
+     "finding": 0,
+     "fix": "subtractSecond",
+     "changes": [
+      {
+       "object": 1,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 0,
+       "area": 82
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "gaps",
+   "title": "Boşluk olmamalı: ortası eksik ada (komşular ortak sınırlarıyla), 0,5 mm'lik gürültü, delikteki ada; kuzeyden güneye",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-000000000004",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420010
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487010,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-000000000005",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487018,
+        "y": 4420010
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487030,
+        "y": 4420020
+       },
+       {
+        "x": 487018,
+        "y": 4420020
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-000000000006",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420020
+       },
+       {
+        "x": 487010,
+        "y": 4420020
+       },
+       {
+        "x": 487010,
+        "y": 4420030
+       },
+       {
+        "x": 487000,
+        "y": 4420030
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-000000000007",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487010,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487010,
+        "y": 4420030
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-000000000008",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487030,
+        "y": 4420020
+       },
+       {
+        "x": 487030,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-000000000009",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050.0005,
+        "y": 4420000
+       },
+       {
+        "x": 487050.0005,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-00000000000a",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487050.0005,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420010.0005
+       },
+       {
+        "x": 487050.0005,
+        "y": 4420010.0005
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-00000000000b",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487050,
+        "y": 4420010.0005
+       },
+       {
+        "x": 487060,
+        "y": 4420010.0005
+       },
+       {
+        "x": 487060,
+        "y": 4420020
+       },
+       {
+        "x": 487050,
+        "y": 4420020
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-00000000000c",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420010
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487050,
+        "y": 4420020
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-00000000000d",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420020
+       },
+       {
+        "x": 487070,
+        "y": 4420020
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487075,
+          "y": 4420005
+         },
+         {
+          "x": 487085,
+          "y": 4420005
+         },
+         {
+          "x": 487085,
+          "y": 4420015
+         },
+         {
+          "x": 487075,
+          "y": 4420015
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900004-0000-7000-8000-00000000000e",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487078,
+        "y": 4420008
+       },
+       {
+        "x": 487082,
+        "y": 4420008
+       },
+       {
+        "x": 487082,
+        "y": 4420012
+       },
+       {
+        "x": 487078,
+        "y": 4420012
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotHaveGaps",
+     "layer": "parsel"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "gap",
+     "objects": [
+      3,
+      4,
+      1,
+      6
+     ],
+     "at": {
+      "x": 487014.0,
+      "y": 4420015.0
+     },
+     "measure": 80.0,
+     "measureKind": "area",
+     "fixes": [
+      "mergeNeighbour"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "gap",
+     "objects": [
+      12,
+      13
+     ],
+     "at": {
+      "x": 487080.0,
+      "y": 4420010.0
+     },
+     "measure": 84.0,
+     "measureKind": "area",
+     "fixes": [
+      "mergeNeighbour"
+     ],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "mergeNeighbour",
+     "changes": [
+      {
+       "object": 3,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 0,
+       "area": 180
+      }
+     ]
+    },
+    {
+     "finding": 1,
+     "fix": "mergeNeighbour",
+     "changes": [
+      {
+       "object": 12,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 1,
+       "area": 384
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "slivers",
+   "title": "İnce alan olmamalı: 5 cm'lik parsel (en uzun ortak sınırlı komşuya katılır), çok parçalı alanın ince parçası",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "parsel",
+     "uid": "01900005-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900005-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010.05,
+        "y": 4420000
+       },
+       {
+        "x": 487010.05,
+        "y": 4420010
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900005-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487010.05,
+        "y": 4420002
+       },
+       {
+        "x": 487020,
+        "y": 4420002
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       },
+       {
+        "x": 487010.05,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900005-0000-7000-8000-000000000004",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       }
+      ],
+      "parts": [
+       {
+        "pts": [
+         {
+          "x": 487045,
+          "y": 4420000
+         },
+         {
+          "x": 487045.08,
+          "y": 4420000
+         },
+         {
+          "x": 487045.08,
+          "y": 4420005
+         },
+         {
+          "x": 487045,
+          "y": 4420005
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotHaveSlivers",
+     "layer": "parsel",
+     "value": 0.1
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "sliver",
+     "objects": [
+      1
+     ],
+     "at": {
+      "x": 487010.025,
+      "y": 4420005.0
+     },
+     "measure": 0.04975124378109453,
+     "measureKind": "length",
+     "fixes": [
+      "mergeNeighbour",
+      "deletePart"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "sliver",
+     "objects": [
+      3
+     ],
+     "at": {
+      "x": 487045.04,
+      "y": 4420002.5
+     },
+     "measure": 0.07874015748031496,
+     "measureKind": "length",
+     "fixes": [
+      "deletePart"
+     ],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "mergeNeighbour",
+     "changes": [
+      {
+       "object": 0,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 0,
+       "area": 100.5
+      },
+      {
+       "object": 1,
+       "remove": true
+      }
+     ]
+    },
+    {
+     "finding": 0,
+     "fix": "deletePart",
+     "changes": [
+      {
+       "object": 1,
+       "remove": true
+      }
+     ]
+    },
+    {
+     "finding": 1,
+     "fix": "deletePart",
+     "changes": [
+      {
+       "object": 3,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 0,
+       "area": 100
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "duplicates",
+   "title": "Yinelenmemeli: kenarı bütünüyle öbürünün 0,4 mm yakınında olan çizgi, yarısı örtüşen çizgiler (yinelenen değil), 0,67 mm'lik iki nokta",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "yol",
+     "uid": "01900006-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420005
+       }
+      ]
+     }
+    },
+    {
+     "layer": "yol",
+     "uid": "01900006-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487000,
+       "y": 4420000.0004
+      },
+      "b": {
+       "x": 487010,
+       "y": 4420000.0004
+      }
+     }
+    },
+    {
+     "layer": "yol",
+     "uid": "01900006-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487030,
+       "y": 4420000
+      },
+      "b": {
+       "x": 487040,
+       "y": 4420000
+      }
+     }
+    },
+    {
+     "layer": "yol",
+     "uid": "01900006-0000-7000-8000-000000000004",
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487035,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "nokta",
+     "uid": "01900006-0000-7000-8000-000000000005",
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487050,
+       "y": 4420000
+      }
+     }
+    },
+    {
+     "layer": "nokta",
+     "uid": "01900006-0000-7000-8000-000000000006",
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487050.0006,
+       "y": 4420000.0003
+      }
+     }
+    },
+    {
+     "layer": "nokta",
+     "uid": "01900006-0000-7000-8000-000000000007",
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487052,
+       "y": 4420000
+      }
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotHaveDuplicates",
+     "layer": "yol"
+    },
+    {
+     "id": "r2",
+     "kind": "mustNotHaveDuplicates",
+     "layer": "nokta"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "duplicateEdge",
+     "objects": [
+      0,
+      1
+     ],
+     "at": {
+      "x": 487005.0,
+      "y": 4420000.0
+     },
+     "measure": 10.0,
+     "measureKind": "length",
+     "fixes": [
+      "deleteDuplicate"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r2",
+     "problem": "duplicatePoint",
+     "objects": [
+      4,
+      5
+     ],
+     "at": {
+      "x": 487050.0006,
+      "y": 4420000.0003
+     },
+     "measure": 0.0006708203932499369,
+     "measureKind": "distance",
+     "fixes": [
+      "deleteDuplicate"
+     ],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "deleteDuplicate",
+     "changes": [
+      {
+       "object": 1,
+       "remove": true
+      }
+     ]
+    },
+    {
+     "finding": 1,
+     "fix": "deleteDuplicate",
+     "changes": [
+      {
+       "object": 5,
+       "remove": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dangles",
+   "title": "Sarkan uç olmamalı: T birleşimi bağlı, 30 cm kısa uç (en yakın çizgiye taşınır), kapalı yol, alan sınırına değen uç",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "yol",
+     "uid": "01900007-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "yol",
+     "uid": "01900007-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487010,
+       "y": 4420005
+      },
+      "b": {
+       "x": 487019.7,
+       "y": 4420005
+      }
+     }
+    },
+    {
+     "layer": "yol",
+     "uid": "01900007-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487020,
+       "y": 4420000
+      },
+      "b": {
+       "x": 487020,
+       "y": 4420010
+      }
+     }
+    },
+    {
+     "layer": "yol",
+     "uid": "01900007-0000-7000-8000-000000000004",
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       }
+      ]
+     }
+    },
+    {
+     "layer": "yol",
+     "uid": "01900007-0000-7000-8000-000000000005",
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487061,
+       "y": 4420003
+      },
+      "b": {
+       "x": 487070,
+       "y": 4420003
+      }
+     }
+    },
+    {
+     "layer": "yol",
+     "uid": "01900007-0000-7000-8000-000000000006",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotHaveDangles",
+     "layer": "yol"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "dangle",
+     "objects": [
+      0
+     ],
+     "at": {
+      "x": 487000.0,
+      "y": 4420000.0
+     },
+     "measure": 11.180339887498949,
+     "measureKind": "distance",
+     "fixes": [
+      "snapEnd"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "dangle",
+     "objects": [
+      0
+     ],
+     "at": {
+      "x": 487010.0,
+      "y": 4420010.0
+     },
+     "measure": 5.0,
+     "measureKind": "distance",
+     "fixes": [
+      "snapEnd"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "dangle",
+     "objects": [
+      1
+     ],
+     "at": {
+      "x": 487019.7,
+      "y": 4420005.0
+     },
+     "measure": 0.3,
+     "measureKind": "distance",
+     "fixes": [
+      "snapEnd"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "dangle",
+     "objects": [
+      2
+     ],
+     "at": {
+      "x": 487020.0,
+      "y": 4420000.0
+     },
+     "measure": 5.008991914547278,
+     "measureKind": "distance",
+     "fixes": [
+      "snapEnd"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "dangle",
+     "objects": [
+      2
+     ],
+     "at": {
+      "x": 487020.0,
+      "y": 4420010.0
+     },
+     "measure": 5.008991914547278,
+     "measureKind": "distance",
+     "fixes": [
+      "snapEnd"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "dangle",
+     "objects": [
+      4
+     ],
+     "at": {
+      "x": 487061.0,
+      "y": 4420003.0
+     },
+     "measure": 9.0,
+     "measureKind": "distance",
+     "fixes": [
+      "snapEnd"
+     ],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 2,
+     "fix": "snapEnd",
+     "changes": [
+      {
+       "object": 1,
+       "pts": [
+        {
+         "x": 487010,
+         "y": 4420005
+        },
+        {
+         "x": 487020,
+         "y": 4420005
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "short-edges",
+   "title": "Kısa kenar olmamalı: alanın 3 cm'lik kenarı, çoklu çizginin son kenarı (baştaki köşesi silinir), 4 cm'lik çizgi ve yay, deliğin kenarı",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "parsel",
+     "uid": "01900008-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000.03
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900008-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040.02,
+        "y": 4420000
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900008-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487050,
+       "y": 4420000
+      },
+      "b": {
+       "x": 487050.04,
+       "y": 4420000
+      }
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900008-0000-7000-8000-000000000004",
+     "shape": {
+      "kind": "arc",
+      "c": {
+       "x": 487060,
+       "y": 4420000
+      },
+      "r": 0.04,
+      "a0": 0.5,
+      "a1": 1.5
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900008-0000-7000-8000-000000000005",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487023,
+          "y": 4420003
+         },
+         {
+          "x": 487027,
+          "y": 4420003
+         },
+         {
+          "x": 487027,
+          "y": 4420007
+         },
+         {
+          "x": 487023.02,
+          "y": 4420007
+         },
+         {
+          "x": 487023,
+          "y": 4420007
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotHaveShortEdges",
+     "layer": "parsel"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "shortEdge",
+     "objects": [
+      0
+     ],
+     "at": {
+      "x": 487010.0,
+      "y": 4420000.015
+     },
+     "measure": 0.03,
+     "measureKind": "length",
+     "fixes": [
+      "removeVertex"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "shortEdge",
+     "objects": [
+      1
+     ],
+     "at": {
+      "x": 487040.01,
+      "y": 4420000.0
+     },
+     "measure": 0.02,
+     "measureKind": "length",
+     "fixes": [
+      "removeVertex"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "shortEdge",
+     "objects": [
+      2
+     ],
+     "at": {
+      "x": 487050.02,
+      "y": 4420000.0
+     },
+     "measure": 0.04,
+     "measureKind": "length",
+     "fixes": [
+      "deleteObject"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "shortEdge",
+     "objects": [
+      3
+     ],
+     "at": {
+      "x": 487060.0216120922,
+      "y": 4420000.03365884
+     },
+     "measure": 0.04,
+     "measureKind": "length",
+     "fixes": [
+      "deleteObject"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "shortEdge",
+     "objects": [
+      4
+     ],
+     "at": {
+      "x": 487023.01,
+      "y": 4420007.0
+     },
+     "measure": 0.02,
+     "measureKind": "length",
+     "fixes": [
+      "removeVertex"
+     ],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "removeVertex",
+     "changes": [
+      {
+       "object": 0,
+       "pts": [
+        {
+         "x": 487000,
+         "y": 4420000
+        },
+        {
+         "x": 487010,
+         "y": 4420000
+        },
+        {
+         "x": 487010,
+         "y": 4420010
+        },
+        {
+         "x": 487000,
+         "y": 4420010
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "finding": 1,
+     "fix": "removeVertex",
+     "changes": [
+      {
+       "object": 1,
+       "pts": [
+        {
+         "x": 487030,
+         "y": 4420000
+        },
+        {
+         "x": 487040.02,
+         "y": 4420000
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "finding": 2,
+     "fix": "deleteObject",
+     "changes": [
+      {
+       "object": 2,
+       "remove": true
+      }
+     ]
+    },
+    {
+     "finding": 3,
+     "fix": "deleteObject",
+     "changes": [
+      {
+       "object": 3,
+       "remove": true
+      }
+     ]
+    },
+    {
+     "finding": 4,
+     "fix": "removeVertex",
+     "changes": [
+      {
+       "object": 4,
+       "pts": [
+        {
+         "x": 487020,
+         "y": 4420000
+        },
+        {
+         "x": 487030,
+         "y": 4420000
+        },
+        {
+         "x": 487030,
+         "y": 4420010
+        },
+        {
+         "x": 487020,
+         "y": 4420010
+        }
+       ],
+       "holes": [
+        [
+         {
+          "x": 487023,
+          "y": 4420003
+         },
+         {
+          "x": 487027,
+          "y": 4420003
+         },
+         {
+          "x": 487027,
+          "y": 4420007
+         },
+         {
+          "x": 487023.02,
+          "y": 4420007
+         }
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "small-angles",
+   "title": "Küçük açı olmamalı: parselin 0,38°'lik sivri ucu, çoklu çizginin 3°'lik dönüşü",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "parsel",
+     "uid": "01900009-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487005,
+        "y": 4420010
+       },
+       {
+        "x": 487005,
+        "y": 4420040
+       },
+       {
+        "x": 487004.8,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900009-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487020.5,
+        "y": 4420000.5
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotHaveSmallAngles",
+     "layer": "parsel",
+     "value": 0.08726646259971647
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "smallAngle",
+     "objects": [
+      0
+     ],
+     "at": {
+      "x": 487005.0,
+      "y": 4420040.0
+     },
+     "measure": 0.006666567903868229,
+     "measureKind": "angle",
+     "fixes": [
+      "removeVertex"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "smallAngle",
+     "objects": [
+      1
+     ],
+     "at": {
+      "x": 487030.0,
+      "y": 4420000.0
+     },
+     "measure": 0.05258306161094172,
+     "measureKind": "angle",
+     "fixes": [
+      "removeVertex"
+     ],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "removeVertex",
+     "changes": [
+      {
+       "object": 0,
+       "pts": [
+        {
+         "x": 487000,
+         "y": 4420000
+        },
+        {
+         "x": 487010,
+         "y": 4420000
+        },
+        {
+         "x": 487010,
+         "y": 4420010
+        },
+        {
+         "x": 487005,
+         "y": 4420010
+        },
+        {
+         "x": 487004.8,
+         "y": 4420010
+        },
+        {
+         "x": 487000,
+         "y": 4420010
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "finding": 1,
+     "fix": "removeVertex",
+     "changes": [
+      {
+       "object": 1,
+       "pts": [
+        {
+         "x": 487020,
+         "y": 4420000
+        },
+        {
+         "x": 487020.5,
+         "y": 4420000.5
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "title": "Geçerli olmalı: papyon (Onar iki üçgen yapar), yinelenen köşe, kendini kesen yol (düzeltme yok)",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "parsel",
+     "uid": "0190000a-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "0190000a-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "0190000a-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustBeValid",
+     "layer": "parsel"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "ringCrossing",
+     "objects": [
+      0
+     ],
+     "at": {
+      "x": 487005.0,
+      "y": 4420005.0
+     },
+     "measure": null,
+     "measureKind": null,
+     "fixes": [
+      "repair"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "repeated",
+     "objects": [
+      1
+     ],
+     "at": {
+      "x": 487030.0,
+      "y": 4420000.0
+     },
+     "measure": null,
+     "measureKind": null,
+     "fixes": [
+      "repair"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "pathCrossing",
+     "objects": [
+      2
+     ],
+     "at": {
+      "x": 487045.0,
+      "y": 4420005.0
+     },
+     "measure": null,
+     "measureKind": null,
+     "fixes": [],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "repair",
+     "changes": [
+      {
+       "object": 0,
+       "kind": "polygon",
+       "parts": 2,
+       "holes": 0,
+       "area": 50
+      }
+     ]
+    },
+    {
+     "finding": 1,
+     "fix": "repair",
+     "changes": [
+      {
+       "object": 1,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 0,
+       "area": 100
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "missing-vertices",
+   "title": "Ortak sınırda köşe eksik olmamalı: komşunun kenarındaki köşe, T birleşimi, kenara 0,5 mm (içinde) ve 2 mm (dışında)",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "parsel",
+     "uid": "0190000b-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420004
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "0190000b-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "0190000b-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420010
+       },
+       {
+        "x": 487005,
+        "y": 4420010
+       },
+       {
+        "x": 487005,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "0190000b-0000-7000-8000-000000000004",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "0190000b-0000-7000-8000-000000000005",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       },
+       {
+        "x": 487040.0005,
+        "y": 4420005
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "0190000b-0000-7000-8000-000000000006",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487035,
+        "y": 4420020
+       },
+       {
+        "x": 487035,
+        "y": 4420010.002
+       },
+       {
+        "x": 487030,
+        "y": 4420020
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotHaveMissingVertices",
+     "layer": "parsel"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "missingVertex",
+     "objects": [
+      1,
+      0
+     ],
+     "at": {
+      "x": 487010.0,
+      "y": 4420004.0
+     },
+     "measure": 0.0,
+     "measureKind": "distance",
+     "fixes": [
+      "addVertex"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "missingVertex",
+     "objects": [
+      0,
+      2
+     ],
+     "at": {
+      "x": 487005.0,
+      "y": 4420010.0
+     },
+     "measure": 0.0,
+     "measureKind": "distance",
+     "fixes": [
+      "addVertex"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "missingVertex",
+     "objects": [
+      3,
+      4
+     ],
+     "at": {
+      "x": 487040.0005,
+      "y": 4420005.0
+     },
+     "measure": 0.0005,
+     "measureKind": "distance",
+     "fixes": [
+      "addVertex"
+     ],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "addVertex",
+     "changes": [
+      {
+       "object": 1,
+       "pts": [
+        {
+         "x": 487010,
+         "y": 4420000
+        },
+        {
+         "x": 487020,
+         "y": 4420000
+        },
+        {
+         "x": 487020,
+         "y": 4420010
+        },
+        {
+         "x": 487010,
+         "y": 4420010
+        },
+        {
+         "x": 487010,
+         "y": 4420004
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "finding": 1,
+     "fix": "addVertex",
+     "changes": [
+      {
+       "object": 0,
+       "pts": [
+        {
+         "x": 487000,
+         "y": 4420000
+        },
+        {
+         "x": 487010,
+         "y": 4420000
+        },
+        {
+         "x": 487010,
+         "y": 4420004
+        },
+        {
+         "x": 487010,
+         "y": 4420010
+        },
+        {
+         "x": 487005,
+         "y": 4420010
+        },
+        {
+         "x": 487000,
+         "y": 4420010
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "finding": 2,
+     "fix": "addVertex",
+     "changes": [
+      {
+       "object": 3,
+       "pts": [
+        {
+         "x": 487030,
+         "y": 4420000
+        },
+        {
+         "x": 487040,
+         "y": 4420000
+        },
+        {
+         "x": 487040.0005,
+         "y": 4420005
+        },
+        {
+         "x": 487040,
+         "y": 4420010
+        },
+        {
+         "x": 487030,
+         "y": 4420010
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "overlap-with",
+   "title": "… ile çakışmamalı: yola taşan bina; iki düzeltme",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "bina",
+     "uid": "0190000c-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "yol",
+     "uid": "0190000c-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487008,
+        "y": 4419995
+       },
+       {
+        "x": 487012,
+        "y": 4419995
+       },
+       {
+        "x": 487012,
+        "y": 4420015
+       },
+       {
+        "x": 487008,
+        "y": 4420015
+       }
+      ]
+     }
+    },
+    {
+     "layer": "bina",
+     "uid": "0190000c-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotOverlapWith",
+     "layer": "bina",
+     "other": "yol"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "overlap",
+     "objects": [
+      0,
+      1
+     ],
+     "at": {
+      "x": 487009.0,
+      "y": 4420005.0
+     },
+     "measure": 20.0,
+     "measureKind": "area",
+     "fixes": [
+      "subtractFirst",
+      "subtractSecond"
+     ],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "subtractFirst",
+     "changes": [
+      {
+       "object": 0,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 0,
+       "area": 80
+      }
+     ]
+    },
+    {
+     "finding": 0,
+     "fix": "subtractSecond",
+     "changes": [
+      {
+       "object": 1,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 0,
+       "area": 60
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "covered-by",
+   "title": "… içinde kalmalı: parseline taşan bina ve çizgi (dışarıdaki kesilir), içerideki, sınırdaki (toleransta) ve dışarıdaki noktalar",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "parsel",
+     "uid": "0190000d-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     }
+    },
+    {
+     "layer": "bina",
+     "uid": "0190000d-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487002,
+        "y": 4420002
+       },
+       {
+        "x": 487008,
+        "y": 4420002
+       },
+       {
+        "x": 487008,
+        "y": 4420008
+       },
+       {
+        "x": 487002,
+        "y": 4420008
+       }
+      ]
+     }
+    },
+    {
+     "layer": "bina",
+     "uid": "0190000d-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487015,
+        "y": 4420005
+       },
+       {
+        "x": 487025,
+        "y": 4420005
+       },
+       {
+        "x": 487025,
+        "y": 4420010
+       },
+       {
+        "x": 487015,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "bina",
+     "uid": "0190000d-0000-7000-8000-000000000004",
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487010,
+       "y": 4420012
+      },
+      "b": {
+       "x": 487030,
+       "y": 4420012
+      }
+     }
+    },
+    {
+     "layer": "bina",
+     "uid": "0190000d-0000-7000-8000-000000000005",
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487005,
+       "y": 4420005
+      }
+     }
+    },
+    {
+     "layer": "bina",
+     "uid": "0190000d-0000-7000-8000-000000000006",
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487020.0005,
+       "y": 4420001
+      }
+     }
+    },
+    {
+     "layer": "bina",
+     "uid": "0190000d-0000-7000-8000-000000000007",
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487025,
+       "y": 4420001
+      }
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustBeCoveredBy",
+     "layer": "bina",
+     "other": "parsel"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "outside",
+     "objects": [
+      2
+     ],
+     "at": {
+      "x": 487022.5,
+      "y": 4420007.5
+     },
+     "measure": 25.0,
+     "measureKind": "area",
+     "fixes": [
+      "clipOutside"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "outside",
+     "objects": [
+      3
+     ],
+     "at": {
+      "x": 487025.0,
+      "y": 4420012.0
+     },
+     "measure": 10.0,
+     "measureKind": "length",
+     "fixes": [
+      "clipOutside"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "outside",
+     "objects": [
+      6
+     ],
+     "at": {
+      "x": 487025.0,
+      "y": 4420001.0
+     },
+     "measure": 5.0,
+     "measureKind": "distance",
+     "fixes": [],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "clipOutside",
+     "changes": [
+      {
+       "object": 2,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 0,
+       "area": 25
+      }
+     ]
+    },
+    {
+     "finding": 1,
+     "fix": "clipOutside",
+     "changes": [
+      {
+       "object": 3,
+       "kind": "polyline",
+       "parts": 1,
+       "length": 10
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "boundary-covered-by",
+   "title": "Sınırı … sınırlarında olmalı: parsellerle ve sınır çizgisiyle örtülen ada kenarları, halkanın başından geçen kısım",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "ada",
+     "uid": "0190000e-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "0190000e-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000.0005
+       },
+       {
+        "x": 487010,
+        "y": 4420000.0005
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "0190000e-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487018,
+        "y": 4420000
+       },
+       {
+        "x": 487018,
+        "y": 4420010
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "0190000e-0000-7000-8000-000000000004",
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487020,
+       "y": 4420000
+      },
+      "b": {
+       "x": 487020,
+       "y": 4420004
+      }
+     }
+    },
+    {
+     "layer": "ada",
+     "uid": "0190000e-0000-7000-8000-000000000005",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "0190000e-0000-7000-8000-000000000006",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487038,
+        "y": 4420000
+       },
+       {
+        "x": 487038,
+        "y": 4420010
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "boundaryMustBeCoveredBy",
+     "layer": "ada",
+     "other": "parsel"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "uncoveredBoundary",
+     "objects": [
+      0
+     ],
+     "at": {
+      "x": 487020.0,
+      "y": 4420008.0
+     },
+     "measure": 9.996,
+     "measureKind": "length",
+     "fixes": [],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "uncoveredBoundary",
+     "objects": [
+      4
+     ],
+     "at": {
+      "x": 487040.0,
+      "y": 4420005.0
+     },
+     "measure": 13.998,
+     "measureKind": "length",
+     "fixes": [],
+     "exception": false
+    }
+   ]
+  },
+  {
+   "id": "on-end-of",
+   "title": "… çizgilerinin ucunda olmalı: uçtaki, köşedeki, uca toleransta yakın ve uzaktaki nokta; kapalı yolun tek ucu",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "yol",
+     "uid": "0190000f-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "yol",
+     "uid": "0190000f-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       }
+      ]
+     }
+    },
+    {
+     "layer": "nokta",
+     "uid": "0190000f-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487000,
+       "y": 4420000
+      }
+     }
+    },
+    {
+     "layer": "nokta",
+     "uid": "0190000f-0000-7000-8000-000000000004",
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487010,
+       "y": 4420000.5
+      }
+     }
+    },
+    {
+     "layer": "nokta",
+     "uid": "0190000f-0000-7000-8000-000000000005",
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487020.0004,
+       "y": 4420000.0003
+      }
+     }
+    },
+    {
+     "layer": "nokta",
+     "uid": "0190000f-0000-7000-8000-000000000006",
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487035,
+       "y": 4420000
+      }
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustBeOnEndOf",
+     "layer": "nokta",
+     "other": "yol"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "notOnEnd",
+     "objects": [
+      3
+     ],
+     "at": {
+      "x": 487010.0,
+      "y": 4420000.5
+     },
+     "measure": 9.5,
+     "measureKind": "distance",
+     "fixes": [
+      "snapToEnd"
+     ],
+     "exception": false
+    },
+    {
+     "rule": "r1",
+     "problem": "notOnEnd",
+     "objects": [
+      5
+     ],
+     "at": {
+      "x": 487035.0,
+      "y": 4420000.0
+     },
+     "measure": 15.0,
+     "measureKind": "distance",
+     "fixes": [
+      "snapToEnd"
+     ],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "snapToEnd",
+     "changes": [
+      {
+       "object": 3,
+       "p": {
+        "x": 487010,
+        "y": 4420010
+       }
+      }
+     ]
+    },
+    {
+     "finding": 1,
+     "fix": "snapToEnd",
+     "changes": [
+      {
+       "object": 5,
+       "p": {
+        "x": 487020,
+        "y": 4420000
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "exceptions",
+   "title": "İstisna: aynı kural, aynı nesneler ve toleransta aynı yer; yeri değişen bulgu açık kalır",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "parsel",
+     "uid": "01900010-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900010-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487008,
+        "y": 4420002
+       },
+       {
+        "x": 487018,
+        "y": 4420002
+       },
+       {
+        "x": 487018,
+        "y": 4420008
+       },
+       {
+        "x": 487008,
+        "y": 4420008
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900010-0000-7000-8000-000000000003",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       }
+      ]
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900010-0000-7000-8000-000000000004",
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487038,
+        "y": 4420002
+       },
+       {
+        "x": 487048,
+        "y": 4420002
+       },
+       {
+        "x": 487048,
+        "y": 4420008
+       },
+       {
+        "x": 487038,
+        "y": 4420008
+       }
+      ]
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotOverlap",
+     "layer": "parsel"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "overlap",
+     "objects": [
+      0,
+      1
+     ],
+     "at": {
+      "x": 487009.0,
+      "y": 4420005.0
+     },
+     "measure": 12.0,
+     "measureKind": "area",
+     "fixes": [
+      "subtractFirst",
+      "subtractSecond"
+     ],
+     "exception": true
+    },
+    {
+     "rule": "r1",
+     "problem": "overlap",
+     "objects": [
+      2,
+      3
+     ],
+     "at": {
+      "x": 487039.0,
+      "y": 4420005.0
+     },
+     "measure": 12.0,
+     "measureKind": "area",
+     "fixes": [
+      "subtractFirst",
+      "subtractSecond"
+     ],
+     "exception": false
+    }
+   ],
+   "exceptions": [
+    {
+     "rule": "r1",
+     "objects": [
+      "01900010-0000-7000-8000-000000000001",
+      "01900010-0000-7000-8000-000000000002"
+     ],
+     "at": {
+      "x": 487009,
+      "y": 4420005
+     }
+    },
+    {
+     "rule": "r1",
+     "objects": [
+      "01900010-0000-7000-8000-000000000003",
+      "01900010-0000-7000-8000-000000000004"
+     ],
+     "at": {
+      "x": 487039,
+      "y": 4420005.01
+     }
+    }
+   ]
+  },
+  {
+   "id": "circles",
+   "title": "Çakışmamalı: iki dairenin merceği (kapalı biçim), Birinci nesneden çıkar",
+   "tolerance": 0.001,
+   "objects": [
+    {
+     "layer": "parsel",
+     "uid": "01900011-0000-7000-8000-000000000001",
+     "shape": {
+      "kind": "circle",
+      "c": {
+       "x": 487000,
+       "y": 4420000
+      },
+      "r": 5
+     }
+    },
+    {
+     "layer": "parsel",
+     "uid": "01900011-0000-7000-8000-000000000002",
+     "shape": {
+      "kind": "circle",
+      "c": {
+       "x": 487006,
+       "y": 4420000
+      },
+      "r": 5
+     }
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "kind": "mustNotOverlap",
+     "layer": "parsel"
+    }
+   ],
+   "findings": [
+    {
+     "rule": "r1",
+     "problem": "overlap",
+     "objects": [
+      0,
+      1
+     ],
+     "at": {
+      "x": 487003.0,
+      "y": 4420000.0
+     },
+     "measure": 22.36476090008061,
+     "measureKind": "area",
+     "fixes": [
+      "subtractFirst",
+      "subtractSecond"
+     ],
+     "exception": false
+    }
+   ],
+   "fixed": [
+    {
+     "finding": 0,
+     "fix": "subtractFirst",
+     "changes": [
+      {
+       "object": 0,
+       "kind": "polygon",
+       "parts": 1,
+       "holes": 0,
+       "area": 56.17505543966422
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

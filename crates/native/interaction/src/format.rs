@@ -498,6 +498,7 @@ mod tests {
             layer_states: Vec::new(),
             survey: None,
             dimension_styles: Vec::new(),
+            topology: None,
             text_styles: Vec::new(),
         };
         let cad = Format::of(&settings);
@@ -569,6 +570,7 @@ mod tests {
             layer_states: Vec::new(),
             survey: None,
             dimension_styles: Vec::new(),
+            topology: None,
             text_styles: Vec::new(),
         };
         let f = Format::of(&settings);
