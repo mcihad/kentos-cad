@@ -12,7 +12,9 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::store::Store;
 use kentos_native_application::geometry::shape;
 use kentos_native_style::StylePalette;
+use kentos_native_style::View;
 use kentos_native_style::batches::{DecodeOptions, decode};
+use kentos_native_style::color::{ColorMode, ViewColors};
 use kentos_native_style::library::{Source, StyleLibrary};
 use kentos_native_style::program::{BuildOptions, build_layer, symbol_scale_of};
 use serde_json::{Value, json};
@@ -173,6 +175,11 @@ fn builds_the_web_s_batches() {
             clip: None,
             library: &library,
             layer_name: &names,
+            // Görünüm kipleri where the case gives them (docs/adr/0195).
+            view: View {
+                fills: view["fills"] != false,
+                area_edges: view["areaEdges"] != false,
+            },
         };
         let (call, batches) = build_layer(&store, &style, &list, &opts).expect("build");
         let decisions: Vec<Value> = list
@@ -212,6 +219,10 @@ fn builds_the_web_s_batches() {
                 palette: &palette,
                 plot_scale: scale,
                 library: &library,
+                view: ViewColors {
+                    mode: ColorMode::from_key(view["colorMode"].as_str().unwrap_or("color")),
+                    opaque: view["transparency"] == false,
+                },
             },
         )
         .expect("decode");
@@ -299,6 +310,7 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
             clip: None,
             library: &library,
             layer_name: &names,
+            view: Default::default(),
         };
         let build = |list: &[&Entity]| -> StyledLayer {
             let (call, batches) = build_layer(&store, &style, list, &opts).expect("build");
@@ -309,6 +321,7 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
                     palette: &palette,
                     plot_scale: scale,
                     library: &library,
+                    view: Default::default(),
                 },
             )
             .expect("decode")
@@ -350,5 +363,5 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
             checked += 1;
         }
     }
-    assert_eq!(checked, 36, "twelve cases, three part sizes");
+    assert_eq!(checked, 51, "seventeen cases, three part sizes");
 }

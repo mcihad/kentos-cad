@@ -10,12 +10,12 @@ import type { Affine } from '../model/geom/affine';
 import type { Edge } from '../model/geom/intersect';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
 import type { Bounds, Vec2 } from '../model/geometry';
-import { parseHex, readCanvasPalette, withAlpha, type CanvasPalette } from '../render/color';
+import { highlightHex, modedPalette, parseHex, readCanvasPalette, withAlpha, type CanvasPalette } from '../render/color';
 import { onFaceLoaded } from '../render/drawingFaces';
 import { createBackend } from '../render/createBackend';
 import { buildGrid, gridExtent, type GridExtent } from '../render/grid';
 import { Atlas } from '../render/atlas';
-import { buildSceneLayer } from '../render/sceneBuilder';
+import { buildSceneLayer, widenLines } from '../render/sceneBuilder';
 import { buildStyledLayer } from '../render/styledLayer';
 import type { BackendKind, RenderBackend } from '../render/types';
 import { webgpuSupported } from '../render/webgpu/support';
@@ -831,10 +831,19 @@ export class ViewportController {
       }),
     );
     d.add(() => clearTimeout(this.symbolTimer));
-    for (const s of [this.ctx.prefs.symbolSize, this.ctx.prefs.lineWeights])
+    const { prefs } = this.ctx;
+    for (const s of [prefs.symbolSize, prefs.lineWeights, prefs.colorMode, prefs.fills, prefs.areaEdges, prefs.transparency])
       d.add(
         s.subscribe(() => {
           this.allDirty = true;
+          this.requestRender();
+        }),
+      );
+    // Vurgu rengi and kalınlığı (docs/adr/0195): the highlights are built again.
+    for (const s of [prefs.highlightColor, prefs.highlightWidth])
+      d.add(
+        s.subscribe(() => {
+          this.highlightDirty = true;
           this.requestRender();
         }),
       );
@@ -1337,6 +1346,12 @@ export class ViewportController {
       plotScale,
       screen: this.ctx.prefs.symbolSize.value === 'screen',
       hairlines: !this.ctx.prefs.lineWeights.value,
+      view: {
+        colorMode: this.ctx.prefs.colorMode.value,
+        fills: this.ctx.prefs.fills.value,
+        areaEdges: this.ctx.prefs.areaEdges.value,
+        transparency: this.ctx.prefs.transparency.value,
+      },
       library: this.ctx.styles.library,
       layerName: (id: string) => doc.layers.get(id)?.name ?? id,
       geometry: this.picker,
@@ -1361,12 +1376,14 @@ export class ViewportController {
   }
 
   private uploadHighlight(): void {
-    const { doc, selection } = this.ctx;
-    const accent = parseHex(this.palette.accent);
+    const { doc, selection, prefs } = this.ctx;
+    // Vurgu rengi and kalınlığı (docs/adr/0195 §1).
+    const accent = parseHex(highlightHex(prefs.highlightColor.value, this.palette.accent));
+    const width = prefs.highlightWidth.value;
     const base = { color: 'fg', lineType: 'continuous' as const, lineWeight: 0.25 };
     const sel = [...selection.ids.value].map((id) => doc.get(id)).filter((e): e is Entity => !!e);
     this.backend!.upload(
-      buildSceneLayer('__sel', sel, base, {
+      widenLines(buildSceneLayer('__sel', sel, base, {
         origin: doc.origin,
         palette: this.palette,
         geometry: this.picker,
@@ -1375,12 +1392,12 @@ export class ViewportController {
         overrideDash: [6, 3],
         pointStyle: { size: 15, shape: 'ring' },
         clip: this.constructionClip(),
-      }),
+      }), width),
     );
     const hoverId = selection.hover.value;
     const hover = hoverId !== null && !selection.has(hoverId) ? doc.get(hoverId) : undefined;
     this.backend!.upload(
-      buildSceneLayer('__hover', hover ? [hover] : [], base, {
+      widenLines(buildSceneLayer('__hover', hover ? [hover] : [], base, {
         origin: doc.origin,
         palette: this.palette,
         geometry: this.picker,
@@ -1390,7 +1407,7 @@ export class ViewportController {
         overrideDash: null,
         pointStyle: { size: 15, shape: 'ring' },
         clip: this.constructionClip(),
-      }),
+      }), width),
     );
   }
 
@@ -1450,7 +1467,8 @@ export class ViewportController {
     const my = Math.ceil(cam.height * LABEL_MARGIN);
     const w = Math.max(1, Math.round((cam.width + 2 * mx) * dpr));
     const h = Math.max(1, Math.round((cam.height + 2 * my) * dpr));
-    const key = `${w}x${h}|${dpr}|${cam.scale}|${this.labelEpoch}|${this.ctx.doc.revision}`;
+    const mode = this.ctx.prefs.colorMode.value;
+    const key = `${w}x${h}|${dpr}|${cam.scale}|${this.labelEpoch}|${this.ctx.doc.revision}|${mode}`;
     const moving = cam.changed.value !== this.labelCamera;
     this.labelCamera = cam.changed.value;
     let cache = this.labelCache;
@@ -1470,7 +1488,7 @@ export class ViewportController {
       const lg = cache.canvas.getContext('2d')!;
       lg.setTransform(dpr, 0, 0, dpr, 0, 0);
       lg.clearRect(0, 0, view.width, view.height);
-      drawLabels(lg, this.ctx.doc, view, this.palette, this.picker.labels(view.visibleBounds(), view.scale, this.editingId), (l, look) => this.dimensionText(l, look), (b) => this.picker.blockPieces(b));
+      drawLabels(lg, this.ctx.doc, view, modedPalette(this.palette, mode), this.picker.labels(view.visibleBounds(), view.scale, this.editingId), (l, look) => this.dimensionText(l, look), (b) => this.picker.blockPieces(b));
       cache.key = key;
       cache.center = view.center;
       sx = -mx * dpr;
@@ -1517,7 +1535,7 @@ export class ViewportController {
     g.rect(x, y, w, h);
     g.clip();
     g.translate(x, y);
-    drawLabels(g, this.ctx.doc, lens, pal, this.picker.labels(lens.visibleBounds(), lens.scale, this.editingId), (l, look) => this.dimensionText(l, look), (b) => this.picker.blockPieces(b));
+    drawLabels(g, this.ctx.doc, lens, modedPalette(pal, this.ctx.prefs.colorMode.value), this.picker.labels(lens.visibleBounds(), lens.scale, this.editingId), (l, look) => this.dimensionText(l, look), (b) => this.picker.blockPieces(b));
     if (this.paragraphPreview) paragraphRecords(g, pal, lens, this.paragraphPreview.records, this.paragraphPreview.text, this.paragraphPreview.runs, this.paragraphPreview.face);
     const selected = this.ctx.selection.ids.value;
     if (selected.size <= 150) drawGrips(g, this.picker.grips(selected), lens, pal, this.ctx.tools.active.activeGrip?.() ?? null);

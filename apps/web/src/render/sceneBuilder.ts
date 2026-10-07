@@ -6,7 +6,7 @@ import { DrawnReader, type StyledGeometry } from '../style/geometry';
 import { parseHex, resolveColor, withAlpha, type CanvasPalette } from './color';
 import { FillQueue } from './fillQueue';
 import type { GeometrySource } from './styledLayer';
-import type { LineBatch, PointBatch, RGBA, SceneLayer } from './types';
+import { STROKE_STRIDE, type LineBatch, type PointBatch, type RGBA, type SceneLayer, type StyledBatch } from './types';
 
 export const DASH_PATTERNS: Record<LineType, readonly number[] | null> = {
   continuous: null,
@@ -177,4 +177,27 @@ export function buildSceneLayer(id: string, entities: readonly Entity[], style: 
     }
   }
   return layer;
+}
+
+/**
+ * A highlight's lines wider than a pixel (Vurgu kalınlığı, docs/adr/0195 §2): the plain lines draw one pixel, so wider
+ * ones go through the styled strokes, `width` px, their colour and dash kept; a width of one leaves the layer as it is.
+ */
+export function widenLines(layer: SceneLayer, width: number): SceneLayer {
+  if (width <= 1 || !layer.lines.length) return layer;
+  const strokes: StyledBatch[] = layer.lines.map((b) => {
+    const n = b.positions.length / 4;
+    const segments = new Float32Array(n * STROKE_STRIDE);
+    let [minX, minY, maxX, maxY] = [Infinity, Infinity, -Infinity, -Infinity];
+    for (let i = 0; i < n; i++) {
+      const [ax, ay, bx, by] = [b.positions[4 * i], b.positions[4 * i + 1], b.positions[4 * i + 2], b.positions[4 * i + 3]];
+      segments.set([ax, ay, bx, by, b.distances[2 * i], 0], i * STROKE_STRIDE);
+      minX = Math.min(minX, ax, bx);
+      minY = Math.min(minY, ay, by);
+      maxX = Math.max(maxX, ax, bx);
+      maxY = Math.max(maxY, ay, by);
+    }
+    return { kind: 'stroke', segments, color: b.color, width, unit: 'px', dash: b.dash, dashOffset: 0, cap: 'butt', blur: 0, bounds: [minX, minY, maxX, maxY], reach: width / 2 + 1, reachUnit: 'px' };
+  });
+  return { ...layer, lines: [], styled: [...(layer.styled ?? []), ...strokes] };
 }

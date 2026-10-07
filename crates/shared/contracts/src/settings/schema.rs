@@ -557,6 +557,59 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Çizgi kalınlığı",
                 "Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir.",
             ),
+        // Görünüm kipleri (docs/adr/0195): how the drawing is shown, never what it holds.
+        choice(
+            "graphics.colorMode",
+            "color",
+            &[("color", "Renkli"), ("mono", "Tek renk"), ("gray", "Gri")],
+        )
+        .hosts(&[Web, Desktop])
+        .text(
+            "Renk kipi",
+            "Renkli: nesnelerin kendi renkleri. Tek renk: her şey zeminin karşıt renginde. Gri: her renk kendi parlaklığında. Resimler kendi renkleriyle kalır.",
+        ),
+        boolean("graphics.fills", true)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Dolgular ve taramalar",
+                "Alan dolguları ve taramalar çizilir. Kapalıyken yalnız çizgiler görünür; resimler görünür kalır.",
+            ),
+        boolean("graphics.areaEdges", true)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Alan sınırları",
+                "Kapalı alanların çizgileri çizilir. Kapalıyken yalnız dolguları görünür.",
+            ),
+        boolean("graphics.transparency", true)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Saydamlık",
+                "Yarı saydam dolgular ve resimler saydamlıklarıyla çizilir. Kapalıyken tam örtücü çizilir.",
+            ),
+        choice(
+            "graphics.highlightColor",
+            "accent",
+            &[
+                ("accent", "Tema vurgusu"),
+                ("orange", "Turuncu"),
+                ("red", "Kırmızı"),
+                ("green", "Yeşil"),
+                ("cyan", "Camgöbeği"),
+                ("magenta", "Eflatun"),
+            ],
+        )
+        .hosts(&[Web, Desktop])
+        .text(
+            "Vurgu rengi",
+            "Seçilen ve üzerine gelinen nesnenin vurgusunun rengi.",
+        ),
+        integer("graphics.highlightWidth", 1)
+            .range(1.0, 5.0)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Vurgu kalınlığı",
+                "Seçilen ve üzerine gelinen nesnenin vurgusunun çizgi kalınlığı, piksel.",
+            ),
         // ── Project ─────────────────────────────────────────────────────
         // Read from the open project (`ProjectSettings`); never from a preference.
         integer("project.srid", 5256)

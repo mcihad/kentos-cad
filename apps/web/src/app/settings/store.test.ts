@@ -109,6 +109,13 @@ const MIGRATED: PreferencesData = {
   hoverInfo: false,
   symbolSize: 'screen',
   lineWeights: false,
+  // Newer than the old store (docs/adr/0195): the schema's defaults.
+  colorMode: 'color',
+  fills: true,
+  areaEdges: true,
+  transparency: true,
+  highlightColor: 'accent',
+  highlightWidth: 1,
   startScreen: false,
   // Newer than the old store (docs/adr/0167 §1): the schema's default.
   geographic: 'dms',

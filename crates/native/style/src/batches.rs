@@ -14,7 +14,9 @@ use kentos_style_core::js::number;
 use kentos_style_core::style::batch::{Batches, TEXT_BOX};
 use serde_json::{Value, json};
 
-use crate::color::{StylePalette, parse_hex, resolve, rgba};
+use crate::color::{
+    StylePalette, ViewColors, parse_hex, resolve, rgba, view_alpha, view_hex, view_rgba,
+};
 use crate::library::StyleLibrary;
 
 /// Sizes in metres ("world", from paper mm at the plot scale) or screen pixels.
@@ -365,6 +367,8 @@ pub struct DecodeOptions<'a> {
     /// The scale symbols were compiled at: relates px and paper mm inside pattern tiles.
     pub plot_scale: f64,
     pub library: &'a StyleLibrary,
+    /// Görünüm kipleri's colours (docs/adr/0195 §2).
+    pub view: ViewColors,
 }
 
 // ── Reading the core's JSON ────────────────────────────────────────────
@@ -525,11 +529,37 @@ struct Looks<'a> {
 }
 
 impl Looks<'_> {
+    /// A colour as the view draws it (Görünüm kipleri's mode, docs/adr/0195 §1).
     fn rgba(&self, color: &str, opacity: f64) -> [f64; 4] {
-        rgba(color, opacity, self.o.palette)
+        view_rgba(
+            rgba(color, opacity, self.o.palette),
+            self.o.view.mode,
+            self.o.palette,
+        )
     }
 
+    /// A fill's colour: its mode, and opaque when Saydamlık is off.
+    fn fill_rgba(&self, color: &str, opacity: f64) -> [f64; 4] {
+        let c = self.rgba(color, opacity);
+        [c[0], c[1], c[2], view_alpha(c[3], self.o.view.opaque)]
+    }
+
+    /// A fill's opacity as Saydamlık draws it.
+    fn fill_opacity(&self, opacity: f64) -> f64 {
+        view_alpha(opacity, self.o.view.opaque)
+    }
+
+    /// A colour's text as the mode draws it (a text's, an SVG parameter's).
     fn resolved(&self, color: &str) -> String {
+        view_hex(
+            resolve(color, self.o.palette),
+            self.o.view.mode,
+            self.o.palette,
+        )
+    }
+
+    /// A colour's text as it is: a halo keeps the ground's colour in every mode.
+    fn resolved_plain(&self, color: &str) -> String {
         resolve(color, self.o.palette).to_owned()
     }
 
@@ -539,10 +569,12 @@ impl Looks<'_> {
             "text" => {
                 let size = n(style, "size");
                 let color = self.resolved(s(style, "color"));
-                let halo = style
-                    .get("halo")
-                    .filter(|h| h.is_object())
-                    .map(|h| (self.resolved(s(h, "color")), n(h, "width") / size.max(1e-9)));
+                let halo = style.get("halo").filter(|h| h.is_object()).map(|h| {
+                    (
+                        self.resolved_plain(s(h, "color")),
+                        n(h, "width") / size.max(1e-9),
+                    )
+                });
                 let font = s(style, "font");
                 let weight = n(style, "weight");
                 let face = if font == "sans" && weight >= 900.0 {
@@ -636,7 +668,7 @@ impl Looks<'_> {
     fn paint(&self, p: &Value) -> FillPaintBatch {
         match s(p, "kind") {
             "hatch" => FillPaintBatch::Hatch {
-                color: self.rgba(s(p, "color"), n(p, "opacity")),
+                color: self.fill_rgba(s(p, "color"), n(p, "opacity")),
                 angle: n(p, "angle"),
                 spacing: n(p, "spacing"),
                 width: n(p, "width"),
@@ -647,8 +679,8 @@ impl Looks<'_> {
                 unit: Unit::read(p.get("unit")),
             },
             "gradient" => FillPaintBatch::Gradient {
-                color: self.rgba(s(p, "color"), n(p, "opacity")),
-                color2: self.rgba(s(p, "color2"), n(p, "opacity")),
+                color: self.fill_rgba(s(p, "color"), n(p, "opacity")),
+                color2: self.fill_rgba(s(p, "color2"), n(p, "opacity")),
                 shape: n(p, "shape") as u32,
                 inverted: p.get("inverted").and_then(Value::as_bool) == Some(true),
                 dir: n(p, "dir"),
@@ -666,8 +698,8 @@ impl Looks<'_> {
                 let coverage = n(p, "coverage");
                 FillPaintBatch::Pattern {
                     shape: shape_name(s(m, "shape")).to_owned(),
-                    fill: opt_s(m, "fill").map(|c| self.rgba(c, 1.0)),
-                    stroke: opt_s(m, "stroke").map(|c| self.rgba(c, 1.0)),
+                    fill: opt_s(m, "fill").map(|c| self.fill_rgba(c, 1.0)),
+                    stroke: opt_s(m, "stroke").map(|c| self.fill_rgba(c, 1.0)),
                     stroke_width: n(m, "strokeWidth"),
                     half: [
                         msize / 2.0,
@@ -684,7 +716,7 @@ impl Looks<'_> {
                     coverage,
                     seed: n(p, "seed"),
                     tint: pattern_tint(m, size[0] * size[1]) * coverage,
-                    opacity: n(p, "opacity") * n(common, "opacity"),
+                    opacity: self.fill_opacity(n(p, "opacity") * n(common, "opacity")),
                     unit: Unit::read(p.get("unit")),
                 }
             }
@@ -694,7 +726,7 @@ impl Looks<'_> {
                 size: pair(p, "size"),
                 angle: n(p, "angle"),
                 mirror: p.get("mirror").and_then(Value::as_bool) == Some(true),
-                opacity: n(p, "opacity"),
+                opacity: self.fill_opacity(n(p, "opacity")),
             },
             "tile" => {
                 let tile = p.get("tile").unwrap_or(&Value::Null);
@@ -707,12 +739,12 @@ impl Looks<'_> {
                     size: [size[0], size[1] * if stagger { 2.0 } else { 1.0 }],
                     angle: n(p, "angle"),
                     offset: pair(p, "offset"),
-                    opacity: n(p, "opacity"),
+                    opacity: self.fill_opacity(n(p, "opacity")),
                     unit,
                 }
             }
             _ => FillPaintBatch::Solid {
-                color: self.rgba(s(p, "color"), n(p, "opacity")),
+                color: self.fill_rgba(s(p, "color"), n(p, "opacity")),
             },
         }
     }

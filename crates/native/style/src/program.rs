@@ -21,7 +21,7 @@ use kentos_geometry_core::store::Store;
 use kentos_style_core::style::batch::Batches;
 use kentos_style_core::style::build::{
     LayerObjects, MODE_DIMENSION, MODE_IMAGE, MODE_OWN, MODE_RENDERER, MODE_SET, MODE_SKIP,
-    Program, build_layer as core_build,
+    Program, View, build_layer_with as core_build,
 };
 use serde_json::{Map, Value, json};
 
@@ -62,6 +62,8 @@ pub struct BuildOptions<'a> {
     pub library: &'a StyleLibrary,
     /// A layer's name by id (`$katman`).
     pub layer_name: &'a dyn Fn(&str) -> String,
+    /// What Görünüm kipleri leave out (docs/adr/0195): fills, areas' edges.
+    pub view: View,
 }
 
 /// What the page gives the core for a layer: the program's JSON, the
@@ -356,6 +358,7 @@ pub fn build_layer(
         opts.origin,
         opts.plot_scale,
         opts.screen,
+        opts.view,
     )?;
     Ok((call, batches))
 }

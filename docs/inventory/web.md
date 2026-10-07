@@ -4,12 +4,12 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 365 | 353 | 0 | 12 |
+| Komutlar | 371 | 359 | 0 | 12 |
 | Araçlar | 113 | 111 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
-| Ayarlar | 86 | 86 | 0 | 0 |
+| Ayarlar | 92 | 92 | 0 | 0 |
 | Tarayıcı depoları | 11 | 11 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 467 | 467 | 0 | 0 |
 | Pencereler ve paneller | 109 | 109 | 0 | 0 |
@@ -49,12 +49,12 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 293 | 0 | 58 | 12 | 2 | 365 |
+| Komutlar | 299 | 0 | 58 | 12 | 2 | 371 |
 | Araçlar | 111 | 0 | 0 | 2 | 0 | 113 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
-| Ayarlar | 82 | 0 | 3 | 0 | 1 | 86 |
+| Ayarlar | 88 | 0 | 3 | 0 | 1 | 92 |
 | Tarayıcı depoları | 9 | 0 | 0 | 0 | 2 | 11 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 467 | 0 | 0 | 0 | 0 | 467 |
 | Pencereler ve paneller | 89 | 2 | 17 | 0 | 1 | 109 |
@@ -76,7 +76,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 365; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 371; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -167,7 +167,7 @@ Yok.
 - `disaster` Afet ve risk analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `plan3d` İmar planından 3D kent tasarımı (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (3 / 86)
+#### Ayarlar (3 / 92)
 
 - `session.overlapLast`
 - `session.overlapLayers`
@@ -205,4 +205,4 @@ Yok.
 
 ## Test başvurusu
 
-126 / 365 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+126 / 371 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

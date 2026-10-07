@@ -696,9 +696,20 @@ export class CoreStore {
    * whether symbol sizes are on the screen (paper mm drawn as px, steady while zooming).
    * The batches' descriptions (JSON) and their numbers one after another.
    */
-  buildStyled(program: CoreStyleProgram, ids: Float64Array, objects: Int32Array, pieces: Int32Array, table: { texts: string; lens: Int32Array; numbers: Float64Array }, clip: { minX: number; minY: number; maxX: number; maxY: number } | null, origin: { x: number; y: number }, plotScale: number, screen = false): { json: string; data: Float32Array } {
+  buildStyled(
+    program: CoreStyleProgram,
+    ids: Float64Array,
+    objects: Int32Array,
+    pieces: Int32Array,
+    table: { texts: string; lens: Int32Array; numbers: Float64Array },
+    clip: { minX: number; minY: number; maxX: number; maxY: number } | null,
+    origin: { x: number; y: number },
+    plotScale: number,
+    screen = false,
+    view = { fills: true, areaEdges: true },
+  ): { json: string; data: Float32Array } {
     return typed(() => {
-      const r = this.raw.buildStyled(program.raw, ids, objects, pieces, table.texts, table.lens, table.numbers, clip !== null, clip?.minX ?? 0, clip?.minY ?? 0, clip?.maxX ?? 0, clip?.maxY ?? 0, origin.x, origin.y, plotScale, screen);
+      const r = this.raw.buildStyled(program.raw, ids, objects, pieces, table.texts, table.lens, table.numbers, clip !== null, clip?.minX ?? 0, clip?.minY ?? 0, clip?.maxX ?? 0, clip?.maxY ?? 0, origin.x, origin.y, plotScale, screen, view.fills, view.areaEdges);
       const json = r.json;
       return { json, data: r.intoData() };
     });

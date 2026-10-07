@@ -112,6 +112,8 @@ pub(crate) fn vector_content(
         screen: false,
         hairlines: false,
         origin,
+        view_build: Default::default(),
+        view_colors: Default::default(),
     };
     let clip = Bounds {
         min_x: reach[0],

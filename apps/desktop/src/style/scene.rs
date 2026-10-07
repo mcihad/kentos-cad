@@ -45,6 +45,9 @@ pub struct Look {
     /// Line weights hidden (Kalınlık off).
     pub hairlines: bool,
     pub origin: Vec2,
+    /// Görünüm kipleri (docs/adr/0195): what the build leaves out, and the colours.
+    pub view_build: kentos_native_style::View,
+    pub view_colors: kentos_native_style::color::ViewColors,
 }
 
 /// Places per part of a large layer: a part holds the layer's objects whose
@@ -189,6 +192,7 @@ pub(crate) fn build_whole(
         clip: Some(clip),
         library,
         layer_name: &|id: &str| names.get(id).cloned().unwrap_or_else(|| id.to_owned()),
+        view: look.view_build,
     };
     build_layer(store, &node.style, entities, &opts)
         .and_then(|(_, batches)| {
@@ -198,6 +202,7 @@ pub(crate) fn build_whole(
                     palette: &look.palette,
                     plot_scale: look.symbol_scale,
                     library,
+                    view: look.view_colors,
                 },
             )
         })
@@ -395,6 +400,7 @@ impl StyledCache {
                         .cloned()
                         .unwrap_or_else(|| id.to_owned())
                 },
+                view: look.view_build,
             };
             build_layer(store, &node.style, entities, &opts)
                 .and_then(|(call, batches)| {
@@ -404,6 +410,7 @@ impl StyledCache {
                             palette: &look.palette,
                             plot_scale: look.symbol_scale,
                             library,
+                            view: look.view_colors,
                         },
                     )
                     .map(|layer| (layer, call.reads_index))

@@ -163,13 +163,18 @@ pub struct Styling<'a> {
     pub screen_symbols: bool,
     /// Kalınlık (`graphics.lineWeights`): off draws every line one pixel wide.
     pub line_weights: bool,
+    /// Görünüm kipleri (docs/adr/0195): what the layers leave out, and their colours.
+    pub view_build: kentos_native_style::View,
+    pub view_colors: kentos_native_style::color::ViewColors,
 }
 
-/// How the area draws: the settings' effective `graphics.msaa` and `graphics.hiDpi` (docs/adr/0023).
+/// How the area draws: the settings' effective `graphics.msaa` and `graphics.hiDpi` (docs/adr/0023),
+/// and the highlights' width in logical pixels (`graphics.highlightWidth`, docs/adr/0195).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Graphics {
     pub samples: u32,
     pub hi_dpi: bool,
+    pub highlight_width: u32,
 }
 
 impl Default for Graphics {
@@ -177,7 +182,21 @@ impl Default for Graphics {
         Self {
             samples: 1,
             hi_dpi: true,
+            highlight_width: 1,
         }
+    }
+}
+
+/// The named highlight colours (`graphics.highlightColor`, docs/adr/0195 §1; the web's `HIGHLIGHT_COLORS`);
+/// `accent` and anything else is the theme's accent.
+pub fn highlight_color(key: &str, accent: Rgba8) -> Rgba8 {
+    match key {
+        "orange" => Rgba8::rgb(0xF5, 0xA6, 0x23),
+        "red" => Rgba8::rgb(0xE5, 0x48, 0x4D),
+        "green" => Rgba8::rgb(0x30, 0xA4, 0x6C),
+        "cyan" => Rgba8::rgb(0x05, 0xA2, 0xC2),
+        "magenta" => Rgba8::rgb(0xD6, 0x40, 0x9F),
+        _ => accent,
     }
 }
 
@@ -455,6 +474,7 @@ impl Viewport {
         let settings = RenderSettings {
             samples: graphics.samples,
             hi_dpi: graphics.hi_dpi,
+            highlight_width: graphics.highlight_width as f32,
             ..RenderSettings::new(palette.background)
         };
         // Every shown layer through the style engine, as on the web (docs/adr/0090);
@@ -517,6 +537,8 @@ impl Viewport {
             screen: s.screen_symbols,
             hairlines: !s.line_weights,
             origin: scene::scene_origin(doc),
+            view_build: s.view_build,
+            view_colors: s.view_colors,
         };
         let scene = self.styled.borrow_mut().scene(
             self.generation,

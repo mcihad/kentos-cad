@@ -8,7 +8,7 @@ import { batchesJson, captureStyled, decisionsOf, type StyledCall } from '../sty
 import { PickIndex } from '../viewport/picking';
 import { symbolScaleOf } from '../viewport/symbolScale';
 import type { CanvasPalette } from './color';
-import { buildStyledLayer } from './styledLayer';
+import { buildStyledLayer, viewModesOf } from './styledLayer';
 
 /**
  * A styled layer's way to the GPU as fixtures/style/v1/batches.json holds it
@@ -24,7 +24,7 @@ interface Case {
   style: LayerStyle;
   entities: Entity[];
   plotScale: number;
-  view: { symbolSize: 'plot' | 'screen'; pxPerM: number; lineWeights: boolean };
+  view: { symbolSize: 'plot' | 'screen'; pxPerM: number; lineWeights: boolean; colorMode?: 'color' | 'mono' | 'gray'; fills?: boolean; areaEdges?: boolean; transparency?: boolean };
   expect: { symbolScale: number; decisions: unknown[]; program: unknown; objects: number[]; table: unknown; batches: unknown[] };
 }
 
@@ -56,6 +56,7 @@ describe('styled layers’ way to the GPU (fixtures/style/v1/batches.json)', () 
         plotScale: symbolScale,
         screen: c.view.symbolSize === 'screen',
         hairlines: !c.view.lineWeights,
+        view: viewModesOf(c.view),
         library: { symbol: (id) => F.library[id], asset: (id) => F.assets.find((a) => a.id === id) },
         layerName: (id) => doc.layers.get(id)?.name ?? id,
         geometry: captureStyled(new PickIndex(doc), (x) => (call = x)),

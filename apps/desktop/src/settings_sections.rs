@@ -149,6 +149,12 @@ impl Section {
                 "graphics.hiDpi",
                 "graphics.symbolSize",
                 "graphics.lineWeights",
+                "graphics.colorMode",
+                "graphics.fills",
+                "graphics.areaEdges",
+                "graphics.transparency",
+                "graphics.highlightColor",
+                "graphics.highlightWidth",
             ],
             Self::File => &[],
         }
@@ -499,7 +505,32 @@ impl App {
                 choices("graphics.symbolSize", &f.value("graphics.symbolSize")),
             )
             .help(Fields::help("graphics.symbolSize"));
-        f.switch_field(form, "graphics.lineWeights", None).into()
+        let form = f
+            .switch_field(form, "graphics.lineWeights", None)
+            // Görünüm kipleri (docs/adr/0195), as the web's Çizim motoru → Görünüm kipleri.
+            .section("Görünüm kipleri")
+            .field(
+                Fields::title("graphics.colorMode"),
+                choices("graphics.colorMode", &f.value("graphics.colorMode")),
+            )
+            .help(Fields::help("graphics.colorMode"));
+        let form = f.switch_field(form, "graphics.fills", None);
+        let form = f.switch_field(form, "graphics.areaEdges", None);
+        f.switch_field(form, "graphics.transparency", None)
+            .field(
+                Fields::title("graphics.highlightColor"),
+                choices(
+                    "graphics.highlightColor",
+                    &f.value("graphics.highlightColor"),
+                ),
+            )
+            .help(Fields::help("graphics.highlightColor"))
+            .field(
+                Fields::title("graphics.highlightWidth"),
+                f.pixels("graphics.highlightWidth", 1.0),
+            )
+            .help(Fields::help("graphics.highlightWidth"))
+            .into()
     }
 
     fn file_section<'a>(&self, draft: &SettingsDraft) -> Element<'a, Message> {

@@ -11,7 +11,8 @@ import { it } from 'vitest';
 import type { NewEntity } from '../../src/model/entities';
 import type { LayerStyle } from '../../src/model/layers';
 import type { Symbol } from '../../src/model/style';
-import { buildStyledLayer } from '../../src/render/styledLayer';
+import type { ColorMode } from '../../src/render/color';
+import { buildStyledLayer, viewModesOf } from '../../src/render/styledLayer';
 import { ASSETS, layerDocument, PALETTE } from '../../src/style/cases';
 import { batchesJson, captureStyled, decisionsOf, type StyledCall } from '../../src/style/fixture';
 import { PickIndex } from '../../src/viewport/picking';
@@ -140,7 +141,8 @@ interface Input {
   style: LayerStyle;
   entities: NewEntity[];
   plotScale: number;
-  view: { symbolSize: 'plot' | 'screen'; pxPerM: number; lineWeights: boolean };
+  /** Görünüm kipleri (docs/adr/0195) where a case gives them: Renkli, with fills, edges and transparency otherwise. */
+  view: { symbolSize: 'plot' | 'screen'; pxPerM: number; lineWeights: boolean; colorMode?: ColorMode; fills?: boolean; areaEdges?: boolean; transparency?: boolean };
 }
 
 const INPUTS: Input[] = [
@@ -155,6 +157,11 @@ const INPUTS: Input[] = [
   { id: 'categorized-off', title: 'Kategorili işleyici, Arsa kapalı: Arsa çizilmez, diğer değerlere de düşmez', style: CATEGORIZED_OFF, entities: DRAWING, plotScale: 500, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
   { id: 'own-weights', title: 'Kendi kalınlığı olan nesneler: en ince, DXF’in en kalını, kendi rengiyle biri ve kalınlığı olmayan (katmanınki)', style: SIMPLE, entities: WEIGHTS, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
   { id: 'own-weights-hairlines', title: 'Kendi kalınlığı olan nesneler, kalınlıklar kapalı: hepsi bir piksel', style: SIMPLE, entities: WEIGHTS, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: false } },
+  { id: 'view-mono', title: 'Tek renk (ADR 0195): her renk temanın mürekkebi, saydamlıklar ve yazının halesi kalır', style: SIMPLE, entities: OWN, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true, colorMode: 'mono' } },
+  { id: 'view-gray', title: 'Gri (ADR 0195): her renk kendi parlaklığında, saydamlıklar kalır', style: SIMPLE, entities: OWN, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true, colorMode: 'gray' } },
+  { id: 'view-no-fills', title: 'Dolgular ve taramalar kapalı (ADR 0195): alanların dolguları, taramalar ve desenler çizilmez; çizgiler ve işaretler çizilir', style: SIMPLE, entities: [...DRAWING, ...OWN], plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true, fills: false } },
+  { id: 'view-no-edges', title: 'Alan sınırları kapalı (ADR 0195): alanların çizgileri çizilmez, dolguları çizilir; çoklu çizgi kalır', style: SIMPLE, entities: [...DRAWING, ...OWN], plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true, areaEdges: false } },
+  { id: 'view-opaque', title: 'Saydamlık kapalı (ADR 0195): yarı saydam dolgular tam örtücü', style: SIMPLE, entities: [...DRAWING, ...OWN], plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true, transparency: false } },
   { id: 'far-tile', title: 'Çapada ve 4 400 km ötede, yerel koordinatlarda aynı nesneler: uzaktakiler kendi karolarının toplulukları, dünyaya bağlı desenlerin evresi katlanmış', style: SIMPLE, entities: FAR, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
 ];
 
@@ -170,6 +177,7 @@ it.runIf(!!process.env.GOLDEN_WRITE)('records the styled layers’ way to the GP
       plotScale: symbolScale,
       screen: c.view.symbolSize === 'screen',
       hairlines: !c.view.lineWeights,
+      view: viewModesOf(c.view),
       library: { symbol: (id) => LIBRARY[id], asset: (id) => ASSETS.find((a) => a.id === id) },
       layerName: (id) => doc.layers.get(id)?.name ?? id,
       geometry: captureStyled(new PickIndex(doc), (x) => (call = x)),

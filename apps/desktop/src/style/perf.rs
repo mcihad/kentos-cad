@@ -177,6 +177,8 @@ fn look(doc: &Document, screen_scale: f64) -> Look {
         screen: false,
         hairlines: false,
         origin: scene::scene_origin(doc),
+        view_build: Default::default(),
+        view_colors: Default::default(),
     }
 }
 

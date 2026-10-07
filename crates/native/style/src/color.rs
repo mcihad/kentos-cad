@@ -88,6 +88,75 @@ pub fn rgba(color: &str, opacity: f64, palette: &StylePalette) -> [f64; 4] {
     [c[0], c[1], c[2], c[3] * opacity]
 }
 
+/// Görünüm kipleri's colour mode (`graphics.colorMode`, docs/adr/0195 §1).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ColorMode {
+    #[default]
+    Color,
+    Mono,
+    Gray,
+}
+
+impl ColorMode {
+    /// The setting's word; anything else is Renkli.
+    pub fn from_key(key: &str) -> ColorMode {
+        match key {
+            "mono" => ColorMode::Mono,
+            "gray" => ColorMode::Gray,
+            _ => ColorMode::Color,
+        }
+    }
+}
+
+/// How the page colours a layer (docs/adr/0195 §2): the colour mode, and
+/// whether fills are drawn opaque (Saydamlık off).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct ViewColors {
+    pub mode: ColorMode,
+    pub opaque: bool,
+}
+
+/// `c` as the mode draws it, its alpha kept (the web's `viewRgba`): in one
+/// colour the palette's ink, in gray its brightness `0.2126 r + 0.7152 g +
+/// 0.0722 b` over the sRGB values (Rec. 709).
+pub fn view_rgba(c: [f64; 4], mode: ColorMode, palette: &StylePalette) -> [f64; 4] {
+    match mode {
+        ColorMode::Color => c,
+        ColorMode::Mono => {
+            let ink = parse_hex(&palette.ink, 1.0);
+            [ink[0], ink[1], ink[2], c[3]]
+        }
+        ColorMode::Gray => {
+            let y = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+            [y, y, y, c[3]]
+        }
+    }
+}
+
+/// A resolved colour's text as the mode draws it (a text's colour, an SVG
+/// symbol's parameter; the web's `viewHex`): `#RRGGBB`, with its alpha byte
+/// when it is not opaque; a colour that does not read stays as it is.
+pub fn view_hex(hex: &str, mode: ColorMode, palette: &StylePalette) -> String {
+    if mode == ColorMode::Color {
+        return hex.to_owned();
+    }
+    let c = view_rgba(parse_hex(hex, 1.0), mode, palette);
+    if c.iter().any(|v| v.is_nan()) {
+        return hex.to_owned();
+    }
+    let byte = |v: f64| libm::round(v * 255.0).clamp(0.0, 255.0) as u8;
+    let mut out = format!("#{:02X}{:02X}{:02X}", byte(c[0]), byte(c[1]), byte(c[2]));
+    if c[3] < 1.0 {
+        out.push_str(&format!("{:02X}", byte(c[3])));
+    }
+    out
+}
+
+/// A fill's alpha as Saydamlık draws it: off, whatever shows at all is opaque.
+pub fn view_alpha(a: f64, opaque: bool) -> f64 {
+    if opaque && a > 0.0 { 1.0 } else { a }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -101,6 +170,23 @@ mod tests {
         assert_eq!(parse_hex("#fff", 1.0), [1.0, 1.0, 1.0, 1.0]);
         assert_eq!(parse_hex("#000000", 0.5)[3], 0.5);
         assert!(parse_hex("kırmızı", 1.0)[0].is_nan());
+    }
+
+    #[test]
+    fn the_modes_keep_alpha_and_name_their_colours() {
+        let p = StylePalette::paper();
+        let c = parse_hex("#3E63DD33", 1.0);
+        assert_eq!(view_rgba(c, ColorMode::Color, &p), c);
+        assert_eq!(view_rgba(c, ColorMode::Mono, &p), [0.0, 0.0, 0.0, c[3]]);
+        let y = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+        assert_eq!(view_rgba(c, ColorMode::Gray, &p), [y, y, y, c[3]]);
+        // 0.2126·62 + 0.7152·99 + 0.0722·221 = 99.94 → 100 (0x64).
+        assert_eq!(view_hex("#3E63DD", ColorMode::Gray, &p), "#646464");
+        assert_eq!(view_hex("#3E63DD33", ColorMode::Mono, &p), "#00000033");
+        assert_eq!(view_hex("kırmızı", ColorMode::Gray, &p), "kırmızı");
+        assert_eq!(view_alpha(0.2, true), 1.0);
+        assert_eq!(view_alpha(0.0, true), 0.0);
+        assert_eq!(view_alpha(0.2, false), 0.2);
     }
 
     #[test]

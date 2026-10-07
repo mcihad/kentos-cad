@@ -60,7 +60,7 @@ const fn on_sheet(name: &'static str, caption: &'static str, open: Open) -> Scen
     }
 }
 
-const SCENES: [Scene; 33] = [
+const SCENES: [Scene; 34] = [
     scene("daire", Some("Giriş"), "Daire", Open::Caption),
     scene("yay", Some("Giriş"), "Yay", Open::Caption),
     scene("buda", Some("Giriş"), "Buda", Open::Arrow),
@@ -78,6 +78,8 @@ const SCENES: [Scene; 33] = [
     scene("ice-aktar", Some("Dosya"), "İçe aktar", Open::Caption),
     scene("disa-aktar", Some("Dosya"), "Dışa aktar", Open::Caption),
     scene("proje-turu", Some("Görünüm"), "Proje türü", Open::Caption),
+    // Görünüm kipleri's colour modes (docs/adr/0195).
+    scene("renk-kipi", Some("Görünüm"), "Renk kipi", Open::Caption),
     scene(
         "sembol-boyutu",
         Some("Görünüm"),
@@ -158,8 +160,9 @@ fn icon_tour() {
             {
                 continue;
             }
-            // The sheet's Çıktı panel keeps its labels only in a wide window.
-            let (width, height) = if scene.name == "pafta-disa" {
+            // The sheet's Çıktı panel and the view's Görünüm kipleri keep
+            // their labels only in a wide window.
+            let (width, height) = if matches!(scene.name, "pafta-disa" | "renk-kipi") {
                 (1920.0, 1080.0)
             } else {
                 (1440.0, 900.0)

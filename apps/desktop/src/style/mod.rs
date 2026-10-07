@@ -141,6 +141,16 @@ impl Styles {
             styles: self,
             screen_symbols: settings.text("graphics.symbolSize") == "screen",
             line_weights: settings.bool("graphics.lineWeights"),
+            view_build: kentos_native_style::View {
+                fills: settings.bool("graphics.fills"),
+                area_edges: settings.bool("graphics.areaEdges"),
+            },
+            view_colors: kentos_native_style::color::ViewColors {
+                mode: kentos_native_style::color::ColorMode::from_key(
+                    &settings.text("graphics.colorMode"),
+                ),
+                opaque: !settings.bool("graphics.transparency"),
+            },
         }
     }
 
@@ -171,5 +181,19 @@ impl crate::app::App {
         } else {
             "Semboller: çizim ölçeğinde"
         });
+    }
+
+    /// Renk kipi from its command (Görünüm kipleri, docs/adr/0195 §3).
+    pub(crate) fn choose_color_mode(&mut self, id: &str) {
+        let (value, words) = match id {
+            "view.colorMode.mono" => ("mono", "Tek renk"),
+            "view.colorMode.gray" => ("gray", "Gri"),
+            _ => ("color", "Renkli"),
+        };
+        let _ = self
+            .settings
+            .choose(&[("graphics.colorMode", serde_json::Value::from(value))]);
+        self.apply_settings();
+        self.output(format!("Renk kipi: {words}"));
     }
 }

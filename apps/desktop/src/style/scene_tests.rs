@@ -153,6 +153,8 @@ fn look(doc: &Document) -> Look {
         screen: false,
         hairlines: false,
         origin: scene::scene_origin(doc),
+        view_build: Default::default(),
+        view_colors: Default::default(),
     }
 }
 
@@ -320,6 +322,7 @@ fn the_parts_draw_what_the_layer_built_whole_draws() {
         clip: Some(construction_clip(&VIEW)),
         library: &library,
         layer_name: &names,
+        view: Default::default(),
     };
     let entities: Vec<&Entity> = doc.model.by_layer("parsel").collect();
     let node = doc.model.layers().get("parsel").expect("parsel").clone();
@@ -330,6 +333,7 @@ fn the_parts_draw_what_the_layer_built_whole_draws() {
             palette: &look.palette,
             plot_scale: look.symbol_scale,
             library: &library,
+            view: Default::default(),
         },
     )
     .expect("decoded");

@@ -1,6 +1,6 @@
 import type { LibraryAsset } from '../model/style';
 import { MM_PER_PX, type FillPaint, type MarkerStyle, type PrimUnit, type ShapeMarkStyle, type StrokeStyle, type TileSource } from '../style/primitives';
-import { parseHex, resolveColor, type CanvasPalette } from './color';
+import { parseHex, resolveColor, viewAlpha, viewHex, viewRgba, type CanvasPalette, type ViewColors } from './color';
 import { TEXT_BOX, type AtlasImage, type FillPaintBatch, type MarkerLook, type RGBA, type ShapeId, type StyledBatch, type TileMark } from './types';
 
 /**
@@ -16,6 +16,8 @@ export interface BatchOptions {
   /** Denominator of the plot scale, to relate px and paper mm inside pattern tiles. */
   plotScale: number;
   asset(id: string): LibraryAsset | undefined;
+  /** Görünüm kipleri's colours (docs/adr/0195 §2); none: Renkli, with transparency. */
+  view?: ViewColors;
 }
 
 /** One batch as the core describes it: the first style it was made for, its numbers and extent. */
@@ -81,9 +83,26 @@ class Looks {
     this.opts = opts;
   }
 
+  /** A colour as the view draws it (Görünüm kipleri's mode, docs/adr/0195 §1). */
   rgba(color: string, opacity: number): RGBA {
     const c = parseHex(resolveColor(color, this.opts.palette));
-    return [c[0], c[1], c[2], c[3] * opacity];
+    return viewRgba([c[0], c[1], c[2], c[3] * opacity], this.opts.view?.mode ?? 'color', this.opts.palette);
+  }
+
+  /** A fill's colour: its mode, and opaque when Saydamlık is off. */
+  private fillRgba(color: string, opacity: number): RGBA {
+    const c = this.rgba(color, opacity);
+    return [c[0], c[1], c[2], viewAlpha(c[3], this.opts.view?.opaque ?? false)];
+  }
+
+  /** A fill's opacity as Saydamlık draws it. */
+  private fillOpacity(opacity: number): number {
+    return viewAlpha(opacity, this.opts.view?.opaque ?? false);
+  }
+
+  /** A colour's text as the mode draws it (a text's, an SVG parameter's). */
+  private resolved(color: string): string {
+    return viewHex(resolveColor(color, this.opts.palette), this.opts.view?.mode ?? 'color', this.opts.palette);
   }
 
   look(style: MarkerStyle): MarkerLook {
@@ -91,7 +110,8 @@ class Looks {
       case 'shape':
         return { kind: 'shape', shape: shapeId(style.shape), fill: style.fill ? this.rgba(style.fill, 1) : null, stroke: style.stroke ? this.rgba(style.stroke, 1) : null, strokeWidth: style.strokeWidth, params: style.params };
       case 'text': {
-        const color = resolveColor(style.color, this.opts.palette);
+        const color = this.resolved(style.color);
+        // A halo keeps the ground's colour in every mode, so the text reads.
         const halo = style.halo ? { color: resolveColor(style.halo.color, this.opts.palette), width: style.halo.width / Math.max(style.size, 1e-9) } : null;
         const font = FONT_FAMILY[style.font === 'sans' && style.weight >= 900 ? 'black' : style.font];
         const key = `t|${style.text}|${style.font}|${style.weight}|${style.italic}|${color}|${halo ? `${halo.color}/${halo.width.toFixed(3)}` : ''}`;
@@ -107,8 +127,8 @@ class Looks {
     const a = this.opts.asset(s.asset);
     if (!a) return { key: `missing|${s.asset}`, kind: 'svg', svg: MISSING_SVG, width: 24, height: 24 };
     if (a.format === 'svg') {
-      const fill = s.fill ? resolveColor(s.fill, this.opts.palette) : null;
-      const stroke = s.stroke ? resolveColor(s.stroke, this.opts.palette) : null;
+      const fill = s.fill ? this.resolved(s.fill) : null;
+      const stroke = s.stroke ? this.resolved(s.stroke) : null;
       return { key: `svg|${a.id}|${fill}|${stroke}|${a.data.length}`, kind: 'svg', svg: applySvgParams(a.data, fill, stroke), width: a.width, height: a.height };
     }
     return { key: `img|${a.id}|${a.data.length}`, kind: 'raster', url: a.data, width: a.width, height: a.height };
@@ -124,11 +144,11 @@ class Looks {
   paint(p: FillPaint): FillPaintBatch {
     switch (p.kind) {
       case 'solid':
-        return { kind: 'solid', color: this.rgba(p.color, p.opacity) };
+        return { kind: 'solid', color: this.fillRgba(p.color, p.opacity) };
       case 'hatch':
         return {
           kind: 'hatch',
-          color: this.rgba(p.color, p.opacity),
+          color: this.fillRgba(p.color, p.opacity),
           angle: p.angle,
           spacing: p.spacing,
           width: p.width,
@@ -139,17 +159,17 @@ class Looks {
           unit: p.unit,
         };
       case 'gradient':
-        return { kind: 'gradient', color: this.rgba(p.color, p.opacity), color2: this.rgba(p.color2, p.opacity), shape: p.shape, inverted: p.inverted, dir: p.dir, from: p.from, to: p.to, centre: [p.centre[0], p.centre[1]], radius: p.radius };
+        return { kind: 'gradient', color: this.fillRgba(p.color, p.opacity), color2: this.fillRgba(p.color2, p.opacity), shape: p.shape, inverted: p.inverted, dir: p.dir, from: p.from, to: p.to, centre: [p.centre[0], p.centre[1]], radius: p.radius };
       case 'image':
-        return { kind: 'image', image: p.image, url: this.pictureUrl(p.image), corner: [p.corner[0], p.corner[1]], size: [p.size[0], p.size[1]], angle: p.angle, mirror: p.mirror, opacity: p.opacity };
+        return { kind: 'image', image: p.image, url: this.pictureUrl(p.image), corner: [p.corner[0], p.corner[1]], size: [p.size[0], p.size[1]], angle: p.angle, mirror: p.mirror, opacity: this.fillOpacity(p.opacity) };
       case 'pattern': {
         const m = p.mark;
         const size: [number, number] = [p.size[0], p.size[1]];
         return {
           kind: 'pattern',
           shape: shapeId(m.shape),
-          fill: m.fill ? this.rgba(m.fill, 1) : null,
-          stroke: m.stroke ? this.rgba(m.stroke, 1) : null,
+          fill: m.fill ? this.fillRgba(m.fill, 1) : null,
+          stroke: m.stroke ? this.fillRgba(m.stroke, 1) : null,
           strokeWidth: m.strokeWidth,
           half: [m.size / 2, (m.height || m.size) / 2],
           markOffset: m.common.offset,
@@ -163,14 +183,14 @@ class Looks {
           coverage: p.coverage,
           seed: p.seed,
           tint: patternTint(m, size[0] * size[1]) * p.coverage,
-          opacity: p.opacity * m.common.opacity,
+          opacity: this.fillOpacity(p.opacity * m.common.opacity),
           unit: p.unit,
         };
       }
       case 'tile': {
         const stagger = p.tile.kind === 'markers' && p.tile.stagger;
         const size: [number, number] = [p.size[0], p.size[1] * (stagger ? 2 : 1)];
-        return { kind: 'tile', image: this.tileImage(p.tile, p.size, p.unit), size, angle: p.angle, offset: p.offset, opacity: p.opacity, unit: p.unit };
+        return { kind: 'tile', image: this.tileImage(p.tile, p.size, p.unit), size, angle: p.angle, offset: p.offset, opacity: this.fillOpacity(p.opacity), unit: p.unit };
       }
     }
   }

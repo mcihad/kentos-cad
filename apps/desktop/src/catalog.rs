@@ -265,6 +265,13 @@ pub const PORTED: &[&str] = &[
     "block.insertFile",
     // docs/adr/0194: Hizala ve dağıt (kentos_interaction::align_distribute).
     "tool.alignDistribute",
+    // docs/adr/0195: Görünüm kipleri.
+    "view.colorMode.color",
+    "view.colorMode.mono",
+    "view.colorMode.gray",
+    "view.fills",
+    "view.areaEdges",
+    "view.transparency",
     // Drawing and editing tools, phase 1 (docs/adr/0140): every corner at once, Parçala
     // with its three methods, direction, thinning, cleaning and property copying.
     "tool.filletAll",

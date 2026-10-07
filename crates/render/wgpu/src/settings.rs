@@ -11,6 +11,10 @@ pub struct RenderSettings {
     pub background: Rgba8,
     /// Stroke width of every line, logical pixels (per-layer line weights: REN-11).
     pub line_width: f32,
+    /// Stroke width of the highlights (the parts over the styled layers and
+    /// the overlays: selection and hover), logical pixels (Vurgu kalınlığı,
+    /// docs/adr/0195).
+    pub highlight_width: f32,
     /// Largest distance between a curve and its chords on screen, logical pixels.
     pub curve_tolerance_px: f64,
     /// Most chords the curves of one scene may get. A deep zoom into a drawing
@@ -37,6 +41,7 @@ impl RenderSettings {
         Self {
             background,
             line_width: Self::DEFAULT_LINE_WIDTH,
+            highlight_width: Self::DEFAULT_LINE_WIDTH,
             curve_tolerance_px: Self::DEFAULT_CURVE_TOLERANCE_PX,
             curve_segment_budget: Self::DEFAULT_CURVE_SEGMENT_BUDGET,
             samples: 1,

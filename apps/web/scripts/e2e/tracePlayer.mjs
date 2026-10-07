@@ -94,6 +94,9 @@ const SNAP_DEFAULTS = {
   snapScaleMax: 0,
 };
 
+/** Görünüm kipleri and the highlight as the settings first give them (docs/adr/0195): an earlier trace's never carry over. */
+const VIEW_DEFAULTS = { colorMode: 'color', fills: true, areaEdges: true, transparency: true, highlightColor: 'accent', highlightWidth: 1 };
+
 // ── Keyboard ────────────────────────────────────────────────────────────
 // A trace names characters (what the keyboard produces), not key positions;
 // each layout says which key events produce them.
@@ -338,7 +341,7 @@ async function setUp(t) {
     k.settings.overlapLayers.set(new Set());
     // The snap kinds and the snap's other preferences are the settings' first values unless the trace's prefs say
     // otherwise (docs/adr/0163): a kind an earlier trace turned on with its command never carries over.
-    for (const [key, v] of Object.entries(${JSON.stringify(SNAP_DEFAULTS)})) k.prefs[key].set(v);
+    for (const [key, v] of Object.entries(${JSON.stringify({ ...SNAP_DEFAULTS, ...VIEW_DEFAULTS })})) k.prefs[key].set(v);
     for (const [key, v] of Object.entries(${JSON.stringify(t.draft ?? {})})) k.settings[key].set(key === 'overlapLayers' ? new Set(v) : v);
     for (const [key, v] of Object.entries(${JSON.stringify(t.prefs ?? {})})) k.prefs[key].set(v);
     const c = k.view.camera;

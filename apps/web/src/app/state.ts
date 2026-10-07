@@ -3,6 +3,7 @@ import type { DrawingFont, DrawingUnit, Workspace } from '../model/projectSettin
 import { Signal } from '../core/signal';
 import { settingDefault } from '../core/settings/schema';
 import type { LineType } from '../model/layers';
+import type { ColorMode, HighlightColor } from '../render/color';
 import { LAYOUT_DEFAULTS, LAYOUT_KEY, readLayout, type UiLayoutData } from './layoutPlan';
 import type { SettingsStore } from './settings/store';
 import { NO_LOCKS, type LockAsk, type LockState } from '../tools/locks';
@@ -235,6 +236,18 @@ export interface PreferencesData {
    * among thick boundaries. Symbols from the style library keep their own widths.
    */
   lineWeights: boolean;
+  /** Görünüm kipleri (docs/adr/0195): Renkli, Tek renk or Gri. */
+  colorMode: ColorMode;
+  /** Area fills and hatches drawn (pictures always are). */
+  fills: boolean;
+  /** Areas' edges drawn. */
+  areaEdges: boolean;
+  /** Fills and pictures drawn with their transparency; off, opaque. */
+  transparency: boolean;
+  /** The selection and hover highlight's colour: the theme's accent or a named one. */
+  highlightColor: HighlightColor;
+  /** The highlight's line width, px (1–5). */
+  highlightWidth: number;
   /** The start screen (Başlangıç: new, open, cloud, recent files) shows when the app opens. */
   startScreen: boolean;
   /** How a geographic second system's latitude and longitude are written (docs/adr/0167 §1). */
@@ -282,6 +295,12 @@ export const PREF_KEYS = {
   hoverInfo: 'drafting.hoverInfo',
   symbolSize: 'graphics.symbolSize',
   lineWeights: 'graphics.lineWeights',
+  colorMode: 'graphics.colorMode',
+  fills: 'graphics.fills',
+  areaEdges: 'graphics.areaEdges',
+  transparency: 'graphics.transparency',
+  highlightColor: 'graphics.highlightColor',
+  highlightWidth: 'graphics.highlightWidth',
   startScreen: 'appearance.startScreen',
   geographic: 'display.geographic',
 } as const satisfies Record<keyof PreferencesData, string>;

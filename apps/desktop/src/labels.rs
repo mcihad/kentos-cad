@@ -39,6 +39,7 @@ use kentos_render_wgpu::color::{Palette, Rgba8};
 use crate::app::Message;
 use crate::drawing_fonts;
 use crate::viewport::Canvas;
+use kentos_native_style::color::ColorMode;
 
 /// The labels a view shows, as last asked of the store, and what they were
 /// asked for: the drawing (`drawing`, its changes), the view and the text
@@ -75,9 +76,10 @@ pub fn layer<'a>(
     format: &Format,
     hidden: Option<Slot>,
     preview: Option<Preview>,
+    mode: ColorMode,
 ) -> Element<'a, Message> {
     build(
-        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, preview, true,
+        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, preview, true, mode,
     )
 }
 
@@ -95,9 +97,10 @@ pub fn lens_layer<'a>(
     format: &Format,
     hidden: Option<Slot>,
     preview: Option<Preview>,
+    mode: ColorMode,
 ) -> Element<'a, Message> {
     build(
-        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, preview, false,
+        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, preview, false, mode,
     )
 }
 
@@ -126,6 +129,7 @@ fn build<'a>(
     hidden: Option<Slot>,
     preview: Option<Preview>,
     map_marks: bool,
+    mode: ColorMode,
 ) -> Element<'a, Message> {
     let mut key = DefaultHasher::new();
     (
@@ -169,14 +173,14 @@ fn build<'a>(
         }
     }
     let font = doc.settings().drawing_font.unwrap_or(DrawingFont::Barlow);
-    (canvas as u8, font as u8).hash(&mut key);
+    (canvas as u8, font as u8, mode as u8).hash(&mut key);
     // The number formats decide a dimension's text.
     format!("{format:?}").hash(&mut key);
     canvas::Canvas::new(Labels {
         doc,
         spots,
         camera: *camera,
-        colors: colors(canvas, palette),
+        colors: colors(canvas, palette).in_mode(mode),
         font,
         format: *format,
         key: key.finish(),
@@ -200,6 +204,45 @@ pub struct Colors {
     pub fg: Color,
     pub fg_dim: Color,
     palette: Palette,
+    /// Görünüm kipleri's colour mode (docs/adr/0195 §1); the halo keeps the ground's colour.
+    mode: ColorMode,
+}
+
+impl Colors {
+    /// These colours as Görünüm kipleri's mode shows them (docs/adr/0195 §1).
+    pub fn in_mode(mut self, mode: ColorMode) -> Self {
+        self.mode = mode;
+        self.label = self.shown(self.label);
+        self.fg = self.shown(self.fg);
+        self.fg_dim = self.shown(self.fg_dim);
+        self
+    }
+
+    /// A colour as the mode shows it, its alpha kept: in one colour the
+    /// palette's ink, in gray its brightness (the batches' rule, `view_rgba`).
+    fn shown(&self, c: Color) -> Color {
+        match self.mode {
+            ColorMode::Color => c,
+            ColorMode::Mono => {
+                let ink = color(self.palette.ink);
+                Color { a: c.a, ..ink }
+            }
+            ColorMode::Gray => {
+                let y = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+                Color {
+                    r: y,
+                    g: y,
+                    b: y,
+                    a: c.a,
+                }
+            }
+        }
+    }
+
+    /// A colour the drawing names (a layer's, an object's, a run's) as the mode shows it.
+    fn named(&self, name: &str) -> Option<Color> {
+        self.palette.resolve(name).map(|c| self.shown(color(c)))
+    }
 }
 
 fn color(c: Rgba8) -> Color {
@@ -227,6 +270,7 @@ pub fn paper_colors() -> Colors {
         fg: color(palette.fg),
         fg_dim: color(palette.fg_dim),
         palette,
+        mode: ColorMode::Color,
     }
 }
 
@@ -243,6 +287,7 @@ pub fn colors(canvas: Canvas, palette: &Palette) -> Colors {
         fg: color(palette.fg),
         fg_dim: color(palette.fg_dim),
         palette: *palette,
+        mode: ColorMode::Color,
     }
 }
 
@@ -675,11 +720,7 @@ impl Labels<'_> {
     fn ink_of(&self, name: Option<&str>) -> Color {
         match name {
             None | Some("fg" | "fg-dim") => self.colors.label,
-            Some(c) => self
-                .colors
-                .palette
-                .resolve(c)
-                .map_or(self.colors.label, color),
+            Some(c) => self.colors.named(c).unwrap_or(self.colors.label),
         }
     }
 
@@ -762,8 +803,8 @@ impl Labels<'_> {
             let scaled = if script.is_some() { size * 0.6 } else { size };
             let color = f
                 .and_then(|r| r.color.as_deref())
-                .and_then(|name| self.colors.palette.resolve(name))
-                .map_or(self.colors.label, color);
+                .and_then(|name| self.colors.named(name))
+                .unwrap_or(self.colors.label);
             if !words.trim().is_empty() || f.is_some_and(|r| r.underline) {
                 self.draw(
                     frame,

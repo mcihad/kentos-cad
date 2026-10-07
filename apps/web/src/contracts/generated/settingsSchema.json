@@ -1218,6 +1218,144 @@
       "apply": "live"
     },
     {
+      "key": "graphics.colorMode",
+      "type": "enum",
+      "default": "color",
+      "choices": [
+        {
+          "value": "color",
+          "label": "Renkli"
+        },
+        {
+          "value": "mono",
+          "label": "Tek renk"
+        },
+        {
+          "value": "gray",
+          "label": "Gri"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Renk kipi",
+      "description": "Renkli: nesnelerin kendi renkleri. Tek renk: her şey zeminin karşıt renginde. Gri: her renk kendi parlaklığında. Resimler kendi renkleriyle kalır.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "graphics.fills",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Dolgular ve taramalar",
+      "description": "Alan dolguları ve taramalar çizilir. Kapalıyken yalnız çizgiler görünür; resimler görünür kalır.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "graphics.areaEdges",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Alan sınırları",
+      "description": "Kapalı alanların çizgileri çizilir. Kapalıyken yalnız dolguları görünür.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "graphics.transparency",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Saydamlık",
+      "description": "Yarı saydam dolgular ve resimler saydamlıklarıyla çizilir. Kapalıyken tam örtücü çizilir.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "graphics.highlightColor",
+      "type": "enum",
+      "default": "accent",
+      "choices": [
+        {
+          "value": "accent",
+          "label": "Tema vurgusu"
+        },
+        {
+          "value": "orange",
+          "label": "Turuncu"
+        },
+        {
+          "value": "red",
+          "label": "Kırmızı"
+        },
+        {
+          "value": "green",
+          "label": "Yeşil"
+        },
+        {
+          "value": "cyan",
+          "label": "Camgöbeği"
+        },
+        {
+          "value": "magenta",
+          "label": "Eflatun"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Vurgu rengi",
+      "description": "Seçilen ve üzerine gelinen nesnenin vurgusunun rengi.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "graphics.highlightWidth",
+      "type": "integer",
+      "default": 1,
+      "min": 1.0,
+      "max": 5.0,
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Vurgu kalınlığı",
+      "description": "Seçilen ve üzerine gelinen nesnenin vurgusunun çizgi kalınlığı, piksel.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "project.srid",
       "type": "integer",
       "default": 5256,

@@ -98,6 +98,10 @@ pub struct BatchSink {
     recent_strokes: Recent<StrokeStyle>,
     recent_fills: Recent<FillPaint>,
     recent_markers: Recent<MarkerStyle>,
+    /// Görünüm kipleri (docs/adr/0195): the fills (but pictures) and the
+    /// strokes of the object being drawn are left out.
+    hide_fills: bool,
+    hide_strokes: bool,
 }
 
 /// How many styles of a kind are remembered.
@@ -158,7 +162,16 @@ impl BatchSink {
             recent_strokes: Recent::new(),
             recent_fills: Recent::new(),
             recent_markers: Recent::new(),
+            hide_fills: false,
+            hide_strokes: false,
         }
+    }
+
+    /// What of the next object is left out (Görünüm kipleri, docs/adr/0195):
+    /// its fills but pictures, its strokes; until changed.
+    pub fn hide(&mut self, fills: bool, strokes: bool) {
+        self.hide_fills = fills;
+        self.hide_strokes = strokes;
     }
 
     /// Scale range of what follows (a rule's range), until changed.
@@ -330,6 +343,9 @@ impl BatchSink {
 
 impl Sink for BatchSink {
     fn stroke(&mut self, style: &StrokeStyle, path: &[Vec2], closed: bool) {
+        if self.hide_strokes {
+            return;
+        }
         // An empty path still makes its batch, as before tiles (the batches' order).
         let tile = path.first().map_or([0.0, 0.0], |&p| self.tile_of(p));
         let e = match self.recent_strokes.find(style, self.scale, tile) {
@@ -374,7 +390,9 @@ impl Sink for BatchSink {
     }
 
     fn fill(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
-        if rings.first().is_none_or(|r| r.len() < 3) {
+        if rings.first().is_none_or(|r| r.len() < 3)
+            || (self.hide_fills && !matches!(paint, FillPaint::Image { .. }))
+        {
             return;
         }
         // A gradient's frame is its area's (docs/adr/0186 §3): from the anchor, as the positions

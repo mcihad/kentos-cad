@@ -508,9 +508,9 @@ export class PickIndex {
   }
 
   /** A layer through the style engine, next to its geometry (render/styledLayer.ts); `pieces`: every insert's pieces' sets. */
-  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, pieces: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number, screen = false): { json: string; data: Float32Array } {
+  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, pieces: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number, screen = false, view = { fills: true, areaEdges: true }): { json: string; data: Float32Array } {
     this.sync();
-    return this.store.buildStyled(program, Float64Array.from(ids), objects, pieces, table, clip, origin, plotScale, screen);
+    return this.store.buildStyled(program, Float64Array.from(ids), objects, pieces, table, clip, origin, plotScale, screen, view);
   }
 
   /**

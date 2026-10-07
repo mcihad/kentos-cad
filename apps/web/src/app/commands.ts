@@ -540,6 +540,45 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       description: 'Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir (AutoCAD LWT); hassas çalışmada kalın sınırlar noktaları örtmez. Kitaplık sembolleri kendi kalınlığını korur.',
       aliases: ['KALINLIK', 'LWT', 'LWDISPLAY'],
     }),
+    // Görünüm kipleri (docs/adr/0195): how the drawing is shown, never what it holds.
+    ...(
+      [
+        ['color', 'Renkli', 'colorModeColor', 'Nesneler kendi renkleriyle çizilir.', ['RENKLI']],
+        ['mono', 'Tek renk', 'colorModeMono', 'Her çizgi, dolgu ve yazı zeminin karşıt renginde çizilir (basmadan önce görmek için); resimler kendi renkleriyle kalır.', ['TEKRENK', 'MONOCHROME']],
+        ['gray', 'Gri', 'colorModeGray', 'Her renk kendi parlaklığında, grinin bir tonunda çizilir; resimler kendi renkleriyle kalır.', ['GRI', 'GRAYSCALE']],
+      ] as const
+    ).map(([mode, title, icon, description, aliases]) => ({
+      id: `view.colorMode.${mode}`,
+      title,
+      category: V,
+      icon,
+      description,
+      aliases: [...aliases],
+      run: () => ctx.prefs.colorMode.set(mode),
+      isChecked: () => ctx.prefs.colorMode.value === mode,
+      watch: [ctx.prefs.colorMode],
+    })),
+    toggle('view.fills', 'Dolguları ve taramaları göster', ctx.prefs.fills, {
+      category: V,
+      icon: 'viewFills',
+      short: 'Dolgular',
+      description: 'Alan dolguları ve taramalar çizilir. Kapalıyken yalnız çizgiler görünür (kalabalık paftada çalışmak için); resimler görünür kalır.',
+      aliases: ['DOLGU', 'FILLMODE'],
+    }),
+    toggle('view.areaEdges', 'Alan sınırlarını göster', ctx.prefs.areaEdges, {
+      category: V,
+      icon: 'viewAreaEdges',
+      short: 'Alan sınırları',
+      description: 'Kapalı alanların çizgileri çizilir. Kapalıyken yalnız dolguları görünür; daire, çoklu çizgi ve taramalar etkilenmez.',
+      aliases: ['ALANSINIR'],
+    }),
+    toggle('view.transparency', 'Saydamlığı göster', ctx.prefs.transparency, {
+      category: V,
+      icon: 'viewTransparency',
+      short: 'Saydamlık',
+      description: 'Yarı saydam dolgular ve resimler saydamlıklarıyla çizilir. Kapalıyken tam örtücü çizilir.',
+      aliases: ['SAYDAMLIK', 'TRANSPARENCY'],
+    }),
     // Between the light theme and the dark ones (night and high contrast are dark).
     { id: 'view.theme.toggle', title: 'Temayı değiştir', category: V, icon: 'appearance', run: () => applyTheme(ctx, ctx.prefs.theme.value === 'light' ? 'dark' : 'light') },
     {

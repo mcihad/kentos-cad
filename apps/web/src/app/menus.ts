@@ -161,6 +161,12 @@ export const MAIN_MENU: TopMenu[] = [
       { label: 'Çizim motoru', icon: 'chip', items: ['view.renderer.webgl2', 'view.renderer.webgpu'] },
       { label: 'Sembol boyutu', icon: 'styles', items: ['view.symbols.plot', 'view.symbols.screen'] },
       'view.lineWeights',
+      // Görünüm kipleri (docs/adr/0195 §3).
+      sec('Görünüm kipleri'),
+      { label: 'Renk kipi', icon: 'colorModeColor', items: ['view.colorMode.color', 'view.colorMode.mono', 'view.colorMode.gray'] },
+      'view.fills',
+      'view.areaEdges',
+      'view.transparency',
     ],
   },
   {

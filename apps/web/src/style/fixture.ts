@@ -40,8 +40,8 @@ export function captureStyled(index: PickIndex, seen: (c: StyledCall) => void): 
     drawn: (ids, oriented, clip) => index.drawn(ids, oriented, clip),
     blockPieces: (block) => index.blockPieces(block),
     insertPieces: (id) => index.insertPieces(id),
-    styled: (program, ids, objects, pieces, table, clip, origin, plotScale, screen) => {
-      const out = index.styled(program, ids, objects, pieces, table, clip, origin, plotScale, screen);
+    styled: (program, ids, objects, pieces, table, clip, origin, plotScale, screen, view) => {
+      const out = index.styled(program, ids, objects, pieces, table, clip, origin, plotScale, screen, view);
       seen({
         program: program.json,
         objects: [...objects],

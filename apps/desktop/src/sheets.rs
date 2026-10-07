@@ -140,6 +140,8 @@ impl SheetMaps {
             screen: false,
             hairlines: false,
             origin,
+            view_build: Default::default(),
+            view_colors: Default::default(),
         };
         let clip = scene::extents(doc).map_or(
             kentos_render_wgpu::Bounds {

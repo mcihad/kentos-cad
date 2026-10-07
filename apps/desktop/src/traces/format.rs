@@ -73,6 +73,9 @@ pub struct DraftSpec {
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Prefs {
     pub(super) cursor_input: Option<bool>,
+    /// The highlight's colour and width (Görünüm kipleri, docs/adr/0195).
+    pub(super) highlight_color: Option<String>,
+    pub(super) highlight_width: Option<u32>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -71,6 +71,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   hizala ve dağıt: seçilenler kutularının kenarı ya da ortasıyla başvuru nesnesine, noktaya ya da seçimin kutusuna (Sola, Ortala,
   Sağa, Üste, Ortaya, Alta), ya da eşit aralıkla (Yatay ve Dikey dağıt); her nesne kendi kaymasıyla, tek adımda;
   `cad.entities.transform`'un `arrange` türü (ADR 0194);
+  görünüm kipleri: Renk kipi (Renkli, Tek renk, Gri), Dolgular, Alan sınırları ve Saydamlık açılıp kapanır, seçimin ve üzerine
+  gelmenin vurgu rengi ve kalınlığı; kullanıcının tercihleri, çizim değişmez (ADR 0195);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -1055,7 +1057,11 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   (7 Ekim; ikonlar seçenek sayfasının A'ları): çekirdek `ops::arrange` (kutular deponun kuralıyla, `block::pieces_bounds`; bağımsız
   başvuru `arrange_cases.py`, ortak `fixtures/arrange/v1`), sözleşmenin `Transform::Arrange` ve `ArrangeMode`'u, komut iki platformda
   (`too_few_objects`), araç masaüstünde `kentos_interaction::align_distribute`, web'de `tools/alignDistributeTool.ts`; ortak iz
-  `align-distribute.json`. Sıradaki `CAD-33` görünüm kipleri.
+  `align-distribute.json`. `CAD-33` görünüm kipleri ([ADR 0195](docs/adr/0195-view-modes.md)) tek parçada bitti (7 Ekim; ikonlar
+  önerilen seçenekler, Tek renk'in ikinci seçenek): ayarlar `graphics.colorMode`, `.fills`, `.areaEdges`, `.transparency`,
+  `.highlightColor`, `.highlightWidth`; stil çekirdeğinin `build::View`'u (`BatchSink::hide`), renk kuralı masaüstünde
+  `kentos_native_style::color`'ın `ViewColors`'ı, web'de `render/color.ts`; vurgu masaüstünde wgpu'nun ikinci çerçeve bağlaması, web'de
+  `widenLines`; ortak durumlar `batches.json`'un görünüş durumları, ortak iz `view-modes.json`. Sıradaki `CAD-34` eğri boyunca yazı.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

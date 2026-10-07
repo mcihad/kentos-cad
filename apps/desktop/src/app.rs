@@ -1504,10 +1504,19 @@ impl App {
     }
 
     /// What the drawing area draws with: the effective sample count and pixel ratio.
+    /// Görünüm kipleri's colour mode (`graphics.colorMode`, docs/adr/0195 §1).
+    pub fn color_mode(&self) -> kentos_native_style::color::ColorMode {
+        kentos_native_style::color::ColorMode::from_key(&self.settings.text("graphics.colorMode"))
+    }
+
     pub fn graphics(&self) -> Graphics {
         Graphics {
             samples: self.settings.number("graphics.msaa").max(1.0) as u32,
             hi_dpi: self.settings.bool("graphics.hiDpi"),
+            highlight_width: self
+                .settings
+                .number("graphics.highlightWidth")
+                .clamp(1.0, 5.0) as u32,
         }
     }
 
@@ -1783,6 +1792,13 @@ impl App {
             "draft.grid" => self.toggle_session("drafting.grid", "Izgara"),
             // The styled drawing's view choices (style/, docs/adr/0090).
             "view.lineWeights" => self.toggle_session("graphics.lineWeights", "Çizgi kalınlığı"),
+            // Görünüm kipleri (docs/adr/0195).
+            "view.colorMode.color" | "view.colorMode.mono" | "view.colorMode.gray" => {
+                self.choose_color_mode(id);
+            }
+            "view.fills" => self.toggle_session("graphics.fills", "Dolgular ve taramalar"),
+            "view.areaEdges" => self.toggle_session("graphics.areaEdges", "Alan sınırları"),
+            "view.transparency" => self.toggle_session("graphics.transparency", "Saydamlık"),
             "style.layerStyle" => self.open_layer_style(None),
             // The style library (style/manager/, docs/adr/0092).
             "style.manager" => return self.open_style_manager(None, None),
@@ -1972,6 +1988,12 @@ impl App {
             "draft.overlap.layers" => self.draft.overlap == kentos_interaction::Overlap::Layers,
             "draft.grid" => self.settings.bool("drafting.grid"),
             "view.lineWeights" => self.settings.bool("graphics.lineWeights"),
+            "view.colorMode.color" => self.settings.text("graphics.colorMode") == "color",
+            "view.colorMode.mono" => self.settings.text("graphics.colorMode") == "mono",
+            "view.colorMode.gray" => self.settings.text("graphics.colorMode") == "gray",
+            "view.fills" => self.settings.bool("graphics.fills"),
+            "view.areaEdges" => self.settings.bool("graphics.areaEdges"),
+            "view.transparency" => self.settings.bool("graphics.transparency"),
             "view.symbols.plot" => self.settings.text("graphics.symbolSize") != "screen",
             "view.symbols.screen" => self.settings.text("graphics.symbolSize") == "screen",
             "view.theme.dark" => self.mode == Mode::Dark,

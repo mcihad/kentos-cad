@@ -446,6 +446,13 @@ export const ICONS = {
   target: '<circle cx="10" cy="10" r="5.9"/><path d="M10 1.9v3.4M10 14.7v3.4M1.9 10h3.4M14.7 10h3.4"/><circle cx="10" cy="10" r="1.3" fill="currentColor" stroke="none"/>',
   grid: '<path d="M3 7h14M3 13h14M7 3v14M13 3v14"/>',
   lineWeight: '<path d="M3 5h14"/><path d="M3 10h14" stroke-width="2.4"/><path d="M3 15.5h14" stroke-width="3.6"/>',
+  // Görünüm kipleri (docs/adr/0195): Renkli, Tek renk, Gri; Dolgular, Alan sınırları, Saydamlık (the option sheet's A, Tek renk its B: A's half disc is Tema's).
+  colorModeColor: '<circle cx="7.5" cy="8" r="4.5"/><circle cx="12.5" cy="8" r="4.5"/><circle cx="10" cy="12.5" r="4.5"/>',
+  colorModeMono: '<rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 17 17 3v12a2 2 0 0 1-2 2z" fill="currentColor" stroke="none"/>',
+  colorModeGray: '<rect x="2.5" y="6.5" width="5" height="7" rx="0.8" fill="currentColor" stroke="none" opacity="0.9"/><rect x="7.5" y="6.5" width="5" height="7" rx="0.8" fill="currentColor" stroke="none" opacity="0.5"/><rect x="12.5" y="6.5" width="5" height="7" rx="0.8" fill="currentColor" stroke="none" opacity="0.2"/><rect x="2.5" y="6.5" width="15" height="7" rx="0.8"/>',
+  viewFills: '<path d="M3 4.5h11l3 11H6z"/><path d="m6.5 8 2.5-3.5M7 12l5-7M9 15l5.5-8M12.5 15.2l3-4.2" stroke-width="1.1"/>',
+  viewAreaEdges: '<path d="M3 4.5h11l3 11H6z" stroke-width="1.8"/><rect x="1.5" y="3" width="3" height="3" fill="currentColor" stroke="none"/><rect x="12.5" y="3" width="3" height="3" fill="currentColor" stroke="none"/><rect x="15.5" y="14" width="3" height="3" fill="currentColor" stroke="none"/><rect x="4.5" y="14" width="3" height="3" fill="currentColor" stroke="none"/>',
+  viewTransparency: '<rect x="2.5" y="2.5" width="10" height="10" rx="1"/><rect x="7.5" y="7.5" width="10" height="10" rx="1" fill="currentColor" stroke="none" opacity="0.35"/><rect x="7.5" y="7.5" width="10" height="10" rx="1"/>',
   // A layer's colour (a drop, half full) and line type (solid, dashed, dash-dot).
   color: '<path d="M10 2.8C7.6 6 5 8.9 5 12a5 5 0 0 0 10 0c0-3.1-2.6-6-5-9.2z"/><path d="M5 12h10a5 5 0 0 1-10 0z" fill="currentColor" fill-opacity=".35" stroke="none"/>',
   lineType: '<path d="M3 5h14"/><path d="M3 10h14" stroke-dasharray="3 2.6"/><path d="M3 15h14" stroke-dasharray="5 2.6 .1 2.6"/>',

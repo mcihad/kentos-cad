@@ -508,6 +508,19 @@ impl<'a> Player<'a> {
                 "drafting.cursorInput",
                 trace.prefs.cursor_input.unwrap_or(true).into(),
             ),
+            (
+                "graphics.highlightColor",
+                trace
+                    .prefs
+                    .highlight_color
+                    .clone()
+                    .unwrap_or_else(|| "accent".to_owned())
+                    .into(),
+            ),
+            (
+                "graphics.highlightWidth",
+                trace.prefs.highlight_width.unwrap_or(1).into(),
+            ),
         ]);
         if !refused.is_empty() {
             return Err(format!("{}: ayarlar alınmadı: {refused:?}", trace.id));

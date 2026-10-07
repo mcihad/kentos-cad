@@ -19,7 +19,7 @@ use kentos_geometry_core::store::{Store, array_packed_objects, transform_packed_
 use kentos_geometry_core::store::snap::{Extension, SnapExtras};
 use kentos_geometry_core::text::Font;
 use kentos_geometry_core::tools::editing::array_transforms;
-use kentos_style_core::style::build::{LayerObjects, Program, build_layer};
+use kentos_style_core::style::build::{LayerObjects, Program, View, build_layer_with};
 use wasm_bindgen::prelude::*;
 
 fn read_entity(text: &str) -> Result<Entity, JsError> {
@@ -873,8 +873,9 @@ impl GeometryStore {
     /// set of its simple look, its colour), `pieces` the sets of every
     /// insert's pieces in turn (docs/adr/0144), the program's table of values
     /// (`texts`, `text_lens`, `numbers`), the box construction lines are
-    /// clipped to, the origin the batches are relative to, the plot scale and
-    /// whether symbol sizes are on the screen (paper mm drawn as px).
+    /// clipped to, the origin the batches are relative to, the plot scale,
+    /// whether symbol sizes are on the screen (paper mm drawn as px), and
+    /// what Görünüm kipleri show: the fills and the areas' edges (docs/adr/0195).
     #[wasm_bindgen(js_name = buildStyled)]
     #[allow(clippy::too_many_arguments)]
     pub fn build_styled(
@@ -895,9 +896,11 @@ impl GeometryStore {
         origin_y: f64,
         plot_scale: f64,
         screen: bool,
+        fills: bool,
+        area_edges: bool,
     ) -> Result<StyledBatches, JsError> {
         let clip = has_clip.then(|| rect(min_x, min_y, max_x, max_y));
-        let b = build_layer(
+        let b = build_layer_with(
             &self.inner,
             &program.inner,
             &LayerObjects {
@@ -912,6 +915,7 @@ impl GeometryStore {
             Vec2::new(origin_x, origin_y),
             plot_scale,
             screen,
+            View { fills, area_edges },
         )
         .map_err(|e| JsError::new(&e))?;
         Ok(StyledBatches {

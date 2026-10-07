@@ -386,6 +386,12 @@ impl Renderer {
             self.srgb_target,
         );
         queue.write_buffer(&state.uniform, 0, bytemuck::bytes_of(&uniform));
+        let wide = FrameUniform {
+            line_width: settings.highlight_width,
+            ..uniform
+        };
+        queue.write_buffer(&state.highlight.0, 0, bytemuck::bytes_of(&wide));
+        uploaded += std::mem::size_of::<FrameUniform>() as u64;
         // What the picture shows and how: the parts under the overlays, the
         // frame and the ground. The styled layers add theirs (prepare_styled).
         state.keep = frame.keep_picture && state.own;
@@ -399,18 +405,23 @@ impl Renderer {
             part.id.hash(&mut key);
         }
         bytemuck::bytes_of(&uniform).hash(&mut key);
+        settings.highlight_width.to_bits().hash(&mut key);
         state.clear.map(f32::to_bits).hash(&mut key);
         state.want = key.finish();
         state.want_styled = None;
         if state.overlays > 0 {
-            // The overlays go straight into the host's frame: its size and scale.
-            let overlay = frame.camera.frame_uniform(
-                frame.origin,
-                frame.size_px,
-                frame.scale_factor,
-                settings,
-                self.srgb_target,
-            );
+            // The overlays go straight into the host's frame: its size and scale; they are the
+            // highlights, at their width.
+            let overlay = FrameUniform {
+                line_width: settings.highlight_width,
+                ..frame.camera.frame_uniform(
+                    frame.origin,
+                    frame.size_px,
+                    frame.scale_factor,
+                    settings,
+                    self.srgb_target,
+                )
+            };
             let (buffer, _) = state
                 .overlay
                 .get_or_insert_with(|| frame_binding(device, frame_layout, "kentos.cad2d.overlay"));
@@ -757,6 +768,9 @@ fn make_targets(
 struct View {
     uniform: wgpu::Buffer,
     bind_group: wgpu::BindGroup,
+    /// The frame uniform the highlights are drawn with: the main one at the
+    /// highlight's width (Vurgu kalınlığı, docs/adr/0195).
+    highlight: (wgpu::Buffer, wgpu::BindGroup),
     parts: Vec<GpuPart>,
     stats: FrameStats,
     frames: u64,
@@ -833,6 +847,7 @@ impl View {
         Self {
             uniform,
             bind_group,
+            highlight: frame_binding(device, layout, "kentos.cad2d.highlight"),
             parts: Vec::new(),
             stats: FrameStats::default(),
             frames: 0,
@@ -892,7 +907,8 @@ impl View {
                 let under = view.under.min(self.parts.len());
                 self.draw_parts(pass, pipes, 0..under);
                 gpu.draw(pass, view, samples);
-                pass.set_bind_group(0, &self.bind_group, &[]);
+                // The highlights, at their width.
+                pass.set_bind_group(0, &self.highlight.1, &[]);
                 self.draw_parts(pass, pipes, under..all.end);
             }
             _ => self.draw_parts(pass, pipes, all),

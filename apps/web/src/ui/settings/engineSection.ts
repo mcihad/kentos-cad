@@ -10,7 +10,7 @@ import { matchingPreset } from '../../core/settings/rules';
 import { resolveReasonMessage, settingDescriptor, SETTINGS_SCHEMA } from '../../core/settings/schema';
 import { webgpuSupported } from '../../render/webgpu/support';
 import { h, type Child } from '../dom';
-import { note, segmented, settingRow, toggleSwitch } from '../widgets/controls';
+import { note, segmented, settingRow, stepper, toggleSwitch } from '../widgets/controls';
 import type { AppDraft } from './AppSettingsDialog';
 import { group, type DraftApi } from './SettingsShell';
 
@@ -127,6 +127,46 @@ export function engine(api: DraftApi<AppDraft>, ctx: AppContext): Child[] {
         'Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir (durum çubuğunda Kalınlık).',
         toggleSwitch({ label: 'Çizgi kalınlığını göster', checked: d.lineWeights, onChange: (v) => api.set('lineWeights', v) }),
       ),
+    ),
+    // Görünüm kipleri (docs/adr/0195 §1): how the drawing is shown, never what it holds.
+    group(
+      'Görünüm kipleri',
+      settingRow(
+        'Renk kipi',
+        'Renkli: nesnelerin kendi renkleri. Tek renk: her şey zeminin karşıt renginde. Gri: her renk kendi parlaklığında. Resimler kendi renkleriyle kalır.',
+        segmented({
+          label: 'Renk kipi',
+          options: [
+            { value: 'color', label: 'Renkli' },
+            { value: 'mono', label: 'Tek renk' },
+            { value: 'gray', label: 'Gri' },
+          ],
+          value: d.colorMode,
+          onChange: (v) => api.set('colorMode', v),
+        }),
+      ),
+      settingRow('Dolgular ve taramalar', 'Kapalıyken yalnız çizgiler görünür; resimler görünür kalır.', toggleSwitch({ label: 'Dolguları ve taramaları göster', checked: d.fills, onChange: (v) => api.set('fills', v) })),
+      settingRow('Alan sınırları', 'Kapalıyken alanların yalnız dolguları görünür.', toggleSwitch({ label: 'Alan sınırlarını göster', checked: d.areaEdges, onChange: (v) => api.set('areaEdges', v) })),
+      settingRow('Saydamlık', 'Kapalıyken yarı saydam dolgular ve resimler tam örtücü çizilir.', toggleSwitch({ label: 'Saydamlığı göster', checked: d.transparency, onChange: (v) => api.set('transparency', v) })),
+      settingRow(
+        'Vurgu rengi',
+        'Seçilen ve üzerine gelinen nesnenin vurgusu.',
+        segmented({
+          label: 'Vurgu rengi',
+          options: [
+            { value: 'accent', label: 'Tema' },
+            { value: 'orange', label: 'Turuncu' },
+            { value: 'red', label: 'Kırmızı' },
+            { value: 'green', label: 'Yeşil' },
+            { value: 'cyan', label: 'Camgöbeği' },
+            { value: 'magenta', label: 'Eflatun' },
+          ],
+          value: d.highlightColor,
+          onChange: (v) => api.set('highlightColor', v),
+        }),
+        { stacked: true },
+      ),
+      settingRow('Vurgu kalınlığı', 'Vurgunun çizgi kalınlığı.', stepper({ label: 'Vurgu kalınlığı', value: d.highlightWidth, min: 1, max: 5, unit: 'px', onChange: (v) => api.set('highlightWidth', v) })),
     ),
   ];
 }

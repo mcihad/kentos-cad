@@ -217,6 +217,7 @@ pub fn preview(
         clip: None,
         library,
         layer_name: &|_| "Önizleme".to_owned(),
+        view: Default::default(),
     };
     let (_, batches) = build_layer(&store, &style, &[&sample], &opts)?;
     let layer = decode(
@@ -225,6 +226,7 @@ pub fn preview(
             palette,
             plot_scale: 1000.0,
             library,
+            view: Default::default(),
         },
     )?;
     Ok(Preview {

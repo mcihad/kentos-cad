@@ -13,7 +13,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
-use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::entity::{Shape, is_closed_outline};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::draw::{
@@ -386,6 +386,34 @@ pub struct LayerObjects<'a> {
     pub pieces: &'a [i32],
 }
 
+/// What Görünüm kipleri leave out of a layer (docs/adr/0195 §1): the fills
+/// and hatches of closed objects (pictures stay), the edges of areas.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct View {
+    pub fills: bool,
+    pub area_edges: bool,
+}
+
+impl Default for View {
+    fn default() -> Self {
+        View {
+            fills: true,
+            area_edges: true,
+        }
+    }
+}
+
+impl View {
+    /// What of `shape` is left out: its fills (a closed object's: an area, a
+    /// circle, a hatch, a closed curve), its strokes (an area's edges).
+    fn hides(self, shape: &Shape) -> (bool, bool) {
+        (
+            !self.fills && is_closed_outline(shape),
+            !self.area_edges && matches!(shape, Shape::Polygon { .. }),
+        )
+    }
+}
+
 /// Draws the objects of one layer: the batches in draw order.
 pub fn build_layer(
     store: &Store,
@@ -395,6 +423,30 @@ pub fn build_layer(
     origin: Vec2,
     plot_scale: f64,
     screen: bool,
+) -> Result<Batches, String> {
+    build_layer_with(
+        store,
+        program,
+        o,
+        clip,
+        origin,
+        plot_scale,
+        screen,
+        View::default(),
+    )
+}
+
+/// [`build_layer`] as Görünüm kipleri show it (docs/adr/0195).
+#[allow(clippy::too_many_arguments)]
+pub fn build_layer_with(
+    store: &Store,
+    program: &Program,
+    o: &LayerObjects,
+    clip: Option<&Bounds>,
+    origin: Vec2,
+    plot_scale: f64,
+    screen: bool,
+    view: View,
 ) -> Result<Batches, String> {
     let n = o.ids.len();
     if o.objects.len() != 4 * n {
@@ -453,6 +505,8 @@ pub fn build_layer(
             i,
         };
         let mut one = |shape: &Shape, a: i32, simple: i32, sink: &mut BatchSink| {
+            let (fills, strokes) = view.hides(shape);
+            sink.hide(fills, strokes);
             draw_object(
                 shape,
                 [mode, a, simple, color],

@@ -677,7 +677,11 @@ impl App {
                     self.lock_tag(&format),
                     doc.model.settings().drawing_font.unwrap_or(DrawingFont::Barlow),
                 );
-                let accent = rgba8(Tokens::of(&self.theme()).accent);
+                // Vurgu rengi (docs/adr/0195 §1): the theme's accent or a named one.
+                let accent = crate::viewport::highlight_color(
+                    &self.settings.text("graphics.highlightColor"),
+                    rgba8(Tokens::of(&self.theme()).accent),
+                );
                 // The drawing's text over the scene, under the marks (labels.rs, docs/adr/0055).
                 // The text being edited in place is hidden meanwhile (text_field.rs).
                 let labels = crate::labels::layer(
@@ -694,6 +698,7 @@ impl App {
                         .and_then(|f| f.editing)
                         .or(self.paragraph.as_ref().and_then(|p| p.editing)),
                     self.paragraph_preview(),
+                    self.color_mode(),
                 );
                 let area = self.viewport.view(
                     doc,
@@ -793,6 +798,7 @@ impl App {
                 .and_then(|f| f.editing)
                 .or(self.paragraph.as_ref().and_then(|p| p.editing)),
             self.paragraph_preview(),
+            self.color_mode(),
         );
         stack![
             self.viewport.lens(camera, self.canvas()),

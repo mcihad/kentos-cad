@@ -8139,6 +8139,6145 @@
    }
   },
   {
+   "id": "view-mono",
+   "title": "Tek renk (ADR 0195): her renk temanın mürekkebi, saydamlıklar ve yazının halesi kalır",
+   "style": {
+    "color": "fg",
+    "lineType": "dashdot",
+    "lineWeight": 0.5,
+    "fill": "#E5484D33",
+    "point": {
+     "symbol": "cross",
+     "size": 9
+    }
+   },
+   "entities": [
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-tarama",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420015
+      },
+      {
+       "x": 487000,
+       "y": 4420015
+      }
+     ],
+     "id": 1,
+     "uid": "01a11400-5ff1-70df-9c61-f3c4fcaf7c2b"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-desen",
+     "pts": [
+      {
+       "x": 487025,
+       "y": 4420000
+      },
+      {
+       "x": 487045,
+       "y": 4420000
+      },
+      {
+       "x": 487045,
+       "y": 4420015
+      },
+      {
+       "x": 487025,
+       "y": 4420015
+      }
+     ],
+     "id": 2,
+     "uid": "01a11400-5ff1-70e0-957b-51e992e0cb2b"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-doku",
+     "pts": [
+      {
+       "x": 487050,
+       "y": 4420000
+      },
+      {
+       "x": 487060,
+       "y": 4420000
+      },
+      {
+       "x": 487060,
+       "y": 4420010
+      },
+      {
+       "x": 487050,
+       "y": 4420010
+      }
+     ],
+     "id": 3,
+     "uid": "01a11400-5ff1-70e1-915b-23a71a7d5b96"
+    },
+    {
+     "kind": "polyline",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "cizgi-oklu",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420035
+      }
+     ],
+     "id": 4,
+     "uid": "01a11400-5ff1-70e2-ae79-537a9ccaa7d8"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "nokta-agac",
+     "p": {
+      "x": 487040,
+      "y": 4420025
+     },
+     "id": 5,
+     "uid": "01a11400-5ff1-70e3-8a60-8a2710f2b565"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "nokta-harf",
+     "p": {
+      "x": 487045,
+      "y": 4420025
+     },
+     "id": 6,
+     "uid": "01a11400-5ff1-70e4-a800-fe04d7a6decd"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "color": "#F28E2B",
+     "p": {
+      "x": 487050,
+      "y": 4420025
+     },
+     "id": 7,
+     "uid": "01a11400-5ff1-70e5-9088-6bc1de8fdfd7"
+    }
+   ],
+   "plotScale": 1000,
+   "view": {
+    "symbolSize": "plot",
+    "pxPerM": 4,
+    "lineWeights": true,
+    "colorMode": "mono"
+   },
+   "expect": {
+    "symbolScale": 1000,
+    "decisions": [
+     {
+      "id": 1,
+      "mode": "own",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 2,
+      "mode": "own",
+      "a": 1,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 3,
+      "mode": "own",
+      "a": 2,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 4,
+      "mode": "own",
+      "a": 3,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 5,
+      "mode": "own",
+      "a": 4,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 6,
+      "mode": "own",
+      "a": 5,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 7,
+      "mode": "set",
+      "a": 1,
+      "simple": 1,
+      "color": 1
+     }
+    ],
+    "program": {
+     "symbols": {
+      "alan-tarama": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "f",
+         "type": "simpleFill",
+         "color": "#4E79A780"
+        },
+        {
+         "id": "h",
+         "type": "hatchFill",
+         "angle": 45,
+         "spacing": 2,
+         "width": 0.25,
+         "color": "fg"
+        },
+        {
+         "id": "o",
+         "type": "simpleLine",
+         "color": "fg",
+         "width": 0.35
+        }
+       ]
+      },
+      "alan-desen": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "p",
+         "type": "patternFill",
+         "spacingX": 4,
+         "spacingY": 4,
+         "stagger": true,
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "id": "c",
+            "type": "shape",
+            "shape": "circle",
+            "size": 1,
+            "fill": "#59A14F"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "alan-doku": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "i",
+         "type": "imageFill",
+         "asset": "doku",
+         "tileSize": 5
+        }
+       ]
+      },
+      "cizgi-oklu": {
+       "type": "line",
+       "layers": [
+        {
+         "id": "l",
+         "type": "simpleLine",
+         "color": "#E15759",
+         "width": 0.5,
+         "dash": [
+          3,
+          1.5
+         ]
+        },
+        {
+         "id": "m",
+         "type": "markerLine",
+         "placement": "interval",
+         "interval": 10,
+         "rotate": true,
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "id": "s",
+            "type": "shape",
+            "shape": "arrowhead",
+            "size": 2,
+            "fill": "#E15759"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "nokta-agac": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "v",
+         "type": "svg",
+         "asset": "agac",
+         "size": 4,
+         "fill": "#2E7D32"
+        }
+       ]
+      },
+      "nokta-harf": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "t",
+         "type": "text",
+         "text": "T",
+         "size": 3,
+         "font": "sans",
+         "weight": 700,
+         "color": "fg",
+         "halo": {
+          "color": "paper",
+          "width": 0.5
+         }
+        }
+       ]
+      }
+     },
+     "renderer": null,
+     "sets": [
+      {
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "fg",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E5484D33"
+         },
+         {
+          "id": "o",
+          "type": "simpleLine",
+          "color": "fg",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "p",
+          "type": "shape",
+          "shape": "cross",
+          "size": 9,
+          "unit": "px",
+          "stroke": "fg",
+          "strokeWidth": 1.3,
+          "fill": null
+         }
+        ]
+       }
+      },
+      {
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "#F28E2B",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E5484D33"
+         },
+         {
+          "id": "o",
+          "type": "simpleLine",
+          "color": "#F28E2B",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "p",
+          "type": "shape",
+          "shape": "cross",
+          "size": 9,
+          "unit": "px",
+          "stroke": "#F28E2B",
+          "strokeWidth": 1.3,
+          "fill": null
+         }
+        ]
+       }
+      }
+     ],
+     "refs": [
+      "alan-tarama",
+      "alan-desen",
+      "alan-doku",
+      "cizgi-oklu",
+      "nokta-agac",
+      "nokta-harf"
+     ],
+     "colors": [
+      "fg",
+      "#F28E2B"
+     ],
+     "assets": {
+      "doku": [
+       16,
+       8
+      ]
+     }
+    },
+    "objects": [
+     3,
+     0,
+     0,
+     0,
+     3,
+     1,
+     0,
+     0,
+     3,
+     2,
+     0,
+     0,
+     3,
+     3,
+     0,
+     0,
+     3,
+     4,
+     0,
+     0,
+     3,
+     5,
+     0,
+     0,
+     2,
+     1,
+     1,
+     1
+    ],
+    "table": {
+     "texts": "",
+     "lens": [],
+     "numbers": []
+    },
+    "batches": [
+     {
+      "kind": "fill",
+      "positions": [
+       0,
+       15,
+       0,
+       0,
+       20,
+       0,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15
+      ],
+      "paint": {
+       "kind": "solid",
+       "color": [
+        1,
+        1,
+        1,
+        0.5019607843137255
+       ]
+      },
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       25,
+       15,
+       25,
+       0,
+       45,
+       0,
+       45,
+       0,
+       45,
+       15,
+       25,
+       15
+      ],
+      "paint": {
+       "kind": "pattern",
+       "shape": "circle",
+       "fill": [
+        1,
+        1,
+        1,
+        1
+       ],
+       "stroke": null,
+       "strokeWidth": 0,
+       "half": [
+        0.5,
+        0.5
+       ],
+       "markOffset": [
+        0,
+        0
+       ],
+       "markRotation": 0,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ],
+       "size": [
+        4,
+        4
+       ],
+       "stagger": true,
+       "angle": 0,
+       "offset": [
+        0,
+        0
+       ],
+       "jitter": 0,
+       "coverage": 1,
+       "seed": 0,
+       "tint": 0.0490625,
+       "opacity": 1,
+       "unit": "world"
+      },
+      "bounds": [
+       25,
+       0,
+       45,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       50,
+       10,
+       50,
+       0,
+       60,
+       0,
+       60,
+       0,
+       60,
+       10,
+       50,
+       10
+      ],
+      "paint": {
+       "kind": "tile",
+       "image": {
+        "key": "img|doku|34",
+        "kind": "raster",
+        "url": "data:image/png;base64,iVBORw0KGgo=",
+        "width": 16,
+        "height": 8
+       },
+       "size": [
+        5,
+        2.5
+       ],
+       "angle": 0,
+       "offset": [
+        0,
+        0
+       ],
+       "opacity": 1,
+       "unit": "world"
+      },
+      "bounds": [
+       50,
+       0,
+       60,
+       10
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       0,
+       15,
+       0,
+       0,
+       20,
+       0,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15
+      ],
+      "paint": {
+       "kind": "hatch",
+       "color": [
+        1,
+        1,
+        1,
+        1
+       ],
+       "angle": 0.7853981633974483,
+       "spacing": 2,
+       "width": 0.25,
+       "offset": 0,
+       "dash": null,
+       "dashOffset": 0,
+       "unit": "world"
+      },
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       0,
+       20,
+       0,
+       0,
+       0,
+       20,
+       0,
+       20,
+       15,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15,
+       35,
+       0,
+       0,
+       15,
+       0,
+       0,
+       55,
+       0
+      ],
+      "color": [
+       1,
+       1,
+       1,
+       1
+      ],
+      "width": 0.35,
+      "unit": "world",
+      "dash": null,
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 1.175,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       20,
+       30,
+       20,
+       0,
+       1,
+       30,
+       20,
+       30,
+       35,
+       30,
+       2
+      ],
+      "color": [
+       1,
+       1,
+       1,
+       1
+      ],
+      "width": 0.5,
+      "unit": "world",
+      "dash": [
+       3,
+       1.5
+      ],
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       20,
+       30,
+       35
+      ],
+      "reach": 1.25,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       0,
+       20,
+       0,
+       2,
+       2,
+       10,
+       20,
+       0,
+       2,
+       2,
+       20,
+       20,
+       0,
+       2,
+       2,
+       30,
+       20,
+       1.5707964,
+       2,
+       2,
+       30,
+       30,
+       1.5707964,
+       2,
+       2
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "shape",
+       "shape": "arrowhead",
+       "fill": [
+        1,
+        1,
+        1,
+        1
+       ],
+       "stroke": null,
+       "strokeWidth": 0,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       2,
+       2
+      ],
+      "bounds": [
+       0,
+       20,
+       30,
+       30
+      ],
+      "reach": 5,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       40,
+       25,
+       0,
+       4,
+       0
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "image",
+       "image": {
+        "key": "svg|agac|#FFFFFF|null|190",
+        "kind": "svg",
+        "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 30\"><circle cx=\"10\" cy=\"10\" r=\"8\" fill=\"#FFFFFF\" stroke=\"#000000\"/><path d=\"M10 18V30\" stroke=\"#FFFFFF\"/></svg>",
+        "width": 20,
+        "height": 30
+       },
+       "fit": "width"
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       4,
+       0
+      ],
+      "bounds": [
+       40,
+       25,
+       40,
+       25
+      ],
+      "reach": 8,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       45,
+       25,
+       0,
+       0,
+       3.75
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "image",
+       "image": {
+        "key": "t|T|sans|700|false|#FFFFFF|#151B22/0.167",
+        "kind": "text",
+        "text": "T",
+        "font": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif",
+        "weight": 700,
+        "italic": false,
+        "color": "#FFFFFF",
+        "halo": {
+         "color": "#151B22",
+         "width": 0.16666666666666666
+        }
+       },
+       "fit": "height"
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       0,
+       3.75
+      ],
+      "bounds": [
+       45,
+       25,
+       45,
+       25
+      ],
+      "reach": 7.625,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       50,
+       25,
+       0,
+       9,
+       9
+      ],
+      "unit": "px",
+      "look": {
+       "kind": "shape",
+       "shape": "cross",
+       "fill": null,
+       "stroke": [
+        1,
+        1,
+        1,
+        1
+       ],
+       "strokeWidth": 1.3,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       9,
+       9
+      ],
+      "bounds": [
+       50,
+       25,
+       50,
+       25
+      ],
+      "reach": 15.5,
+      "reachUnit": "px"
+     }
+    ]
+   }
+  },
+  {
+   "id": "view-gray",
+   "title": "Gri (ADR 0195): her renk kendi parlaklığında, saydamlıklar kalır",
+   "style": {
+    "color": "fg",
+    "lineType": "dashdot",
+    "lineWeight": 0.5,
+    "fill": "#E5484D33",
+    "point": {
+     "symbol": "cross",
+     "size": 9
+    }
+   },
+   "entities": [
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-tarama",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420015
+      },
+      {
+       "x": 487000,
+       "y": 4420015
+      }
+     ],
+     "id": 1,
+     "uid": "01a11400-5ff2-70dc-9cef-9bfc03789a52"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-desen",
+     "pts": [
+      {
+       "x": 487025,
+       "y": 4420000
+      },
+      {
+       "x": 487045,
+       "y": 4420000
+      },
+      {
+       "x": 487045,
+       "y": 4420015
+      },
+      {
+       "x": 487025,
+       "y": 4420015
+      }
+     ],
+     "id": 2,
+     "uid": "01a11400-5ff2-70dd-85b6-7779cedc88a8"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-doku",
+     "pts": [
+      {
+       "x": 487050,
+       "y": 4420000
+      },
+      {
+       "x": 487060,
+       "y": 4420000
+      },
+      {
+       "x": 487060,
+       "y": 4420010
+      },
+      {
+       "x": 487050,
+       "y": 4420010
+      }
+     ],
+     "id": 3,
+     "uid": "01a11400-5ff2-70de-bfff-892ecc18c49c"
+    },
+    {
+     "kind": "polyline",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "cizgi-oklu",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420035
+      }
+     ],
+     "id": 4,
+     "uid": "01a11400-5ff2-70df-824c-7d29d9313af2"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "nokta-agac",
+     "p": {
+      "x": 487040,
+      "y": 4420025
+     },
+     "id": 5,
+     "uid": "01a11400-5ff2-70e0-b7e9-319fce4e42b6"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "nokta-harf",
+     "p": {
+      "x": 487045,
+      "y": 4420025
+     },
+     "id": 6,
+     "uid": "01a11400-5ff2-70e1-a223-b0bfafe070ec"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "color": "#F28E2B",
+     "p": {
+      "x": 487050,
+      "y": 4420025
+     },
+     "id": 7,
+     "uid": "01a11400-5ff2-70e2-a850-cdf4bb0fc7bd"
+    }
+   ],
+   "plotScale": 1000,
+   "view": {
+    "symbolSize": "plot",
+    "pxPerM": 4,
+    "lineWeights": true,
+    "colorMode": "gray"
+   },
+   "expect": {
+    "symbolScale": 1000,
+    "decisions": [
+     {
+      "id": 1,
+      "mode": "own",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 2,
+      "mode": "own",
+      "a": 1,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 3,
+      "mode": "own",
+      "a": 2,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 4,
+      "mode": "own",
+      "a": 3,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 5,
+      "mode": "own",
+      "a": 4,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 6,
+      "mode": "own",
+      "a": 5,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 7,
+      "mode": "set",
+      "a": 1,
+      "simple": 1,
+      "color": 1
+     }
+    ],
+    "program": {
+     "symbols": {
+      "alan-tarama": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "f",
+         "type": "simpleFill",
+         "color": "#4E79A780"
+        },
+        {
+         "id": "h",
+         "type": "hatchFill",
+         "angle": 45,
+         "spacing": 2,
+         "width": 0.25,
+         "color": "fg"
+        },
+        {
+         "id": "o",
+         "type": "simpleLine",
+         "color": "fg",
+         "width": 0.35
+        }
+       ]
+      },
+      "alan-desen": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "p",
+         "type": "patternFill",
+         "spacingX": 4,
+         "spacingY": 4,
+         "stagger": true,
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "id": "c",
+            "type": "shape",
+            "shape": "circle",
+            "size": 1,
+            "fill": "#59A14F"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "alan-doku": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "i",
+         "type": "imageFill",
+         "asset": "doku",
+         "tileSize": 5
+        }
+       ]
+      },
+      "cizgi-oklu": {
+       "type": "line",
+       "layers": [
+        {
+         "id": "l",
+         "type": "simpleLine",
+         "color": "#E15759",
+         "width": 0.5,
+         "dash": [
+          3,
+          1.5
+         ]
+        },
+        {
+         "id": "m",
+         "type": "markerLine",
+         "placement": "interval",
+         "interval": 10,
+         "rotate": true,
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "id": "s",
+            "type": "shape",
+            "shape": "arrowhead",
+            "size": 2,
+            "fill": "#E15759"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "nokta-agac": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "v",
+         "type": "svg",
+         "asset": "agac",
+         "size": 4,
+         "fill": "#2E7D32"
+        }
+       ]
+      },
+      "nokta-harf": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "t",
+         "type": "text",
+         "text": "T",
+         "size": 3,
+         "font": "sans",
+         "weight": 700,
+         "color": "fg",
+         "halo": {
+          "color": "paper",
+          "width": 0.5
+         }
+        }
+       ]
+      }
+     },
+     "renderer": null,
+     "sets": [
+      {
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "fg",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E5484D33"
+         },
+         {
+          "id": "o",
+          "type": "simpleLine",
+          "color": "fg",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "p",
+          "type": "shape",
+          "shape": "cross",
+          "size": 9,
+          "unit": "px",
+          "stroke": "fg",
+          "strokeWidth": 1.3,
+          "fill": null
+         }
+        ]
+       }
+      },
+      {
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "#F28E2B",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E5484D33"
+         },
+         {
+          "id": "o",
+          "type": "simpleLine",
+          "color": "#F28E2B",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "p",
+          "type": "shape",
+          "shape": "cross",
+          "size": 9,
+          "unit": "px",
+          "stroke": "#F28E2B",
+          "strokeWidth": 1.3,
+          "fill": null
+         }
+        ]
+       }
+      }
+     ],
+     "refs": [
+      "alan-tarama",
+      "alan-desen",
+      "alan-doku",
+      "cizgi-oklu",
+      "nokta-agac",
+      "nokta-harf"
+     ],
+     "colors": [
+      "fg",
+      "#F28E2B"
+     ],
+     "assets": {
+      "doku": [
+       16,
+       8
+      ]
+     }
+    },
+    "objects": [
+     3,
+     0,
+     0,
+     0,
+     3,
+     1,
+     0,
+     0,
+     3,
+     2,
+     0,
+     0,
+     3,
+     3,
+     0,
+     0,
+     3,
+     4,
+     0,
+     0,
+     3,
+     5,
+     0,
+     0,
+     2,
+     1,
+     1,
+     1
+    ],
+    "table": {
+     "texts": "",
+     "lens": [],
+     "numbers": []
+    },
+    "batches": [
+     {
+      "kind": "fill",
+      "positions": [
+       0,
+       15,
+       0,
+       0,
+       20,
+       0,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15
+      ],
+      "paint": {
+       "kind": "solid",
+       "color": [
+        0.4516839215686274,
+        0.4516839215686274,
+        0.4516839215686274,
+        0.5019607843137255
+       ]
+      },
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       25,
+       15,
+       25,
+       0,
+       45,
+       0,
+       45,
+       0,
+       45,
+       15,
+       25,
+       15
+      ],
+      "paint": {
+       "kind": "pattern",
+       "shape": "circle",
+       "fill": [
+        0.5481270588235294,
+        0.5481270588235294,
+        0.5481270588235294,
+        1
+       ],
+       "stroke": null,
+       "strokeWidth": 0,
+       "half": [
+        0.5,
+        0.5
+       ],
+       "markOffset": [
+        0,
+        0
+       ],
+       "markRotation": 0,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ],
+       "size": [
+        4,
+        4
+       ],
+       "stagger": true,
+       "angle": 0,
+       "offset": [
+        0,
+        0
+       ],
+       "jitter": 0,
+       "coverage": 1,
+       "seed": 0,
+       "tint": 0.0490625,
+       "opacity": 1,
+       "unit": "world"
+      },
+      "bounds": [
+       25,
+       0,
+       45,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       50,
+       10,
+       50,
+       0,
+       60,
+       0,
+       60,
+       0,
+       60,
+       10,
+       50,
+       10
+      ],
+      "paint": {
+       "kind": "tile",
+       "image": {
+        "key": "img|doku|34",
+        "kind": "raster",
+        "url": "data:image/png;base64,iVBORw0KGgo=",
+        "width": 16,
+        "height": 8
+       },
+       "size": [
+        5,
+        2.5
+       ],
+       "angle": 0,
+       "offset": [
+        0,
+        0
+       ],
+       "opacity": 1,
+       "unit": "world"
+      },
+      "bounds": [
+       50,
+       0,
+       60,
+       10
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       0,
+       15,
+       0,
+       0,
+       20,
+       0,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15
+      ],
+      "paint": {
+       "kind": "hatch",
+       "color": [
+        0.9143435294117646,
+        0.9143435294117646,
+        0.9143435294117646,
+        1
+       ],
+       "angle": 0.7853981633974483,
+       "spacing": 2,
+       "width": 0.25,
+       "offset": 0,
+       "dash": null,
+       "dashOffset": 0,
+       "unit": "world"
+      },
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       0,
+       20,
+       0,
+       0,
+       0,
+       20,
+       0,
+       20,
+       15,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15,
+       35,
+       0,
+       0,
+       15,
+       0,
+       0,
+       55,
+       0
+      ],
+      "color": [
+       0.9143435294117646,
+       0.9143435294117646,
+       0.9143435294117646,
+       1
+      ],
+      "width": 0.35,
+      "unit": "world",
+      "dash": null,
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 1.175,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       20,
+       30,
+       20,
+       0,
+       1,
+       30,
+       20,
+       30,
+       35,
+       30,
+       2
+      ],
+      "color": [
+       0.45679686274509806,
+       0.45679686274509806,
+       0.45679686274509806,
+       1
+      ],
+      "width": 0.5,
+      "unit": "world",
+      "dash": [
+       3,
+       1.5
+      ],
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       20,
+       30,
+       35
+      ],
+      "reach": 1.25,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       0,
+       20,
+       0,
+       2,
+       2,
+       10,
+       20,
+       0,
+       2,
+       2,
+       20,
+       20,
+       0,
+       2,
+       2,
+       30,
+       20,
+       1.5707964,
+       2,
+       2,
+       30,
+       30,
+       1.5707964,
+       2,
+       2
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "shape",
+       "shape": "arrowhead",
+       "fill": [
+        0.45679686274509806,
+        0.45679686274509806,
+        0.45679686274509806,
+        1
+       ],
+       "stroke": null,
+       "strokeWidth": 0,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       2,
+       2
+      ],
+      "bounds": [
+       0,
+       20,
+       30,
+       30
+      ],
+      "reach": 5,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       40,
+       25,
+       0,
+       4,
+       0
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "image",
+       "image": {
+        "key": "svg|agac|#676767|null|190",
+        "kind": "svg",
+        "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 30\"><circle cx=\"10\" cy=\"10\" r=\"8\" fill=\"#676767\" stroke=\"#000000\"/><path d=\"M10 18V30\" stroke=\"#676767\"/></svg>",
+        "width": 20,
+        "height": 30
+       },
+       "fit": "width"
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       4,
+       0
+      ],
+      "bounds": [
+       40,
+       25,
+       40,
+       25
+      ],
+      "reach": 8,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       45,
+       25,
+       0,
+       0,
+       3.75
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "image",
+       "image": {
+        "key": "t|T|sans|700|false|#E9E9E9|#151B22/0.167",
+        "kind": "text",
+        "text": "T",
+        "font": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif",
+        "weight": 700,
+        "italic": false,
+        "color": "#E9E9E9",
+        "halo": {
+         "color": "#151B22",
+         "width": 0.16666666666666666
+        }
+       },
+       "fit": "height"
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       0,
+       3.75
+      ],
+      "bounds": [
+       45,
+       25,
+       45,
+       25
+      ],
+      "reach": 7.625,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       50,
+       25,
+       0,
+       9,
+       9
+      ],
+      "unit": "px",
+      "look": {
+       "kind": "shape",
+       "shape": "cross",
+       "fill": null,
+       "stroke": [
+        0.6122047058823529,
+        0.6122047058823529,
+        0.6122047058823529,
+        1
+       ],
+       "strokeWidth": 1.3,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       9,
+       9
+      ],
+      "bounds": [
+       50,
+       25,
+       50,
+       25
+      ],
+      "reach": 15.5,
+      "reachUnit": "px"
+     }
+    ]
+   }
+  },
+  {
+   "id": "view-no-fills",
+   "title": "Dolgular ve taramalar kapalı (ADR 0195): alanların dolguları, taramalar ve desenler çizilmez; çizgiler ve işaretler çizilir",
+   "style": {
+    "color": "fg",
+    "lineType": "dashdot",
+    "lineWeight": 0.5,
+    "fill": "#E5484D33",
+    "point": {
+     "symbol": "cross",
+     "size": 9
+    }
+   },
+   "entities": [
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {
+      "Nitelik": "Arsa"
+     },
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420015
+      },
+      {
+       "x": 487000,
+       "y": 4420015
+      }
+     ],
+     "id": 1,
+     "uid": "01a11400-5ff3-7664-ac8b-c516b3d768a0"
+    },
+    {
+     "kind": "polyline",
+     "layerId": "k",
+     "attrs": {
+      "Nitelik": "Yol"
+     },
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420035
+      }
+     ],
+     "id": 2,
+     "uid": "01a11400-5ff3-7665-812c-4589639522e1"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {
+      "Nitelik": "Ağaç"
+     },
+     "p": {
+      "x": 487040,
+      "y": 4420010
+     },
+     "id": 3,
+     "uid": "01a11400-5ff3-7666-ba3a-c5d31864fe35"
+    },
+    {
+     "kind": "text",
+     "layerId": "k",
+     "attrs": {},
+     "p": {
+      "x": 487005,
+      "y": 4420005
+     },
+     "text": "Etiket",
+     "height": 2,
+     "rotation": 0,
+     "id": 4,
+     "uid": "01a11400-5ff3-7667-bd5b-e0d06244b267"
+    },
+    {
+     "kind": "hatch",
+     "layerId": "k",
+     "attrs": {},
+     "ring": [
+      {
+       "x": 487025,
+       "y": 4420000
+      },
+      {
+       "x": 487035,
+       "y": 4420000
+      },
+      {
+       "x": 487035,
+       "y": 4420008
+      },
+      {
+       "x": 487025,
+       "y": 4420008
+      }
+     ],
+     "pattern": {
+      "type": "lines",
+      "angle": 30,
+      "spacing": 1.5
+     },
+     "id": 5,
+     "uid": "01a11400-5ff3-7668-83d7-7c7ec7ab9ed0"
+    },
+    {
+     "kind": "dimension",
+     "layerId": "k",
+     "attrs": {},
+     "a": {
+      "x": 487000,
+      "y": 4419995
+     },
+     "b": {
+      "x": 487020,
+      "y": 4419995
+     },
+     "offset": 2,
+     "height": 1.5,
+     "id": 6,
+     "uid": "01a11400-5ff3-7669-8e31-adf911d7e626"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-tarama",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420015
+      },
+      {
+       "x": 487000,
+       "y": 4420015
+      }
+     ],
+     "id": 7,
+     "uid": "01a11400-5ff3-766a-b8ac-0149eb2d8c29"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-desen",
+     "pts": [
+      {
+       "x": 487025,
+       "y": 4420000
+      },
+      {
+       "x": 487045,
+       "y": 4420000
+      },
+      {
+       "x": 487045,
+       "y": 4420015
+      },
+      {
+       "x": 487025,
+       "y": 4420015
+      }
+     ],
+     "id": 8,
+     "uid": "01a11400-5ff3-766b-bd7a-0723a5767843"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-doku",
+     "pts": [
+      {
+       "x": 487050,
+       "y": 4420000
+      },
+      {
+       "x": 487060,
+       "y": 4420000
+      },
+      {
+       "x": 487060,
+       "y": 4420010
+      },
+      {
+       "x": 487050,
+       "y": 4420010
+      }
+     ],
+     "id": 9,
+     "uid": "01a11400-5ff3-766c-86c5-4a77b37e0a96"
+    },
+    {
+     "kind": "polyline",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "cizgi-oklu",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420035
+      }
+     ],
+     "id": 10,
+     "uid": "01a11400-5ff3-766d-8087-90d6c77965db"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "nokta-agac",
+     "p": {
+      "x": 487040,
+      "y": 4420025
+     },
+     "id": 11,
+     "uid": "01a11400-5ff3-766e-83a3-858f8871b2b6"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "nokta-harf",
+     "p": {
+      "x": 487045,
+      "y": 4420025
+     },
+     "id": 12,
+     "uid": "01a11400-5ff3-766f-beea-843e490feccb"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "color": "#F28E2B",
+     "p": {
+      "x": 487050,
+      "y": 4420025
+     },
+     "id": 13,
+     "uid": "01a11400-5ff3-7670-b275-6e7f3cdf424e"
+    }
+   ],
+   "plotScale": 1000,
+   "view": {
+    "symbolSize": "plot",
+    "pxPerM": 4,
+    "lineWeights": true,
+    "fills": false
+   },
+   "expect": {
+    "symbolScale": 1000,
+    "decisions": [
+     {
+      "id": 1,
+      "mode": "set",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 2,
+      "mode": "set",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 3,
+      "mode": "set",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 4,
+      "mode": "skip",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 5,
+      "mode": "set",
+      "a": 1,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 6,
+      "mode": "dimension",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 7,
+      "mode": "own",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 8,
+      "mode": "own",
+      "a": 1,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 9,
+      "mode": "own",
+      "a": 2,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 10,
+      "mode": "own",
+      "a": 3,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 11,
+      "mode": "own",
+      "a": 4,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 12,
+      "mode": "own",
+      "a": 5,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 13,
+      "mode": "set",
+      "a": 2,
+      "simple": 2,
+      "color": 1
+     }
+    ],
+    "program": {
+     "symbols": {
+      "alan-tarama": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "f",
+         "type": "simpleFill",
+         "color": "#4E79A780"
+        },
+        {
+         "id": "h",
+         "type": "hatchFill",
+         "angle": 45,
+         "spacing": 2,
+         "width": 0.25,
+         "color": "fg"
+        },
+        {
+         "id": "o",
+         "type": "simpleLine",
+         "color": "fg",
+         "width": 0.35
+        }
+       ]
+      },
+      "alan-desen": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "p",
+         "type": "patternFill",
+         "spacingX": 4,
+         "spacingY": 4,
+         "stagger": true,
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "id": "c",
+            "type": "shape",
+            "shape": "circle",
+            "size": 1,
+            "fill": "#59A14F"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "alan-doku": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "i",
+         "type": "imageFill",
+         "asset": "doku",
+         "tileSize": 5
+        }
+       ]
+      },
+      "cizgi-oklu": {
+       "type": "line",
+       "layers": [
+        {
+         "id": "l",
+         "type": "simpleLine",
+         "color": "#E15759",
+         "width": 0.5,
+         "dash": [
+          3,
+          1.5
+         ]
+        },
+        {
+         "id": "m",
+         "type": "markerLine",
+         "placement": "interval",
+         "interval": 10,
+         "rotate": true,
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "id": "s",
+            "type": "shape",
+            "shape": "arrowhead",
+            "size": 2,
+            "fill": "#E15759"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "nokta-agac": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "v",
+         "type": "svg",
+         "asset": "agac",
+         "size": 4,
+         "fill": "#2E7D32"
+        }
+       ]
+      },
+      "nokta-harf": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "t",
+         "type": "text",
+         "text": "T",
+         "size": 3,
+         "font": "sans",
+         "weight": 700,
+         "color": "fg",
+         "halo": {
+          "color": "paper",
+          "width": 0.5
+         }
+        }
+       ]
+      }
+     },
+     "renderer": null,
+     "sets": [
+      {
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "fg",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E5484D33"
+         },
+         {
+          "id": "o",
+          "type": "simpleLine",
+          "color": "fg",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "p",
+          "type": "shape",
+          "shape": "cross",
+          "size": 9,
+          "unit": "px",
+          "stroke": "fg",
+          "strokeWidth": 1.3,
+          "fill": null
+         }
+        ]
+       }
+      },
+      {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "h1",
+          "type": "hatchFill",
+          "angle": 30,
+          "spacing": 1.5,
+          "width": 0,
+          "color": "fg",
+          "unit": "m"
+         }
+        ]
+       }
+      },
+      {
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "#F28E2B",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E5484D33"
+         },
+         {
+          "id": "o",
+          "type": "simpleLine",
+          "color": "#F28E2B",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "p",
+          "type": "shape",
+          "shape": "cross",
+          "size": 9,
+          "unit": "px",
+          "stroke": "#F28E2B",
+          "strokeWidth": 1.3,
+          "fill": null
+         }
+        ]
+       }
+      }
+     ],
+     "refs": [
+      "alan-tarama",
+      "alan-desen",
+      "alan-doku",
+      "cizgi-oklu",
+      "nokta-agac",
+      "nokta-harf"
+     ],
+     "colors": [
+      "fg",
+      "#F28E2B"
+     ],
+     "assets": {
+      "doku": [
+       16,
+       8
+      ]
+     }
+    },
+    "objects": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     2,
+     1,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     0,
+     3,
+     1,
+     0,
+     0,
+     3,
+     2,
+     0,
+     0,
+     3,
+     3,
+     0,
+     0,
+     3,
+     4,
+     0,
+     0,
+     3,
+     5,
+     0,
+     0,
+     2,
+     2,
+     2,
+     1
+    ],
+    "table": {
+     "texts": "",
+     "lens": [],
+     "numbers": []
+    },
+    "batches": [
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       0,
+       20,
+       0,
+       0,
+       0,
+       20,
+       0,
+       20,
+       15,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15,
+       35,
+       0,
+       0,
+       15,
+       0,
+       0,
+       55,
+       0
+      ],
+      "color": [
+       0.8941176470588236,
+       0.9176470588235294,
+       0.9411764705882353,
+       1
+      ],
+      "width": 0.5,
+      "unit": "world",
+      "dash": [
+       5,
+       1.2,
+       0.6,
+       1.2
+      ],
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 1.25,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       0,
+       20,
+       0,
+       0,
+       0,
+       20,
+       0,
+       20,
+       15,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15,
+       35,
+       0,
+       0,
+       15,
+       0,
+       0,
+       55,
+       0
+      ],
+      "color": [
+       0.8941176470588236,
+       0.9176470588235294,
+       0.9411764705882353,
+       1
+      ],
+      "width": 0.35,
+      "unit": "world",
+      "dash": null,
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 1.175,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       20,
+       30,
+       20,
+       0,
+       1,
+       30,
+       20,
+       30,
+       35,
+       30,
+       2
+      ],
+      "color": [
+       0.8941176470588236,
+       0.9176470588235294,
+       0.9411764705882353,
+       1
+      ],
+      "width": 0.5,
+      "unit": "world",
+      "dash": [
+       5,
+       1.2,
+       0.6,
+       1.2
+      ],
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       20,
+       30,
+       35
+      ],
+      "reach": 1.25,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       20,
+       30,
+       20,
+       0,
+       1,
+       30,
+       20,
+       30,
+       35,
+       30,
+       2
+      ],
+      "color": [
+       0.8823529411764706,
+       0.3411764705882353,
+       0.34901960784313724,
+       1
+      ],
+      "width": 0.5,
+      "unit": "world",
+      "dash": [
+       3,
+       1.5
+      ],
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       20,
+       30,
+       35
+      ],
+      "reach": 1.25,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       0,
+       20,
+       0,
+       2,
+       2,
+       10,
+       20,
+       0,
+       2,
+       2,
+       20,
+       20,
+       0,
+       2,
+       2,
+       30,
+       20,
+       1.5707964,
+       2,
+       2,
+       30,
+       30,
+       1.5707964,
+       2,
+       2
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "shape",
+       "shape": "arrowhead",
+       "fill": [
+        0.8823529411764706,
+        0.3411764705882353,
+        0.34901960784313724,
+        1
+       ],
+       "stroke": null,
+       "strokeWidth": 0,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       2,
+       2
+      ],
+      "bounds": [
+       0,
+       20,
+       30,
+       30
+      ],
+      "reach": 5,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       -4.25,
+       0,
+       -2.25,
+       0,
+       3,
+       20,
+       -4.25,
+       20,
+       -2.25,
+       0,
+       3,
+       0,
+       -3,
+       20,
+       -3,
+       0,
+       3,
+       -0.31819806,
+       -3.318198,
+       0.31819806,
+       -2.681802,
+       0,
+       3,
+       19.681803,
+       -3.318198,
+       20.318197,
+       -2.681802,
+       0,
+       3
+      ],
+      "color": [
+       0.8941176470588236,
+       0.9176470588235294,
+       0.9411764705882353,
+       1
+      ],
+      "width": 0,
+      "unit": "px",
+      "dash": null,
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       -0.31819805153645575,
+       -4.25,
+       20.318198051536456,
+       -2.25
+      ],
+      "reach": 1,
+      "reachUnit": "px"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       40,
+       10,
+       0,
+       9,
+       9
+      ],
+      "unit": "px",
+      "look": {
+       "kind": "shape",
+       "shape": "cross",
+       "fill": null,
+       "stroke": [
+        0.8941176470588236,
+        0.9176470588235294,
+        0.9411764705882353,
+        1
+       ],
+       "strokeWidth": 1.3,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       9,
+       9
+      ],
+      "bounds": [
+       40,
+       10,
+       40,
+       10
+      ],
+      "reach": 15.5,
+      "reachUnit": "px"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       40,
+       25,
+       0,
+       4,
+       0
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "image",
+       "image": {
+        "key": "svg|agac|#2E7D32|null|190",
+        "kind": "svg",
+        "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 30\"><circle cx=\"10\" cy=\"10\" r=\"8\" fill=\"#2E7D32\" stroke=\"#000000\"/><path d=\"M10 18V30\" stroke=\"#2E7D32\"/></svg>",
+        "width": 20,
+        "height": 30
+       },
+       "fit": "width"
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       4,
+       0
+      ],
+      "bounds": [
+       40,
+       25,
+       40,
+       25
+      ],
+      "reach": 8,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       45,
+       25,
+       0,
+       0,
+       3.75
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "image",
+       "image": {
+        "key": "t|T|sans|700|false|#E4EAF0|#151B22/0.167",
+        "kind": "text",
+        "text": "T",
+        "font": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif",
+        "weight": 700,
+        "italic": false,
+        "color": "#E4EAF0",
+        "halo": {
+         "color": "#151B22",
+         "width": 0.16666666666666666
+        }
+       },
+       "fit": "height"
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       0,
+       3.75
+      ],
+      "bounds": [
+       45,
+       25,
+       45,
+       25
+      ],
+      "reach": 7.625,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       50,
+       25,
+       0,
+       9,
+       9
+      ],
+      "unit": "px",
+      "look": {
+       "kind": "shape",
+       "shape": "cross",
+       "fill": null,
+       "stroke": [
+        0.9490196078431372,
+        0.5568627450980392,
+        0.16862745098039217,
+        1
+       ],
+       "strokeWidth": 1.3,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       9,
+       9
+      ],
+      "bounds": [
+       50,
+       25,
+       50,
+       25
+      ],
+      "reach": 15.5,
+      "reachUnit": "px"
+     }
+    ]
+   }
+  },
+  {
+   "id": "view-no-edges",
+   "title": "Alan sınırları kapalı (ADR 0195): alanların çizgileri çizilmez, dolguları çizilir; çoklu çizgi kalır",
+   "style": {
+    "color": "fg",
+    "lineType": "dashdot",
+    "lineWeight": 0.5,
+    "fill": "#E5484D33",
+    "point": {
+     "symbol": "cross",
+     "size": 9
+    }
+   },
+   "entities": [
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {
+      "Nitelik": "Arsa"
+     },
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420015
+      },
+      {
+       "x": 487000,
+       "y": 4420015
+      }
+     ],
+     "id": 1,
+     "uid": "01a11400-5ff3-7671-bf42-b3e2b5211984"
+    },
+    {
+     "kind": "polyline",
+     "layerId": "k",
+     "attrs": {
+      "Nitelik": "Yol"
+     },
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420035
+      }
+     ],
+     "id": 2,
+     "uid": "01a11400-5ff3-7672-9a34-2262b697fb7e"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {
+      "Nitelik": "Ağaç"
+     },
+     "p": {
+      "x": 487040,
+      "y": 4420010
+     },
+     "id": 3,
+     "uid": "01a11400-5ff3-7673-905d-9e839254f259"
+    },
+    {
+     "kind": "text",
+     "layerId": "k",
+     "attrs": {},
+     "p": {
+      "x": 487005,
+      "y": 4420005
+     },
+     "text": "Etiket",
+     "height": 2,
+     "rotation": 0,
+     "id": 4,
+     "uid": "01a11400-5ff3-7674-bcde-900de1f61bde"
+    },
+    {
+     "kind": "hatch",
+     "layerId": "k",
+     "attrs": {},
+     "ring": [
+      {
+       "x": 487025,
+       "y": 4420000
+      },
+      {
+       "x": 487035,
+       "y": 4420000
+      },
+      {
+       "x": 487035,
+       "y": 4420008
+      },
+      {
+       "x": 487025,
+       "y": 4420008
+      }
+     ],
+     "pattern": {
+      "type": "lines",
+      "angle": 30,
+      "spacing": 1.5
+     },
+     "id": 5,
+     "uid": "01a11400-5ff3-7675-8dbf-958b1cac0575"
+    },
+    {
+     "kind": "dimension",
+     "layerId": "k",
+     "attrs": {},
+     "a": {
+      "x": 487000,
+      "y": 4419995
+     },
+     "b": {
+      "x": 487020,
+      "y": 4419995
+     },
+     "offset": 2,
+     "height": 1.5,
+     "id": 6,
+     "uid": "01a11400-5ff3-7676-874c-e9a2ad3815cb"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-tarama",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420015
+      },
+      {
+       "x": 487000,
+       "y": 4420015
+      }
+     ],
+     "id": 7,
+     "uid": "01a11400-5ff3-7677-aecc-4ac6242b4a6c"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-desen",
+     "pts": [
+      {
+       "x": 487025,
+       "y": 4420000
+      },
+      {
+       "x": 487045,
+       "y": 4420000
+      },
+      {
+       "x": 487045,
+       "y": 4420015
+      },
+      {
+       "x": 487025,
+       "y": 4420015
+      }
+     ],
+     "id": 8,
+     "uid": "01a11400-5ff3-7678-aa45-de8009f5a29f"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-doku",
+     "pts": [
+      {
+       "x": 487050,
+       "y": 4420000
+      },
+      {
+       "x": 487060,
+       "y": 4420000
+      },
+      {
+       "x": 487060,
+       "y": 4420010
+      },
+      {
+       "x": 487050,
+       "y": 4420010
+      }
+     ],
+     "id": 9,
+     "uid": "01a11400-5ff3-7679-a023-f1ff5616b700"
+    },
+    {
+     "kind": "polyline",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "cizgi-oklu",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420035
+      }
+     ],
+     "id": 10,
+     "uid": "01a11400-5ff3-767a-aad4-b2a7260c4741"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "nokta-agac",
+     "p": {
+      "x": 487040,
+      "y": 4420025
+     },
+     "id": 11,
+     "uid": "01a11400-5ff3-767b-b18c-890b8f92aded"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "nokta-harf",
+     "p": {
+      "x": 487045,
+      "y": 4420025
+     },
+     "id": 12,
+     "uid": "01a11400-5ff3-767c-9b98-e8c9eb3c442d"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "color": "#F28E2B",
+     "p": {
+      "x": 487050,
+      "y": 4420025
+     },
+     "id": 13,
+     "uid": "01a11400-5ff3-767d-bad2-fb3bca93c2bd"
+    }
+   ],
+   "plotScale": 1000,
+   "view": {
+    "symbolSize": "plot",
+    "pxPerM": 4,
+    "lineWeights": true,
+    "areaEdges": false
+   },
+   "expect": {
+    "symbolScale": 1000,
+    "decisions": [
+     {
+      "id": 1,
+      "mode": "set",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 2,
+      "mode": "set",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 3,
+      "mode": "set",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 4,
+      "mode": "skip",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 5,
+      "mode": "set",
+      "a": 1,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 6,
+      "mode": "dimension",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 7,
+      "mode": "own",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 8,
+      "mode": "own",
+      "a": 1,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 9,
+      "mode": "own",
+      "a": 2,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 10,
+      "mode": "own",
+      "a": 3,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 11,
+      "mode": "own",
+      "a": 4,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 12,
+      "mode": "own",
+      "a": 5,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 13,
+      "mode": "set",
+      "a": 2,
+      "simple": 2,
+      "color": 1
+     }
+    ],
+    "program": {
+     "symbols": {
+      "alan-tarama": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "f",
+         "type": "simpleFill",
+         "color": "#4E79A780"
+        },
+        {
+         "id": "h",
+         "type": "hatchFill",
+         "angle": 45,
+         "spacing": 2,
+         "width": 0.25,
+         "color": "fg"
+        },
+        {
+         "id": "o",
+         "type": "simpleLine",
+         "color": "fg",
+         "width": 0.35
+        }
+       ]
+      },
+      "alan-desen": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "p",
+         "type": "patternFill",
+         "spacingX": 4,
+         "spacingY": 4,
+         "stagger": true,
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "id": "c",
+            "type": "shape",
+            "shape": "circle",
+            "size": 1,
+            "fill": "#59A14F"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "alan-doku": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "i",
+         "type": "imageFill",
+         "asset": "doku",
+         "tileSize": 5
+        }
+       ]
+      },
+      "cizgi-oklu": {
+       "type": "line",
+       "layers": [
+        {
+         "id": "l",
+         "type": "simpleLine",
+         "color": "#E15759",
+         "width": 0.5,
+         "dash": [
+          3,
+          1.5
+         ]
+        },
+        {
+         "id": "m",
+         "type": "markerLine",
+         "placement": "interval",
+         "interval": 10,
+         "rotate": true,
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "id": "s",
+            "type": "shape",
+            "shape": "arrowhead",
+            "size": 2,
+            "fill": "#E15759"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "nokta-agac": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "v",
+         "type": "svg",
+         "asset": "agac",
+         "size": 4,
+         "fill": "#2E7D32"
+        }
+       ]
+      },
+      "nokta-harf": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "t",
+         "type": "text",
+         "text": "T",
+         "size": 3,
+         "font": "sans",
+         "weight": 700,
+         "color": "fg",
+         "halo": {
+          "color": "paper",
+          "width": 0.5
+         }
+        }
+       ]
+      }
+     },
+     "renderer": null,
+     "sets": [
+      {
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "fg",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E5484D33"
+         },
+         {
+          "id": "o",
+          "type": "simpleLine",
+          "color": "fg",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "p",
+          "type": "shape",
+          "shape": "cross",
+          "size": 9,
+          "unit": "px",
+          "stroke": "fg",
+          "strokeWidth": 1.3,
+          "fill": null
+         }
+        ]
+       }
+      },
+      {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "h1",
+          "type": "hatchFill",
+          "angle": 30,
+          "spacing": 1.5,
+          "width": 0,
+          "color": "fg",
+          "unit": "m"
+         }
+        ]
+       }
+      },
+      {
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "#F28E2B",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E5484D33"
+         },
+         {
+          "id": "o",
+          "type": "simpleLine",
+          "color": "#F28E2B",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "p",
+          "type": "shape",
+          "shape": "cross",
+          "size": 9,
+          "unit": "px",
+          "stroke": "#F28E2B",
+          "strokeWidth": 1.3,
+          "fill": null
+         }
+        ]
+       }
+      }
+     ],
+     "refs": [
+      "alan-tarama",
+      "alan-desen",
+      "alan-doku",
+      "cizgi-oklu",
+      "nokta-agac",
+      "nokta-harf"
+     ],
+     "colors": [
+      "fg",
+      "#F28E2B"
+     ],
+     "assets": {
+      "doku": [
+       16,
+       8
+      ]
+     }
+    },
+    "objects": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     2,
+     1,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     0,
+     3,
+     1,
+     0,
+     0,
+     3,
+     2,
+     0,
+     0,
+     3,
+     3,
+     0,
+     0,
+     3,
+     4,
+     0,
+     0,
+     3,
+     5,
+     0,
+     0,
+     2,
+     2,
+     2,
+     1
+    ],
+    "table": {
+     "texts": "",
+     "lens": [],
+     "numbers": []
+    },
+    "batches": [
+     {
+      "kind": "fill",
+      "positions": [
+       0,
+       15,
+       0,
+       0,
+       20,
+       0,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15
+      ],
+      "paint": {
+       "kind": "solid",
+       "color": [
+        0.8980392156862745,
+        0.2823529411764706,
+        0.30196078431372547,
+        0.2
+       ]
+      },
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       25,
+       8,
+       25,
+       0,
+       35,
+       0,
+       35,
+       0,
+       35,
+       8,
+       25,
+       8
+      ],
+      "paint": {
+       "kind": "hatch",
+       "color": [
+        0.8941176470588236,
+        0.9176470588235294,
+        0.9411764705882353,
+        1
+       ],
+       "angle": 0.5235987755982988,
+       "spacing": 1.5,
+       "width": 0,
+       "offset": 0,
+       "dash": null,
+       "dashOffset": 0,
+       "unit": "world"
+      },
+      "bounds": [
+       25,
+       0,
+       35,
+       8
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       0,
+       15,
+       0,
+       0,
+       20,
+       0,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15
+      ],
+      "paint": {
+       "kind": "solid",
+       "color": [
+        0.3058823529411765,
+        0.4745098039215686,
+        0.6549019607843137,
+        0.5019607843137255
+       ]
+      },
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       25,
+       15,
+       25,
+       0,
+       45,
+       0,
+       45,
+       0,
+       45,
+       15,
+       25,
+       15
+      ],
+      "paint": {
+       "kind": "pattern",
+       "shape": "circle",
+       "fill": [
+        0.34901960784313724,
+        0.6313725490196078,
+        0.30980392156862746,
+        1
+       ],
+       "stroke": null,
+       "strokeWidth": 0,
+       "half": [
+        0.5,
+        0.5
+       ],
+       "markOffset": [
+        0,
+        0
+       ],
+       "markRotation": 0,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ],
+       "size": [
+        4,
+        4
+       ],
+       "stagger": true,
+       "angle": 0,
+       "offset": [
+        0,
+        0
+       ],
+       "jitter": 0,
+       "coverage": 1,
+       "seed": 0,
+       "tint": 0.0490625,
+       "opacity": 1,
+       "unit": "world"
+      },
+      "bounds": [
+       25,
+       0,
+       45,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       50,
+       10,
+       50,
+       0,
+       60,
+       0,
+       60,
+       0,
+       60,
+       10,
+       50,
+       10
+      ],
+      "paint": {
+       "kind": "tile",
+       "image": {
+        "key": "img|doku|34",
+        "kind": "raster",
+        "url": "data:image/png;base64,iVBORw0KGgo=",
+        "width": 16,
+        "height": 8
+       },
+       "size": [
+        5,
+        2.5
+       ],
+       "angle": 0,
+       "offset": [
+        0,
+        0
+       ],
+       "opacity": 1,
+       "unit": "world"
+      },
+      "bounds": [
+       50,
+       0,
+       60,
+       10
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       0,
+       15,
+       0,
+       0,
+       20,
+       0,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15
+      ],
+      "paint": {
+       "kind": "hatch",
+       "color": [
+        0.8941176470588236,
+        0.9176470588235294,
+        0.9411764705882353,
+        1
+       ],
+       "angle": 0.7853981633974483,
+       "spacing": 2,
+       "width": 0.25,
+       "offset": 0,
+       "dash": null,
+       "dashOffset": 0,
+       "unit": "world"
+      },
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       20,
+       30,
+       20,
+       0,
+       1,
+       30,
+       20,
+       30,
+       35,
+       30,
+       2
+      ],
+      "color": [
+       0.8941176470588236,
+       0.9176470588235294,
+       0.9411764705882353,
+       1
+      ],
+      "width": 0.5,
+      "unit": "world",
+      "dash": [
+       5,
+       1.2,
+       0.6,
+       1.2
+      ],
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       20,
+       30,
+       35
+      ],
+      "reach": 1.25,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       20,
+       30,
+       20,
+       0,
+       1,
+       30,
+       20,
+       30,
+       35,
+       30,
+       2
+      ],
+      "color": [
+       0.8823529411764706,
+       0.3411764705882353,
+       0.34901960784313724,
+       1
+      ],
+      "width": 0.5,
+      "unit": "world",
+      "dash": [
+       3,
+       1.5
+      ],
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       20,
+       30,
+       35
+      ],
+      "reach": 1.25,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       0,
+       20,
+       0,
+       2,
+       2,
+       10,
+       20,
+       0,
+       2,
+       2,
+       20,
+       20,
+       0,
+       2,
+       2,
+       30,
+       20,
+       1.5707964,
+       2,
+       2,
+       30,
+       30,
+       1.5707964,
+       2,
+       2
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "shape",
+       "shape": "arrowhead",
+       "fill": [
+        0.8823529411764706,
+        0.3411764705882353,
+        0.34901960784313724,
+        1
+       ],
+       "stroke": null,
+       "strokeWidth": 0,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       2,
+       2
+      ],
+      "bounds": [
+       0,
+       20,
+       30,
+       30
+      ],
+      "reach": 5,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       -4.25,
+       0,
+       -2.25,
+       0,
+       3,
+       20,
+       -4.25,
+       20,
+       -2.25,
+       0,
+       3,
+       0,
+       -3,
+       20,
+       -3,
+       0,
+       3,
+       -0.31819806,
+       -3.318198,
+       0.31819806,
+       -2.681802,
+       0,
+       3,
+       19.681803,
+       -3.318198,
+       20.318197,
+       -2.681802,
+       0,
+       3
+      ],
+      "color": [
+       0.8941176470588236,
+       0.9176470588235294,
+       0.9411764705882353,
+       1
+      ],
+      "width": 0,
+      "unit": "px",
+      "dash": null,
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       -0.31819805153645575,
+       -4.25,
+       20.318198051536456,
+       -2.25
+      ],
+      "reach": 1,
+      "reachUnit": "px"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       40,
+       10,
+       0,
+       9,
+       9
+      ],
+      "unit": "px",
+      "look": {
+       "kind": "shape",
+       "shape": "cross",
+       "fill": null,
+       "stroke": [
+        0.8941176470588236,
+        0.9176470588235294,
+        0.9411764705882353,
+        1
+       ],
+       "strokeWidth": 1.3,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       9,
+       9
+      ],
+      "bounds": [
+       40,
+       10,
+       40,
+       10
+      ],
+      "reach": 15.5,
+      "reachUnit": "px"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       40,
+       25,
+       0,
+       4,
+       0
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "image",
+       "image": {
+        "key": "svg|agac|#2E7D32|null|190",
+        "kind": "svg",
+        "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 30\"><circle cx=\"10\" cy=\"10\" r=\"8\" fill=\"#2E7D32\" stroke=\"#000000\"/><path d=\"M10 18V30\" stroke=\"#2E7D32\"/></svg>",
+        "width": 20,
+        "height": 30
+       },
+       "fit": "width"
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       4,
+       0
+      ],
+      "bounds": [
+       40,
+       25,
+       40,
+       25
+      ],
+      "reach": 8,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       45,
+       25,
+       0,
+       0,
+       3.75
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "image",
+       "image": {
+        "key": "t|T|sans|700|false|#E4EAF0|#151B22/0.167",
+        "kind": "text",
+        "text": "T",
+        "font": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif",
+        "weight": 700,
+        "italic": false,
+        "color": "#E4EAF0",
+        "halo": {
+         "color": "#151B22",
+         "width": 0.16666666666666666
+        }
+       },
+       "fit": "height"
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       0,
+       3.75
+      ],
+      "bounds": [
+       45,
+       25,
+       45,
+       25
+      ],
+      "reach": 7.625,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       50,
+       25,
+       0,
+       9,
+       9
+      ],
+      "unit": "px",
+      "look": {
+       "kind": "shape",
+       "shape": "cross",
+       "fill": null,
+       "stroke": [
+        0.9490196078431372,
+        0.5568627450980392,
+        0.16862745098039217,
+        1
+       ],
+       "strokeWidth": 1.3,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       9,
+       9
+      ],
+      "bounds": [
+       50,
+       25,
+       50,
+       25
+      ],
+      "reach": 15.5,
+      "reachUnit": "px"
+     }
+    ]
+   }
+  },
+  {
+   "id": "view-opaque",
+   "title": "Saydamlık kapalı (ADR 0195): yarı saydam dolgular tam örtücü",
+   "style": {
+    "color": "fg",
+    "lineType": "dashdot",
+    "lineWeight": 0.5,
+    "fill": "#E5484D33",
+    "point": {
+     "symbol": "cross",
+     "size": 9
+    }
+   },
+   "entities": [
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {
+      "Nitelik": "Arsa"
+     },
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420015
+      },
+      {
+       "x": 487000,
+       "y": 4420015
+      }
+     ],
+     "id": 1,
+     "uid": "01a11400-5ff6-71b5-9477-8da0f565548b"
+    },
+    {
+     "kind": "polyline",
+     "layerId": "k",
+     "attrs": {
+      "Nitelik": "Yol"
+     },
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420035
+      }
+     ],
+     "id": 2,
+     "uid": "01a11400-5ff6-71b6-a1ee-bdecca04877b"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {
+      "Nitelik": "Ağaç"
+     },
+     "p": {
+      "x": 487040,
+      "y": 4420010
+     },
+     "id": 3,
+     "uid": "01a11400-5ff6-71b7-a6ed-4f76211cccf4"
+    },
+    {
+     "kind": "text",
+     "layerId": "k",
+     "attrs": {},
+     "p": {
+      "x": 487005,
+      "y": 4420005
+     },
+     "text": "Etiket",
+     "height": 2,
+     "rotation": 0,
+     "id": 4,
+     "uid": "01a11400-5ff6-71b8-af01-901c7fd892ff"
+    },
+    {
+     "kind": "hatch",
+     "layerId": "k",
+     "attrs": {},
+     "ring": [
+      {
+       "x": 487025,
+       "y": 4420000
+      },
+      {
+       "x": 487035,
+       "y": 4420000
+      },
+      {
+       "x": 487035,
+       "y": 4420008
+      },
+      {
+       "x": 487025,
+       "y": 4420008
+      }
+     ],
+     "pattern": {
+      "type": "lines",
+      "angle": 30,
+      "spacing": 1.5
+     },
+     "id": 5,
+     "uid": "01a11400-5ff6-71b9-a468-7ad8c8ff651d"
+    },
+    {
+     "kind": "dimension",
+     "layerId": "k",
+     "attrs": {},
+     "a": {
+      "x": 487000,
+      "y": 4419995
+     },
+     "b": {
+      "x": 487020,
+      "y": 4419995
+     },
+     "offset": 2,
+     "height": 1.5,
+     "id": 6,
+     "uid": "01a11400-5ff6-71ba-ada9-b674fe719e84"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-tarama",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420000
+      },
+      {
+       "x": 487020,
+       "y": 4420015
+      },
+      {
+       "x": 487000,
+       "y": 4420015
+      }
+     ],
+     "id": 7,
+     "uid": "01a11400-5ff6-71bb-ab7d-cab3d6aa12c1"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-desen",
+     "pts": [
+      {
+       "x": 487025,
+       "y": 4420000
+      },
+      {
+       "x": 487045,
+       "y": 4420000
+      },
+      {
+       "x": 487045,
+       "y": 4420015
+      },
+      {
+       "x": 487025,
+       "y": 4420015
+      }
+     ],
+     "id": 8,
+     "uid": "01a11400-5ff6-71bc-bc7f-ec8c0b784a44"
+    },
+    {
+     "kind": "polygon",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "alan-doku",
+     "pts": [
+      {
+       "x": 487050,
+       "y": 4420000
+      },
+      {
+       "x": 487060,
+       "y": 4420000
+      },
+      {
+       "x": 487060,
+       "y": 4420010
+      },
+      {
+       "x": 487050,
+       "y": 4420010
+      }
+     ],
+     "id": 9,
+     "uid": "01a11400-5ff6-71bd-be47-ff029d97a461"
+    },
+    {
+     "kind": "polyline",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "cizgi-oklu",
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420020
+      },
+      {
+       "x": 487030,
+       "y": 4420035
+      }
+     ],
+     "id": 10,
+     "uid": "01a11400-5ff6-71be-99e8-bf97eddcd849"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "nokta-agac",
+     "p": {
+      "x": 487040,
+      "y": 4420025
+     },
+     "id": 11,
+     "uid": "01a11400-5ff6-71bf-b545-22d4ab6f0b76"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "symbol": "nokta-harf",
+     "p": {
+      "x": 487045,
+      "y": 4420025
+     },
+     "id": 12,
+     "uid": "01a11400-5ff6-71c0-9567-99cd42818e1b"
+    },
+    {
+     "kind": "point",
+     "layerId": "k",
+     "attrs": {},
+     "color": "#F28E2B",
+     "p": {
+      "x": 487050,
+      "y": 4420025
+     },
+     "id": 13,
+     "uid": "01a11400-5ff6-71c1-a36f-17942e89185c"
+    }
+   ],
+   "plotScale": 1000,
+   "view": {
+    "symbolSize": "plot",
+    "pxPerM": 4,
+    "lineWeights": true,
+    "transparency": false
+   },
+   "expect": {
+    "symbolScale": 1000,
+    "decisions": [
+     {
+      "id": 1,
+      "mode": "set",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 2,
+      "mode": "set",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 3,
+      "mode": "set",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 4,
+      "mode": "skip",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 5,
+      "mode": "set",
+      "a": 1,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 6,
+      "mode": "dimension",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 7,
+      "mode": "own",
+      "a": 0,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 8,
+      "mode": "own",
+      "a": 1,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 9,
+      "mode": "own",
+      "a": 2,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 10,
+      "mode": "own",
+      "a": 3,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 11,
+      "mode": "own",
+      "a": 4,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 12,
+      "mode": "own",
+      "a": 5,
+      "simple": 0,
+      "color": 0
+     },
+     {
+      "id": 13,
+      "mode": "set",
+      "a": 2,
+      "simple": 2,
+      "color": 1
+     }
+    ],
+    "program": {
+     "symbols": {
+      "alan-tarama": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "f",
+         "type": "simpleFill",
+         "color": "#4E79A780"
+        },
+        {
+         "id": "h",
+         "type": "hatchFill",
+         "angle": 45,
+         "spacing": 2,
+         "width": 0.25,
+         "color": "fg"
+        },
+        {
+         "id": "o",
+         "type": "simpleLine",
+         "color": "fg",
+         "width": 0.35
+        }
+       ]
+      },
+      "alan-desen": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "p",
+         "type": "patternFill",
+         "spacingX": 4,
+         "spacingY": 4,
+         "stagger": true,
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "id": "c",
+            "type": "shape",
+            "shape": "circle",
+            "size": 1,
+            "fill": "#59A14F"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "alan-doku": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "i",
+         "type": "imageFill",
+         "asset": "doku",
+         "tileSize": 5
+        }
+       ]
+      },
+      "cizgi-oklu": {
+       "type": "line",
+       "layers": [
+        {
+         "id": "l",
+         "type": "simpleLine",
+         "color": "#E15759",
+         "width": 0.5,
+         "dash": [
+          3,
+          1.5
+         ]
+        },
+        {
+         "id": "m",
+         "type": "markerLine",
+         "placement": "interval",
+         "interval": 10,
+         "rotate": true,
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "id": "s",
+            "type": "shape",
+            "shape": "arrowhead",
+            "size": 2,
+            "fill": "#E15759"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "nokta-agac": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "v",
+         "type": "svg",
+         "asset": "agac",
+         "size": 4,
+         "fill": "#2E7D32"
+        }
+       ]
+      },
+      "nokta-harf": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "t",
+         "type": "text",
+         "text": "T",
+         "size": 3,
+         "font": "sans",
+         "weight": 700,
+         "color": "fg",
+         "halo": {
+          "color": "paper",
+          "width": 0.5
+         }
+        }
+       ]
+      }
+     },
+     "renderer": null,
+     "sets": [
+      {
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "fg",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E5484D33"
+         },
+         {
+          "id": "o",
+          "type": "simpleLine",
+          "color": "fg",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "p",
+          "type": "shape",
+          "shape": "cross",
+          "size": 9,
+          "unit": "px",
+          "stroke": "fg",
+          "strokeWidth": 1.3,
+          "fill": null
+         }
+        ]
+       }
+      },
+      {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "h1",
+          "type": "hatchFill",
+          "angle": 30,
+          "spacing": 1.5,
+          "width": 0,
+          "color": "fg",
+          "unit": "m"
+         }
+        ]
+       }
+      },
+      {
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "#F28E2B",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E5484D33"
+         },
+         {
+          "id": "o",
+          "type": "simpleLine",
+          "color": "#F28E2B",
+          "width": 0.5,
+          "dash": [
+           5,
+           1.2,
+           0.6,
+           1.2
+          ],
+          "unit": "mm",
+          "cap": "butt",
+          "join": "miter"
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "p",
+          "type": "shape",
+          "shape": "cross",
+          "size": 9,
+          "unit": "px",
+          "stroke": "#F28E2B",
+          "strokeWidth": 1.3,
+          "fill": null
+         }
+        ]
+       }
+      }
+     ],
+     "refs": [
+      "alan-tarama",
+      "alan-desen",
+      "alan-doku",
+      "cizgi-oklu",
+      "nokta-agac",
+      "nokta-harf"
+     ],
+     "colors": [
+      "fg",
+      "#F28E2B"
+     ],
+     "assets": {
+      "doku": [
+       16,
+       8
+      ]
+     }
+    },
+    "objects": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     2,
+     1,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     0,
+     3,
+     1,
+     0,
+     0,
+     3,
+     2,
+     0,
+     0,
+     3,
+     3,
+     0,
+     0,
+     3,
+     4,
+     0,
+     0,
+     3,
+     5,
+     0,
+     0,
+     2,
+     2,
+     2,
+     1
+    ],
+    "table": {
+     "texts": "",
+     "lens": [],
+     "numbers": []
+    },
+    "batches": [
+     {
+      "kind": "fill",
+      "positions": [
+       0,
+       15,
+       0,
+       0,
+       20,
+       0,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15
+      ],
+      "paint": {
+       "kind": "solid",
+       "color": [
+        0.8980392156862745,
+        0.2823529411764706,
+        0.30196078431372547,
+        1
+       ]
+      },
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       25,
+       8,
+       25,
+       0,
+       35,
+       0,
+       35,
+       0,
+       35,
+       8,
+       25,
+       8
+      ],
+      "paint": {
+       "kind": "hatch",
+       "color": [
+        0.8941176470588236,
+        0.9176470588235294,
+        0.9411764705882353,
+        1
+       ],
+       "angle": 0.5235987755982988,
+       "spacing": 1.5,
+       "width": 0,
+       "offset": 0,
+       "dash": null,
+       "dashOffset": 0,
+       "unit": "world"
+      },
+      "bounds": [
+       25,
+       0,
+       35,
+       8
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       0,
+       15,
+       0,
+       0,
+       20,
+       0,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15
+      ],
+      "paint": {
+       "kind": "solid",
+       "color": [
+        0.3058823529411765,
+        0.4745098039215686,
+        0.6549019607843137,
+        1
+       ]
+      },
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       25,
+       15,
+       25,
+       0,
+       45,
+       0,
+       45,
+       0,
+       45,
+       15,
+       25,
+       15
+      ],
+      "paint": {
+       "kind": "pattern",
+       "shape": "circle",
+       "fill": [
+        0.34901960784313724,
+        0.6313725490196078,
+        0.30980392156862746,
+        1
+       ],
+       "stroke": null,
+       "strokeWidth": 0,
+       "half": [
+        0.5,
+        0.5
+       ],
+       "markOffset": [
+        0,
+        0
+       ],
+       "markRotation": 0,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ],
+       "size": [
+        4,
+        4
+       ],
+       "stagger": true,
+       "angle": 0,
+       "offset": [
+        0,
+        0
+       ],
+       "jitter": 0,
+       "coverage": 1,
+       "seed": 0,
+       "tint": 0.0490625,
+       "opacity": 1,
+       "unit": "world"
+      },
+      "bounds": [
+       25,
+       0,
+       45,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       50,
+       10,
+       50,
+       0,
+       60,
+       0,
+       60,
+       0,
+       60,
+       10,
+       50,
+       10
+      ],
+      "paint": {
+       "kind": "tile",
+       "image": {
+        "key": "img|doku|34",
+        "kind": "raster",
+        "url": "data:image/png;base64,iVBORw0KGgo=",
+        "width": 16,
+        "height": 8
+       },
+       "size": [
+        5,
+        2.5
+       ],
+       "angle": 0,
+       "offset": [
+        0,
+        0
+       ],
+       "opacity": 1,
+       "unit": "world"
+      },
+      "bounds": [
+       50,
+       0,
+       60,
+       10
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "fill",
+      "positions": [
+       0,
+       15,
+       0,
+       0,
+       20,
+       0,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15
+      ],
+      "paint": {
+       "kind": "hatch",
+       "color": [
+        0.8941176470588236,
+        0.9176470588235294,
+        0.9411764705882353,
+        1
+       ],
+       "angle": 0.7853981633974483,
+       "spacing": 2,
+       "width": 0.25,
+       "offset": 0,
+       "dash": null,
+       "dashOffset": 0,
+       "unit": "world"
+      },
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 0,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       0,
+       20,
+       0,
+       0,
+       0,
+       20,
+       0,
+       20,
+       15,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15,
+       35,
+       0,
+       0,
+       15,
+       0,
+       0,
+       55,
+       0
+      ],
+      "color": [
+       0.8941176470588236,
+       0.9176470588235294,
+       0.9411764705882353,
+       1
+      ],
+      "width": 0.5,
+      "unit": "world",
+      "dash": [
+       5,
+       1.2,
+       0.6,
+       1.2
+      ],
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 1.25,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       0,
+       20,
+       0,
+       0,
+       0,
+       20,
+       0,
+       20,
+       15,
+       20,
+       0,
+       20,
+       15,
+       0,
+       15,
+       35,
+       0,
+       0,
+       15,
+       0,
+       0,
+       55,
+       0
+      ],
+      "color": [
+       0.8941176470588236,
+       0.9176470588235294,
+       0.9411764705882353,
+       1
+      ],
+      "width": 0.35,
+      "unit": "world",
+      "dash": null,
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       0,
+       20,
+       15
+      ],
+      "reach": 1.175,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       20,
+       30,
+       20,
+       0,
+       1,
+       30,
+       20,
+       30,
+       35,
+       30,
+       2
+      ],
+      "color": [
+       0.8941176470588236,
+       0.9176470588235294,
+       0.9411764705882353,
+       1
+      ],
+      "width": 0.5,
+      "unit": "world",
+      "dash": [
+       5,
+       1.2,
+       0.6,
+       1.2
+      ],
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       20,
+       30,
+       35
+      ],
+      "reach": 1.25,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       20,
+       30,
+       20,
+       0,
+       1,
+       30,
+       20,
+       30,
+       35,
+       30,
+       2
+      ],
+      "color": [
+       0.8823529411764706,
+       0.3411764705882353,
+       0.34901960784313724,
+       1
+      ],
+      "width": 0.5,
+      "unit": "world",
+      "dash": [
+       3,
+       1.5
+      ],
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       0,
+       20,
+       30,
+       35
+      ],
+      "reach": 1.25,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       0,
+       20,
+       0,
+       2,
+       2,
+       10,
+       20,
+       0,
+       2,
+       2,
+       20,
+       20,
+       0,
+       2,
+       2,
+       30,
+       20,
+       1.5707964,
+       2,
+       2,
+       30,
+       30,
+       1.5707964,
+       2,
+       2
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "shape",
+       "shape": "arrowhead",
+       "fill": [
+        0.8823529411764706,
+        0.3411764705882353,
+        0.34901960784313724,
+        1
+       ],
+       "stroke": null,
+       "strokeWidth": 0,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       2,
+       2
+      ],
+      "bounds": [
+       0,
+       20,
+       30,
+       30
+      ],
+      "reach": 5,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "stroke",
+      "segments": [
+       0,
+       -4.25,
+       0,
+       -2.25,
+       0,
+       3,
+       20,
+       -4.25,
+       20,
+       -2.25,
+       0,
+       3,
+       0,
+       -3,
+       20,
+       -3,
+       0,
+       3,
+       -0.31819806,
+       -3.318198,
+       0.31819806,
+       -2.681802,
+       0,
+       3,
+       19.681803,
+       -3.318198,
+       20.318197,
+       -2.681802,
+       0,
+       3
+      ],
+      "color": [
+       0.8941176470588236,
+       0.9176470588235294,
+       0.9411764705882353,
+       1
+      ],
+      "width": 0,
+      "unit": "px",
+      "dash": null,
+      "dashOffset": 0,
+      "cap": "butt",
+      "blur": 0,
+      "bounds": [
+       -0.31819805153645575,
+       -4.25,
+       20.318198051536456,
+       -2.25
+      ],
+      "reach": 1,
+      "reachUnit": "px"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       40,
+       10,
+       0,
+       9,
+       9
+      ],
+      "unit": "px",
+      "look": {
+       "kind": "shape",
+       "shape": "cross",
+       "fill": null,
+       "stroke": [
+        0.8941176470588236,
+        0.9176470588235294,
+        0.9411764705882353,
+        1
+       ],
+       "strokeWidth": 1.3,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       9,
+       9
+      ],
+      "bounds": [
+       40,
+       10,
+       40,
+       10
+      ],
+      "reach": 15.5,
+      "reachUnit": "px"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       40,
+       25,
+       0,
+       4,
+       0
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "image",
+       "image": {
+        "key": "svg|agac|#2E7D32|null|190",
+        "kind": "svg",
+        "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 30\"><circle cx=\"10\" cy=\"10\" r=\"8\" fill=\"#2E7D32\" stroke=\"#000000\"/><path d=\"M10 18V30\" stroke=\"#2E7D32\"/></svg>",
+        "width": 20,
+        "height": 30
+       },
+       "fit": "width"
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       4,
+       0
+      ],
+      "bounds": [
+       40,
+       25,
+       40,
+       25
+      ],
+      "reach": 8,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       45,
+       25,
+       0,
+       0,
+       3.75
+      ],
+      "unit": "world",
+      "look": {
+       "kind": "image",
+       "image": {
+        "key": "t|T|sans|700|false|#E4EAF0|#151B22/0.167",
+        "kind": "text",
+        "text": "T",
+        "font": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif",
+        "weight": 700,
+        "italic": false,
+        "color": "#E4EAF0",
+        "halo": {
+         "color": "#151B22",
+         "width": 0.16666666666666666
+        }
+       },
+       "fit": "height"
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       0,
+       3.75
+      ],
+      "bounds": [
+       45,
+       25,
+       45,
+       25
+      ],
+      "reach": 7.625,
+      "reachUnit": "world"
+     },
+     {
+      "kind": "marker",
+      "instances": [
+       50,
+       25,
+       0,
+       9,
+       9
+      ],
+      "unit": "px",
+      "look": {
+       "kind": "shape",
+       "shape": "cross",
+       "fill": null,
+       "stroke": [
+        0.9490196078431372,
+        0.5568627450980392,
+        0.16862745098039217,
+        1
+       ],
+       "strokeWidth": 1.3,
+       "params": [
+        0,
+        12,
+        3.141592653589793,
+        0.2
+       ]
+      },
+      "offset": [
+       0,
+       0
+      ],
+      "anchor": [
+       0,
+       0
+      ],
+      "opacity": 1,
+      "extent": [
+       9,
+       9
+      ],
+      "bounds": [
+       50,
+       25,
+       50,
+       25
+      ],
+      "reach": 15.5,
+      "reachUnit": "px"
+     }
+    ]
+   }
+  },
+  {
    "id": "far-tile",
    "title": "Çapada ve 4 400 km ötede, yerel koordinatlarda aynı nesneler: uzaktakiler kendi karolarının toplulukları, dünyaya bağlı desenlerin evresi katlanmış",
    "style": {
