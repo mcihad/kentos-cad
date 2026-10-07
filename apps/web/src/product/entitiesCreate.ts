@@ -67,6 +67,9 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   image: 'Resim ekle',
   // Eğri boyunca yazı (docs/adr/0196 §4).
   textAlong: 'Eğri boyunca yazı',
+  tangentLine: 'İki daireye teğet',
+  fourthCorner: 'Dördüncü köşe',
+  rangeRings: 'Menzil halkaları',
 };
 
 /**

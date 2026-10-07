@@ -539,6 +539,14 @@ pub struct Memory {
     pub text_increment: bool,
     /// Eğri boyunca yazı's Hiza and Konum as one alignment (`TextAlongTool.align`, docs/adr/0196 §4).
     pub along_align: kentos_contracts::TextAlign,
+    /// Dördüncü köşe's Çıktı: the four corners as an area, else the fourth as a point
+    /// (`FourthCornerTool.area`, docs/adr/0197 §4).
+    pub fourth_area: bool,
+    /// Menzil halkaları's Aralık (metres), Sayı and Işın (`RangeRingsTool.spacing`,
+    /// `.count`, `.rays`; docs/adr/0197 §4).
+    pub ring_spacing: f64,
+    pub ring_count: u32,
+    pub ring_rays: u32,
     /// Çok satırlı yazı's line spacing (`ParagraphTextTool.lineSpacing`, docs/adr/0182 §4): 1 none.
     pub paragraph_spacing: f64,
     /// Kılavuz's arrowhead (none: the filled arrow) and Zemin
@@ -837,6 +845,10 @@ impl Default for Memory {
             text_mask: false,
             text_increment: false,
             along_align: kentos_contracts::TextAlign::BottomCenter,
+            fourth_area: false,
+            ring_spacing: 10.0,
+            ring_count: 5,
+            ring_rays: 0,
             paragraph_spacing: 1.0,
             leader_arrow: None,
             leader_mask: false,

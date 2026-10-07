@@ -36,8 +36,8 @@ use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::styles;
 use crate::tool::{
-    Context, Flow, Marker, MarkerShape, Memory, OptionChoice, Pointer, Preview, Stroke, TextField,
-    TextGhost, Tone, Tool, ViewChange,
+    Context, Cursor, Flow, Marker, MarkerShape, Memory, OptionChoice, Pointer, Preview, Stroke,
+    TextField, TextGhost, Tone, Tool, ViewChange,
 };
 
 /// Eğri boyunca yazı's id: its command is `tool.textAlong`.
@@ -390,6 +390,11 @@ impl Tool for TextAlong {
 
     fn snaps(&self) -> bool {
         false
+    }
+
+    /// An object is wanted, then a place on it (the web's `cursor = 'pick'`).
+    fn cursor(&self) -> Cursor {
+        Cursor::Pick
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {

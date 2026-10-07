@@ -123,6 +123,7 @@ pub mod dimension_chain;
 pub mod quick_dimension;
 pub mod divide;
 pub mod donut;
+pub mod drawing_extras;
 mod edge;
 pub mod edge_shift;
 pub mod elevation;

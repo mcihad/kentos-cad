@@ -2,12 +2,14 @@
 //! (docs/adr/0008, S5): typed point input and its grammar, the ortho and polar
 //! cursor, the digitizing locks (docs/adr/0166), object tracking, the point
 //! calculator's own arithmetic, and each tool's constructions (directions,
-//! typed-radius polygons, arc bulges, corners, transforms, dimension arms).
+//! typed-radius polygons, arc bulges, corners, transforms, dimension arms,
+//! two circles' common tangents, range rings).
 //! The tools in `apps/web/src/tools` and `apps/web/src/viewport` only pick,
 //! preview and record; camera and screen pixels stay there.
 
 pub mod construct;
 pub mod drawing;
+pub mod drawing_extras;
 pub mod editing;
 pub mod hatch;
 pub mod locks;

@@ -268,6 +268,10 @@ pub const PORTED: &[&str] = &[
     // Eğri boyunca yazı (docs/adr/0196 §4).
     "tool.textAlong",
     "tool.textCurve",
+    // Çizim ekleri (docs/adr/0197 §4).
+    "tool.tangentLine",
+    "tool.fourthCorner",
+    "tool.rangeRings",
     // docs/adr/0195: Görünüm kipleri.
     "view.colorMode.color",
     "view.colorMode.mono",

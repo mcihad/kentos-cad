@@ -99,7 +99,8 @@ describe('ribbon', () => {
     // Four tools and none of them main: small, three to a column.
     expect(sized(ölçme.items)).toEqual(['tool.measure:small', 'tool.area:small', 'tool.measureAngle:small', 'tool.stationOffset:small']);
     const curve = tabs.find((t) => t.id === 'draw')!.panels.find((p) => p.label === 'Eğri')!;
-    expect(sized(curve.items)).toEqual(['tool.circle▾:large', 'tool.arc▾:large', 'tool.ellipse:small', 'tool.spline:small', 'tool.sector:small']);
+    // Menzil halkaları beside Daire dilimi (docs/adr/0197 §4).
+    expect(sized(curve.items)).toEqual(['tool.circle▾:large', 'tool.arc▾:large', 'tool.ellipse:small', 'tool.spline:small', 'tool.sector:small', 'tool.rangeRings:small']);
     expect(curve.overflow).toEqual(['tool.donut']);
   });
 

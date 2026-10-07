@@ -574,6 +574,30 @@
       ]
     },
     {
+      "name": "İki daireye teğet: nesneleri tek adımda yazılır, adı “İki daireye teğet” (ADR 0197)",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "tangentLine", "objects": [{"geometry": {"kind": "line", "a": {"x": 487000, "y": 4420004}, "b": {"x": 487024, "y": 4420006}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3], "entities": {"3": {"kind": "line", "a": {"x": 487000, "y": 4420004}, "b": {"x": 487024, "y": 4420006}, "id": 3, "layerId": "yapi", "attrs": {}}}, "uids": {"3": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "İki daireye teğet", "expect": {"ids": [1, 2], "canUndo": false, "canRedo": true}},
+        {"op": "redo", "returns": "İki daireye teğet", "expect": {"ids": [1, 2, 3]}}
+      ]
+    },
+    {
+      "name": "Dördüncü köşe: nesneleri tek adımda yazılır, adı “Dördüncü köşe” (ADR 0197)",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "fourthCorner", "objects": [{"geometry": {"kind": "polygon", "pts": [{"x": 487000, "y": 4420000}, {"x": 487012, "y": 4420000}, {"x": 487014, "y": 4420006}, {"x": 487002, "y": 4420006}]}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3], "entities": {"3": {"kind": "polygon", "pts": [{"x": 487000, "y": 4420000}, {"x": 487012, "y": 4420000}, {"x": 487014, "y": 4420006}, {"x": 487002, "y": 4420006}], "id": 3, "layerId": "yapi", "attrs": {}}}, "uids": {"3": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Dördüncü köşe", "expect": {"ids": [1, 2], "canUndo": false, "canRedo": true}},
+        {"op": "redo", "returns": "Dördüncü köşe", "expect": {"ids": [1, 2, 3]}}
+      ]
+    },
+    {
+      "name": "Menzil halkaları: nesneleri tek adımda yazılır, adı “Menzil halkaları” (ADR 0197)",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "rangeRings", "objects": [{"geometry": {"kind": "circle", "c": {"x": 487050, "y": 4420050}, "r": 10}}, {"geometry": {"kind": "circle", "c": {"x": 487050, "y": 4420050}, "r": 20}}, {"geometry": {"kind": "line", "a": {"x": 487050, "y": 4420050}, "b": {"x": 487050, "y": 4420070}}}, {"geometry": {"kind": "line", "a": {"x": 487050, "y": 4420050}, "b": {"x": 487050, "y": 4420030}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3", "$uidOf:4", "$uidOf:5", "$uidOf:6"], "ids": [3, 4, 5, 6], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "entities": {"3": {"kind": "circle", "c": {"x": 487050, "y": 4420050}, "r": 10, "id": 3, "layerId": "yapi", "attrs": {}}, "4": {"kind": "circle", "c": {"x": 487050, "y": 4420050}, "r": 20, "id": 4, "layerId": "yapi", "attrs": {}}, "5": {"kind": "line", "a": {"x": 487050, "y": 4420050}, "b": {"x": 487050, "y": 4420070}, "id": 5, "layerId": "yapi", "attrs": {}}, "6": {"kind": "line", "a": {"x": 487050, "y": 4420050}, "b": {"x": 487050, "y": 4420030}, "id": 6, "layerId": "yapi", "attrs": {}}}, "uids": {"3": "new", "4": "new", "5": "new", "6": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Menzil halkaları", "expect": {"ids": [1, 2], "canUndo": false, "canRedo": true}},
+        {"op": "redo", "returns": "Menzil halkaları", "expect": {"ids": [1, 2, 3, 4, 5, 6]}}
+      ]
+    },
+    {
       "name": "Kılavuz: köşeleri, notu, yüksekliği, dönüşü, oku ve zemini tek adımda yazılır, adı “Kılavuz”; dolu ok, zeminsizlik ve notsuzluk alan değildir (ADR 0146)",
       "steps": [
         {"op": "execute", "input": {"layerId": "yapi", "operation": "leader", "objects": [{"geometry": {"kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Mevcut bina", "height": 2.5, "rotation": 0}}, {"geometry": {"kind": "leader", "pts": [{"x": 487090, "y": 4420110}, {"x": 487086, "y": 4420114}, {"x": 487080, "y": 4420116}], "text": "Ø150 PVC", "height": 2, "rotation": 0, "arrow": "open", "mask": true}}, {"geometry": {"kind": "leader", "pts": [{"x": 487100, "y": 4420110}, {"x": 487106, "y": 4420118}], "text": "Ada 101 Parsel 5", "height": 1.5, "rotation": 30, "arrow": "dot", "mask": false}, "color": "#E5484D"}, {"geometry": {"kind": "leader", "pts": [{"x": 487060, "y": 4420100}, {"x": 487065, "y": 4420104}, {"x": 487069, "y": 4420104}], "height": 2.5, "rotation": 0, "arrow": "none"}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3", "$uidOf:4", "$uidOf:5", "$uidOf:6"], "ids": [3, 4, 5, 6], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "entities": {"3": {"kind": "leader", "pts": [{"x": 487060, "y": 4420110}, {"x": 487066, "y": 4420115}], "text": "Mevcut bina", "height": 2.5, "rotation": 0, "id": 3, "layerId": "yapi", "attrs": {}}, "4": {"kind": "leader", "pts": [{"x": 487090, "y": 4420110}, {"x": 487086, "y": 4420114}, {"x": 487080, "y": 4420116}], "text": "Ø150 PVC", "height": 2, "rotation": 0, "arrow": "open", "mask": true, "id": 4, "layerId": "yapi", "attrs": {}}, "5": {"kind": "leader", "pts": [{"x": 487100, "y": 4420110}, {"x": 487106, "y": 4420118}], "text": "Ada 101 Parsel 5", "height": 1.5, "rotation": 30, "arrow": "dot", "id": 5, "layerId": "yapi", "color": "#E5484D", "attrs": {}}, "6": {"kind": "leader", "pts": [{"x": 487060, "y": 4420100}, {"x": 487065, "y": 4420104}, {"x": 487069, "y": 4420104}], "height": 2.5, "rotation": 0, "arrow": "none", "id": 6, "layerId": "yapi", "attrs": {}}}, "uids": {"3": "new", "4": "new", "5": "new", "6": "new"}, "revision": "changed"}},

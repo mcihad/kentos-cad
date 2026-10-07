@@ -1252,6 +1252,29 @@ cases.append({
 })
 
 
+# ── Çizim ekleri (docs/adr/0197 §1–§3) ──────────────────────────────────
+
+extras = [
+    ("tangentLine", "İki daireye teğet", [O({"kind": "line", "a": P(487000, 4420004), "b": P(487024, 4420006)})]),
+    ("fourthCorner", "Dördüncü köşe", [O({"kind": "polygon", "pts": [P(487000, 4420000), P(487012, 4420000), P(487014, 4420006), P(487002, 4420006)]})]),
+    ("rangeRings", "Menzil halkaları", [O({"kind": "circle", "c": P(487050, 4420050), "r": 10}), O({"kind": "circle", "c": P(487050, 4420050), "r": 20}),
+                                        O({"kind": "line", "a": P(487050, 4420050), "b": P(487050, 4420070)}),
+                                        O({"kind": "line", "a": P(487050, 4420050), "b": P(487050, 4420030)})]),
+]
+for operation, step, objects in extras:
+    new = [3 + i for i in range(len(objects))]
+    cases.append({
+        "name": f"{step}: nesneleri tek adımda yazılır, adı “{step}” (ADR 0197)",
+        "steps": [
+            {"op": "execute", "input": {"layerId": "yapi", "operation": operation, "objects": objects}, "result": done(new),
+             "expect": {"ids": IDS + new, "entities": {str(i): made(o, i) for i, o in zip(new, objects)}, "uids": {str(i): "new" for i in new},
+                        "revision": "changed"}},
+            {"op": "undo", "returns": step, "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+            {"op": "redo", "returns": step, "expect": {"ids": IDS + new}},
+        ],
+    })
+
+
 # ── Kılavuz (docs/adr/0146) ─────────────────────────────────────────────
 
 LEADER = {"kind": "leader", "pts": [P(487060, 4420110), P(487066, 4420115)], "text": "Mevcut bina", "height": 2.5, "rotation": 0}

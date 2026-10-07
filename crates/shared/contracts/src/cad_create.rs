@@ -93,6 +93,12 @@ pub enum CreateOperation {
     Image,
     /// Eğri boyunca yazı (docs/adr/0196 §4): a text along a curve.
     TextAlong,
+    /// İki daireye teğet (docs/adr/0197 §1): a common tangent of two circles or arcs, a line.
+    TangentLine,
+    /// Dördüncü köşe (docs/adr/0197 §2): a parallelogram's fourth corner, a point or the four as an area.
+    FourthCorner,
+    /// Menzil halkaları (docs/adr/0197 §3): rings round a centre and rays to the outer one.
+    RangeRings,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

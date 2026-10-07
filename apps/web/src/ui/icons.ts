@@ -203,6 +203,13 @@ export const ICONS = {
   sector: `<path d="M5 15.5V4.5a11 11 0 0 1 11 11z" fill="currentColor" fill-opacity=".14"/>${grip(5, 15.5)}${grip(5, 4.5)}${grip(16, 15.5)}`,
   pointsBetween: `<path d="M3 14 17 6"/><circle cx="7.7" cy="11.3" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="12.3" cy="8.7" r="1.25"/>${grip(3, 14)}${grip(17, 6)}`,
   intersectPoint: `<circle cx="7.5" cy="11" r="4.6"/><circle cx="12.5" cy="11" r="4.6"/><circle cx="10" cy="7.15" r="1.4" fill="currentColor"/>${grip(7.5, 11)}${grip(12.5, 11)}`,
+  // Çizim ekleri (docs/adr/0197): the options sheet's recommended ones, taken while the owner was away (7 October): two
+  // circles and their outer tangent touching them at its grips; a parallelogram's three given corners as grips, the
+  // fourth ringed, its two sides to come dashed; a quarter of three rings round the centre's grip between two rays
+  // (full rings with rays read as Halka or a target at 16 px).
+  tangentLine: `<circle cx="4.6" cy="13.2" r="2.6" stroke-width="1.1"/><circle cx="14.2" cy="11.6" r="4.2" stroke-width="1.1"/><path d="M1.68 11.45 14.92 6.91"/>${grip(3.76, 10.74)}${grip(12.84, 7.63)}`,
+  fourthCorner: `<path d="M2.5 16h9l6-11"/><path d="M17.5 5h-9l-6 11" stroke-dasharray="2.2 1.6" stroke-width="1.2"/>${grip(2.5, 16)}${grip(11.5, 16)}${grip(17.5, 5)}<circle cx="8.5" cy="5" r="2" stroke-width="1.3"/>`,
+  rangeRings: `<path d="M4 11.5A4.5 4.5 0 0 1 8.5 16M4 7.5A8.5 8.5 0 0 1 12.5 16M4 3.5A12.5 12.5 0 0 1 16.5 16" stroke-width="1.2"/><path d="M4 16V3.5M4 16h12.5" stroke-width="1.1"/>${grip(4, 16)}`,
   // Ara nokta by a distance along (measured) and by a ratio (%).
   pointsBetweenDistance: `<path d="M3 16.5 17 8.5"/><circle cx="10" cy="12.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="14.2" cy="10.1" r="1.3" fill="currentColor" stroke="none"/>${grip(3, 16.5)}${grip(17, 8.5)}<path d="M2.2 13.2 9.2 9.2M2.6 11.6l-.4 1.6 1.6.4M7.6 8.8l1.6.4-.4 1.6" stroke-width="1.1"/>`,
   pointsBetweenRatio: `<path d="M3 16 17 8"/><circle cx="10" cy="12" r="1.25" fill="currentColor" stroke="none"/>${grip(3, 16)}${grip(17, 8)}<circle cx="5" cy="4.5" r="1.3" stroke-width="1.1"/><circle cx="10" cy="7.5" r="1.3" stroke-width="1.1"/><path d="M10.5 3.5 4.5 8.5" stroke-width="1.1"/>`,

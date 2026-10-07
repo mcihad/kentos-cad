@@ -60,7 +60,7 @@ const fn on_sheet(name: &'static str, caption: &'static str, open: Open) -> Scen
     }
 }
 
-const SCENES: [Scene; 35] = [
+const SCENES: [Scene; 36] = [
     scene("daire", Some("Giriş"), "Daire", Open::Caption),
     scene("yay", Some("Giriş"), "Yay", Open::Caption),
     scene("buda", Some("Giriş"), "Buda", Open::Arrow),
@@ -87,6 +87,8 @@ const SCENES: [Scene; 35] = [
         "Eğri boyunca yazı",
         Open::Arrow,
     ),
+    // Giriş's Çizim ▾: the drawing tools beyond the panel's, Çizim ekleri's among them (docs/adr/0197).
+    scene("cizim-paneli", Some("Giriş"), "Çizim", Open::Caption),
     scene(
         "sembol-boyutu",
         Some("Görünüm"),

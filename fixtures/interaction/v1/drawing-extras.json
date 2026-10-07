@@ -1,0 +1,418 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "drawing-extras",
+  "title": "Çizim ekleri: İki daireye teğet tıklamalara en yakın dış ve iç teğeti yazar, iç içe borularda söyler; Dördüncü köşe nokta ve Çıktı (Ç) Alan ile paralelkenar; Menzil halkaları Aralık, Sayı ve Işın'la tek adımda, Ctrl+Z geri alır; bellek başladığı gibi bırakılır",
+  "source": "docs/adr/0197 §4; web tools/drawingExtrasTools.ts, masaüstü kentos_interaction::drawing_extras; cad.entities.create tangentLine, fourthCorner, rangeRings",
+  "covers": [
+    "CAD-35"
+  ],
+  "document": "drawing-extras.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.06
+  },
+  "draft": {
+    "snap": false,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "clickTolerance": 0.1,
+  "steps": [
+    {
+      "run": "tool.tangentLine",
+      "expect": {
+        "tool": "tangentLine",
+        "prompt": "İki daireye teğet: ilk daireye ya da yaya, teğetin değeceği yerin yakınından tıklayın"
+      }
+    },
+    {
+      "click": [
+        -14,
+        8
+      ],
+      "note": "Birinci boru, teğetin değeceği üst yanından.",
+      "expect": {
+        "prompt": "İki daireye teğet: ikinci daireye ya da yaya, teğetin değeceği yerin yakınından tıklayın; Esc ilkini bıraktırır"
+      }
+    },
+    {
+      "move": [
+        7,
+        12
+      ],
+      "note": "İkinci borunun üst yanında: seçilecek dış teğet parlak, öbür üçü kesikli."
+    },
+    {
+      "shot": "teget-onizleme",
+      "note": "Önizleme: tıklamalara en yakın teğet (dış sol) parlak, ötekiler kesikli; imlecin yanında türü ve uzunluğu."
+    },
+    {
+      "click": [
+        7,
+        12
+      ],
+      "note": "Dış teğet yazılır: iki borunun üstüne değen 22 m'lik çizgi.",
+      "expect": {
+        "entities": 4,
+        "log": "success",
+        "logged": [
+          "Dış teğet eklendi: 22.000 m."
+        ],
+        "newest": {
+          "kind": "line",
+          "points": [
+            [
+              -14.7213,
+              7.9344
+            ],
+            [
+              6.918,
+              11.9016
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "click": [
+        -12.5,
+        7.7
+      ],
+      "note": "Birinci borunun sağ üstünden ..."
+    },
+    {
+      "click": [
+        5.8,
+        0.45
+      ],
+      "note": "... ikincinin sol altına: iç teğet.",
+      "expect": {
+        "entities": 5,
+        "log": "success",
+        "logged": [
+          "İç teğet eklendi: 19.698 m."
+        ],
+        "newest": {
+          "kind": "line",
+          "points": [
+            [
+              -12.5196,
+              7.716
+            ],
+            [
+              5.7795,
+              0.426
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "click": [
+        8,
+        12
+      ],
+      "note": "Büyük boru ..."
+    },
+    {
+      "click": [
+        11,
+        6
+      ],
+      "note": "... içindeki küçük boru: ortak teğet yok, söylenir; ilk boru seçili kalır.",
+      "expect": {
+        "entities": 5,
+        "log": "warn",
+        "logged": [
+          "Bu iki dairenin ortak teğeti yok: biri ötekinin içinde. Birbirinin dışındaki ya da kesişen iki daire seçin."
+        ],
+        "prompt": "İki daireye teğet: ikinci daireye ya da yaya, teğetin değeceği yerin yakınından tıklayın; Esc ilkini bıraktırır"
+      }
+    },
+    {
+      "key": "Esc",
+      "note": "İlk boru bırakılır.",
+      "expect": {
+        "tool": "tangentLine",
+        "prompt": "İki daireye teğet: ilk daireye ya da yaya, teğetin değeceği yerin yakınından tıklayın"
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    },
+    {
+      "run": "tool.fourthCorner",
+      "expect": {
+        "tool": "fourthCorner",
+        "prompt": "Dördüncü köşe: birinci köşeyi belirtin [Çıktı (Ç): Nokta]"
+      }
+    },
+    {
+      "text": "486980,4419997"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "prompt": "Dördüncü köşe: ortadaki köşeyi belirtin (dördüncünün karşısı) [Çıktı (Ç): Nokta]"
+      }
+    },
+    {
+      "text": "486990,4419997"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "prompt": "Dördüncü köşe: üçüncü köşeyi belirtin [Çıktı (Ç): Nokta]"
+      }
+    },
+    {
+      "move": [
+        -7,
+        -9
+      ],
+      "note": "Paralelkenar imleçle kesikli; dördüncü köşe halkalı, koordinatıyla."
+    },
+    {
+      "shot": "dorduncu-onizleme",
+      "note": "Önizleme: üç köşe ve imleç; dördüncü köşe (−17, −9) halkalı ve koordinatıyla."
+    },
+    {
+      "text": "486993,4419991"
+    },
+    {
+      "key": "Enter",
+      "note": "Dördüncü köşe nokta olarak yazılır.",
+      "expect": {
+        "entities": 6,
+        "log": "success",
+        "logged": [
+          "Dördüncü köşe kondu: X 486983.000  Y 4419991.000."
+        ],
+        "newest": {
+          "kind": "point",
+          "points": [
+            [
+              -17,
+              -9
+            ]
+          ]
+        },
+        "prompt": "Dördüncü köşe: birinci köşeyi belirtin [Çıktı (Ç): Nokta]"
+      }
+    },
+    {
+      "key": "Ç",
+      "note": "Çıktı: Alan.",
+      "expect": {
+        "prompt": "Dördüncü köşe: birinci köşeyi belirtin [Çıktı (Ç): Alan]"
+      }
+    },
+    {
+      "text": "486996,4419994"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "text": "487006,4419994"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "text": "487008,4419989"
+    },
+    {
+      "key": "Enter",
+      "note": "Dört köşe alan olarak yazılır.",
+      "expect": {
+        "entities": 7,
+        "log": "success",
+        "logged": [
+          "Paralelkenar alanı eklendi: X 486998.000  Y 4419989.000."
+        ],
+        "newest": {
+          "kind": "polygon",
+          "points": [
+            [
+              -4,
+              -6
+            ],
+            [
+              6,
+              -6
+            ],
+            [
+              8,
+              -11
+            ],
+            [
+              -2,
+              -11
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "key": "Ç",
+      "note": "Çıktı yeniden Nokta: bellek başladığı gibi kalır.",
+      "expect": {
+        "prompt": "Dördüncü köşe: birinci köşeyi belirtin [Çıktı (Ç): Nokta]"
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    },
+    {
+      "run": "tool.rangeRings",
+      "expect": {
+        "tool": "rangeRings",
+        "prompt": "Menzil halkaları: merkezi belirtin [Aralık (A): 10.000 m / Sayı (S): 5 / Işın (I): 0]"
+      }
+    },
+    {
+      "key": "A",
+      "expect": {
+        "prompt": "Menzil halkaları: halkaların aralığını m olarak yazın (Enter: 10)"
+      }
+    },
+    {
+      "text": "2.5"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "prompt": "Menzil halkaları: merkezi belirtin [Aralık (A): 2.500 m / Sayı (S): 5 / Işın (I): 0]"
+      }
+    },
+    {
+      "key": "S",
+      "expect": {
+        "prompt": "Menzil halkaları: halka sayısını yazın, 1 ile 100 arası (Enter: 5)"
+      }
+    },
+    {
+      "text": "4"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "prompt": "Menzil halkaları: merkezi belirtin [Aralık (A): 2.500 m / Sayı (S): 4 / Işın (I): 0]"
+      }
+    },
+    {
+      "key": "I",
+      "expect": {
+        "prompt": "Menzil halkaları: ışın sayısını yazın, 0 ile 360 arası; 0 ışınsız (Enter: 0)"
+      }
+    },
+    {
+      "text": "8"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "prompt": "Menzil halkaları: merkezi belirtin [Aralık (A): 2.500 m / Sayı (S): 4 / Işın (I): 8]"
+      }
+    },
+    {
+      "move": [
+        22,
+        -8
+      ],
+      "note": "Halkalar ve ışınlar imleçle."
+    },
+    {
+      "shot": "halkalar-onizleme",
+      "note": "Önizleme: 2,5 m aralıklı dört halka, kuzeyden saat yönünde sekiz ışın; imlecin yanında sayı ve dış yarıçap."
+    },
+    {
+      "click": [
+        22,
+        -8
+      ],
+      "note": "Halkalar ve ışınlar tek adımda; en yenisi kuzeybatıdaki son ışın.",
+      "expect": {
+        "entities": 19,
+        "log": "success",
+        "logged": [
+          "4 halka ve 8 ışın eklendi."
+        ],
+        "newest": {
+          "kind": "line",
+          "points": [
+            [
+              22,
+              -8
+            ],
+            [
+              14.9289,
+              -0.9289
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "shot": "yazildi",
+      "note": "Yazılanlar: iki teğet, dördüncü köşe noktası, paralelkenar alanı, halkalar ve ışınlar."
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Halkalar ve ışınlar tek adımda geri alınır.",
+      "expect": {
+        "entities": 7
+      }
+    },
+    {
+      "key": "A"
+    },
+    {
+      "text": "10"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "key": "S"
+    },
+    {
+      "text": "5"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "key": "I"
+    },
+    {
+      "text": "0"
+    },
+    {
+      "key": "Enter",
+      "note": "Bellek başladığı gibi.",
+      "expect": {
+        "prompt": "Menzil halkaları: merkezi belirtin [Aralık (A): 10.000 m / Sayı (S): 5 / Işın (I): 0]"
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    }
+  ]
+}

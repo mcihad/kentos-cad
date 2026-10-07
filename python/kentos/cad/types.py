@@ -164,6 +164,9 @@ class CreateOperation(_StrEnum):
     - ``centerline``: Orta hat (docs/adr/0190): the axis between two sides, a polyline.
     - ``image``: Resim ekle (docs/adr/0192): a picture placed.
     - ``textAlong``: Eğri boyunca yazı (docs/adr/0196 §4): a text along a curve.
+    - ``tangentLine``: İki daireye teğet (docs/adr/0197 §1): a common tangent of two circles or arcs, a line.
+    - ``fourthCorner``: Dördüncü köşe (docs/adr/0197 §2): a parallelogram's fourth corner, a point or the four as an area.
+    - ``rangeRings``: Menzil halkaları (docs/adr/0197 §3): rings round a centre and rays to the outer one.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -191,9 +194,12 @@ class CreateOperation(_StrEnum):
     CENTERLINE = "centerline"
     IMAGE = "image"
     TEXT_ALONG = "textAlong"
+    TANGENT_LINE = "tangentLine"
+    FOURTH_CORNER = "fourthCorner"
+    RANGE_RINGS = "rangeRings"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 

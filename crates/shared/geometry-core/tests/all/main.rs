@@ -13,6 +13,7 @@ mod crs_text;
 mod data_search;
 mod dimensions;
 mod display;
+mod drawing_extras;
 mod edge_shift;
 mod image;
 mod field_reduce;

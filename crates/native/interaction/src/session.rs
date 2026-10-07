@@ -116,6 +116,10 @@ pub const TOOLS: &[&str] = &[
     spline::ID,
     construction::XLINE_ID,
     construction::RAY_ID,
+    // Çizim ekleri (docs/adr/0197).
+    crate::drawing_extras::TANGENT_ID,
+    crate::drawing_extras::FOURTH_ID,
+    crate::drawing_extras::RINGS_ID,
     parallel::ID,
     perpendicular::IN_ID,
     perpendicular::OUT_ID,
@@ -327,6 +331,13 @@ impl Session {
             spline::ID => Box::new(crate::spline::Spline::new()),
             construction::XLINE_ID => Box::new(crate::construction::Xline::new()),
             construction::RAY_ID => Box::new(crate::construction::Ray::new()),
+            crate::drawing_extras::TANGENT_ID => {
+                Box::new(crate::drawing_extras::TangentLine::new())
+            }
+            crate::drawing_extras::FOURTH_ID => {
+                Box::new(crate::drawing_extras::FourthCorner::new())
+            }
+            crate::drawing_extras::RINGS_ID => Box::new(crate::drawing_extras::RangeRings::new()),
             parallel::ID => Box::new(crate::parallel::Parallel::new()),
             perpendicular::IN_ID => Box::new(Perpendicular::perpendicular_in()),
             perpendicular::OUT_ID => Box::new(Perpendicular::perpendicular_out()),
