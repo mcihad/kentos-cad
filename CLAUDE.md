@@ -1129,7 +1129,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `geoprocess_cases.py`, ortak `fixtures/geoprocess/v1` ve `fixtures/processing/v1/geometry.json`: yeni nesneler ölçüleriyle `addedShapes`,
   araçların varsayılanları); on bir araç web'de `processing/builtin/geometry/`, masaüstünde `kentos-processing`'in `builtin/geometry/`'sinde;
   web'de `RunJob.crs`, masaüstünde araç `kentos_project::systems`'ten (işlem grubu artık `project`'e bağlanır); sonuç tablolarında sayı
-  sütunları sağda; KentOS UI'ın simge çizicisi `stroke-opacity` okur. Sıradaki `GIS-04`.
+  sütunları sağda; KentOS UI'ın simge çizicisi `stroke-opacity` okur. Sıradaki `GIS-04`. `GIS-06` ve `GIS-07` mevzuatla
+  düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
