@@ -415,6 +415,11 @@ impl Input for EntitiesTransform {
                 coordinate(&mut link.from, "from", field)
                     .or_else(|| coordinate(&mut link.to, "to", field))
             }
+            // Hizala ve dağıt (docs/adr/0194): `transform.at`.
+            Transform::Arrange { at, .. } => match rest {
+                "at" => at.as_mut(),
+                _ => None,
+            },
         }
     }
 }

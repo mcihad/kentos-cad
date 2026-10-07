@@ -958,6 +958,113 @@ cases.append({
 })
 
 
+# ── Hizala ve dağıt (docs/adr/0194) ──────────────────────────────────────
+# Each object moves by its own displacement along one axis; the boxes of the line, the circle and the point are
+# computed here from their definitions (a line's ends, a circle's centre ± radius, a point's place), the moves by the
+# ADR's rule in the same order of operations (as arrange_cases.py does).
+
+
+def arrange_t(mode, at=None):
+    out = {"kind": "arrange", "mode": mode}
+    if at is not None:
+        out["at"] = at
+    return out
+
+
+def box_of(e):
+    k = e["kind"]
+    if k == "line":
+        xs, ys = (e["a"]["x"], e["b"]["x"]), (e["a"]["y"], e["b"]["y"])
+        return (min(xs), min(ys), max(xs), max(ys))
+    if k == "circle":
+        c, r = e["c"], e["r"]
+        return (c["x"] - r, c["y"] - r, c["x"] + r, c["y"] + r)
+    if k == "point":
+        return (e["p"]["x"], e["p"]["y"], e["p"]["x"], e["p"]["y"])
+    raise SystemExit(f"no box rule here for {k}")
+
+
+def arrange_moves(ids, mode, at=None):
+    boxes = [box_of(ORIG(i)) for i in ids]
+    east = mode in ("left", "center", "right", "horizontal")
+    side = {"left": lambda b: b[0], "center": lambda b: (b[0] + b[2]) / 2, "right": lambda b: b[2],
+            "top": lambda b: b[3], "middle": lambda b: (b[1] + b[3]) / 2, "bottom": lambda b: b[1]}
+    if mode in side:
+        ds = [at - side[mode](b) for b in boxes]
+    else:
+        lo, hi = (0, 2) if east else (1, 3)
+        order = sorted(range(len(boxes)), key=lambda i: (boxes[i][lo] + boxes[i][hi]) / 2)
+        sizes = 0.0
+        for i in order:
+            sizes += boxes[i][hi] - boxes[i][lo]
+        gap = ((boxes[order[-1]][hi] - boxes[order[0]][lo]) - sizes) / (len(boxes) - 1)
+        ds = [0.0] * len(boxes)
+        start = boxes[order[0]][lo]
+        for k in range(1, len(boxes) - 1):
+            prev = boxes[order[k - 1]]
+            start = (start + (prev[hi] - prev[lo])) + gap
+            ds[order[k]] = start - boxes[order[k]][lo]
+    return {i: translation(d, 0.0) if east else translation(0.0, d) for i, d in zip(ids, ds)}
+
+
+A_IDS = [10, 13, 4]
+A_LEFT = arrange_moves(A_IDS, "left", 487000.0)
+assert [A_LEFT[i][4] for i in A_IDS] == [-10.0, -27.5, -1.0]
+A_SPREAD = arrange_moves(A_IDS, "horizontal")
+assert [A_SPREAD[i][4] for i in A_IDS] == [-0.75, 0.0, 0.0]
+A_MIDDLE = arrange_moves(A_IDS, "middle", 4420005.0)
+A_RIGHT = arrange_moves([10, 13], "right", 487040.0)
+TOO_FEW_OBJECTS = "Yatay dağıt için en az üç nesne gerekir (kilitli katmandakiler sayılmaz). Dağıtılacak nesneleri seçin."
+AT_MISSING = "Hizalamanın varacağı doğu ya da kuzey (at) verilmedi. Başvurunun kenarının ya da ortasının değerini verin."
+AT_GIVEN = "Dağıtma bir değere hizalamaz; at verilmez. Değeri çıkarın ya da bir hizalama kipi seçin."
+
+cases.append({
+    "name": "Sola hizala: her nesne kendi kutusunun batı kenarıyla verilen doğuya kayar (çizgi uçlarıyla, daire merkez ± yarıçapla, nokta yeriyle); kilitli katmandaki çizgi kalır, söylenir; adım Sola hizala",
+    "steps": [
+        {"op": "plan", "input": {"uids": [U(i) for i in A_IDS + [12]], "transform": arrange_t("left", 487000.0)},
+         "result": planned([U(i) for i in A_IDS], [moved(ORIG(i), A_LEFT[i]) for i in A_IDS], locked=[U(12)], warnings=[locked_warning(1)]), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(i) for i in A_IDS + [12]], "transform": arrange_t("left", 487000.0)},
+         "result": done(changed=[U(i) for i in A_IDS], locked=[U(12)], warnings=[locked_warning(1)]),
+         "expect": {"ids": IDS, "entities": entities(*((i, moved(ORIG(i), A_LEFT[i])) for i in A_IDS), (12, ORIG(12))), "canUndo": True, "dirty": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Sola hizala", "expect": {"entities": entities(*((i, ORIG(i)) for i in A_IDS)), "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Ortaya hizala: kutuların kuzey ortaları verilen kuzeye kayar, doğuları kalır; Yatay dağıt: ortalarına göre ilk ve son kalır, aradaki çizgi eşit aralığa kayar (8,25 m)",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(i) for i in A_IDS], "transform": arrange_t("middle", 4420005.0)}, "result": done(changed=[U(i) for i in A_IDS]),
+         "expect": {"entities": entities(*((i, moved(ORIG(i), A_MIDDLE[i])) for i in A_IDS)), "revision": "changed"}},
+        {"op": "undo", "returns": "Ortaya hizala", "expect": {"entities": entities(*((i, ORIG(i)) for i in A_IDS))}},
+        {"op": "execute", "input": {"uids": [U(i) for i in A_IDS], "transform": arrange_t("horizontal")}, "result": done(changed=[U(i) for i in A_IDS]),
+         "expect": {"entities": entities(*((i, moved(ORIG(i), A_SPREAD[i])) for i in A_IDS)), "revision": "changed"}},
+        {"op": "undo", "returns": "Yatay dağıt", "expect": {"entities": entities(*((i, ORIG(i)) for i in A_IDS)), "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Sağa hizala kopyası: kopyalar doğu kenarlarıyla verilen doğuya yerleşir, asıllar kalır; adım yine Sağa hizala",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(10), U(13)], "transform": arrange_t("right", 487040.0), "copy": True}, "result": done(created=[U(22), U(23)]),
+         "expect": {"ids": IDS + [22, 23], "entities": entities((10, ORIG(10)), (13, ORIG(13)), (22, moved(ORIG(10), A_RIGHT[10], 22)), (23, moved(ORIG(13), A_RIGHT[13], 23))),
+                    "uids": {"22": "new", "23": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Sağa hizala", "expect": {"ids": IDS}},
+    ],
+})
+
+cases.append({
+    "name": "Hizala ve dağıt'ın retleri: sonlu olmayan değer, değeri verilmeyen hizalama, değer verilen dağıtma, kilitli olmayan üçten az nesneyle dağıtma; hiçbiri yazılmaz",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(10)], "transform": arrange_t("left", 0.0)}, "nonFinite": {"transform.at": "NaN"},
+         "result": failed("not_finite", NFV("Hizalamanın doğusu ya da kuzeyi", "Değeri sonlu bir sayıyla verin."), "transform.at"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(10)], "transform": arrange_t("top")}, "result": failed("invalid_transform", AT_MISSING, "transform.at"), "expect": untouched},
+        {"op": "validate", "input": {"uids": [U(10)], "transform": arrange_t("vertical", 4420000.0)}, "result": failed("invalid_transform", AT_GIVEN, "transform.at"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(10), U(13), U(12)], "transform": arrange_t("horizontal")}, "result": failed("too_few_objects", TOO_FEW_OBJECTS, "uids"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(12)], "transform": arrange_t("horizontal")}, "result": failed("layer_locked", LOCKED(1), "uids"), "expect": untouched},
+    ],
+})
+
+
 def compact(v):
     return json.dumps(v, ensure_ascii=False, separators=(", ", ": "))
 

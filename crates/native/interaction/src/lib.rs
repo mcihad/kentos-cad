@@ -95,6 +95,7 @@
 
 pub mod adjoin;
 pub mod align;
+pub mod align_distribute;
 pub mod angle;
 pub mod arc;
 pub mod area;

@@ -56,6 +56,9 @@ pub const WARP_SHAPES: &str = "warp_shapes";
 /// two from one point, their sources on one line, no single solution
 /// (`cad.entities.transform`, docs/adr/0158).
 pub const INVALID_LINKS: &str = "invalid_links";
+/// A spread of Hizala ve dağıt with fewer than three objects off locked
+/// layers (`cad.entities.transform`, docs/adr/0194).
+pub const TOO_FEW_OBJECTS: &str = "too_few_objects";
 /// Shapes on a rubber sheet whose kept edges or curves lie over 0.1 mm from
 /// their true image (`cad.entities.transform`, a warning, docs/adr/0158).
 pub const RUBBER_BENDS: &str = "rubber_bends";

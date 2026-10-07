@@ -402,7 +402,7 @@ impl Store {
     /// around the pieces and the insertion point (a snap point and its grip);
     /// any other object its own box.
     fn expansion(&self, shape: &Shape) -> (Option<Arc<Expanded>>, Bounds) {
-        let mut b = entity_bounds_in(shape, self.font);
+        let b = entity_bounds_in(shape, self.font);
         if !matches!(shape, Shape::Insert { .. }) {
             return (None, b);
         }
@@ -410,16 +410,10 @@ impl Store {
         if pieces.is_empty() {
             return (None, b);
         }
+        // An attribute's text that shows nothing stays in its place among the pieces, without a box.
+        let b = crate::block::pieces_bounds(b, &pieces, self.font);
         let mut x = Expanded::default();
         for piece in pieces {
-            // An attribute's text that shows nothing stays in its place among the pieces, without a box.
-            if !crate::block::shows_nothing(&piece.shape) {
-                let pb = entity_bounds_in(&piece.shape, self.font);
-                b.min_x = js_min(b.min_x, pb.min_x);
-                b.min_y = js_min(b.min_y, pb.min_y);
-                b.max_x = js_max(b.max_x, pb.max_x);
-                b.max_y = js_max(b.max_y, pb.max_y);
-            }
             x.shapes.push(piece.shape);
             x.colors.push(piece.color);
             x.weights.push(piece.line_weight);

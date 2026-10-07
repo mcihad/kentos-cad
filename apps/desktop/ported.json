@@ -158,6 +158,7 @@
     "file.saveSelection",
     "file.takeFrom",
     "block.insertFile",
+    "tool.alignDistribute",
     "tool.filletAll",
     "tool.chamferAll",
     "tool.split",

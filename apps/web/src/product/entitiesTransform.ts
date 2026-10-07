@@ -8,6 +8,7 @@ import type { CadDocument } from '../model/document';
 import type { Entity, NewEntity } from '../model/entities';
 import { withoutLink } from '../model/linkedTexts';
 import { geometryIsFinite, transformObjects, withGeometry } from '../model/ops/transform';
+import { ARRANGE_LABELS, aligns, arrangeBoxes, arrangeMoves } from '../model/ops/arrange';
 import { rubberSheet } from '../model/ops/rubber';
 import { rubberShapes, warpShapes, type Warp } from '../model/ops/warp';
 import { fixed } from '../core/displayNumber';
@@ -54,6 +55,13 @@ import { assignElevations, elevatedPaths } from './elevation';
  * rules (`rubberShapes`): only vertices move, kinds stay. Its checks add,
  * after the links' numbers, links that give no sheet (`invalid_links`); it
  * warns how many shapes bend over 0.1 mm from their true image.
+ *
+ * Hizala ve dağıt (docs/adr/0194) moves each object on its own: the objects'
+ * boxes (`arrangeBoxes`, the drawing's blocks and typeface) give each its
+ * displacement (`arrangeMoves`), which moves it as Taşı does. Its checks
+ * add, after its number, `at` for an alignment and only for one
+ * (`invalid_transform`) and, after the locked layers, a spread of fewer than
+ * three objects (`too_few_objects`).
  */
 
 interface Checked {
@@ -87,7 +95,30 @@ export function transformLabel(t: Transform, copy: boolean): string {
       return 'Oturt';
     case 'rubbersheet':
       return 'Kauçuk levha';
+    case 'arrange':
+      return ARRANGE_LABELS[t.mode];
   }
+}
+
+/** An arrangement's own checks after its number: `at` for an alignment and only for one (`invalid_transform`). */
+function checkArrange(t: Extract<Transform, { kind: 'arrange' }>): Stop | null {
+  if (t.at !== undefined) {
+    const stop = notFiniteValue(t.at, 'Hizalamanın doğusu ya da kuzeyi', 'Değeri sonlu bir sayıyla verin.', 'transform.at');
+    if (stop) return stop;
+  }
+  if (aligns(t.mode) && t.at === undefined)
+    return failed(error('invalid_transform', 'Hizalamanın varacağı doğu ya da kuzey (at) verilmedi. Başvurunun kenarının ya da ortasının değerini verin.', 'transform.at'));
+  if (!aligns(t.mode) && t.at !== undefined) return failed(error('invalid_transform', 'Dağıtma bir değere hizalamaz; at verilmez. Değeri çıkarın ya da bir hizalama kipi seçin.', 'transform.at'));
+  return null;
+}
+
+/** The objects moved each by its own displacement (Hizala ve dağıt), or why not: a spread needs three. */
+function arranged(doc: CadDocument, sources: readonly Entity[], t: Extract<Transform, { kind: 'arrange' }>): Stop | Entity[] {
+  if (!aligns(t.mode) && sources.length < 3)
+    return failed(error('too_few_objects', `${ARRANGE_LABELS[t.mode]} için en az üç nesne gerekir (kilitli katmandakiler sayılmaz). Dağıtılacak nesneleri seçin.`, 'uids'));
+  const boxes = arrangeBoxes(sources, doc.blocks.value, doc.settings.drawingFont.value);
+  const moves = arrangeMoves(boxes, t.mode, t.at ?? null);
+  return sources.map((e, i) => transformObjects([e], { kind: 'move', dx: moves[i].x, dy: moves[i].y })[0]);
 }
 
 const NUMBER_FIX = 'Dönüşümün sayılarını sonlu verin.';
@@ -213,6 +244,8 @@ function checkTransform(t: Transform): Stop | null {
       return checkWarp(t);
     case 'rubbersheet':
       return checkLinks(t);
+    case 'arrange':
+      return checkArrange(t);
   }
 }
 
@@ -272,14 +305,18 @@ function check(doc: CadDocument, input: EntitiesTransform): Stop | Checked {
   if (warp && 'status' in warp) return warp;
   const sheet = t.kind === 'rubbersheet' ? onSheet(sources.map((s) => s.entity), t.links) : null;
   if (sheet && 'status' in sheet) return sheet;
+  const arrange = t.kind === 'arrange' ? arranged(doc, sources.map((s) => s.entity), t) : null;
+  if (arrange && 'status' in arrange) return arrange;
   const moved = warp
     ? warp.moved
     : sheet
       ? sheet.moved
-      : transformObjects(
-          sources.map((s) => s.entity),
-          t,
-        );
+      : arrange
+        ? arrange
+        : transformObjects(
+            sources.map((s) => s.entity),
+            t,
+          );
   if (sources.some((s, i) => geometryIsFinite(s.entity) && !geometryIsFinite(moved[i])))
     return failed(error('not_finite', 'Dönüşüm sonucunda sonlu olmayan bir değer çıktı (sayı taşması). Daha küçük bir değer verin.', 'transform'));
   const warnings: CommandWarning[] = locked.length ? [{ code: 'layer_locked', message: lockedMessage(locked.length), path: 'uids' }] : [];

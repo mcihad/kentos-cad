@@ -28,8 +28,8 @@ use std::sync::Arc;
 use crate::api::json::Json;
 use crate::entity::{Attrs, Entity, Shape, entity_bounds_in};
 use crate::geom::affine::{Affine, apply, compose, translation};
-use crate::geometry::{empty_bounds, extend_bounds};
-use crate::jsmath::{PI, cos, sin};
+use crate::geometry::{Bounds, empty_bounds, extend_bounds};
+use crate::jsmath::{PI, cos, js_max, js_min, sin};
 use crate::ops::curve_cuts::Cut;
 use crate::ops::transform::transform_shape;
 use crate::text::{Font, TextAlign};
@@ -376,6 +376,22 @@ fn attribute_of(v: &Json) -> Result<Attribute, String> {
 /// but draws, picks, snaps and measures nothing.
 pub fn shows_nothing(piece: &Shape) -> bool {
     matches!(piece, Shape::Text { text, .. } if text.is_empty())
+}
+
+/// An insert's box with its placed pieces, as the geometry store keeps it:
+/// `own` (the insertion point's box) widened by the box of every piece that
+/// shows something, in the drawing's typeface (Hizala ve dağıt measures
+/// with it too, docs/adr/0194 §2).
+pub fn pieces_bounds(own: Bounds, pieces: &[Piece], font: Font) -> Bounds {
+    let mut b = own;
+    for piece in pieces.iter().filter(|p| !shows_nothing(&p.shape)) {
+        let pb = entity_bounds_in(&piece.shape, font);
+        b.min_x = js_min(b.min_x, pb.min_x);
+        b.min_y = js_min(b.min_y, pb.min_y);
+        b.max_x = js_max(b.max_x, pb.max_x);
+        b.max_y = js_max(b.max_y, pb.max_y);
+    }
+    b
 }
 
 /// An insert's attributes (docs/adr/0144 §7).

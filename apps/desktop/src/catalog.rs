@@ -263,6 +263,8 @@ pub const PORTED: &[&str] = &[
     "file.saveSelection",
     "file.takeFrom",
     "block.insertFile",
+    // docs/adr/0194: Hizala ve dağıt (kentos_interaction::align_distribute).
+    "tool.alignDistribute",
     // Drawing and editing tools, phase 1 (docs/adr/0140): every corner at once, Parçala
     // with its three methods, direction, thinning, cleaning and property copying.
     "tool.filletAll",

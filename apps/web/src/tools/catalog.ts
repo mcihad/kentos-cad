@@ -23,6 +23,7 @@ import { ExplodeTool, JoinTool, StretchTool } from './editTools';
 import { ArrayTool, MirrorTool, MoveTool, RotateTool, ScaleTool } from './modifyTools';
 import { ParallelLineTool } from './parallelTool';
 import { AlignTool, PolarArrayTool } from './arrangeTools';
+import { AlignDistributeTool } from './alignDistributeTool';
 import { LengthenTool } from './lengthenTool';
 import { CleanupTool } from './cleanupTool';
 import { LabelsToTextTool } from './labelsToTextTool';
@@ -297,6 +298,34 @@ const defs: Def[] = [
   { id: 'arrayPolar', family: 'array', label: 'Kutupsal dizi', icon: 'arrayPolar', group: 'transform', section: 'array', aliases: ['ARPO', 'ARRAYPOLAR', 'KDIZI', 'KUTUPSALDIZI'], description: 'Seçili nesneleri bir merkez çevresinde çoğaltır: adet, doldurma açısı, nesneler dönsün ya da dönmesin.', steps: ['Nesneleri seçip sağ tıklayın.', 'Merkeze tıklayın; kopyalar canlı görünür.', '“Adet”, “Açı” (360 tam tur, eksi saat yönünde) ve “Nesneleri döndür” ile ayarlayıp sağ tıklayın.'], productCommand: entitiesArray.id, create: (c) => new PolarArrayTool(c) },
   { id: 'arrayPath', family: 'array', label: 'Yol boyunca dizi', icon: 'arrayPath', group: 'transform', section: 'array', aliases: ['ARRAYPATH', 'YOLDIZI'], description: 'Seçili nesneleri bir çizgi, yay ya da çoklu çizgi boyunca eşit aralıkla çoğaltır; istenirse yolun doğrultusuna döndürür.', steps: ['Nesneleri seçip sağ tıklayın.', 'Yola tıklayın: çizgi, yay, daire ya da çoklu çizgi.', 'Adedi yazın, seçilen dahil (varsayılan 5) ya da “Aralık” ile aralığı yazın; “Hizala” kopyaları yolun doğrultusuna döndürür. Kopyalar canlı görünür, sağ tık uygular.'], productCommand: entitiesArray.id, create: (c) => new PathArrayTool(c) },
   { id: 'align', label: 'Hizala', icon: 'align', group: 'transform', section: 'move', aliases: ['AL', 'ALIGN', 'HIZALA'], description: 'Seçimi iki nokta çiftiyle yerine oturtur: birinci kaynak birinci hedefe taşınır, ikinci çift yönü (isterseniz ölçeği) verir.', steps: ['Nesneleri seçip sağ tıklayın.', 'Birinci kaynak noktasına, sonra birinci hedef noktasına tıklayın (yalnız taşımak için burada sağ tıklayın).', 'İkinci kaynak ve ikinci hedef noktalarına tıklayın; “Ölçekle” açıkken boy da hedefe uyar.'], productCommand: entitiesTransform.id, create: (c) => new AlignTool(c) },
+  {
+    id: 'alignDistribute',
+    // Under its panel's ▾ (seyrek araçlar): CBS's Düzenle, the fullest tab, keeps every panel whole on a wide window.
+    rare: true,
+    label: 'Hizala ve dağıt',
+    icon: 'arrangeLeft',
+    group: 'transform',
+    section: 'move',
+    methods: [
+      { label: 'Sola hizala', description: 'Batı kenarları başvuruya' },
+      { label: 'Ortala', option: 'O', icon: 'arrangeCenter', description: 'Doğu-batı ortaları başvuruya' },
+      { label: 'Sağa hizala', option: 'A', icon: 'arrangeRight', description: 'Doğu kenarları başvuruya' },
+      { label: 'Üste hizala', option: 'Ü', icon: 'arrangeTop', description: 'Kuzey kenarları başvuruya' },
+      { label: 'Ortaya hizala', option: 'R', icon: 'arrangeMiddle', description: 'Kuzey-güney ortaları başvuruya' },
+      { label: 'Alta hizala', option: 'T', icon: 'arrangeBottom', description: 'Güney kenarları başvuruya' },
+      { label: 'Yatay dağıt', option: 'Y', icon: 'arrangeHorizontal', description: 'Doğu-batı yönünde eşit aralıkla' },
+      { label: 'Dikey dağıt', option: 'D', icon: 'arrangeVertical', description: 'Kuzey-güney yönünde eşit aralıkla' },
+    ],
+    aliases: ['HIZALAVEDAGIT', 'HIZALADAGIT', 'DAGIT', 'ALIGNDISTRIBUTE'],
+    description: 'Seçilen nesneleri kutularının kenarı ya da ortasıyla bir başvuru nesnesine, noktaya ya da seçimin sınırına hizalar; ya da eşit aralıkla dağıtır. Her nesne yalnız kendi yerinden kayar.',
+    steps: [
+      'Nesneleri seçip sağ tıklayın (önceden seçiliyse bu adım geçilir).',
+      'Hizalamada başvuru nesnesine tıklayın; boş yere tıklamak o noktaya, Enter seçimin sınırına göre hizalar. İmleç önizlemeyi gösterir.',
+      'Dağıtmada Enter ya da tık uygular: baştaki ve sondaki kalır, aradakiler eşit aralıkla dizilir. Harfler yöntemi değiştirir: Sola S, Ortala O, Sağa A, Üste Ü, Ortaya R, Alta T, Yatay dağıt Y, Dikey dağıt D.',
+    ],
+    productCommand: entitiesTransform.id,
+    create: (c) => new AlignDistributeTool(c),
+  },
   // Düzenle
   { id: 'offset', primary: true, label: 'Ötele', icon: 'offset', group: 'modify', section: 'edge', shortcut: 'Shift+O', aliases: ['O', 'OFFSET', 'OTELE'], description: 'Çizgi, çoklu çizgi, alan, daire ya da yayın paralel kopyasını çıkarır; iki yana ya da kaynağı silerek.', steps: ['Ötelenecek nesneye tıklayın.', 'Kopyanın gideceği tarafa tıklayın.', 'Mesafe için sayı yazın; “Noktadan geç” açıkken kopya tıkladığınız noktadan geçer. “İki yana” iki yanda birden kopya çıkarır, “Kaynağı sil” özgün nesneyi aynı adımda siler.'], productCommand: entitiesEdit.id, create: (c) => new OffsetTool(c) },
   {

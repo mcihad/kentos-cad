@@ -70,6 +70,22 @@ AreaUnitName = Literal["m2", "donum", "ha"]
 """The names of :class:`AreaUnit`, for a plain string."""
 
 
+class ArrangeMode(_StrEnum):
+    """What Hizala ve dağıt does (docs/adr/0194): six alignments and two spreads."""
+    LEFT = "left"
+    CENTER = "center"
+    RIGHT = "right"
+    TOP = "top"
+    MIDDLE = "middle"
+    BOTTOM = "bottom"
+    HORIZONTAL = "horizontal"
+    VERTICAL = "vertical"
+
+
+ArrangeModeName = Literal["left", "center", "right", "top", "middle", "bottom", "horizontal", "vertical"]
+"""The names of :class:`ArrangeMode`, for a plain string."""
+
+
 class BlockEditOperation(_StrEnum):
     """What `cad.blocks.edit` does; it names the undo step.
 
@@ -1009,6 +1025,7 @@ class Transform(_Union):
     - :class:`AffineTransform` (``kind: affine``)
     - :class:`ProjectiveTransform` (``kind: projective``)
     - :class:`RubbersheetTransform` (``kind: rubbersheet``)
+    - :class:`ArrangeTransform` (``kind: arrange``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -3313,7 +3330,9 @@ class EntitiesTransform(_Model):
     field of its original (layer, colour, attributes, label, symbol) and a new
     persistent id; the originals stay. The undo step is the tool's name:
     “Taşı” (a move), “Kopyala” (a move as copies), “Döndür”, “Ölçekle”,
-    “Aynala”, “Hizala”.
+    “Aynala”, “Hizala”; of an arrangement the mode's name (“Sola hizala”,
+    “Ortala”, “Sağa hizala”, “Üste hizala”, “Ortaya hizala”, “Alta hizala”,
+    “Yatay dağıt”, “Dikey dağıt”).
 
     Objects on a locked layer (by itself or a group above it) stay where they
     are and are not copied: with others to transform they are named in the
@@ -3328,12 +3347,14 @@ class EntitiesTransform(_Model):
     alignment's second pair given by half, or its source or target points
     within a nanometre of the first's), `invalid_transform` (an affine or
     projective transform whose linear part squashes the plane: its
-    determinant under 1e-12 of its columns' lengths' product),
+    determinant under 1e-12 of its columns' lengths' product; an
+    arrangement's `at` missing for an alignment or given for a spread),
     `invalid_links` (Kauçuk levha's links: fewer than 3 or more than 1000,
     two from one point, all their sources on one line, or equations with no
     single solution; path `transform.links`),
     `invalid_revision`, `revision_conflict` (status `conflict`),
-    `entity_not_found` (each id in order), `layer_locked`, `beyond_horizon`
+    `entity_not_found` (each id in order), `layer_locked`, `too_few_objects`
+    (a spread with fewer than three objects off locked layers), `beyond_horizon`
     (a point of an object beyond a projective transform's horizon), then
     `not_finite` again (path `transform`) when the transform would carry a
     coordinate past the largest float64; on the desktop also
@@ -8342,6 +8363,37 @@ class RubbersheetTransform(Transform):
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class ArrangeTransform(Transform):
+    """Hizala ve dağıt (docs/adr/0194): each object moves on its own along
+    one axis. The six alignments put its box's west side (`left`),
+    middle (`center`) or east side (`right`) on the easting `at`, its
+    north side (`top`), middle (`middle`) or south side (`bottom`) on
+    the northing `at`; the two spreads (`horizontal`, `vertical`) keep
+    the first and the last box by their middles and space the others
+    at equal gaps between them, `at` not given. A box is the object's
+    extent as the drawing measures it (an insert with its block's
+    pieces, a text in the drawing's typeface).
+    """
+    TAG_VALUE: ClassVar[str] = "arrange"
+    mode: ArrangeMode | ArrangeModeName
+    at: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "arrange"}
+        out["mode"] = _enum_out(self.mode)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else float(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArrangeTransform:
+        return cls(
+            mode=_enum_in(ArrangeMode, data["mode"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else float(data["at"]),
+        )
+
+
 _ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "path": PathArrayLayout}
 
 
@@ -8369,7 +8421,7 @@ _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange
 _TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource}
 
 
-_TRANSFORM: dict[str, type[Transform]] = {"move": MoveTransform, "rotate": RotateTransform, "scale": ScaleTransform, "mirror": MirrorTransform, "align": AlignTransform, "similarity": SimilarityTransform, "affine": AffineTransform, "projective": ProjectiveTransform, "rubbersheet": RubbersheetTransform}
+_TRANSFORM: dict[str, type[Transform]] = {"move": MoveTransform, "rotate": RotateTransform, "scale": ScaleTransform, "mirror": MirrorTransform, "align": AlignTransform, "similarity": SimilarityTransform, "affine": AffineTransform, "projective": ProjectiveTransform, "rubbersheet": RubbersheetTransform, "arrange": ArrangeTransform}
 
 
 __all__ = [
@@ -8390,6 +8442,9 @@ __all__ = [
     "AreaUnit",
     "AreaUnitName",
     "AreasTableSource",
+    "ArrangeMode",
+    "ArrangeModeName",
+    "ArrangeTransform",
     "ArrayLayout",
     "AttributeDefinition",
     "AttributesTableSource",

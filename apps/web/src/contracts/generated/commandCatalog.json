@@ -31764,6 +31764,20 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "ArrangeMode": {
+            "description": "What Hizala ve dağıt does (docs/adr/0194): six alignments and two spreads.",
+            "enum": [
+              "left",
+              "center",
+              "right",
+              "top",
+              "middle",
+              "bottom",
+              "horizontal",
+              "vertical"
+            ],
+            "type": "string"
+          },
           "RubberLink": {
             "description": "A link of Kauçuk levha: a point of the drawing and where it is to go.",
             "properties": {
@@ -32030,6 +32044,30 @@
                   "links"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "Hizala ve dağıt (docs/adr/0194): each object moves on its own along\none axis. The six alignments put its box's west side (`left`),\nmiddle (`center`) or east side (`right`) on the easting `at`, its\nnorth side (`top`), middle (`middle`) or south side (`bottom`) on\nthe northing `at`; the two spreads (`horizontal`, `vertical`) keep\nthe first and the last box by their middles and space the others\nat equal gaps between them, `at` not given. A box is the object's\nextent as the drawing measures it (an insert with its block's\npieces, a text in the drawing's typeface).",
+                "properties": {
+                  "at": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "arrange",
+                    "type": "string"
+                  },
+                  "mode": {
+                    "$ref": "#/$defs/ArrangeMode"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "mode"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -32053,7 +32091,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.transform` v1: objects named by their persistent\nids (docs/adr/0014) moved by one transform as one undo step, in place or\nas copies. The modify tools make the selection explicit here (TODOS.md\nCMD-07): they give the selected objects' ids; the command reads no\nselection, layer or view.\n\nIn place, each object keeps its slot, its persistent id and every other\nfield; only its geometry changes. As copies, each new object takes every\nfield of its original (layer, colour, attributes, label, symbol) and a new\npersistent id; the originals stay. The undo step is the tool's name:\n“Taşı” (a move), “Kopyala” (a move as copies), “Döndür”, “Ölçekle”,\n“Aynala”, “Hizala”.\n\nObjects on a locked layer (by itself or a group above it) stay where they\nare and are not copied: with others to transform they are named in the\noutput's `locked` with a `layer_locked` warning; when every one is locked\nnothing is written and the answer is `layer_locked`. A repeated id counts\nonce.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `not_finite` (the transform's numbers,\nin their order), `invalid_factor` (a scale not above zero),\n`invalid_axis` (a mirror axis without a direction), `invalid_align` (an\nalignment's second pair given by half, or its source or target points\nwithin a nanometre of the first's), `invalid_transform` (an affine or\nprojective transform whose linear part squashes the plane: its\ndeterminant under 1e-12 of its columns' lengths' product),\n`invalid_links` (Kauçuk levha's links: fewer than 3 or more than 1000,\ntwo from one point, all their sources on one line, or equations with no\nsingle solution; path `transform.links`),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `layer_locked`, `beyond_horizon`\n(a point of an object beyond a projective transform's horizon), then\n`not_finite` again (path `transform`) when the transform would carry a\ncoordinate past the largest float64; on the desktop also\n`slots_exhausted` for copies.\n\nThe undo step of the similarity, affine and projective transforms is\n“Oturt”, of the rubber sheet “Kauçuk levha”. When the transform is not a\nsimilarity the output warns with `warp_curves` (objects whose curves\nbecame straight vertices) and `warp_shapes` (texts, notes, blocks,\ndimensions and hatch patterns that kept their shape), each with its\ncount; a rubber sheet with `rubber_bends` (objects whose kept edges or\ncurves lie over 0.1 mm from their true image, and the largest, mm).",
+        "description": "Input of `cad.entities.transform` v1: objects named by their persistent\nids (docs/adr/0014) moved by one transform as one undo step, in place or\nas copies. The modify tools make the selection explicit here (TODOS.md\nCMD-07): they give the selected objects' ids; the command reads no\nselection, layer or view.\n\nIn place, each object keeps its slot, its persistent id and every other\nfield; only its geometry changes. As copies, each new object takes every\nfield of its original (layer, colour, attributes, label, symbol) and a new\npersistent id; the originals stay. The undo step is the tool's name:\n“Taşı” (a move), “Kopyala” (a move as copies), “Döndür”, “Ölçekle”,\n“Aynala”, “Hizala”; of an arrangement the mode's name (“Sola hizala”,\n“Ortala”, “Sağa hizala”, “Üste hizala”, “Ortaya hizala”, “Alta hizala”,\n“Yatay dağıt”, “Dikey dağıt”).\n\nObjects on a locked layer (by itself or a group above it) stay where they\nare and are not copied: with others to transform they are named in the\noutput's `locked` with a `layer_locked` warning; when every one is locked\nnothing is written and the answer is `layer_locked`. A repeated id counts\nonce.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `not_finite` (the transform's numbers,\nin their order), `invalid_factor` (a scale not above zero),\n`invalid_axis` (a mirror axis without a direction), `invalid_align` (an\nalignment's second pair given by half, or its source or target points\nwithin a nanometre of the first's), `invalid_transform` (an affine or\nprojective transform whose linear part squashes the plane: its\ndeterminant under 1e-12 of its columns' lengths' product; an\narrangement's `at` missing for an alignment or given for a spread),\n`invalid_links` (Kauçuk levha's links: fewer than 3 or more than 1000,\ntwo from one point, all their sources on one line, or equations with no\nsingle solution; path `transform.links`),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `layer_locked`, `too_few_objects`\n(a spread with fewer than three objects off locked layers), `beyond_horizon`\n(a point of an object beyond a projective transform's horizon), then\n`not_finite` again (path `transform`) when the transform would carry a\ncoordinate past the largest float64; on the desktop also\n`slots_exhausted` for copies.\n\nThe undo step of the similarity, affine and projective transforms is\n“Oturt”, of the rubber sheet “Kauçuk levha”. When the transform is not a\nsimilarity the output warns with `warp_curves` (objects whose curves\nbecame straight vertices) and `warp_shapes` (texts, notes, blocks,\ndimensions and hatch patterns that kept their shape), each with its\ncount; a rubber sheet with `rubber_bends` (objects whose kept edges or\ncurves lie over 0.1 mm from their true image, and the largest, mm).",
         "properties": {
           "copy": {
             "description": "True: copies are made and the originals stay (Kopyala, Kopya (K),\nAynala keeping its source). Absent or false: the objects themselves change.",

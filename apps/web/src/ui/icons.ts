@@ -260,6 +260,15 @@ export const ICONS = {
   perpOut: `<path d="M3 16h14M8 16V4M8 13.3h2.7V16"/><path d="m6 6 2-2 2 2"/>${grip(8, 16)}`,
   arrayPolar: '<circle cx="10" cy="10" r="6.5" stroke-dasharray="2 2"/><rect x="8.3" y="1.8" width="3.4" height="3.4"/><rect x="14.8" y="8.3" width="3.4" height="3.4"/><rect x="8.3" y="14.8" width="3.4" height="3.4"/><rect x="1.8" y="8.3" width="3.4" height="3.4"/><circle cx="10" cy="10" r=".9" fill="currentColor" stroke="none"/>',
   align: `<path d="M4 9.5 8.5 4.5l4 3.6" stroke-dasharray="2 1.5"/><path d="M4 16h9v-5"/>${grip(4, 16)}${grip(13, 16)}`,
+  // Hizala ve dağıt (docs/adr/0194): the boxes as framed bars and the reference's line (the option sheet's A).
+  arrangeLeft: '<path d="M3 2.5v15"/><rect x="5.5" y="4.5" width="11" height="4" rx="0.8"/><rect x="5.5" y="11.5" width="7" height="4" rx="0.8"/>',
+  arrangeCenter: '<path d="M10 2v3m0 3.5v3.5m0 3.5V18"/><rect x="4.5" y="5" width="11" height="3.5" rx="0.8"/><rect x="6.5" y="12" width="7" height="3.5" rx="0.8"/>',
+  arrangeRight: '<path d="M17 2.5v15"/><rect x="3.5" y="4.5" width="11" height="4" rx="0.8"/><rect x="7.5" y="11.5" width="7" height="4" rx="0.8"/>',
+  arrangeTop: '<path d="M2.5 3h15"/><rect x="4.5" y="5.5" width="4" height="11" rx="0.8"/><rect x="11.5" y="5.5" width="4" height="7" rx="0.8"/>',
+  arrangeMiddle: '<path d="M2 10h3m3.5 0H12m3.5 0H18"/><rect x="5" y="4.5" width="3.5" height="11" rx="0.8"/><rect x="12" y="6.5" width="3.5" height="7" rx="0.8"/>',
+  arrangeBottom: '<path d="M2.5 17h15"/><rect x="4.5" y="3.5" width="4" height="11" rx="0.8"/><rect x="11.5" y="7.5" width="4" height="7" rx="0.8"/>',
+  arrangeHorizontal: '<path d="M2 3v14M18 3v14"/><rect x="4" y="6" width="2.6" height="8" rx="0.8"/><rect x="8.7" y="4" width="2.6" height="12" rx="0.8"/><rect x="13.4" y="7" width="2.6" height="6" rx="0.8"/>',
+  arrangeVertical: '<path d="M3 2h14M3 18h14"/><rect x="6" y="4" width="8" height="2.6" rx="0.8"/><rect x="4" y="8.7" width="12" height="2.6" rx="0.8"/><rect x="7" y="13.4" width="6" height="2.6" rx="0.8"/>',
   lengthen: `<path d="M3 13h9"/><path d="M12 13h5.5" stroke-dasharray="2 1.5"/><path d="m15 10.5 2.5 2.5-2.5 2.5"/>${grip(12, 13)}`,
   // Sürdür (docs/adr/0173 §4): a polyline drawn, its end's grip, the new vertices going on from it dashed.
   continue: `<path d="M2.5 16.5 6 10.5l4 3"/><path d="m10 13.5 3.5-6.5 4 1.5" stroke-dasharray="1.8 1.4"/>${grip(10, 13.5)}${grip(13.5, 7)}${grip(17.5, 8.5)}`,

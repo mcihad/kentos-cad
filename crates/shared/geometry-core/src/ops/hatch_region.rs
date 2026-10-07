@@ -224,7 +224,7 @@ pub fn region_of_entities(
 }
 
 /// The blocks' definitions given to an operation (the contract's list), or none.
-fn blocks_of(v: &Json) -> Result<Blocks, String> {
+pub(crate) fn blocks_of(v: &Json) -> Result<Blocks, String> {
     match v {
         Json::Arr(_) => Blocks::from_json(v),
         _ => Ok(Blocks::default()),

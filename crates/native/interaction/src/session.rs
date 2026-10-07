@@ -95,6 +95,7 @@ pub const TOOLS: &[&str] = &[
     array::ID,
     polar::ID,
     align::ID,
+    crate::align_distribute::ID,
     offset::ID,
     trim::TRIM_ID,
     trim::EXTEND_ID,
@@ -302,6 +303,9 @@ impl Session {
             array::ID => Box::new(Array::tool()),
             polar::ID => Box::new(Polar::tool()),
             align::ID => Box::new(Align::tool()),
+            crate::align_distribute::ID => {
+                Box::new(crate::align_distribute::AlignDistribute::tool())
+            }
             offset::ID => Box::new(Offset::new()),
             trim::TRIM_ID => Box::new(Boundary::trim()),
             trim::EXTEND_ID => Box::new(Boundary::extend()),

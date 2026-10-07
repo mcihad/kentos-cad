@@ -17,15 +17,22 @@
 //! (`ops::rubber`) and its rules (`ops::warp::sheet_shape`): only vertices
 //! move, kinds stay, how far a shape bends from its true image is counted.
 //!
+//! Hizala ve dağıt (docs/adr/0194) moves each object on its own: the
+//! objects' boxes (`ops::arrange::object_bounds`, the drawing's blocks and
+//! typeface) give each its displacement (`ops::arrange::moves`), which
+//! moves it as Taşı does.
+//!
 //! The checks, in order (the first that fails answers):
 //! 1. at least one id; every id lowercase UUID text with hyphens (in order);
 //! 2. the transform's numbers finite, in their order; a scale factor above
 //!    zero; a mirror axis with a direction; an alignment's second pair whole,
 //!    its points apart from the first pair's; an affine or projective
-//!    transform not singular; a rubber sheet's links giving one sheet;
+//!    transform not singular; a rubber sheet's links giving one sheet; an
+//!    arrangement's `at` given for an alignment and only for one;
 //! 3. the expected revision (every command's, `checks.rs`);
 //! 4. every id names an object of the document (in order);
-//! 5. not every object on a locked layer (with others, a warning);
+//! 5. not every object on a locked layer (with others, a warning); a
+//!    spread with at least three objects off locked layers;
 //! 6. no point of an object beyond a projective transform's horizon;
 //! 7. no coordinate carried past the largest float64 by the transform.
 //!
@@ -33,8 +40,8 @@
 //! used to copy them onto their locked layer; ADR 0037 records the change.
 
 use kentos_contracts::{
-    CommandError, CommandResult, CommandWarning, EntitiesTransform, EntitiesTransformPlan,
-    EntitiesTransformed, Entity, Transform,
+    ArrangeMode, CommandError, CommandResult, CommandWarning, EntitiesTransform,
+    EntitiesTransformPlan, EntitiesTransformed, Entity, Transform,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2;
@@ -44,16 +51,18 @@ use kentos_geometry_core::geom::affine::{Affine, similarity};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::{js_hypot, js_max};
 use kentos_geometry_core::display::fixed;
+use kentos_geometry_core::ops::arrange::{self, Mode};
 use kentos_geometry_core::ops::rubber::{Link, RubberError, Sheet};
 use kentos_geometry_core::ops::transform::transform_shape;
 use kentos_geometry_core::ops::warp::{CHORD, Warp, sheet_shape, warp_shape};
+use kentos_geometry_core::text::Font;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
 use crate::elevation;
-use crate::geometry::{edit_geometry, entity_of, shape, unlinked, with_shape};
+use crate::geometry::{drawing_font, edit_geometry, entity_of, shape, unlinked, with_shape};
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesTransform) -> CommandResult<()> {
@@ -170,6 +179,21 @@ pub fn label(transform: &Transform, copy: bool) -> &'static str {
             "Oturt"
         }
         Transform::Rubbersheet { .. } => "Kauçuk levha",
+        Transform::Arrange { mode, .. } => arrange_mode(*mode).label(),
+    }
+}
+
+/// The core's mode of an arrangement (docs/adr/0194).
+pub fn arrange_mode(mode: ArrangeMode) -> Mode {
+    match mode {
+        ArrangeMode::Left => Mode::Left,
+        ArrangeMode::Center => Mode::Center,
+        ArrangeMode::Right => Mode::Right,
+        ArrangeMode::Top => Mode::Top,
+        ArrangeMode::Middle => Mode::Middle,
+        ArrangeMode::Bottom => Mode::Bottom,
+        ArrangeMode::Horizontal => Mode::Horizontal,
+        ArrangeMode::Vertical => Mode::Vertical,
     }
 }
 
@@ -181,7 +205,8 @@ pub fn affine(transform: &Transform) -> Option<Affine> {
         Transform::Similarity { .. }
         | Transform::Affine { .. }
         | Transform::Projective { .. }
-        | Transform::Rubbersheet { .. } => None,
+        | Transform::Rubbersheet { .. }
+        | Transform::Arrange { .. } => None,
         Transform::Move { dx, dy } => similarity("move", &[dx, dy]),
         Transform::Rotate { center, angle } => similarity("rotate", &[center.x, center.y, angle]),
         Transform::Scale { center, factor } => similarity("scale", &[center.x, center.y, factor]),
@@ -275,6 +300,38 @@ enum How {
     Matrix(Affine),
     Warp(Warp),
     Sheet(Box<Sheet>),
+    /// Hizala ve dağıt's mode and its easting or northing.
+    Arrange(Mode, Option<f64>),
+}
+
+/// An arrangement's own checks after its number: `at` for an alignment and
+/// only for one (`invalid_transform`).
+fn check_arrange(mode: ArrangeMode, at: Option<f64>) -> Result<How, Stop> {
+    if let Some(at) = at {
+        checks::finite(
+            at,
+            "Hizalamanın doğusu ya da kuzeyi",
+            "Değeri sonlu bir sayıyla verin.",
+            "transform.at",
+        )?;
+    }
+    let mode = arrange_mode(mode);
+    let refuse = |message: &str| {
+        Err(Stop::Failed(checks::error(
+            codes::INVALID_TRANSFORM,
+            message.into(),
+            Some("transform.at".into()),
+        )))
+    };
+    match (mode.aligns(), at) {
+        (true, None) => refuse(
+            "Hizalamanın varacağı doğu ya da kuzey (at) verilmedi. Başvurunun kenarının ya da ortasının değerini verin.",
+        ),
+        (false, Some(_)) => refuse(
+            "Dağıtma bir değere hizalamaz; at verilmez. Değeri çıkarın ya da bir hizalama kipi seçin.",
+        ),
+        _ => Ok(How::Arrange(mode, at)),
+    }
 }
 
 /// Why a rubber sheet's links give no sheet, in the user's words.
@@ -425,6 +482,9 @@ fn check_transform(transform: &Transform) -> Result<How, Stop> {
     if let Transform::Rubbersheet { links } = transform {
         return check_sheet(links).map(|s| How::Sheet(Box::new(s)));
     }
+    if let Transform::Arrange { mode, at } = *transform {
+        return check_arrange(mode, at);
+    }
     if let Some(warp) = check_warp(transform)? {
         return Ok(How::Warp(warp));
     }
@@ -494,7 +554,8 @@ fn check_transform(transform: &Transform) -> Result<How, Stop> {
         Transform::Similarity { .. }
         | Transform::Affine { .. }
         | Transform::Projective { .. }
-        | Transform::Rubbersheet { .. } => {}
+        | Transform::Rubbersheet { .. }
+        | Transform::Arrange { .. } => {}
     }
     affine(transform).map(How::Matrix).ok_or_else(|| {
         Stop::Failed(checks::error(
@@ -516,6 +577,8 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
     let (mut overflow, mut beyond) = (false, false);
     let (mut curves, mut kept) = (0, 0);
     let (mut bent, mut bend) = (0, 0.0_f64);
+    // Hizala ve dağıt's objects wait for every box (a spread reads them all).
+    let mut arranged = Vec::new();
     for (slot, entity, uid) in checks::objects(doc, &input.uids)? {
         if doc.layers().is_locked(&entity.base().layer_id) {
             locked.push(uid.clone());
@@ -523,6 +586,10 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
         }
         let before = shape(entity);
         let e = match &how {
+            How::Arrange(..) => {
+                arranged.push((slot, entity, uid, before));
+                continue;
+            }
             How::Matrix(m) => {
                 let after = transform_shape(&before, m);
                 overflow |= finite_shape(&before) && !finite_shape(&after);
@@ -578,6 +645,48 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
         };
         sources.push((slot, uid.clone()));
         moved.push(e);
+    }
+    if let How::Arrange(mode, at) = how
+        && !arranged.is_empty()
+    {
+        if !mode.aligns() && arranged.len() < 3 {
+            return Err(Stop::Failed(checks::error(
+                codes::TOO_FEW_OBJECTS,
+                format!(
+                    "{} için en az üç nesne gerekir (kilitli katmandakiler sayılmaz). Dağıtılacak nesneleri seçin.",
+                    mode.label()
+                ),
+                Some("uids".into()),
+            )));
+        }
+        let blocks = crate::blocks::core_blocks(doc.blocks());
+        let font: Font = drawing_font(doc.settings().drawing_font);
+        let boxes: Vec<_> = arranged
+            .iter()
+            .map(|(_, _, _, before)| arrange::object_bounds(before, &blocks, font))
+            .collect();
+        for ((slot, entity, uid, before), d) in
+            arranged.into_iter().zip(arrange::moves(&boxes, mode, at))
+        {
+            let m = similarity("move", &[d.x, d.y]).ok_or_else(|| {
+                Stop::Failed(checks::error(
+                    codes::NOT_FINITE,
+                    "Dönüşüm kurulamadı.".into(),
+                    Some("transform".into()),
+                ))
+            })?;
+            let after = transform_shape(&before, &m);
+            overflow |= finite_shape(&before) && !finite_shape(&after);
+            let Some(e) = with_shape(entity, after) else {
+                return Err(Stop::Failed(checks::error(
+                    codes::NOT_FINITE,
+                    "Nesne dönüştürülemedi.".into(),
+                    Some("transform".into()),
+                )));
+            };
+            sources.push((slot, uid.clone()));
+            moved.push(e);
+        }
     }
     if sources.is_empty() {
         return Err(Stop::Failed(checks::error(

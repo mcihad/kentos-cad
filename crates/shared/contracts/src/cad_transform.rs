@@ -90,6 +90,38 @@ pub enum Transform {
     /// patterns keep their shape at their anchor. 3 to 1000 links, their
     /// sources apart and not all on one line.
     Rubbersheet { links: Vec<RubberLink> },
+    /// Hizala ve dağıt (docs/adr/0194): each object moves on its own along
+    /// one axis. The six alignments put its box's west side (`left`),
+    /// middle (`center`) or east side (`right`) on the easting `at`, its
+    /// north side (`top`), middle (`middle`) or south side (`bottom`) on
+    /// the northing `at`; the two spreads (`horizontal`, `vertical`) keep
+    /// the first and the last box by their middles and space the others
+    /// at equal gaps between them, `at` not given. A box is the object's
+    /// extent as the drawing measures it (an insert with its block's
+    /// pieces, a text in the drawing's typeface).
+    Arrange {
+        mode: ArrangeMode,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        at: Option<f64>,
+    },
+}
+
+/// What Hizala ve dağıt does (docs/adr/0194): six alignments and two spreads.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ArrangeMode {
+    Left,
+    Center,
+    Right,
+    Top,
+    Middle,
+    Bottom,
+    Horizontal,
+    Vertical,
 }
 
 /// A link of Kauçuk levha: a point of the drawing and where it is to go.
@@ -114,7 +146,9 @@ pub struct RubberLink {
 /// field of its original (layer, colour, attributes, label, symbol) and a new
 /// persistent id; the originals stay. The undo step is the tool's name:
 /// “Taşı” (a move), “Kopyala” (a move as copies), “Döndür”, “Ölçekle”,
-/// “Aynala”, “Hizala”.
+/// “Aynala”, “Hizala”; of an arrangement the mode's name (“Sola hizala”,
+/// “Ortala”, “Sağa hizala”, “Üste hizala”, “Ortaya hizala”, “Alta hizala”,
+/// “Yatay dağıt”, “Dikey dağıt”).
 ///
 /// Objects on a locked layer (by itself or a group above it) stay where they
 /// are and are not copied: with others to transform they are named in the
@@ -129,12 +163,14 @@ pub struct RubberLink {
 /// alignment's second pair given by half, or its source or target points
 /// within a nanometre of the first's), `invalid_transform` (an affine or
 /// projective transform whose linear part squashes the plane: its
-/// determinant under 1e-12 of its columns' lengths' product),
+/// determinant under 1e-12 of its columns' lengths' product; an
+/// arrangement's `at` missing for an alignment or given for a spread),
 /// `invalid_links` (Kauçuk levha's links: fewer than 3 or more than 1000,
 /// two from one point, all their sources on one line, or equations with no
 /// single solution; path `transform.links`),
 /// `invalid_revision`, `revision_conflict` (status `conflict`),
-/// `entity_not_found` (each id in order), `layer_locked`, `beyond_horizon`
+/// `entity_not_found` (each id in order), `layer_locked`, `too_few_objects`
+/// (a spread with fewer than three objects off locked layers), `beyond_horizon`
 /// (a point of an object beyond a projective transform's horizon), then
 /// `not_finite` again (path `transform`) when the transform would carry a
 /// coordinate past the largest float64; on the desktop also

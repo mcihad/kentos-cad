@@ -180,6 +180,9 @@ function similarityOf(t: Transform): [string, number[]] {
     case 'rubbersheet':
       // Kauçuk levha is the core's sheet (./warp.ts `rubberShapes`, docs/adr/0158).
       throw new Error("Kauçuk levha çekirdeğin rubberShapes'iyle yapılır.");
+    case 'arrange':
+      // Hizala ve dağıt moves each object by its own displacement (./arrange.ts, docs/adr/0194).
+      throw new Error('Hizala ve dağıt her nesneyi kendi kaymasıyla taşır (arrangeMoves).');
   }
 }
 

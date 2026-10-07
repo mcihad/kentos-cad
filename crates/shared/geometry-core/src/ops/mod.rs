@@ -2,6 +2,7 @@
 
 pub mod adjoin;
 pub mod areas;
+pub mod arrange;
 pub mod breaking;
 pub mod centerline;
 pub mod cogo;
