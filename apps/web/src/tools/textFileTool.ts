@@ -56,7 +56,7 @@ export class PlaceTextFileTool extends PointInputTool {
 
   protected promptFor(): string {
     if (!this.file) return 'metin dosyasını seçin';
-    const o = TextTool.options();
+    const o = TextTool.options(this.ctx);
     const texts = this.file.lines.filter(Boolean).length;
     // A CAD project's style first (docs/adr/0183 §4).
     const style = stylesShown(this.ctx) ? `${textStyleName(this.ctx)}, ` : '';
@@ -67,7 +67,7 @@ export class PlaceTextFileTool extends PointInputTool {
     if (!this.file) return;
     const layers = this.ctx.doc.layers;
     if (layers.isLocked(layers.active.value)) return void this.targetLayer();
-    const o = TextTool.options();
+    const o = TextTool.options(this.ctx);
     const height = (o.heightMm / 1000) * this.ctx.doc.settings.plotScale.value;
     const r = (o.angle * Math.PI) / 180;
     // Down the text's own up: each line 1.5 heights under the one before.
@@ -88,7 +88,7 @@ export class PlaceTextFileTool extends PointInputTool {
   override draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
     const at = this.hover;
     if (!this.file || !at) return;
-    const o = TextTool.options();
+    const o = TextTool.options(this.ctx);
     const px = Math.max(8, (o.heightMm / 1000) * this.ctx.doc.settings.plotScale.value * view.scale);
     const [along, up] = textAlignShares(o.align);
     const s = view.worldToScreen(at);

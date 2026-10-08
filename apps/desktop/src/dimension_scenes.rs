@@ -30,9 +30,9 @@ use serde_json::json;
 
 use crate::app::{App, Message};
 use crate::files_testing::make_cad;
-use kentos_ui::widget::docking;
 use crate::tools_scenes::{Objects, click, forget, hover, method, open, typed};
 use crate::tools_screens::{Pointed, Scene, open_split};
+use kentos_ui::widget::docking;
 
 /// The road's edges: arcs about (20, −60), 50 and 42 m out, from 50° to 130°.
 const C: [f64; 2] = [20.0, -60.0];
@@ -234,7 +234,14 @@ fn half_radius(app: &mut App) {
     let high = json!({ "height": 5.0 });
     for k in 0..8 {
         let t = f64::from(k) * PI / 4.0 + 0.3;
-        o.dimension("parsel", Some("radius"), [c, on(t)], None, 12.0, high.clone());
+        o.dimension(
+            "parsel",
+            Some("radius"),
+            [c, on(t)],
+            None,
+            12.0,
+            high.clone(),
+        );
     }
     o.dimension("parsel", Some("diameter"), [c, on(-0.6)], None, 0.0, high);
     open(app, o);

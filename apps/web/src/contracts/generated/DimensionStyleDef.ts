@@ -3,6 +3,7 @@ import type { DimensionArrow } from "./DimensionArrow";
 import type { DimensionTextPlace } from "./DimensionTextPlace";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { LineType } from "./LineType";
 
 /**
  * A named dimension style (docs/adr/0183 §3): sizes in paper mm.
@@ -23,4 +24,8 @@ height: number, arrow?: DimensionArrow,
 /**
  * The arrowhead's length, mm; absent: the arrowhead's default times the height.
  */
-arrowSize?: number, extOffset?: number, extBeyond?: number, textGap?: number, textPlace?: DimensionTextPlace, decimals?: number, unit?: DrawingUnit, prefix?: string, suffix?: string, font?: DrawingFont, };
+arrowSize?: number, extOffset?: number, extBeyond?: number, textGap?: number, textPlace?: DimensionTextPlace, decimals?: number, unit?: DrawingUnit, prefix?: string, suffix?: string, font?: DrawingFont, 
+/**
+ * The line fields as a dimension's (docs/adr/0205 §6); weights in paper mm.
+ */
+dimLineColor?: string, dimLineWeight?: number, dimLineType?: LineType, extColor?: string, extWeight?: number, extLineType?: LineType, textColor?: string, };

@@ -12,7 +12,7 @@ import { dimensionLabel, dimensionMeasure, layoutDimension, quickDimensions, typ
 interface Case {
   name: string;
   dimension: DimensionGeom;
-  want: { lines: [Vec2, Vec2][]; textAt: Vec2; rotation: number; value: number; unit: string; prefix: string; handle: Vec2 } | null;
+  want: { lines: [Vec2, Vec2][]; ext: number[]; textAt: Vec2; rotation: number; value: number; unit: string; prefix: string; handle: Vec2 } | null;
 }
 
 const near = (a: number, e: number) => Math.abs(a - e) <= 1e-9 + 1e-15 * Math.abs(e);
@@ -33,6 +33,8 @@ describe('the new dimensions (fixtures/dimension/v1)', () => {
       if (!got) continue;
       const w = c.want;
       expect(got.lines.length, c.name).toBe(w.lines.length);
+      // Which lines are extension lines (docs/adr/0205 §6).
+      expect(got.ext, c.name).toEqual(w.ext);
       expect(
         got.lines.every(([p, q], i) => at(p, w.lines[i][0]) && at(q, w.lines[i][1])),
         c.name,

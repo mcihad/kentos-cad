@@ -22,13 +22,14 @@ pub mod draw;
 #[cfg(test)]
 mod inserts;
 pub mod labels;
+pub mod legible;
 pub mod overview;
 mod pack;
 pub mod pick;
 pub mod polygon;
 pub mod processing;
-mod select;
 pub(crate) mod rtree;
+mod select;
 pub mod snap;
 pub mod tools;
 
@@ -356,7 +357,8 @@ impl Store {
             let fresh = self.slots[*s as usize]
                 .as_ref()
                 .map(|it| self.expansion(&it.shape));
-            if let (Some(it), Some((expanded, bounds))) = (self.slots[*s as usize].as_mut(), fresh) {
+            if let (Some(it), Some((expanded, bounds))) = (self.slots[*s as usize].as_mut(), fresh)
+            {
                 it.bounds = bounds;
                 it.expanded = expanded;
             }
@@ -377,7 +379,8 @@ impl Store {
             let fresh = self.slots[*s as usize]
                 .as_ref()
                 .map(|it| self.expansion(&it.shape));
-            if let (Some(it), Some((expanded, bounds))) = (self.slots[*s as usize].as_mut(), fresh) {
+            if let (Some(it), Some((expanded, bounds))) = (self.slots[*s as usize].as_mut(), fresh)
+            {
                 it.bounds = bounds;
                 it.expanded = expanded;
             }
@@ -489,7 +492,9 @@ impl Store {
                     .ok()
                     .filter(|n| n.fract() == 0.0 && *n >= 0.0 && *n <= f64::from(u32::MAX))
                     .map(|n| n as u32)
-                    .ok_or_else(|| format!("[{i}].snapKinds: tür bitlerinin sayısı bekleniyordu"))?,
+                    .ok_or_else(|| {
+                        format!("[{i}].snapKinds: tür bitlerinin sayısı bekleniyordu")
+                    })?,
             };
             let flags = LayerFlags {
                 visible: field("visible")?,
@@ -745,7 +750,9 @@ mod tests {
         let hasher = BuildHasherDefault::<super::IdHasher>::default();
         let mask = (1u64 << 16) - 1;
         for keys in [
-            (0..65_536u64).map(|n| (n as f64).to_bits()).collect::<Vec<_>>(),
+            (0..65_536u64)
+                .map(|n| (n as f64).to_bits())
+                .collect::<Vec<_>>(),
             (0..65_536u64).collect(),
         ] {
             let buckets: std::collections::HashSet<u64> =

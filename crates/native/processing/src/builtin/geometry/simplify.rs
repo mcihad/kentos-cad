@@ -61,6 +61,7 @@ pub fn tool() -> Tool {
                     max: Some(1000.0),
                     integer: false,
                     unit: "m".into(),
+                    placeholder: None,
                 },
             )
             .default_value(json!(0.1))

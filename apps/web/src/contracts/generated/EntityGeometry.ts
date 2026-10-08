@@ -11,6 +11,7 @@ import type { HatchAssoc } from "./HatchAssoc";
 import type { HatchPattern } from "./HatchPattern";
 import type { ImageFields } from "./ImageFields";
 import type { LeaderArrow } from "./LeaderArrow";
+import type { LineType } from "./LineType";
 import type { PointPart } from "./PointPart";
 import type { RasterFields } from "./RasterFields";
 import type { RingGeometry } from "./RingGeometry";
@@ -165,7 +166,36 @@ suffix?: string,
 /**
  * The value's typeface; absent: the project's.
  */
-font?: DrawingFont, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, 
+font?: DrawingFont, 
+/**
+ * The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:
+ * the object's (docs/adr/0205 §6).
+ */
+dimLineColor?: string, 
+/**
+ * The dimension line's weight, paper mm as an object's; absent: a hairline.
+ */
+dimLineWeight?: number, 
+/**
+ * The dimension line's type; absent: continuous.
+ */
+dimLineType?: LineType, 
+/**
+ * The extension lines' colour; absent: the object's.
+ */
+extColor?: string, 
+/**
+ * The extension lines' weight, paper mm; absent: a hairline.
+ */
+extWeight?: number, 
+/**
+ * The extension lines' type; absent: continuous.
+ */
+extLineType?: LineType, 
+/**
+ * The value's colour; absent: the object's.
+ */
+textColor?: string, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, 
 /**
  * The objects its region follows (docs/adr/0186 §6).
  */
@@ -182,6 +212,11 @@ text?: string, height: number, rotation: number,
  * The arrowhead; absent: a filled arrow.
  */
 arrow?: LeaderArrow, 
+/**
+ * The arrowhead's length, times the note's height (docs/adr/0205
+ * §7); absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
+ */
+arrowSize?: number, 
 /**
  * The note's box filled with the drawing area's colour before it is drawn.
  */

@@ -102,7 +102,9 @@ pub fn kept_block_text(name: &str) -> String {
 
 /// … when a definition removed here, or refused removal there, comes back because someone else placed it.
 pub fn restored_block_text(name: &str) -> String {
-    format!("“{name}” bloğu başka birinin yerleştirmesinde kullanılıyor; silinmedi, çizime geri kondu.")
+    format!(
+        "“{name}” bloğu başka birinin yerleştirmesinde kullanılıyor; silinmedi, çizime geri kondu."
+    )
 }
 
 /// … when an unsent definition gives way to a name someone else took first.
@@ -177,8 +179,11 @@ impl ProjectSync {
         }
         if self.known_blocks.len() + out.len() > doc.blocks().len() {
             let here: HashSet<BlockId> = doc.blocks().iter().map(|b| b.id).collect();
-            let mut gone: Vec<(&BlockId, &TrackedBlock)> =
-                self.known_blocks.iter().filter(|(id, _)| !here.contains(id)).collect();
+            let mut gone: Vec<(&BlockId, &TrackedBlock)> = self
+                .known_blocks
+                .iter()
+                .filter(|(id, _)| !here.contains(id))
+                .collect();
             gone.sort_by_key(|(id, _)| **id);
             for (id, t) in gone {
                 out.push(PlannedBlock::Delete {
@@ -207,11 +212,18 @@ impl ProjectSync {
                 list.push(&t.block);
             }
         }
-        let index: HashMap<BlockId, usize> = list.iter().enumerate().map(|(i, b)| (b.id, i)).collect();
+        let index: HashMap<BlockId, usize> =
+            list.iter().enumerate().map(|(i, b)| (b.id, i)).collect();
         if index.len() == list.len()
             && let Ok(depth) = nesting(&list, &index)
         {
-            let at = |p: &PlannedBlock| index.get(&p.id()).and_then(|&i| depth.get(i)).copied().unwrap_or(0);
+            let at = |p: &PlannedBlock| {
+                index
+                    .get(&p.id())
+                    .and_then(|&i| depth.get(i))
+                    .copied()
+                    .unwrap_or(0)
+            };
             upserts.sort_by_key(at);
             deletes.sort_by_key(|p| std::cmp::Reverse(at(p)));
         }
@@ -243,7 +255,8 @@ impl ProjectSync {
         how: &Taking<'_>,
         placed: &mut dyn FnMut() -> HashSet<BlockId>,
     ) -> Result<BlockMerge, String> {
-        let by_server: HashMap<BlockId, &BlockRecord> = server.iter().map(|r| (r.block.id, r)).collect();
+        let by_server: HashMap<BlockId, &BlockRecord> =
+            server.iter().map(|r| (r.block.id, r)).collect();
         let mut merge = BlockMerge::default();
         let mut next: HashMap<BlockId, BlockDefinition> = HashMap::new();
         let mut mine: HashSet<BlockId> = HashSet::new();
@@ -255,13 +268,17 @@ impl ProjectSync {
         for &id in &ids {
             let here = doc.block(id);
             let s = by_server.get(&id).copied();
-            let moved = s.map(|r| r.version.as_str()) != self.known_blocks.get(&id).map(|t| t.version.as_str());
+            let moved = s.map(|r| r.version.as_str())
+                != self.known_blocks.get(&id).map(|t| t.version.as_str());
             if !self.block_differs(doc, id) || how.force.contains(&id) {
                 // Nothing unsent here: the server's, whatever it is.
                 if let Some(r) = s {
                     next.insert(id, r.block.clone());
                 }
-                merge.learned.push((id, s.map_or(Learned::Gone, |r| Learned::Taken(r.version.clone()))));
+                merge.learned.push((
+                    id,
+                    s.map_or(Learned::Gone, |r| Learned::Taken(r.version.clone())),
+                ));
                 continue;
             }
             if here.is_none() && s.is_none() {
@@ -291,7 +308,9 @@ impl ProjectSync {
                 Some(_) => {}
                 None => merge.learned.push((
                     id,
-                    s.map_or(Learned::Gone, |r| Learned::Over(r.version.clone(), Arc::new(r.block.clone()))),
+                    s.map_or(Learned::Gone, |r| {
+                        Learned::Over(r.version.clone(), Arc::new(r.block.clone()))
+                    }),
                 )),
             }
         }
@@ -344,7 +363,12 @@ impl ProjectSync {
         }
         // The drawing's order, then the server's new definitions in the server's.
         let mut used = HashSet::new();
-        for id in doc.blocks().iter().map(|b| b.id).chain(server.iter().map(|r| r.block.id)) {
+        for id in doc
+            .blocks()
+            .iter()
+            .map(|b| b.id)
+            .chain(server.iter().map(|r| r.block.id))
+        {
             if used.insert(id)
                 && let Some(b) = next.remove(&id)
             {
@@ -359,7 +383,8 @@ impl ProjectSync {
             .map(|b| name_key(&b.name))
             .collect();
         for i in 0..merge.list.len() {
-            if !mine.contains(&merge.list[i].id) || !theirs.contains(&name_key(&merge.list[i].name)) {
+            if !mine.contains(&merge.list[i].id) || !theirs.contains(&name_key(&merge.list[i].name))
+            {
                 continue;
             }
             let others: Vec<&str> = merge
@@ -398,7 +423,9 @@ impl ProjectSync {
                     ),
                     None => self.forget_block(id),
                 },
-                Learned::Over(version, block) => self.know_block(id, TrackedBlock { version, block }),
+                Learned::Over(version, block) => {
+                    self.know_block(id, TrackedBlock { version, block })
+                }
             }
         }
     }
@@ -421,7 +448,8 @@ impl ProjectSync {
 
     /// Every definition the server has, with its version, in id order (the local copy's base).
     pub(super) fn known_block_list(&self) -> Vec<(BlockId, String, Arc<BlockDefinition>)> {
-        let sorted: BTreeMap<BlockId, &TrackedBlock> = self.known_blocks.iter().map(|(id, t)| (*id, t)).collect();
+        let sorted: BTreeMap<BlockId, &TrackedBlock> =
+            self.known_blocks.iter().map(|(id, t)| (*id, t)).collect();
         sorted
             .into_iter()
             .map(|(id, t)| (id, t.version.clone(), t.block.clone()))
@@ -431,5 +459,6 @@ impl ProjectSync {
 
 /// Whether `rules` would take this list (a draft's definitions put back one by one).
 pub(super) fn takes(list: &[&BlockDefinition]) -> Result<(), String> {
-    rules::check(list, &[]).map_err(|fault| fault.message(|i| list.get(i).map_or("", |b| b.name.as_str())))
+    rules::check(list, &[])
+        .map_err(|fault| fault.message(|i| list.get(i).map_or("", |b| b.name.as_str())))
 }

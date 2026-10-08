@@ -59,6 +59,7 @@ pub fn param_from_json(v: &Value) -> Option<ParamDef> {
             max: number(o, "max"),
             integer: flag(o, "integer"),
             unit: text(o, "unit").unwrap_or_default(),
+            placeholder: text(o, "placeholder"),
         },
         "string" => ParamKind::Text {
             placeholder: text(o, "placeholder"),

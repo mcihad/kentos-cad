@@ -82,8 +82,18 @@ fn the_new_kinds_a_mask_and_elevations_and_only_they_make_schema_9() {
     let of = |doc: &DocumentSnapshotV2| schema(&kentos_kcad::encode_verified(doc).expect("writes"));
     let with = |d: DimensionEntity| of(&drawing(vec![Entity::Dimension(d)]));
     // The five older kinds stay schema 2.
-    for style in [None, Some(DimensionStyle::Linear), Some(DimensionStyle::Radius)] {
-        assert_eq!(with(DimensionEntity { style, ..dimension() }), 2);
+    for style in [
+        None,
+        Some(DimensionStyle::Linear),
+        Some(DimensionStyle::Radius),
+    ] {
+        assert_eq!(
+            with(DimensionEntity {
+                style,
+                ..dimension()
+            }),
+            2
+        );
     }
     assert_eq!(
         with(DimensionEntity {

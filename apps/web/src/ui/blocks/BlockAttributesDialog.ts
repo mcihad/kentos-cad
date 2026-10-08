@@ -1,4 +1,5 @@
 import type { AppContext } from '../../app/context';
+import { annotationHeight } from '../../tools/annotationHeights';
 import { attributesInsert } from '../../app/blocks';
 import type { BlocksEdit } from '../../contracts/generated/BlocksEdit';
 import { blocksEdit } from '../../product/blocksEdit';
@@ -32,8 +33,8 @@ export function openBlockAttributesDialog(ctx: AppContext, id: string, draft?: A
   const { base, name } = block;
   const rows: AttributeRow[] = draft ?? (block.attributes ?? []).map((a) => rowOf(a, base));
   const extent = outlineExtent(ctx.view.blockOutlines(id, { x: 0, y: 0 }));
-  // A new block's first text is as high as a text Yazı writes: 2.5 mm on paper.
-  const height = (2.5 / 1000) * doc.settings.plotScale.value;
+  // A new block's first text is as high as a text Yazı writes: the project's Yazı height on paper (docs/adr/0205 §1).
+  const height = annotationHeight(ctx, 'text');
   const via = attributesInsert(ctx, id);
   const status = h('div', { role: 'status', hidden: true });
   const save = h('button', { class: 'btn btn--primary', type: 'button' }, 'Kaydet');

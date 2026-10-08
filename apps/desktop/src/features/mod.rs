@@ -628,10 +628,14 @@ impl App {
             Control::Press(texts::ZOOM) => {
                 (!self.selection.is_empty()).then(|| Message::Features(Event::ZoomSelection))
             }
-            Control::Press(texts::FIELDS) => {
-                rows.layer.is_some().then(|| Message::Features(Event::Fields))
-            }
-            Control::Key("Esc") => self.features.editing.map(|_| Message::Features(Event::Cancel)),
+            Control::Press(texts::FIELDS) => rows
+                .layer
+                .is_some()
+                .then(|| Message::Features(Event::Fields)),
+            Control::Key("Esc") => self
+                .features
+                .editing
+                .map(|_| Message::Features(Event::Cancel)),
             other => return Err(format!("“Tablo” sekmesinde {other} yok")),
         })
     }
@@ -650,7 +654,9 @@ impl App {
             return Err(format!("{row}. satır yok"));
         }
         let j = (0..rows.table.columns.len())
-            .find(|&j| Self::feature_header(&rows, j) == header && rows.table.columns[j].key.is_some())
+            .find(|&j| {
+                Self::feature_header(&rows, j) == header && rows.table.columns[j].key.is_some()
+            })
             .ok_or_else(|| format!("“{header}” sütunu yok"))?;
         let field = rows.table.columns[j].field.as_ref();
         let listed = field.is_some_and(|f| {
@@ -661,10 +667,9 @@ impl App {
             // A list: the item with these words (Evet, Konut; — for none).
             let f = field.ok_or("alan yok")?;
             let code = match &f.values {
-                Some(v) if !v.is_empty() => v
-                    .iter()
-                    .find(|c| c.label == text)
-                    .map(|c| c.code.clone()),
+                Some(v) if !v.is_empty() => {
+                    v.iter().find(|c| c.label == text).map(|c| c.code.clone())
+                }
                 _ => match text {
                     "Evet" => Some("true".to_owned()),
                     "Hayır" => Some("false".to_owned()),

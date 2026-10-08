@@ -22,7 +22,9 @@ fn ev(app: &mut App, e: Event) {
 }
 
 fn rows(app: &App) -> Vec<String> {
-    app.features_seen().map(|(_, _, rows)| rows).unwrap_or_default()
+    app.features_seen()
+        .map(|(_, _, rows)| rows)
+        .unwrap_or_default()
 }
 
 #[test]
@@ -45,7 +47,16 @@ fn the_tab_shows_the_active_layers_objects_by_its_fields() {
     assert_eq!(count, "5 / 5");
     assert_eq!(
         columns,
-        ["Tür", "Ada *", "Parsel", "Tapu alanı", "Kullanım", "Ruhsat", "Tescil tarihi", "Not"]
+        [
+            "Tür",
+            "Ada *",
+            "Parsel",
+            "Tapu alanı",
+            "Kullanım",
+            "Ruhsat",
+            "Tescil tarihi",
+            "Not"
+        ]
     );
     assert_eq!(
         rows(&app)[4],

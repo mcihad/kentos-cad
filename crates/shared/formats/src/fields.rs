@@ -56,7 +56,9 @@ pub fn dbf_field(name: &str, kind: u8, width: usize, decimals: u8) -> Option<Lay
 
 /// The fields of a DBF's descriptors (name, type, width, decimals), in order:
 /// the known types, a usable name once (folded).
-pub fn dbf_fields<'a>(descriptors: impl IntoIterator<Item = (&'a str, u8, usize, u8)>) -> Vec<LayerField> {
+pub fn dbf_fields<'a>(
+    descriptors: impl IntoIterator<Item = (&'a str, u8, usize, u8)>,
+) -> Vec<LayerField> {
     let mut taken = HashSet::new();
     descriptors
         .into_iter()
@@ -139,7 +141,12 @@ pub fn plain_number(text: &str) -> String {
     let (whole, fraction) = mantissa.split_once('.').unwrap_or((mantissa, ""));
     let digits = |t: &str| t.bytes().all(|b| b.is_ascii_digit());
     let exp_digits = exp.strip_prefix(['+', '-']).unwrap_or(exp);
-    if whole.is_empty() || !digits(whole) || !digits(fraction) || exp_digits.is_empty() || !digits(exp_digits) {
+    if whole.is_empty()
+        || !digits(whole)
+        || !digits(fraction)
+        || exp_digits.is_empty()
+        || !digits(exp_digits)
+    {
         return text.to_owned();
     }
     let Ok(exp) = exp.parse::<i64>() else {

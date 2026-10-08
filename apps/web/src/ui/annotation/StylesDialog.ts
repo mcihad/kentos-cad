@@ -14,6 +14,9 @@ import {
   type TextStyleDef,
 } from '../../model/annotationStyles';
 import { layoutDimension } from '../../model/geom/dimension';
+import { LINE_TYPE_LABEL, LINE_TYPES, type LineType } from '../../model/layers';
+import { LINE_COLORS, LINE_WEIGHTS, weightText } from '../ribbon/fields';
+import { fixed } from '../../core/displayNumber';
 import type { DrawingFont, DrawingUnit } from '../../model/projectSettings';
 import { readCanvasPalette } from '../../render/color';
 import { faceFont, leanOf, valueFont } from '../../render/drawingFaces';
@@ -178,7 +181,46 @@ export function openAnnotationStyles(ctx: AppContext, kind: Kind): void {
         field('Birim', select('Birim', units, s.unit ?? 'project', (v) => edit({ unit: v === 'project' ? undefined : v }))),
       ),
       h('div', { class: 'io-row' }, affix('Önek', 'prefix', s.prefix), affix('Sonek', 'suffix', s.suffix), field('Yazı tipi', select('Yazı tipi', fonts, s.font ?? 'project', (v) => edit({ font: v === 'project' ? undefined : v })))),
+      // Its lines (docs/adr/0205 §6): the dimension line's and arrowheads', the extension lines', the value's colour.
+      h('div', { class: 'astyle-section' }, 'Çizgiler'),
+      h(
+        'div',
+        { class: 'io-row' },
+        field('Ölçü çizgisi', colorSelect('Ölçü çizgisinin rengi', s.dimLineColor, (v) => edit({ dimLineColor: v }))),
+        field('Kalınlık', weightSelect('Ölçü çizgisinin kalınlığı', s.dimLineWeight, (v) => edit({ dimLineWeight: v }))),
+        field('Tip', typeSelect('Ölçü çizgisinin tipi', s.dimLineType, (v) => edit({ dimLineType: v }))),
+      ),
+      h(
+        'div',
+        { class: 'io-row' },
+        field('Uzatma çizgileri', colorSelect('Uzatma çizgilerinin rengi', s.extColor, (v) => edit({ extColor: v }))),
+        field('Kalınlık', weightSelect('Uzatma çizgilerinin kalınlığı', s.extWeight, (v) => edit({ extWeight: v }))),
+        field('Tip', typeSelect('Uzatma çizgilerinin tipi', s.extLineType, (v) => edit({ extLineType: v }))),
+      ),
+      // A third of the row, as each of the lines' fields (the desktop's too).
+      h('div', { class: 'io-row' }, field('Değer', colorSelect('Değerin rengi', s.textColor, (v) => edit({ textColor: v }))), h('div', { class: 'io-field' }), h('div', { class: 'io-field' })),
     ];
+  }
+
+  /** A colour of a dimension's lines: none (the object's), a drawing colour, or the one it has. */
+  function colorSelect(label: string, value: string | undefined, set: (v: string | undefined) => void): HTMLElement {
+    const options = [{ value: '', label: 'Nesnenin rengi' }, ...LINE_COLORS.map((c) => ({ value: c.value, label: c.name }))];
+    const known = value && options.find((o) => o.value.toLowerCase() === value.toLowerCase());
+    if (value && !known) options.push({ value, label: value.toUpperCase() });
+    return select(label, options, known ? known.value : (value ?? ''), (v) => set(v || undefined));
+  }
+
+  /** A weight of a dimension's lines on paper: none (a hairline) or one of the drawing's weights. */
+  function weightSelect(label: string, value: number | undefined, set: (v: number | undefined) => void): HTMLElement {
+    const options = [{ value: '', label: 'Kılcal' }, ...LINE_WEIGHTS.map((w) => ({ value: String(w), label: weightText(w) }))];
+    if (value !== undefined && !LINE_WEIGHTS.includes(value)) options.push({ value: String(value), label: weightText(value) });
+    return select(label, options, value === undefined ? '' : String(value), (v) => set(v === '' ? undefined : Number(v)));
+  }
+
+  /** A type of a dimension's lines: none (continuous) or another. */
+  function typeSelect(label: string, value: LineType | undefined, set: (v: LineType | undefined) => void): HTMLElement {
+    const options = LINE_TYPES.map((t) => ({ value: t, label: LINE_TYPE_LABEL[t] }));
+    return select(label, options, value ?? 'continuous', (v) => set(v === 'continuous' ? undefined : (v as LineType)));
   }
 
   /** Standart's form: what a styleless object looks like, nothing to edit. */
@@ -190,7 +232,7 @@ export function openAnnotationStyles(ctx: AppContext, kind: Kind): void {
         { class: 'astyle-standard' },
         kind === 'text'
           ? `Stilsiz yazılar projenin yazı tipiyle (${font}) yazılır; tek satırlı yazı eğiktir. Yazı tipi Proje ayarları'ndadır. Standart düzenlenmez: yeni bir stil için Yeni'ye basın.`
-          : `Stilsiz ölçüler: uçlarda çentik, 2,5 mm değer, projenin yazı tipi (${font}), birimi ve basamakları. Standart düzenlenmez: yeni bir stil için Yeni'ye basın.`,
+          : `Stilsiz ölçüler: uçlarda çentik, projenin ölçü yüksekliğinde (${fixed(settings.annotationMm('dimension'), 1)} mm) değer, nesnenin renginde kılcal çizgiler, projenin yazı tipi (${font}), birimi ve basamakları. Standart düzenlenmez: yeni bir stil için Yeni'ye basın.`,
       ),
     ];
   }
@@ -229,7 +271,7 @@ export function openAnnotationStyles(ctx: AppContext, kind: Kind): void {
     const st = s as DimensionStyleDef | null;
     const scale = settings.plotScale.value;
     const look = st ? lookOf(st) : {};
-    const height = ((st?.height ?? 2.5) / 1000) * scale;
+    const height = ((st?.height ?? settings.annotationMm('dimension')) / 1000) * scale;
     const len = (60 / 1000) * scale;
     const l = layoutDimension({ a: { x: 0, y: 0 }, b: { x: len, y: 0 }, offset: (12 / 1000) * scale, height, ...look });
     if (!l) return;
@@ -238,16 +280,24 @@ export function openAnnotationStyles(ctx: AppContext, kind: Kind): void {
     const [minY, maxY] = [Math.min(...pts.map((p) => p.y)), Math.max(...pts.map((p) => p.y)) + height * 1.2];
     const k = Math.min((w - 32) / (maxX - minX || 1), (hgt - 24) / (maxY - minY || 1));
     const at = (p: { x: number; y: number }) => ({ x: 16 + (p.x - minX) * k + (w - 32 - (maxX - minX) * k) / 2, y: hgt - 12 - (p.y - minY) * k });
-    g.strokeStyle = pal.label;
-    g.fillStyle = pal.label;
-    g.lineWidth = 1.2;
-    for (const [p, q] of l.lines) {
+    // Its lines as its look names them (docs/adr/0205 §6): colour, weight (at the preview's paper size) and type.
+    const lineLook = (color: string | undefined, weight: number | undefined, type: LineType | undefined) => {
+      g.strokeStyle = color ?? pal.label;
+      g.lineWidth = weight ? Math.max(1, (weight / 1000) * scale * k) : 1.2;
+      const dash = { dashed: [3, 1.5], dashdot: [5, 1.2, 0.6, 1.2], dotted: [0.6, 1.2], continuous: [] }[type ?? 'continuous'];
+      g.setLineDash(dash.map((mm) => Math.max(1, (mm / 1000) * scale * k)));
+    };
+    l.lines.forEach(([p, q], i) => {
+      if (l.ext.includes(i)) lineLook(look.extColor, look.extWeight, look.extLineType);
+      else lineLook(look.dimLineColor, look.dimLineWeight, look.dimLineType);
       const [a, b] = [at(p), at(q)];
       g.beginPath();
       g.moveTo(a.x, a.y);
       g.lineTo(b.x, b.y);
       g.stroke();
-    }
+    });
+    g.setLineDash([]);
+    g.fillStyle = look.dimLineColor ?? pal.label;
     for (const ring of l.fills ?? []) {
       g.beginPath();
       ring.forEach((p, i) => (i ? g.lineTo(at(p).x, at(p).y) : g.moveTo(at(p).x, at(p).y)));
@@ -269,6 +319,7 @@ export function openAnnotationStyles(ctx: AppContext, kind: Kind): void {
       g.fillRect(-tw / 2 - px * 0.1, -px * 1.15, tw + px * 0.2, px * 1.38);
       g.fillStyle = pal.label;
     }
+    g.fillStyle = look.textColor ?? pal.label;
     g.fillText(text, 0, 0);
     g.restore();
   }

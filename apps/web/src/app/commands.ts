@@ -560,6 +560,25 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       isChecked: () => ctx.prefs.colorMode.value === mode,
       watch: [ctx.prefs.colorMode],
     })),
+    // Yazıların boyu (docs/adr/0205 §5): how the drawing's text is sized on the screen, never what it holds.
+    ...(
+      [
+        ['legible', 'Yazılar kaybolmasın', 'Kaybolmasın', 'annotationLegible', 'Yazılar gerçek boylarında; ekranda okunur boydan küçük kalan bu boyda ve birbirinin üstüne binmeden çizilir.', ['OKUNUR', 'YAZIBOYU']],
+        ['true', 'Yazılar gerçek boyda', 'Gerçek boy', 'annotationTrue', 'Yazılar çizimdeki gerçek boylarında; 5 pikselden küçük kalan çizilmez.', ['GERCEKBOY']],
+        ['screen', 'Yazılar ekranda sabit', 'Ekranda sabit', 'annotationScreen', 'Her yazı kâğıttaki boyunda çizilir; yakınlaştırınca büyümez. Binenler seyreltilir.', ['EKRANDASABIT']],
+      ] as const
+    ).map(([size, title, short, icon, description, aliases]) => ({
+      id: `view.annotationSize.${size}`,
+      title,
+      short,
+      category: V,
+      icon,
+      description,
+      aliases: [...aliases],
+      run: () => ctx.prefs.annotationSize.set(size),
+      isChecked: () => ctx.prefs.annotationSize.value === size,
+      watch: [ctx.prefs.annotationSize],
+    })),
     toggle('view.fills', 'Dolguları ve taramaları göster', ctx.prefs.fills, {
       category: V,
       icon: 'viewFills',

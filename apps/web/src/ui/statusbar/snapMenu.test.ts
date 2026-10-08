@@ -84,6 +84,9 @@ describe('Kenet hücresinin menüsü', () => {
   it('turns a kind and Çizilmekte olan nesneye on and off through their commands', () => {
     const { ctx, prefs, commands } = setup();
     const item = (label: string) => snapMenu(ctx).find((i) => i.label === label)!;
+    // Ticked one after another: the kinds' rows leave the menu open (docs/adr/0187 §5, 8 Ekim); the rest close it.
+    expect(['Uç nokta', 'Karelaj', 'Çizilmekte olan nesneye'].map((l) => item(l).stay)).toEqual([true, true, true]);
+    expect(item('Kenet ayarları…').stay).toBeUndefined();
     item('Karelaj').run!();
     expect(prefs.snapGrid.value).toBe(true);
     expect(item('Karelaj').checked).toBe(true);

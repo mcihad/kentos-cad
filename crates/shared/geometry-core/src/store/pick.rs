@@ -10,9 +10,9 @@ use crate::entity::{
     inside_polygon, is_closed_outline, is_multi_part, polygon_holes, polygon_ring,
 };
 use crate::geom::dimension::layout_dimension;
-use crate::geom::leader::note_place;
 use crate::geom::ellipse::{ellipse_area, inside_ellipse, is_full_ellipse, tessellate_ellipse};
 use crate::geom::intersect::{Edge, closest_on_edge, seg_seg};
+use crate::geom::leader::note_place;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
 use crate::jsmath::{PI, js_cmp, js_hypot, js_max, js_min};
 use crate::ops::edges::entity_edges;

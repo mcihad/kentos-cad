@@ -625,10 +625,7 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
     if let Some(angle) = want.angle
         && !seen.angle.is_some_and(|a| (a - angle).abs() <= 1e-9)
     {
-        bad.push(format!(
-            "{name}.angle: {:?}, beklenen {angle}",
-            seen.angle
-        ));
+        bad.push(format!("{name}.angle: {:?}, beklenen {angle}", seen.angle));
     }
     // A text's height (docs/adr/0175), a dimension's value's (docs/adr/0183), within 1e-9.
     if let Some(height) = want.height

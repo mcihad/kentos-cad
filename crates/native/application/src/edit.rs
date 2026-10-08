@@ -197,6 +197,8 @@ pub fn label(operation: EditOperation) -> &'static str {
         // Ağ dengelemelerinin Çizime yaz'ı (docs/adr/0203 §8).
         EditOperation::NetworkAdjust => "Yatay ağ dengelemesi",
         EditOperation::LevelAdjust => "Kot ağı dengelemesi",
+        // Ölçek ya da genel yükseklik değişince izleyenler (docs/adr/0205 §3).
+        EditOperation::AnnotationScale => "Yazı yüksekliklerini uydur",
     }
 }
 
@@ -763,6 +765,23 @@ pub(crate) fn check_geometry(
                 "Kılavuzun yüksekliği sıfırdan büyük olmalı; {height} verildi. Notun yüksekliğini metre olarak, pozitif verin."
             ),
             at(".height"),
+        )));
+    }
+    // A leader's arrowhead size, times its note's height (docs/adr/0205 §7).
+    if let EntityGeometry::Leader {
+        arrow_size: Some(size),
+        ..
+    } = g
+        && !kentos_contracts::leader_arrow_holds(*size)
+    {
+        return Err(Stop::Failed(error(
+            codes::INVALID_ARROW_SIZE,
+            format!(
+                "Kılavuzun ok boyu notun yüksekliğinin {} ile {} katı olmalı; {size} verildi. Bu aralıkta verin ya da alanı kaldırın (notun yüksekliği kadar).",
+                kentos_contracts::MIN_LEADER_ARROW,
+                kentos_contracts::MAX_LEADER_ARROW
+            ),
+            at(".arrowSize"),
         )));
     }
     // A text's width factor (docs/adr/0145).

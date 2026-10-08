@@ -82,12 +82,12 @@ pub(crate) fn texts(
 
 #[cfg(test)]
 mod tests {
+    use crate::app::{App, Message};
+    use crate::files_testing::app_with_drawing;
     use iced::Size;
     use iced::keyboard::key::Named;
     use kentos_interaction::point_calc::CalcKind;
     use kentos_ui::snapshot::{Input, Snapshot};
-    use crate::app::{App, Message};
-    use crate::files_testing::app_with_drawing;
 
     fn said(app: &crate::app::App) -> Vec<String> {
         app.log.lines().map(|l| l.text.clone()).collect()

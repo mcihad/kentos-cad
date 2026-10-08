@@ -161,7 +161,11 @@ pub(super) fn ordinate(d: &DimensionGeom) -> Option<DimensionLayout> {
     };
     let ab = Vec2::new(b.x - a.x, b.y - a.y);
     let along = dot(ab, n);
-    let u = if along >= 0.0 { n } else { Vec2::new(-n.x, -n.y) };
+    let u = if along >= 0.0 {
+        n
+    } else {
+        Vec2::new(-n.x, -n.y)
+    };
     let (l, s) = (along.abs(), dot(ab, e));
     if l <= g {
         return None;
@@ -193,6 +197,7 @@ pub(super) fn ordinate(d: &DimensionGeom) -> Option<DimensionLayout> {
         prefix,
         handle: b,
         fills: None,
+        ext: Vec::new(),
     })
 }
 
@@ -219,8 +224,10 @@ pub(super) fn arc_length(d: &DimensionGeom) -> Option<DimensionLayout> {
     let k = if d.offset >= 0.0 { 1.0 } else { -1.0 };
     let mut lines = Vec::new();
     let mut fills = Vec::new();
+    let mut ext = Vec::new();
     if d.offset.abs() > g {
         for t in [t0, t0 + sweep] {
+            ext.push(lines.len());
             lines.push([at2(c, t, r + k * g), at2(c, t, big + k * beyond)]);
         }
     }
@@ -251,10 +258,7 @@ pub(super) fn arc_length(d: &DimensionGeom) -> Option<DimensionLayout> {
     let handle = at2(c, tm, big);
     let (text_at, rotation) = text_along(handle, tangent(tm), lift(d));
     // Off the arc: outwards for a dimension arc outside it, inwards for one inside.
-    let outwards = Vec2::new(
-        ((handle.x - c.x) / big) * k,
-        ((handle.y - c.y) / big) * k,
-    );
+    let outwards = Vec2::new(((handle.x - c.x) / big) * k, ((handle.y - c.y) / big) * k);
     let text_at = away_from(handle, text_at, rotation, outwards, h, 1.6 * h);
     // The symbol in the value's own frame, clear of its mask (1.25h over its baseline).
     let (along, up) = frame(rotation);
@@ -283,6 +287,7 @@ pub(super) fn arc_length(d: &DimensionGeom) -> Option<DimensionLayout> {
         }],
         handle,
         fills: fills_of(fills),
+        ext,
     })
 }
 
@@ -367,6 +372,7 @@ pub(super) fn jogged(d: &DimensionGeom) -> Option<DimensionLayout> {
         pick,
         handle: p1,
         fills: fills_of(fills),
+        ext: Vec::new(),
     })
 }
 
@@ -431,5 +437,6 @@ pub(super) fn arrowed(d: &DimensionGeom, slope: bool) -> Option<DimensionLayout>
         pick: vec![Edge::Seg { a: tail, b: tip }],
         handle: m,
         fills: None,
+        ext: Vec::new(),
     })
 }

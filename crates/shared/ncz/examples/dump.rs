@@ -8,7 +8,7 @@ use std::fmt::Write as _;
 
 use kentos_formats::watch::Quiet;
 use kentos_ncz::attributes::{self, Cell};
-use kentos_ncz::format::{self, Entity, Header, SmartClass, Sink};
+use kentos_ncz::format::{self, Entity, Header, Sink, SmartClass};
 
 fn esc(s: &str) -> String {
     s.replace('\0', "\\0")
@@ -52,11 +52,25 @@ impl Sink for Dump {
         ] {
             let _ = write!(o, "{}|", bits(v));
         }
-        let _ = write!(o, "{}|{}|{}", bits(e.line_width), u8::from(e.closed), e.coords.len());
+        let _ = write!(
+            o,
+            "{}|{}|{}",
+            bits(e.line_width),
+            u8::from(e.closed),
+            e.coords.len()
+        );
         if e.smart != SmartClass::None {
             let _ = write!(o, "|S:{}", e.smart.name());
             for p in &e.properties {
-                let _ = write!(o, "~{}={}/{}/{}{}", p.name, p.value, p.display, u8::from(p.user), u8::from(p.null));
+                let _ = write!(
+                    o,
+                    "~{}={}/{}/{}{}",
+                    p.name,
+                    p.value,
+                    p.display,
+                    u8::from(p.user),
+                    u8::from(p.null)
+                );
             }
         }
         for c in &e.coords {
@@ -88,7 +102,13 @@ fn main() {
         for c in &h.layer_colors {
             let _ = writeln!(o, "C|{c}");
         }
-        let _ = writeln!(o, "V|{}\nP|{}\nS|{}", esc(&h.version_name), esc(&h.projection_text), esc(&h.epsg));
+        let _ = writeln!(
+            o,
+            "V|{}\nP|{}\nS|{}",
+            esc(&h.version_name),
+            esc(&h.projection_text),
+            esc(&h.epsg)
+        );
         for (t, &n) in h.unsupported.iter().enumerate() {
             if n != 0 {
                 let _ = writeln!(o, "U|{t}|{n}");
@@ -117,6 +137,10 @@ fn main() {
             .filter(|(_, n)| **n != 0)
             .map(|(t, n)| format!("{t}={n}"))
             .collect();
-        eprintln!("outcome {outcome:?} dropped: {} smart_marks={}", dropped.join(" "), h.smart_marks);
+        eprintln!(
+            "outcome {outcome:?} dropped: {} smart_marks={}",
+            dropped.join(" "),
+            h.smart_marks
+        );
     }
 }

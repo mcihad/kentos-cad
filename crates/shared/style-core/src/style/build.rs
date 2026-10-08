@@ -240,6 +240,9 @@ pub struct Program {
     refs: Vec<SymbolRef>,
     colors: Vec<String>,
     aspects: HashMap<String, f64>,
+    /// Line weights hidden (Kalınlık off): every line one pixel, a
+    /// dimension's own weights too (docs/adr/0205 §6).
+    hairlines: bool,
     /// The fields any expression reads, in order of first use.
     pub fields: Vec<String>,
     /// Each expression's fields as slots of `fields`.
@@ -303,6 +306,7 @@ impl Program {
             _ => Vec::new(),
         };
         let aspects = aspects_of(v.get("assets"));
+        let hairlines = matches!(v.get("hairlines"), Json::Bool(true));
         let mut fields: Vec<String> = Vec::new();
         let mut index: HashMap<String, usize> = HashMap::new();
         let mut needs = Needs::default();
@@ -329,6 +333,7 @@ impl Program {
             refs,
             colors,
             aspects,
+            hairlines,
             fields,
             slots,
             needs,
@@ -525,7 +530,12 @@ pub fn build_layer_with(
             Some((x, sets)) => {
                 for (k, shape) in x.shapes.iter().enumerate() {
                     let set = sets.and_then(|s| s.get(k)).copied().unwrap_or(simple);
-                    one(shape, if mode == MODE_SET { set } else { a }, set, &mut sink);
+                    one(
+                        shape,
+                        if mode == MODE_SET { set } else { a },
+                        set,
+                        &mut sink,
+                    );
                 }
             }
             None => one(&item.shape, a, simple, &mut sink),
@@ -557,34 +567,45 @@ fn draw_object(
         return;
     }
     if mode == MODE_DIMENSION {
-        // Dimensions keep their own hairline look: their layout lines. Drawn at every scale
-        // (the TypeScript kept the previous object's rule range here).
+        // Dimensions keep their own look: their layout lines, hairlines in the dimension's
+        // colour unless its look names the dimension line's or the extension lines' colour,
+        // weight and type (docs/adr/0205 §6). Drawn at every scale (the TypeScript kept the
+        // previous object's rule range here).
         let ink = usize::try_from(color)
             .ok()
             .and_then(|c| program.colors.get(c))
             .cloned()
             .unwrap_or_default();
+        let lines = match shape {
+            Shape::Dimension { look, .. } => look.lines.as_deref(),
+            _ => None,
+        };
+        let line = dimension_stroke(
+            lines.map(|l| (&l.dim_line_color, l.dim_line_weight, &l.dim_line_type)),
+            &ink,
+            program.hairlines,
+            env,
+        );
+        let ext = dimension_stroke(
+            lines.map(|l| (&l.ext_color, l.ext_weight, &l.ext_line_type)),
+            &ink,
+            program.hairlines,
+            env,
+        );
         if let Some(Geom::Line(paths)) = parts.first() {
-            let hair = StrokeStyle {
-                color: ink.clone(),
-                opacity: 1.0,
-                width: 0.0,
-                unit: PrimUnit::Px,
-                dash: None,
-                dash_offset: 0.0,
-                cap: "butt".into(),
-                join: "miter".into(),
-                blur: 0.0,
-                level: LEVEL_LINE + 500.0,
-            };
+            // Which of its lines are extension lines: the layout's.
+            let exts = kentos_geometry_core::entity::dimension_geom(shape)
+                .and_then(|g| kentos_geometry_core::geom::dimension::layout_dimension(&g))
+                .map(|l| l.ext)
+                .unwrap_or_default();
             sink.set_scale(Scale::default());
-            for (pts, _) in paths {
-                sink.stroke(&hair, pts, false);
+            for (i, (pts, _)) in paths.iter().enumerate() {
+                sink.stroke(if exts.contains(&i) { &ext } else { &line }, pts, false);
             }
         }
-        // Filled arrowheads and dots, solid in the dimension's colour (docs/adr/0183 §3).
+        // Filled arrowheads and dots, solid in the dimension line's colour (docs/adr/0183 §3).
         let solid = FillPaint::Solid {
-            color: ink,
+            color: line.color.clone(),
             opacity: 1.0,
             level: LEVEL_LINE + 500.0,
         };
@@ -604,6 +625,56 @@ fn draw_object(
     // A leader's lines through the line symbol, its arrowhead through the fill symbol (docs/adr/0146 §5).
     for geom in &parts {
         draw_part(geom, [mode, a, simple], program, values, env, sink);
+    }
+}
+
+/// A line type's dashes on paper, mm (the layers' simple lines'); none: continuous.
+pub fn line_type_dash(name: &str) -> Option<&'static [f64]> {
+    match name {
+        "dashed" => Some(&[3.0, 1.5]),
+        "dashdot" => Some(&[5.0, 1.2, 0.6, 1.2]),
+        "dotted" => Some(&[0.6, 1.2]),
+        _ => None,
+    }
+}
+
+/// A dimension's line's stroke (docs/adr/0205 §6): its colour (`#RRGGBB`,
+/// else the dimension's `ink`), its weight on paper (mm, else a hairline)
+/// and its type's dashes, drawn as the layers' lines are (paper mm at the
+/// plot scale, or on the screen); `hairlines`: every weight one pixel.
+fn dimension_stroke(
+    part: Option<(&Option<String>, Option<f64>, &Option<String>)>,
+    ink: &str,
+    hairlines: bool,
+    env: &Env<'_>,
+) -> StrokeStyle {
+    use super::compile::{to_drawn, to_px};
+    use super::model::Unit;
+    let (color, weight, kind) = part.unwrap_or((&None, None, &None));
+    let weight = weight.filter(|w| *w > 0.0 && !hairlines);
+    let (width, unit) = match weight {
+        Some(w) => to_drawn(w, Unit::Mm, env),
+        None => (0.0, PrimUnit::Px),
+    };
+    let dash = kind.as_deref().and_then(line_type_dash).map(|d| {
+        d.iter()
+            .map(|mm| match unit {
+                PrimUnit::Px => to_px(*mm, Unit::Mm),
+                PrimUnit::World => to_drawn(*mm, Unit::Mm, env).0,
+            })
+            .collect()
+    });
+    StrokeStyle {
+        color: color.clone().unwrap_or_else(|| ink.to_owned()),
+        opacity: 1.0,
+        width,
+        unit,
+        dash,
+        dash_offset: 0.0,
+        cap: "butt".into(),
+        join: "miter".into(),
+        blur: 0.0,
+        level: LEVEL_LINE + 500.0,
     }
 }
 

@@ -83,10 +83,7 @@ pub fn place(
     };
     let mut plan = Plan::default();
     let mut number = options.start;
-    for g in points
-        .iter()
-        .filter(|g| options.kinds.contains(&g.kind))
-    {
+    for g in points.iter().filter(|g| options.kinds.contains(&g.kind)) {
         let moved = match transform_in(&wgs84, to, Vec2::new(g.lon, g.lat), choices) {
             Ok(moved) => moved,
             Err(u) => {

@@ -91,10 +91,7 @@ impl Boundary {
             format!(", {} ada (delik)", area.holes.len())
         };
         let size = cx.format().area(net_area(&area));
-        cx.say(
-            Level::Success,
-            format!("Alan oluşturuldu: {size}{holes}."),
-        );
+        cx.say(Level::Success, format!("Alan oluşturuldu: {size}{holes}."));
     }
 }
 

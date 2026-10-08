@@ -90,7 +90,10 @@ use crate::layer::LineType;
 ///    priori standard deviations.
 /// 39: raster layers (docs/adr/0204): `.kcad` document schema 29 and the typed columns' `raster`
 ///    kind; DXF and GeoJSON leave rasters out and say so.
-pub const FORMATS_VERSION: u32 = 39;
+/// 40: annotation heights and lines (docs/adr/0205): `.kcad` document schema 30, the settings'
+///    `annotation`, a dimension's and a dimension style's line fields, a leader's `arrowSize` and
+///    AutoCAD's arrowheads; the columns' dimension line flags and leader arrowhead size.
+pub const FORMATS_VERSION: u32 = 40;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -126,7 +129,10 @@ pub struct ImportLayer {
     /// Shapefile's DBF fields, the kinds of a GeoJSON's properties; a new
     /// layer takes them. Empty: none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::fields::LayerField>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::fields::LayerField>>", optional)
+    )]
     pub fields: Vec<crate::fields::LayerField>,
 }
 
@@ -841,7 +847,10 @@ pub struct GeoJsonLayer {
     /// The layer's fields (docs/adr/0199 §6): a number's and a yes or no
     /// value's attribute is written as a JSON number or boolean.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::fields::LayerField>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::fields::LayerField>>", optional)
+    )]
     pub fields: Vec<crate::fields::LayerField>,
 }
 

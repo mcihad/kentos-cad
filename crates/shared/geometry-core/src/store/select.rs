@@ -222,7 +222,7 @@ fn outline(e: &Shape, font: Font) -> Vec<Vec2> {
         Shape::Leader { .. } => {
             let mut out = entity_outline(e, 64.0);
             if let Some(l) = leader::layout_of(e) {
-                out.extend(leader::head_reach(&l.head));
+                out.extend(leader::head_reach(&l));
             }
             out.extend(
                 leader::note_place(e)

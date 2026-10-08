@@ -36,8 +36,16 @@ fn near(have: f64, want: f64) -> bool {
 fn ground() -> (Bench, [Slot; 4]) {
     let mut b = Bench::on(EMPTY);
     b.draft.snap = false;
-    let west = b.add_path("cizim", &[[0.0, 0.0], [20.0, 0.0], [20.0, 30.0], [0.0, 30.0]], true);
-    let east = b.add_path("cizim", &[[20.0, 0.0], [40.0, 0.0], [40.0, 30.0], [20.0, 30.0]], true);
+    let west = b.add_path(
+        "cizim",
+        &[[0.0, 0.0], [20.0, 0.0], [20.0, 30.0], [0.0, 30.0]],
+        true,
+    );
+    let east = b.add_path(
+        "cizim",
+        &[[20.0, 0.0], [40.0, 0.0], [40.0, 30.0], [20.0, 30.0]],
+        true,
+    );
     let road = b.add_bulged(
         "cizim",
         &[[0.0, -10.0], [10.0, -10.0], [20.0, -20.0]],
@@ -56,7 +64,10 @@ fn every_edge_of_the_selection_at_once_the_shared_one_once_out_of_the_areas() {
         b.session.prompt().text(),
         "Hızlı ölçü: ölçülerin yerini gösterin ya da uzaklık yazın [Zemin (Z): kapalı]"
     );
-    assert!(!b.session.tracks(), "no snapping: the cursor's distance places them");
+    assert!(
+        !b.session.tracks(),
+        "no snapping: the cursor's distance places them"
+    );
     // 4 m over the parcels' north edge: the nearest edge.
     b.move_to(10.0, 34.0);
     let strokes = b.run(|s, cx| s.preview(&cx.format()).map_or(0, |p| p.strokes.len()));
@@ -67,7 +78,9 @@ fn every_edge_of_the_selection_at_once_the_shared_one_once_out_of_the_areas() {
     assert_eq!(made.len(), 9);
     assert_eq!(
         b.last_text(),
-        Some("Hızlı ölçü: 9 ölçü eklendi; 1 nesne atlandı (yalnız çizgi, çoklu çizgi ve alan ölçülür).")
+        Some(
+            "Hızlı ölçü: 9 ölçü eklendi; 1 nesne atlandı (yalnız çizgi, çoklu çizgi ve alan ölçülür)."
+        )
     );
     assert_eq!(b.last_level(), Some(Level::Success));
     // The tool is done.
@@ -75,11 +88,17 @@ fn every_edge_of_the_selection_at_once_the_shared_one_once_out_of_the_areas() {
     // Out of the west parcel (counter-clockwise: right of its edges).
     let first = &made[0];
     assert_eq!((rel(first.a), rel(first.b)), ([0.0, 0.0], [20.0, 0.0]));
-    assert!(near(first.offset, -4.0) && near(first.height, 2.5), "{first:?}");
+    assert!(
+        near(first.offset, -4.0) && near(first.height, 2.5),
+        "{first:?}"
+    );
     assert_eq!(first.style, None);
     // The road: its side is the cursor's, left of its way.
     let (straight, arc) = (&made[7], &made[8]);
-    assert_eq!((rel(straight.a), rel(straight.b)), ([0.0, -10.0], [10.0, -10.0]));
+    assert_eq!(
+        (rel(straight.a), rel(straight.b)),
+        ([0.0, -10.0], [10.0, -10.0])
+    );
     assert!(near(straight.offset, 4.0), "{straight:?}");
     // The clockwise arc about (10, −20): its ends counter-clockwise, its dimension outwards.
     assert_eq!(arc.style, Some(DimensionStyle::ArcLength));

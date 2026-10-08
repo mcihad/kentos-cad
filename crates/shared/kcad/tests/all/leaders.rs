@@ -52,6 +52,7 @@ fn leader(pts: Vec<Vec2>) -> LeaderEntity {
         height: 2.5,
         rotation: 0.0,
         arrow: None,
+        arrow_size: None,
         mask: false,
     }
 }
@@ -90,11 +91,7 @@ fn a_leader_and_only_a_leader_makes_schema_8() {
     assert_eq!(schema(&data), 8);
     assert!(kentos_kcad::encode(&doc).expect("writes") == data);
     // The older drawings keep their schemas and bytes.
-    for (file, want) in [
-        ("minimal.kcad", 2),
-        ("blocks.kcad", 6),
-        ("texts.kcad", 7),
-    ] {
+    for (file, want) in [("minimal.kcad", 2), ("blocks.kcad", 6), ("texts.kcad", 7)] {
         let data = read(file);
         assert_eq!(schema(&data), want, "{file}");
         let doc = kentos_kcad::decode(&data).expect("reads");
@@ -124,7 +121,10 @@ fn every_field_of_a_leader_comes_back() {
         ]
     );
     assert_eq!(
-        leaders.iter().map(|l| l.text.as_deref()).collect::<Vec<_>>(),
+        leaders
+            .iter()
+            .map(|l| l.text.as_deref())
+            .collect::<Vec<_>>(),
         [
             Some("Mevcut bina"),
             Some("Ø150 PVC"),
@@ -190,11 +190,26 @@ fn the_readers_errors_name_their_places() {
     assert_eq!(e.code, Code::UnknownKind);
     assert!(e.message.contains("“leader”"), "{e}");
     for (file, place) in [
-        ("broken/leader-one-vertex.kcad", "document/entities/0/leader/pts"),
-        ("broken/leader-zero-height.kcad", "document/entities/0/leader/height"),
-        ("broken/leader-empty-note.kcad", "document/entities/0/leader/text"),
-        ("broken/leader-filled-arrow.kcad", "document/entities/0/leader/arrow"),
-        ("broken/leader-mask-false.kcad", "document/entities/0/leader/mask"),
+        (
+            "broken/leader-one-vertex.kcad",
+            "document/entities/0/leader/pts",
+        ),
+        (
+            "broken/leader-zero-height.kcad",
+            "document/entities/0/leader/height",
+        ),
+        (
+            "broken/leader-empty-note.kcad",
+            "document/entities/0/leader/text",
+        ),
+        (
+            "broken/leader-filled-arrow.kcad",
+            "document/entities/0/leader/arrow",
+        ),
+        (
+            "broken/leader-mask-false.kcad",
+            "document/entities/0/leader/mask",
+        ),
     ] {
         let e = refused(file);
         assert_eq!(e.code, Code::BadValue, "{file}: {e}");

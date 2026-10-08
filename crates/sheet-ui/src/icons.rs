@@ -231,6 +231,18 @@ pub const SELECT_TOGGLE: Icon = Icon::Svg(
     r#"<path d="M4 3.2 13 8.7l-4 1.1-2.1 3.9z"/><path d="M15 10.8v4M13 12.8h4M13 16.8h4" stroke-width="1.2"/>"#,
 );
 
+/// A map's scale and centre from the drawing (docs/adr/0206 §1): the app's
+/// `plotScale`, `zoomExtents` and `target` (apps/web/src/ui/icons.ts).
+pub const PLOT_SCALE: Icon = Icon::Svg(
+    r#"<rect x="2.5" y="7.5" width="15" height="5"/><path d="M2.5 7.5h3.75v5H2.5zM10 7.5h3.75v5H10z" fill="currentColor" stroke="none"/><path d="M2.5 15v1.5M10 15v1.5M17.5 15v1.5" stroke-width="1.2"/>"#,
+);
+pub const ZOOM_EXTENTS: Icon = Icon::Svg(
+    r#"<path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/><rect x="7" y="7" width="6" height="6"/>"#,
+);
+pub const TARGET: Icon = Icon::Svg(
+    r#"<circle cx="10" cy="10" r="5.9"/><path d="M10 1.9v3.4M10 14.7v3.4M1.9 10h3.4M14.7 10h3.4"/><circle cx="10" cy="10" r="1.3" fill="currentColor" stroke="none"/>"#,
+);
+
 #[cfg(test)]
 mod tests {
     use super::*;

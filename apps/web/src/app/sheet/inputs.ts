@@ -1,5 +1,6 @@
 import type { Capabilities } from '../../contracts/generated/sheet/Capabilities';
 import type { CoordinateInput } from '../../contracts/generated/sheet/CoordinateInput';
+import type { CoordSource } from '../../contracts/generated/sheet/CoordSource';
 import type { CrsInfo } from '../../contracts/generated/sheet/CrsInfo';
 import type { DisplayList } from '../../contracts/generated/sheet/DisplayList';
 import type { FeatureInput } from '../../contracts/generated/sheet/FeatureInput';
@@ -128,11 +129,7 @@ export function renderInputs(ctx: AppContext, book: SheetBook, sheet: Sheet, o: 
       });
       tables.push({ item: it.id, features });
     } else if (k.type === 'coordinateList') {
-      const list = k.source.type === 'selection' ? [...ctx.selection.ids.value].map((id) => doc.get(id)).filter((e): e is Entity => !!e) : (() => {
-        const layer = layerOf(ctx, k.source.layer);
-        return layer ? doc.byLayer(layer) : [];
-      })();
-      coordinates.push(coordinatesOf(ctx, it.id, list));
+      coordinates.push(coordinateInputOf(ctx, it.id, k.source));
     } else if (k.type === 'legend') {
       const map = k.map ? items.find((m) => m.id === k.map) : undefined;
       const layers: MapLayers = map?.kind.type === 'map' ? map.kind.layers : { type: 'all' };
@@ -152,6 +149,30 @@ export function renderInputs(ctx: AppContext, book: SheetBook, sheet: Sheet, o: 
     ...(o.assets ? { assets: [...o.assets] } : {}),
     ...(o.dpi ? { dpi: o.dpi } : {}),
   };
+}
+
+/**
+ * A coordinate list's objects (docs/adr/0206 §2): the drawing's chosen ones now (live), a layer's, or the ones taken by
+ * their lasting ids, those the drawing no longer has counted.
+ */
+export function coordinateObjects(ctx: AppContext, source: CoordSource): { list: Entity[]; missing: number } {
+  const doc = ctx.doc;
+  if (source.type === 'selection') return { list: [...ctx.selection.ids.value].map((id) => doc.get(id)).filter((e): e is Entity => !!e), missing: 0 };
+  if (source.type === 'layer') {
+    const layer = layerOf(ctx, source.layer);
+    return { list: layer ? doc.byLayer(layer) : [], missing: 0 };
+  }
+  const list: Entity[] = source.uids.flatMap((u) => {
+    const e = doc.byUid(u);
+    return e ? [e] : [];
+  });
+  return { list, missing: source.uids.length - list.length };
+}
+
+/** The host's input for a coordinate list item (docs/adr/0206 §2): its points from its source, how many objects gave them. */
+export function coordinateInputOf(ctx: AppContext, item: string, source: CoordSource): CoordinateInput {
+  const { list, missing } = coordinateObjects(ctx, source);
+  return { ...coordinatesOf(ctx, item, list), objects: list.length, ...(missing ? { missing } : {}) };
 }
 
 /** A coordinate list's points: one closed figure's corners (with its area), or the points and vertices of all. */

@@ -69,7 +69,8 @@ impl Vertex {
         if let Entity::Polyline(path) | Entity::Polygon(path) = e {
             // Every part's outer vertices, part after part, as the core's `remove_vertex`
             // counts them (docs/adr/0143).
-            let rings = std::iter::once(&path.pts).chain(path.parts.iter().flatten().map(|q| &q.pts));
+            let rings =
+                std::iter::once(&path.pts).chain(path.parts.iter().flatten().map(|q| &q.pts));
             let mut offset = 0;
             for ring in rings {
                 if let Some(i) = ring

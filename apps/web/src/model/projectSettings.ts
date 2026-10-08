@@ -12,6 +12,10 @@ import type { Workspace } from '../contracts/generated/Workspace';
 import { crsBySrid, DEFAULT_SRID, type CrsDef } from '../geo/crs';
 import { sanitizedDimensionStyles, sanitizedTextStyles } from './annotationStyles';
 import { sameTopology, sanitizeTopology } from './topologyRules';
+import { ANNOTATION_KINDS, annotationMm, paperHeight, sanitizedAnnotationHeights, type AnnotationHeights, type AnnotationKind } from './annotationScale';
+
+/** Whether two projects' annotation heights are the same (none and none too). */
+const sameHeights = (a: AnnotationHeights | null, b: AnnotationHeights | null): boolean => ANNOTATION_KINDS.every((k) => a?.[k] === b?.[k]);
 
 export type AreaUnit = 'm2' | 'donum' | 'ha';
 export type AngleUnit = 'grad' | 'deg';
@@ -72,18 +76,21 @@ export interface ProjectSettingsData {
   dimensionStyles?: DimensionStyleDef[];
   /** The project's topology rules, tolerance and exceptions (docs/adr/0202 §1); absent: none. */
   topology?: TopologySettings;
+  /** The project's annotation heights on paper (docs/adr/0205 §1); absent: every kind's default. */
+  annotation?: AnnotationHeights;
 }
 
 /**
- * A change to some settings: absent fields are kept; a null `secondSrid`, `customCrs`, `secondCustomCrs`, `survey` or
- * `topology` removes it, an empty `datumTransforms` the datum choices.
+ * A change to some settings: absent fields are kept; a null `secondSrid`, `customCrs`, `secondCustomCrs`, `survey`,
+ * `topology` or `annotation` removes it, an empty `datumTransforms` the datum choices.
  */
-export type ProjectSettingsPatch = Partial<Omit<ProjectSettingsData, 'secondSrid' | 'customCrs' | 'secondCustomCrs' | 'survey' | 'topology'>> & {
+export type ProjectSettingsPatch = Partial<Omit<ProjectSettingsData, 'secondSrid' | 'customCrs' | 'secondCustomCrs' | 'survey' | 'topology' | 'annotation'>> & {
   secondSrid?: number | null;
   customCrs?: CrsDefinition | null;
   secondCustomCrs?: CrsDefinition | null;
   survey?: SurveySettings | null;
   topology?: TopologySettings | null;
+  annotation?: AnnotationHeights | null;
 };
 
 /** The refraction coefficient of trigonometric heights when a project names none (docs/adr/0169 §3). */
@@ -249,6 +256,8 @@ export class ProjectSettings {
   readonly dimensionStyles: Signal<readonly DimensionStyleDef[]>;
   /** The project's topology rules, tolerance and exceptions, or null, as a project keeps them (docs/adr/0202 §1; `sanitizeTopology`). */
   readonly topology: Signal<TopologySettings | null>;
+  /** The project's annotation heights, or null, as a project keeps them (docs/adr/0205 §1; `sanitizedAnnotationHeights`). */
+  readonly annotation: Signal<AnnotationHeights | null>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
 
@@ -273,6 +282,7 @@ export class ProjectSettings {
     this.textStyles = new Signal<readonly TextStyleDef[]>(sanitizedTextStyles(d.textStyles ?? []));
     this.dimensionStyles = new Signal<readonly DimensionStyleDef[]>(sanitizedDimensionStyles(d.dimensionStyles ?? []));
     this.topology = new Signal(sanitizeTopology(d.topology), sameTopology);
+    this.annotation = new Signal(sanitizedAnnotationHeights(d.annotation) ?? null, sameHeights);
     watchAll(
       [
         this.crs,
@@ -293,6 +303,7 @@ export class ProjectSettings {
         this.textStyles,
         this.dimensionStyles,
         this.topology,
+        this.annotation,
       ],
       () => this.changed.update((v) => v + 1),
     );
@@ -326,7 +337,19 @@ export class ProjectSettings {
       ...(this.dimensionStyles.value.length ? { dimensionStyles: structuredClone([...this.dimensionStyles.value]) } : {}),
       // Written only when there are (KCAD schema 27).
       ...(this.topology.value ? { topology: structuredClone(this.topology.value) } : {}),
+      // Written only when there are (KCAD schema 30).
+      ...(this.annotation.value ? { annotation: { ...this.annotation.value } } : {}),
     };
+  }
+
+  /** A kind of annotation's height on paper, mm: the project's, else its default (docs/adr/0205 §1). */
+  annotationMm(kind: AnnotationKind): number {
+    return annotationMm(this.annotation.value ?? undefined, kind);
+  }
+
+  /** A kind of annotation's height in the drawing at the plot scale, metres (docs/adr/0205 §1). */
+  annotationHeight(kind: AnnotationKind): number {
+    return paperHeight(this.annotationMm(kind), this.plotScale.value);
   }
 
   /** The refraction coefficient k of trigonometric heights: the project's, or 0.13 (docs/adr/0169 §3). */
@@ -374,6 +397,7 @@ export class ProjectSettings {
       textStyles: data.textStyles ?? [],
       dimensionStyles: data.dimensionStyles ?? [],
       topology: data.topology ?? null,
+      annotation: data.annotation ?? null,
     });
     this.workspace.set(typeOf(data.workspace));
     this.drawingUnit.set(data.drawingUnit ?? 'm');
@@ -413,6 +437,7 @@ export class ProjectSettings {
     if (data.textStyles !== undefined) this.textStyles.set(sanitizedTextStyles(data.textStyles));
     if (data.dimensionStyles !== undefined) this.dimensionStyles.set(sanitizedDimensionStyles(data.dimensionStyles));
     if (data.topology !== undefined) this.topology.set(sanitizeTopology(data.topology));
+    if (data.annotation !== undefined) this.annotation.set(sanitizedAnnotationHeights(data.annotation ?? undefined) ?? null);
   }
 
   /** The project's text style `id`, or null (Standart, or one it no longer has). */

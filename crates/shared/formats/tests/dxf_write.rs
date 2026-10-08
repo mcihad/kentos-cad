@@ -2240,24 +2240,42 @@ fn an_attribute_text_on_more_lines_is_written_on_one_and_said() {
 /// The leaders' fixture (`fixtures/formats/v1/dxf-write/leaders.input.json`,
 /// docs/adr/0146 §8) goes out as its committed bytes, which
 /// `scripts/fixtures/dxf_write_reference.py` checks without KentOS's code;
-/// the open and dot arrowheads are said.
+/// every arrowhead is AutoCAD's block of it (docs/adr/0205 §7): nothing is said.
 #[test]
 fn the_leaders_fixture_is_written_to_its_committed_bytes() {
     let report = written_as_committed("leaders");
-    let notes: Vec<(&str, &str, u32)> = report
-        .notes
-        .iter()
-        .map(|n| (n.what.as_str(), n.reason.as_str(), n.count))
-        .collect();
-    assert_eq!(
-        notes,
-        [(
-            "Kılavuz oku",
-            "açık ve nokta ok KentOS verisi olarak yazıldı; başka programlar dolu ok gösterir, KentOS geri okur",
-            2
-        )]
-    );
+    assert!(report.notes.is_empty(), "{:?}", report.notes);
     assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+}
+
+/// A drawing's block named as an arrow block AutoCAD's (`_Open`) keeps its
+/// name: the leader's open arrowhead is then KentOS's data, said; another
+/// program draws Standard's filled one, KentOS reads the open one back.
+#[test]
+fn a_block_with_an_arrow_block_s_name_keeps_it() {
+    let mut input = fixture_input("leaders");
+    input.blocks[0].name = "_Open".into();
+    let (text, report) = write(&input);
+    assert!(
+        report
+            .notes
+            .iter()
+            .any(|n| n.what == "Kılavuz oku"
+                && n.reason.contains("çizimin bir bloğunun adıyla aynı")),
+        "{:?}",
+        report.notes
+    );
+    let r = read(&text);
+    let open = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Leader(l) => Some(l.arrow),
+            _ => None,
+        })
+        .filter(|a| *a == Some(kentos_contracts::LeaderArrow::Open))
+        .count();
+    assert_eq!(open, 1);
 }
 
 /// Leaders go out as LEADERs with their notes' MTEXTs and come back as they
@@ -2284,7 +2302,7 @@ fn leaders_read_back_as_they_were() {
             })
             .collect()
     };
-    assert_eq!(leaders(&r.entities).len(), 7);
+    assert_eq!(leaders(&r.entities).len(), 17);
     assert_eq!(leaders(&r.entities), leaders(&input.entities));
     assert!(r.report.notes.is_empty(), "{:?}", r.report.notes);
     assert!(r.entities.iter().all(|e| !matches!(e, Entity::Text(_))));
@@ -2523,7 +2541,9 @@ fn styles_read_back_as_they_were() {
             .iter()
             .map(|s| s.name.clone())
             .collect::<Vec<_>>(),
-        names(vec!["Mimari", "Kadastro", "Noktalı", "Açık", "Oksuz"])
+        names(vec![
+            "Mimari", "Kadastro", "Noktalı", "Açık", "Oksuz", "Renkli"
+        ])
     );
     // The reader's id → the project's.
     let mut ids = BTreeMap::new();

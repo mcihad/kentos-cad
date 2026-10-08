@@ -565,6 +565,81 @@
    "expect": "“standart” adı Standart'ındır; ölçü stili başka bir ad almalı"
   },
   {
+   "name": "Çizgileri olan stil",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo",
+     "dimLineColor": "#C0392B",
+     "dimLineWeight": 0.35,
+     "dimLineType": "dashed",
+     "extColor": "#7F8C8D",
+     "extWeight": 0.18,
+     "extLineType": "dotted",
+     "textColor": "#1F4E79"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Ölçü çizgisinin rengi #RRGGBB değil",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo",
+     "dimLineColor": "kırmızı"
+    }
+   ],
+   "expect": "“Mimari” ölçü stili: Ölçünün ölçü çizgisinin rengi #RRGGBB biçiminde olmalı; “kırmızı” verildi. Rengi #RRGGBB olarak verin ya da alanı kaldırın (nesnenin rengi)."
+  },
+  {
+   "name": "Uzatma çizgilerinin kalınlığı 101 mm",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo",
+     "extWeight": 101.0
+    }
+   ],
+   "expect": "“Mimari” ölçü stili: Ölçünün uzatma çizgilerinin kalınlığı kâğıtta 0 ile 100 mm arasında olmalı; 101 verildi. Bu aralıkta verin ya da alanı kaldırın (kılcal)."
+  },
+  {
    "name": "Yüzsüz yazı",
    "op": "faceProblem",
    "face": {},
@@ -742,6 +817,42 @@
    "expect": [
     "dimStyle",
     "Ölçünün stil kimliği boş. Stilin kimliğini verin ya da alanı kaldırın (Standart)."
+   ]
+  },
+  {
+   "name": "Çizgiler",
+   "op": "lookProblem",
+   "look": {
+    "dimLineColor": "#C0392B",
+    "dimLineWeight": 0.35,
+    "dimLineType": "dashdot",
+    "extColor": "#7f8c8d",
+    "extWeight": 0.0,
+    "extLineType": "dashed",
+    "textColor": "#1F4E79"
+   },
+   "expect": null
+  },
+  {
+   "name": "Değerin rengi kısa",
+   "op": "lookProblem",
+   "look": {
+    "textColor": "#F00"
+   },
+   "expect": [
+    "textColor",
+    "Ölçünün değerinin rengi #RRGGBB biçiminde olmalı; “#F00” verildi. Rengi #RRGGBB olarak verin ya da alanı kaldırın (nesnenin rengi)."
+   ]
+  },
+  {
+   "name": "Ölçü çizgisi −0,1 mm",
+   "op": "lookProblem",
+   "look": {
+    "dimLineWeight": -0.1
+   },
+   "expect": [
+    "dimLineWeight",
+    "Ölçünün ölçü çizgisinin kalınlığı kâğıtta 0 ile 100 mm arasında olmalı; -0.1 verildi. Bu aralıkta verin ya da alanı kaldırın (kılcal)."
    ]
   },
   {
@@ -1236,6 +1347,91 @@
    }
   },
   {
+   "name": "Standart 1:500, projenin ölçü yüksekliği 3,5 mm",
+   "op": "applyDimension",
+   "style": null,
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo"
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+     "name": "Harita",
+     "height": 2.5,
+     "arrowSize": 1.5,
+     "textPlace": "centre"
+    }
+   ],
+   "plotScale": 500.0,
+   "standardMm": 3.5,
+   "dimension": {
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+    "textPlace": "centre",
+    "height": 0.3
+   },
+   "expect": {
+    "height": 1.75
+   }
+  },
+  {
+   "name": "Çizgileri olan stil: renkler, kalınlık ve tip görünüşe geçer",
+   "op": "applyDimension",
+   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo"
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+     "name": "Harita",
+     "height": 2.5,
+     "arrowSize": 1.5,
+     "textPlace": "centre",
+     "dimLineColor": "#C0392B",
+     "dimLineWeight": 0.35,
+     "extLineType": "dotted",
+     "textColor": "#1F4E79"
+    }
+   ],
+   "plotScale": 1000.0,
+   "dimension": {
+    "height": 0.3
+   },
+   "expect": {
+    "height": 2.5,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+    "textPlace": "centre",
+    "dimLineColor": "#C0392B",
+    "dimLineWeight": 0.35,
+    "extLineType": "dotted",
+    "textColor": "#1F4E79"
+   }
+  },
+  {
    "name": "Hepsi stilin: hepsi yeni",
    "op": "followDimension",
    "old": {
@@ -1405,6 +1601,144 @@
     "unit": "mm",
     "suffix": " mm",
     "font": "arimo"
+   }
+  },
+  {
+   "name": "Çizgiler stilin: hepsi yeni",
+   "op": "followDimension",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "name": "Mimari",
+    "height": 3.5,
+    "arrow": "closed",
+    "arrowSize": 3.5,
+    "extOffset": 1.0,
+    "extBeyond": 1.75,
+    "textGap": 0.875,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo",
+    "dimLineColor": "#C0392B",
+    "extWeight": 0.18
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "name": "Mimari",
+    "height": 3.5,
+    "arrow": "closed",
+    "arrowSize": 3.5,
+    "extOffset": 1.0,
+    "extBeyond": 1.75,
+    "textGap": 0.875,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo",
+    "dimLineColor": "#1F4E79",
+    "extWeight": 0.25,
+    "dimLineType": "dashed"
+   },
+   "plotScale": 50.0,
+   "dimension": {
+    "height": 0.17500000000000002,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "closed",
+    "extOffset": 0.2857142857142857,
+    "textGap": 0.25,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo",
+    "dimLineColor": "#C0392B",
+    "extWeight": 0.18
+   },
+   "expect": {
+    "height": 0.17500000000000002,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "closed",
+    "extOffset": 0.2857142857142857,
+    "textGap": 0.25,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo",
+    "dimLineColor": "#1F4E79",
+    "dimLineType": "dashed",
+    "extWeight": 0.25
+   }
+  },
+  {
+   "name": "Kendi rengi kalır, kalınlık ve tip yeni",
+   "op": "followDimension",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "name": "Mimari",
+    "height": 3.5,
+    "arrow": "closed",
+    "arrowSize": 3.5,
+    "extOffset": 1.0,
+    "extBeyond": 1.75,
+    "textGap": 0.875,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo",
+    "dimLineColor": "#C0392B",
+    "extWeight": 0.18
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "name": "Mimari",
+    "height": 3.5,
+    "arrow": "closed",
+    "arrowSize": 3.5,
+    "extOffset": 1.0,
+    "extBeyond": 1.75,
+    "textGap": 0.875,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo",
+    "dimLineColor": "#1F4E79",
+    "extWeight": 0.25,
+    "dimLineType": "dashed"
+   },
+   "plotScale": 50.0,
+   "dimension": {
+    "height": 0.17500000000000002,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "closed",
+    "extOffset": 0.2857142857142857,
+    "textGap": 0.25,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo",
+    "dimLineColor": "#000000",
+    "extWeight": 0.18
+   },
+   "expect": {
+    "height": 0.17500000000000002,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "dimLineColor": "#000000",
+    "arrow": "closed",
+    "extOffset": 0.2857142857142857,
+    "textGap": 0.25,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo",
+    "dimLineType": "dashed",
+    "extWeight": 0.25
    }
   },
   {

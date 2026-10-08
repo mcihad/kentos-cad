@@ -145,6 +145,21 @@ export function engine(api: DraftApi<AppDraft>, ctx: AppContext): Child[] {
           onChange: (v) => api.set('colorMode', v),
         }),
       ),
+      // Yazıların boyu (docs/adr/0205 §5).
+      settingRow(
+        'Yazıların boyu',
+        'Kaybolmasın: ekranda 8 pikselden küçük kalan yazı bu boyda, birbirinin üstüne binmeden çizilir. Gerçek boy: 5 pikselden küçük yazı çizilmez. Ekranda sabit: her yazı kâğıttaki boyunda. Pafta ve çıktılar gerçek boyu kullanır.',
+        segmented({
+          label: 'Yazıların boyu',
+          options: [
+            { value: 'legible', label: 'Kaybolmasın' },
+            { value: 'true', label: 'Gerçek boy' },
+            { value: 'screen', label: 'Ekranda sabit' },
+          ],
+          value: d.annotationSize,
+          onChange: (v) => api.set('annotationSize', v),
+        }),
+      ),
       settingRow('Dolgular ve taramalar', 'Kapalıyken yalnız çizgiler görünür; resimler görünür kalır.', toggleSwitch({ label: 'Dolguları ve taramaları göster', checked: d.fills, onChange: (v) => api.set('fills', v) })),
       settingRow('Alan sınırları', 'Kapalıyken alanların yalnız dolguları görünür.', toggleSwitch({ label: 'Alan sınırlarını göster', checked: d.areaEdges, onChange: (v) => api.set('areaEdges', v) })),
       settingRow('Saydamlık', 'Kapalıyken yarı saydam dolgular ve resimler tam örtücü çizilir.', toggleSwitch({ label: 'Saydamlığı göster', checked: d.transparency, onChange: (v) => api.set('transparency', v) })),

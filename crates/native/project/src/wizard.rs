@@ -135,6 +135,22 @@ pub fn scale_text(n: f64) -> String {
     format!("1:{}", tr_number(n))
 }
 
+/// The plot scales a project's Ölçek offers (docs/adr/0205 §4): its type's
+/// (a CAD project's drawing scales, else the map scales), with the current
+/// one in its place when it is none of them. The web's `projectScales`.
+pub fn project_scales(cad: bool, current: f64) -> Vec<f64> {
+    let mut out: Vec<f64> = if cad {
+        CAD_SCALES.to_vec()
+    } else {
+        GIS_SCALES.to_vec()
+    };
+    if current.is_finite() && current > 0.0 && !out.contains(&current) {
+        out.push(current);
+        out.sort_by(f64::total_cmp);
+    }
+    out
+}
+
 /// `n.toLocaleString('tr-TR')`: digits grouped by dots, at most three decimals after a comma.
 fn tr_number(n: f64) -> String {
     let thousandths = (n.abs() * 1000.0).round();

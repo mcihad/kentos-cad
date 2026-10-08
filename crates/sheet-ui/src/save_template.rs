@@ -401,8 +401,8 @@ impl Designer {
             ));
         }
         if d.workspaces.is_empty() {
-            col = col
-                .push(label::caption("En az bir proje türü seçin.").style(style::text::danger));
+            col =
+                col.push(label::caption("En az bir proje türü seçin.").style(style::text::danger));
         }
         body = body.push(col);
         let mut types = column![].spacing(4);

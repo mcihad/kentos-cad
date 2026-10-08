@@ -1,4 +1,5 @@
 import { uuidv7 } from '../core/uuid';
+import { followAnnotationChange } from './annotationScale';
 import { packDrawing, type PageEntity } from '../io/columns';
 import { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
@@ -175,11 +176,14 @@ function putSettings(ctx: AppContext, result: Json, units: boolean): void {
   if (units)
     for (const key of TAKEN_SETTINGS) {
       if (key in s) patch[key] = s[key];
-      else if (key === 'survey') patch.survey = null;
+      else if (key === 'survey' || key === 'annotation') patch[key] = null;
       else if (key === 'drawingUnit') patch.drawingUnit = 'm';
     }
+  // The annotations at the old general height follow a scale or heights taken (docs/adr/0205 §3).
+  const before = { scale: ctx.doc.settings.plotScale.value, heights: ctx.doc.settings.annotation.value ?? undefined };
   ctx.doc.settings.assign(patch);
   ctx.doc.styles.set(result.styles);
+  if (units) followAnnotationChange(ctx, { fromScale: before.scale, toScale: ctx.doc.settings.plotScale.value, from: before.heights, to: ctx.doc.settings.annotation.value ?? undefined });
 }
 
 /** Başka çizimden al's `picks` of `theirs` into the open drawing (docs/adr/0193 §2); the counts in words, or why not. */

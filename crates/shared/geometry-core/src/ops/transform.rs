@@ -414,6 +414,7 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             height,
             rotation,
             arrow,
+            arrow_size,
             mask,
         } => Shape::Leader {
             pts: pts.iter().map(|&p| apply(m, p)).collect(),
@@ -421,6 +422,7 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             height: height * s,
             rotation: text_turn(*rotation, m),
             arrow: arrow.clone(),
+            arrow_size: *arrow_size,
             mask: *mask,
         },
         // Its corner moves and its sizes scale; it turns as a text does: mirrored, its

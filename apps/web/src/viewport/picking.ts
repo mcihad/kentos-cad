@@ -289,6 +289,12 @@ export class PickIndex {
     return this.store.labels(view.minX, view.minY, view.maxX, view.maxY, scale, editingId);
   }
 
+  /** The same as the view shows them under `size` (docs/adr/0205 §5): `LABEL_SHOWN_STRIDE` numbers a record. */
+  labelsShown(view: Bounds, scale: number, editingId: number | null, size: 'legible' | 'true' | 'screen', plotScale: number): Float64Array {
+    this.sync();
+    return this.store.labelsShown(view.minX, view.minY, view.maxX, view.maxY, scale, editingId, size, plotScale);
+  }
+
   /**
    * Etiketleri yazıya çevir (docs/adr/0175 §1): the texts `wanted` labels make at 1:`scale`, each object's label
    * placed by the store as the drawing's are, the template filled and the text measured in the drawing's typeface; a

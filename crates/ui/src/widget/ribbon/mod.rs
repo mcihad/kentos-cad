@@ -610,8 +610,8 @@ pub fn fit(widths: &[[f32; 4]], keep: &[bool], available: f32) -> (Vec<u8>, bool
             let whole = (0..widths.len()).all(|k| !kept(k) || levels[k] == 0);
             let floor = if kept(i) || whole { 0 } else { 2 };
             let here = widths[i][usize::from(levels[i])];
-            if let Some(l) = (floor..levels[i])
-                .find(|&l| total - here + widths[i][usize::from(l)] <= available)
+            if let Some(l) =
+                (floor..levels[i]).find(|&l| total - here + widths[i][usize::from(l)] <= available)
             {
                 total += widths[i][usize::from(l)] - here;
                 levels[i] = l;

@@ -2,7 +2,7 @@
   "format": "kentos.interaction-trace",
   "version": 1,
   "id": "selection-extras",
-  "title": "Seçim ekleri: ortak sınıra tıklamak iki parselden ilkini seçer, çip “1/2” açılır, Shift+Boşluk sıradakine geçer ve başa döner; dairenin kenarı alanın önündedir; Önceki seçim kaldırılan ve yerini başkasına bırakan seçimi geri getirir, ikinci basış bir önceki hâle döner; Çokgenle seç'in İçindekiler, Kesişenler ve Dışındakiler kipleri içbükey çokgende; Benzerini seç örnekten seçer, ölçütler kapatılıp açılınca yeniden seçer, başka nesneye tıklamak onu örnek yapar; Seçim süzgeci kapalı alanları dışarıda bırakır: tıklama, kutu ve söylenen sayı",
+  "title": "Seçim ekleri: ortak sınıra tıklamak iki parselden ilkini seçer, çip “1/2” açılır, Shift+Boşluk sıradakine geçer ve başa döner; dairenin kenarı alanın önündedir; Önceki seçim kaldırılan ve yerini başkasına bırakan seçimi geri getirir, ikinci basış bir önceki hâle döner; Çokgenle seç'in İçindekiler, Kesişenler ve Dışındakiler kipleri içbükey çokgende; Benzerini seç örnekten seçer, ölçütler kapatılıp açılınca yeniden seçer, başka nesneye tıklamak onu örnek yapar; Seçim süzgeci kapalı alanları dışarıda bırakır: tıklama, kutu ve söylenen sayı; Hiçbir tür ve tek tür yalnız onu seçtirir, Bütün türler hiçbir şeyi dışarıda bırakmaz",
   "source": "Web'in SelectTool'u, SelectionChip'i, PolygonSelectTool'u, SelectSimilarTool'u ve seçim komutları (app/selectionCommands.ts), ADR 0187",
   "covers": ["CAD-25"],
   "document": "selection.kcad",
@@ -70,6 +70,14 @@
     { "click": [-10, 2.875], "note": "Parsel süzülünce dairenin tek adayı kalır: çip açılmaz.", "expect": { "selected": [7], "cycle": null } },
     { "drag": [[-28, -18], [28, 19]], "note": "Pencere bütün çizimi alır; süzgeç üç parseli dışarıda bırakır ve söyler.", "expect": { "selected": [3, 4, 6, 7], "logged": ["Seçim süzgeci 3 nesneyi dışarıda bıraktı."] } },
     { "run": "edit.selectFilter.polygon", "note": "Kapalı alan yeniden süzgeçte." },
+    { "run": "edit.selectFilter", "note": "Süzgeç kapanır.", "expect": { "logged": ["Seçim süzgeci kapalı."] } },
+    { "key": "Esc", "expect": { "selected": [] } },
+    { "run": "edit.selectFilterNone", "note": "Hiçbir tür (8 Ekim eki): bütün türlerin işareti kalkar, süzgeç açılır." },
+    { "run": "edit.selectFilter.circle", "note": "Yalnız Daire işaretlenir." },
+    { "drag": [[-28, -18], [28, 19]], "note": "Pencere bütün çizimi alır; yalnız daire seçilir, öbür altı nesne dışarıda kalır.", "expect": { "selected": [7], "logged": ["Seçim süzgeci 6 nesneyi dışarıda bıraktı."] } },
+    { "key": "Esc", "expect": { "selected": [] } },
+    { "run": "edit.selectFilterAll", "note": "Bütün türler: süzgeç açık kalır, hiçbir nesneyi dışarıda bırakmaz." },
+    { "drag": [[-28, -18], [28, 19]], "expect": { "selected": [1, 2, 3, 4, 5, 6, 7] } },
     { "run": "edit.selectFilter", "note": "Süzgeç kapanır.", "expect": { "logged": ["Seçim süzgeci kapalı."] } },
     { "key": "Esc", "expect": { "selected": [] } }
   ]

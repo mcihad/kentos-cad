@@ -10,4 +10,5 @@
 export { SheetPaint } from './paint';
 export { newSheet, saveAsTemplate, sheetFromTemplate, templateAction, templateNeeds, templatePreview } from './templateActions';
 export { addPicture } from './pictures';
+export { coordinateInputOf, coordinateObjects } from './inputs';
 export { CloudLibrary } from './cloudLibrary';

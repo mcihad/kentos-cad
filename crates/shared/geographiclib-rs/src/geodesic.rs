@@ -1,10 +1,10 @@
 #![allow(non_snake_case)]
 #![allow(clippy::excessive_precision)]
 
-use crate::lm::Lm;
 use crate::geodesic_capability as caps;
 use crate::geodesic_line;
 use crate::geomath;
+use crate::lm::Lm;
 use std::sync;
 
 use std::f64::consts::{FRAC_1_SQRT_2, PI};
@@ -472,10 +472,12 @@ impl Geodesic {
         let comg2 = calp2 * cbet2;
         geomath::norm(&mut ssig2, &mut csig2);
 
-        let sig12 = ((csig1 * ssig2 - ssig1 * csig2).max(0.0)).lm_atan2(csig1 * csig2 + ssig1 * ssig2);
+        let sig12 =
+            ((csig1 * ssig2 - ssig1 * csig2).max(0.0)).lm_atan2(csig1 * csig2 + ssig1 * ssig2);
         let somg12 = (comg1 * somg2 - somg1 * comg2).max(0.0);
         let comg12 = comg1 * comg2 + somg1 * somg2;
-        let eta = (somg12 * clam120 - comg12 * slam120).lm_atan2(comg12 * clam120 + somg12 * slam120);
+        let eta =
+            (somg12 * clam120 - comg12 * slam120).lm_atan2(comg12 * clam120 + somg12 * slam120);
 
         let k2 = geomath::sq(calp0) * self._ep2;
         let eps = k2 / (2.0 * (1.0 + (1.0 + k2).sqrt()) + k2);
@@ -638,7 +640,8 @@ impl Geodesic {
             ssig2 = sbet2;
             csig2 = calp2 * cbet2;
 
-            sig12 = ((csig1 * ssig2 - ssig1 * csig2).max(0.0)).lm_atan2(csig1 * csig2 + ssig1 * ssig2);
+            sig12 =
+                ((csig1 * ssig2 - ssig1 * csig2).max(0.0)).lm_atan2(csig1 * csig2 + ssig1 * ssig2);
             let res = self._Lengths(
                 self._n,
                 sig12,

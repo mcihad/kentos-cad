@@ -192,7 +192,7 @@ fn parts(e: &Shape, font: Font) -> (Vec<Edge>, Vec<Vec2>) {
             let mut edges = entity_edges(e);
             edges.extend(body(e, font).map(|b| closed(&b)).unwrap_or_default());
             let head = leader::layout_of(e)
-                .map(|l| leader::head_reach(&l.head))
+                .map(|l| leader::head_reach(&l))
                 .unwrap_or_default();
             (edges, head)
         }

@@ -238,6 +238,8 @@ export interface PreferencesData {
   lineWeights: boolean;
   /** Görünüm kipleri (docs/adr/0195): Renkli, Tek renk or Gri. */
   colorMode: ColorMode;
+  /** How the drawing's text is sized on the screen (docs/adr/0205 §5): Kaybolmasın, Gerçek boy or Ekranda sabit. */
+  annotationSize: 'legible' | 'true' | 'screen';
   /** Area fills and hatches drawn (pictures always are). */
   fills: boolean;
   /** Areas' edges drawn. */
@@ -296,6 +298,7 @@ export const PREF_KEYS = {
   symbolSize: 'graphics.symbolSize',
   lineWeights: 'graphics.lineWeights',
   colorMode: 'graphics.colorMode',
+  annotationSize: 'graphics.annotationSize',
   fills: 'graphics.fills',
   areaEdges: 'graphics.areaEdges',
   transparency: 'graphics.transparency',

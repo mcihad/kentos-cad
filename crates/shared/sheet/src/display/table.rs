@@ -236,17 +236,85 @@ fn layer_rows(
         .collect()
 }
 
-fn coordinate_model(ctx: &Ctx, it: &Item, c: &CoordinateListItem, notes: &mut Vec<Note>) -> Model {
-    let geo = ctx.inputs.capabilities.georeferenced;
-    // East first in both: Y east in surveying, X east in the drawing's own axes.
-    let (e, n) = if geo {
+/// What a coordinate list's source gives, as its section says it
+/// (docs/adr/0206 §2): whose objects, how many, and their points (a
+/// closed figure's corners and area); `input` the host's for the list,
+/// `layer` the source layer's name when it is one.
+pub fn coordinate_summary(
+    source: &CoordSource,
+    input: Option<&super::CoordinateInput>,
+    layer: Option<&str>,
+) -> String {
+    let objects = input.and_then(|i| i.objects).unwrap_or(0);
+    let missing = input.and_then(|i| i.missing).unwrap_or(0);
+    let points = input.map_or(0, |i| i.points.len());
+    let what = match input {
+        Some(i) if i.closed && points > 2 => {
+            let area = i
+                .area
+                .map(|a| format!(", alanı {} m²", kentos_geometry_core::display::fixed(a, 2)))
+                .unwrap_or_default();
+            format!("kapalı şeklin {points} köşesi{area}")
+        }
+        _ => format!("{points} nokta"),
+    };
+    match source {
+        CoordSource::Objects(o) if o.uids.is_empty() => {
+            "Nesne alınmadı: çizimde nesneleri seçip “Seçimi al”a basın.".to_owned()
+        }
+        CoordSource::Objects(o) => {
+            let gone = if missing > 0 {
+                format!(" (çizimde olmayan: {missing})")
+            } else {
+                String::new()
+            };
+            format!("Seçilen {} nesne{gone}: {what}.", o.uids.len())
+        }
+        CoordSource::Layer(_) => {
+            let name = layer.unwrap_or("Bulunamayan");
+            if objects == 0 {
+                format!("“{name}” katmanında nesne yok: liste boş.")
+            } else {
+                format!("“{name}” katmanı: {objects} nesne, {what}.")
+            }
+        }
+        CoordSource::Selection(_) if objects == 0 => {
+            "Çizimde seçili nesne yok: liste boş. Seçim değiştikçe liste de değişir; sabitlemek için “Seçimi al”.".to_owned()
+        }
+        CoordSource::Selection(_) => format!(
+            "Çizimde şu an seçili {objects} nesne: {what}. Seçim değiştikçe liste de değişir; sabitlemek için “Seçimi al”."
+        ),
+    }
+}
+
+/// A coordinate list's headings and its area row's word (docs/adr/0206 §3):
+/// each one given, else the default; east first in both, Y east in
+/// surveying, X east in a local project's own axes.
+pub fn coordinate_headings(c: &CoordinateListItem, georeferenced: bool) -> [String; 5] {
+    let (e, n) = if georeferenced {
         ("Y (m)", "X (m)")
     } else {
         ("X (m)", "Y (m)")
     };
-    let mut header = vec!["Nokta".to_owned(), e.to_owned(), n.to_owned()];
+    let cols = c.columns.clone().unwrap_or_default();
+    let or = |v: Option<String>, d: &str| {
+        v.filter(|v| !v.trim().is_empty())
+            .unwrap_or_else(|| d.to_owned())
+    };
+    [
+        or(cols.point, "Nokta"),
+        or(cols.east, e),
+        or(cols.north, n),
+        or(cols.z, "Z (m)"),
+        or(cols.area, "Alan"),
+    ]
+}
+
+fn coordinate_model(ctx: &Ctx, it: &Item, c: &CoordinateListItem, notes: &mut Vec<Note>) -> Model {
+    let [point, e, n, z, area_word] = coordinate_headings(c, ctx.inputs.capabilities.georeferenced);
+    let mut header = vec![point, e, n];
     if c.z {
-        header.push("Z (m)".to_owned());
+        header.push(z);
     }
     let mut columns = vec![
         Column {
@@ -316,7 +384,7 @@ fn coordinate_model(ctx: &Ctx, it: &Item, c: &CoordinateListItem, notes: &mut Ve
                 kentos_geometry_core::geometry::signed_area(&pts).abs()
             });
             rows.push(RowData::Span(format!(
-                "Alan = {} m²",
+                "{area_word} = {} m²",
                 kentos_geometry_core::display::fixed(area, d.max(2))
             )));
         }

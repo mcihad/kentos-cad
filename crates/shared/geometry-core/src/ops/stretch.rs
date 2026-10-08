@@ -118,6 +118,7 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             height,
             rotation,
             arrow,
+            arrow_size,
             mask,
         } => any(pts).then(|| Shape::Leader {
             pts: pts.iter().map(|&p| mv(p)).collect(),
@@ -125,6 +126,7 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             height: *height,
             rotation: *rotation,
             arrow: arrow.clone(),
+            arrow_size: *arrow_size,
             mask: *mask,
         })?,
         Shape::Polygon {

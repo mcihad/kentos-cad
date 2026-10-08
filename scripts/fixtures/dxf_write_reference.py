@@ -59,9 +59,26 @@ library and no KentOS code:
   6), left to right (72 1), as high as the leader, in MTEXT's notation
   (control characters spaces, a backslash, brace or caret escaped), in the
   note's direction (11), over the drawing's background exactly when masked
-  (90 3). KentOS's data names an open or dot arrowhead ("arrow"), no other;
-  it holds the note exactly when MTEXT cannot (a control character in it),
-  and the turn, when it does, exactly;
+  (90 3). Its own changes to Standard (ACAD's DSTYLE data, docs/adr/0205
+  §7) give its arrowhead's length (41: its size, else 1, times its height,
+  exactly) and, for an arrowhead but the filled one and none, AutoCAD's
+  arrow block (341: the handle of the block record named _ClosedBlank,
+  _Open, _Open30, _Open90, _Dot, _DotSmall, _DotBlank, _Oblique,
+  _ArchTick, _BoxFilled, _BoxBlank or _DatumFilled), written once, its
+  record and BLOCK where the first leader with it puts them (a block's
+  before the block, the drawing's in its order), not anonymous (70 0), its
+  objects on 0 in BYBLOCK's colour and weight: the arrowhead one long, its
+  tip at the origin and its line along −x, as AutoCAD's are (a triangle
+  of base a third of its length, the open arrow's sides 15° and 45° off
+  the line, the dots of radius 1/4 and 1/8, the box 1/2 a side, the tick at
+  45° 1/√2 long each way, the architectural tick a band 1/8 wide, the
+  datum triangle's base 1 across the tip): a filled area a SOLID (a dot a
+  donut: a closed LWPOLYLINE of two half circles, as wide as its radius),
+  a line an LWPOLYLINE, a blank dot a CIRCLE. KentOS's data has no
+  arrowhead ("arrow") and its size ("arrowsize") exactly when DIMASZ over
+  the height does not give it back; it holds the note exactly when MTEXT
+  cannot (a control character in it), and the turn, when it does,
+  exactly;
 - a dimension of docs/adr/0147 §8 (Koordinat, Yay uzunluğu, Kırıklı
   yarıçap, Semt, Eğim, and an aligned one with Zemin): an ordinate is a
   DIMENSION of type 6 (70: 6 + 32, + 64 when it gives the east, its angle 0)
@@ -700,7 +717,71 @@ def mtext_notation(s: str) -> str:
     return "".join(" " if control(c) else escape.get(c, c) for c in s)
 
 
-def check_leader(o: list[tuple[int, str]], m: list[tuple[int, str]] | None, e: dict, where: str) -> None:
+# AutoCAD's arrow block of each arrowhead (docs/adr/0205 §7); the filled one is Standard's, none has none.
+ARROW_BLOCK = {
+    "closed": "_ClosedBlank", "open": "_Open", "open30": "_Open30", "open90": "_Open90", "dot": "_Dot",
+    "dotSmall": "_DotSmall", "dotBlank": "_DotBlank", "oblique": "_Oblique", "archTick": "_ArchTick",
+    "boxFilled": "_BoxFilled", "boxBlank": "_BoxBlank", "datumFilled": "_DatumFilled",
+}
+
+
+def arrow_shape(arrow: str) -> list[tuple]:
+    """An arrow block's objects as AutoCAD draws the arrowhead, one long, its tip at the origin, its line along −x:
+    ("solid", corners), ("donut", centre, radius), ("polyline", points, closed), ("circle", centre, radius)."""
+    t = 1.0 / 6.0
+    w = 1.0 / 16.0 / math.sqrt(2.0)
+    s = math.tan(math.pi / 12.0)
+    return {
+        "closed": [("polyline", [(0.0, 0.0), (-1.0, -t), (-1.0, t)], True)],
+        "open": [("polyline", [(-1.0, -t), (0.0, 0.0), (-1.0, t)], False)],
+        "open30": [("polyline", [(-1.0, -s), (0.0, 0.0), (-1.0, s)], False)],
+        "open90": [("polyline", [(-0.5, -0.5), (0.0, 0.0), (-0.5, 0.5)], False)],
+        "dot": [("donut", (0.0, 0.0), 0.25)],
+        "dotSmall": [("donut", (0.0, 0.0), 0.125)],
+        "dotBlank": [("circle", (0.0, 0.0), 0.25)],
+        "oblique": [("polyline", [(0.5, 0.5), (-0.5, -0.5)], False)],
+        "archTick": [("solid", [(0.5 - w, 0.5 + w), (-0.5 - w, -0.5 + w), (-0.5 + w, -0.5 - w), (0.5 + w, 0.5 - w)])],
+        "boxFilled": [("solid", [(0.25, 0.25), (-0.25, 0.25), (-0.25, -0.25), (0.25, -0.25)])],
+        "boxBlank": [("polyline", [(0.25, 0.25), (-0.25, 0.25), (-0.25, -0.25), (0.25, -0.25)], True)],
+        "datumFilled": [("solid", [(0.0, 0.5), (-1.0, 0.0), (0.0, -0.5)])],
+    }[arrow]
+
+
+def check_arrow_block(b: list[list[tuple[int, str]]], arrow: str, record: str, where: str) -> None:
+    """An arrow block's BLOCK, objects and ENDBLK: not anonymous, on 0, its objects BYBLOCK, as `arrow_shape`."""
+    head, *objects, end = b
+    name = ARROW_BLOCK[arrow]
+    ensure(group(head, 2) == name and group(head, 70) == "0" and group(head, 330) == record, f"{where}: {name}'s BLOCK, not anonymous")
+    ensure(float(group(head, 10)) == 0.0 and float(group(head, 20)) == 0.0, f"{where}: {name} based at the origin")
+    ensure(end[0] == (0, "ENDBLK") and group(end, 330) == record, f"{where}: {name}'s ENDBLK")
+    want = arrow_shape(arrow)
+    ensure(len(objects) == len(want), f"{where}: {name}'s {len(want)} objects")
+    near = lambda a, b: abs(a - b) <= 1e-12
+    for o, (kind, *rest) in zip(objects, want):
+        ensure(group(o, 330) == record and group(o, 8) == "0" and group(o, 62) == "0" and group(o, 370) == "-2", f"{where}: {name}'s objects on 0, BYBLOCK")
+        if kind == "solid":
+            corners = rest[0]
+            got = [(float(group(o, c)), float(group(o, c + 10))) for c in (10, 11, 12, 13)]
+            # SOLID runs 1 2 4 3 round a four-cornered area; a triangle repeats its last corner.
+            order = [corners[0], corners[1], corners[3], corners[2]] if len(corners) == 4 else [*corners, corners[2]]
+            ensure(o[0] == (0, "SOLID") and all(near(a[0], b[0]) and near(a[1], b[1]) for a, b in zip(got, order)), f"{where}: {name}'s SOLID {order}")
+        elif kind == "donut":
+            (cx, cy), r = rest
+            xs = [float(v) for c, v in o if c == 10]
+            ys = [float(v) for c, v in o if c == 20]
+            ensure(o[0] == (0, "LWPOLYLINE") and group(o, 70) == "1" and float(group(o, 43)) == r, f"{where}: {name}'s donut as wide as its radius")
+            ensure(xs == [cx - r / 2, cx + r / 2] and ys == [cy, cy] and [v for c, v in o if c == 42] == ["1.0", "1.0"], f"{where}: {name}'s two half circles")
+        elif kind == "circle":
+            (cx, cy), r = rest
+            ensure(o[0] == (0, "CIRCLE") and float(group(o, 10)) == cx and float(group(o, 20)) == cy and float(group(o, 40)) == r, f"{where}: {name}'s circle")
+        else:
+            pts, closed = rest
+            got = [(float(a[1]), float(b[1])) for a, b in zip(o, o[1:]) if a[0] == 10 and b[0] == 20]
+            ensure(o[0] == (0, "LWPOLYLINE") and group(o, 70) == ("1" if closed else "0"), f"{where}: {name}'s polyline")
+            ensure(len(got) == len(pts) and all(near(a[0], b[0]) and near(a[1], b[1]) for a, b in zip(got, pts)), f"{where}: {name}'s points {pts}")
+
+
+def check_leader(o: list[tuple[int, str]], m: list[tuple[int, str]] | None, e: dict, where: str, arrows: dict[str, str]) -> None:
     note = note_of(e)
     h = e["height"]
     r = math.radians(e["rotation"])
@@ -732,7 +813,18 @@ def check_leader(o: list[tuple[int, str]], m: list[tuple[int, str]] | None, e: d
     ensure(abs(float(group(o, 211)) - u[0]) <= 1e-12 and abs(float(group(o, 221)) - u[1]) <= 1e-12, f"{where}: the note's direction (211)")
     items = kentos(o)
     arrow = e.get("arrow")
-    ensure(items.get("arrow") == ([arrow] if arrow in ("open", "dot") else None), f"{where}: KentOS's arrow item exactly for open and dot")
+    # Its arrowhead's length and AutoCAD's block of it (docs/adr/0205 §7).
+    size = e.get("arrowSize")
+    own = dstyle(o)
+    ensure(41 in own and float(own[41]) == (size if size is not None else 1.0) * h, f"{where}: its arrowhead's length (DSTYLE 41)")
+    block = ARROW_BLOCK.get(arrow)
+    ensure(own.get(341) == (arrows[block] if block else None), f"{where}: AutoCAD's arrow block {block} (DSTYLE 341)")
+    ensure(set(own) <= {41, 341}, f"{where}: no other change to Standard")
+    ensure("arrow" not in items, f"{where}: no arrow item (the block names it)")
+    exact_size = size is not None and (size * h) / h != size
+    ensure(("arrowsize" in items) == exact_size, f"{where}: KentOS's arrow size exactly when DIMASZ over its height does not give it back")
+    if exact_size:
+        ensure(float(items["arrowsize"][0]) == size, f"{where}: KentOS's arrow size exactly")
     if "noteturn" in items:
         ensure(float(items["noteturn"][0]) == e["rotation"], f"{where}: KentOS's turn is the leader's exactly")
     exact = bool(note) and any(control(c) for c in note)
@@ -1045,7 +1137,21 @@ LABELS = {
 STYLE_REFUSED = set('<>/\\":;?*|=,`')
 FACE_KEYS = ("textStyle", "font", "bold", "italic", "oblique")
 LOOK_KEYS = ("dimStyle", "arrow", "arrowSize", "extOffset", "extBeyond", "textGap", "textPlace", "decimals", "unit",
-             "prefix", "suffix", "font")
+             "prefix", "suffix", "font", "dimLineColor", "dimLineWeight", "dimLineType", "extColor", "extWeight",
+             "extLineType", "textColor")
+# DXF's line weights, hundredths of a mm (docs/adr/0139): a weight is written as the nearest, the first of two.
+DXF_WEIGHTS = [0, 5, 9, 13, 15, 18, 20, 25, 30, 35, 40, 50, 53, 60, 70, 80, 90, 100, 106, 120, 140, 158, 200, 211]
+# The LTYPE records of KentOS's dashed line types.
+LTYPE_NAMES = {"dashed": "DASHED", "dashdot": "DASHDOT", "dotted": "DOT"}
+
+
+def nearest_weight(mm: float) -> int:
+    return min(DXF_WEIGHTS, key=lambda w: abs(w - mm * 100.0))
+
+
+def ltype_handles(p: list[tuple[int, str]]) -> dict[str, str]:
+    """The LTYPE records' handles by name."""
+    return {group(r, 2): group(r, 5) for r in split(section(p, "TABLES")) if r[0] == (0, "LTYPE")}
 STANDARD_STYLE = [(2, "Standard"), (70, "0"), (40, "0.0"), (41, "1.0"), (50, "0.0"), (71, "0"), (42, "2.5"),
                   (3, "arial.ttf"), (4, "")]
 
@@ -1147,7 +1253,7 @@ def check_style_tables(spec: dict, p: list[tuple[int, str]], names: tuple, paper
         w = f"ölçü stili {s['name']}"
         h = length(s["height"])
         look = {k: (v / s["height"] if k in ("arrowSize", "extOffset", "extBeyond", "textGap") else v) for k, v in s.items() if k in LOOK_KEYS}
-        check_vars({c: v for c, v in r if c not in (1001, 1000, 1002)}, look, h, s.get("decimals", 2), per_metre, w)
+        check_vars({c: v for c, v in r if c not in (1001, 1000, 1002)}, look, h, s.get("decimals", 2), per_metre, w, ltype_handles(p))
         flags_at = r.index((70, "0"))
         post = dimpost(look)
         ensure(post is None or r[flags_at + 1] == (3, post), f"{w}: DIMPOST {post!r} after the flags")
@@ -1161,7 +1267,7 @@ def dimpost(look: dict) -> str | None:
     return f"{look.get('prefix', '')}<>{look.get('suffix', '')}"
 
 
-def check_vars(v: dict, look: dict, h: float, decimals: int, per_metre: float, where: str) -> None:
+def check_vars(v: dict, look: dict, h: float, decimals: int, per_metre: float, where: str, ltypes: dict[str, str]) -> None:
     """A look's variables (a DIMSTYLE record's groups or a DIMENSION's DSTYLE overrides, code -> value) at height h."""
     tick = "arrow" not in look
     size = look.get("arrowSize", 0.6 if tick else 1.0) * h
@@ -1184,6 +1290,21 @@ def check_vars(v: dict, look: dict, h: float, decimals: int, per_metre: float, w
         ensure(close(real(144), factor, 1e-12), f"{where}: DIMLFAC {factor}")
     else:
         ensure(real(144) in (None, 1.0), f"{where}: no DIMLFAC of its own")
+    # Its lines (docs/adr/0205 §6): the colours it names as ACI indexes (DIMCLRD, DIMCLRE, DIMCLRT), its weights as
+    # DXF's nearest (DIMLWD, DIMLWE), its types by their LTYPE records (DIMLTYPE; DIMLTEX1 and 2 the extension lines').
+    for code, key in ((176, "dimLineColor"), (177, "extColor"), (178, "textColor")):
+        if look.get(key):
+            ensure(v.get(code) is not None and 1 <= int(v[code]) <= 255, f"{where}: {key} an ACI index ({code})")
+        else:
+            ensure(v.get(code) in (None, "0"), f"{where}: no {key} of its own ({code})")
+    for code, key in ((371, "dimLineWeight"), (372, "extWeight")):
+        if look.get(key) is not None:
+            ensure(v.get(code) == str(nearest_weight(look[key])), f"{where}: {key} as DXF's nearest ({code})")
+        else:
+            ensure(v.get(code) in (None, "-2"), f"{where}: no {key} of its own ({code})")
+    for code, key in ((345, "dimLineType"), (346, "extLineType"), (347, "extLineType")):
+        t = look.get(key)
+        ensure(v.get(code) == (ltypes[LTYPE_NAMES[t]] if t else None), f"{where}: {key} by its LTYPE record ({code})")
 
 
 def check_face(o: list[tuple[int, str]], e: dict, names: tuple, mtext: bool, where: str, letter: bool = False) -> None:
@@ -1231,12 +1352,13 @@ def arrow_ends(e: dict) -> list[tuple[tuple[float, float], tuple[float, float]]]
     raise Bad(f"no arrowhead rule here for a {style} dimension")
 
 
-def check_dim_look(o: list[tuple[int, str]], e: dict, names: tuple, spec: dict, blocks: list, per_metre: float, where: str) -> None:
-    """A DIMENSION's style record (3), its look in DSTYLE and KentOS's data, its block's arrowheads and value's record."""
+def check_dim_look(o: list[tuple[int, str]], e: dict, names: tuple, spec: dict, blocks: list, per_metre: float, where: str,
+                   ltypes: dict[str, str]) -> None:
+    """A DIMENSION's style record (3), its look in DSTYLE and KentOS's data, its block's arrowheads, lines' pens and value's record."""
     _, dims, synthetic = names
     look = own(e, LOOK_KEYS)
     ensure(group(o[after(o, "AcDbDimension") :], 3) == dims.get(e.get("dimStyle"), "Standard"), f"{where}: names its style's record (3)")
-    check_vars(dstyle(o), look, e["height"], spec["lengthDecimals"], per_metre, f"{where} (DSTYLE)")
+    check_vars(dstyle(o), look, e["height"], spec["lengthDecimals"], per_metre, f"{where} (DSTYLE)", ltypes)
     got = kentos(o).get("look")
     ensure((got is None) if not look else (got is not None and json.loads(item_text(got)) == look), f"{where}: its look {look} in KentOS's data")
     name = group(o, 2)
@@ -1246,6 +1368,28 @@ def check_dim_look(o: list[tuple[int, str]], e: dict, names: tuple, spec: dict, 
     mtext = next(x for x in inside if x[0] == (0, "MTEXT"))
     value = synthetic[(e["font"], False, False)] if e.get("font") else "Standard"
     ensure(group(mtext, 7) == value, f"{where}: its value in its typeface's record {value!r}")
+    # Its lines' pens (docs/adr/0205 §6): an aligned or linear one's extension lines (each from a measured point, its
+    # offset away) the extension lines' colour (420, true; 62 BYBLOCK without one), type (6) and weight (370), its
+    # other lines and arrowheads the dimension line's, its value the value's colour.
+    def pen(x: list[tuple[int, str]]) -> tuple:
+        return (group(x, 6), group(x, 420), group(x, 370), group(x, 62) == "0")
+
+    def want_pen(color: str | None, weight: float | None, kind: str | None) -> tuple:
+        return (LTYPE_NAMES.get(kind) if kind else None, str(int(color[1:], 16)) if color else None,
+                str(nearest_weight(weight)) if weight is not None else None, not color)
+
+    line_pen = want_pen(look.get("dimLineColor"), look.get("dimLineWeight"), look.get("dimLineType"))
+    ext_pen = want_pen(look.get("extColor"), look.get("extWeight"), look.get("extLineType"))
+    gap = look.get("extOffset", 0.5) * e["height"]
+    straight = e.get("style") in (None, "aligned", "linear")
+    for x in inside:
+        if x[0] == (0, "LINE"):
+            p0 = point(x, 10)
+            ext = straight and any(abs(math.hypot(p0[0] - q[0], p0[1] - q[1]) - gap) <= 1e-9 * max(1.0, gap) for q in (xy(e["a"]), xy(e["b"])))
+            ensure(pen(x) == (ext_pen if ext else line_pen), f"{where}: its {'extension' if ext else 'dimension'} line's pen")
+        elif x[0] in ((0, "SOLID"), (0, "LWPOLYLINE"), (0, "ARC")):
+            ensure(pen(x) == line_pen, f"{where}: its arrowheads and arc in the dimension line's pen")
+    ensure(pen(mtext) == want_pen(look.get("textColor"), None, None), f"{where}: its value in the value's colour")
     solids = [x for x in inside if x[0] == (0, "SOLID")]
     dots = [x for x in inside if x[0] == (0, "LWPOLYLINE")]
     arrow = look.get("arrow")
@@ -1396,11 +1540,21 @@ def check(name: str) -> list[str]:
     # Each dimension's own anonymous block (*D1, *D2 …): a block's dimensions' before it (blocks it holds), the
     # drawing's after the drawing's blocks (docs/adr/0147 §8).
     want, k = ["*Model_Space", "*Paper_Space"], 0
+    # AutoCAD's arrow blocks (docs/adr/0205 §7): each where the first leader with its arrowhead is written.
+    arrow_of: dict[str, str] = {}
+
+    def arrow_block(e: dict) -> None:
+        block = ARROW_BLOCK.get(e.get("arrow"))
+        if e["kind"] == "leader" and block and block not in arrow_of:
+            arrow_of[block] = e["arrow"]
+            want.append(block)
+
     for b in order:
         for e in b["entities"]:
             if e["kind"] == "dimension":
                 k += 1
                 want.append(f"*D{k}")
+            arrow_block(e)
         want.append(names[b["id"]])
     # The drawing's dimensions' blocks and its tables' and curved texts' (*U1, *U2 …, docs/adr/0184 §7, 0196 §5), in
     # the drawing's order.
@@ -1414,10 +1568,19 @@ def check(name: str) -> list[str]:
             u += 1
             anonymous[i] = u
             want.append(f"*U{u}")
+        arrow_block(e)
     ensure([group(r, 2) for r in records] == want, f"block records {want}")
     blocks = split(section(p, "BLOCKS"))
     heads = [e for e in blocks if e[0] == (0, "BLOCK")]
     ensure([group(h, 2) for h in heads] == want, f"BLOCKs {want}")
+    # The arrow blocks' records' handles, and their objects.
+    arrows = {name: record_of[name] for name in arrow_of}
+    for name, arrow in arrow_of.items():
+        i = next(k for k, b in enumerate(blocks) if b[0] == (0, "BLOCK") and group(b, 2) == name)
+        end = next(k for k in range(i, len(blocks)) if blocks[k][0] == (0, "ENDBLK"))
+        check_arrow_block(blocks[i : end + 1], arrow, arrows[name], f"ok bloğu {name}")
+    if arrow_of:
+        said.append(f"{len(arrow_of)} ok bloğu ({', '.join(arrow_of)})")
     for b in spec["blocks"]:
         if b["id"] not in names:
             ensure(all(group(h, 2) != b["name"] for h in heads), f"the unused {b['name']!r} is not written")
@@ -1462,7 +1625,7 @@ def check(name: str) -> list[str]:
             if e["kind"] == "insert":
                 check_insert(o, e, names[e["block"]], where)
             if e["kind"] == "leader":
-                check_leader(o, objects[k + 1] if note_of(e) else None, e, where)
+                check_leader(o, objects[k + 1] if note_of(e) else None, e, where, arrows)
                 if note_of(e):
                     check_look(objects[k + 1], e, layers, f"{where} › MTEXT")
             if is_paragraph(e):
@@ -1471,7 +1634,7 @@ def check(name: str) -> list[str]:
                 check_face(o, e, styled, is_paragraph(e), where)
             if e["kind"] == "dimension":
                 check_dimension(o, e, e.get("text"), blocks, where)
-                check_dim_look(o, e, styled, spec, blocks, per_metre, where)
+                check_dim_look(o, e, styled, spec, blocks, per_metre, where, ltype_handles(p))
             if e["kind"] == "polygon":
                 own = group(o, 5)
                 for h in objects[k + 1 : k + len(written_kinds(e))]:
@@ -1566,7 +1729,7 @@ def check(name: str) -> list[str]:
         ensure(group(o, 330) == "17" and group(o, 8) == layers[e["layerId"]], f"{where}: in model space, on its layer")
         if e.get("color"):
             ensure(group(o, 420) == str(int(e["color"][1:], 16)), f"{where}: its true colour")
-        check_leader(o, drawn[k + 1] if note_of(e) else None, e, where)
+        check_leader(o, drawn[k + 1] if note_of(e) else None, e, where, arrows)
     if leaders:
         noted = sum(1 for e in leaders if note_of(e))
         said.append(f"{len(leaders)} kılavuz ({noted} notlu MTEXT'iyle)")
@@ -1580,7 +1743,7 @@ def check(name: str) -> list[str]:
     for n, (e, o) in enumerate(zip(dims, written)):
         where = f"ölçü {n + 1} ({e.get('style', 'aligned')})"
         check_dimension(o, e, spec["dimensionValues"].get(str(e["id"])), blocks, where)
-        check_dim_look(o, e, styled, spec, blocks, per_metre, where)
+        check_dim_look(o, e, styled, spec, blocks, per_metre, where, ltype_handles(p))
     if dims:
         said.append(f"{len(dims)} ölçü ({sum(1 for e in dims if e.get('mask'))} zeminli)")
 

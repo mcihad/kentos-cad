@@ -76,7 +76,6 @@ pub(super) fn glyph(kind: SymbolKind) -> (Icon, Tone) {
     }
 }
 
-
 pub(super) fn view<'a, Message: Clone + 'a>(
     state: &'a CompletionState,
     events: Events<'a, Message>,

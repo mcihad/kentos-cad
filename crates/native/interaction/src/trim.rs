@@ -240,7 +240,10 @@ impl Boundary {
             let reason = why.map(|w| format!(" {w}")).unwrap_or_default();
             cx.say(
                 Level::Warn,
-                format!("Çit hiçbir nesneyi {}; nesne değişmedi.{reason}", verb_of(self.act)),
+                format!(
+                    "Çit hiçbir nesneyi {}; nesne değişmedi.{reason}",
+                    verb_of(self.act)
+                ),
             );
             return;
         }
@@ -313,7 +316,9 @@ impl Boundary {
         let mut used = [false; 2];
         for &at in crossings {
             let Some(path) = path_of(&current).filter(|p| !p.closed) else {
-                work.fail("Yalnız açık çizgiler, çoklu çizgiler ve yaylar uzatılabilir.".to_owned());
+                work.fail(
+                    "Yalnız açık çizgiler, çoklu çizgiler ve yaylar uzatılabilir.".to_owned(),
+                );
                 continue;
             };
             let end = usize::from(nearest_s(&path, at) > path.length / 2.0);

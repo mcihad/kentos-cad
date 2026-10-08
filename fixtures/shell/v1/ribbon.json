@@ -1882,24 +1882,256 @@
   ],
   "scales": [
    {
-    "denominator": 500,
-    "text": "1:500"
+    "cad": false,
+    "current": 1000,
+    "offered": [
+     {
+      "denominator": 500,
+      "text": "1:500"
+     },
+     {
+      "denominator": 1000,
+      "text": "1:1.000"
+     },
+     {
+      "denominator": 2000,
+      "text": "1:2.000"
+     },
+     {
+      "denominator": 5000,
+      "text": "1:5.000"
+     },
+     {
+      "denominator": 10000,
+      "text": "1:10.000"
+     },
+     {
+      "denominator": 25000,
+      "text": "1:25.000"
+     },
+     {
+      "denominator": 50000,
+      "text": "1:50.000"
+     }
+    ]
    },
    {
-    "denominator": 1000,
-    "text": "1:1000"
+    "cad": true,
+    "current": 1,
+    "offered": [
+     {
+      "denominator": 1,
+      "text": "1:1"
+     },
+     {
+      "denominator": 2,
+      "text": "1:2"
+     },
+     {
+      "denominator": 5,
+      "text": "1:5"
+     },
+     {
+      "denominator": 10,
+      "text": "1:10"
+     },
+     {
+      "denominator": 20,
+      "text": "1:20"
+     },
+     {
+      "denominator": 50,
+      "text": "1:50"
+     },
+     {
+      "denominator": 100,
+      "text": "1:100"
+     },
+     {
+      "denominator": 200,
+      "text": "1:200"
+     },
+     {
+      "denominator": 500,
+      "text": "1:500"
+     },
+     {
+      "denominator": 1000,
+      "text": "1:1.000"
+     }
+    ]
    },
    {
-    "denominator": 2000,
-    "text": "1:2000"
+    "cad": true,
+    "current": 75,
+    "offered": [
+     {
+      "denominator": 1,
+      "text": "1:1"
+     },
+     {
+      "denominator": 2,
+      "text": "1:2"
+     },
+     {
+      "denominator": 5,
+      "text": "1:5"
+     },
+     {
+      "denominator": 10,
+      "text": "1:10"
+     },
+     {
+      "denominator": 20,
+      "text": "1:20"
+     },
+     {
+      "denominator": 50,
+      "text": "1:50"
+     },
+     {
+      "denominator": 75,
+      "text": "1:75"
+     },
+     {
+      "denominator": 100,
+      "text": "1:100"
+     },
+     {
+      "denominator": 200,
+      "text": "1:200"
+     },
+     {
+      "denominator": 500,
+      "text": "1:500"
+     },
+     {
+      "denominator": 1000,
+      "text": "1:1.000"
+     }
+    ]
    },
    {
-    "denominator": 5000,
-    "text": "1:5000"
+    "cad": false,
+    "current": 100000,
+    "offered": [
+     {
+      "denominator": 500,
+      "text": "1:500"
+     },
+     {
+      "denominator": 1000,
+      "text": "1:1.000"
+     },
+     {
+      "denominator": 2000,
+      "text": "1:2.000"
+     },
+     {
+      "denominator": 5000,
+      "text": "1:5.000"
+     },
+     {
+      "denominator": 10000,
+      "text": "1:10.000"
+     },
+     {
+      "denominator": 25000,
+      "text": "1:25.000"
+     },
+     {
+      "denominator": 50000,
+      "text": "1:50.000"
+     },
+     {
+      "denominator": 100000,
+      "text": "1:100.000"
+     }
+    ]
    },
    {
-    "denominator": 25000,
-    "text": "1:25000"
+    "cad": false,
+    "current": 2500,
+    "offered": [
+     {
+      "denominator": 500,
+      "text": "1:500"
+     },
+     {
+      "denominator": 1000,
+      "text": "1:1.000"
+     },
+     {
+      "denominator": 2000,
+      "text": "1:2.000"
+     },
+     {
+      "denominator": 2500,
+      "text": "1:2.500"
+     },
+     {
+      "denominator": 5000,
+      "text": "1:5.000"
+     },
+     {
+      "denominator": 10000,
+      "text": "1:10.000"
+     },
+     {
+      "denominator": 25000,
+      "text": "1:25.000"
+     },
+     {
+      "denominator": 50000,
+      "text": "1:50.000"
+     }
+    ]
+   },
+   {
+    "cad": true,
+    "current": 1000,
+    "offered": [
+     {
+      "denominator": 1,
+      "text": "1:1"
+     },
+     {
+      "denominator": 2,
+      "text": "1:2"
+     },
+     {
+      "denominator": 5,
+      "text": "1:5"
+     },
+     {
+      "denominator": 10,
+      "text": "1:10"
+     },
+     {
+      "denominator": 20,
+      "text": "1:20"
+     },
+     {
+      "denominator": 50,
+      "text": "1:50"
+     },
+     {
+      "denominator": 100,
+      "text": "1:100"
+     },
+     {
+      "denominator": 200,
+      "text": "1:200"
+     },
+     {
+      "denominator": 500,
+      "text": "1:500"
+     },
+     {
+      "denominator": 1000,
+      "text": "1:1.000"
+     }
+    ]
    }
   ]
  },

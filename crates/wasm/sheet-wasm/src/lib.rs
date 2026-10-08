@@ -110,6 +110,57 @@ pub fn standard_scales() -> String {
     answer(Ok(kentos_sheet::paper::standard_scales()))
 }
 
+/// `number | null`: the scale a fixed map's frame (`RectUm`) needs to show `w` × `h` metres of
+/// ground with its content turned `rotation` m° (Görünüme sığdır, docs/adr/0206 §1).
+#[wasm_bindgen(js_name = fitViewScale)]
+pub fn fit_view_scale(w: f64, h: f64, rotation: i32, frame: &str) -> String {
+    answer(
+        read::<kentos_sheet::units::RectUm>("frame", frame)
+            .map(|f| kentos_sheet::atlas::fit_view_scale(w, h, rotation, &f)),
+    )
+}
+
+/// `string`: what a coordinate list's source (`CoordSource`) gives, as its section says it, from
+/// the host's input for the list (`CoordinateInput`, or an empty text for none) and the source
+/// layer's name (docs/adr/0206 §2).
+#[wasm_bindgen(js_name = coordinateSummary)]
+pub fn coordinate_summary(source: &str, input: &str, layer: &str) -> String {
+    let input = if input.trim().is_empty() {
+        Ok(None)
+    } else {
+        read::<kentos_sheet::display::CoordinateInput>("input", input).map(Some)
+    };
+    answer(
+        read::<kentos_sheet::kinds::CoordSource>("source", source).and_then(|s| {
+            input.map(|i| {
+                kentos_sheet::display::coordinate_summary(
+                    &s,
+                    i.as_ref(),
+                    (!layer.is_empty()).then_some(layer),
+                )
+            })
+        }),
+    )
+}
+
+/// `[string, string, string, string, string]`: a coordinate list's headings (Nokta, east, north,
+/// Z) and its area row's word, each given or the default (docs/adr/0206 §3); `item` the list's
+/// kind as an item holds it (its `type` too).
+#[wasm_bindgen(js_name = coordinateHeadings)]
+pub fn coordinate_headings(item: &str, georeferenced: bool) -> String {
+    answer(
+        read::<serde_json::Value>("item", item)
+            .and_then(|mut v| {
+                if let Some(o) = v.as_object_mut() {
+                    o.remove("type");
+                }
+                serde_json::from_value::<kentos_sheet::kinds::CoordinateListItem>(v)
+                    .map_err(|e| SheetError::json("item", &e))
+            })
+            .map(|c| kentos_sheet::display::coordinate_headings(&c, georeferenced)),
+    )
+}
+
 /// `Bindable[]`: the item properties an expression can drive (ƒ), with their types.
 #[wasm_bindgen(js_name = bindableProperties)]
 pub fn bindable_properties() -> String {

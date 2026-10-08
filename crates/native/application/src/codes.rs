@@ -136,6 +136,8 @@ pub const DUPLICATE_TAG: &str = "duplicate_tag";
 /// An attribute definition's text height that is not a finite number above
 /// zero (`cad.blocks.edit`).
 pub const INVALID_HEIGHT: &str = "invalid_height";
+/// A leader's arrowhead size out of 0.1–10 times its note's height (docs/adr/0205 §7).
+pub const INVALID_ARROW_SIZE: &str = "invalid_arrow_size";
 /// A text's width factor not over 0 or over 100 (docs/adr/0145).
 pub const INVALID_WIDTH_FACTOR: &str = "invalid_width_factor";
 /// A multi-line text's box width, line spacing or letter formats out of their rules (docs/adr/0182 §6).

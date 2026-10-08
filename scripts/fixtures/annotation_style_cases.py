@@ -40,7 +40,12 @@ on their own, not from an implementation's output; the contract's rules
 - Applying a dimension style: its look, each size as mm / the style's height,
   left out when it is the default (the tick 0.6, any other arrowhead 1, the
   gaps 0.5, the value 0.35); the height mm / 1000 × the scale. Standart: no
-  look, the height 2.5 mm's.
+  look, the height the project's dimension height (2.5 mm unless a case
+  names `standardMm`, docs/adr/0205 §1).
+- A dimension's lines (docs/adr/0205 §6): its line's, extension lines' and
+  value's colours `#RRGGBB`, its line's and extension lines' weights 0 to 100
+  paper mm, their types; a style carries them into a dimension's look as
+  they are, and following its style moves them as the other look fields.
 - A dimension following its style: each look field equal to the old style's
   look takes the new one; the height moves when it is the old style's.
 - A dimension's value as written (docs/adr/0183 §3): its look's prefix, its
@@ -69,6 +74,25 @@ MAX_AFFIX = 32
 STANDARD = "Standart"
 DEFAULTS = {"tick": 0.6, "arrow": 1.0, "extOffset": 0.5, "extBeyond": 0.5, "textGap": 0.35}
 STANDARD_DIMENSION_MM = 2.5
+MAX_LINE_WEIGHT = 100.0
+LINE_FIELDS = ("dimLineColor", "dimLineWeight", "dimLineType", "extColor", "extWeight", "extLineType", "textColor")
+
+
+def hex_colour(c):
+    return len(c) == 7 and c[0] == "#" and all(ch in "0123456789abcdefABCDEF" for ch in c[1:])
+
+
+def line_problem(l):
+    """The line colours and weights' refusal: the field and its words, or None."""
+    for key, what in [("dimLineColor", "ölçü çizgisinin rengi"), ("extColor", "uzatma çizgilerinin rengi"), ("textColor", "değerinin rengi")]:
+        c = l.get(key)
+        if c is not None and not hex_colour(c):
+            return [key, f"Ölçünün {what} #RRGGBB biçiminde olmalı; “{c}” verildi. Rengi #RRGGBB olarak verin ya da alanı kaldırın (nesnenin rengi)."]
+    for key, what in [("dimLineWeight", "ölçü çizgisinin kalınlığı"), ("extWeight", "uzatma çizgilerinin kalınlığı")]:
+        w = l.get(key)
+        if w is not None and not (math.isfinite(w) and 0 <= w <= MAX_LINE_WEIGHT):
+            return [key, f"Ölçünün {what} kâğıtta 0 ile {num(MAX_LINE_WEIGHT)} mm arasında olmalı; {num(w)} verildi. Bu aralıkta verin ya da alanı kaldırın (kılcal)."]
+    return None
 
 
 def num(x):
@@ -175,7 +199,8 @@ def dimension_style_problem(s):
             why = affix_problem(v)
             if why:
                 return f"“{name}” ölçü stilinin {what} yazılamaz: {why}"
-    return None
+    line = line_problem(s)
+    return f"“{name}” ölçü stili: {line[1]}" if line else None
 
 
 def text_styles_problem(styles):
@@ -227,7 +252,7 @@ def look_problem(l):
             why = affix_problem(v)
             if why:
                 return [key, f"Ölçünün {what} yazılamaz: {why}. Tek satır, en çok {MAX_AFFIX} harf verin ya da alanı kaldırın."]
-    return None
+    return line_problem(l)
 
 
 FACE = ("textStyle", "font", "bold", "italic", "oblique")
@@ -283,7 +308,7 @@ def follow_text(old, new, text, scale):
     return out
 
 
-LOOK = ("dimStyle", "arrow", "arrowSize", "extOffset", "extBeyond", "textGap", "textPlace", "decimals", "unit", "prefix", "suffix", "font")
+LOOK = ("dimStyle", "arrow", "arrowSize", "extOffset", "extBeyond", "textGap", "textPlace", "decimals", "unit", "prefix", "suffix", "font") + LINE_FIELDS
 
 
 def look_of(style):
@@ -301,16 +326,16 @@ def look_of(style):
             r = style[key] / style["height"]
             if r != default:
                 out[key] = r
-    for key in ("textPlace", "decimals", "unit", "prefix", "suffix", "font"):
+    for key in ("textPlace", "decimals", "unit", "prefix", "suffix", "font") + LINE_FIELDS:
         if style.get(key) is not None:
             out[key] = style[key]
     return out
 
 
-def apply_dimension(style, dim, scale):
+def apply_dimension(style, dim, scale, standard=STANDARD_DIMENSION_MM):
     out = {k: v for k, v in dim.items() if k not in LOOK}
     if style is None:
-        out["height"] = height_at(STANDARD_DIMENSION_MM, scale)
+        out["height"] = height_at(standard, scale)
         return out
     out.update(look_of(style))
     out["height"] = height_at(style["height"], scale)
@@ -426,6 +451,9 @@ def cases():
         ("Sonek 33 harf", [dict(OLCU, suffix="m" * 33)]),
         ("Sonekte sekme", [dict(OLCU, suffix="\tm")]),
         ("Standart adı ölçüde de ayrılmıştır", [dict(CENTIK, name="standart")]),
+        ("Çizgileri olan stil", [dict(OLCU, dimLineColor="#C0392B", dimLineWeight=0.35, dimLineType="dashed", extColor="#7F8C8D", extWeight=0.18, extLineType="dotted", textColor="#1F4E79")]),
+        ("Ölçü çizgisinin rengi #RRGGBB değil", [dict(OLCU, dimLineColor="kırmızı")]),
+        ("Uzatma çizgilerinin kalınlığı 101 mm", [dict(OLCU, extWeight=101.0)]),
     ]:
         add(name, "dimensionStylesProblem", {"styles": styles}, dimension_styles_problem(styles))
 
@@ -451,6 +479,9 @@ def cases():
         ("Önek boş", {"prefix": ""}),
         ("Sonekte sekme", {"suffix": "\tm"}),
         ("Stil kimliği boş", {"dimStyle": ""}),
+        ("Çizgiler", {"dimLineColor": "#C0392B", "dimLineWeight": 0.35, "dimLineType": "dashdot", "extColor": "#7f8c8d", "extWeight": 0.0, "extLineType": "dashed", "textColor": "#1F4E79"}),
+        ("Değerin rengi kısa", {"textColor": "#F00"}),
+        ("Ölçü çizgisi −0,1 mm", {"dimLineWeight": -0.1}),
     ]:
         add(name, "lookProblem", {"look": look}, look_problem(look))
 
@@ -483,6 +514,10 @@ def cases():
         ("Standart 1:1000: görünüş gider, değer 2,5 mm", None, 1000.0),
     ]:
         add(name, "applyDimension", {"style": style["id"] if style else None, "styles": [OLCU, CENTIK], "plotScale": scale, "dimension": dict(look_of(CENTIK), height=0.3)}, apply_dimension(style, dict(look_of(CENTIK), height=0.3), scale))
+    # Standart's height is the project's (docs/adr/0205 §1); a style's lines come with its look (§6).
+    add("Standart 1:500, projenin ölçü yüksekliği 3,5 mm", "applyDimension", {"style": None, "styles": [OLCU, CENTIK], "plotScale": 500.0, "standardMm": 3.5, "dimension": dict(look_of(CENTIK), height=0.3)}, apply_dimension(None, dict(look_of(CENTIK), height=0.3), 500.0, 3.5))
+    lined = dict(CENTIK, dimLineColor="#C0392B", dimLineWeight=0.35, extLineType="dotted", textColor="#1F4E79")
+    add("Çizgileri olan stil: renkler, kalınlık ve tip görünüşe geçer", "applyDimension", {"style": lined["id"], "styles": [OLCU, lined], "plotScale": 1000.0, "dimension": {"height": 0.3}}, apply_dimension(lined, {"height": 0.3}, 1000.0))
     olcu2 = dict(OLCU, height=2.5, arrow="dot", arrowSize=2.5, unit="mm", decimals=0, prefix=None, suffix=" mm")
     olcu2 = {k: v for k, v in olcu2.items() if v is not None}
     for name, d in [
@@ -491,6 +526,14 @@ def cases():
         ("Kendi yüksekliği kalır", dict(apply_dimension(OLCU, dim, 50.0), height=0.2)),
     ]:
         add(name, "followDimension", {"old": OLCU, "new": olcu2, "plotScale": 50.0, "dimension": d}, follow_dimension(OLCU, olcu2, d, 50.0))
+    # The lines follow as the other look fields (docs/adr/0205 §6): the style's change, an own colour kept.
+    lined_old = dict(OLCU, dimLineColor="#C0392B", extWeight=0.18)
+    lined_new = dict(OLCU, dimLineColor="#1F4E79", extWeight=0.25, dimLineType="dashed")
+    for name, d in [
+        ("Çizgiler stilin: hepsi yeni", apply_dimension(lined_old, dim, 50.0)),
+        ("Kendi rengi kalır, kalınlık ve tip yeni", dict(apply_dimension(lined_old, dim, 50.0), dimLineColor="#000000")),
+    ]:
+        add(name, "followDimension", {"old": lined_old, "new": lined_new, "plotScale": 50.0, "dimension": d}, follow_dimension(lined_old, lined_new, d, 50.0))
 
     # ── A dimension's value as written ──────────────────────────────────
     metres = {"unit": "m", "lengthDecimals": 3}

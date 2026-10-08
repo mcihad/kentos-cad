@@ -4,6 +4,7 @@
 //! `kentos-cad [çizim.kcad]` opens the drawing at once; `kentos-cad snapshot
 //! çıktı.png [çizim.kcad]` draws the window into an image without opening it.
 
+mod annotation_scale;
 mod annotation_styles;
 mod app;
 mod app_menu;
@@ -18,35 +19,43 @@ mod blocks_panel;
 mod bottom;
 mod calc;
 mod catalog;
+#[cfg(test)]
+mod centerline_scenes;
 mod clipboard;
 mod cloud;
 mod cogo;
 mod command_bar;
+#[cfg(test)]
+mod coordinate_scenes;
 mod crs;
 mod data_compare;
+#[cfg(test)]
+mod dimension_scenes;
 mod document;
 mod drawing_exchange;
 mod drawing_fonts;
 mod drawing_menus;
 #[cfg(test)]
+mod edge_shift_scenes;
+#[cfg(test)]
 mod elevation_scenes;
 #[cfg(test)]
 mod elevation_tests;
 mod exchange;
-mod features;
-mod find_replace;
 mod expression;
+mod features;
 #[cfg(test)]
 mod files_testing;
+mod find_replace;
 mod grids;
 #[cfg(test)]
 mod hatch_scenes;
-#[cfg(test)]
-mod selection_scenes;
 mod hover_card;
 #[cfg(test)]
 mod icon_tour;
 mod icons;
+#[cfg(test)]
+mod image_scenes;
 mod input;
 mod keys;
 mod keytips;
@@ -55,8 +64,8 @@ mod layer_fields;
 mod layer_list;
 mod layer_merge;
 mod layer_purge;
-mod layer_states;
 mod layer_snap;
+mod layer_states;
 mod layer_tree;
 mod layering;
 mod layout;
@@ -65,6 +74,8 @@ mod layout_plan;
 mod layout_plan_tests;
 #[cfg(test)]
 mod layout_tests;
+#[cfg(test)]
+mod leader_scenes;
 mod locks;
 mod log_plan;
 #[cfg(test)]
@@ -78,28 +89,28 @@ mod message_log_tests;
 mod modes;
 mod navigation;
 mod navigation_cards;
+#[cfg(test)]
+mod netcad_names_tests;
 mod opening;
+#[cfg(test)]
+mod overlap_tests;
 mod paragraph_editor;
 #[cfg(test)]
+mod parts_scenes;
+#[cfg(test)]
 mod perf;
+mod pictures;
 mod point_calc;
 #[cfg(test)]
 mod point_calc_scenes;
-#[cfg(test)]
-mod centerline_scenes;
-#[cfg(test)]
-mod edge_shift_scenes;
-#[cfg(test)]
-mod image_scenes;
-#[cfg(test)]
-mod stationing_scenes;
-mod pictures;
 mod points;
 mod preview;
 mod processing;
 mod project;
 mod properties;
 mod python;
+#[cfg(test)]
+mod query_tests;
 #[cfg(test)]
 mod raster_scenes;
 mod rasters;
@@ -121,6 +132,8 @@ mod second_crs;
 mod selecting;
 mod selection_chip;
 mod selection_commands;
+#[cfg(test)]
+mod selection_scenes;
 mod settings;
 mod settings_look;
 #[cfg(test)]
@@ -138,7 +151,13 @@ mod snap_tests;
 mod snapshot;
 mod sources;
 mod start;
+#[cfg(test)]
+mod stationing_scenes;
 mod style;
+#[cfg(test)]
+mod style_scenes;
+#[cfg(test)]
+mod table_scenes;
 mod tables;
 mod template_editor;
 mod template_members;
@@ -146,31 +165,6 @@ mod templates;
 mod templates_panel;
 mod text_field;
 mod text_file;
-mod traces;
-#[cfg(test)]
-mod ui_screens;
-#[cfg(test)]
-mod netcad_names_tests;
-#[cfg(test)]
-mod parts_scenes;
-#[cfg(test)]
-mod query_tests;
-#[cfg(test)]
-mod coordinate_scenes;
-#[cfg(test)]
-mod dimension_scenes;
-#[cfg(test)]
-mod leader_scenes;
-#[cfg(test)]
-mod topology_scenes;
-#[cfg(test)]
-mod topology_tests;
-#[cfg(test)]
-mod overlap_tests;
-#[cfg(test)]
-mod style_scenes;
-#[cfg(test)]
-mod table_scenes;
 #[cfg(test)]
 mod text_scenes;
 #[cfg(test)]
@@ -178,12 +172,21 @@ mod tools_scenes;
 #[cfg(test)]
 mod tools_screens;
 mod topology;
+#[cfg(test)]
+mod topology_scenes;
+#[cfg(test)]
+mod topology_tests;
+mod traces;
 mod tracking;
+#[cfg(test)]
+mod ui_screens;
 mod usage;
 mod vertices;
 mod view;
 mod view_commands;
 mod viewport;
+#[cfg(test)]
+mod window_layers_tests;
 
 use kentos_ui::theme::typography;
 

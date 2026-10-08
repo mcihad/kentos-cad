@@ -365,7 +365,13 @@ fn a_spot_elevation_goes_on_its_layer_with_its_elevation() {
     // A locked spot layer: the tool's own words, another active layer would not help (docs/adr/0067).
     let mut b = on(TOOLS, "cizim", "spot");
     b.doc.toggle_layer_locked("kot");
-    let name = b.doc.layers().get("kot").expect("the spot layer").name.clone();
+    let name = b
+        .doc
+        .layers()
+        .get("kot")
+        .expect("the spot layer")
+        .name
+        .clone();
     let count = b.doc.len();
     b.click(-4.0, -4.0);
     assert!(b.type_text("1"));

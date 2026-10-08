@@ -8,9 +8,9 @@ use crate::entity::{
 };
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::bulge::{bulge_ring_area, has_bulges};
-use crate::geom::region::union_areas;
 use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geom::offset::{OffsetResult, offset_bulge_path, offset_path, side_of};
+use crate::geom::region::union_areas;
 use crate::jsmath::{js_hypot, js_min};
 use crate::op;
 use crate::ops::curve_cuts::{

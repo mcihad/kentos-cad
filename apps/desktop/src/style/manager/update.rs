@@ -13,9 +13,7 @@ use kentos_native_style::library::{ItemKind, Source};
 use serde_json::{Map, Value, json};
 
 use super::files::import_said;
-use super::{
-    DOUBLE_CLICK, Event, Field, Manager, PickTarget, SEARCH, find_node, node_key,
-};
+use super::{DOUBLE_CLICK, Event, Field, Manager, PickTarget, SEARCH, find_node, node_key};
 use crate::app::{App, Dialog, Message};
 
 impl App {
@@ -246,7 +244,11 @@ impl App {
         let name = item.name().to_owned();
         let mut path = vec!["Sembollerim".to_owned()];
         path.extend(item.path().last().map(|p| (*p).to_owned()));
-        match self.styles.library.copy(id, Source::User, None, Some(&path)) {
+        match self
+            .styles
+            .library
+            .copy(id, Source::User, None, Some(&path))
+        {
             Ok(copy) => {
                 self.library_changed(Source::User);
                 let copy = copy.id().to_owned();
@@ -275,10 +277,7 @@ impl App {
         };
         let editable = m.at.0.editable() && m.query.is_empty() && self.writable(m.at.0);
         let (source, path) = if editable {
-            (
-                m.at.0,
-                (!m.at.1.is_empty()).then(|| m.at.1.clone()),
-            )
+            (m.at.0, (!m.at.1.is_empty()).then(|| m.at.1.clone()))
         } else {
             (Source::User, None)
         };
@@ -293,7 +292,8 @@ impl App {
     /// SVG çizimi (düzenleyicide)…: a new drawing, in the category open when it is the user's.
     fn new_drawing(&mut self) {
         let path = self.styles.manager.as_ref().and_then(|m| {
-            (m.at.0 == Source::User && m.query.is_empty() && !m.at.1.is_empty()).then(|| m.at.1.clone())
+            (m.at.0 == Source::User && m.query.is_empty() && !m.at.1.is_empty())
+                .then(|| m.at.1.clone())
         });
         self.open_svg_editor(crate::style::svgedit::Opening {
             id: None,

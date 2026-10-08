@@ -53,8 +53,9 @@ pub struct Picks {
     pub settings: bool,
 }
 
-/// The project settings Başka çizimden al takes (never the coordinate systems).
-pub const TAKEN_SETTINGS: [&str; 8] = [
+/// The project settings Başka çizimden al takes (never the coordinate
+/// systems); the annotation heights too (docs/adr/0205 §1).
+pub const TAKEN_SETTINGS: [&str; 9] = [
     "lengthDecimals",
     "areaDecimals",
     "areaUnit",
@@ -63,6 +64,7 @@ pub const TAKEN_SETTINGS: [&str; 8] = [
     "drawingFont",
     "drawingUnit",
     "survey",
+    "annotation",
 ];
 
 /// A name as names are compared: Turkish letters folded, case aside,

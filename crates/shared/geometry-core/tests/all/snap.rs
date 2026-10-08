@@ -124,10 +124,21 @@ fn every_snap_is_the_references() {
             .as_array()
             .unwrap()
             .iter()
-            .map(|k| 1u32 << names.iter().position(|n| *n == k.as_str().unwrap()).unwrap())
+            .map(|k| {
+                1u32 << names
+                    .iter()
+                    .position(|n| *n == k.as_str().unwrap())
+                    .unwrap()
+            })
             .fold(0, |m, b| m | b);
         let from = (!c["from"].is_null()).then(|| pt(&c["from"]));
-        let got = store(c).snap_ex(pt(&c["p"]), num(&c["tol"]), kinds, from, &extras(&c["extras"]));
+        let got = store(c).snap_ex(
+            pt(&c["p"]),
+            num(&c["tol"]),
+            kinds,
+            from,
+            &extras(&c["extras"]),
+        );
         let want = &c["expect"];
         match (got, want.is_null()) {
             (None, true) => {}

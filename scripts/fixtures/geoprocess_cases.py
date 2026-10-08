@@ -989,7 +989,7 @@ def build_processing():
         "geometry.simplify": {"input": active, "tolerance": 0.1, "layer": {"newName": "Sadeleştirilen"}},
         "geometry.reproject": {"input": active, "source": "4326", "layer": {"newName": "Dönüştürülen"}},
     }
-    defaults = {"lengthDecimals": 3, "areaDecimals": 2, "angleUnit": "grad", "plotScale": 1000, "drawingFont": "barlow", "activeLayer": "cizim"}
+    defaults = {"lengthDecimals": 3, "areaDecimals": 2, "angleUnit": "grad", "plotScale": 1000, "drawingFont": "barlow", "activeLayer": "cizim", "measureHeightMm": 2}
     return {
         "format": "kentos.processing-cases",
         "version": 1,

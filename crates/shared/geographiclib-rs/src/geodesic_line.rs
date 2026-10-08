@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
-use crate::lm::Lm;
 use crate::geodesic::{self, CARR_SIZE, GEODESIC_ORDER};
 use crate::geodesic_capability as caps;
 use crate::geomath;
+use crate::lm::Lm;
 use std::collections::HashMap;
 
 /// A geodesic line.

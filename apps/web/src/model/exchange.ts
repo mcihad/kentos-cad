@@ -37,8 +37,8 @@ export interface Picks {
   settings?: boolean;
 }
 
-/** The project settings Başka çizimden al takes (never the coordinate systems). */
-export const TAKEN_SETTINGS = ['lengthDecimals', 'areaDecimals', 'areaUnit', 'angleUnit', 'plotScale', 'drawingFont', 'drawingUnit', 'survey'] as const;
+/** The project settings Başka çizimden al takes (never the coordinate systems); the annotation heights too (docs/adr/0205 §1). */
+export const TAKEN_SETTINGS = ['lengthDecimals', 'areaDecimals', 'areaUnit', 'angleUnit', 'plotScale', 'drawingFont', 'drawingUnit', 'survey', 'annotation'] as const;
 
 const FOLDED: Record<string, string> = { ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u', â: 'a', á: 'a', à: 'a', ä: 'a', î: 'i', í: 'i', ì: 'i', ï: 'i', û: 'u', ú: 'u', ù: 'u', ô: 'o', ó: 'o', ò: 'o', é: 'e', è: 'e', ê: 'e', ë: 'e' };
 

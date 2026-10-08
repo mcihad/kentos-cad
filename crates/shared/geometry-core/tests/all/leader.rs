@@ -13,6 +13,7 @@ fn leader(pts: &[(f64, f64)], rotation: f64) -> Shape {
         height: 2.5,
         rotation,
         arrow: Some("open".into()),
+        arrow_size: None,
         mask: Some(true),
     }
 }
@@ -36,6 +37,7 @@ fn its_note_turns_as_a_text_does() {
             text,
             arrow,
             mask,
+            ..
         } => {
             assert_eq!(text.as_deref(), Some("Mevcut bina"));
             assert_eq!(arrow.as_deref(), Some("open"));
@@ -62,14 +64,14 @@ fn its_note_turns_as_a_text_does() {
 }
 
 /// The shared cases (fixtures/leader/v1/layout.json), written from
-/// docs/adr/0146 §2 alone by scripts/fixtures/leader_cases.py: the core lays
+/// docs/adr/0146 §2 and 0205 §7 alone by scripts/fixtures/leader_cases.py: the core lays
 /// every leader out as the independent reference does, within 1e-9 m. The
 /// web runs the same file through its WASM (`leader.wasm.test.ts`).
 #[test]
 fn every_shared_layout_case_is_laid_out_as_the_reference_lays_it_out() {
     use kentos_geometry_core::api::json::{FromJson, Json};
     use kentos_geometry_core::entity::Entity;
-    use kentos_geometry_core::geom::leader::{Head, layout_of};
+    use kentos_geometry_core::geom::leader::layout_of;
     use serde_json::Value;
 
     let file: Value = serde_json::from_str(include_str!(
@@ -78,7 +80,8 @@ fn every_shared_layout_case_is_laid_out_as_the_reference_lays_it_out() {
     .expect("the cases are JSON");
     assert_eq!(file["format"], "kentos.leader-cases");
     let cases = file["cases"].as_array().expect("a case list");
-    assert_eq!(cases.len(), 10, "the cases are all there");
+    assert_eq!(file["version"], 2);
+    assert_eq!(cases.len(), 22, "the cases are all there");
     let near = |a: f64, e: &Value| {
         let e = e.as_f64().expect("a number");
         (a - e).abs() <= 1e-9 + 1e-15 * e.abs()
@@ -101,15 +104,18 @@ fn every_shared_layout_case_is_laid_out_as_the_reference_lays_it_out() {
         };
         let want = &case["want"];
         let head = &want["head"];
-        let head_ok = match (&got.head, head["kind"].as_str()) {
-            (Head::Filled { triangle }, Some("filled")) => all(triangle, &head["triangle"]),
-            (Head::Open { lines }, Some("open")) => all(lines, &head["lines"]),
-            (Head::Dot { center, radius }, Some("dot")) => {
-                at(*center, &head["center"]) && near(*radius, &head["radius"])
-            }
-            (Head::None {}, Some("none")) => true,
-            _ => false,
-        };
+        let fills = head["fills"].as_array().expect("areas");
+        let lines = head["lines"].as_array().expect("lines");
+        let head_ok =
+            got.head.fills.len() == fills.len()
+                && got.head.fills.iter().zip(fills).all(|(r, e)| all(r, e))
+                && got.head.lines.len() == lines.len()
+                && got.head.lines.iter().zip(lines).all(|(l, e)| {
+                    all(&l.pts, &e["pts"]) && Some(l.closed) == e["closed"].as_bool()
+                })
+                && near(got.head.back, &head["back"])
+                && at(got.start, &want["start"])
+                && Some(got.first as u64) == want["first"].as_u64();
         let note_ok = match (got.landing, got.note_point, got.note_align) {
             (Some(landing), Some(p), Some(align)) => {
                 all(&landing, &want["landing"])
@@ -144,7 +150,10 @@ fn it_snaps_to_its_vertices_and_its_landing_s_end() {
     use kentos_geometry_core::store::snap::SnapKind;
     let s = store();
     let end = SnapKind::Endpoint.bit();
-    let hit = |x: f64, y: f64| s.snap(Vec2::new(x, y), 0.3, end, None).map(|h| (h.point, h.id));
+    let hit = |x: f64, y: f64| {
+        s.snap(Vec2::new(x, y), 0.3, end, None)
+            .map(|h| (h.point, h.id))
+    };
     assert_eq!(hit(0.1, 0.1), Some((Vec2::new(0.0, 0.0), 1.0)));
     assert_eq!(hit(4.1, 3.1), Some((Vec2::new(4.0, 3.0), 1.0)));
     assert_eq!(hit(7.9, 3.2), Some((Vec2::new(8.0, 3.0), 1.0)));
@@ -164,13 +173,18 @@ fn a_window_takes_it_whole_and_a_crossing_by_any_part() {
         max_y,
     };
     // Wholly inside only with its note's box; the arrowhead's reach stays inside the line's box here.
-    assert_eq!(s.in_rect(&b(-1.0, -1.0, 9.5, 5.0), false), Vec::<f64>::new());
+    assert_eq!(
+        s.in_rect(&b(-1.0, -1.0, 9.5, 5.0), false),
+        Vec::<f64>::new()
+    );
     assert_eq!(s.in_rect(&b(-1.0, -1.0, 40.0, 5.0), false), vec![1.0, 2.0]);
     // A crossing box over the note alone, over the landing alone.
     assert_eq!(s.in_rect(&b(10.0, 2.5, 11.0, 3.5), true), vec![1.0]);
     assert_eq!(s.in_rect(&b(6.0, 2.5, 7.0, 3.5), true), vec![1.0]);
     // A fence across the note, across the landing.
-    let fence = |a: (f64, f64), b: (f64, f64)| s.in_fence(&[Vec2::new(a.0, a.1), Vec2::new(b.0, b.1)], 0.01);
+    let fence = |a: (f64, f64), b: (f64, f64)| {
+        s.in_fence(&[Vec2::new(a.0, a.1), Vec2::new(b.0, b.1)], 0.01)
+    };
     assert_eq!(fence((10.0, 1.0), (10.0, 5.0)), vec![1.0]);
     assert_eq!(fence((6.0, 2.0), (6.0, 4.0)), vec![1.0]);
     assert_eq!(fence((30.0, 0.0), (30.0, 5.0)), Vec::<f64>::new());
@@ -187,6 +201,7 @@ fn it_explodes_into_a_polyline_its_arrowhead_and_its_note() {
         height: 2.0,
         rotation: 0.0,
         arrow: None,
+        arrow_size: None,
         mask: Some(true),
     };
     let Cut::Pieces(pieces) = explode_entity(&filled, "", Font::DEFAULT) else {
@@ -194,8 +209,9 @@ fn it_explodes_into_a_polyline_its_arrowhead_and_its_note() {
     };
     let shapes: Vec<&Shape> = pieces.iter().map(|e| &e.shape).collect();
     assert_eq!(shapes.len(), 3);
+    // Its line leaves the filled triangle's back, the arrowhead's length (the height) from the tip (docs/adr/0205 §7).
     assert!(
-        matches!(shapes[0], Shape::Polyline { pts, .. } if pts == &[Vec2::new(0.0, 0.0), Vec2::new(4.0, 3.0), Vec2::new(8.0, 3.0)]),
+        matches!(shapes[0], Shape::Polyline { pts, .. } if pts == &[Vec2::new(1.6, 1.2), Vec2::new(4.0, 3.0), Vec2::new(8.0, 3.0)]),
         "{:?}",
         shapes[0]
     );
@@ -217,13 +233,16 @@ fn it_explodes_into_a_polyline_its_arrowhead_and_its_note() {
         height: 2.0,
         rotation: 0.0,
         arrow: Some("open".into()),
+        arrow_size: None,
         mask: None,
     };
     let Cut::Pieces(pieces) = explode_entity(&open, "", Font::DEFAULT) else {
         panic!("a leader explodes");
     };
     assert_eq!(pieces.len(), 2);
-    assert!(matches!(&pieces[1].shape, Shape::Polyline { pts, .. } if pts.len() == 3 && pts[1] == Vec2::new(0.0, 0.0)));
+    assert!(
+        matches!(&pieces[1].shape, Shape::Polyline { pts, .. } if pts.len() == 3 && pts[1] == Vec2::new(0.0, 0.0))
+    );
 }
 
 #[test]
@@ -251,8 +270,20 @@ fn the_edge_edits_refuse_it_until_it_is_exploded() {
         Geometry::Error(m) => m,
         Geometry::Ok(_) => panic!("a geometry"),
     };
-    assert_eq!(cut(trim_entity(&e, Vec2::new(1.0, 1.0), &wall)), refused("budanamaz"));
-    assert_eq!(geometry(extend_entity(&e, Vec2::new(9.0, 4.0), &wall)), refused("uzatılamaz"));
-    assert_eq!(cut(break_entity(&e, Vec2::new(1.0, 1.0), Vec2::new(2.0, 2.0))), refused("kırılamaz"));
-    assert_eq!(geometry(offset_entity(&e.shape, 1.0, Vec2::new(0.0, 5.0))), refused("ötelenemez"));
+    assert_eq!(
+        cut(trim_entity(&e, Vec2::new(1.0, 1.0), &wall)),
+        refused("budanamaz")
+    );
+    assert_eq!(
+        geometry(extend_entity(&e, Vec2::new(9.0, 4.0), &wall)),
+        refused("uzatılamaz")
+    );
+    assert_eq!(
+        cut(break_entity(&e, Vec2::new(1.0, 1.0), Vec2::new(2.0, 2.0))),
+        refused("kırılamaz")
+    );
+    assert_eq!(
+        geometry(offset_entity(&e.shape, 1.0, Vec2::new(0.0, 5.0))),
+        refused("ötelenemez")
+    );
 }

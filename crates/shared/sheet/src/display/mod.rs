@@ -16,6 +16,8 @@ mod marks;
 pub use marks::{DateSource, DeclinationSource, NorthInfo, NorthMissing};
 mod table;
 mod title;
+/// A coordinate list's headings and what its source gives (docs/adr/0206 §2, §3).
+pub use table::{coordinate_headings, coordinate_summary};
 
 use std::collections::BTreeMap;
 

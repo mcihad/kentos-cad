@@ -75,11 +75,7 @@ pub fn paths(e: &Entity) -> Vec<Elevated> {
 /// (docs/adr/0142). What Oturt writes: the core warps the paths with their
 /// elevations (docs/adr/0156 §4).
 pub fn assign(entity: &mut Entity, zs: &[Vec<Option<f64>>]) {
-    let take = |k: usize| {
-        zs.get(k)
-            .filter(|z| z.iter().any(Option::is_some))
-            .cloned()
-    };
+    let take = |k: usize| zs.get(k).filter(|z| z.iter().any(Option::is_some)).cloned();
     match entity {
         Entity::Line(l) => {
             let ends = zs.first();

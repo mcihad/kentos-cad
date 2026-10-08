@@ -109,9 +109,11 @@ impl App {
         })
     }
 
-    /// The Kenet cell's right-click menu (the web's `snapMenu`).
+    /// The Kenet cell's right-click menu (the web's `snapMenu`). The kinds
+    /// and Çizilmekte olan nesneye are ticked one after another: the menu
+    /// stays open (docs/adr/0187 §5's checklist).
     pub(crate) fn snap_cell_menu(&self) -> Menu<Message> {
-        let run = |id: &'static str| catalog().get(id).map(|_| Message::Run(id));
+        let run = |id: &'static str| catalog().get(id).map(|_| Message::RunKept(id));
         let mut menu = Menu::new().header("Kenet türleri");
         for (id, _) in KINDS {
             let Some(command) = catalog().get(id) else {
@@ -119,13 +121,17 @@ impl App {
             };
             menu = menu
                 .check(command.short, self.checked(id).unwrap_or(false), run(id))
-                .icon(command.icon);
+                .icon(command.icon)
+                .stay();
         }
-        menu = menu.separator().check(
-            "Çizilmekte olan nesneye",
-            self.checked(SELF.0).unwrap_or(false),
-            run(SELF.0),
-        );
+        menu = menu
+            .separator()
+            .check(
+                "Çizilmekte olan nesneye",
+                self.checked(SELF.0).unwrap_or(false),
+                run(SELF.0),
+            )
+            .stay();
         let (east, north) = (
             self.settings.number("snap.gridEast"),
             self.settings.number("snap.gridNorth"),
@@ -210,6 +216,10 @@ mod tests {
         ] {
             assert!(menu.contains(name), "{name} is on the menu");
         }
+        // The kinds and Çizilmekte olan nesneye are ticked one after another:
+        // their rows leave the menu open (docs/adr/0187 §5, 8 Ekim).
+        assert_eq!(menu.matches("stay: true").count(), KINDS.len() + 1);
+        assert!(menu.contains("RunKept(\"draft.snap.grid\")"), "{menu}");
     }
 
     #[test]

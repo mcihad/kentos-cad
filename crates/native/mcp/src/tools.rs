@@ -529,9 +529,8 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
                     .get("plotScale")
                     .and_then(Value::as_f64)
                     .unwrap_or(1000.0),
-                workspace: serde_json::from_value(named("workspace", "gis")?).map_err(|_| {
-                    refused("invalid_input", "workspace: cad ya da gis.")
-                })?,
+                workspace: serde_json::from_value(named("workspace", "gis")?)
+                    .map_err(|_| refused("invalid_input", "workspace: cad ya da gis."))?,
                 drawing_font: serde_json::from_value(named("drawingFont", "barlow")?).map_err(
                     |_| {
                         refused(

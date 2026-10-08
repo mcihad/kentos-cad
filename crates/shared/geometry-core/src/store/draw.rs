@@ -45,7 +45,7 @@ use crate::entity::{
 };
 use crate::geom::bulge::has_bulges;
 use crate::geom::dimension::layout_dimension;
-use crate::geom::leader::{self, Head};
+use crate::geom::leader;
 use crate::geometry::{Bounds, signed_area};
 use crate::jsmath::{js_max, js_min};
 use crate::op;
@@ -231,24 +231,18 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
                 path(out, false, &[*a, *b]);
             }
         }
-        // Its line on to its landing's end, an open arrowhead's sides, a filled one's or a dot's area (docs/adr/0146 §5).
+        // Its line on to its landing's end and its arrowhead's lines; its arrowhead's area (docs/adr/0146 §5,
+        // 0205 §7).
         Shape::Leader { pts, .. } => match leader::layout_of(s) {
             Some(l) => {
-                let open = match &l.head {
-                    Head::Open { lines } => Some(lines),
-                    _ => None,
-                };
-                out.extend([MIXED, if open.is_some() { 2.0 } else { 1.0 }]);
+                out.extend([MIXED, (1 + l.head.lines.len()) as f64]);
                 path(out, false, &leader::drawn_path(pts, &l));
-                if let Some(lines) = open {
-                    path(out, false, lines);
+                for line in &l.head.lines {
+                    path(out, line.closed, &line.pts);
                 }
-                match leader::head_ring(&l.head) {
-                    Some(r) => {
-                        out.push(1.0);
-                        ring(out, &r, false, oriented.then_some(true));
-                    }
-                    None => out.push(0.0),
+                out.push(l.head.fills.len() as f64);
+                for r in &l.head.fills {
+                    ring(out, r, false, oriented.then_some(true));
                 }
             }
             None => out.push(NONE),
@@ -563,11 +557,11 @@ mod tests {
                 r#"{{"kind":"leader","pts":[{{"x":0,"y":0}},{{"x":0,"y":4}}],"height":3,"rotation":0{extra}}}"#
             )
         };
-        let line = [0.0, 3.0, 0.0, 0.0, 0.0, 4.0, 6.0, 4.0];
-        // A filled arrow: its triangle (tip, base corners) turned counter-clockwise for the style engine.
+        // A filled arrow: its line leaves its back, the arrowhead's length (the height) from the tip, and its
+        // triangle (tip, base corners) is turned counter-clockwise for the style engine (docs/adr/0205 §7).
         let filled = record(&leader(r#","text":"Not""#), true, None);
         assert_eq!(&filled[..2], [MIXED, 1.0]);
-        assert_eq!(&filled[2..10], line);
+        assert_eq!(&filled[2..10], [0.0, 3.0, 0.0, 3.0, 0.0, 4.0, 6.0, 4.0]);
         assert_eq!(&filled[10..], [1.0, 3.0, 0.5, 3.0, -0.5, 3.0, 0.0, 0.0]);
         // Unoriented (the highlight layers): as the layout has it.
         let plain = record(&leader(r#","text":"Not""#), false, None);
@@ -576,11 +570,12 @@ mod tests {
         let open = record(&leader(r#","text":"Not","arrow":"open""#), true, None);
         assert_eq!(&open[..2], [MIXED, 2.0]);
         assert_eq!(&open[10..], [0.0, 3.0, -0.5, 3.0, 0.0, 0.0, 0.5, 3.0, 0.0]);
-        // Without a note no landing; a dot is its outline, a full turn's 72 points about the tip.
+        // Without a note no landing; a dot is its outline, a full turn's 72 points about the tip from the line's
+        // direction, its line leaving the circle.
         let dot = record(&leader(r#","arrow":"dot""#), true, None);
-        assert_eq!(&dot[..9], [MIXED, 1.0, 0.0, 2.0, 0.0, 0.0, 0.0, 4.0, 1.0]);
+        assert_eq!(&dot[..9], [MIXED, 1.0, 0.0, 2.0, 0.0, 0.75, 0.0, 4.0, 1.0]);
         assert_eq!((dot[9], dot.len()), (72.0, 10 + 2 * 72));
-        assert_eq!((dot[10], dot[11]), (0.75, 0.0));
+        assert_eq!((dot[10], dot[11]), (0.0, 0.75));
         let bare = record(&leader(r#","arrow":"none""#), true, None);
         assert_eq!(bare, [MIXED, 1.0, 0.0, 2.0, 0.0, 0.0, 0.0, 4.0, 0.0]);
     }

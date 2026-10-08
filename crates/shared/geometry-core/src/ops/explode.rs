@@ -15,8 +15,8 @@ use crate::geom::curve_outline::spline_outline;
 use crate::geom::dimension::layout_dimension;
 use crate::geom::hatch::hatch_lines;
 use crate::geom::hatch_pattern::pattern_pieces;
-use crate::geom::leader::{self, Head};
 use crate::geom::intersect::Edge;
+use crate::geom::leader;
 use crate::jsmath::{PI, cos, js_hypot, js_max, sin};
 use crate::op;
 use crate::ops::curve_cuts::Cut;
@@ -258,8 +258,9 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
             }
             Cut::Pieces(segs.into_iter().map(|[a, b]| line(a, b)).collect())
         }
-        // Its line on to its landing's end a polyline, its note a text, its arrowhead a solid
-        // hatch (a filled one, a dot) or a polyline (an open one) (docs/adr/0146 §4).
+        // Its line on to its landing's end a polyline, its note a text, its arrowhead's areas
+        // solid hatches and its lines polylines, a closed one as an area's outline (docs/adr/0146
+        // §4, 0205 §7).
         Shape::Leader {
             pts,
             text,
@@ -280,11 +281,18 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                 })
             };
             let mut pieces = vec![path(leader::drawn_path(pts, &l))];
-            if let Head::Open { lines } = &l.head {
-                pieces.push(path(lines.to_vec()));
-            } else if let Some(ring) = leader::head_ring(&l.head) {
+            for line in &l.head.lines {
+                let mut pts = line.pts.clone();
+                if line.closed
+                    && let Some(&first) = pts.first()
+                {
+                    pts.push(first);
+                }
+                pieces.push(path(pts));
+            }
+            for ring in &l.head.fills {
                 pieces.push(Entity::new(Shape::Hatch {
-                    ring,
+                    ring: ring.clone(),
                     holes: None,
                     pattern: HatchPattern::user("solid", 0.0, *height),
                     assoc: None,

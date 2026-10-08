@@ -32,8 +32,8 @@ use kentos_contracts::{
     FeatureRecord, LayerNode, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, ProjectChanges,
     ProjectPatch, ProjectSettings, ProjectStyles,
 };
-use std::sync::Arc;
 use kentos_domain::{ChangeMark, Changes, Document, Slot};
+use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::failure::ApiFailure;
@@ -799,16 +799,18 @@ impl ProjectSync {
 }
 
 mod base;
+#[cfg(test)]
+mod block_tests;
 mod blocks;
 mod draft;
 mod remote;
 #[cfg(test)]
-mod block_tests;
-#[cfg(test)]
 mod tests;
 
 use blocks::{PlannedBlock, TrackedBlock, block_key};
-pub use blocks::{block_of_key, kept_block_text, renamed_block_text, restored_block_text, unmerged_text};
+pub use blocks::{
+    block_of_key, kept_block_text, renamed_block_text, restored_block_text, unmerged_text,
+};
 
 pub(crate) use base::objects_by_id;
 pub use base::{BaseBlock, BaseMeta, BaseObject, BaseSnapshot, BaseStep};

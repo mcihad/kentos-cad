@@ -68,7 +68,10 @@ fn area_says_the_area_and_perimeter_and_closes_on_its_first_corner() {
         b.session.prompt().text(),
         "Alan hesapla: ilk noktayı belirtin [İçine tıkla (I)]"
     );
-    clicks(&mut b, &[[-14.0, 4.0], [-8.0, 4.0], [-8.0, 10.0], [-14.0, 10.0]]);
+    clicks(
+        &mut b,
+        &[[-14.0, 4.0], [-8.0, 4.0], [-8.0, 10.0], [-14.0, 10.0]],
+    );
     b.move_to(-14.0, 4.0);
     assert_eq!(tag(&b).last().map(String::as_str), Some("Alan 36.00 m²"));
     // Clicking the first corner closes the ring and measures it.
@@ -78,7 +81,10 @@ fn area_says_the_area_and_perimeter_and_closes_on_its_first_corner() {
     // Too few corners: the web's words, and the draft is dropped.
     clicks(&mut b, &[[-14.0, 4.0], [-8.0, 4.0]]);
     b.confirm();
-    assert_eq!(b.last_text(), Some("Alan hesapla için en az 3 nokta gerekir."));
+    assert_eq!(
+        b.last_text(),
+        Some("Alan hesapla için en az 3 nokta gerekir.")
+    );
     assert_eq!(b.points(), 0);
 }
 
@@ -89,7 +95,13 @@ fn a_parcel_is_numbered_on_the_parcel_layer_and_selected() {
     let count = b.doc.entities().count();
     clicks(
         &mut b,
-        &[[-14.0, 12.0], [-8.0, 12.0], [-8.0, 18.0], [-14.0, 18.0], [-14.0, 12.0]],
+        &[
+            [-14.0, 12.0],
+            [-8.0, 12.0],
+            [-8.0, 18.0],
+            [-14.0, 18.0],
+            [-14.0, 12.0],
+        ],
     );
     assert_eq!(b.doc.entities().count(), count + 1);
     let Entity::Polygon(p) = b.newest().clone() else {
@@ -116,7 +128,10 @@ fn a_parcel_is_numbered_on_the_parcel_layer_and_selected() {
         ]
     );
     let corners: Vec<[f64; 2]> = p.pts.iter().map(|&q| rel(q)).collect();
-    assert_eq!(corners, [[-14.0, 12.0], [-8.0, 12.0], [-8.0, 18.0], [-14.0, 18.0]]);
+    assert_eq!(
+        corners,
+        [[-14.0, 12.0], [-8.0, 12.0], [-8.0, 18.0], [-14.0, 18.0]]
+    );
     assert_eq!(b.selected(), [p.base.id]);
     assert_eq!(
         b.last_text(),
@@ -161,7 +176,9 @@ fn a_locked_parcel_layer_is_said_in_the_tools_own_words() {
     assert_eq!(b.doc.entities().count(), count);
     assert_eq!(
         b.last_text(),
-        Some("“Parseller” katmanı kilitli; Parsel bu katmana yazar. Kilidi Katmanlar panelinden açın.")
+        Some(
+            "“Parseller” katmanı kilitli; Parsel bu katmana yazar. Kilidi Katmanlar panelinden açın."
+        )
     );
     assert_eq!(b.last_level(), Some(Level::Warn));
 }

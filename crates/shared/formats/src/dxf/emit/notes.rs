@@ -15,14 +15,15 @@
 use std::collections::HashMap;
 
 use kentos_contracts::{
-    Entity, EntityBase, LeaderArrow, LeaderEntity, Paragraph, TextAlign, TextEntity, TextRun, Vec2,
+    Entity, EntityBase, LeaderArrow, LeaderEntity, MAX_LEADER_ARROW, MIN_LEADER_ARROW, Paragraph,
+    TextAlign, TextEntity, TextRun, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::geom::leader::layout;
 
 use super::super::dimension::mtext_value;
 use super::super::entity::{Kind, Parsed};
-use super::super::leaders::{DimStyle, MLeader, arrow_of_block};
+use super::super::leaders::{DimStyle, Fit, MLeader, arrow_of_block};
 use super::super::strings::mtext_lines;
 use super::super::xdata::caret_decode;
 use super::{Ctx, Emitter, anchor_points, apply_meta, mapped_text, xy};
@@ -33,8 +34,7 @@ const LEADER: &str = "Kılavuz (LEADER)";
 const MLEADER: &str = "Çoklu kılavuz (MULTILEADER)";
 /// A leader's height when the file gives none: AutoCAD's ISO arrow.
 const FALLBACK_HEIGHT: f64 = 2.5;
-const NO_HEIGHT: &str =
-    "yüksekliği dosyada yok (ne 40 ne boyut stilinin ok boyu); 2,5 alındı";
+const NO_HEIGHT: &str = "yüksekliği dosyada yok (ne 40 ne boyut stilinin ok boyu); 2,5 alındı";
 const MORE_LINES: &str =
     "notunun ilk satırı kılavuzun notu oldu; öbür satırları ayrı yazı olarak alındı";
 
@@ -167,19 +167,59 @@ impl Emitter<'_> {
     }
 
     /// The arrowhead an arrow block stands for, by its record's name; one
-    /// KentOS has no such arrowhead for is drawn filled, and said.
+    /// KentOS has only one like (docs/adr/0205 §7) or none like is said.
     fn arrow_of(&mut self, block: Option<u64>, what: &str, line: u32) -> Option<LeaderArrow> {
         let lib = self.lib;
         let name = block.and_then(|h| lib.block_records.get(&h))?;
-        let (arrow, known) = arrow_of_block(name);
-        if !known {
-            self.note(
+        let (arrow, fit) = arrow_of_block(name);
+        match (fit, arrow) {
+            (Fit::Near, Some(a)) => self.note(
+                what,
+                &format!(
+                    "ok başı “{name}” KentOS'ta yok; en yakını “{}” alındı",
+                    a.label()
+                ),
+                line,
+            ),
+            (Fit::None, _) => self.note(
                 what,
                 &format!("ok başı “{name}” KentOS'ta yok; dolu ok olarak alındı"),
                 line,
-            );
+            ),
+            _ => {}
         }
         arrow
+    }
+
+    /// A leader's arrowhead's length over its note's height (docs/adr/0205
+    /// §7), both in the file's units: none for the same (KentOS's default)
+    /// or when the file gives either none; one out of KentOS's range is
+    /// brought into it, said.
+    fn arrow_ratio(
+        &mut self,
+        length: Option<f64>,
+        height: f64,
+        what: &str,
+        line: u32,
+    ) -> Option<f64> {
+        let r = length
+            .filter(|l| *l > 0.0)
+            .filter(|_| height > 0.0)
+            .map(|l| l / height)
+            .filter(|r| r.is_finite() && *r != 1.0)?;
+        let kept = r.clamp(MIN_LEADER_ARROW, MAX_LEADER_ARROW);
+        if kept != r {
+            self.note(
+                what,
+                &format!(
+                    "ok başı notun {} katıydı; KentOS'un sınırı olan {} katı alındı",
+                    kentos_geometry_core::display::fixed(r, 2),
+                    kentos_geometry_core::display::fixed(kept, 2)
+                ),
+                line,
+            );
+        }
+        (kept != 1.0).then_some(kept)
     }
 
     /// Counts an object into the drawing's tallies, or out of them (a
@@ -212,7 +252,7 @@ impl Emitter<'_> {
     fn under_note(l: &LeaderEntity, mut rest: TextEntity) -> TextEntity {
         let pts: Vec<CoreVec2> = l.pts.iter().map(|p| CoreVec2::new(p.x, p.y)).collect();
         let arrow = l.arrow.map(LeaderArrow::name);
-        let Some(laid) = layout(&pts, l.height, l.rotation, arrow, true) else {
+        let Some(laid) = layout(&pts, l.height, l.rotation, arrow, None, true) else {
             return rest;
         };
         let (Some(at), Some(align)) = (laid.note_point, laid.note_align) else {
@@ -278,6 +318,8 @@ impl Emitter<'_> {
         }
         let style = own_style.over(self.dim_style(style));
         let meta = e.meta.as_ref();
+        // Its text's height (40) as the file has it, for its arrowhead's size.
+        let text_height = *height;
         let arrow = if *arrow {
             // KentOS's own arrowhead, while the file still draws one.
             match meta
@@ -314,6 +356,11 @@ impl Emitter<'_> {
             .turn
             .filter(|t| same_turn(*t, rotation))
             .unwrap_or(rotation);
+        // Its arrowhead's length over its height: KentOS's exactly, else DIMASZ over 40 (docs/adr/0205 §7).
+        let arrow_size = match meta.and_then(|m| m.arrow_size) {
+            Some(k) => Some(k),
+            None => self.arrow_ratio(style.arrow_length(), text_height, LEADER, e.line),
+        };
         let mut leader = LeaderEntity {
             base: b,
             pts,
@@ -321,6 +368,7 @@ impl Emitter<'_> {
             height,
             rotation,
             arrow,
+            arrow_size,
             mask: false,
         };
         // Made with an MTEXT (73 = 0, or not said): its note is the MTEXT 340 names.
@@ -451,7 +499,11 @@ impl Emitter<'_> {
             self.note(MLEADER, "eğri ok çizgisi kırık çizgi olarak alındı", e.line);
         }
         if m.block {
-            self.note(MLEADER, "blok içeriği alınmadı; kılavuz notsuz alındı", e.line);
+            self.note(
+                MLEADER,
+                "blok içeriği alınmadı; kılavuz notsuz alındı",
+                e.line,
+            );
         }
         let arrow = self.arrow_of(m.arrow_block, MLEADER, e.line);
         let (own, fallback) = if m.arrow_size > 0.0 {
@@ -462,6 +514,12 @@ impl Emitter<'_> {
         let Some((height, rotation)) = Self::plain_size(ctx, own, 0.0) else {
             return self.skip(MLEADER, "bloğun dönüşümü onu düzleştiriyor", e.line);
         };
+        // Its arrowhead's length over its note's height (docs/adr/0205 §7).
+        let arrow_size = if m.text.is_some() && !m.block {
+            self.arrow_ratio(Some(m.arrow_size), m.text_height, MLEADER, e.line)
+        } else {
+            None
+        };
         let mut leader = LeaderEntity {
             base: b.clone(),
             pts,
@@ -469,6 +527,7 @@ impl Emitter<'_> {
             height,
             rotation,
             arrow,
+            arrow_size,
             mask: false,
         };
         if let Some(text) = m.text.as_deref().filter(|_| !m.block) {

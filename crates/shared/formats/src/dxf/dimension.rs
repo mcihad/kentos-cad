@@ -48,8 +48,7 @@ const TYPE: i64 = 31;
 
 /// What the report says when another program's ordinate is not measured
 /// from the drawing's origin.
-pub const ORDINATE_ORIGIN: &str =
-    "koordinat ölçüsünün başlangıcı (0, 0) değil; değeri göreli olduğundan bloğunun çizgileri ve değeriyle alındı";
+pub const ORDINATE_ORIGIN: &str = "koordinat ölçüsünün başlangıcı (0, 0) değil; değeri göreli olduğundan bloğunun çizgileri ve değeriyle alındı";
 
 /// Where a DIMENSION puts a KentOS dimension.
 #[derive(Clone, Debug, PartialEq)]
@@ -116,7 +115,7 @@ pub fn layout(d: &DimensionEntity) -> Option<DimensionLayout> {
 /// A dimension's look as the core lays it out (the arrowheads, sizes and the
 /// value's place; what writes the value is the app's).
 pub fn look_of(l: &kentos_contracts::DimensionLook) -> kentos_geometry_core::geom::dimension::Look {
-    use kentos_geometry_core::geom::dimension::{Arrow, Look};
+    use kentos_geometry_core::geom::dimension::{Arrow, Look, LookLines};
     Look {
         style: l.dim_style.clone(),
         arrow: l.arrow.and_then(|a| Arrow::from_name(a.name())),
@@ -132,6 +131,16 @@ pub fn look_of(l: &kentos_contracts::DimensionLook) -> kentos_geometry_core::geo
         font: l
             .font
             .map(|f| kentos_geometry_core::text::Font::from_id(f.id())),
+        lines: LookLines {
+            dim_line_color: l.dim_line_color.clone(),
+            dim_line_weight: l.dim_line_weight,
+            dim_line_type: l.dim_line_type.map(|t| t.name().to_owned()),
+            ext_color: l.ext_color.clone(),
+            ext_weight: l.ext_weight,
+            ext_line_type: l.ext_line_type.map(|t| t.name().to_owned()),
+            text_color: l.text_color.clone(),
+        }
+        .boxed(),
     }
 }
 
@@ -232,7 +241,10 @@ fn jog_middle(d: &DimensionEntity) -> Vec2 {
     let s = (c.x - b.x) * n.x + (c.y - b.y) * n.y;
     let t = (b.x - c.x) * u.x + (b.y - c.y) * u.y;
     let along = d.offset.max(0.0).min((t - s.abs()).max(0.0)) + s.abs() / 2.0;
-    v(c.x + u.x * along - n.x * s / 2.0, c.y + u.y * along - n.y * s / 2.0)
+    v(
+        c.x + u.x * along - n.x * s / 2.0,
+        c.y + u.y * along - n.y * s / 2.0,
+    )
 }
 
 /// What a DIMENSION (an ARC_DIMENSION, a LARGE_RADIAL_DIMENSION) says, as the reader found it.
@@ -323,7 +335,12 @@ pub enum Foreign {
 /// middle 14). `height` is its style's text height, `mask` its fill. Any
 /// other kind, or one KentOS cannot draw, is left to its block.
 pub fn foreign(g: &Groups, base: EntityBase, height: f64, mask: bool) -> Foreign {
-    let made = |a: Vec2, b: Vec2, offset: f64, style: DimensionStyle, angle: Option<f64>, c: Option<Vec2>| {
+    let made = |a: Vec2,
+                b: Vec2,
+                offset: f64,
+                style: DimensionStyle,
+                angle: Option<f64>,
+                c: Option<Vec2>| {
         DimensionEntity {
             base: base.clone(),
             a,
@@ -353,13 +370,27 @@ pub fn foreign(g: &Groups, base: EntityBase, height: f64, mask: bool) -> Foreign
                 return Foreign::Block(Some(ORDINATE_ORIGIN));
             }
             let east = g.flags & ORDINATE_EAST != 0;
-            made(a, b, 0.0, DimensionStyle::Ordinate, Some(if east { 0.0 } else { 90.0 }), None)
+            made(
+                a,
+                b,
+                0.0,
+                DimensionStyle::Ordinate,
+                Some(if east { 0.0 } else { 90.0 }),
+                None,
+            )
         }
         ("ARC_DIMENSION", _) => {
             let (Some(p), Some(a), Some(b), Some(c)) = (g.p10, g.p13, g.p14, g.p15) else {
                 return Foreign::Block(None);
             };
-            made(a, b, dist(p, c) - dist(a, c), DimensionStyle::ArcLength, None, Some(c))
+            made(
+                a,
+                b,
+                dist(p, c) - dist(a, c),
+                DimensionStyle::ArcLength,
+                None,
+                Some(c),
+            )
         }
         ("LARGE_RADIAL_DIMENSION", _) => {
             let (Some(a), Some(shown), Some(jog), Some(b)) = (g.p10, g.p13, g.p14, g.p15) else {
@@ -393,7 +424,9 @@ pub fn foreign(g: &Groups, base: EntityBase, height: f64, mask: bool) -> Foreign
         look: Default::default(),
     };
     if !(d.height > 0.0) || dimension_fault(&geom).is_some() || layout_dimension(&geom).is_none() {
-        return Foreign::Block(Some("KentOS bu ölçüyü çizemiyor; bloğunun çizgileri ve değeriyle alındı"));
+        return Foreign::Block(Some(
+            "KentOS bu ölçüyü çizemiyor; bloğunun çizgileri ve değeriyle alındı",
+        ));
     }
     Foreign::Taken(Box::new(d))
 }

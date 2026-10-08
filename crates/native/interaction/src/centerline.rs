@@ -33,8 +33,7 @@ pub const LABEL: &str = "Orta hat";
 /// Adım at the start, metres.
 pub const FIRST_STEP: f64 = 1.0;
 /// Why a click gave no side.
-pub const NO_OBJECT_HERE: &str =
-    "Tıklanan yerde nesne yok; çizginin, yayın, dairenin, elipsin, eğrinin ya da alanın üzerine tıklayın.";
+pub const NO_OBJECT_HERE: &str = "Tıklanan yerde nesne yok; çizginin, yayın, dairenin, elipsin, eğrinin ya da alanın üzerine tıklayın.";
 /// The second side is the first.
 pub const SAME_SIDE: &str = "İkinci kenar birincisiyle aynı olamaz; öbür kenara tıklayın.";
 
@@ -102,7 +101,11 @@ fn chained(hit: Slot, cx: &Context<'_>) -> Option<Side> {
     if found.members.len() < 2 {
         return Some(alone);
     }
-    let members: Vec<Slot> = found.members.iter().filter_map(|&i| slots.get(i).copied()).collect();
+    let members: Vec<Slot> = found
+        .members
+        .iter()
+        .filter_map(|&i| slots.get(i).copied())
+        .collect();
     // The core names each object by its `id`: the slot (Birleştir's `run_join`).
     let list: Vec<CoreEntity> = members
         .iter()
@@ -192,10 +195,7 @@ impl Centerline {
         };
         let geometry = EntityGeometry::Polyline {
             pts: wire_all(&axis.pts),
-            bulges: axis
-                .bulges
-                .clone()
-                .filter(|b| b.iter().any(|&x| x != 0.0)),
+            bulges: axis.bulges.clone().filter(|b| b.iter().any(|&x| x != 0.0)),
             zs: None,
             parts: None,
         };
@@ -363,7 +363,8 @@ impl Tool for Centerline {
         }
         if let Some(Ok(axis)) = &self.plan {
             let line = bulge_path_outline(&axis.pts, axis.bulges.as_deref(), false, 0.05);
-            out.strokes.push(Stroke::dashed(line, false, [6.0, 4.0]).tone(Tone::Snap));
+            out.strokes
+                .push(Stroke::dashed(line, false, [6.0, 4.0]).tone(Tone::Snap));
         }
         out
     }

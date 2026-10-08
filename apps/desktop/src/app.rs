@@ -181,6 +181,8 @@ pub enum Dialog {
     TakeFrom,
     /// Katman listesi (layer_list.rs, docs/adr/0177 §6); the window is `App::layer_list`.
     LayerList,
+    /// Ölçek yaz… (annotation_scale.rs, docs/adr/0205 §4); the field is `App::plot_scale_field`.
+    PlotScale,
     /// Veri karşılaştır (data_compare.rs, docs/adr/0179); the window is `App::data_compare`.
     DataCompare,
     /// Raster ekle (rasters/add.rs, docs/adr/0204 §8); the window is `App::rasters.add`.
@@ -235,6 +237,10 @@ pub enum Picker {
 pub enum Message {
     /// Run a web command id (ribbon, shortcut, command line, dialog).
     Run(&'static str),
+    /// Run a command ticked on a menu that stays open (a checklist's row:
+    /// the selection filter's and the snap kinds, docs/adr/0187 §5): as
+    /// `Run`, but the ribbon opened over the drawing stays as it is.
+    RunKept(&'static str),
     /// Draw with the style library's object template of this id
     /// (`template.draw`, docs/adr/0176 §3; templates.rs).
     DrawTemplate(String),
@@ -351,6 +357,8 @@ pub enum Message {
     AnnotationStyles(crate::annotation_styles::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
+    /// Ölçek yaz…'s window (annotation_scale.rs, docs/adr/0205 §4).
+    PlotScale(crate::annotation_scale::Event),
     /// Seçilenleri dosyaya kaydet, Başka çizimden al and Dosyadan blok ekle (drawing_exchange.rs).
     DrawingExchange(crate::drawing_exchange::Event),
     /// Veri karşılaştır's window (data_compare.rs).
@@ -458,8 +466,6 @@ pub enum Message {
     ServerChecked(Result<kentos_contracts::Health, String>),
     /// A layer ticked or unticked on the Çakışma cell's menu (docs/adr/0162 §1).
     OverlapLayer(String),
-    /// Seçim süzgeci's kinds all ticked or none (the Süzgeç cell's menu, docs/adr/0187 §5).
-    SelectKinds(bool),
     /// Sıradakini seç's list: the chip's candidate to choose (docs/adr/0187 §1).
     CycleTo(usize),
     /// The candidate the pointer rests on in that list: highlighted in the drawing.
@@ -704,6 +710,8 @@ pub struct App {
     pub(crate) take_from: Option<crate::drawing_exchange::Window>,
     /// Katman listesi's window (layer_list.rs, docs/adr/0177 §6).
     pub(crate) layer_list: Option<crate::layer_list::Window>,
+    /// Ölçek yaz…'s typed scale while its window is open (annotation_scale.rs, docs/adr/0205 §4).
+    pub(crate) plot_scale_field: Option<String>,
     /// Veri karşılaştır's window (data_compare.rs, docs/adr/0179).
     pub(crate) data_compare: Option<crate::data_compare::Window>,
     /// Kayıtlı ölçüleri denetle's window (cogo.rs, docs/adr/0180).
@@ -957,6 +965,7 @@ impl App {
             layer_purge: None,
             take_from: None,
             layer_list: None,
+            plot_scale_field: None,
             data_compare: None,
             cogo: None,
             table_insert: Default::default(),
@@ -1139,6 +1148,7 @@ impl App {
         // the drawing area's own events move the pointer themselves.
         let locks = (!matches!(message, Message::Viewport(_)))
             .then_some((self.locks.length, self.locks.toward));
+        let held = self.window_over();
         let task = self.handle(message);
         // A template's run ends with its tool (templates.rs).
         self.follow_template();
@@ -1178,7 +1188,21 @@ impl App {
         self.follow_layout(Instant::now());
         self.follow_navigation(Instant::now());
         self.cloud_after(Instant::now());
+        // A window that opens over the drawing has the keyboard: a text box under
+        // it (the command line that opened it) lets go first, before the window's
+        // own field takes it. The view keeps the window's widgets as they were
+        // when something comes over them (view.rs), so nothing else would.
+        if !held && self.window_over() {
+            self.line_focused = false;
+            return release_keyboard().chain(task);
+        }
         task
+    }
+
+    /// Whether a window is open over the drawing: a dialog, the application
+    /// menu or the sheet templates' gallery.
+    fn window_over(&self) -> bool {
+        self.dialog.is_some() || self.app_menu.is_some() || self.sheets.gallery_open()
     }
 
     /// After every message: the geometry store takes the drawing's changes
@@ -1243,7 +1267,7 @@ impl App {
             self.vertices.keyboard = false;
         }
         match message {
-            Message::Run(id) => return self.run(id),
+            Message::Run(id) | Message::RunKept(id) => return self.run(id),
             Message::DrawTemplate(id) => return self.draw_template(&id),
             Message::ApplyTemplate(id) => self.apply_template(&id),
             Message::RunMethod { id, option, label } => {
@@ -1359,6 +1383,7 @@ impl App {
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
             Message::LayerList(event) => return self.layer_list_event(event),
+            Message::PlotScale(event) => return self.plot_scale_event(event),
             Message::DataCompare(event) => return self.data_compare_event(event),
             Message::Cogo(event) => return self.cogo_event(event),
             Message::TableInsert(event) => return self.table_insert_event(event),
@@ -1520,7 +1545,6 @@ impl App {
             Message::Recovery(event) => return self.recovery_event(event),
             Message::ServerChecked(answer) => self.server_checked(answer),
             Message::OverlapLayer(id) => self.toggle_overlap_layer(id),
-            Message::SelectKinds(on) => self.select_all_kinds(on),
             Message::CycleTo(index) => self.selection.cycle_to(index),
             Message::CycleHover(slot) => self.selection.set_hover(slot),
             Message::Snap(event) => self.snap_event(event),
@@ -1571,6 +1595,19 @@ impl App {
     /// Görünüm kipleri's colour mode (`graphics.colorMode`, docs/adr/0195 §1).
     pub fn color_mode(&self) -> kentos_native_style::color::ColorMode {
         kentos_native_style::color::ColorMode::from_key(&self.settings.text("graphics.colorMode"))
+    }
+
+    /// How the drawing's text is sized on the screen (docs/adr/0205 §5): the
+    /// preference, at the open project's plot scale.
+    pub fn label_size(&self) -> kentos_interaction::spatial::LabelSize {
+        let plot = self
+            .document
+            .as_ref()
+            .map_or(1000.0, |d| d.settings().plot_scale);
+        kentos_interaction::spatial::LabelSize::of(
+            &self.settings.text("graphics.annotationSize"),
+            plot,
+        )
     }
 
     pub fn graphics(&self) -> Graphics {
@@ -1707,6 +1744,9 @@ impl App {
         // another drawing starts them again (docs/adr/0176 §3b).
         self.release_template();
         self.template_names.clear();
+        // The annotation tools' heights typed in the last drawing: the new one's annotations take
+        // its own project's (docs/adr/0205 §2).
+        self.memory.forget_heights();
         self.isolated_layers.clear();
         self.selected_layer = None;
         self.spatial.reload(&doc.model);
@@ -1860,6 +1900,10 @@ impl App {
             "view.colorMode.color" | "view.colorMode.mono" | "view.colorMode.gray" => {
                 self.choose_color_mode(id);
             }
+            // Yazıların boyu (docs/adr/0205 §5).
+            "view.annotationSize.legible"
+            | "view.annotationSize.true"
+            | "view.annotationSize.screen" => self.choose_annotation_size(id),
             "view.fills" => self.toggle_session("graphics.fills", "Dolgular ve taramalar"),
             "view.areaEdges" => self.toggle_session("graphics.areaEdges", "Alan sınırları"),
             "view.transparency" => self.toggle_session("graphics.transparency", "Saydamlık"),
@@ -1915,6 +1959,8 @@ impl App {
             "edit.previousSelection" => self.previous_selection(),
             "edit.cycleSelection" => self.cycle_selection(),
             "edit.selectFilter" => self.toggle_select_filter(),
+            "edit.selectFilterAll" => self.select_all_kinds(true),
+            "edit.selectFilterNone" => self.select_all_kinds(false),
             id if id.starts_with("edit.selectFilter.") => {
                 self.toggle_select_kind(&id["edit.selectFilter.".len()..]);
             }
@@ -2075,6 +2121,13 @@ impl App {
             "view.colorMode.color" => self.settings.text("graphics.colorMode") == "color",
             "view.colorMode.mono" => self.settings.text("graphics.colorMode") == "mono",
             "view.colorMode.gray" => self.settings.text("graphics.colorMode") == "gray",
+            "view.annotationSize.legible" => {
+                self.settings.text("graphics.annotationSize") == "legible"
+            }
+            "view.annotationSize.true" => self.settings.text("graphics.annotationSize") == "true",
+            "view.annotationSize.screen" => {
+                self.settings.text("graphics.annotationSize") == "screen"
+            }
             "view.fills" => self.settings.bool("graphics.fills"),
             "view.areaEdges" => self.settings.bool("graphics.areaEdges"),
             "view.transparency" => self.settings.bool("graphics.transparency"),

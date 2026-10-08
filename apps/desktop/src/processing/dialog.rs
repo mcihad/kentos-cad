@@ -259,11 +259,20 @@ impl ToolDialog {
             Event::Value(name, value) => self.set(name, value),
             Event::Number(name, text) => {
                 let read = text.trim().replace(',', ".");
-                let value = read
-                    .parse::<f64>()
-                    .ok()
-                    .filter(|n| n.is_finite() && !read.is_empty())
-                    .map_or_else(|| Value::String(text.clone()), |n| json!(n));
+                // An optional field left empty is no value (docs/adr/0205 §2: the project's height).
+                let optional = self
+                    .tool
+                    .parameters
+                    .iter()
+                    .any(|p| p.name == name && p.optional);
+                let value = if optional && read.is_empty() {
+                    Value::Null
+                } else {
+                    read.parse::<f64>()
+                        .ok()
+                        .filter(|n| n.is_finite() && !read.is_empty())
+                        .map_or_else(|| Value::String(text.clone()), |n| json!(n))
+                };
                 self.numbers.insert(name.clone(), text);
                 self.set(name, value);
             }

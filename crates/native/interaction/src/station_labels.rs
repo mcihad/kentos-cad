@@ -21,7 +21,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{CreateOperation, EntityGeometry};
+use kentos_contracts::{AnnotationKind, CreateOperation, EntityGeometry};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::stationing::{self as rules, Look, Rules, Side, Stationing};
@@ -112,7 +112,7 @@ fn height_mm(cx: &Context<'_>) -> f64 {
     styles::shown(settings)
         .then(|| styles::text_style(cx.memory, settings).and_then(|s| s.height))
         .flatten()
-        .unwrap_or(cx.memory.station_height_mm)
+        .unwrap_or_else(|| cx.annotation_mm(AnnotationKind::Station))
 }
 
 impl StationLabels {
@@ -133,7 +133,7 @@ impl StationLabels {
     /// when something it depends on changed.
     fn see(&mut self, cx: &mut Context<'_>) {
         let key = (
-            *cx.memory,
+            cx.seen_memory(),
             cx.format(),
             styles::Seen::text(cx),
             self.reverse,
@@ -322,7 +322,7 @@ impl StationLabels {
             },
             Asking::Height => match parse_number(t) {
                 Some(n) if n > 0.0 && n.is_finite() => {
-                    cx.memory.station_height_mm = n;
+                    cx.memory.heights.set(AnnotationKind::Station, Some(n));
                     self.asking = None;
                 }
                 _ => refused(cx, "Yükseklik sıfırdan büyük bir sayı olmalı (kâğıtta mm)"),
@@ -421,7 +421,7 @@ impl Tool for StationLabels {
             .option_with(
                 "Yükseklik",
                 "H",
-                format!("{} mm", js_number(m.station_height_mm)),
+                format!("{} mm", js_number(m.heights.mm(AnnotationKind::Station))),
             )
             .option_if(style.shown, "Stil", "S", style.chosen.clone())
             .option_with("İşaret", "İ", on(m.station_tick))

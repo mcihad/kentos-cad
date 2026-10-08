@@ -32,6 +32,61 @@
             ],
             "type": "string"
           },
+          "AnnotationHeights": {
+            "description": "The project's annotation heights on paper, mm (docs/adr/0205 §1): a\nheight not given is its kind's default.",
+            "properties": {
+              "coordinate": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "dimension": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "leader": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "measure": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "station": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "table": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "text": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "ArcEntity": {
             "description": "Arc from `a0` to `a1` (radians), always counter-clockwise.",
             "properties": {
@@ -822,6 +877,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -837,8 +918,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -924,6 +1031,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -1056,6 +1170,30 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The line fields as a dimension's (docs/adr/0205 §6); weights in paper mm.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "dimLineWeight": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "extBeyond": {
                 "format": "double",
                 "type": [
@@ -1063,7 +1201,30 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "extOffset": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
                 "format": "double",
                 "type": [
                   "number",
@@ -1100,6 +1261,12 @@
                 ]
               },
               "suffix": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
                 "type": [
                   "string",
                   "null"
@@ -2534,21 +2701,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -2566,6 +2783,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -3075,6 +3300,17 @@
             "properties": {
               "angleUnit": {
                 "$ref": "#/$defs/AngleUnit"
+              },
+              "annotation": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AnnotationHeights"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The project's annotation heights on paper (docs/adr/0205 §1); absent:\nevery kind's default."
               },
               "areaDecimals": {
                 "format": "uint32",
@@ -5083,6 +5319,61 @@
             ],
             "type": "string"
           },
+          "AnnotationHeights": {
+            "description": "The project's annotation heights on paper, mm (docs/adr/0205 §1): a\nheight not given is its kind's default.",
+            "properties": {
+              "coordinate": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "dimension": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "leader": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "measure": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "station": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "table": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "text": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "AreaUnit": {
             "enum": [
               "m2",
@@ -5411,6 +5702,30 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The line fields as a dimension's (docs/adr/0205 §6); weights in paper mm.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "dimLineWeight": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "extBeyond": {
                 "format": "double",
                 "type": [
@@ -5418,7 +5733,30 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "extOffset": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
                 "format": "double",
                 "type": [
                   "number",
@@ -5455,6 +5793,12 @@
                 ]
               },
               "suffix": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
                 "type": [
                   "string",
                   "null"
@@ -6114,6 +6458,17 @@
             "properties": {
               "angleUnit": {
                 "$ref": "#/$defs/AngleUnit"
+              },
+              "annotation": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AnnotationHeights"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The project's annotation heights on paper (docs/adr/0205 §1); absent:\nevery kind's default."
               },
               "areaDecimals": {
                 "format": "uint32",
@@ -6891,6 +7246,61 @@
               "deg"
             ],
             "type": "string"
+          },
+          "AnnotationHeights": {
+            "description": "The project's annotation heights on paper, mm (docs/adr/0205 §1): a\nheight not given is its kind's default.",
+            "properties": {
+              "coordinate": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "dimension": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "leader": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "measure": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "station": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "table": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "text": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
           },
           "ArcEntity": {
             "description": "Arc from `a0` to `a1` (radians), always counter-clockwise.",
@@ -7671,6 +8081,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -7686,8 +8122,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -7773,6 +8235,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -7905,6 +8374,30 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The line fields as a dimension's (docs/adr/0205 §6); weights in paper mm.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "dimLineWeight": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "extBeyond": {
                 "format": "double",
                 "type": [
@@ -7912,7 +8405,30 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "extOffset": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
                 "format": "double",
                 "type": [
                   "number",
@@ -7949,6 +8465,12 @@
                 ]
               },
               "suffix": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
                 "type": [
                   "string",
                   "null"
@@ -9321,21 +9843,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -9353,6 +9925,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -9912,6 +10492,17 @@
             "properties": {
               "angleUnit": {
                 "$ref": "#/$defs/AngleUnit"
+              },
+              "annotation": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AnnotationHeights"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The project's annotation heights on paper (docs/adr/0205 §1); absent:\nevery kind's default."
               },
               "areaDecimals": {
                 "format": "uint32",
@@ -17538,6 +18129,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -17553,8 +18170,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -17640,6 +18283,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -18547,21 +19197,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -18579,6 +19279,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -18743,6 +19451,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
@@ -20632,6 +21349,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -20647,8 +21390,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -20734,6 +21503,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -21641,21 +22417,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -21673,6 +22499,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -21837,6 +22671,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
@@ -23687,6 +24530,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -23702,8 +24571,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -23789,6 +24684,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -24696,21 +25598,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -24728,6 +25680,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -24892,6 +25852,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
@@ -26877,6 +27846,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -26892,8 +27887,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -26979,6 +28000,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -27886,21 +28914,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -27918,6 +28996,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -28082,6 +29168,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
@@ -29917,6 +31012,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -29932,8 +31053,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -30019,6 +31166,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -30926,21 +32080,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -30958,6 +32162,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -31122,6 +32334,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
@@ -32967,6 +34188,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -32982,8 +34229,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -33069,6 +34342,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -33976,21 +35256,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -34008,6 +35338,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -34172,6 +35510,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
@@ -36291,6 +37638,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -36306,8 +37679,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -36393,6 +37792,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -37300,21 +38706,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -37332,6 +38788,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -37496,6 +38960,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
@@ -39341,6 +40814,11 @@
                 "const": "rasterGeoref",
                 "description": "Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster\nput in place of its resampled file, updated in place.",
                 "type": "string"
+              },
+              {
+                "const": "annotationScale",
+                "description": "Yazı yüksekliklerini uydur (docs/adr/0205 §3): after the plot scale or\nan annotation height changed, the texts, leaders, dimensions and\ntables still at the old height given the new one\n(`follow_annotation_scale`).",
+                "type": "string"
               }
             ]
           },
@@ -40010,6 +41488,32 @@
                       "null"
                     ]
                   },
+                  "dimLineColor": {
+                    "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "dimLineType": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/LineType"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The dimension line's type; absent: continuous."
+                  },
+                  "dimLineWeight": {
+                    "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
                   "dimStyle": {
                     "description": "The project's dimension style it follows, by its id; absent: Standart.",
                     "type": [
@@ -40025,8 +41529,34 @@
                       "null"
                     ]
                   },
+                  "extColor": {
+                    "description": "The extension lines' colour; absent: the object's.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "extLineType": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/LineType"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The extension lines' type; absent: continuous."
+                  },
                   "extOffset": {
                     "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "extWeight": {
+                    "description": "The extension lines' weight, paper mm; absent: a hairline.",
                     "format": "double",
                     "type": [
                       "number",
@@ -40085,6 +41615,13 @@
                     ]
                   },
                   "text": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "textColor": {
+                    "description": "The value's colour; absent: the object's.",
                     "type": [
                       "string",
                       "null"
@@ -40239,6 +41776,14 @@
                       }
                     ],
                     "description": "The arrowhead; absent: a filled arrow."
+                  },
+                  "arrowSize": {
+                    "description": "The arrowhead's length, times the note's height (docs/adr/0205\n§7); absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
                   },
                   "height": {
                     "format": "double",
@@ -40677,24 +42222,83 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PatternLine": {
             "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
@@ -41730,6 +43334,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -41745,8 +43375,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -41832,6 +43488,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -42739,21 +44402,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -42771,6 +44484,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -42935,6 +44656,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
@@ -44902,6 +46632,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -44917,8 +46673,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -45004,6 +46786,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -45911,21 +47700,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -45943,6 +47782,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -46107,6 +47954,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
@@ -48336,6 +50192,32 @@
                       "null"
                     ]
                   },
+                  "dimLineColor": {
+                    "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "dimLineType": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/LineType"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The dimension line's type; absent: continuous."
+                  },
+                  "dimLineWeight": {
+                    "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
                   "dimStyle": {
                     "description": "The project's dimension style it follows, by its id; absent: Standart.",
                     "type": [
@@ -48351,8 +50233,34 @@
                       "null"
                     ]
                   },
+                  "extColor": {
+                    "description": "The extension lines' colour; absent: the object's.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "extLineType": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/LineType"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The extension lines' type; absent: continuous."
+                  },
                   "extOffset": {
                     "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "extWeight": {
+                    "description": "The extension lines' weight, paper mm; absent: a hairline.",
                     "format": "double",
                     "type": [
                       "number",
@@ -48411,6 +50319,13 @@
                     ]
                   },
                   "text": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "textColor": {
+                    "description": "The value's colour; absent: the object's.",
                     "type": [
                       "string",
                       "null"
@@ -48565,6 +50480,14 @@
                       }
                     ],
                     "description": "The arrowhead; absent: a filled arrow."
+                  },
+                  "arrowSize": {
+                    "description": "The arrowhead's length, times the note's height (docs/adr/0205\n§7); absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
                   },
                   "height": {
                     "format": "double",
@@ -49003,24 +50926,83 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "NewObject": {
             "description": "One new object: its geometry and what else it carries. The layer is the\ninput's; the persistent id and the slot are given when it is written.",
@@ -50131,6 +52113,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -50146,8 +52154,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -50233,6 +52267,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -51140,21 +53181,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -51172,6 +53263,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -51336,6 +53435,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
@@ -53313,6 +55421,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -53328,8 +55462,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -53415,6 +55575,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -54322,21 +56489,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -54354,6 +56571,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -54518,6 +56743,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
@@ -56482,6 +58716,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -56497,8 +58757,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -56584,6 +58870,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -57491,21 +59784,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -57523,6 +59866,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -57687,6 +60038,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
@@ -59815,6 +62175,32 @@
                   "null"
                 ]
               },
+              "dimLineColor": {
+                "description": "The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:\nthe object's (docs/adr/0205 §6).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The dimension line's type; absent: continuous."
+              },
+              "dimLineWeight": {
+                "description": "The dimension line's weight, paper mm as an object's; absent: a hairline.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "dimStyle": {
                 "description": "The project's dimension style it follows, by its id; absent: Standart.",
                 "type": [
@@ -59830,8 +62216,34 @@
                   "null"
                 ]
               },
+              "extColor": {
+                "description": "The extension lines' colour; absent: the object's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The extension lines' type; absent: continuous."
+              },
               "extOffset": {
                 "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "description": "The extension lines' weight, paper mm; absent: a hairline.",
                 "format": "double",
                 "type": [
                   "number",
@@ -59917,6 +62329,13 @@
                 ]
               },
               "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "description": "The value's colour; absent: the object's.",
                 "type": [
                   "string",
                   "null"
@@ -60824,21 +63243,71 @@
             "type": "object"
           },
           "LeaderArrow": {
-            "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
+            "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
             "oneOf": [
               {
                 "const": "open",
-                "description": "The filled arrow's two sides.",
+                "description": "Açık ok: the filled triangle's two sides (Open).",
                 "type": "string"
               },
               {
                 "const": "dot",
-                "description": "A filled dot.",
+                "description": "Dolu nokta: a filled dot (Dot).",
                 "type": "string"
               },
               {
                 "const": "none",
-                "description": "No arrowhead: the line ends at the tip.",
+                "description": "Yok: no arrowhead, the line ends at the tip (None).",
+                "type": "string"
+              },
+              {
+                "const": "closed",
+                "description": "Boş üçgen: the triangle's outline (Closed blank).",
+                "type": "string"
+              },
+              {
+                "const": "open30",
+                "description": "İnce açık ok: two sides 15° off the line (Open 30).",
+                "type": "string"
+              },
+              {
+                "const": "open90",
+                "description": "Dik açık ok: two sides square to each other (Open 90, Right angle).",
+                "type": "string"
+              },
+              {
+                "const": "dotSmall",
+                "description": "Küçük nokta (Dot small).",
+                "type": "string"
+              },
+              {
+                "const": "dotBlank",
+                "description": "Boş nokta: a ring (Dot blank).",
+                "type": "string"
+              },
+              {
+                "const": "oblique",
+                "description": "Eğik çizgi: a tick across the tip (Oblique).",
+                "type": "string"
+              },
+              {
+                "const": "archTick",
+                "description": "Mimari çentik: a heavy tick (Architectural tick).",
+                "type": "string"
+              },
+              {
+                "const": "boxFilled",
+                "description": "Dolu kare (Box filled).",
+                "type": "string"
+              },
+              {
+                "const": "boxBlank",
+                "description": "Boş kare (Box blank).",
+                "type": "string"
+              },
+              {
+                "const": "datumFilled",
+                "description": "Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).",
                 "type": "string"
               }
             ]
@@ -60856,6 +63325,14 @@
                   }
                 ],
                 "description": "The arrowhead; absent: a filled arrow."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, times the note's height (docs/adr/0205 §7);\nabsent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "attrs": {
                 "additionalProperties": {
@@ -61020,6 +63497,15 @@
               "b"
             ],
             "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
           },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",

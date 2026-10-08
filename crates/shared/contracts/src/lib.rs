@@ -28,6 +28,7 @@
 //!   in v1 and become typed when the style core moves to Rust.
 
 pub mod annotation;
+pub mod annotation_scale;
 pub mod api;
 pub mod blocks;
 pub mod cad;
@@ -63,6 +64,7 @@ pub mod table;
 pub mod topology;
 
 pub use annotation::*;
+pub use annotation_scale::*;
 pub use api::*;
 pub use cad::*;
 pub use cad_array::*;

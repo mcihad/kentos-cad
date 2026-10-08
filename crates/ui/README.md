@@ -57,7 +57,8 @@ src/                     kentos-ui kütüphanesi
 │   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma, sanal satırlar
 │   ├── tree_view.rs     ağaç tablo: üç durumlu onay kutusu, sürükleyerek taşıma, adlandırma
 │   ├── virtual_list.rs  sanal liste: yalnızca görünen satırları kurar
-│   ├── context_menu.rs  sağ tık menüsü ve menü düğmesi: alt menü, kısayol, klavye
+│   ├── context_menu.rs  sağ tık menüsü ve menü düğmesi: alt menü, kısayol, klavye, açık kalan
+│   │                    işaret satırları (art arda işaretlenen liste)
 │   ├── inspector.rs     nesne inceleyici: nesne başlığı, arama, kategoriler, yalnız değişenler,
 │   │                    çoklu seçimde “Çeşitli”, özel satırlar, sürüklenen ad sütunu, sağ tık, yardım
 │   ├── legend.rs        lejant: nokta, çizgi, alan simgeleri, bölümler, renk ölçeği

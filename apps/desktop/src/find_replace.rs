@@ -122,9 +122,7 @@ impl App {
         let (Some(w), Some(doc)) = (self.find_replace.as_mut(), self.document.as_ref()) else {
             return;
         };
-        let scope: Option<Vec<Slot>> = w
-            .selection_only
-            .then(|| self.selection.ids().to_vec());
+        let scope: Option<Vec<Slot>> = w.selection_only.then(|| self.selection.ids().to_vec());
         w.matches = matches(&doc.model, scope.as_deref(), &w.query());
         let present: HashSet<Slot> = w.matches.iter().map(|m| m.slot).collect();
         w.unchecked.retain(|s| present.contains(s));

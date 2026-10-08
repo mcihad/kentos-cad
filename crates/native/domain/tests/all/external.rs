@@ -322,11 +322,15 @@ fn another_editors_object_on_an_added_layer_drops_its_step() {
 /// A definition whose id ends in `n`, with a line and inserts of the blocks `inside`.
 fn block(n: u8, name: &str, inside: &[u8]) -> kentos_domain::contracts::BlockDefinition {
     let id = |n: u8| format!("00000000-0000-7000-8000-00000000b{n:03x}");
-    let mut entities = vec![serde_json::json!({ "kind": "line", "id": 1, "layerId": "", "attrs": {},
-        "a": { "x": 0, "y": 0 }, "b": { "x": 1, "y": 0 } })];
+    let mut entities = vec![
+        serde_json::json!({ "kind": "line", "id": 1, "layerId": "", "attrs": {},
+        "a": { "x": 0, "y": 0 }, "b": { "x": 1, "y": 0 } }),
+    ];
     for (k, b) in inside.iter().enumerate() {
-        entities.push(serde_json::json!({ "kind": "insert", "id": k + 2, "layerId": "", "attrs": {},
-            "block": id(*b), "p": { "x": 0, "y": 0 }, "scale": 1, "rotation": 0 }));
+        entities.push(
+            serde_json::json!({ "kind": "insert", "id": k + 2, "layerId": "", "attrs": {},
+            "block": id(*b), "p": { "x": 0, "y": 0 }, "scale": 1, "rotation": 0 }),
+        );
     }
     serde_json::from_value(serde_json::json!({ "id": id(n), "name": name, "base": { "x": 0, "y": 0 }, "entities": entities }))
         .expect("a definition")
@@ -352,9 +356,15 @@ fn block_definitions_come_in_quietly_and_an_unchanged_one_keeps_its_object() {
         .unwrap();
     let names: Vec<&str> = doc.blocks().iter().map(|b| b.name.as_str()).collect();
     assert_eq!(names, ["A", "B"]);
-    assert!(std::sync::Arc::ptr_eq(&doc.blocks()[0], &kept), "A kept its object");
+    assert!(
+        std::sync::Arc::ptr_eq(&doc.blocks()[0], &kept),
+        "A kept its object"
+    );
     assert!(!doc.is_dirty() && doc.revision() == revision);
-    assert!(doc.generation() > generation, "what the drawing shows changed");
+    assert!(
+        doc.generation() > generation,
+        "what the drawing shows changed"
+    );
     // A did not change: the step that made it stays.
     assert_eq!(doc.undo().as_deref(), Some("Blok tanımla"));
 }
@@ -384,7 +394,11 @@ fn steps_that_changed_a_definition_someone_else_changed_or_place_a_gone_one_go()
     while let Some(step) = doc.undo() {
         left.push(step);
     }
-    assert_eq!(left, ["Ekle", "Ekle"], "only the two points' steps are left");
+    assert_eq!(
+        left,
+        ["Ekle", "Ekle"],
+        "only the two points' steps are left"
+    );
     assert_eq!(doc.blocks().len(), 1);
     assert_eq!(doc.blocks()[0].name, "A3");
 }

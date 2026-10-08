@@ -257,6 +257,17 @@ impl App {
                 .filter_map(|s| model.uid(s))
                 .collect();
             self.table_insert.style = self.memory.text_style.map(|id| id.to_string());
+            // The cells' height: typed in this drawing, else the project's Tablo height (docs/adr/0205 §2).
+            let mm = self
+                .memory
+                .heights
+                .get(kentos_contracts::AnnotationKind::Table)
+                .unwrap_or_else(|| {
+                    model
+                        .settings()
+                        .annotation_mm(kentos_contracts::AnnotationKind::Table)
+                });
+            self.table_insert.height_mm = kentos_processing::text::js_number(mm);
         }
         self.dialog = Some(Dialog::TableInsert);
     }
@@ -375,7 +386,15 @@ impl App {
             Event::Rows(t) => w.rows = t,
             Event::Columns(t) => w.columns = t,
             Event::Header(on) => w.header = on,
-            Event::Height(t) => w.height_mm = t,
+            Event::Height(t) => {
+                // A height typed is this drawing's from now on (docs/adr/0205 §2).
+                if let Some(mm) = number(&t).filter(|v| *v > 0.0) {
+                    self.memory
+                        .heights
+                        .set(kentos_contracts::AnnotationKind::Table, Some(mm));
+                }
+                self.table_insert.height_mm = t;
+            }
             Event::Lines(l) => w.lines = l,
             Event::Frame(on) => w.frame = on,
             Event::FrameWidth(t) => w.frame_mm = t,

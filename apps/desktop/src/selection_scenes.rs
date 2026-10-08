@@ -3,8 +3,9 @@
 //! their shared corner, a line and a circle. A click on the shared edge with
 //! Sıradakini seç's chip and its list; Çokgenle seç on Kesişenler before the
 //! last corner and its answer; Benzerini seç from the first parcel; Seçim
-//! süzgeci without Kapalı alan after a window over the drawing, and the Süzgeç cell's
-//! menu. The web's are `shots.mjs selecting`. `tools_screens` takes them in
+//! süzgeci without Kapalı alan after a window over the drawing, the Süzgeç cell's
+//! menu, the menu still open after two more kinds unticked from it, and the
+//! ribbon's Seçim süzgeci ▾. The web's are `shots.mjs selecting`. `tools_screens` takes them in
 //! the dark and the light theme at 1440×900 and 1100×650:
 //!
 //! ```text
@@ -13,12 +14,15 @@
 //!
 //! Test code only.
 
+use kentos_ui::snapshot::Snapshot;
 use serde_json::json;
 
 use crate::app::{App, Message};
-use crate::files_testing::make_cad;
+use crate::files_testing::{find_texts, make_cad};
 use crate::tools_scenes::{E, N, Objects, at, click, hover, open, run, typed};
-use crate::tools_screens::{Pointed, Scene, press_caption};
+use crate::tools_screens::{
+    Pointed, Scene, open_folded, open_ribbon_menu, press_caption, press_keys,
+};
 use crate::viewport::Event;
 
 /// Parcels A (1) and B (2), the road (3), the corner point (4), the red
@@ -138,7 +142,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
     ]
 }
 
-/// The chip's list and the Süzgeç cell's menu.
+/// The chip's list, the Süzgeç cell's menu, the same menu after two kinds
+/// unticked from one opening (it stays open, docs/adr/0187 §5, 8 Ekim) and
+/// Giriş › Seçim süzgeci ▾, the same list under its on/off row.
 pub(crate) fn pointed() -> Vec<Pointed> {
     vec![
         ("secim-cip-liste", chip, |s, app| {
@@ -147,5 +153,21 @@ pub(crate) fn pointed() -> Vec<Pointed> {
         ("secim-suzgec-menu", filtered, |s, app| {
             press_caption(s, app, "Süzgeç", true, false)
         }),
+        ("secim-suzgec-coklu", filtered, |s, app| {
+            use iced::keyboard::key::Named::{ArrowDown, Enter};
+            press_caption(s, app, "Süzgeç", true, false);
+            press_keys(s, app, &[ArrowDown, Enter, ArrowDown, Enter]);
+        }),
+        ("secim-suzgec-serit", filtered, ribbon_filter_menu),
     ]
+}
+
+/// Giriş › Seçim süzgeci ▾ opened; a narrow window folds the Seçim panel,
+/// whose menu holds the drop-down as a submenu.
+fn ribbon_filter_menu(s: &mut Snapshot, app: &mut App) {
+    open_ribbon_menu(s, app, "Seçim süzgeci");
+    if find_texts(s, app, "Seçilebilir türler").is_empty() {
+        open_folded(s, app, "Seçim");
+        press_caption(s, app, "Seçim süzgeci", false, false);
+    }
 }

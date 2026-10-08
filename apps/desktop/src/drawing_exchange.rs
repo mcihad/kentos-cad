@@ -626,8 +626,19 @@ impl App {
                 settings = s;
             }
         }
+        // The annotations at the old general height follow a scale or heights taken (docs/adr/0205 §3).
+        let before = doc.model.settings();
+        let change = kentos_contracts::ScaleChange {
+            from_scale: before.plot_scale,
+            to_scale: settings.plot_scale,
+            from: before.annotation.clone().unwrap_or_default(),
+            to: settings.annotation.clone().unwrap_or_default(),
+        };
         doc.model.set_settings(settings);
         doc.model.set_styles(result.styles.clone());
+        if units {
+            self.follow_annotations(change);
+        }
     }
 
     /// Başka çizimden al's checked rows into the open drawing (docs/adr/0193 §2); whether they went in.

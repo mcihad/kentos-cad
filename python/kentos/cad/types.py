@@ -363,6 +363,7 @@ class EditOperation(_StrEnum):
     - ``levelAdjust``: Kot ağı dengelemesi (docs/adr/0203 §8): points given their adjusted heights, vertices on them too.
     - ``rasterStyle``: Raster stili (docs/adr/0204 §4): rasters' looks and opacities written in place.
     - ``rasterGeoref``: Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster
+    - ``annotationScale``: Yazı yüksekliklerini uydur (docs/adr/0205 §3): after the plot scale or
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -418,9 +419,10 @@ class EditOperation(_StrEnum):
     LEVEL_ADJUST = "levelAdjust"
     RASTER_STYLE = "rasterStyle"
     RASTER_GEOREF = "rasterGeoref"
+    ANNOTATION_SCALE = "annotationScale"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "annotationScale"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -532,19 +534,42 @@ LayerNodeTypeName = Literal["group", "layer"]
 
 
 class LeaderArrow(_StrEnum):
-    """A leader's arrowhead other than the filled arrow, which is no value but
-    the field's absence: a leader has one spelling (docs/adr/0146 §1).
+    """A leader's arrowhead other than the filled triangle (Dolu üçgen,
+    AutoCAD's Closed filled), which is no value but the field's absence: a
+    leader has one spelling (docs/adr/0146 §1). The first three are the
+    first leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`
+    schema 30).
 
-    - ``open``: The filled arrow's two sides.
-    - ``dot``: A filled dot.
-    - ``none``: No arrowhead: the line ends at the tip.
+    - ``open``: Açık ok: the filled triangle's two sides (Open).
+    - ``dot``: Dolu nokta: a filled dot (Dot).
+    - ``none``: Yok: no arrowhead, the line ends at the tip (None).
+    - ``closed``: Boş üçgen: the triangle's outline (Closed blank).
+    - ``open30``: İnce açık ok: two sides 15° off the line (Open 30).
+    - ``open90``: Dik açık ok: two sides square to each other (Open 90, Right angle).
+    - ``dotSmall``: Küçük nokta (Dot small).
+    - ``dotBlank``: Boş nokta: a ring (Dot blank).
+    - ``oblique``: Eğik çizgi: a tick across the tip (Oblique).
+    - ``archTick``: Mimari çentik: a heavy tick (Architectural tick).
+    - ``boxFilled``: Dolu kare (Box filled).
+    - ``boxBlank``: Boş kare (Box blank).
+    - ``datumFilled``: Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).
     """
     OPEN = "open"
     DOT = "dot"
     NONE = "none"
+    CLOSED = "closed"
+    OPEN30 = "open30"
+    OPEN90 = "open90"
+    DOT_SMALL = "dotSmall"
+    DOT_BLANK = "dotBlank"
+    OBLIQUE = "oblique"
+    ARCH_TICK = "archTick"
+    BOX_FILLED = "boxFilled"
+    BOX_BLANK = "boxBlank"
+    DATUM_FILLED = "datumFilled"
 
 
-LeaderArrowName = Literal["open", "dot", "none"]
+LeaderArrowName = Literal["open", "dot", "none", "closed", "open30", "open90", "dotSmall", "dotBlank", "oblique", "archTick", "boxFilled", "boxBlank", "datumFilled"]
 """The names of :class:`LeaderArrow`, for a plain string."""
 
 
@@ -1210,6 +1235,50 @@ _RasterFieldsT = TypeVar("_RasterFieldsT", bound="RasterFields")
 
 
 _TmDefinitionT = TypeVar("_TmDefinitionT", bound="TmDefinition")
+
+
+@dataclass(kw_only=True, slots=True)
+class AnnotationHeights(_Model):
+    """The project's annotation heights on paper, mm (docs/adr/0205 §1): a
+    height not given is its kind's default.
+    """
+    coordinate: float | None | Unset = UNSET
+    dimension: float | None | Unset = UNSET
+    leader: float | None | Unset = UNSET
+    measure: float | None | Unset = UNSET
+    station: float | None | Unset = UNSET
+    table: float | None | Unset = UNSET
+    text: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.coordinate is not UNSET:
+            out["coordinate"] = None if self.coordinate is None else float(self.coordinate)
+        if self.dimension is not UNSET:
+            out["dimension"] = None if self.dimension is None else float(self.dimension)
+        if self.leader is not UNSET:
+            out["leader"] = None if self.leader is None else float(self.leader)
+        if self.measure is not UNSET:
+            out["measure"] = None if self.measure is None else float(self.measure)
+        if self.station is not UNSET:
+            out["station"] = None if self.station is None else float(self.station)
+        if self.table is not UNSET:
+            out["table"] = None if self.table is None else float(self.table)
+        if self.text is not UNSET:
+            out["text"] = None if self.text is None else float(self.text)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AnnotationHeights:
+        return cls(
+            coordinate=UNSET if "coordinate" not in data else None if data["coordinate"] is None else float(data["coordinate"]),
+            dimension=UNSET if "dimension" not in data else None if data["dimension"] is None else float(data["dimension"]),
+            leader=UNSET if "leader" not in data else None if data["leader"] is None else float(data["leader"]),
+            measure=UNSET if "measure" not in data else None if data["measure"] is None else float(data["measure"]),
+            station=UNSET if "station" not in data else None if data["station"] is None else float(data["station"]),
+            table=UNSET if "table" not in data else None if data["table"] is None else float(data["table"]),
+            text=UNSET if "text" not in data else None if data["text"] is None else float(data["text"]),
+        )
 
 
 @dataclass(kw_only=True, slots=True)
@@ -2504,9 +2573,16 @@ class DimensionEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         decimals: A length's, a coordinate's or a slope's decimals; absent: the
             project's length decimals (a slope's 2). Angles keep the project's.
+        dim_line_color: The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:
+            the object's (docs/adr/0205 §6).
+        dim_line_type: The dimension line's type; absent: continuous.
+        dim_line_weight: The dimension line's weight, paper mm as an object's; absent: a hairline.
         dim_style: The project's dimension style it follows, by its id; absent: Standart.
         ext_beyond: How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.
+        ext_color: The extension lines' colour; absent: the object's.
+        ext_line_type: The extension lines' type; absent: continuous.
         ext_offset: The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.
+        ext_weight: The extension lines' weight, paper mm; absent: a hairline.
         font: The value's typeface; absent: the project's.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
@@ -2517,6 +2593,7 @@ class DimensionEntity(Entity):
         prefix: Written before the value (and its kind's own prefix).
         suffix: Written after the value.
         symbol: Library symbol overriding the layer's style.
+        text_color: The value's colour; absent: the object's.
         text_gap: The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.
         text_place: Where the value stands; absent: over the line.
         unit: The unit lengths and coordinates are written in; absent: the project's.
@@ -2536,9 +2613,15 @@ class DimensionEntity(Entity):
     c: Vec2 | None | Unset = UNSET
     color: str | None | Unset = UNSET
     decimals: int | None | Unset = UNSET
+    dim_line_color: str | None | Unset = UNSET
+    dim_line_type: LineType | LineTypeName | None | Unset = UNSET
+    dim_line_weight: float | None | Unset = UNSET
     dim_style: str | None | Unset = UNSET
     ext_beyond: float | None | Unset = UNSET
+    ext_color: str | None | Unset = UNSET
+    ext_line_type: LineType | LineTypeName | None | Unset = UNSET
     ext_offset: float | None | Unset = UNSET
+    ext_weight: float | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -2548,6 +2631,7 @@ class DimensionEntity(Entity):
     suffix: str | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     text: str | None | Unset = UNSET
+    text_color: str | None | Unset = UNSET
     text_gap: float | None | Unset = UNSET
     text_place: DimensionTextPlace | DimensionTextPlaceName | None | Unset = UNSET
     unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
@@ -2575,12 +2659,24 @@ class DimensionEntity(Entity):
             out["color"] = self.color
         if self.decimals is not UNSET:
             out["decimals"] = self.decimals
+        if self.dim_line_color is not UNSET:
+            out["dimLineColor"] = self.dim_line_color
+        if self.dim_line_type is not UNSET:
+            out["dimLineType"] = None if self.dim_line_type is None else _enum_out(self.dim_line_type)
+        if self.dim_line_weight is not UNSET:
+            out["dimLineWeight"] = None if self.dim_line_weight is None else float(self.dim_line_weight)
         if self.dim_style is not UNSET:
             out["dimStyle"] = self.dim_style
         if self.ext_beyond is not UNSET:
             out["extBeyond"] = None if self.ext_beyond is None else float(self.ext_beyond)
+        if self.ext_color is not UNSET:
+            out["extColor"] = self.ext_color
+        if self.ext_line_type is not UNSET:
+            out["extLineType"] = None if self.ext_line_type is None else _enum_out(self.ext_line_type)
         if self.ext_offset is not UNSET:
             out["extOffset"] = None if self.ext_offset is None else float(self.ext_offset)
+        if self.ext_weight is not UNSET:
+            out["extWeight"] = None if self.ext_weight is None else float(self.ext_weight)
         if self.font is not UNSET:
             out["font"] = None if self.font is None else _enum_out(self.font)
         if self.label is not UNSET:
@@ -2599,6 +2695,8 @@ class DimensionEntity(Entity):
             out["symbol"] = self.symbol
         if self.text is not UNSET:
             out["text"] = self.text
+        if self.text_color is not UNSET:
+            out["textColor"] = self.text_color
         if self.text_gap is not UNSET:
             out["textGap"] = None if self.text_gap is None else float(self.text_gap)
         if self.text_place is not UNSET:
@@ -2627,9 +2725,15 @@ class DimensionEntity(Entity):
             c=UNSET if "c" not in data else None if data["c"] is None else Vec2.from_json(data["c"]),
             color=data.get("color", UNSET),
             decimals=data.get("decimals", UNSET),
+            dim_line_color=data.get("dimLineColor", UNSET),
+            dim_line_type=UNSET if "dimLineType" not in data else None if data["dimLineType"] is None else _enum_in(LineType, data["dimLineType"]),
+            dim_line_weight=UNSET if "dimLineWeight" not in data else None if data["dimLineWeight"] is None else float(data["dimLineWeight"]),
             dim_style=data.get("dimStyle", UNSET),
             ext_beyond=UNSET if "extBeyond" not in data else None if data["extBeyond"] is None else float(data["extBeyond"]),
+            ext_color=data.get("extColor", UNSET),
+            ext_line_type=UNSET if "extLineType" not in data else None if data["extLineType"] is None else _enum_in(LineType, data["extLineType"]),
             ext_offset=UNSET if "extOffset" not in data else None if data["extOffset"] is None else float(data["extOffset"]),
+            ext_weight=UNSET if "extWeight" not in data else None if data["extWeight"] is None else float(data["extWeight"]),
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -2639,6 +2743,7 @@ class DimensionEntity(Entity):
             suffix=data.get("suffix", UNSET),
             symbol=data.get("symbol", UNSET),
             text=data.get("text", UNSET),
+            text_color=data.get("textColor", UNSET),
             text_gap=UNSET if "textGap" not in data else None if data["textGap"] is None else float(data["textGap"]),
             text_place=UNSET if "textPlace" not in data else None if data["textPlace"] is None else _enum_in(DimensionTextPlace, data["textPlace"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
@@ -2655,6 +2760,7 @@ class DimensionStyleDef(_Model):
         name: As a text style's.
         height: The value's height on paper, mm.
         arrow_size: The arrowhead's length, mm; absent: the arrowhead's default times the height.
+        dim_line_color: The line fields as a dimension's (docs/adr/0205 §6); weights in paper mm.
     """
     id: str
     name: str
@@ -2662,11 +2768,18 @@ class DimensionStyleDef(_Model):
     arrow: DimensionArrow | DimensionArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
     decimals: int | None | Unset = UNSET
+    dim_line_color: str | None | Unset = UNSET
+    dim_line_type: LineType | LineTypeName | None | Unset = UNSET
+    dim_line_weight: float | None | Unset = UNSET
     ext_beyond: float | None | Unset = UNSET
+    ext_color: str | None | Unset = UNSET
+    ext_line_type: LineType | LineTypeName | None | Unset = UNSET
     ext_offset: float | None | Unset = UNSET
+    ext_weight: float | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     prefix: str | None | Unset = UNSET
     suffix: str | None | Unset = UNSET
+    text_color: str | None | Unset = UNSET
     text_gap: float | None | Unset = UNSET
     text_place: DimensionTextPlace | DimensionTextPlaceName | None | Unset = UNSET
     unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
@@ -2682,16 +2795,30 @@ class DimensionStyleDef(_Model):
             out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
         if self.decimals is not UNSET:
             out["decimals"] = self.decimals
+        if self.dim_line_color is not UNSET:
+            out["dimLineColor"] = self.dim_line_color
+        if self.dim_line_type is not UNSET:
+            out["dimLineType"] = None if self.dim_line_type is None else _enum_out(self.dim_line_type)
+        if self.dim_line_weight is not UNSET:
+            out["dimLineWeight"] = None if self.dim_line_weight is None else float(self.dim_line_weight)
         if self.ext_beyond is not UNSET:
             out["extBeyond"] = None if self.ext_beyond is None else float(self.ext_beyond)
+        if self.ext_color is not UNSET:
+            out["extColor"] = self.ext_color
+        if self.ext_line_type is not UNSET:
+            out["extLineType"] = None if self.ext_line_type is None else _enum_out(self.ext_line_type)
         if self.ext_offset is not UNSET:
             out["extOffset"] = None if self.ext_offset is None else float(self.ext_offset)
+        if self.ext_weight is not UNSET:
+            out["extWeight"] = None if self.ext_weight is None else float(self.ext_weight)
         if self.font is not UNSET:
             out["font"] = None if self.font is None else _enum_out(self.font)
         if self.prefix is not UNSET:
             out["prefix"] = self.prefix
         if self.suffix is not UNSET:
             out["suffix"] = self.suffix
+        if self.text_color is not UNSET:
+            out["textColor"] = self.text_color
         if self.text_gap is not UNSET:
             out["textGap"] = None if self.text_gap is None else float(self.text_gap)
         if self.text_place is not UNSET:
@@ -2709,11 +2836,18 @@ class DimensionStyleDef(_Model):
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(DimensionArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             decimals=data.get("decimals", UNSET),
+            dim_line_color=data.get("dimLineColor", UNSET),
+            dim_line_type=UNSET if "dimLineType" not in data else None if data["dimLineType"] is None else _enum_in(LineType, data["dimLineType"]),
+            dim_line_weight=UNSET if "dimLineWeight" not in data else None if data["dimLineWeight"] is None else float(data["dimLineWeight"]),
             ext_beyond=UNSET if "extBeyond" not in data else None if data["extBeyond"] is None else float(data["extBeyond"]),
+            ext_color=data.get("extColor", UNSET),
+            ext_line_type=UNSET if "extLineType" not in data else None if data["extLineType"] is None else _enum_in(LineType, data["extLineType"]),
             ext_offset=UNSET if "extOffset" not in data else None if data["extOffset"] is None else float(data["extOffset"]),
+            ext_weight=UNSET if "extWeight" not in data else None if data["extWeight"] is None else float(data["extWeight"]),
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             prefix=data.get("prefix", UNSET),
             suffix=data.get("suffix", UNSET),
+            text_color=data.get("textColor", UNSET),
             text_gap=UNSET if "textGap" not in data else None if data["textGap"] is None else float(data["textGap"]),
             text_place=UNSET if "textPlace" not in data else None if data["textPlace"] is None else _enum_in(DimensionTextPlace, data["textPlace"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
@@ -4584,6 +4718,8 @@ class LeaderEntity(Entity):
             landing are measured by it.
         rotation: The note's and the landing's direction, degrees counter-clockwise from east.
         arrow: The arrowhead; absent: a filled arrow.
+        arrow_size: The arrowhead's length, times the note's height (docs/adr/0205 §7);
+            absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
         color: Colour override; absent = the layer's colour ("katmana göre").
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
@@ -4603,6 +4739,7 @@ class LeaderEntity(Entity):
     height: float
     rotation: float
     arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
+    arrow_size: float | None | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -4620,6 +4757,8 @@ class LeaderEntity(Entity):
         out["rotation"] = float(self.rotation)
         if self.arrow is not UNSET:
             out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
+        if self.arrow_size is not UNSET:
+            out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -4644,6 +4783,7 @@ class LeaderEntity(Entity):
             height=float(data["height"]),
             rotation=float(data["rotation"]),
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
+            arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -6262,6 +6402,8 @@ class ProjectSettings(_Model):
     """Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
     Attributes:
         plot_scale: Plot scale denominator (1:1000 → 1000).
+        annotation: The project's annotation heights on paper (docs/adr/0205 §1); absent:
+            every kind's default.
         custom_crs: The project's own coordinate system when it is a definition
             (docs/adr/0168 §1); `srid` is then 0.
         datum_transforms: The project's datum choices (docs/adr/0168 §3); none: EPSG's ways.
@@ -6288,6 +6430,7 @@ class ProjectSettings(_Model):
     area_unit: AreaUnit | AreaUnitName
     angle_unit: AngleUnit | AngleUnitName
     plot_scale: float
+    annotation: AnnotationHeights | None | Unset = UNSET
     custom_crs: CrsDefinition | None | Unset = UNSET
     datum_transforms: list[DatumTransform] | Unset = UNSET
     dimension_styles: list[DimensionStyleDef] | Unset = UNSET
@@ -6309,6 +6452,8 @@ class ProjectSettings(_Model):
         out["areaUnit"] = _enum_out(self.area_unit)
         out["angleUnit"] = _enum_out(self.angle_unit)
         out["plotScale"] = float(self.plot_scale)
+        if self.annotation is not UNSET:
+            out["annotation"] = None if self.annotation is None else self.annotation.to_json()
         if self.custom_crs is not UNSET:
             out["customCrs"] = None if self.custom_crs is None else self.custom_crs.to_json()
         if self.datum_transforms is not UNSET:
@@ -6344,6 +6489,7 @@ class ProjectSettings(_Model):
             area_unit=_enum_in(AreaUnit, data["areaUnit"]),
             angle_unit=_enum_in(AngleUnit, data["angleUnit"]),
             plot_scale=float(data["plotScale"]),
+            annotation=UNSET if "annotation" not in data else None if data["annotation"] is None else AnnotationHeights.from_json(data["annotation"]),
             custom_crs=UNSET if "customCrs" not in data else None if data["customCrs"] is None else CrsDefinition.from_json(data["customCrs"]),
             datum_transforms=[DatumTransform.from_json(e0) for e0 in data["datumTransforms"]] if "datumTransforms" in data else UNSET,
             dimension_styles=[DimensionStyleDef.from_json(e0) for e0 in data["dimensionStyles"]] if "dimensionStyles" in data else UNSET,
@@ -8314,13 +8460,21 @@ class DimensionEntityGeometry(EntityGeometry):
             `DEFAULT_ARROW` for the others.
         decimals: A length's, a coordinate's or a slope's decimals; absent: the
             project's length decimals (a slope's 2). Angles keep the project's.
+        dim_line_color: The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:
+            the object's (docs/adr/0205 §6).
+        dim_line_type: The dimension line's type; absent: continuous.
+        dim_line_weight: The dimension line's weight, paper mm as an object's; absent: a hairline.
         dim_style: The project's dimension style it follows, by its id; absent: Standart.
         ext_beyond: How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.
+        ext_color: The extension lines' colour; absent: the object's.
+        ext_line_type: The extension lines' type; absent: continuous.
         ext_offset: The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.
+        ext_weight: The extension lines' weight, paper mm; absent: a hairline.
         font: The value's typeface; absent: the project's.
         mask: The value over the drawing's background (docs/adr/0147).
         prefix: Written before the value (and its kind's own prefix).
         suffix: Written after the value.
+        text_color: The value's colour; absent: the object's.
         text_gap: The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.
         text_place: Where the value stands; absent: over the line.
         unit: The unit lengths and coordinates are written in; absent: the project's.
@@ -8336,15 +8490,22 @@ class DimensionEntityGeometry(EntityGeometry):
     arrow_size: float | None | Unset = UNSET
     c: Vec2 | None | Unset = UNSET
     decimals: int | None | Unset = UNSET
+    dim_line_color: str | None | Unset = UNSET
+    dim_line_type: LineType | LineTypeName | None | Unset = UNSET
+    dim_line_weight: float | None | Unset = UNSET
     dim_style: str | None | Unset = UNSET
     ext_beyond: float | None | Unset = UNSET
+    ext_color: str | None | Unset = UNSET
+    ext_line_type: LineType | LineTypeName | None | Unset = UNSET
     ext_offset: float | None | Unset = UNSET
+    ext_weight: float | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     mask: bool | Unset = UNSET
     prefix: str | None | Unset = UNSET
     style: DimensionStyle | DimensionStyleName | None | Unset = UNSET
     suffix: str | None | Unset = UNSET
     text: str | None | Unset = UNSET
+    text_color: str | None | Unset = UNSET
     text_gap: float | None | Unset = UNSET
     text_place: DimensionTextPlace | DimensionTextPlaceName | None | Unset = UNSET
     unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
@@ -8367,12 +8528,24 @@ class DimensionEntityGeometry(EntityGeometry):
             out["c"] = None if self.c is None else _vec2_out(self.c)
         if self.decimals is not UNSET:
             out["decimals"] = self.decimals
+        if self.dim_line_color is not UNSET:
+            out["dimLineColor"] = self.dim_line_color
+        if self.dim_line_type is not UNSET:
+            out["dimLineType"] = None if self.dim_line_type is None else _enum_out(self.dim_line_type)
+        if self.dim_line_weight is not UNSET:
+            out["dimLineWeight"] = None if self.dim_line_weight is None else float(self.dim_line_weight)
         if self.dim_style is not UNSET:
             out["dimStyle"] = self.dim_style
         if self.ext_beyond is not UNSET:
             out["extBeyond"] = None if self.ext_beyond is None else float(self.ext_beyond)
+        if self.ext_color is not UNSET:
+            out["extColor"] = self.ext_color
+        if self.ext_line_type is not UNSET:
+            out["extLineType"] = None if self.ext_line_type is None else _enum_out(self.ext_line_type)
         if self.ext_offset is not UNSET:
             out["extOffset"] = None if self.ext_offset is None else float(self.ext_offset)
+        if self.ext_weight is not UNSET:
+            out["extWeight"] = None if self.ext_weight is None else float(self.ext_weight)
         if self.font is not UNSET:
             out["font"] = None if self.font is None else _enum_out(self.font)
         if self.mask is not UNSET:
@@ -8385,6 +8558,8 @@ class DimensionEntityGeometry(EntityGeometry):
             out["suffix"] = self.suffix
         if self.text is not UNSET:
             out["text"] = self.text
+        if self.text_color is not UNSET:
+            out["textColor"] = self.text_color
         if self.text_gap is not UNSET:
             out["textGap"] = None if self.text_gap is None else float(self.text_gap)
         if self.text_place is not UNSET:
@@ -8409,15 +8584,22 @@ class DimensionEntityGeometry(EntityGeometry):
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             c=UNSET if "c" not in data else None if data["c"] is None else Vec2.from_json(data["c"]),
             decimals=data.get("decimals", UNSET),
+            dim_line_color=data.get("dimLineColor", UNSET),
+            dim_line_type=UNSET if "dimLineType" not in data else None if data["dimLineType"] is None else _enum_in(LineType, data["dimLineType"]),
+            dim_line_weight=UNSET if "dimLineWeight" not in data else None if data["dimLineWeight"] is None else float(data["dimLineWeight"]),
             dim_style=data.get("dimStyle", UNSET),
             ext_beyond=UNSET if "extBeyond" not in data else None if data["extBeyond"] is None else float(data["extBeyond"]),
+            ext_color=data.get("extColor", UNSET),
+            ext_line_type=UNSET if "extLineType" not in data else None if data["extLineType"] is None else _enum_in(LineType, data["extLineType"]),
             ext_offset=UNSET if "extOffset" not in data else None if data["extOffset"] is None else float(data["extOffset"]),
+            ext_weight=UNSET if "extWeight" not in data else None if data["extWeight"] is None else float(data["extWeight"]),
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             mask=data.get("mask", UNSET),
             prefix=data.get("prefix", UNSET),
             style=UNSET if "style" not in data else None if data["style"] is None else _enum_in(DimensionStyle, data["style"]),
             suffix=data.get("suffix", UNSET),
             text=data.get("text", UNSET),
+            text_color=data.get("textColor", UNSET),
             text_gap=UNSET if "textGap" not in data else None if data["textGap"] is None else float(data["textGap"]),
             text_place=UNSET if "textPlace" not in data else None if data["textPlace"] is None else _enum_in(DimensionTextPlace, data["textPlace"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
@@ -8503,6 +8685,8 @@ class LeaderEntityGeometry(EntityGeometry):
     Attributes:
         pts: At least two: the arrow's tip first.
         arrow: The arrowhead; absent: a filled arrow.
+        arrow_size: The arrowhead's length, times the note's height (docs/adr/0205
+            §7); absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
         mask: The note's box filled with the drawing area's colour before it is drawn.
         text: The note, one line; absent: the arrow alone. Never empty.
     """
@@ -8511,6 +8695,7 @@ class LeaderEntityGeometry(EntityGeometry):
     height: float
     rotation: float
     arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
+    arrow_size: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
     text: str | None | Unset = UNSET
 
@@ -8521,6 +8706,8 @@ class LeaderEntityGeometry(EntityGeometry):
         out["rotation"] = float(self.rotation)
         if self.arrow is not UNSET:
             out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
+        if self.arrow_size is not UNSET:
+            out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
         if self.mask is not UNSET:
             out["mask"] = self.mask
         if self.text is not UNSET:
@@ -8534,6 +8721,7 @@ class LeaderEntityGeometry(EntityGeometry):
             height=float(data["height"]),
             rotation=float(data["rotation"]),
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
+            arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             mask=data.get("mask", UNSET),
             text=data.get("text", UNSET),
         )
@@ -9104,6 +9292,7 @@ __all__ = [
     "AlignTransform",
     "AngleUnit",
     "AngleUnitName",
+    "AnnotationHeights",
     "ArcCreate",
     "ArcCreated",
     "ArcEntity",

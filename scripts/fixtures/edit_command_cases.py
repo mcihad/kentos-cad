@@ -78,10 +78,13 @@ GEOMETRY = {
     "xline": ["p", "dir"],
     "ray": ["p", "dir"],
     "text": ["p", "text", "height", "rotation", "align", "widthFactor", "mask", "path"],
-    "dimension": ["a", "b", "offset", "height", "text", "style", "angle", "c", "mask", "za", "zb"],
+    "dimension": ["a", "b", "offset", "height", "text", "style", "angle", "c", "mask", "za", "zb",
+                  # Its look (docs/adr/0183 §3) and lines (docs/adr/0205 §6).
+                  "dimStyle", "arrow", "arrowSize", "extOffset", "extBeyond", "textGap", "textPlace", "decimals", "unit", "prefix", "suffix", "font",
+                  "dimLineColor", "dimLineWeight", "dimLineType", "extColor", "extWeight", "extLineType", "textColor"],
     "hatch": ["ring", "holes", "pattern"],
     "insert": ["block", "p", "scale", "rotation", "mirror"],
-    "leader": ["pts", "text", "height", "rotation", "arrow", "mask"],
+    "leader": ["pts", "text", "height", "rotation", "arrow", "mask", "arrowSize"],
     "table": ["p", "rotation", "height", "rows", "columns", "cells", "merges", "aligns", "header", "grid", "frame", "textStyle", "font", "bold",
               "italic", "oblique", "source"],
     "image": ["p", "width", "height", "rotation", "mirror", "asset", "file", "clip", "opacity"],
@@ -791,6 +794,58 @@ cases.append({
          "expect": {"entities": {"1": reshaped(PE(1), levelled)}, "uids": {"1": "nokta"}, "revision": "changed"}},
         {"op": "undo", "returns": "Kot ağı dengelemesi", "expect": {"entities": {"1": reshaped(PE(1), adjusted)}}},
         {"op": "undo", "returns": "Yatay ağ dengelemesi", "expect": {"entities": {"1": PE(1)}, "canUndo": False}},
+    ],
+})
+
+# Yazı yüksekliklerini uydur (docs/adr/0205 §3): the heights the shared rule gives (fixtures/text/v1/scale.json), written as
+# given in one step; a leader's arrowhead's size is its note's height's multiple, so it stays.
+A_TEXT = {"kind": "text", "id": 1, "layerId": "yapi", "attrs": {}, "p": P(487000, 4420200), "text": "Ada 101", "height": 2.5, "rotation": 0}
+A_LEADER = {"kind": "leader", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [P(487010, 4420200), P(487014, 4420203)], "text": "Bina",
+            "height": 2.5, "rotation": 0, "arrow": "closed", "arrowSize": 1.5}
+A_DIM = {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": P(487000, 4420210), "b": P(487020, 4420210), "offset": 3,
+         "height": 2.5, "dimLineColor": "#C0392B", "extWeight": 0.18}
+A_TABLE = {"kind": "table", "id": 4, "layerId": "yapi", "attrs": {}, "p": P(487030, 4420220), "rotation": 0, "height": 2.5, "rows": [6, 5.5],
+           "columns": [20, 12.5], "cells": [["Nokta", "Y"], ["1", "487000.00"]], "header": True, "frame": 0.7}
+A_SETUP = {**SETUP, "entities": [A_TEXT, A_LEADER, A_DIM, A_TABLE]}
+A_NOTHING = {"ids": [1, 2, 3, 4], "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
+
+
+def a_geometry(e, **fields):
+    out = {k: v for k, v in json.loads(json.dumps(e)).items() if k not in ("id", "layerId", "attrs")}
+    out.update(fields)
+    return out
+
+
+a_text = a_geometry(A_TEXT, height=1.25)
+a_leader = a_geometry(A_LEADER, height=1.25)
+a_dim = a_geometry(A_DIM, height=1.25)
+a_table = a_geometry(A_TABLE, height=1.25, rows=[3, 2.75], columns=[10, 6.25], frame=0.35)
+cases.append({
+    "name": "Yazı yüksekliklerini uydur: yazının, kılavuzun, ölçünün ve tablonun yeni yükseklikleri tek adımda; kılavuzun ok boyu notun katı olarak kalır, ölçünün çizgileri ve tablonun satırları yazıldığı gibi (ADR 0205 §3)",
+    "setup": A_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "annotationScale", "changes": [
+            {"kind": "update", "uid": uid(1), "geometry": a_text},
+            {"kind": "update", "uid": uid(2), "geometry": a_leader},
+            {"kind": "update", "uid": uid(3), "geometry": a_dim},
+            {"kind": "update", "uid": uid(4), "geometry": a_table}]},
+         "result": done(changed=[uid(1), uid(2), uid(3), uid(4)]),
+         "expect": {"ids": [1, 2, 3, 4], "entities": {"1": reshaped(A_TEXT, a_text), "2": reshaped(A_LEADER, a_leader),
+                                                       "3": reshaped(A_DIM, a_dim), "4": reshaped(A_TABLE, a_table)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Yazı yüksekliklerini uydur", "expect": {"ids": [1, 2, 3, 4], "entities": {"1": A_TEXT, "2": A_LEADER, "3": A_DIM, "4": A_TABLE}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "kılavuzun ok boyu notun yüksekliğinin 0,1 ile 10 katı: invalid_arrow_size (ADR 0205 §7)",
+    "setup": A_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(2), "geometry": a_geometry(A_LEADER, arrowSize=20)}]},
+         "result": failed("invalid_arrow_size", "Kılavuzun ok boyu notun yüksekliğinin 0.1 ile 10 katı olmalı; 20 verildi. Bu aralıkta verin ya da alanı kaldırın (notun yüksekliği kadar).",
+                          "changes[0].geometry.arrowSize"), "expect": A_NOTHING},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(2), "geometry": a_geometry(A_LEADER, arrowSize=0.05)}]},
+         "result": failed("invalid_arrow_size", "Kılavuzun ok boyu notun yüksekliğinin 0.1 ile 10 katı olmalı; 0.05 verildi. Bu aralıkta verin ya da alanı kaldırın (notun yüksekliği kadar).",
+                          "changes[0].geometry.arrowSize"), "expect": A_NOTHING},
     ],
 })
 
@@ -1850,19 +1905,21 @@ cases.append({
 
 
 def leader_pieces(i):
-    """Patlat's pieces (docs/adr/0146 §4), from the layout's rule: its line on to the landing's end a polyline,
-    its filled arrowhead or dot a solid hatch, an open one's sides a polyline, its note a text."""
+    """Patlat's pieces (docs/adr/0146 §4, 0205 §7), from the layout's rule: its line from where it starts (the
+    head's back) on to the landing's end a polyline, each line of its arrowhead a polyline (a closed one back to its
+    first point), each filled area a solid hatch, its note a text."""
     e = LE(i)
     pts = [(q["x"], q["y"]) for q in e["pts"]]
-    got = leader_layout(pts, e["height"], e["rotation"], e.get("arrow"), "text" in e)
+    got = leader_layout(pts, e["height"], e["rotation"], e.get("arrow"), e.get("arrowSize"), "text" in e)
     xy = lambda q: P(q[0], q[1])  # noqa: E731
-    line = [xy(q) for q in pts] + ([xy(got["landing"][1])] if "landing" in got else [])
+    line = [xy(got["start"])] + [xy(q) for q in pts[got["first"]:]] + ([xy(got["landing"][1])] if "landing" in got else [])
     pieces = [{"kind": "polyline", "pts": line}]
     head = got["head"]
-    if head["kind"] == "open":
-        pieces.append({"kind": "polyline", "pts": [xy(q) for q in head["lines"]]})
-    elif head["kind"] == "filled":
-        pieces.append({"kind": "hatch", "ring": [xy(q) for q in head["triangle"]], "pattern": {"type": "solid", "angle": 0, "spacing": e["height"]}})
+    for drawn in head["lines"]:
+        ps = drawn["pts"] + (drawn["pts"][:1] if drawn["closed"] else [])
+        pieces.append({"kind": "polyline", "pts": [xy(q) for q in ps]})
+    for ring in head["fills"]:
+        pieces.append({"kind": "hatch", "ring": [xy(q) for q in ring], "pattern": {"type": "solid", "angle": 0, "spacing": e["height"]}})
     if "notePoint" in got:
         text = {"kind": "text", "p": xy(got["notePoint"]), "text": e["text"], "height": e["height"], "rotation": e["rotation"], "align": got["noteAlign"]}
         if e.get("mask"):

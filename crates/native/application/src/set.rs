@@ -250,7 +250,9 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
     for (at, _, e, _) in &found {
         let layer = &e.base().layer_id;
         if layers.is_locked(layer) {
-            let name = layers.get(layer).map_or(layer.as_str(), |n| n.name.as_str());
+            let name = layers
+                .get(layer)
+                .map_or(layer.as_str(), |n| n.name.as_str());
             return Err(Stop::Failed(error(
                 codes::LAYER_LOCKED,
                 format!(

@@ -572,6 +572,88 @@ fn dimensions_keep_their_hairlines_at_every_scale() {
     assert_eq!(s[1], ("#000000".into(), None, None));
 }
 
+/// A dimension's lines in its look's colours, weights and types (docs/adr/0205 §6): the extension lines
+/// apart from the dimension line and its ticks; weights on paper at the plot scale, dashes too; with Kalınlık
+/// off every one a hairline.
+#[test]
+fn a_dimension_draws_its_lines_as_its_look_names_them() {
+    use kentos_geometry_core::geom::dimension::look::{Look, LookLines};
+    let dim = |hairlines: bool| {
+        let look = Look {
+            lines: LookLines {
+                dim_line_color: Some("#C0392B".into()),
+                dim_line_weight: Some(0.35),
+                dim_line_type: Some("dashed".into()),
+                ext_color: Some("#7F8C8D".into()),
+                ..Default::default()
+            }
+            .boxed(),
+            ..Default::default()
+        };
+        let obj = Obj {
+            shape: Shape::Dimension {
+                a: v(0.0, 0.0),
+                b: v(10.0, 0.0),
+                offset: 3.0,
+                height: 1.0,
+                text: None,
+                style: None,
+                angle: None,
+                c: None,
+                mask: None,
+                za: None,
+                zb: None,
+                look,
+            },
+            attrs: &[],
+            how: [MODE_DIMENSION, 0, -1, 0],
+        };
+        let p = format!(
+            r##"{{"symbols":{{}},"renderer":null,"sets":[],"refs":[],"colors":["#000000"],"assets":{{}}{}}}"##,
+            if hairlines {
+                r#","hairlines":true"#
+            } else {
+                ""
+            }
+        );
+        build(&p, &[obj], v(0.0, 0.0)).0
+    };
+    let batches = dim(false);
+    let looks: Vec<(String, f64, String, bool)> = batches
+        .iter()
+        .filter(|b| text(b.get("kind")) == "stroke")
+        .map(|b| {
+            let st = b.get("style");
+            (
+                text(st.get("color")).to_string(),
+                number(st.get("width")).unwrap_or(-1.0),
+                text(st.get("unit")).to_string(),
+                matches!(st.get("dash"), Json::Arr(_)),
+            )
+        })
+        .collect();
+    // The extension lines in their colour, hairlines; the dimension line 0.35 mm at 1:1000 (0.35 m), dashed.
+    assert!(
+        looks.contains(&("#7F8C8D".into(), 0.0, "px".into(), false)),
+        "{looks:?}"
+    );
+    assert!(
+        looks.contains(&("#C0392B".into(), 0.35, "world".into(), true)),
+        "{looks:?}"
+    );
+    assert!(
+        !looks.iter().any(|l| l.0 == "#000000"),
+        "nothing in the object's colour: {looks:?}"
+    );
+    // Kalınlık off: the weight goes, the colours and the dashes stay.
+    let thin = dim(true);
+    assert!(
+        thin.iter()
+            .filter(|b| text(b.get("kind")) == "stroke")
+            .all(|b| number(b.get("style").get("width")) == Some(0.0))
+    );
+}
+
 #[test]
 fn one_symbol_draws_nothing_on_text_and_dimensions() {
     let call = |entity: &str| {
@@ -616,6 +698,7 @@ fn a_leader_strokes_its_lines_and_fills_its_arrowhead() {
             height: 3.0,
             rotation: 0.0,
             arrow: arrow.map(str::to_owned),
+            arrow_size: None,
             mask: None,
         },
         attrs: &[],

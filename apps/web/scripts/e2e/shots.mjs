@@ -40,7 +40,8 @@
 // vertextable (docs/adr/0172: Köşe tablosu, a row selected, a value typed, a radius refused, a road, two objects);
 // network (docs/adr/0203: Yatay ağ and Kot ağı dengelemesi solved, their results, a blunder, what does not hold, written);
 // sources (docs/adr/0199 §7: Kaynaklar with a folder added and a folder inside it open, a file's menu); fields
-// (docs/adr/0199 §5: Öznitelikler's fields by their kinds).
+// (docs/adr/0199 §5: Öznitelikler's fields by their kinds); annotations (docs/adr/0205: dimensions' lines, the leaders'
+// arrowheads, texts far out, Ölçü stilleri's Çizgiler, Ölçek ve yazılar, Ölçek yaz…).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -5074,6 +5075,12 @@ const IMAGES = readFileSync(new URL('../../../../fixtures/interaction/v1/images.
 const LOGO = [...readFileSync(new URL('../../../../fixtures/interaction/v1/logo.png', import.meta.url))];
 SCENES.images = imageScenes();
 
+// The annotations of docs/adr/0205 on fixtures/interaction/v1/annotations.kcad (scripts/fixtures/annotation_scene.py), as
+// the desktop's `labels::annotation_screens`: the parcel's dimensions, the one following “Renkli çizgiler” selected
+// (Öznitelikler's line rows); the leaders' arrowheads closer in; far out at 1:1000 with Kaybolmasın and Gerçek boy; the
+// Ölçü stilleri window on the style, Proje ayarları › Ölçek ve yazılar and Ölçek yaz….
+SCENES.annotations = annotationScenes();
+
 // Yazı ve ölçü stilleri (docs/adr/0183) in a CAD project at 1:500: a parcel drawn with the project's styles (its number
 // bold in Arimo, the road's name in Barlow italic and slanted, a note in Courier Prime, its sides measured in Mimari
 // (arrows, cm), Kadastro (ticks, the value centred, “L=”), Noktalı (dots) and Açık (open arrows), one dimension in
@@ -6036,7 +6043,48 @@ function selectingScenes() {
     },
     { id: 'selection-filter', open: filtered, close },
     { id: 'selection-filter-menu', open: async (ui) => (await filtered(ui), await rightClick(ui, '.status__toggle[data-command="edit.selectFilter"]')), close },
+    // Two more kinds unticked from one opening: the menu stays open (docs/adr/0187 §5, 8 Ekim); the desktop's
+    // “secim-suzgec-coklu”.
+    {
+      id: 'selection-filter-multi',
+      open: async (ui) => {
+        await filtered(ui);
+        await rightClick(ui, '.status__toggle[data-command="edit.selectFilter"]');
+        await menuRow(ui, 'Nokta');
+        await menuRow(ui, 'Çizgi');
+      },
+      close,
+    },
+    // Giriş › Seçim süzgeci ▾: the cell's list under its on/off row; the desktop's “secim-suzgec-serit”.
+    {
+      id: 'selection-filter-ribbon',
+      open: async (ui) => {
+        await filtered(ui);
+        const shown = await ui.eval(`(() => { const b = document.querySelector('.rbtn[data-menu="Seçim süzgeci"]'); return !!b && b.offsetParent !== null; })()`);
+        if (!shown) {
+          await ui.clickSel('.rpanel[data-panel="Seçim"] .rpanel__collapsed');
+          await ui.sleep(300);
+        }
+        await ui.clickSel('.rbtn[data-menu="Seçim süzgeci"]');
+        await ui.waitFor(`!!document.querySelector('.menu')`);
+        await ui.sleep(300);
+      },
+      close,
+    },
   ];
+}
+
+/** A click on an open menu's row by its label; the pointer stays on it. A menu already closed is said, not a stop. */
+async function menuRow(ui, label) {
+  const at = await ui.eval(`(() => {
+    const row = [...document.querySelectorAll('.menu .menu__item')].find((r) => r.querySelector('.menu__label')?.textContent === ${JSON.stringify(label)});
+    if (!row) return null;
+    const b = row.getBoundingClientRect();
+    return [b.x + b.width / 2, b.y + b.height / 2];
+  })()`);
+  if (!at) return console.warn(`  açık menüde “${label}” satırı yok (menü kapandı mı?)`);
+  await ui.clickAt(...at);
+  await ui.sleep(300);
 }
 
 function coordinateScenes() {
@@ -6339,4 +6387,91 @@ function helpers(b) {
     },
   };
   return ui;
+}
+
+function annotationScenes() {
+  const FILE = readFileSync(new URL('../../../../fixtures/interaction/v1/annotations.kcad', import.meta.url), 'utf8');
+  /** The drawing open, `then` (the view's camera `c`, the app `k`) run after its extent is in view. */
+  const load = (then = '') => async (ui) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(FILE)}, null))) throw new Error('annotations.kcad did not load');
+      k.commands.execute('view.annotationSize.legible');
+      k.view.zoomExtents();
+      const c = k.view.camera;
+      ${then}
+      k.view.requestRender();
+    })()`);
+    await ui.move(2, 2);
+    await ui.sleep(600);
+  };
+  const close = async (ui) => (await ui.escapeAll(3), await ui.eval(`window.kentos.commands.execute('view.annotationSize.legible')`));
+  return [
+    { id: 'annotations-drawn', open: load('k.selection.set([4]);'), close },
+    {
+      id: 'annotations-props',
+      open: async (ui) => {
+        await load('k.selection.set([4]);')(ui);
+        // Genel closed and the panel scrolled down to the dimension's line rows.
+        await ui.eval(`(() => {
+          const head = [...document.querySelectorAll('.props__section')].find((b) => b.textContent.trim().startsWith('Genel'));
+          if (head && head.getAttribute('aria-expanded') === 'true') head.click();
+        })()`);
+        await ui.sleep(200);
+        await ui.eval(`(() => { for (const el of document.querySelectorAll('.props, .props *')) if (el.scrollHeight > el.clientHeight + 4) el.scrollTop = el.scrollHeight; let p = document.querySelector('.props'); while (p) { if (p.scrollHeight > p.clientHeight + 4) p.scrollTop = p.scrollHeight; p = p.parentElement; } })()`);
+        await ui.sleep(300);
+      },
+      close,
+    },
+    { id: 'annotations-arrows', open: load('c.center = { x: 500050, y: 4400072 }; c.scale = 5.6;'), close },
+    { id: 'annotations-far-legible', open: load('c.scale = c.scale / 5;'), close },
+    { id: 'annotations-far-true', open: load("k.commands.execute('view.annotationSize.true'); c.scale = c.scale / 5;"), close },
+    {
+      id: 'annotations-dimension-styles',
+      open: async (ui) => {
+        await load()(ui);
+        await ui.eval(`window.kentos.commands.execute('style.dimensionStyles')`);
+        await ui.waitFor(`!!document.querySelector('.dialog--annotation')`);
+        await ui.clickText('.dialog--annotation .states-row__name', 'Renkli çizgiler');
+        await ui.move(2, 2);
+        await ui.sleep(400);
+      },
+      close,
+    },
+    {
+      id: 'annotations-dimension-styles-preview',
+      open: async (ui) => {
+        await load()(ui);
+        await ui.eval(`window.kentos.commands.execute('style.dimensionStyles')`);
+        await ui.waitFor(`!!document.querySelector('.dialog--annotation')`);
+        await ui.clickText('.dialog--annotation .states-row__name', 'Renkli çizgiler');
+        // Down to the preview.
+        await ui.eval(`(() => { for (const el of document.querySelectorAll('.dialog--annotation, .dialog--annotation *')) if (el.scrollHeight > el.clientHeight + 4) el.scrollTop = el.scrollHeight; })()`);
+        await ui.move(2, 2);
+        await ui.sleep(400);
+      },
+      close,
+    },
+    {
+      id: 'annotations-project-scale',
+      open: async (ui) => {
+        await load()(ui);
+        await ui.eval(`import('/src/ui/settings/ProjectSettingsDialog.ts').then((m) => m.openProjectSettings(window.kentos, 'scale'))`);
+        await ui.sleep(500);
+      },
+      close,
+    },
+    {
+      id: 'annotations-plot-scale',
+      open: async (ui) => {
+        await load()(ui);
+        await ui.eval(`import('/src/ui/settings/PlotScaleDialog.ts').then((m) => m.openPlotScaleDialog(window.kentos))`);
+        await ui.waitFor(`!!document.querySelector('.plotscale__field')`);
+        await ui.eval(`(() => { const f = document.querySelector('.plotscale__field'); f.value = '2500'; f.dispatchEvent(new Event('input')); })()`);
+        await ui.sleep(300);
+      },
+      close,
+    },
+  ];
 }

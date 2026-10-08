@@ -612,7 +612,12 @@ fn leader_screens() {
             app.apply_settings();
             app.picker = Picker::File(fixture("leaders.dxf"));
             run(&mut app, "file.import.dxf");
-            shot(&mut app, &out, &format!("aktar-{mode}-19-dxf-kilavuzlar"), size);
+            shot(
+                &mut app,
+                &out,
+                &format!("aktar-{mode}-19-dxf-kilavuzlar"),
+                size,
+            );
             send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
             app.selection.set(Vec::<kentos_domain::Slot>::new());
             let frame = kentos_render_wgpu::Bounds {
@@ -622,13 +627,23 @@ fn leader_screens() {
                 max_y: 14.0,
             };
             app.viewport.camera.fit(&frame, 24.0);
-            shot(&mut app, &out, &format!("aktar-{mode}-20-dxf-kilavuzlar-alindi"), size);
+            shot(
+                &mut app,
+                &out,
+                &format!("aktar-{mode}-20-dxf-kilavuzlar-alindi"),
+                size,
+            );
             run(&mut app, "file.export.dxf");
             send(
                 &mut app,
                 Event::DxfExport(dxf_export::Event::Scope(dxf_export::Scope::All)),
             );
-            shot(&mut app, &out, &format!("aktar-{mode}-21-dxf-ver-kilavuzlar"), size);
+            shot(
+                &mut app,
+                &out,
+                &format!("aktar-{mode}-21-dxf-ver-kilavuzlar"),
+                size,
+            );
         }
     }
 }

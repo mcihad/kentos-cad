@@ -51,9 +51,37 @@ fn caption_at(snapshot: &mut Snapshot, app: &App, caption: &str, arrow: bool) ->
 /// A split button's list opened, as its key tip opens it (ribbon_keys.rs): by the
 /// button's own key, the tools' family or the tool with methods.
 pub(crate) fn open_split(snapshot: &mut Snapshot, app: &mut App, key: &str) {
+    open_menu_id(snapshot, app, crate::ribbon_keys::split_menu_id(key));
+}
+
+/// A ribbon drop-down's menu opened, as its key tip opens it (ribbon_keys.rs): by its label.
+pub(crate) fn open_ribbon_menu(snapshot: &mut Snapshot, app: &mut App, label: &str) {
+    open_menu_id(snapshot, app, crate::ribbon_keys::menu_id(label));
+}
+
+/// A folded panel's menu opened (a narrow window), as its key tip opens it: by the panel's title.
+pub(crate) fn open_folded(snapshot: &mut Snapshot, app: &mut App, panel: &str) {
+    open_menu_id(snapshot, app, crate::ribbon_keys::folded_id(panel));
+}
+
+/// Keys pressed over the window, one after another (a menu's arrows and Enter).
+pub(crate) fn press_keys(
+    snapshot: &mut Snapshot,
+    app: &mut App,
+    keys: &[iced::keyboard::key::Named],
+) {
+    let mut update = |app: &mut App, message: Message| {
+        let _ = app.update(message);
+    };
+    for key in keys {
+        snapshot.input(app, App::view, &mut update, Input::Key(*key));
+    }
+}
+
+/// A menu opened by its id, as the key tips open them.
+fn open_menu_id(snapshot: &mut Snapshot, app: &mut App, id: iced::advanced::widget::Id) {
     use iced::futures::StreamExt as _;
-    let task: iced::Task<Message> =
-        kentos_ui::widget::context_menu::open_menu(crate::ribbon_keys::split_menu_id(key));
+    let task: iced::Task<Message> = kentos_ui::widget::context_menu::open_menu(id);
     if let Some(mut stream) = iced_runtime::task::into_stream(task) {
         while let Some(action) = iced::futures::executor::block_on(stream.next()) {
             if let iced_runtime::Action::Widget(operation) = action {

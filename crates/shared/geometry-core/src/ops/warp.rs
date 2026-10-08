@@ -635,6 +635,7 @@ fn common<M: Map + ?Sized>(
             height,
             rotation,
             arrow,
+            arrow_size,
             mask,
         } => {
             let last = *pts.last().unwrap_or(&Vec2::new(0.0, 0.0));
@@ -648,6 +649,7 @@ fn common<M: Map + ?Sized>(
                 height,
                 rotation,
                 arrow: arrow.clone(),
+                arrow_size: *arrow_size,
                 mask: *mask,
             })
         }

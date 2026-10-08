@@ -49,7 +49,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   satırları ve degradesiyle iki yönde (ADR 0186);
   seçim ekleri: Sıradakini seç (tıklamanın adayları çekirdeğin sırasıyla, “1/3 ▾” çipi ve listesi, Shift+Boşluk), Çokgenle seç
   (İçindekiler, Kesişenler, Dışındakiler), Önceki seçim, Benzerini seç (Tür, Katman, Renk, Sembol), Seçim süzgeci (durum çubuğunda Süzgeç,
-  on altı tür; tıklama, kutu, seçim araçları ve seçme adımları süzülür, dışarıda kalan söylenir) (ADR 0187);
+  on yedi tür; tıklama, kutu, seçim araçları ve seçme adımları süzülür, dışarıda kalan söylenir; hücrenin menüsü ve Giriş › Seçim süzgeci ▾
+  aynı işaret listesi: kısa adlar ve ikonlar, menü açık kalır, Bütün türler ve Hiçbir tür; Kenet türleri ve Çakışma'nın katmanları da açık kalır) (ADR 0187);
   nokta hesaplayıcı ekleri: Obje üzerinde nokta (nesnenin yolunda yakın uçtan uzaklık ve dik sapma; çizgi, yay, daire, elips, eğri, alanın
   dış sınırı), Km ve sapma (güzergâhın km'si, Başlangıç (B)), Nokta adından, Mesafe ve eğim (eğik mesafe ve yüzde eğim), Açıortay;
   `#ad` hesaplayıcının referansını da verir, takma adlar Türkçe işaretsiz de (`eğim` EGIM) (ADR 0188);
@@ -110,6 +111,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çizim hattında raster atlası (stilli çizimin 6. sürümü); Raster ekle (sistemin kuralı, oturtulmamış yer), Raster stili (canlı önizleme),
   Raster oturt (Helmert, afin, projektif, polinom 2 ve 3, ince plaka; artıklar ve m0; afin dönüşümü değiştirir, ötekiler GeoTIFF'e yeniden
   örnekler), Koordinat oku'da rasterin değerleri; CBS'de Veri › Raster, CAD'de Ekle › Raster (ADR 0204);
+  açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
+  projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
+  tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
+  (`graphics.annotationSize`), ölçünün çizgilerinin rengi, kalınlığı ve tipi (Ölçü stilleri'nin Çizgiler'i, Öznitelikler, DXF), kılavuzun
+  AutoCAD gibi 14 ucu ve Ok boyu, DXF'te AutoCAD'in ok blokları (ADR 0205);
+  paftada haritanın ölçeği: Çizim ölçeğini al, Görünüme sığdır, Görünümden al; koordinat listesinin kaynağı kimlikleriyle
+  (Seçimi al), katman ya da canlı seçim, ne verdiği bir satırla, Çizimde göster, sütun başlıkları (ADR 0206);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -321,7 +329,7 @@ python3 scripts/fixtures/coordinate_label_cases.py --check   # Koordinat yaz'ın
 KENTOS_SHOTS_ONLY=koordinat-yaz,koordinat-koseler,koordinat-cizelge,koordinat-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Koordinat yaz'ın resimleri, .run/shots/arac-koordinat-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs coordinates); ADR 0185)
 python3 scripts/fixtures/hatch_pattern_cases.py --check   # tarama desenlerinin kitaplığını, kesiklerin çizilişini, boyalarını, bölgeye kesilen çizgi ve noktalarını, taşınmasını ve taramanın bölgesini ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/hatch/v1/cases.json (ADR 0186)
 python3 scripts/fixtures/selection_cases.py --check   # Seçim eklerinin kurallarını (tıklamanın adayları ve sırası, Çokgenle seç'in üç kipi ve halka sorunları kesirlerle, Benzerini seç) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/selection/v1 (ADR 0187)
-KENTOS_SHOTS_ONLY=secim-cip,secim-cip-liste,secim-cokgen,secim-cokgen-sonuc,secim-benzeri,secim-suzgec,secim-suzgec-menu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # seçim eklerinin resimleri, .run/shots/arac-secim-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs selecting); ADR 0187)
+KENTOS_SHOTS_ONLY=secim-cip,secim-cip-liste,secim-cokgen,secim-cokgen-sonuc,secim-benzeri,secim-suzgec,secim-suzgec-menu,secim-suzgec-coklu,secim-suzgec-serit cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # seçim eklerinin resimleri, .run/shots/arac-secim-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs selecting); ADR 0187)
 python3 scripts/fixtures/point_calc_cases.py --check   # nokta hesaplayıcı eklerinin hesabını (yolun uzaklıktaki noktası ve sapması: kenarlar, bükümlü yaylar, daire, yay, elips ve eğri kendi yay uzunluklarıyla; okuma, km'nin okunuşu ve gösterim kuralıyla yazılışı, eğik mesafenin yatayı, açıortay) mpmath ile 50 basamaklı bağımsız başvurudan denetle; durumlar fixtures/point-calc/v1/cases.json (ADR 0188)
 KENTOS_SHOTS_ONLY=hesap-obje,hesap-km,hesap-egim,hesap-aciortay,hesap-menu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta hesaplayıcı eklerinin resimleri, .run/shots/arac-hesap-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs pointcalc); ADR 0188)
 python3 scripts/fixtures/stationing_cases.py --check   # Km yaz'ın istasyonlarını (katlar ve uçlar, ters yön, kapalı yol, aralığın ondalığı, sınırlar) ve nesnelerini (işaret, okunur yazı çizginin yanında, enkesit, nokta) 50 basamaklı bağımsız başvurudan denetle; durumlar fixtures/stationing/v1/cases.json (ADR 0189)
@@ -360,6 +368,11 @@ KENTOS_SHOTS_ONLY=paralel-kaydir,paralel-kaydir-alan,paralel-kaydir-yazildi carg
 python3 scripts/ui/hatch_icons.py --check   # desenlerin ikonlarını ve Desen menülerinin geniş örneklerini (apps/web/src/ui/hatchIcons.ts) desenlerin tanımından yeniden üretip karşılaştır; değişince --check'siz yazar (ADR 0186 §11)
 KENTOS_SHOTS_ONLY=tarama-araci,tarama-desenler,tarama-coklu,tarama-iliskili,tarama-oznitelikler,tarama-desen-menusu,tarama-oznitelikler-desen cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # tarama eklerinin resimleri, .run/shots/arac-tarama-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hatches); ADR 0186)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
+python3 scripts/fixtures/annotation_scale_cases.py --check   # açıklamaların yüksekliklerini ve ölçek ya da genel yükseklik değişince izlemeyi bağımsız başvurudan denetle; durumlar fixtures/text/v1/scale.json (ADR 0205)
+python3 scripts/fixtures/dimension_ext_calls.py --check   # TypeScript'ten kaydedilmiş ölçü çağrılarının uzatma çizgilerini (ext) kayıtlı çizgilerinden denetle (ADR 0205 §6)
+python3 scripts/ui/arrow_icons.py --check   # kılavuzun ok uçlarının simgelerini (apps/web/src/ui/arrowIcons.ts) uçların tanımından yeniden üretip karşılaştır (ADR 0205 §7)
+python3 scripts/fixtures/annotation_scene.py --check   # ADR 0205 resimlerinin sahnesini (fixtures/interaction/v1/annotations.kcad) denetle
+cargo test -p kentos-desktop labels::annotation_screens -- --ignored --nocapture   # açıklamaların resimleri, .run/shots/aciklama-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs annotations); ADR 0205)
 python3 scripts/fixtures/dimension_cases.py --check   # yeni ölçü türlerinin yerleşimini kurallardan denetle (ADR 0147)
 python3 scripts/fixtures/quick_dimension_cases.py --check   # Hızlı ölçü'nün ölçülerini (taraf, uzaklık, ortak kenar) kurallardan denetle (ADR 0147 §7)
 python3 scripts/fixtures/numeric_display.py --check   # gösterim kuralının durumlarını (yarımlar, gürültü, işaret, taşma) kuraldan denetle (ADR 0149)
@@ -463,6 +476,7 @@ node apps/web/scripts/e2e/sheet-shots.mjs   # pafta kipinin web resimleri, apps/
 node apps/web/scripts/e2e/sheet-pdf.mjs   # paftanın PDF ve GeoPDF'i poppler ve GDAL ile (pdfinfo, pdffonts, pdftotext, gdalinfo)
 node apps/web/scripts/e2e/sheet-cloud.mjs   # şablon kitaplığı gerçek kentosd ile, kendi geçici docker veritabanında (5432'ye dokunmaz)
 cargo test -p kentos-sheet-ui --test screens -- --ignored   # masaüstünün pafta tasarımcısı resimleri, .run/shots/sheet-desktop/
+cargo test -p kentos-sheet-ui --test screens adr_0206 -- --ignored --nocapture   # haritanın ölçek düğmeleri ve koordinat listesinin kaynağı, .run/shots/sheet-desktop/*-0206-* (web'inkiler: node apps/web/scripts/e2e/sheet-shots.mjs --only harita-olcek-dugmeleri,koordinat-listesi-kaynak; ADR 0206)
 .run/py/bin/python scripts/python/live.py   # SDK ve MCP sunucusu gerçek kentosd ile, geçici veritabanında (önce: cargo build -p kentos-api --bin kentosd --example e2e_database; cargo build -p kentos-mcp)
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}
 pnpm inventory:check     # envanter güncel değilse düşer

@@ -23,11 +23,15 @@ fn bid(n: u8) -> BlockId {
 
 /// A definition `n` with a line and inserts of the blocks `inside`.
 fn def(n: u8, name: &str, inside: &[u8]) -> BlockDefinition {
-    let mut entities = vec![serde_json::json!({ "kind": "line", "id": 1, "layerId": "", "attrs": {},
-        "a": { "x": 0, "y": 0 }, "b": { "x": 1, "y": 0 } })];
+    let mut entities = vec![
+        serde_json::json!({ "kind": "line", "id": 1, "layerId": "", "attrs": {},
+        "a": { "x": 0, "y": 0 }, "b": { "x": 1, "y": 0 } }),
+    ];
     for (k, b) in inside.iter().enumerate() {
-        entities.push(serde_json::json!({ "kind": "insert", "id": k + 2, "layerId": "", "attrs": {},
-            "block": bid(*b).to_string(), "p": { "x": 0, "y": 0 }, "scale": 1, "rotation": 0 }));
+        entities.push(
+            serde_json::json!({ "kind": "insert", "id": k + 2, "layerId": "", "attrs": {},
+            "block": bid(*b).to_string(), "p": { "x": 0, "y": 0 }, "scale": 1, "rotation": 0 }),
+        );
     }
     serde_json::from_value(serde_json::json!({ "id": bid(n).to_string(), "name": name,
         "base": { "x": 0, "y": 0 }, "entities": entities }))
@@ -90,7 +94,11 @@ fn committed_all(env: &CommandEnvelope, revision: u64) -> CommitResult {
     result
 }
 
-fn block_event(seq: u64, features: &[(Uuid, FeatureOp)], blocks: &[(BlockId, FeatureOp)]) -> EventPage {
+fn block_event(
+    seq: u64,
+    features: &[(Uuid, FeatureOp)],
+    blocks: &[(BlockId, FeatureOp)],
+) -> EventPage {
     let mut e = event(seq, None, features, false);
     e.blocks = blocks
         .iter()
@@ -166,17 +174,31 @@ fn a_changed_definition_goes_over_its_version_and_a_removed_one_with_its_last_in
     sync.answered(&o.document, &committed_all(&env, 4));
     assert!(o.document.update_block(renamed(&a, "Pencere")).unwrap());
     let env = sync.next(&o.document).unwrap();
-    assert!(matches!(&input(&env).blocks[..], [BlockChange::Update { block }] if block.name == "Pencere"));
-    assert_eq!(env.expected_versions.get(&block_key(a.id)).map(String::as_str), Some("3"));
+    assert!(
+        matches!(&input(&env).blocks[..], [BlockChange::Update { block }] if block.name == "Pencere")
+    );
+    assert_eq!(
+        env.expected_versions
+            .get(&block_key(a.id))
+            .map(String::as_str),
+        Some("3")
+    );
     sync.answered(&o.document, &committed_all(&env, 5));
     let uid = o.document.uid(placed).unwrap();
     o.document.remove(&[placed]);
     assert!(o.document.remove_block(a.id).unwrap());
     let env = sync.next(&o.document).unwrap();
     let changes = input(&env);
-    assert!(matches!(&changes.features[..], [FeatureChange::Delete { id }] if *id == uid.to_string()));
+    assert!(
+        matches!(&changes.features[..], [FeatureChange::Delete { id }] if *id == uid.to_string())
+    );
     assert!(matches!(&changes.blocks[..], [BlockChange::Delete { id }] if *id == a.id));
-    assert_eq!(env.expected_versions.get(&block_key(a.id)).map(String::as_str), Some("5"));
+    assert_eq!(
+        env.expected_versions
+            .get(&block_key(a.id))
+            .map(String::as_str),
+        Some("5")
+    );
     sync.answered(&o.document, &committed_all(&env, 6));
     assert_eq!(sync.block_version_of(a.id), None);
     assert!(sync.all_sent());
@@ -221,7 +243,10 @@ fn many_objects_the_definition_goes_first_and_its_removal_last() {
     sync.answered(&o.document, &committed_all(&third, 4));
     let last = sync.next(&o.document).unwrap();
     assert_eq!(counts(&last), (2101 - BATCH, 1));
-    assert!(matches!(&input(&last).blocks[..], [BlockChange::Delete { .. }]));
+    assert!(matches!(
+        &input(&last).blocks[..],
+        [BlockChange::Delete { .. }]
+    ));
 }
 
 #[test]
@@ -255,14 +280,21 @@ fn anothers_definition_and_its_insert_come_in_one_change_without_an_undo_step() 
     let taken = take(
         &mut sync,
         &mut o.document,
-        &block_event(10, &[(theirs, FeatureOp::Create)], &[(a.id, FeatureOp::Update), (b.id, FeatureOp::Create)]),
+        &block_event(
+            10,
+            &[(theirs, FeatureOp::Create)],
+            &[(a.id, FeatureOp::Update), (b.id, FeatureOp::Create)],
+        ),
         vec![record(theirs, "10", insert_of(2, 486_700.0))],
         listed(&[(&renamed(&a, "Kapı 2"), "4"), (&b, "10")]),
     );
     assert_eq!((taken.conflicts, taken.changed), (0, 3));
     assert_eq!(names(&o.document), ["Kapı 2", "Ağaç"]);
     assert!(o.document.slot_of(theirs).is_some());
-    assert_eq!((sync.block_version_of(a.id), sync.block_version_of(b.id)), (Some("4"), Some("10")));
+    assert_eq!(
+        (sync.block_version_of(a.id), sync.block_version_of(b.id)),
+        (Some("4"), Some("10"))
+    );
     assert!(!o.document.is_dirty() && !o.document.can_undo());
     assert_eq!(sync.pending(), 0);
 }
@@ -274,7 +306,13 @@ fn a_definition_changed_here_and_there_is_a_conflict_until_theirs_is_taken() {
     let mut sync = ProjectSync::new(&o).unwrap();
     o.document.update_block(renamed(&a, "Benim")).unwrap();
     let theirs = listed(&[(&renamed(&a, "Onların"), "4")]);
-    let taken = take(&mut sync, &mut o.document, &block_event(10, &[], &[(a.id, FeatureOp::Update)]), vec![], theirs.clone());
+    let taken = take(
+        &mut sync,
+        &mut o.document,
+        &block_event(10, &[], &[(a.id, FeatureOp::Update)]),
+        vec![],
+        theirs.clone(),
+    );
     assert_eq!(taken.conflicts, 1);
     assert_eq!(sync.conflicts()[0].id, block_key(a.id));
     assert_eq!(sync.conflicts()[0].actual.as_deref(), Some("4"));
@@ -283,9 +321,13 @@ fn a_definition_changed_here_and_there_is_a_conflict_until_theirs_is_taken() {
     // Without the server's list the choice waits.
     sync.take_theirs(&mut o.document, None, None).unwrap();
     assert_eq!(sync.state(), SaveState::Conflict);
-    sync.take_theirs(&mut o.document, None, Some(&theirs)).unwrap();
+    sync.take_theirs(&mut o.document, None, Some(&theirs))
+        .unwrap();
     assert_eq!(names(&o.document), ["Onların"]);
-    assert_eq!((sync.state(), sync.block_version_of(a.id)), (SaveState::Saved, Some("4")));
+    assert_eq!(
+        (sync.state(), sync.block_version_of(a.id)),
+        (SaveState::Saved, Some("4"))
+    );
 }
 
 #[test]
@@ -295,20 +337,34 @@ fn a_definition_changed_here_and_there_goes_over_theirs_when_mine_is_kept() {
     let mut sync = ProjectSync::new(&o).unwrap();
     o.document.update_block(renamed(&a, "Benim")).unwrap();
     let env = sync.next(&o.document).unwrap();
-    let refused = ApiFailure::new(409, "conflict", "Çakışma").with_conflicts(vec![FeatureConflict {
-        id: block_key(a.id),
-        reason: ConflictReason::Changed,
-        expected: Some("3".into()),
-        actual: Some("4".into()),
-        current: None,
-    }]);
+    let refused =
+        ApiFailure::new(409, "conflict", "Çakışma").with_conflicts(vec![FeatureConflict {
+            id: block_key(a.id),
+            reason: ConflictReason::Changed,
+            expected: Some("3".into()),
+            actual: Some("4".into()),
+            current: None,
+        }]);
     assert_eq!(sync.failed(&refused), After::Stop);
     drop(env);
-    assert!(!sync.may_give_back_blocks(), "not a guard: the versions differ");
-    sync.keep_mine(&o.document, Some(&listed(&[(&renamed(&a, "Onların"), "4")])));
+    assert!(
+        !sync.may_give_back_blocks(),
+        "not a guard: the versions differ"
+    );
+    sync.keep_mine(
+        &o.document,
+        Some(&listed(&[(&renamed(&a, "Onların"), "4")])),
+    );
     let env = sync.next(&o.document).unwrap();
-    assert!(matches!(&input(&env).blocks[..], [BlockChange::Update { block }] if block.name == "Benim"));
-    assert_eq!(env.expected_versions.get(&block_key(a.id)).map(String::as_str), Some("4"));
+    assert!(
+        matches!(&input(&env).blocks[..], [BlockChange::Update { block }] if block.name == "Benim")
+    );
+    assert_eq!(
+        env.expected_versions
+            .get(&block_key(a.id))
+            .map(String::as_str),
+        Some("4")
+    );
 }
 
 #[test]
@@ -317,12 +373,21 @@ fn a_definition_removed_there_stays_while_unsent_inserts_here_place_it() {
     let mut o = opened_with(&[(&a, "3")]);
     let mut sync = ProjectSync::new(&o).unwrap();
     o.document.add(insert_of(1, 486_600.0)).unwrap();
-    let taken = take(&mut sync, &mut o.document, &block_event(10, &[], &[(a.id, FeatureOp::Delete)]), vec![], vec![]);
+    let taken = take(
+        &mut sync,
+        &mut o.document,
+        &block_event(10, &[], &[(a.id, FeatureOp::Delete)]),
+        vec![],
+        vec![],
+    );
     assert_eq!(names(&o.document), ["Kapı"]);
     assert_eq!(taken.notes, [kept_block_text("Kapı")]);
     assert_eq!(sync.block_version_of(a.id), None);
     let env = sync.next(&o.document).unwrap();
-    assert!(matches!(&input(&env).blocks[..], [BlockChange::Create { .. }]));
+    assert!(matches!(
+        &input(&env).blocks[..],
+        [BlockChange::Create { .. }]
+    ));
     assert_eq!(input(&env).features.len(), 1);
 }
 
@@ -353,7 +418,13 @@ fn removed_here_and_there_alike_asks_nothing() {
     let mut o = opened_with(&[(&a, "3")]);
     let mut sync = ProjectSync::new(&o).unwrap();
     o.document.remove_block(a.id).unwrap();
-    let taken = take(&mut sync, &mut o.document, &block_event(10, &[], &[(a.id, FeatureOp::Delete)]), vec![], vec![]);
+    let taken = take(
+        &mut sync,
+        &mut o.document,
+        &block_event(10, &[], &[(a.id, FeatureOp::Delete)]),
+        vec![],
+        vec![],
+    );
     assert_eq!(taken.conflicts, 0);
     assert_eq!(sync.block_version_of(a.id), None);
     assert_eq!(sync.next(&o.document), None);
@@ -365,11 +436,19 @@ fn a_name_someone_else_took_first_gives_way_here() {
     let mut sync = ProjectSync::new(&o).unwrap();
     o.document.add_block(def(1, "Blok 1", &[])).unwrap();
     let theirs = def(2, "BLOK 1", &[]);
-    let taken = take(&mut sync, &mut o.document, &block_event(10, &[], &[(theirs.id, FeatureOp::Create)]), vec![], listed(&[(&theirs, "10")]));
+    let taken = take(
+        &mut sync,
+        &mut o.document,
+        &block_event(10, &[], &[(theirs.id, FeatureOp::Create)]),
+        vec![],
+        listed(&[(&theirs, "10")]),
+    );
     assert_eq!(names(&o.document), ["Blok 1 (2)", "BLOK 1"]);
     assert_eq!(taken.notes, [renamed_block_text("Blok 1", "Blok 1 (2)")]);
     let env = sync.next(&o.document).unwrap();
-    assert!(matches!(&input(&env).blocks[..], [BlockChange::Create { block }] if block.name == "Blok 1 (2)"));
+    assert!(
+        matches!(&input(&env).blocks[..], [BlockChange::Create { block }] if block.name == "Blok 1 (2)")
+    );
 }
 
 #[test]
@@ -379,18 +458,25 @@ fn a_refused_removal_of_a_placed_definition_puts_it_back_and_asks_nothing() {
     let mut sync = ProjectSync::new(&o).unwrap();
     o.document.remove_block(a.id).unwrap();
     let env = sync.next(&o.document).unwrap();
-    assert!(matches!(&input(&env).blocks[..], [BlockChange::Delete { .. }]));
+    assert!(matches!(
+        &input(&env).blocks[..],
+        [BlockChange::Delete { .. }]
+    ));
     // Someone else's insert places it there: the server keeps it, and says so with its own version.
-    let guard = ApiFailure::new(409, "conflict", "“Kapı” bloğu kullanılıyor").with_conflicts(vec![FeatureConflict {
-        id: block_key(a.id),
-        reason: ConflictReason::Changed,
-        expected: Some("3".into()),
-        actual: Some("3".into()),
-        current: None,
-    }]);
+    let guard = ApiFailure::new(409, "conflict", "“Kapı” bloğu kullanılıyor").with_conflicts(vec![
+        FeatureConflict {
+            id: block_key(a.id),
+            reason: ConflictReason::Changed,
+            expected: Some("3".into()),
+            actual: Some("3".into()),
+            current: None,
+        },
+    ]);
     assert_eq!(sync.failed(&guard), After::Stop);
     assert!(sync.may_give_back_blocks());
-    let notes = sync.give_back_blocks(&mut o.document, &listed(&[(&a, "3")])).unwrap();
+    let notes = sync
+        .give_back_blocks(&mut o.document, &listed(&[(&a, "3")]))
+        .unwrap();
     assert_eq!(notes, [restored_block_text("Kapı")]);
     assert_eq!(names(&o.document), ["Kapı"]);
     assert!(sync.conflicts().is_empty());
@@ -455,7 +541,11 @@ fn a_drafts_removal_of_a_definition_someone_placed_meanwhile_is_left_out() {
     let restored = sync.restore(&mut again.document, draft).unwrap();
     assert_eq!(names(&again.document), ["Kapı"]);
     assert_eq!(restored.conflicts, 0);
-    assert!(restored.notes[0].contains("taslaktaki silinmesi uygulanmadı"), "{:?}", restored.notes);
+    assert!(
+        restored.notes[0].contains("taslaktaki silinmesi uygulanmadı"),
+        "{:?}",
+        restored.notes
+    );
 }
 
 #[test]
@@ -484,11 +574,21 @@ fn what_the_server_has_of_the_definitions_is_a_base_step_and_in_the_base() {
     let a = def(1, "Kapı", &[]);
     let mut o = opened_with(&[(&a, "3")]);
     let mut sync = ProjectSync::new(&o).unwrap();
-    assert_eq!(sync.take_base_step(), None, "what the opening read is known already");
+    assert_eq!(
+        sync.take_base_step(),
+        None,
+        "what the opening read is known already"
+    );
     let base = sync.base(&o.document);
     assert_eq!(base.block_versions, [(a.id, "3".to_string())]);
     assert_eq!(base.snapshot.blocks, std::slice::from_ref(&a));
-    take(&mut sync, &mut o.document, &block_event(10, &[], &[(a.id, FeatureOp::Update)]), vec![], listed(&[(&renamed(&a, "Kapı 2"), "4")]));
+    take(
+        &mut sync,
+        &mut o.document,
+        &block_event(10, &[], &[(a.id, FeatureOp::Update)]),
+        vec![],
+        listed(&[(&renamed(&a, "Kapı 2"), "4")]),
+    );
     let step = sync.take_base_step().unwrap();
     assert_eq!(
         step.blocks,

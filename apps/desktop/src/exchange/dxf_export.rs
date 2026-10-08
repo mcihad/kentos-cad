@@ -595,7 +595,9 @@ impl App {
         }
         if !leaders.is_empty() {
             let arrows = if own_arrows > 0 {
-                format!(" {own_arrows} kılavuzun açık ya da nokta oku KentOS verisidir: başka programlar dolu ok gösterir.")
+                format!(
+                    " {own_arrows} kılavuzun açık ya da nokta oku KentOS verisidir: başka programlar dolu ok gösterir."
+                )
             } else {
                 String::new()
             };

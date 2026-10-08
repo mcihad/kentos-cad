@@ -201,7 +201,8 @@ export function buildStyledLayer(id: string, entities: readonly Entity[], style:
   const tiled = new Set<string>();
   assetsOf([symbols, sets, style.renderer ?? null], tiled);
   const assets = assetSizes(tiled, (a) => opts.library.asset(a));
-  const program = new CoreStyleProgram(JSON.stringify({ symbols, renderer: style.renderer ?? null, sets, refs, colors, assets }));
+  // Kalınlık off takes a dimension's own weights too (docs/adr/0205 §6).
+  const program = new CoreStyleProgram(JSON.stringify({ symbols, renderer: style.renderer ?? null, sets, refs, colors, assets, ...(opts.hairlines && { hairlines: true }) }));
   try {
     const needs = Object.fromEntries(NEEDS.map((k, i) => [k, !!(program.needs & (1 << i))])) as unknown as ExprNeeds;
     const table = exprTable(program.fields, needs, entities, opts.layerName);

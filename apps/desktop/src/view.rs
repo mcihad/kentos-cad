@@ -159,9 +159,10 @@ impl App {
         layers.extend(self.rasters_jobs_view());
         layers.extend(self.opening_view());
         layers.extend(self.cloud_opening_view());
-        if layers.len() == 1 {
-            return layers.remove(0);
-        }
+        // A stack even of the window alone: a panel or a dialog coming and going
+        // changes the layers over the window, not the window's place in the tree,
+        // so its widgets keep their state (an open menu, a field, the drawing
+        // area's size). The rasters' panel comes and goes by itself (rasters/jobs.rs).
         iced::widget::Stack::with_children(layers).into()
     }
 
@@ -606,17 +607,29 @@ impl App {
                 let menu = move || crate::ribbon_bar::split_list(key, &entries);
                 Some(with_family(button, &ids, command.title, menu))
             }
-            Item::Menu { label, ids, size } => {
+            Item::Menu {
+                label,
+                ids,
+                blocks,
+                checklist,
+                size,
+            } => {
                 let icon = ids
                     .first()
                     .and_then(|id| catalog.get(id))
                     .map_or(Icon::More, |c| c.icon);
                 let button = sized(*size, icon, *label)
-                .flash(self.ribbon_flash.is_some_and(|id| ids.contains(&id)))
-                .menu_id(crate::ribbon_keys::menu_id(label))
-                .key_tips(self.key_tip(&TipKey::Menu(label)), None);
+                    .flash(self.ribbon_flash.is_some_and(|id| ids.contains(&id)))
+                    .menu_id(crate::ribbon_keys::menu_id(label))
+                    .key_tips(self.key_tip(&TipKey::Menu(label)), None);
                 let members = ids.clone();
                 let checked = self.checks(&members);
+                if *checklist {
+                    // Ticked one row after another, the menu open (docs/adr/0187 §5).
+                    let blocks = blocks.clone();
+                    let menu = move || checklist_of(&blocks, &checked);
+                    return Some(with_family(button, ids, label, menu));
+                }
                 let menu = move || menu_of(&members, &checked);
                 Some(with_family(button, ids, label, menu))
             }
@@ -704,6 +717,7 @@ impl App {
                         .or(self.paragraph.as_ref().and_then(|p| p.editing)),
                     self.paragraph_preview(),
                     self.color_mode(),
+                    self.label_size(),
                 );
                 let area = self.viewport.view(
                     doc,
@@ -805,6 +819,7 @@ impl App {
                 .or(self.paragraph.as_ref().and_then(|p| p.editing)),
             self.paragraph_preview(),
             self.color_mode(),
+            self.label_size(),
         );
         stack![
             self.viewport.lens(camera, self.canvas()),
@@ -1319,12 +1334,14 @@ impl App {
                     continue;
                 }
                 let chosen = self.overlap_layers.contains(&node.id);
+                // Several layers are ticked one after another: the menu stays open.
                 layers_menu = layers_menu
                     .check(
                         node.name.clone(),
                         chosen,
                         Message::OverlapLayer(node.id.clone()),
                     )
+                    .stay()
                     .swatch(self.drawing_color(&node.style.color));
                 if !layers.is_visible(&node.id) {
                     layers_menu = layers_menu.hint("gizli");
@@ -1486,6 +1503,7 @@ impl App {
             Asking::SvgEditor => self.svgedit_view(),
             Asking::BlockDefine => self.block_define_view(),
             Asking::BlockAttributes => self.block_attributes_view(),
+            Asking::PlotScale => self.plot_scale_view(),
             Asking::AttributeValues => self.attribute_values_view(),
             Asking::FindReplace => self.find_replace_view(),
             Asking::LayerMerge => self.layer_merge_view(),
@@ -1585,6 +1603,41 @@ fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
                 None => menu,
             }
         })
+}
+
+/// A list ticked one row after another (the web's `checklistItem`,
+/// docs/adr/0187 §5): each command by its short name with its icon beside
+/// its tick, a titled block under its header, a separator between blocks.
+/// A row leaves the menu open (`Message::RunKept`) and the menu, built again,
+/// reads its ticks from the app. `checked` follows the blocks' commands in
+/// order.
+pub(crate) fn checklist_of(
+    blocks: &[(&'static str, Vec<&'static str>)],
+    checked: &[Option<bool>],
+) -> Menu<Message> {
+    let mut ticks = checked.iter().copied().chain(std::iter::repeat(None));
+    let mut menu = Menu::new();
+    for (title, ids) in blocks {
+        menu = menu.separator();
+        if !title.is_empty() {
+            menu = menu.header(*title);
+        }
+        for id in ids {
+            let tick = ticks.next().flatten();
+            let Some(command) = catalog().get(id) else {
+                continue;
+            };
+            let run =
+                (command.standing == Standing::Ported).then_some(Message::RunKept(command.id));
+            menu = match tick {
+                Some(on) => menu.check(command.short, on, run),
+                None => menu.item(command.short, run),
+            }
+            .icon(command.icon)
+            .stay();
+        }
+    }
+    menu
 }
 
 /// The status bar's drafting aids, as the web's (`StatusBar.ts`).

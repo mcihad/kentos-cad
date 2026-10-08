@@ -67,6 +67,69 @@ try {
     check('the Uyarılar badge counts new warnings: opening the tab hides it; after Geçmişi temizle it counts from zero', two === '2' && opened === '' && afterClear === '1', JSON.stringify({ two, opened, afterClear }));
   }
 
+  // Seçim süzgeci's lists stay open as kinds are ticked (docs/adr/0187 §5, 8 Ekim): the Süzgeç cell's right-click menu
+  // and Giriş › Seçim süzgeci ▾, by the real mouse; Esc closes them.
+  {
+    const rowAt = (label) => b.eval(`(() => { const r = [...document.querySelectorAll('.menu .menu__item')].find((e) => e.querySelector('.menu__label')?.textContent === ${JSON.stringify(label)}); if (!r) return null; const box = r.getBoundingClientRect(); return [Math.round(box.left + box.width / 2), Math.round(box.top + box.height / 2)]; })()`);
+    const ticks = () => b.eval(`Object.fromEntries([...document.querySelectorAll('.menu .menu__item')].map((e) => [e.querySelector('.menu__label')?.textContent, e.getAttribute('aria-checked')]))`);
+    const open = () => b.eval(`!!document.querySelector('.menu')`);
+    const restore = `(async () => { const k = window.kentos; const { FILTER_KINDS } = await import('/src/tools/selectable.ts'); k.settings.selectKinds.set(new Set(FILTER_KINDS)); k.settings.selectFilter.set(false); })()`;
+    // Giriş, where Seçim süzgeci ▾ is.
+    const home = await b.eval(`(() => { const t = document.querySelector('.ribbon__tab[data-tab="home"]'); if (!t) return null; const r = t.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    if (home) await b.click(...home);
+    await sleep(200);
+    const cell = await b.eval(`(() => { const e = document.querySelector('.status__toggle[data-command="edit.selectFilter"]'); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    let viaCell = null;
+    if (cell) {
+      await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: cell[0], y: cell[1], button: 'none' });
+      await b.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: cell[0], y: cell[1], button: 'right', clickCount: 1 });
+      await b.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: cell[0], y: cell[1], button: 'right', clickCount: 1 });
+      await sleep(200);
+      for (const label of ['Nokta', 'Çizgi']) {
+        const at = await rowAt(label);
+        if (at) await b.click(...at);
+        await sleep(120);
+      }
+      const after = await ticks();
+      const stillOpen = await open();
+      const none = await rowAt('Hiçbir tür');
+      if (none) await b.click(...none);
+      await sleep(120);
+      const cleared = await ticks();
+      const filterOn = await b.eval(`window.kentos.settings.selectFilter.value`);
+      await b.key('Escape');
+      await sleep(120);
+      viaCell = { after: [after['Nokta'], after['Çizgi'], after['Yazı']], stillOpen, cleared: Object.values(cleared).filter((v) => v === 'true').length, filterOn, closed: !(await open()) };
+    }
+    await b.eval(restore);
+    check(
+      'Süzgeç: two kinds unticked and Hiçbir tür from one opening, the menu open until Esc',
+      !!viaCell && viaCell.after.join() === 'false,false,true' && viaCell.stillOpen && viaCell.cleared === 0 && viaCell.filterOn && viaCell.closed,
+      JSON.stringify(viaCell),
+    );
+    const button = await b.eval(`(() => { const e = document.querySelector('.rbtn[data-menu="Seçim süzgeci"]'); if (!e || e.offsetParent === null) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    let viaRibbon = null;
+    if (button) {
+      await b.click(...button);
+      await sleep(200);
+      const first = await b.eval(`document.querySelector('.menu .menu__item .menu__label')?.textContent`);
+      const yazi = await rowAt('Yazı');
+      if (yazi) await b.click(...yazi);
+      await sleep(120);
+      const ticked = await ticks();
+      viaRibbon = { first, yazi: ticked['Yazı'], filter: ticked['Süzgeç'], stillOpen: await open() };
+      await b.key('Escape');
+      await sleep(120);
+      viaRibbon.closed = !(await open());
+    }
+    await b.eval(restore);
+    check(
+      'Giriş › Seçim süzgeci ▾: “Süzgeç” first, a kind ticked off with the menu open, Esc closes',
+      !!viaRibbon && viaRibbon.first === 'Süzgeç' && viaRibbon.yazi === 'false' && viaRibbon.filter === 'true' && viaRibbon.stillOpen && viaRibbon.closed,
+      JSON.stringify(viaRibbon),
+    );
+  }
+
   // A scrolled layer tree stays where it is when it is rendered again (a group closes below the view), and
   // the first click in it chooses the clicked row: it used to scroll to the top and choose the first row.
   {

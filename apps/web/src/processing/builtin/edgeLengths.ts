@@ -35,7 +35,18 @@ export const edgeLengths = defineTool({
       ],
       default: 'outside',
     },
-    { name: 'textHeight', label: 'Yazı yüksekliği', type: 'number', min: 0.1, max: 50, default: 2, unit: 'mm', description: 'Kâğıt üzerinde, çizim ölçeğine göre.' },
+    {
+      name: 'textHeight',
+      label: 'Yazı yüksekliği',
+      type: 'number',
+      optional: true,
+      min: 0.1,
+      max: 50,
+      default: null,
+      unit: 'mm',
+      placeholder: 'Proje',
+      description: 'Kâğıt üzerinde, çizim ölçeğine göre; boş bırakılırsa projenin kenar ve köşe yazıları yüksekliği.',
+    },
     { name: 'prefix', label: 'Önek', type: 'string', default: '', allowEmpty: true, maxLength: 12, advanced: true },
     { name: 'suffix', label: 'Sonek', type: 'string', default: '', allowEmpty: true, maxLength: 12, advanced: true, description: 'Örneğin “ m”.' },
     { name: 'minLength', label: 'En kısa kenar', type: 'number', min: 0, default: 0, unit: 'm', advanced: true, description: 'Bundan kısa kenarlar yazılmaz.' },
@@ -48,7 +59,8 @@ export const edgeLengths = defineTool({
   ],
   preview: (v) => `${v.prefix}${fixed(12.3456, v.decimals)}${v.suffix}`,
   run: (v, ctx) => {
-    const height = (v.textHeight / 1000) * ctx.units.plotScale;
+    // Empty: the project's Kenar ve köşe yazıları height (docs/adr/0205 §2).
+    const height = ((v.textHeight ?? ctx.units.measureHeightMm ?? 2) / 1000) * ctx.units.plotScale;
     // Lines, polylines and polygons have edges; one key per edge whichever way it runs (1 mm grid: parcels share exact corners).
     const { labels, skipped } = ctx.geometry.edgeLengths(
       v.input.entities.map((e) => e.id),

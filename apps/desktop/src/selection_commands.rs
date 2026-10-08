@@ -33,6 +33,7 @@ pub(crate) fn kind_icon(kind: &str) -> &'static str {
         "insert" => "blockInsert",
         "leader" => "leader",
         "table" => "table",
+        "image" => "imageInsert",
         _ => "more",
     }
 }
@@ -51,6 +52,25 @@ fn kinds_text(mask: u32) -> String {
         .map(|k| crate::layer_tree::lower_tr(kind_title(k)))
         .collect::<Vec<_>>()
         .join(", ")
+}
+
+/// Seçim süzgeci's list (the web's `SELECT_FILTER_KINDS`): the kinds in
+/// their menu's order, then every kind or none at once.
+fn select_filter_blocks() -> Vec<(&'static str, Vec<&'static str>)> {
+    let kinds = KINDS
+        .iter()
+        .filter_map(|kind| {
+            catalog()
+                .commands()
+                .iter()
+                .find(|c| c.id.strip_prefix("edit.selectFilter.") == Some(kind))
+                .map(|c| c.id)
+        })
+        .collect();
+    vec![
+        ("Seçilebilir türler", kinds),
+        ("", vec!["edit.selectFilterAll", "edit.selectFilterNone"]),
+    ]
 }
 
 impl App {
@@ -129,30 +149,125 @@ impl App {
     }
 
     /// The Süzgeç cell's right-click menu (the web's `selectFilterMenu`): the
-    /// kinds, each ticked or not, then every kind or none at once.
+    /// kinds by their short names and icons, each ticked or not, then every
+    /// kind or none at once; it stays open as rows are ticked (docs/adr/0187
+    /// §5). The ribbon's Seçim süzgeci ▾ shows the same list under its on/off
+    /// row (`view::checklist_of`).
     pub(crate) fn select_filter_menu(&self) -> Menu<Message> {
-        let mut menu = Menu::new().header("Seçilebilir türler");
+        let blocks = select_filter_blocks();
+        let checked: Vec<Option<bool>> = blocks
+            .iter()
+            .flat_map(|(_, ids)| ids.iter())
+            .map(|id| self.checked(id))
+            .collect();
+        crate::view::checklist_of(&blocks, &checked)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::catalog::Item;
+
+    fn app() -> App {
+        App::boot(None).0
+    }
+
+    /// The ribbon's Seçim süzgeci ▾, as the catalog reads it from the web's layout.
+    fn ribbon_menu() -> (Vec<(&'static str, Vec<&'static str>)>, bool) {
+        catalog()
+            .tabs()
+            .flat_map(|tab| tab.panels.iter())
+            .flat_map(|panel| panel.items.iter())
+            .find_map(|item| match item {
+                Item::Menu {
+                    label: "Seçim süzgeci",
+                    blocks,
+                    checklist,
+                    ..
+                } => Some((blocks.clone(), *checklist)),
+                _ => None,
+            })
+            .expect("Giriş › Seçim süzgeci ▾")
+    }
+
+    #[test]
+    fn the_cell_s_menu_lists_seventeen_kinds_by_short_name_and_icon_and_stays_open() {
+        let menu = format!("{:?}", app().select_filter_menu());
+        assert!(menu.contains("Header(\"Seçilebilir türler\")"), "{menu}");
         for kind in KINDS {
-            let id = catalog()
-                .commands()
-                .iter()
-                .find(|c| c.id.strip_prefix("edit.selectFilter.") == Some(kind))
-                .map(|c| c.id);
-            let Some(id) = id else {
-                continue;
-            };
-            menu = menu
-                .check(
-                    kind_title(kind),
-                    self.select_kind_checked(kind),
-                    Message::Run(id),
-                )
-                .icon(crate::icons::from_web(Some(kind_icon(kind))));
+            let name = kind_title(kind);
+            assert!(
+                menu.contains(&format!("label: \"{name}\"")),
+                "{name}: {menu}"
+            );
         }
-        menu.separator()
-            .item("Bütün türler", Message::SelectKinds(true))
-            .icon(crate::icons::from_web(Some("selectAll")))
-            .item("Hiçbir tür", Message::SelectKinds(false))
-            .icon(crate::icons::from_web(Some("deselect")))
+        assert!(menu.contains("label: \"Resim\""), "the seventeenth kind");
+        // No long titles: the short names under the header, as the web's.
+        assert!(!menu.contains("Seçim süzgecinde"), "{menu}");
+        for row in ["Bütün türler", "Hiçbir tür"] {
+            assert!(menu.contains(&format!("label: \"{row}\"")), "{row}");
+        }
+        // Every row leaves the menu open and keeps a ribbon opened over the drawing.
+        assert_eq!(
+            menu.matches("stay: true").count(),
+            KINDS.len() + 2,
+            "{menu}"
+        );
+        assert!(menu.contains("RunKept(\"edit.selectFilter.image\")"));
+        assert!(menu.contains("RunKept(\"edit.selectFilterNone\")"));
+        assert!(!menu.contains("Run(\""), "{menu}");
+    }
+
+    #[test]
+    fn the_ribbon_s_drop_down_is_the_same_checklist_under_its_on_off_row() {
+        let (blocks, checklist) = ribbon_menu();
+        assert!(checklist, "Seçim süzgeci ▾ is a checklist");
+        let titles: Vec<&str> = blocks.iter().map(|(title, _)| *title).collect();
+        assert_eq!(titles, ["", "Seçilebilir türler", ""]);
+        assert_eq!(blocks[0].1, ["edit.selectFilter"]);
+        // The cell's list, row for row.
+        assert_eq!(blocks[1..], select_filter_blocks()[..]);
+        let app = app();
+        let ids: Vec<&str> = blocks
+            .iter()
+            .flat_map(|(_, ids)| ids.iter().copied())
+            .collect();
+        let checked: Vec<Option<bool>> = ids.iter().map(|id| app.checked(id)).collect();
+        let menu = format!("{:?}", crate::view::checklist_of(&blocks, &checked));
+        // The on/off row says the cell's word, with its icon and its tick.
+        assert!(menu.contains("label: \"Süzgeç\""), "{menu}");
+        assert!(menu.contains("RunKept(\"edit.selectFilter\")"), "{menu}");
+        assert_eq!(menu.matches("stay: true").count(), ids.len(), "{menu}");
+    }
+
+    #[test]
+    fn hicbir_tur_then_ticks_make_the_filter_and_a_kept_run_leaves_the_ribbon_open() {
+        let mut app = app();
+        app.ribbon_peek = true;
+        let _ = app.update(Message::RunKept("edit.selectFilterNone"));
+        assert!(
+            app.ribbon_peek,
+            "a row that stays leaves the ribbon over the drawing"
+        );
+        assert!(
+            app.settings.bool("drafting.selectFilter"),
+            "the filter is on"
+        );
+        assert_eq!(app.select_kinds, 0);
+        let _ = app.update(Message::RunKept("edit.selectFilter.text"));
+        let _ = app.update(Message::RunKept("edit.selectFilter.image"));
+        assert_eq!(
+            app.select_kinds,
+            selectable::bit("text") | selectable::bit("image")
+        );
+        assert_eq!(app.checked("edit.selectFilter.image"), Some(true));
+        assert_eq!(app.checked("edit.selectFilter.point"), Some(false));
+        let _ = app.update(Message::RunKept("edit.selectFilterAll"));
+        assert_eq!(app.select_kinds, selectable::ALL);
+        // A plain command still closes it.
+        let _ = app.update(Message::Run("edit.selectFilter"));
+        assert!(!app.ribbon_peek);
+        assert!(!app.settings.bool("drafting.selectFilter"));
     }
 }

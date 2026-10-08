@@ -22,7 +22,10 @@ const TM_MERIDIANS: [u8; 7] = [27, 30, 33, 36, 39, 42, 45];
 /// The EPSG code the statement names, when it names one for certain.
 fn srid(h: &Header) -> Option<u32> {
     if h.mproj {
-        let zone = TM_MERIDIANS.iter().position(|&m| m == h.zone).map(|i| i as u32);
+        let zone = TM_MERIDIANS
+            .iter()
+            .position(|&m| m == h.zone)
+            .map(|i| i as u32);
         return match (h.datum, h.projection) {
             // ITRF is TUREF's frame (ITRF96).
             (1, 3) => zone.map(|i| 5253 + i),
@@ -126,7 +129,10 @@ mod tests {
         h.epsg = "SRS=7934".into();
         let d = declared(&h).expect("declared");
         assert_eq!(d.srid, Some(5256));
-        assert_eq!(d.text, "ITRF, 3° dilim, orta meridyen 36° (TILED_XML: SRS=7934)");
+        assert_eq!(
+            d.text,
+            "ITRF, 3° dilim, orta meridyen 36° (TILED_XML: SRS=7934)"
+        );
         assert!(declared(&Header::default()).is_none());
     }
 }

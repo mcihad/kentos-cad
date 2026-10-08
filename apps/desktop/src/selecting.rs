@@ -151,6 +151,7 @@ pub fn kind_title(kind: &str) -> &'static str {
         "insert" => "Blok",
         "leader" => "Kılavuz",
         "table" => "Tablo",
+        "image" => "Resim",
         _ => "Nesne",
     }
 }

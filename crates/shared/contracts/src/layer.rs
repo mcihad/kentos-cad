@@ -16,6 +16,41 @@ pub enum LineType {
     Dotted,
 }
 
+impl LineType {
+    /// Every line type, in the contract's order.
+    pub const ALL: [LineType; 4] = [
+        LineType::Continuous,
+        LineType::Dashed,
+        LineType::Dashdot,
+        LineType::Dotted,
+    ];
+
+    /// Its name in the contract and the file (`dashdot`).
+    pub fn name(self) -> &'static str {
+        match self {
+            LineType::Continuous => "continuous",
+            LineType::Dashed => "dashed",
+            LineType::Dashdot => "dashdot",
+            LineType::Dotted => "dotted",
+        }
+    }
+
+    /// The line type of a name; none for any other.
+    pub fn from_name(name: &str) -> Option<LineType> {
+        Self::ALL.into_iter().find(|t| t.name() == name)
+    }
+
+    /// Its name as the interface says it.
+    pub fn label(self) -> &'static str {
+        match self {
+            LineType::Continuous => "Sürekli",
+            LineType::Dashed => "Kesikli",
+            LineType::Dashdot => "Noktalı kesik",
+            LineType::Dotted => "Noktalı",
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -202,7 +237,10 @@ pub struct LayerNode {
     /// attributes, in the order the table and the form show them; empty, no
     /// schema (and nothing written). Only a layer has them, never a group.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::fields::LayerField>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::fields::LayerField>>", optional)
+    )]
     pub fields: Vec<crate::fields::LayerField>,
 }
 

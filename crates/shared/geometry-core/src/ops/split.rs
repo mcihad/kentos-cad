@@ -495,15 +495,18 @@ pub fn cleanup_findings(list: &[Entity]) -> Findings {
             Shape::Polygon { .. } if is_multi_part(&e.shape) => {
                 let parts = area_parts(&e.shape);
                 let fixed: Vec<Option<Shape>> = parts.iter().map(area_without_repeats).collect();
-                fixed.iter().any(Option::is_some).then(|| {
-                    let shapes: Vec<Shape> = parts
-                        .iter()
-                        .zip(fixed)
-                        .map(|(p, c)| c.unwrap_or_else(|| p.clone()))
-                        .collect();
-                    join_parts(&shapes)
-                })
-                .flatten()
+                fixed
+                    .iter()
+                    .any(Option::is_some)
+                    .then(|| {
+                        let shapes: Vec<Shape> = parts
+                            .iter()
+                            .zip(fixed)
+                            .map(|(p, c)| c.unwrap_or_else(|| p.clone()))
+                            .collect();
+                        join_parts(&shapes)
+                    })
+                    .flatten()
             }
             Shape::Polygon { .. } => area_without_repeats(&e.shape),
             _ => None,

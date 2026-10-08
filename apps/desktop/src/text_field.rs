@@ -270,7 +270,12 @@ impl App {
         let [x, y] = camera.world_to_screen(open.at);
         // The web's size: the text's height on screen, 13 to 48 px.
         let size = (open.height * camera.scale).clamp(13.0, 48.0) as f32;
-        let chars = open.text.chars().count().max(open.placeholder.chars().count()).max(8);
+        let chars = open
+            .text
+            .chars()
+            .count()
+            .max(open.placeholder.chars().count())
+            .max(8);
         let width = (chars as f32 * size * 0.62 + 24.0).max(160.0);
         let input = text_input(&open.placeholder, &open.text)
             .id(ID)
@@ -281,12 +286,13 @@ impl App {
             .padding([2, 6])
             .width(width)
             .style(style::field::input);
-        let hint = container(label::caption(open.hint)).padding([2, 6]).style(
-            |theme: &iced::Theme| container::Style {
-                background: Some(Tokens::of(theme).surface.into()),
-                ..container::Style::default()
-            },
-        );
+        let hint =
+            container(label::caption(open.hint))
+                .padding([2, 6])
+                .style(|theme: &iced::Theme| container::Style {
+                    background: Some(Tokens::of(theme).surface.into()),
+                    ..container::Style::default()
+                });
         // Its baseline at the text's (the web's `translate(0, -85%)`), moved by
         // where the point is on the text: a dimension's value and a centred
         // text centred on it, a text's middle or top over its baseline.
@@ -399,10 +405,14 @@ mod tests {
         if !doc.model.layers().is_visible(&layer) {
             doc.model.toggle_layer_visible(&layer);
         }
-        app.spatial.sync(&app.document.as_ref().expect("open").model);
+        app.spatial
+            .sync(&app.document.as_ref().expect("open").model);
         app.maybe_edit_text(at);
         app.maybe_edit_text(at);
-        let open = app.text_field.clone().expect("the field opened on the text");
+        let open = app
+            .text_field
+            .clone()
+            .expect("the field opened on the text");
         assert_eq!(open.editing, Some(slot));
         assert_eq!(open.hint, "Enter: kaydet · Esc: vazgeç");
         let _ = app.update(Message::TextField(Event::Input("Çınar caddesi".into())));
@@ -411,7 +421,8 @@ mod tests {
         let model = &mut app.document.as_mut().expect("open").model;
         assert_eq!(model.undo().as_deref(), Some("Değiştir"));
         model.toggle_layer_locked(&layer);
-        app.spatial.sync(&app.document.as_ref().expect("open").model);
+        app.spatial
+            .sync(&app.document.as_ref().expect("open").model);
         app.maybe_edit_text(at);
         app.maybe_edit_text(at);
         assert!(app.text_field.is_none());
@@ -446,10 +457,12 @@ mod tests {
                 height: 2.0,
                 rotation: 0.0,
                 arrow: None,
+                arrow_size: None,
                 mask: false,
             }))
             .expect("a slot");
-        app.spatial.sync(&app.document.as_ref().expect("open").model);
+        app.spatial
+            .sync(&app.document.as_ref().expect("open").model);
         slot
     }
 
@@ -469,7 +482,10 @@ mod tests {
         let inside = kentos_interaction::Vec2::new(486_614.0, 4_420_155.0);
         app.maybe_edit_text(inside);
         app.maybe_edit_text(inside);
-        let open = app.text_field.clone().expect("the field opened on the note");
+        let open = app
+            .text_field
+            .clone()
+            .expect("the field opened on the note");
         assert_eq!(open.editing, Some(slot));
         assert_eq!((open.at, open.along, open.up), (note, 0.0, 0.5));
         assert_eq!((open.text.as_str(), open.height), ("Mevcut bina", 2.0));
@@ -483,18 +499,26 @@ mod tests {
         );
         assert_eq!(note_of(&app, slot).as_deref(), Some("Mevcut bina"));
         // Emptied: the arrow alone, its line still opens a field where the note will stand.
-        app.spatial.sync(&app.document.as_ref().expect("open").model);
+        app.spatial
+            .sync(&app.document.as_ref().expect("open").model);
         app.maybe_edit_text(inside);
         app.maybe_edit_text(inside);
         let _ = app.update(Message::TextField(Event::Input("  ".into())));
         let _ = app.update(Message::TextField(Event::Keep));
         assert_eq!(note_of(&app, slot), None);
-        app.spatial.sync(&app.document.as_ref().expect("open").model);
+        app.spatial
+            .sync(&app.document.as_ref().expect("open").model);
         let on_line = kentos_interaction::Vec2::new(486_603.0, 4_420_152.5);
         app.maybe_edit_text(on_line);
         app.maybe_edit_text(on_line);
-        let open = app.text_field.clone().expect("the field opened on the line");
-        assert_eq!((open.editing, open.at, open.text.as_str()), (Some(slot), note, ""));
+        let open = app
+            .text_field
+            .clone()
+            .expect("the field opened on the line");
+        assert_eq!(
+            (open.editing, open.at, open.text.as_str()),
+            (Some(slot), note, "")
+        );
         let _ = app.update(Message::TextField(Event::Input("Depo".into())));
         let _ = app.update(Message::TextField(Event::Keep));
         assert_eq!(note_of(&app, slot).as_deref(), Some("Depo"));
@@ -532,14 +556,16 @@ fn screens() {
                     let _ = app.update(message);
                 };
                 snapshot.settle(&mut app, App::view, &mut update);
-                app.spatial.sync(&app.document.as_ref().expect("open").model);
+                app.spatial
+                    .sync(&app.document.as_ref().expect("open").model);
                 match name {
                     "yeni" => {
                         let _ = app.update(Message::Run("tool.text"));
                         let area = app.viewport.bounds;
                         let at = iced::Point::new(area.width * 0.6, area.height * 0.3);
                         let _ = app.update(Message::Viewport(crate::viewport::Event::Pressed(at)));
-                        let _ = app.update(Message::TextField(Event::Input("Ada 101 Parsel 7".into())));
+                        let _ =
+                            app.update(Message::TextField(Event::Input("Ada 101 Parsel 7".into())));
                     }
                     _ => {
                         let at = app

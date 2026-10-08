@@ -26,7 +26,9 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{CreateOperation, DrawingUnit, Entity, EntityGeometry, TextFace};
+use kentos_contracts::{
+    AnnotationKind, CreateOperation, DrawingUnit, Entity, EntityGeometry, TextFace,
+};
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::ops::coordinate_labels::{
@@ -134,7 +136,7 @@ fn height_mm(cx: &Context<'_>) -> f64 {
     styles::shown(settings)
         .then(|| styles::text_style(cx.memory, settings).and_then(|s| s.height))
         .flatten()
-        .unwrap_or(cx.memory.coordinate_height_mm)
+        .unwrap_or_else(|| cx.annotation_mm(AnnotationKind::Coordinate))
 }
 
 fn look(cx: &Context<'_>) -> Look {
@@ -256,7 +258,7 @@ fn with_options(
         .option_with(
             "Yükseklik",
             "Y",
-            format!("{} mm", js_number(m.coordinate_height_mm)),
+            format!("{} mm", js_number(m.heights.mm(AnnotationKind::Coordinate))),
         );
     if schedule {
         prompt.option_with("Çizelge", "Ç", on(m.coordinate_schedule))
@@ -358,7 +360,7 @@ fn answer(asking: &mut Option<Asking>, text: &str, cx: &mut Context<'_>) -> bool
         },
         Asking::Height => match parse_number(t) {
             Some(n) if n > 0.0 && n.is_finite() => {
-                cx.memory.coordinate_height_mm = n;
+                cx.memory.heights.set(AnnotationKind::Coordinate, Some(n));
                 *asking = None;
             }
             _ => cx.say(
@@ -520,7 +522,12 @@ impl CoordinateLabel {
     }
 
     fn see(&mut self, cx: &Context<'_>) {
-        self.seen = Some((*cx.memory, cx.format(), styles::Seen::text(cx), look(cx)));
+        self.seen = Some((
+            cx.seen_memory(),
+            cx.format(),
+            styles::Seen::text(cx),
+            look(cx),
+        ));
     }
 
     /// Writes the label of `place` in its own step; a place the template
@@ -784,7 +791,7 @@ impl CoordinateVertices {
         let source = table::source_of(cx.doc, ScheduleKind::Coordinates, &self.slots);
         let geometry = table::new_table(cx.doc, &cells, &look, Vec2::new(0.0, 0.0), Some(source));
         cx.view_changes
-            .push(ViewChange::PlaceTable(geometry, SCHEDULE_LABEL));
+            .push(ViewChange::PlaceTable(Box::new(geometry), SCHEDULE_LABEL));
     }
 }
 
@@ -800,7 +807,7 @@ impl Stages for CoordinateVertices {
     /// The options and the labels for the drawing as it is: worked out again
     /// when the drawing or the options changed.
     fn see(&mut self, cx: &Context<'_>) {
-        self.seen = Some((*cx.memory, cx.format(), styles::Seen::text(cx)));
+        self.seen = Some((cx.seen_memory(), cx.format(), styles::Seen::text(cx)));
         if self.slots.is_empty() {
             return;
         }

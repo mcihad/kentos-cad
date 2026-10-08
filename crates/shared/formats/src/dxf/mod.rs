@@ -279,25 +279,32 @@ impl<'a> Reader<'a> {
                         classify_pattern(&elements)
                     };
                     self.ltypes.insert(n.to_uppercase(), t);
+                    // By its handle too: a DIMSTYLE names its lines' types so (docs/adr/0205 §6).
+                    if let Some(h) = g(5).and_then(|x| u64::from_str_radix(x.text(), 16).ok()) {
+                        self.lib.ltype_handles.insert(h, t);
+                    }
                 }
                 "STYLE" => {
                     let h = g(40).and_then(|x| parse_real(x.text())).unwrap_or(0.0);
                     self.lib.style_heights.insert(name().to_uppercase(), h);
                     // The style itself (docs/adr/0183 §7), and its handle for a DIMSTYLE's DIMTXSTY.
-                    if let Some(handle) = g(5).and_then(|x| u64::from_str_radix(x.text(), 16).ok()) {
+                    if let Some(handle) = g(5).and_then(|x| u64::from_str_radix(x.text(), 16).ok())
+                    {
                         self.lib.style_handles.insert(handle, name().to_uppercase());
                     }
-                    self.lib
-                        .text_records
-                        .insert(name().to_uppercase(), styles::style_record(&groups, self.dec));
+                    self.lib.text_records.insert(
+                        name().to_uppercase(),
+                        styles::style_record(&groups, self.dec),
+                    );
                 }
                 // A leader's arrow size and arrow block (docs/adr/0146 §8); the style itself (docs/adr/0183 §7).
                 "DIMSTYLE" => {
                     let style = leaders::table_style(&groups);
                     self.lib.dim_styles.insert(name().to_uppercase(), style);
-                    self.lib
-                        .dim_records
-                        .insert(name().to_uppercase(), (name(), styles::dim_record(&groups, self.dec)));
+                    self.lib.dim_records.insert(
+                        name().to_uppercase(),
+                        (name(), styles::dim_record(&groups, self.dec)),
+                    );
                 }
                 "BLOCK_RECORD" => {
                     if let Some(h) = g(5).and_then(|x| u64::from_str_radix(x.text(), 16).ok()) {
@@ -540,14 +547,19 @@ fn read_once(
     }
     let lib = std::mem::take(&mut rd.lib);
     let mut em = Emitter::new(&lib, out, opts.explode_blocks);
-    em.project_font = opts.drawing_font.unwrap_or(kentos_contracts::DrawingFont::Barlow);
+    em.project_font = opts
+        .drawing_font
+        .unwrap_or(kentos_contracts::DrawingFont::Barlow);
     for (kind, reason, line) in block_skips {
         em.out.report.skip(&kind, &reason, line);
     }
     if deep {
         em.out.report.note(
             "Blok",
-            &format!("bloklar {} düzeyden derin iç içe; bloklar patlatılarak alındı", kentos_contracts::MAX_BLOCK_DEPTH),
+            &format!(
+                "bloklar {} düzeyden derin iç içe; bloklar patlatılarak alındı",
+                kentos_contracts::MAX_BLOCK_DEPTH
+            ),
             0,
         );
     }
@@ -587,8 +599,11 @@ fn read_once(
     } else {
         em.keep_used(defs)
     };
-    let (text_used, dim_used, project_font) =
-        (std::mem::take(&mut em.text_used), std::mem::take(&mut em.dim_used), em.project_font);
+    let (text_used, dim_used, project_font) = (
+        std::mem::take(&mut em.text_used),
+        std::mem::take(&mut em.dim_used),
+        em.project_font,
+    );
     let mut out = em.out;
     // Layers the objects landed on: the table's (in its order), then any it lacked.
     let mut layers: Vec<ImportLayer> = Vec::new();
@@ -664,17 +679,30 @@ fn read_once(
         }
     }
     // The styles the objects follow (docs/adr/0183 §7): their sizes paper mm at the project's scale.
-    let plot = opts.scale.filter(|s| s.is_finite() && *s > 0.0).unwrap_or(1000.0);
+    let plot = opts
+        .scale
+        .filter(|s| s.is_finite() && *s > 0.0)
+        .unwrap_or(1000.0);
     let metres = |x: f64| scale.apply(x);
     let mut text_styles = Vec::new();
     for (i, key) in text_used.iter().enumerate() {
-        let Some(r) = lib.text_records.get(key) else { continue };
-        let (style, unmapped) =
-            styles::text_style(r, format!("dxf-text-{}", i + 1), project_font, &metres, plot);
+        let Some(r) = lib.text_records.get(key) else {
+            continue;
+        };
+        let (style, unmapped) = styles::text_style(
+            r,
+            format!("dxf-text-{}", i + 1),
+            project_font,
+            &metres,
+            plot,
+        );
         if let Some(face) = unmapped {
             out.report.note(
                 "Yazı stili (STYLE)",
-                &format!("“{}” stilinin yazı tipi “{face}” KentOS'ta yok; projenin yazı tipiyle alındı", r.name),
+                &format!(
+                    "“{}” stilinin yazı tipi “{face}” KentOS'ta yok; projenin yazı tipiyle alındı",
+                    r.name
+                ),
                 0,
             );
         }
@@ -682,7 +710,9 @@ fn read_once(
     }
     let mut dimension_styles = Vec::new();
     for (i, key) in dim_used.iter().enumerate() {
-        let Some((name, vars)) = lib.dim_records.get(key) else { continue };
+        let Some((name, vars)) = lib.dim_records.get(key) else {
+            continue;
+        };
         let font = vars
             .dimtxsty
             .and_then(|h| lib.style_handles.get(&h))
@@ -699,6 +729,7 @@ fn read_once(
             format!("dxf-dim-{}", i + 1),
             name,
             &lib.block_records,
+            &lib.ltype_handles,
             font,
             &metres,
             plot,

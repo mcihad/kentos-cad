@@ -15,8 +15,8 @@ use kentos_cloud::{
     Source, Uploaded, conflicting_revision, open, project_create, save_revision, upload_new,
 };
 use kentos_contracts::{
-    AuthConfig, BlockDefinition, CatalogView, CommitResult, DocumentSnapshotV1, DocumentSnapshotV2, Entity,
-    EntityId, FileUploadBegin, GrantRole, PointEntity, ProjectAccessChange, ProjectState,
+    AuthConfig, BlockDefinition, CatalogView, CommitResult, DocumentSnapshotV1, DocumentSnapshotV2,
+    Entity, EntityId, FileUploadBegin, GrantRole, PointEntity, ProjectAccessChange, ProjectState,
     ProjectStorage, TenantRole,
 };
 use kentos_domain::{Document, Slot};
@@ -617,7 +617,13 @@ async fn other_editors_changes_come_in_by_following_the_events() {
 }
 
 /// Takes in the events after the sync's cursor, as the desktop's following does.
-async fn follow_up(cloud: &Cloud, tenant: Uuid, project: Uuid, sync: &mut ProjectSync, doc: &mut Document) -> kentos_cloud::Taken {
+async fn follow_up(
+    cloud: &Cloud,
+    tenant: Uuid,
+    project: Uuid,
+    sync: &mut ProjectSync,
+    doc: &mut Document,
+) -> kentos_cloud::Taken {
     let page = follow::events(cloud, tenant, project, sync.cursor())
         .await
         .unwrap();
@@ -707,7 +713,10 @@ async fn block_definitions_go_between_two_desktops_through_the_server() {
     assert!(a.document.remove_block(kapi.id).unwrap());
     let refused = send_all(&ayse, &mut sa, &a.document).await.unwrap_err();
     assert!(refused.conflict(), "{refused:?}");
-    assert!(sa.may_give_back_blocks(), "the guard: the version is the one expected");
+    assert!(
+        sa.may_give_back_blocks(),
+        "the guard: the version is the one expected"
+    );
     // Her missed events bring Dilek's insert, and with it the definition, back.
     let taken = follow_up(&ayse, tenant, project, &mut sa, &mut a.document).await;
     assert!(a.document.slot_of(his).is_some());
@@ -723,7 +732,10 @@ async fn block_definitions_go_between_two_desktops_through_the_server() {
 
     // Renamed on both sides: a conflict; Ayşe keeps hers over Dilek's version.
     follow_up(&dilek, tenant, project, &mut sd, &mut d.document).await;
-    assert!(d.document.slot_of(hers).is_none(), "Ayşe's insert is gone for Dilek too");
+    assert!(
+        d.document.slot_of(hers).is_none(),
+        "Ayşe's insert is gone for Dilek too"
+    );
     d.document
         .update_block(BlockDefinition {
             name: "Kapı (Dilek)".into(),
@@ -838,7 +850,10 @@ async fn a_layer_someone_drew_on_is_given_back_when_its_removal_is_refused() {
     send_all(&ayse, &mut sa, &a.document).await.unwrap();
     assert!(sa.all_sent());
     let now = ayse.project(tenant, project).await.unwrap();
-    assert!(now.layers.iter().any(|n| n.id == "cizim"), "the layer stays");
+    assert!(
+        now.layers.iter().any(|n| n.id == "cizim"),
+        "the layer stays"
+    );
 
     // Dilek's object comes to Ayşe with its layer; Ayşe's deletions reach Dilek.
     let incoming = Incoming {
@@ -860,7 +875,11 @@ async fn a_layer_someone_drew_on_is_given_back_when_its_removal_is_refused() {
         .await
         .unwrap();
     sd.take_remote(&mut d.document, incoming, remote).unwrap();
-    assert_eq!(d.document.by_layer("cizim").count(), 1, "only Dilek's is left");
+    assert_eq!(
+        d.document.by_layer("cizim").count(),
+        1,
+        "only Dilek's is left"
+    );
     assert_eq!(
         by_uid(&a.document.to_snapshot_v2()),
         by_uid(&d.document.to_snapshot_v2())

@@ -108,7 +108,10 @@ pub struct StyledCache {
 
 /// The definitions made, changed or removed between two lists of the
 /// document's (an unchanged definition keeps its `Arc`).
-fn changed_blocks(before: &[Arc<BlockDefinition>], after: &[Arc<BlockDefinition>]) -> HashSet<BlockId> {
+fn changed_blocks(
+    before: &[Arc<BlockDefinition>],
+    after: &[Arc<BlockDefinition>],
+) -> HashSet<BlockId> {
     let was: HashMap<BlockId, &Arc<BlockDefinition>> = before.iter().map(|b| (b.id, b)).collect();
     let now: HashSet<BlockId> = after.iter().map(|b| b.id).collect();
     after

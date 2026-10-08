@@ -31,6 +31,21 @@ export function strokePath(
   g.restore();
 }
 
+/** A filled area without an outline, its corners sharp (a leader's arrowhead, docs/adr/0205 §7). */
+export function fillRing(g: CanvasRenderingContext2D, view: ViewTransform, pts: readonly Vec2[], color: string): void {
+  if (pts.length < 3) return;
+  g.save();
+  g.beginPath();
+  pts.forEach((p, i) => {
+    const s = view.worldToScreen(p);
+    i ? g.lineTo(s.x, s.y) : g.moveTo(s.x, s.y);
+  });
+  g.closePath();
+  g.fillStyle = color;
+  g.fill();
+  g.restore();
+}
+
 /**
  * A text to come as it will be drawn, faint (Etiketleri yazıya çevir, docs/adr/0175 §3; Koordinat yaz, 0185 §5):
  * `height` metres high in its face (the drawing's family as text objects are drawn, italic 400, without one) and width

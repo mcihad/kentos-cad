@@ -47,9 +47,24 @@ pub const USER_ANGLE: f64 = 45.0;
 pub const DEFAULT_CHOICE: usize = 3;
 
 const GRADIENTS: [(&str, &str, &str, &str); 3] = [
-    ("linear", "Degrade doğrusal", "hatchGradientLinear", "hatchPreviewGradientLinear"),
-    ("cylinder", "Degrade silindir", "hatchGradientCylinder", "hatchPreviewGradientCylinder"),
-    ("spherical", "Degrade küre", "hatchGradientSpherical", "hatchPreviewGradientSpherical"),
+    (
+        "linear",
+        "Degrade doğrusal",
+        "hatchGradientLinear",
+        "hatchPreviewGradientLinear",
+    ),
+    (
+        "cylinder",
+        "Degrade silindir",
+        "hatchGradientCylinder",
+        "hatchPreviewGradientCylinder",
+    ),
+    (
+        "spherical",
+        "Degrade küre",
+        "hatchGradientSpherical",
+        "hatchPreviewGradientSpherical",
+    ),
 ];
 
 /// İkinci renk's names (the ribbon's drawing colours, white and black).
@@ -79,21 +94,22 @@ fn folded(s: &str) -> String {
 
 /// Desen's choices, in its order: Çizgili, Çapraz, Dolu, the library, the gradients.
 pub fn choices() -> Vec<Choice> {
-    let choice = |name: &str, label: String, (icon, preview): (String, String), kind: Kind| Choice {
-        name: name.to_owned(),
-        typed: name.to_lowercase(),
-        label,
-        icon,
-        preview,
-        kind,
-        class: match kind {
-            Kind::Lines => "lines",
-            Kind::Cross => "cross",
-            Kind::Solid => "solid",
-            Kind::Library(_) => "pattern",
-            Kind::Gradient(_) => "gradient",
-        },
-    };
+    let choice =
+        |name: &str, label: String, (icon, preview): (String, String), kind: Kind| Choice {
+            name: name.to_owned(),
+            typed: name.to_lowercase(),
+            label,
+            icon,
+            preview,
+            kind,
+            class: match kind {
+                Kind::Lines => "lines",
+                Kind::Cross => "cross",
+                Kind::Solid => "solid",
+                Kind::Library(_) => "pattern",
+                Kind::Gradient(_) => "gradient",
+            },
+        };
     // A pattern's icon and wide sample by the same word (`hatchSwatchLINE`, `hatchPreviewLINE`).
     let drawn = |word: &str| (format!("hatchSwatch{word}"), format!("hatchPreview{word}"));
     let mut out = vec![
@@ -237,8 +253,13 @@ mod tests {
         assert_eq!(choice_named("degrade"), None);
         let names: std::collections::HashSet<&str> = list.iter().map(|c| c.icon.as_str()).collect();
         assert_eq!(names.len(), list.len(), "every choice its own icon");
-        let previews: std::collections::HashSet<&str> = list.iter().map(|c| c.preview.as_str()).collect();
-        assert_eq!(previews.len(), list.len(), "every choice its own wide sample");
+        let previews: std::collections::HashSet<&str> =
+            list.iter().map(|c| c.preview.as_str()).collect();
+        assert_eq!(
+            previews.len(),
+            list.len(),
+            "every choice its own wide sample"
+        );
         assert_eq!(list[DEFAULT_CHOICE].preview, "hatchPreviewANSI31");
     }
 

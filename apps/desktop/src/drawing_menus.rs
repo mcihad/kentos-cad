@@ -223,7 +223,9 @@ impl App {
     /// The open menu's items.
     pub(crate) fn drawing_menu_items(&self) -> Menu<Message> {
         match self.drawing_menu.map(|open| open.kind) {
-            Some(Kind::Snap) => self.snap_menu(Menu::new().header("Tek seferlik kenet (sonraki tık)")),
+            Some(Kind::Snap) => {
+                self.snap_menu(Menu::new().header("Tek seferlik kenet (sonraki tık)"))
+            }
             Some(Kind::Command) => self.command_menu(),
             Some(Kind::Idle) | None => self.idle_menu(),
         }
@@ -427,7 +429,10 @@ mod tests {
         view(&mut app, viewport::Event::RightPressed(at));
         view(&mut app, viewport::Event::RightClick(at));
         assert!(app.drawing_menu.is_none());
-        assert!(!app.session.is_running(), "Enter with no point leaves the line tool");
+        assert!(
+            !app.session.is_running(),
+            "Enter with no point leaves the line tool"
+        );
     }
 
     /// A quick right click on a grip of the selected parcel opens the idle
@@ -498,11 +503,15 @@ mod tests {
     fn a_one_shot_snap_lasts_for_the_next_press_of_its_command() {
         let mut app = app_with_drawing();
         let _ = app.update(Message::Run("tool.line"));
-        let _ = app.update(Message::DrawingMenu(Event::SnapOnce(Some(SnapKind::Midpoint))));
+        let _ = app.update(Message::DrawingMenu(Event::SnapOnce(Some(
+            SnapKind::Midpoint,
+        ))));
         assert_eq!(app.snap_once(), Some(SnapKind::Midpoint));
         view(&mut app, viewport::Event::Pressed(Point::new(300.0, 200.0)));
         assert_eq!(app.snap_once(), None, "a left press drops it");
-        let _ = app.update(Message::DrawingMenu(Event::SnapOnce(Some(SnapKind::Center))));
+        let _ = app.update(Message::DrawingMenu(Event::SnapOnce(Some(
+            SnapKind::Center,
+        ))));
         let _ = app.update(Message::Run("tool.circle"));
         assert_eq!(app.snap_once(), None, "another command drops it");
     }

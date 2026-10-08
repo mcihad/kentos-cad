@@ -21,12 +21,13 @@ use kentos_contracts::{
     DrawingFont, DrawingUnit, EllipseEntity, Entity, EntityBase, EntityId, GradientShape,
     HatchAssoc, HatchEntity, HatchGradient, HatchPattern, HatchPatternType, ImageEntity,
     ImageFields, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, MAX_AFFIX,
-    MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO, MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_OBLIQUE,
-    MAX_RASTER_BANDS, MAX_RASTER_SIDE, MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph, PathEntity,
-    PatternLine, PointEntity, PointPart, RasterEntity, RasterFields, RasterRender,
-    RasterResampling, RasterSample, RasterStretch, RasterStyle, RingGeometry, SplineEntity,
-    TableAlign, TableEntity, TableGrid, TableSource, TextAlign, TextEntity, TextFace, TextRun,
-    TextScript, Vec2, label_scale_ok, oblique_holds, width_factor_ok,
+    MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO, MAX_LEADER_ARROW, MAX_LINE_SPACING,
+    MAX_LINE_WEIGHT, MAX_OBLIQUE, MAX_RASTER_BANDS, MAX_RASTER_SIDE, MAX_WIDTH_FACTOR,
+    MIN_LEADER_ARROW, MIN_LINE_SPACING, Paragraph, PathEntity, PatternLine, PointEntity, PointPart,
+    RasterEntity, RasterFields, RasterRender, RasterResampling, RasterSample, RasterStretch,
+    RasterStyle, RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource,
+    TextAlign, TextEntity, TextFace, TextRun, TextScript, Vec2, is_hex_colour, label_scale_ok,
+    leader_arrow_holds, line_weight_holds, oblique_holds, width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -34,14 +35,14 @@ use crate::cbor::{Reader, Seg};
 use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 use crate::{
-    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
-    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES,
-    SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
-    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
-    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_RASTERS,
-    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS,
-    SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
-    SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS,
+    SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND,
+    SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LAYER_FIELDS,
+    SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
+    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
+    SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
+    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS,
+    SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -151,6 +152,10 @@ pub(super) struct Features {
     pub(super) survey_sigmas: bool,
     /// Schema 29: the `raster` kind (docs/adr/0204 §2).
     rasters: bool,
+    /// Schema 30: the settings' annotation heights, a dimension's and a
+    /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
+    /// arrowheads (docs/adr/0205).
+    pub(super) annotation: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -186,6 +191,7 @@ impl Features {
             topology: schema >= SCHEMA_WITH_TOPOLOGY,
             survey_sigmas: schema >= SCHEMA_WITH_SURVEY_SIGMAS,
             rasters: schema >= SCHEMA_WITH_RASTERS,
+            annotation: schema >= SCHEMA_WITH_ANNOTATION,
             uids: true,
         }
     }
@@ -255,6 +261,17 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                                 | "suffix"
                                 | "font"
                         ))
+                    || (has.annotation
+                        && matches!(
+                            key,
+                            "dimLineColor"
+                                | "dimLineWeight"
+                                | "dimLineType"
+                                | "extColor"
+                                | "extWeight"
+                                | "extLineType"
+                                | "textColor"
+                        ))
             }
             // A hatch's tie names objects: only the drawing's hatches (docs/adr/0186 §6).
             Kind::Hatch => {
@@ -262,10 +279,12 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.hatches && has.uids && key == "assoc")
             }
             Kind::Insert => matches!(key, "block" | "p" | "scale" | "rotation" | "mirror"),
-            Kind::Leader => matches!(
-                key,
-                "pts" | "text" | "height" | "rotation" | "arrow" | "mask"
-            ),
+            Kind::Leader => {
+                matches!(
+                    key,
+                    "pts" | "text" | "height" | "rotation" | "arrow" | "mask"
+                ) || (has.annotation && key == "arrowSize")
+            }
             Kind::Table => matches!(
                 key,
                 "p" | "rotation"
@@ -381,6 +400,8 @@ struct Fields {
     mirror: Option<bool>,
     align: Option<TextAlign>,
     arrow: Option<LeaderArrow>,
+    /// A leader's arrowhead size (schema 30).
+    arrow_size: Option<f64>,
     width_factor: Option<f64>,
     mask: Option<bool>,
     /// A picture's own fields (docs/adr/0192 §1), and where the object's map starts (for a refusal).
@@ -753,7 +774,11 @@ pub(super) fn object(
             "style" => {
                 // Schema 9's kinds after the first five (docs/adr/0147).
                 let styles = DIMENSION_STYLES.map(|s| (s.name(), s));
-                let known = if has.dimensions { &styles[..] } else { &styles[..5] };
+                let known = if has.dimensions {
+                    &styles[..]
+                } else {
+                    &styles[..5]
+                };
                 f.style = Some(named(r, known)?)
             }
             "pattern" => f.pattern = Some(pattern(r, has)?),
@@ -829,7 +854,64 @@ pub(super) fn object(
                     DimensionArrow::ALL.iter().map(|a| (a.name(), *a)).collect();
                 f.look.arrow = Some(super::named(r, &names)?)
             }
-            "arrow" => f.arrow = Some(leader_arrow(r)?),
+            "arrow" => f.arrow = Some(leader_arrow(r, has)?),
+            "arrowSize" if kind == Kind::Leader => {
+                let at = r.position();
+                let x = r.float()?;
+                if !leader_arrow_holds(x) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!(
+                            "kılavuzun ok boyu {x}; notun yüksekliğinin {MIN_LEADER_ARROW} ile {MAX_LEADER_ARROW} katı olmalı"
+                        ),
+                    ));
+                }
+                f.arrow_size = Some(x);
+            }
+            "dimLineColor" | "extColor" | "textColor" => {
+                let at = r.position();
+                let c = text(r)?;
+                if !is_hex_colour(&c) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!("ölçünün {key} değeri “{c}”; #RRGGBB olmalı"),
+                    ));
+                }
+                let slot = match key {
+                    "dimLineColor" => &mut f.look.dim_line_color,
+                    "extColor" => &mut f.look.ext_color,
+                    _ => &mut f.look.text_color,
+                };
+                *slot = Some(c);
+            }
+            "dimLineWeight" | "extWeight" => {
+                let at = r.position();
+                let w = r.float()?;
+                if !line_weight_holds(w) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!(
+                            "ölçünün {key} değeri {w}; 0 ile {MAX_LINE_WEIGHT} mm arasında olmalı"
+                        ),
+                    ));
+                }
+                if key == "dimLineWeight" {
+                    f.look.dim_line_weight = Some(w);
+                } else {
+                    f.look.ext_weight = Some(w);
+                }
+            }
+            "dimLineType" | "extLineType" => {
+                let t = super::line_type_named(r)?;
+                if key == "dimLineType" {
+                    f.look.dim_line_type = Some(t);
+                } else {
+                    f.look.ext_line_type = Some(t);
+                }
+            }
             "textStyle" | "dimStyle" => {
                 let at = r.position();
                 let id = text(r)?;
@@ -1143,7 +1225,10 @@ fn build(
                 f.c
             };
             let (za, zb) = if style == Some(DimensionStyle::Slope) {
-                (Some(required(r, f.za, "za")?), Some(required(r, f.zb, "zb")?))
+                (
+                    Some(required(r, f.za, "za")?),
+                    Some(required(r, f.zb, "zb")?),
+                )
             } else if f.za.is_some() || f.zb.is_some() {
                 let (key, at) = if f.za.is_some() {
                     ("za", f.za_at)
@@ -1209,6 +1294,7 @@ fn build(
             height: required(r, f.height, "height")?,
             rotation: required(r, f.rotation, "rotation")?,
             arrow: f.arrow,
+            arrow_size: f.arrow_size,
             mask: f.mask.unwrap_or(false),
         }),
         Kind::Table => {
@@ -1806,9 +1892,15 @@ fn text_run(r: &mut Reader<'_>) -> Result<TextRun, KcadError> {
 }
 
 /// A text's alignment by its name (§6.6); an unknown name is `bad_value`.
-/// A leader's arrowhead (§6.6, docs/adr/0146): its name; the filled arrow has none.
-fn leader_arrow(r: &mut Reader<'_>) -> Result<LeaderArrow, KcadError> {
-    let names: Vec<(&str, LeaderArrow)> = LeaderArrow::ALL.iter().map(|a| (a.name(), *a)).collect();
+/// A leader's arrowhead (§6.6, docs/adr/0146): its name; the filled arrow
+/// has none. AutoCAD's arrowheads beside the first three come with schema 30
+/// (docs/adr/0205 §7): an older payload naming one is `bad_value`.
+fn leader_arrow(r: &mut Reader<'_>, has: Features) -> Result<LeaderArrow, KcadError> {
+    let names: Vec<(&str, LeaderArrow)> = LeaderArrow::ALL
+        .iter()
+        .filter(|a| has.annotation || !a.is_added())
+        .map(|a| (a.name(), *a))
+        .collect();
     super::named(r, &names)
 }
 

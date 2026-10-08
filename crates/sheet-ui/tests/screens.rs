@@ -246,3 +246,101 @@ fn screens() {
         }
     }
 }
+
+/// docs/adr/0206: a map's Çizim ölçeğini al, Görünüme sığdır and Görünümden
+/// al (the project at 1:2500, the map at 1:1000); the aplikasyon sketch's
+/// coordinate list reading a parcel taken from the drawing's choice, what it
+/// gives said, its headings given and drawn so. Tall windows, so that the
+/// inspector shows them; `.run/shots/sheet-desktop/*-0206-*`:
+///
+/// ```text
+/// cargo test -p kentos-sheet-ui --test screens adr_0206 -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn adr_0206_screens() {
+    use kentos_sheet::display::{CoordPoint, CoordinateInput};
+    let fonts =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../apps/desktop/assets/fonts/drawing");
+    assert!(kentos_sheet_ui::fonts::load_dir(&fonts) > 0);
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = out_dir();
+    for (mode, tag) in [(Mode::Light, "pafta"), (Mode::Dark, "grafit")] {
+        let size = Size::new(1440.0, 1300.0);
+        // The map at 1:1000 in a project now at 1:2500, the drawing area 1 200 × 600 m.
+        let mut d = with("sys:genel-a3-yatay", None, Some("Harita"));
+        d.set_context(Context {
+            capabilities: Capabilities {
+                plot_scale: Some(2500),
+                ..context(None).capabilities
+            },
+            view_size: Some([1_200.0, 600.0]),
+            ..context(None)
+        });
+        let mut w = Window { d, mode };
+        shot(&mut w, size, &out, &format!("{tag}-0206-1-harita-olcek"));
+        // The coordinate list: a parcel's four corners, its area, its headings.
+        let mut d = Designer::new(Context {
+            layers: vec![
+                ("parsel".into(), "Parsel".into()),
+                ("bina".into(), "Bina".into()),
+            ],
+            ..context(Some(kentos_contracts::Workspace::Cad))
+        });
+        let t = kentos_sheet::template::system_template("sys:aplikasyon-krokisi")
+            .expect("a system template")
+            .clone();
+        assert!(d.use_template(&t, None));
+        let list = d
+            .open_sheet()
+            .unwrap()
+            .items
+            .iter()
+            .find(|i| i.name == "Koordinat listesi")
+            .map(|i| i.id.clone())
+            .expect("the list");
+        d.update(Message::Select(vec![list.clone()]));
+        d.update(Message::CoordObjects(vec![
+            "0192f6a0-0000-7000-8000-000000000101".into(),
+        ]));
+        for (key, text) in [
+            ("point", "Nokta No"),
+            ("east", "Sağa (Y)"),
+            ("north", "Yukarı (X)"),
+        ] {
+            d.update(Message::CoordHeading(key, text.into()));
+        }
+        let corners = [
+            (484_210.25, 4_418_570.5),
+            (484_262.75, 4_418_574.0),
+            (484_258.5, 4_418_628.25),
+            (484_206.0, 4_418_624.75),
+        ];
+        let mut inputs = kentos_sheet_ui::empty_inputs();
+        inputs.coordinates.push(CoordinateInput {
+            item: list,
+            points: corners
+                .iter()
+                .enumerate()
+                .map(|(i, (x, y))| CoordPoint {
+                    name: Some(format!("{}", 101 + i)),
+                    x: *x,
+                    y: *y,
+                    z: None,
+                })
+                .collect(),
+            closed: true,
+            area: Some(2_826.94),
+            objects: Some(1),
+            missing: None,
+        });
+        d.set_data(inputs);
+        let mut w = Window { d, mode };
+        shot(
+            &mut w,
+            size,
+            &out,
+            &format!("{tag}-0206-2-koordinat-listesi"),
+        );
+    }
+}

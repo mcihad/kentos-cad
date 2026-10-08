@@ -15,11 +15,11 @@ use crate::geom::arc::{
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_path_length, bulge_path_outline, bulge_ring_area, has_bulges};
 use crate::geom::dimension::{DimensionGeom, DimensionLayout, is_new_kind, layout_dimension};
-use crate::geom::leader;
 use crate::geom::ellipse::{
     EllipseGeom, ellipse_area, ellipse_length, ellipse_point, is_full_ellipse, quadrant_params,
     tessellate_ellipse,
 };
+use crate::geom::leader;
 use crate::geom::spline::{catmull_rom, spline_length};
 use crate::geometry::{
     Bounds, centroid, empty_bounds, extend_bounds, path_length, point_in_polygon, signed_area,
@@ -293,8 +293,11 @@ pub enum Shape {
         text: Option<String>,
         height: f64,
         rotation: f64,
-        /// The arrowhead's name (`open`, `dot`, `none`); none: a filled arrow.
+        /// The arrowhead's name (`open`, `dot`, `none` and AutoCAD's others,
+        /// `geom::arrowhead`); none: a filled triangle.
         arrow: Option<String>,
+        /// The arrowhead's length, times the note's height; none: 1 (docs/adr/0205 §7).
+        arrow_size: Option<f64>,
         /// `Some(true)`: the note's box is filled with the drawing area's colour first.
         mask: Option<bool>,
     },
@@ -371,7 +374,7 @@ crate::json_tagged!(Shape, "kind",
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
     Hatch => "hatch" { ring, holes, pattern, assoc },
     Insert => "insert" { block, p, scale, rotation, mirror; attrs },
-    Leader => "leader" { pts, text, height, rotation, arrow, mask },
+    Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask },
     Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
     Raster => "raster" { affine, width, height, bands, sample, asset, file, srid, style, opacity },
@@ -1308,10 +1311,16 @@ pub fn entity_bounds_in(e: &Shape, font: Font) -> Bounds {
         // Its vertices, its arrowhead, its landing and its note's box (docs/adr/0146 §4).
         Shape::Leader { pts, .. } => {
             let laid = leader::layout_of(e);
-            let reach = laid.iter().flat_map(|l| leader::head_reach(&l.head));
+            let reach = laid.iter().flat_map(leader::head_reach);
             let landing = laid.iter().filter_map(|l| l.landing.map(|[_, end]| end));
             let note = leader::note_place(e).map(|t| t.outline(font));
-            for q in pts.iter().copied().chain(reach).chain(landing).chain(note.into_iter().flatten()) {
+            for q in pts
+                .iter()
+                .copied()
+                .chain(reach)
+                .chain(landing)
+                .chain(note.into_iter().flatten())
+            {
                 extend_bounds(&mut b, q, 0.0);
             }
             return b;
@@ -1543,19 +1552,23 @@ pub(crate) static OPS: &[Op] = &[
     op!("textAlignShares", |a: Option<TextAlign>| a
         .map_or([0.0, 0.0], |a| [a.along(), a.up()])),
     // Artır (docs/adr/0145 §3): the text with the number it ends with one more; none without one.
-    op!("textIncrement", |t: String| crate::text::edit::increment(&t)),
+    op!("textIncrement", |t: String| crate::text::edit::increment(
+        &t
+    )),
     // Bul ve değiştir: each text as it becomes, none where nothing matched ({wildcard, caseless, wholeWord}).
-    op!("textReplace", |texts: Vec<String>,
-                        find: String,
-                        with: String,
-                        how: crate::text::edit::Find| texts
-        .iter()
-        .map(|t| crate::text::edit::replace(t, &find, &with, how))
-        .collect::<Vec<_>>()),
+    op!(
+        "textReplace",
+        |texts: Vec<String>, find: String, with: String, how: crate::text::edit::Find| texts
+            .iter()
+            .map(|t| crate::text::edit::replace(t, &find, &with, how))
+            .collect::<Vec<_>>()
+    ),
     // Okunur yap: a text's new point and turn, none when it reads (`text_readable_json`).
     op!("textReadable", |t: Json| text_readable_json(&t)),
     // Hizayı değiştir: a text's point with the alignment `to` (null: the left of the baseline), where it stays.
-    op!("textRealign", |t: Json, to: Option<TextAlign>| text_realign_json(&t, to)),
+    op!("textRealign", |t: Json, to: Option<TextAlign>| {
+        text_realign_json(&t, to)
+    }),
     // A multi-line text's label records as the store gives them (docs/adr/0182 §3), for a text to come
     // (its mask's box with `mask`, then its lines): what the tools' previews draw.
     op!("textLines", |t: Json| text_lines_json(&t)),

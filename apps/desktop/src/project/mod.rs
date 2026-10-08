@@ -11,22 +11,19 @@ mod ask_type;
 mod choices;
 mod content;
 mod custom_crs;
+mod scale;
 pub(crate) mod settings;
 mod survey;
 mod wizard;
-
-use std::fmt;
 
 use iced::widget::{Column, Row, button, column, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_contracts::Workspace;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::typography;
-use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::{label, style};
 
 pub(crate) use ask_type::TYPE_TITLE;
-pub use content::PLOT_SCALES;
 
 use crate::app::{App, Dialog, Message};
 use crate::catalog::catalog;
@@ -151,21 +148,6 @@ pub fn font_label(font: Option<kentos_contracts::DrawingFont>) -> &'static str {
 /// A plot scale as the web writes it: `1:1.000`.
 pub fn scale_label(scale: f64) -> String {
     format!("1:{}", grouped(scale))
-}
-
-/// A plot scale choice of the segmented control.
-#[derive(Debug, Clone, Copy, PartialEq)]
-struct Scale(f64);
-
-impl fmt::Display for Scale {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&scale_label(self.0))
-    }
-}
-
-/// The plot scales as a segmented control.
-fn scales<'a, M: Clone + 'a>(value: f64, on: impl Fn(f64) -> M) -> Element<'a, M> {
-    Segmented::new(PLOT_SCALES.map(Scale), Scale(value), move |s| on(s.0)).into()
 }
 
 /// The project types as cards (the web's `workspacePicker`): the ones that

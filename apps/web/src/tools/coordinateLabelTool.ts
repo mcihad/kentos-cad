@@ -11,6 +11,7 @@ import { writeObjects } from './createCommand';
 import { PointInputTool } from './drawTools';
 import { listedOf, newTable, scheduleOf, sourceOf } from './newTable';
 import { drawTag, drawTextGhost, strokePath } from './preview';
+import { annotationHeightMm, setAnnotationHeightMm } from './annotationHeights';
 import { stylesShown, takeTextStyle, textFaceNow, textStyleChoices, textStyleName, textStyleNow } from './styleOption';
 import { TablePlaceTool } from './tablePlaceTool';
 import type { OptionChoice, ToolPointer } from './Tool';
@@ -55,7 +56,6 @@ export const coordinateOptions = {
   template: '',
   /** Null: the project's length decimals. */
   decimals: null as number | null,
-  heightMm: 2,
   schedule: false,
 };
 
@@ -88,8 +88,11 @@ const template = (ctx: AppContext): string => coordinateOptions.template || firs
 
 const decimals = (ctx: AppContext): number => coordinateOptions.decimals ?? ctx.doc.settings.lengthDecimals.value;
 
-/** The paper height, mm: a CAD project's chosen style's when it fixes one, else Yükseklik's. */
-const heightMm = (ctx: AppContext): number => (stylesShown(ctx) ? textStyleNow(ctx)?.height : undefined) ?? coordinateOptions.heightMm;
+/**
+ * The paper height, mm: a CAD project's chosen style's when it fixes one, else Yükseklik's (typed in this drawing, else
+ * the project's Koordinat yazısı height, docs/adr/0205 §2).
+ */
+const heightMm = (ctx: AppContext): number => (stylesShown(ctx) ? textStyleNow(ctx)?.height : undefined) ?? annotationHeightMm(ctx, 'coordinate');
 
 function look(ctx: AppContext): Look {
   const O = coordinateOptions;
@@ -153,7 +156,7 @@ function optionsText(ctx: AppContext, schedule: boolean): string {
     `Yön (O): ${directionName(O.direction)}`,
     `Şablon (Ş): ${template(ctx)}`,
     `Basamak (B): ${O.decimals ?? `${ctx.doc.settings.lengthDecimals.value} (proje)`}`,
-    `Yükseklik (Y): ${O.heightMm} mm`,
+    `Yükseklik (Y): ${annotationHeightMm(ctx, 'coordinate')} mm`,
     ...(schedule ? [`Çizelge (Ç): ${on(O.schedule)}`] : []),
   ];
   return parts.join(' / ');
@@ -241,7 +244,7 @@ class Options {
       case 'height': {
         const n = parseNumberText(t);
         if (n !== null && n > 0 && Number.isFinite(n)) {
-          coordinateOptions.heightMm = n;
+          setAnnotationHeightMm(this.ctx, 'coordinate', n);
           this.asking = null;
         } else log.warn(`Yükseklik sıfırdan büyük bir sayı olmalı (kâğıtta mm); “${t}” yazıldı.`);
         return true;

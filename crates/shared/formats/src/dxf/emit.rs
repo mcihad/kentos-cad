@@ -86,6 +86,8 @@ pub struct Library {
     pub style_handles: HashMap<u64, String>,
     /// Upper-case dimension style name → its name as written and its variables.
     pub dim_records: HashMap<String, (String, super::styles::DimVars)>,
+    /// An LTYPE record's handle → its line type (a DIMSTYLE's DIMLTYPE, docs/adr/0205 §6).
+    pub ltype_handles: HashMap<u64, kentos_contracts::LineType>,
 }
 
 /// Where an entity lives: the transform down to world XY, the Z map of
@@ -239,12 +241,7 @@ struct Text<'a> {
 /// 360), height and what its width factor is multiplied by (a non-uniform
 /// scale widens or narrows it: its baseline scales by one factor, its height
 /// by another); none when `m` flattens it.
-fn mapped_text(
-    m: Tf,
-    anchor: Vec2,
-    rotation: f64,
-    height: f64,
-) -> Option<(Vec2, f64, f64, f64)> {
+fn mapped_text(m: Tf, anchor: Vec2, rotation: f64, height: f64) -> Option<(Vec2, f64, f64, f64)> {
     let (s, c) = sin_cos_deg(rotation);
     let d = m.linear(v(c, s));
     let u = m.linear(v(-s, c));
@@ -276,7 +273,12 @@ fn mapped_text(
     } else {
         (height * area / ld, ld * ld / area)
     };
-    Some((m.apply(anchor), if rot >= 360.0 { 0.0 } else { rot }, h, widen))
+    Some((
+        m.apply(anchor),
+        if rot >= 360.0 { 0.0 } else { rot },
+        h,
+        widen,
+    ))
 }
 
 /// A width factor as a text holds it: none for 1 (to a billionth, what a
@@ -505,6 +507,9 @@ pub struct Emitter<'l> {
     /// in the order met: each one's place is its reader id's number.
     pub text_used: Vec<String>,
     pub dim_used: Vec<String>,
+    /// What AutoCAD's own blocks (“_…”) said while read: the drawing's only
+    /// if an insert places them (`keep_used`), a leader's arrow block not.
+    aside: HashMap<BlockId, Report>,
 }
 
 impl<'l> Emitter<'l> {
@@ -520,6 +525,7 @@ impl<'l> Emitter<'l> {
             project_font: kentos_contracts::DrawingFont::Barlow,
             text_used: Vec::new(),
             dim_used: Vec::new(),
+            aside: HashMap::new(),
         }
     }
 
@@ -654,6 +660,7 @@ impl<'l> Emitter<'l> {
             id.clone().unwrap_or_default(),
             style,
             &self.lib.block_records,
+            &self.lib.ltype_handles,
             font,
             &|x| x,
             1000.0,
@@ -718,6 +725,9 @@ impl<'l> Emitter<'l> {
             let handles = std::mem::take(&mut self.out.handles);
             let holes = std::mem::take(&mut self.out.holes);
             let pending = std::mem::take(&mut self.pending);
+            // What AutoCAD's own block says is set aside until an insert is known to place it.
+            let own = n.starts_with('_');
+            let outer = own.then(|| std::mem::take(&mut self.out.report));
             self.defining = true;
             let ctx = Ctx::definition(n);
             for x in &block.entities {
@@ -727,6 +737,10 @@ impl<'l> Emitter<'l> {
             // The rings KentOS wrote as polylines of their own go back into their polygons, as in the drawing.
             self.merge_holes();
             self.defining = false;
+            if let Some(outer) = outer {
+                let said = std::mem::replace(&mut self.out.report, outer);
+                self.aside.insert(self.kept[n], said);
+            }
             let entities = std::mem::replace(&mut self.out.entities, drawing);
             self.out.handles = handles;
             self.out.holes = holes;
@@ -774,6 +788,13 @@ impl<'l> Emitter<'l> {
             .zip(used)
             .filter(|(d, used)| *used || !d.name.starts_with('_'))
             .collect();
+        // What AutoCAD's own blocks kept said; the others' goes with them.
+        for (d, _) in &kept {
+            if let Some(said) = self.aside.remove(&d.id) {
+                self.out.report.absorb(said);
+            }
+        }
+        self.aside.clear();
         let unused = kept.iter().filter(|(_, used)| !used).count();
         // An insert draws a definition's objects on its own layer (docs/adr/0144 §1): an object on a
         // layer of its own keeps that layer's look, not whether it is hidden or locked.

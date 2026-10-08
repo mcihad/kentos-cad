@@ -72,6 +72,8 @@ THEIRS = {
         "plotScale": 1000.0,
         "workspace": "gis",
         "drawingFont": "arimo",
+        # The project's annotation heights (docs/adr/0205 §1): Proje ayarları takes them as the other settings.
+        "annotation": {"text": 3.5, "leader": 3.0},
         "textStyles": [
             {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101", "name": "Ada no", "font": "arimo", "bold": True, "height": 3.5},
             {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3102", "name": "Yol adı", "font": "overpass", "italic": True, "height": 2.5},
@@ -324,7 +326,7 @@ def selection(doc, uids):
 
 # ── 2. Taking from another drawing ────────────────────────────────────
 
-TAKEN_SETTINGS = ("lengthDecimals", "areaDecimals", "areaUnit", "angleUnit", "plotScale", "drawingFont", "drawingUnit", "survey")
+TAKEN_SETTINGS = ("lengthDecimals", "areaDecimals", "areaUnit", "angleUnit", "plotScale", "drawingFont", "drawingUnit", "survey", "annotation")
 
 
 def find_path(tree, names):

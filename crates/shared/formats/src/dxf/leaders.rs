@@ -86,7 +86,10 @@ pub fn own_style(groups: &[Pair<'_>]) -> DimStyle {
         return s;
     };
     let rest = &groups[start + 1..];
-    let rest = &rest[..rest.iter().position(|p| p.code == 1001).unwrap_or(rest.len())];
+    let rest = &rest[..rest
+        .iter()
+        .position(|p| p.code == 1001)
+        .unwrap_or(rest.len())];
     let Some(k) = rest
         .iter()
         .position(|p| p.code == 1000 && p.text().eq_ignore_ascii_case("DSTYLE"))
@@ -114,18 +117,64 @@ pub fn own_style(groups: &[Pair<'_>]) -> DimStyle {
     s
 }
 
-/// The arrowhead an AutoCAD arrow block's name stands for: none is the
-/// filled one. `false` when KentOS has no such arrowhead (it is drawn filled).
-pub fn arrow_of_block(name: &str) -> (Option<LeaderArrow>, bool) {
+/// How an AutoCAD arrow block's arrowhead is KentOS's (docs/adr/0205 §7).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Fit {
+    /// KentOS has it.
+    Same,
+    /// KentOS has one like it (said).
+    Near,
+    /// KentOS has none like it: the filled one (said).
+    None,
+}
+
+/// The arrowhead an AutoCAD arrow block's name stands for (DIMBLK's,
+/// DIMLDRBLK's names, any case): none is the filled one.
+pub fn arrow_of_block(name: &str) -> (Option<LeaderArrow>, Fit) {
     let n = name.trim().to_uppercase();
-    match n.as_str() {
-        "" | "_CLOSEDFILLED" => (None, true),
-        "_NONE" => (Some(LeaderArrow::None), true),
-        "_SMALL" => (Some(LeaderArrow::Dot), true),
-        _ if n.starts_with("_OPEN") => (Some(LeaderArrow::Open), true),
-        _ if n.starts_with("_DOT") => (Some(LeaderArrow::Dot), true),
-        _ => (None, false),
-    }
+    let (arrow, fit) = match n.as_str() {
+        "" | "_CLOSEDFILLED" => return (None, Fit::Same),
+        "_NONE" => (LeaderArrow::None, Fit::Same),
+        "_CLOSEDBLANK" => (LeaderArrow::Closed, Fit::Same),
+        "_OPEN" => (LeaderArrow::Open, Fit::Same),
+        "_OPEN30" => (LeaderArrow::Open30, Fit::Same),
+        "_OPEN90" => (LeaderArrow::Open90, Fit::Same),
+        "_DOT" => (LeaderArrow::Dot, Fit::Same),
+        "_DOTSMALL" => (LeaderArrow::DotSmall, Fit::Same),
+        "_DOTBLANK" => (LeaderArrow::DotBlank, Fit::Same),
+        "_OBLIQUE" => (LeaderArrow::Oblique, Fit::Same),
+        "_ARCHTICK" => (LeaderArrow::ArchTick, Fit::Same),
+        "_BOXFILLED" => (LeaderArrow::BoxFilled, Fit::Same),
+        "_BOXBLANK" => (LeaderArrow::BoxBlank, Fit::Same),
+        "_DATUMFILLED" => (LeaderArrow::DatumFilled, Fit::Same),
+        // Closed: the blank triangle with the line through it; the small blank dot and the
+        // origin indicators: rings; the blank datum triangle: the filled one.
+        "_CLOSED" => (LeaderArrow::Closed, Fit::Near),
+        "_SMALL" | "_ORIGIN" | "_ORIGIN2" => (LeaderArrow::DotBlank, Fit::Near),
+        "_DATUMBLANK" => (LeaderArrow::DatumFilled, Fit::Near),
+        _ => return (None, Fit::None),
+    };
+    (Some(arrow), fit)
+}
+
+/// AutoCAD's arrow block for a KentOS arrowhead (docs/adr/0205 §7): none
+/// for the filled one (Standard's) and for none (the LEADER draws no head).
+pub fn block_of_arrow(arrow: Option<LeaderArrow>) -> Option<&'static str> {
+    Some(match arrow? {
+        LeaderArrow::None => return None,
+        LeaderArrow::Closed => "_ClosedBlank",
+        LeaderArrow::Open => "_Open",
+        LeaderArrow::Open30 => "_Open30",
+        LeaderArrow::Open90 => "_Open90",
+        LeaderArrow::Dot => "_Dot",
+        LeaderArrow::DotSmall => "_DotSmall",
+        LeaderArrow::DotBlank => "_DotBlank",
+        LeaderArrow::Oblique => "_Oblique",
+        LeaderArrow::ArchTick => "_ArchTick",
+        LeaderArrow::BoxFilled => "_BoxFilled",
+        LeaderArrow::BoxBlank => "_BoxBlank",
+        LeaderArrow::DatumFilled => "_DatumFilled",
+    })
 }
 
 /// A MULTILEADER's groups as the converter needs them.
@@ -314,12 +363,37 @@ mod tests {
 
     #[test]
     fn arrow_blocks_name_the_arrowheads_kentos_has() {
-        assert_eq!(arrow_of_block(""), (None, true));
-        assert_eq!(arrow_of_block("_ClosedFilled"), (None, true));
-        assert_eq!(arrow_of_block("_Open30"), (Some(LeaderArrow::Open), true));
-        assert_eq!(arrow_of_block("_DotSmall"), (Some(LeaderArrow::Dot), true));
-        assert_eq!(arrow_of_block("_none"), (Some(LeaderArrow::None), true));
-        assert_eq!(arrow_of_block("_ArchTick"), (None, false));
+        assert_eq!(arrow_of_block(""), (None, Fit::Same));
+        assert_eq!(arrow_of_block("_ClosedFilled"), (None, Fit::Same));
+        assert_eq!(
+            arrow_of_block("_Open30"),
+            (Some(LeaderArrow::Open30), Fit::Same)
+        );
+        assert_eq!(
+            arrow_of_block("_DotSmall"),
+            (Some(LeaderArrow::DotSmall), Fit::Same)
+        );
+        assert_eq!(
+            arrow_of_block("_Small"),
+            (Some(LeaderArrow::DotBlank), Fit::Near)
+        );
+        assert_eq!(arrow_of_block("_Integral"), (None, Fit::None));
+        // Every arrowhead KentOS writes as a block reads back as itself.
+        for a in LeaderArrow::ALL {
+            match block_of_arrow(Some(a)) {
+                Some(name) => assert_eq!(arrow_of_block(name), (Some(a), Fit::Same), "{a:?}"),
+                None => assert_eq!(a, LeaderArrow::None),
+            }
+        }
+        assert_eq!(block_of_arrow(None), None);
+        assert_eq!(
+            arrow_of_block("_none"),
+            (Some(LeaderArrow::None), Fit::Same)
+        );
+        assert_eq!(
+            arrow_of_block("_archtick"),
+            (Some(LeaderArrow::ArchTick), Fit::Same)
+        );
     }
 
     #[test]
@@ -327,7 +401,14 @@ mod tests {
         let g = groups(
             "300\nCONTEXT_DATA{\n40\n1.0\n10\n0\n20\n0\n30\n0\n41\n2.0\n140\n1.25\n290\n1\n304\nAda 101\\PParsel 5\n12\n109\n22\n7\n32\n0\n13\n1\n23\n0\n33\n0\n171\n1\n292\n1\n296\n0\n302\nLEADER{\n290\n1\n10\n106\n20\n6\n30\n0\n11\n1\n21\n0\n31\n0\n40\n2.5\n304\nLEADER_LINE{\n10\n100\n20\n0\n30\n0\n10\n104\n20\n4\n30\n0\n305\n}\n304\nLEADER_LINE{\n10\n110\n20\n0\n30\n0\n305\n}\n303\n}\n301\n}\n170\n1\n342\n1F\n42\n0.0\n172\n2\n",
         );
-        let m = mleader(&g, Decoder { enc: Encoding::Utf8 }).ok().expect("reads");
+        let m = mleader(
+            &g,
+            Decoder {
+                enc: Encoding::Utf8,
+            },
+        )
+        .ok()
+        .expect("reads");
         assert_eq!(
             m.lines,
             vec![
@@ -336,9 +417,18 @@ mod tests {
             ]
         );
         assert_eq!(m.text.as_deref(), Some("Ada 101\\PParsel 5"));
-        assert_eq!((m.text_at, m.text_dir), ([109.0, 7.0, 0.0], Some([1.0, 0.0, 0.0])));
-        assert_eq!((m.text_height, m.alignment, m.mask, m.block), (2.0, 1, true, false));
+        assert_eq!(
+            (m.text_at, m.text_dir),
+            ([109.0, 7.0, 0.0], Some([1.0, 0.0, 0.0]))
+        );
+        assert_eq!(
+            (m.text_height, m.alignment, m.mask, m.block),
+            (2.0, 1, true, false)
+        );
         // No arrow size of its own: the context's.
-        assert_eq!((m.arrow_size, m.arrow_block, m.spline), (1.25, Some(0x1F), false));
+        assert_eq!(
+            (m.arrow_size, m.arrow_block, m.spline),
+            (1.25, Some(0x1F), false)
+        );
     }
 }

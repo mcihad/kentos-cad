@@ -11,7 +11,8 @@ import { DrawnReader } from './geometry';
 /**
  * A leader's drawn record (`MIXED`, docs/adr/0146 §5): its line on to its landing's end and an open arrowhead's sides,
  * then its filled arrowhead's or dot's area; the highlight outlines the area and fills it. By hand, h = 3, the leader
- * from (0, 0) up to (0, 4): the arrowhead's base 3 m up, 1 m wide; the landing 6 m east from (0, 4).
+ * from (0, 0) up to (0, 4): the arrowhead's base 3 m up, 1 m wide; the landing 6 m east from (0, 4). The line leaves a
+ * filled arrowhead's base and a dot's circle, an open arrowhead's tip (docs/adr/0205 §7).
  */
 const v = (x: number, y: number): Vec2 => ({ x, y });
 const leader = (extra: Partial<Extract<NewEntity, { kind: 'leader' }>> = {}): NewEntity => ({
@@ -44,7 +45,7 @@ describe('the drawn record of a leader', () => {
     index.dispose();
     expect(filled).toEqual({
       cls: 'mixed',
-      paths: [{ pts: [v(0, 0), v(0, 4), v(6, 4)], closed: false }],
+      paths: [{ pts: [v(0, 3), v(0, 4), v(6, 4)], closed: false }],
       // Turned counter-clockwise for the style engine: a base corner, the other, the tip.
       rings: [[v(0.5, 3), v(-0.5, 3), v(0, 0)]],
     });
@@ -56,10 +57,11 @@ describe('the drawn record of a leader', () => {
       ],
       rings: [],
     });
-    // No note, no landing; the dot a full turn's 72 points about the tip, 0.75 m round.
-    expect(dot?.cls === 'mixed' && dot.paths[0].pts).toEqual([v(0, 0), v(0, 4)]);
+    // No note, no landing; the dot a full turn's 72 points about the tip from the line's direction, 0.75 m round (a
+    // quarter of the arrowhead's length), the line leaving it.
+    expect(dot?.cls === 'mixed' && dot.paths[0].pts).toEqual([v(0, 0.75), v(0, 4)]);
     expect(dot?.cls === 'mixed' && dot.rings[0].length).toBe(72);
-    expect(dot?.cls === 'mixed' && dot.rings[0][0]).toEqual(v(0.75, 0));
+    expect(dot?.cls === 'mixed' && dot.rings[0][0]).toEqual(v(0, 0.75));
     expect(point).toEqual({ cls: 'marker', point: v(9, 9) });
   });
 });

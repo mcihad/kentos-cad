@@ -72,7 +72,12 @@ fn ends_of(e: &Edge) -> (Vec2, Vec2) {
     match *e {
         Edge::Seg { a, b } => (a, b),
         Edge::Arc { c, r, a0, sweep } => {
-            let at = |t: f64| Vec2::new(c.x + r * crate::jsmath::cos(t), c.y + r * crate::jsmath::sin(t));
+            let at = |t: f64| {
+                Vec2::new(
+                    c.x + r * crate::jsmath::cos(t),
+                    c.y + r * crate::jsmath::sin(t),
+                )
+            };
             (at(a0), at(a0 + sweep))
         }
     }

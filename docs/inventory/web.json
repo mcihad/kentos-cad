@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 405,
-      "implemented": 393,
+      "total": 411,
+      "implemented": 399,
       "partial": 0,
       "pending": 12
     },
@@ -49,8 +49,8 @@
       "pending": 2
     },
     "settings": {
-      "total": 92,
-      "implemented": 92,
+      "total": 93,
+      "implemented": 93,
       "partial": 0,
       "pending": 0
     },
@@ -61,14 +61,14 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 536,
-      "implemented": 536,
+      "total": 559,
+      "implemented": 559,
       "partial": 0,
       "pending": 0
     },
     "screens": {
-      "total": 121,
-      "implemented": 121,
+      "total": 122,
+      "implemented": 122,
       "partial": 0,
       "pending": 0
     },
@@ -93,7 +93,6 @@
       "sheet.export.svg",
       "sheet.matchSize.height",
       "sheet.matchSize.width",
-      "sheet.model",
       "sheet.nudge",
       "sheet.print",
       "sheet.redo",
@@ -101,12 +100,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 147,
-    "commandsOnDesktop": 333,
+    "commandsWithoutTests": 149,
+    "commandsOnDesktop": 339,
     "desktop": {
       "commands": {
-        "total": 405,
-        "implemented": 333,
+        "total": 411,
+        "implemented": 339,
         "partial": 0,
         "pending": 12,
         "none": 58,
@@ -145,8 +144,8 @@
         "n/a": 0
       },
       "settings": {
-        "total": 92,
-        "implemented": 88,
+        "total": 93,
+        "implemented": 89,
         "partial": 0,
         "pending": 0,
         "none": 3,
@@ -161,16 +160,16 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 536,
-        "implemented": 536,
+        "total": 559,
+        "implemented": 559,
         "partial": 0,
         "pending": 0,
         "none": 0,
         "n/a": 0
       },
       "screens": {
-        "total": 121,
-        "implemented": 101,
+        "total": 122,
+        "implemented": 102,
         "partial": 2,
         "pending": 0,
         "none": 17,
@@ -2701,7 +2700,7 @@
       "short": "Süzgeç",
       "category": "Düzen",
       "icon": "selectFilter",
-      "description": "Açıkken yalnız işaretli türlerin nesneleri seçilir; türler hücrenin sağ tık menüsündedir.",
+      "description": "Açıkken yalnız işaretli türlerin nesneleri seçilir. Türler Giriş › Seçim süzgeci ▾ menüsünde ve hücrenin sağ tık menüsünde; menü açık kalır, art arda işaretlenir.",
       "aliases": [
         "SUZGEC",
         "SECIMSUZGECI",
@@ -2727,6 +2726,8 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/selection-extras.json"
       ]
     },
@@ -2740,7 +2741,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2766,7 +2767,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2780,7 +2781,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
     },
     {
       "id": "edit.selectFilter.dimension",
@@ -2792,7 +2795,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2818,7 +2821,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2844,7 +2847,33 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.image",
+      "title": "Seçim süzgecinde Resim",
+      "short": "Resim",
+      "category": "Düzen",
+      "icon": "imageInsert",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2870,7 +2899,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2896,7 +2925,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2922,7 +2951,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2948,7 +2977,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2974,7 +3003,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -3002,7 +3031,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -3028,7 +3057,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -3054,7 +3083,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -3080,7 +3109,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -3106,7 +3135,35 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/src/ui/statusbar/selectFilterMenu.test.ts"
+      ]
+    },
+    {
+      "id": "edit.selectFilter.xline",
+      "title": "Seçim süzgecinde Yardımcı çizgi",
+      "short": "Yardımcı çizgi",
+      "category": "Düzen",
+      "icon": "xline",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -3123,13 +3180,14 @@
       "tests": []
     },
     {
-      "id": "edit.selectFilter.xline",
-      "title": "Seçim süzgecinde Yardımcı çizgi",
-      "short": "Yardımcı çizgi",
+      "id": "edit.selectFilterAll",
+      "title": "Seçim süzgecinde bütün türler",
+      "short": "Bütün türler",
       "category": "Düzen",
-      "icon": "xline",
+      "icon": "selectAll",
+      "description": "Seçim süzgecinde bütün türleri işaretler ve süzgeci açar.",
       "aliases": [],
-      "kind": "toggle",
+      "kind": "action",
       "shortcuts": [],
       "menus": [
         "Düzen › Seçim › Seçim süzgeci"
@@ -3146,7 +3204,38 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
+    },
+    {
+      "id": "edit.selectFilterNone",
+      "title": "Seçim süzgecinde hiçbir tür",
+      "short": "Hiçbir tür",
+      "category": "Düzen",
+      "icon": "deselect",
+      "description": "Seçim süzgecinde bütün türlerin işaretini kaldırır ve süzgeci açar: ardından seçilecek türler işaretlenir.",
+      "aliases": [],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
     },
     {
       "id": "edit.undo",
@@ -6042,7 +6131,9 @@
       "ribbon": [],
       "quickAccess": false,
       "hiddenIn": [],
-      "uiSources": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/inspector/dataSections.ts"
+      ],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -11844,6 +11935,94 @@
       ]
     },
     {
+      "id": "view.annotationSize.legible",
+      "title": "Yazılar kaybolmasın",
+      "short": "Kaybolmasın",
+      "category": "Görünüm",
+      "icon": "annotationLegible",
+      "description": "Yazılar gerçek boylarında; ekranda okunur boydan küçük kalan bu boyda ve birbirinin üstüne binmeden çizilir.",
+      "aliases": [
+        "OKUNUR",
+        "YAZIBOYU"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Görünüm › Görünüm kipleri › Yazıların boyu"
+      ],
+      "ribbon": [
+        "CAD › Görünüm › Görünüm kipleri",
+        "CBS › Görünüm › Görünüm kipleri"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "view.annotationSize.screen",
+      "title": "Yazılar ekranda sabit",
+      "short": "Ekranda sabit",
+      "category": "Görünüm",
+      "icon": "annotationScreen",
+      "description": "Her yazı kâğıttaki boyunda çizilir; yakınlaştırınca büyümez. Binenler seyreltilir.",
+      "aliases": [
+        "EKRANDASABIT"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Görünüm › Görünüm kipleri › Yazıların boyu"
+      ],
+      "ribbon": [
+        "CAD › Görünüm › Görünüm kipleri",
+        "CBS › Görünüm › Görünüm kipleri"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "view.annotationSize.true",
+      "title": "Yazılar gerçek boyda",
+      "short": "Gerçek boy",
+      "category": "Görünüm",
+      "icon": "annotationTrue",
+      "description": "Yazılar çizimdeki gerçek boylarında; 5 pikselden küçük kalan çizilmez.",
+      "aliases": [
+        "GERCEKBOY"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Görünüm › Görünüm kipleri › Yazıların boyu"
+      ],
+      "ribbon": [
+        "CAD › Görünüm › Görünüm kipleri",
+        "CBS › Görünüm › Görünüm kipleri"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "view.areaEdges",
       "title": "Alan sınırlarını göster",
       "short": "Alan sınırları",
@@ -12792,6 +12971,7 @@
         "apps/web/src/ui/bottom/PointTable.ts",
         "apps/web/src/ui/bottom/SearchPanel.ts",
         "apps/web/src/ui/ribbon/panels.ts",
+        "apps/web/src/ui/sheet/inspector/dataSections.ts",
         "apps/web/src/ui/shell/viewportMenus.ts"
       ],
       "status": "implemented",
@@ -16348,7 +16528,7 @@
           "name": "textHeight",
           "type": "number",
           "label": "Yazı yüksekliği",
-          "optional": false,
+          "optional": true,
           "unit": "mm"
         },
         {
@@ -17410,7 +17590,7 @@
           "name": "textHeight",
           "type": "number",
           "label": "Yazı yüksekliği",
-          "optional": false,
+          "optional": true,
           "unit": "mm"
         },
         {
@@ -18465,6 +18645,20 @@
       "desktopWhere": "ayarlar.json appearance.accent: iki platformun ortak anahtarı, on hazır renk ya da #rrggbb (Görünüm sekmesi, ADR 0051, 0126)"
     },
     {
+      "id": "user.annotationSize",
+      "key": "annotationSize",
+      "setting": "graphics.annotationSize",
+      "scope": "user",
+      "persistence": "localStorage kentos.settings.v1",
+      "type": "string",
+      "default": "legible",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "user.areaEdges",
       "key": "areaEdges",
       "setting": "graphics.areaEdges",
@@ -19217,6 +19411,97 @@
         "grad",
         "deg"
       ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AnnotationHeights.coordinate",
+      "contract": "AnnotationHeights",
+      "rust": "crates/shared/contracts/src/annotation_scale.rs",
+      "field": "coordinate",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AnnotationHeights.dimension",
+      "contract": "AnnotationHeights",
+      "rust": "crates/shared/contracts/src/annotation_scale.rs",
+      "field": "dimension",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AnnotationHeights.leader",
+      "contract": "AnnotationHeights",
+      "rust": "crates/shared/contracts/src/annotation_scale.rs",
+      "field": "leader",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AnnotationHeights.measure",
+      "contract": "AnnotationHeights",
+      "rust": "crates/shared/contracts/src/annotation_scale.rs",
+      "field": "measure",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AnnotationHeights.station",
+      "contract": "AnnotationHeights",
+      "rust": "crates/shared/contracts/src/annotation_scale.rs",
+      "field": "station",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AnnotationHeights.table",
+      "contract": "AnnotationHeights",
+      "rust": "crates/shared/contracts/src/annotation_scale.rs",
+      "field": "table",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AnnotationHeights.text",
+      "contract": "AnnotationHeights",
+      "rust": "crates/shared/contracts/src/annotation_scale.rs",
+      "field": "text",
+      "type": "number",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -20435,6 +20720,45 @@
       }
     },
     {
+      "id": "DimensionEntity.dimLineColor",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "dimLineColor",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.dimLineType",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "dimLineType",
+      "type": "LineType",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.dimLineWeight",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "dimLineWeight",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "DimensionEntity.dimStyle",
       "contract": "DimensionEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -20461,10 +20785,49 @@
       }
     },
     {
+      "id": "DimensionEntity.extColor",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "extColor",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.extLineType",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "extLineType",
+      "type": "LineType",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "DimensionEntity.extOffset",
       "contract": "DimensionEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "extOffset",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.extWeight",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "extWeight",
       "type": "number",
       "optional": true,
       "status": "implemented",
@@ -20643,6 +21006,19 @@
       }
     },
     {
+      "id": "DimensionEntity.textColor",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "textColor",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "DimensionEntity.textGap",
       "contract": "DimensionEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -20769,6 +21145,45 @@
       }
     },
     {
+      "id": "DimensionStyleDef.dimLineColor",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "dimLineColor",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.dimLineType",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "dimLineType",
+      "type": "LineType",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.dimLineWeight",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "dimLineWeight",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "DimensionStyleDef.extBeyond",
       "contract": "DimensionStyleDef",
       "rust": "crates/shared/contracts/src/annotation.rs",
@@ -20782,10 +21197,49 @@
       }
     },
     {
+      "id": "DimensionStyleDef.extColor",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "extColor",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.extLineType",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "extLineType",
+      "type": "LineType",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "DimensionStyleDef.extOffset",
       "contract": "DimensionStyleDef",
       "rust": "crates/shared/contracts/src/annotation.rs",
       "field": "extOffset",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.extWeight",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "extWeight",
       "type": "number",
       "optional": true,
       "status": "implemented",
@@ -20864,6 +21318,19 @@
       "contract": "DimensionStyleDef",
       "rust": "crates/shared/contracts/src/annotation.rs",
       "field": "suffix",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.textColor",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "textColor",
       "type": "string",
       "optional": true,
       "status": "implemented",
@@ -23143,7 +23610,17 @@
       "values": [
         "open",
         "dot",
-        "none"
+        "none",
+        "closed",
+        "open30",
+        "open90",
+        "dotSmall",
+        "dotBlank",
+        "oblique",
+        "archTick",
+        "boxFilled",
+        "boxBlank",
+        "datumFilled"
       ],
       "status": "implemented",
       "platforms": {
@@ -23157,6 +23634,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "arrow",
       "type": "LeaderArrow",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LeaderEntity.arrowSize",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "arrowSize",
+      "type": "number",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -23967,6 +24457,19 @@
       "field": "angleUnit",
       "type": "AngleUnit",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "ProjectSettings.annotation",
+      "contract": "ProjectSettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "annotation",
+      "type": "AnnotationHeights",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -27312,6 +27815,18 @@
       "desktopWhere": "apps/desktop/src/project/wizard/ (ADR 0165 §3; rules kentos_project::wizard)"
     },
     {
+      "id": "apps/web/src/ui/settings/PlotScaleDialog.ts#openPlotScaleDialog",
+      "name": "openPlotScaleDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/settings/PlotScaleDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/annotation_scale.rs (ADR 0205 §4)"
+    },
+    {
       "id": "apps/web/src/ui/settings/ProjectSettingsDialog.ts#openProjectSettings",
       "name": "openProjectSettings",
       "role": "window",
@@ -27920,11 +28435,17 @@
               "edit.cycleSelection",
               {
                 "label": "Seçim süzgeci",
+                "checklist": true,
                 "items": [
                   {
                     "label": "",
                     "items": [
-                      "edit.selectFilter",
+                      "edit.selectFilter"
+                    ]
+                  },
+                  {
+                    "label": "Seçilebilir türler",
+                    "items": [
                       "edit.selectFilter.point",
                       "edit.selectFilter.line",
                       "edit.selectFilter.polyline",
@@ -27940,7 +28461,15 @@
                       "edit.selectFilter.hatch",
                       "edit.selectFilter.insert",
                       "edit.selectFilter.leader",
-                      "edit.selectFilter.table"
+                      "edit.selectFilter.table",
+                      "edit.selectFilter.image"
+                    ]
+                  },
+                  {
+                    "label": "",
+                    "items": [
+                      "edit.selectFilterAll",
+                      "edit.selectFilterNone"
                     ]
                   }
                 ]
@@ -28086,6 +28615,19 @@
                       "view.colorMode.color",
                       "view.colorMode.mono",
                       "view.colorMode.gray"
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "Yazıların boyu",
+                "items": [
+                  {
+                    "label": "",
+                    "items": [
+                      "view.annotationSize.legible",
+                      "view.annotationSize.true",
+                      "view.annotationSize.screen"
                     ]
                   }
                 ]
@@ -28844,11 +29386,17 @@
               {
                 "menu": "Seçim süzgeci",
                 "size": "small",
+                "checklist": true,
                 "blocks": [
                   {
                     "label": "",
                     "items": [
-                      "edit.selectFilter",
+                      "edit.selectFilter"
+                    ]
+                  },
+                  {
+                    "label": "Seçilebilir türler",
+                    "items": [
                       "edit.selectFilter.point",
                       "edit.selectFilter.line",
                       "edit.selectFilter.polyline",
@@ -28864,7 +29412,15 @@
                       "edit.selectFilter.hatch",
                       "edit.selectFilter.insert",
                       "edit.selectFilter.leader",
-                      "edit.selectFilter.table"
+                      "edit.selectFilter.table",
+                      "edit.selectFilter.image"
+                    ]
+                  },
+                  {
+                    "label": "",
+                    "items": [
+                      "edit.selectFilterAll",
+                      "edit.selectFilterNone"
                     ]
                   }
                 ]
@@ -30782,6 +31338,20 @@
                 ]
               },
               {
+                "menu": "Yazıların boyu",
+                "size": "small",
+                "blocks": [
+                  {
+                    "label": "",
+                    "items": [
+                      "view.annotationSize.legible",
+                      "view.annotationSize.true",
+                      "view.annotationSize.screen"
+                    ]
+                  }
+                ]
+              },
+              {
                 "command": "view.fills",
                 "size": "small"
               },
@@ -31353,11 +31923,17 @@
                 {
                   "menu": "Seçim süzgeci",
                   "size": "small",
+                  "checklist": true,
                   "blocks": [
                     {
                       "label": "",
                       "items": [
-                        "edit.selectFilter",
+                        "edit.selectFilter"
+                      ]
+                    },
+                    {
+                      "label": "Seçilebilir türler",
+                      "items": [
                         "edit.selectFilter.point",
                         "edit.selectFilter.line",
                         "edit.selectFilter.polyline",
@@ -31373,7 +31949,15 @@
                         "edit.selectFilter.hatch",
                         "edit.selectFilter.insert",
                         "edit.selectFilter.leader",
-                        "edit.selectFilter.table"
+                        "edit.selectFilter.table",
+                        "edit.selectFilter.image"
+                      ]
+                    },
+                    {
+                      "label": "",
+                      "items": [
+                        "edit.selectFilterAll",
+                        "edit.selectFilterNone"
                       ]
                     }
                   ]
@@ -32937,6 +33521,20 @@
                   ]
                 },
                 {
+                  "menu": "Yazıların boyu",
+                  "size": "small",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "view.annotationSize.legible",
+                        "view.annotationSize.true",
+                        "view.annotationSize.screen"
+                      ]
+                    }
+                  ]
+                },
+                {
                   "command": "view.fills",
                   "size": "small"
                 },
@@ -33733,11 +34331,17 @@
                 {
                   "menu": "Seçim süzgeci",
                   "size": "small",
+                  "checklist": true,
                   "blocks": [
                     {
                       "label": "",
                       "items": [
-                        "edit.selectFilter",
+                        "edit.selectFilter"
+                      ]
+                    },
+                    {
+                      "label": "Seçilebilir türler",
+                      "items": [
                         "edit.selectFilter.point",
                         "edit.selectFilter.line",
                         "edit.selectFilter.polyline",
@@ -33753,7 +34357,15 @@
                         "edit.selectFilter.hatch",
                         "edit.selectFilter.insert",
                         "edit.selectFilter.leader",
-                        "edit.selectFilter.table"
+                        "edit.selectFilter.table",
+                        "edit.selectFilter.image"
+                      ]
+                    },
+                    {
+                      "label": "",
+                      "items": [
+                        "edit.selectFilterAll",
+                        "edit.selectFilterNone"
                       ]
                     }
                   ]
@@ -35671,6 +36283,20 @@
                   ]
                 },
                 {
+                  "menu": "Yazıların boyu",
+                  "size": "small",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "view.annotationSize.legible",
+                        "view.annotationSize.true",
+                        "view.annotationSize.screen"
+                      ]
+                    }
+                  ]
+                },
+                {
                   "command": "view.fills",
                   "size": "small"
                 },
@@ -36049,10 +36675,6 @@
     "labelSouthWest": "<circle cx=\"15\" cy=\"5\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M13.5 6.5 4.5 15.5\"/><path d=\"M4.5 10.5v5h5\"/>",
     "labelSouthEast": "<circle cx=\"5\" cy=\"5\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M6.5 6.5 15.5 15.5\"/><path d=\"M15.5 10.5v5h-5\"/>",
     "leader": "<path d=\"M4 16 10 9.5h2.5\"/><path d=\"M4 16 7 14.2 5.6 12.8z\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M14 8.2h3.2M14 10.8h2.4\" stroke-width=\"1.2\"/>",
-    "leaderArrowFilled": "<path d=\"M6.5 10H17\"/><path d=\"M2.5 10 7.2 7.6v4.8z\" fill=\"currentColor\" stroke=\"none\"/>",
-    "leaderArrowOpen": "<path d=\"M2.5 10H17\"/><path d=\"M7.2 7.6 2.5 10l4.7 2.4\"/>",
-    "leaderArrowDot": "<path d=\"M6.5 10H17\"/><circle cx=\"4.3\" cy=\"10\" r=\"2.1\" fill=\"currentColor\" stroke=\"none\"/>",
-    "leaderArrowNone": "<path d=\"M2.5 10H17\"/>",
     "findReplace": "<circle cx=\"8\" cy=\"8\" r=\"4.3\"/><path d=\"m11.1 11.1 2.4 2.4\"/><path d=\"M10.5 17h6.5m-2-2 2 2-2 2\"/>",
     "readable": "<path d=\"M16 10.5A6 6 0 1 1 13.6 5.7\"/><path d=\"M14 2.6v3.5h-3.5\"/><path d=\"M7.5 8.3h5M10 8.3v5\"/>",
     "dimension": "<path d=\"M3.5 5v10M16.5 5v10M3.5 12h13\"/><path d=\"m5.8 10.5-2.3 1.5 2.3 1.5M14.2 10.5l2.3 1.5-2.3 1.5\"/><path d=\"M8 8.5h4\"/>",
@@ -36293,6 +36915,9 @@
     "grid": "<path d=\"M3 7h14M3 13h14M7 3v14M13 3v14\"/>",
     "lineWeight": "<path d=\"M3 5h14\"/><path d=\"M3 10h14\" stroke-width=\"2.4\"/><path d=\"M3 15.5h14\" stroke-width=\"3.6\"/>",
     "colorModeColor": "<circle cx=\"7.5\" cy=\"8\" r=\"4.5\"/><circle cx=\"12.5\" cy=\"8\" r=\"4.5\"/><circle cx=\"10\" cy=\"12.5\" r=\"4.5\"/>",
+    "annotationLegible": "<path d=\"M2.5 15.5 6.5 4.5l4 11M4 11.8h5\"/><path d=\"M12.5 11.5 15 9l2.5 2.5M15 9v7\"/>",
+    "annotationTrue": "<path d=\"M3 12.5 7 2.5l4 10M4.5 8.8h5\"/><path d=\"M2.5 16.5h15M5 15v1.5M10 15v1.5M15 15v1.5\" stroke-width=\"1.2\"/>",
+    "annotationScreen": "<rect x=\"2.5\" y=\"3\" width=\"15\" height=\"10.5\" rx=\"1.5\"/><path d=\"M7 17h6M10 13.5V17\"/><path d=\"M7.2 11.2 10 5.4l2.8 5.8M8.1 9.4h3.8\" stroke-width=\"1.2\"/>",
     "colorModeMono": "<rect x=\"3\" y=\"3\" width=\"14\" height=\"14\" rx=\"2\"/><path d=\"M3 17 17 3v12a2 2 0 0 1-2 2z\" fill=\"currentColor\" stroke=\"none\"/>",
     "colorModeGray": "<rect x=\"2.5\" y=\"6.5\" width=\"5\" height=\"7\" rx=\"0.8\" fill=\"currentColor\" stroke=\"none\" opacity=\"0.9\"/><rect x=\"7.5\" y=\"6.5\" width=\"5\" height=\"7\" rx=\"0.8\" fill=\"currentColor\" stroke=\"none\" opacity=\"0.5\"/><rect x=\"12.5\" y=\"6.5\" width=\"5\" height=\"7\" rx=\"0.8\" fill=\"currentColor\" stroke=\"none\" opacity=\"0.2\"/><rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"7\" rx=\"0.8\"/>",
     "viewFills": "<path d=\"M3 4.5h11l3 11H6z\"/><path d=\"m6.5 8 2.5-3.5M7 12l5-7M9 15l5.5-8M12.5 15.2l3-4.2\" stroke-width=\"1.1\"/>",
@@ -36532,6 +37157,20 @@
     "hatchPreviewGradientLinear": "<rect x=\"0.5\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.04\" stroke=\"none\"/><rect x=\"3.76\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.09\" stroke=\"none\"/><rect x=\"7.02\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.13\" stroke=\"none\"/><rect x=\"10.29\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.18\" stroke=\"none\"/><rect x=\"13.55\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.22\" stroke=\"none\"/><rect x=\"16.81\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.27\" stroke=\"none\"/><rect x=\"20.07\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.32\" stroke=\"none\"/><rect x=\"23.33\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.36\" stroke=\"none\"/><rect x=\"26.6\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.41\" stroke=\"none\"/><rect x=\"29.86\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.46\" stroke=\"none\"/><rect x=\"33.12\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.5\" stroke=\"none\"/><rect x=\"36.38\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.55\" stroke=\"none\"/><rect x=\"39.64\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.59\" stroke=\"none\"/><rect x=\"42.9\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.64\" stroke=\"none\"/><rect x=\"0.5\" y=\"0.5\" width=\"45.67\" height=\"19\" rx=\"1.5\" stroke-width=\"1\"/>",
     "hatchPreviewGradientCylinder": "<rect x=\"0.5\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.06\" stroke=\"none\"/><rect x=\"3.76\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.15\" stroke=\"none\"/><rect x=\"7.02\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.23\" stroke=\"none\"/><rect x=\"10.29\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.32\" stroke=\"none\"/><rect x=\"13.55\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.4\" stroke=\"none\"/><rect x=\"16.81\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.49\" stroke=\"none\"/><rect x=\"20.07\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.58\" stroke=\"none\"/><rect x=\"23.33\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.58\" stroke=\"none\"/><rect x=\"26.6\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.49\" stroke=\"none\"/><rect x=\"29.86\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.4\" stroke=\"none\"/><rect x=\"33.12\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.32\" stroke=\"none\"/><rect x=\"36.38\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.23\" stroke=\"none\"/><rect x=\"39.64\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.15\" stroke=\"none\"/><rect x=\"42.9\" y=\"0.5\" width=\"3.31\" height=\"19\" fill=\"currentColor\" fill-opacity=\"0.06\" stroke=\"none\"/><rect x=\"0.5\" y=\"0.5\" width=\"45.67\" height=\"19\" rx=\"1.5\" stroke-width=\"1\"/>",
     "hatchPreviewGradientSpherical": "<ellipse cx=\"23.33\" cy=\"10\" rx=\"22.83\" ry=\"9.5\" fill=\"currentColor\" fill-opacity=\"0.1\" stroke=\"none\"/><ellipse cx=\"23.33\" cy=\"10\" rx=\"16.9\" ry=\"7.03\" fill=\"currentColor\" fill-opacity=\"0.22\" stroke=\"none\"/><ellipse cx=\"23.33\" cy=\"10\" rx=\"11.42\" ry=\"4.75\" fill=\"currentColor\" fill-opacity=\"0.38\" stroke=\"none\"/><ellipse cx=\"23.33\" cy=\"10\" rx=\"5.94\" ry=\"2.47\" fill=\"currentColor\" fill-opacity=\"0.58\" stroke=\"none\"/><rect x=\"0.5\" y=\"0.5\" width=\"45.67\" height=\"19\" rx=\"1.5\" stroke-width=\"1\"/>",
+    "leaderArrowFilled": "<path d=\"M11.5 10H17.5\"/><path d=\"M2.5 10L11.5 8.5L11.5 11.5Z\" fill=\"currentColor\" stroke=\"none\"/>",
+    "leaderArrowClosed": "<path d=\"M11.5 10H17.5\"/><path d=\"M2.5 10L11.5 8.5L11.5 11.5Z\"/>",
+    "leaderArrowOpen": "<path d=\"M2.5 10H17.5\"/><path d=\"M11.5 8.5L2.5 10L11.5 11.5\"/>",
+    "leaderArrowOpen30": "<path d=\"M2.5 10H17.5\"/><path d=\"M11.5 7.59L2.5 10L11.5 12.41\"/>",
+    "leaderArrowOpen90": "<path d=\"M2.5 10H17.5\"/><path d=\"M7 5.5L2.5 10L7 14.5\"/>",
+    "leaderArrowDot": "<path d=\"M6 10H17.5\"/><circle cx=\"3.75\" cy=\"10\" r=\"2.25\" fill=\"currentColor\" stroke=\"none\"/>",
+    "leaderArrowDotSmall": "<path d=\"M3.75 10H17.5\"/><circle cx=\"2.62\" cy=\"10\" r=\"1.12\" fill=\"currentColor\" stroke=\"none\"/>",
+    "leaderArrowDotBlank": "<path d=\"M6 10H17.5\"/><circle cx=\"3.75\" cy=\"10\" r=\"2.25\"/>",
+    "leaderArrowOblique": "<path d=\"M6 10H17.5\"/><path d=\"M1.5 14.5L10.5 5.5\"/>",
+    "leaderArrowArchTick": "<path d=\"M6.4 10H17.5\"/><path d=\"M2.3 14.9L11.3 5.9L10.5 5.1L1.5 14.1Z\" fill=\"currentColor\" stroke=\"none\"/>",
+    "leaderArrowBoxFilled": "<path d=\"M6 10H17.5\"/><path d=\"M1.5 12.25L6 12.25L6 7.75L1.5 7.75Z\" fill=\"currentColor\" stroke=\"none\"/>",
+    "leaderArrowBoxBlank": "<path d=\"M6 10H17.5\"/><path d=\"M1.5 12.25L6 12.25L6 7.75L1.5 7.75Z\"/>",
+    "leaderArrowDatum": "<path d=\"M11.5 10H17.5\"/><path d=\"M2.5 14.5L11.5 10L2.5 5.5Z\" fill=\"currentColor\" stroke=\"none\"/>",
+    "leaderArrowNone": "<path d=\"M2.5 10H17.5\"/>",
     "sheetLayout": "<rect x=\"3.5\" y=\"2.5\" width=\"13\" height=\"15\" rx=\"1\"/><rect x=\"5.5\" y=\"4.5\" width=\"9\" height=\"6.5\"/><path d=\"M5.5 13h9v2.5h-9zM10.5 13v2.5\"/>",
     "sheetNew": "<path d=\"M11 2.5H4.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9\"/><path d=\"M14.5 1.8v5.4M11.8 4.5h5.4\"/>",
     "sheetTemplate": "<rect x=\"6.5\" y=\"2.5\" width=\"10\" height=\"12\" rx=\"1\"/><path d=\"M4 5.5v11a1 1 0 0 0 1 1h8.5\"/><path d=\"M8.7 5.5h5.6M8.7 8h5.6M8.7 10.5h3.4\"/>",

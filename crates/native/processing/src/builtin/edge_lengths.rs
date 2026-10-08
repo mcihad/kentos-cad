@@ -31,6 +31,7 @@ pub fn tool() -> Tool {
                     max,
                     integer,
                     unit: unit.into(),
+                    placeholder: None,
                 },
             )
         };
@@ -87,9 +88,12 @@ pub fn tool() -> Tool {
                 },
             )
             .default_value(json!("outside")),
+            // Empty: the project's Kenar ve köşe yazıları height (docs/adr/0205 §2).
             number("textHeight", "Yazı yüksekliği", Some(0.1), Some(50.0), false, "mm")
-                .default_value(json!(2))
-                .describe("Kâğıt üzerinde, çizim ölçeğine göre."),
+                .optional()
+                .default_value(Value::Null)
+                .placeholder("Proje")
+                .describe("Kâğıt üzerinde, çizim ölçeğine göre; boş bırakılırsa projenin kenar ve köşe yazıları yüksekliği."),
             affix("prefix", "Önek"),
             affix("suffix", "Sonek").describe("Örneğin “ m”."),
             number("minLength", "En kısa kenar", Some(0.0), None, false, "m")
@@ -132,7 +136,10 @@ pub fn tool() -> Tool {
 }
 
 fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> RunResult {
-    let height = (v.number("textHeight").unwrap_or(2.0) / 1000.0) * ctx.units.plot_scale;
+    let mm = v
+        .number("textHeight")
+        .unwrap_or(ctx.units.measure_height_mm);
+    let height = (mm / 1000.0) * ctx.units.plot_scale;
     let input = &v.features("input").entities;
     let ids: Vec<Slot> = input.iter().map(|e| Slot(e.base().id)).collect();
     // Lines, polylines and polygons have edges; one key per edge whichever

@@ -28,6 +28,7 @@ import { NavigationCards } from './navigationCards';
 import { METRES_PER_PX, symbolScaleOf } from './symbolScale';
 import type { ExprColumnData } from '../wasm/core';
 import { extensionAlong, extensionAt, PickIndex, type Extension, type PolygonMode, type SnapHit, type SnapKind } from './picking';
+import { LABEL_SHOWN_STRIDE } from './storeRecords';
 import { screenScale, snapInRange } from './snapRange';
 
 /** Right-button menus the UI draws: idle selection, a running command, or snap overrides. */
@@ -834,6 +835,8 @@ export class ViewportController {
     );
     d.add(() => clearTimeout(this.symbolTimer));
     const { prefs } = this.ctx;
+    // The text's size on screen draws the labels again (docs/adr/0205 §5).
+    d.add(prefs.annotationSize.subscribe(() => this.requestOverlay()));
     for (const s of [prefs.symbolSize, prefs.lineWeights, prefs.colorMode, prefs.fills, prefs.areaEdges, prefs.transparency])
       d.add(
         s.subscribe(() => {
@@ -1470,7 +1473,10 @@ export class ViewportController {
     const w = Math.max(1, Math.round((cam.width + 2 * mx) * dpr));
     const h = Math.max(1, Math.round((cam.height + 2 * my) * dpr));
     const mode = this.ctx.prefs.colorMode.value;
-    const key = `${w}x${h}|${dpr}|${cam.scale}|${this.labelEpoch}|${this.ctx.doc.revision}|${mode}`;
+    // How the text is sized on screen and the plot scale it is measured by (docs/adr/0205 §5).
+    const size = this.ctx.prefs.annotationSize.value;
+    const plot = this.ctx.doc.settings.plotScale.value;
+    const key = `${w}x${h}|${dpr}|${cam.scale}|${this.labelEpoch}|${this.ctx.doc.revision}|${mode}|${size}|${plot}`;
     const moving = cam.changed.value !== this.labelCamera;
     this.labelCamera = cam.changed.value;
     let cache = this.labelCache;
@@ -1490,7 +1496,16 @@ export class ViewportController {
       const lg = cache.canvas.getContext('2d')!;
       lg.setTransform(dpr, 0, 0, dpr, 0, 0);
       lg.clearRect(0, 0, view.width, view.height);
-      drawLabels(lg, this.ctx.doc, view, modedPalette(this.palette, mode), this.picker.labels(view.visibleBounds(), view.scale, this.editingId), (l, look) => this.dimensionText(l, look), (b) => this.picker.blockPieces(b));
+      drawLabels(
+        lg,
+        this.ctx.doc,
+        view,
+        modedPalette(this.palette, mode),
+        this.picker.labelsShown(view.visibleBounds(), view.scale, this.editingId, size, plot),
+        (l, look) => this.dimensionText(l, look),
+        (b) => this.picker.blockPieces(b),
+        LABEL_SHOWN_STRIDE,
+      );
       cache.key = key;
       cache.center = view.center;
       sx = -mx * dpr;
@@ -1537,7 +1552,16 @@ export class ViewportController {
     g.rect(x, y, w, h);
     g.clip();
     g.translate(x, y);
-    drawLabels(g, this.ctx.doc, lens, modedPalette(pal, this.ctx.prefs.colorMode.value), this.picker.labels(lens.visibleBounds(), lens.scale, this.editingId), (l, look) => this.dimensionText(l, look), (b) => this.picker.blockPieces(b));
+    drawLabels(
+      g,
+      this.ctx.doc,
+      lens,
+      modedPalette(pal, this.ctx.prefs.colorMode.value),
+      this.picker.labelsShown(lens.visibleBounds(), lens.scale, this.editingId, this.ctx.prefs.annotationSize.value, this.ctx.doc.settings.plotScale.value),
+      (l, look) => this.dimensionText(l, look),
+      (b) => this.picker.blockPieces(b),
+      LABEL_SHOWN_STRIDE,
+    );
     if (this.paragraphPreview) paragraphRecords(g, pal, lens, this.paragraphPreview.records, this.paragraphPreview.text, this.paragraphPreview.runs, this.paragraphPreview.face);
     const selected = this.ctx.selection.ids.value;
     if (selected.size <= 150) drawGrips(g, this.picker.grips(selected), lens, pal, this.ctx.tools.active.activeGrip?.() ?? null);

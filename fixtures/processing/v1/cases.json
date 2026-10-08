@@ -4,7 +4,7 @@
   "tolerance": 1e-09,
   "documents": {
     "parcels.kcad": {
-      "defaults": {"lengthDecimals": 3, "areaDecimals": 2, "angleUnit": "grad", "plotScale": 1000, "drawingFont": "barlow", "activeLayer": "cizim"},
+      "defaults": {"lengthDecimals": 3, "areaDecimals": 2, "angleUnit": "grad", "plotScale": 1000, "drawingFont": "barlow", "activeLayer": "cizim", "measureHeightMm": 2},
       "tools": {
         "points.numberVertices": {
           "input": {"scope": "selection"},
@@ -19,14 +19,14 @@
           "shared": true,
           "tolerance": 0.001,
           "output": "points",
-          "textHeight": 2,
+          "textHeight": null,
           "layer": {"newName": "Köşe noktaları"}
         },
         "annotation.edgeLengths": {
           "input": {"scope": "selection"},
           "decimals": 3,
           "side": "outside",
-          "textHeight": 2,
+          "textHeight": null,
           "prefix": "",
           "suffix": "",
           "minLength": 0,

@@ -412,7 +412,12 @@ fn block_definitions_are_kept_with_their_versions_step_by_step() {
     let Source::Database { blocks, .. } = &back.source else {
         panic!()
     };
-    let names: Vec<&str> = back.document.blocks().iter().map(|b| b.name.as_str()).collect();
+    let names: Vec<&str> = back
+        .document
+        .blocks()
+        .iter()
+        .map(|b| b.name.as_str())
+        .collect();
     assert_eq!(names, ["Kapı 2", "Ağaç"]);
     assert!(blocks.contains(&(a.id, "4".to_string())) && blocks.contains(&(b.id, "5".to_string())));
     // A compaction writes them whole, with their versions.

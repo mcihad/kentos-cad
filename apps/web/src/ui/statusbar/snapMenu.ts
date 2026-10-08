@@ -1,5 +1,5 @@
 import type { AppContext } from '../../app/context';
-import { commandItem } from '../../app/menus';
+import { checklistItem } from '../../app/menus';
 import type { MenuItem } from '../widgets/PopupMenu';
 
 /** The snap kinds' commands as the menu lists them: the old ones in the one-shot menu's order, then the additions. */
@@ -51,12 +51,10 @@ export function snapMenu(ctx: AppContext): MenuItem[] {
   return [
     { kind: 'header', label: 'Kenet türleri' },
     // The command's short name, “Uç nokta”, not “Kenet: Uç nokta”, under the header; its marker beside the tick.
-    ...KINDS.map((id) => {
-      const cmd = ctx.commands.get(id);
-      return commandItem(ctx, id, { label: cmd?.short, icon: cmd?.icon });
-    }),
+    // Ticked one after another: the menu stays open (docs/adr/0187 §5's checklist).
+    ...KINDS.map((id) => checklistItem(ctx, id)),
     { kind: 'separator' },
-    commandItem(ctx, 'draft.snap.self', { label: 'Çizilmekte olan nesneye' }),
+    checklistItem(ctx, 'draft.snap.self', { label: 'Çizilmekte olan nesneye' }),
     { label: 'Karelaj aralığı', icon: 'snapGrid', hint: `${spacing(east)} × ${spacing(north)}`, items: spacings },
     { label: 'Kenet ayarları…', icon: 'settings', run: () => ctx.commands.execute('tools.options', 'snap') },
   ];

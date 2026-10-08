@@ -662,27 +662,25 @@ impl App {
                             Color::from_rgb8((v >> 16) as u8, (v >> 8) as u8, v as u8)
                         }
                     };
-                    items.push(
-                        tip(
-                            button(
-                                container(iced::widget::Space::new())
-                                    .width(14)
-                                    .height(14)
-                                    .style(move |_: &Theme| container::Style {
-                                        background: Some(swatch.into()),
-                                        border: iced::Border::default().rounded(3),
-                                        ..container::Style::default()
-                                    }),
-                            )
-                            .padding(4)
-                            .style(style::button::ghost)
-                            .on_press(Message::Paragraph(
-                                Event::Format(Toggle::Color(Some(value.to_owned()))),
-                            )),
-                            Tip::new(name),
-                            iced::widget::tooltip::Position::Bottom,
-                        ),
-                    );
+                    items.push(tip(
+                        button(
+                            container(iced::widget::Space::new())
+                                .width(14)
+                                .height(14)
+                                .style(move |_: &Theme| container::Style {
+                                    background: Some(swatch.into()),
+                                    border: iced::Border::default().rounded(3),
+                                    ..container::Style::default()
+                                }),
+                        )
+                        .padding(4)
+                        .style(style::button::ghost)
+                        .on_press(Message::Paragraph(Event::Format(Toggle::Color(Some(
+                            value.to_owned(),
+                        ))))),
+                        Tip::new(name),
+                        iced::widget::tooltip::Position::Bottom,
+                    ));
                 }
                 row(items).spacing(2).align_y(Center).into()
             }

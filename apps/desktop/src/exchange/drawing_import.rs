@@ -27,7 +27,9 @@ use iced::futures::channel::mpsc;
 use iced::widget::{Column, column, container, row};
 use iced::{Bottom, Center, Element, Fill, Length, Right, Task};
 use kentos_contracts::blocks::import_names;
-use kentos_contracts::{DxfReadOptions, ImportLayer, ImportResult, LayerStyle, NczReadOptions, ReportItem};
+use kentos_contracts::{
+    DxfReadOptions, ImportLayer, ImportResult, LayerStyle, NczReadOptions, ReportItem,
+};
 use kentos_domain::Slot;
 use kentos_formats::import;
 use kentos_formats::watch::{STOPPED, Steps};
@@ -136,7 +138,10 @@ impl State {
 #[derive(Debug, Clone)]
 pub enum Event {
     /// How far the read is.
-    Progress { read: u64, share: f32 },
+    Progress {
+        read: u64,
+        share: f32,
+    },
     Read {
         read: u64,
         result: Result<Arc<ImportResult>, String>,
@@ -375,7 +380,9 @@ impl App {
             Ok(_) => Task::run(replies, event),
             Err(e) => Task::done(event(Event::Read {
                 read,
-                result: Err(format!("Dosya okunamadı: iş parçacığı başlatılamadı ({e}).")),
+                result: Err(format!(
+                    "Dosya okunamadı: iş parçacığı başlatılamadı ({e})."
+                )),
                 unusable: None,
             })),
         }
@@ -576,7 +583,8 @@ impl App {
                 }
                 // The view goes where the file is first, so the drawing fills in before the
                 // user's eyes and its first drawing is spread over the frames, not the last one.
-                let chosen_layers: BTreeSet<&str> = plan.layers.iter().map(|(s, _)| s.as_str()).collect();
+                let chosen_layers: BTreeSet<&str> =
+                    plan.layers.iter().map(|(s, _)| s.as_str()).collect();
                 let view = import::view_of(
                     result.view.as_ref(),
                     result
@@ -588,7 +596,8 @@ impl App {
                 if let Some(b) = view {
                     self.zoom_to_bounds(&b);
                 }
-                let entities = Arc::try_unwrap(result).map_or_else(|shared| shared.entities.clone(), |r| r.entities);
+                let entities = Arc::try_unwrap(result)
+                    .map_or_else(|shared| shared.entities.clone(), |r| r.entities);
                 work.feed(entities);
                 self.close_exchange();
                 self.importing = Some(Importing {
@@ -608,9 +617,9 @@ impl App {
         let (Some(doc), Some(job)) = (&mut self.document, &mut self.importing) else {
             return Task::none();
         };
-        let budget = job
-            .last
-            .map_or(SLICE_LEAST, |t| (t.elapsed() / 3).clamp(SLICE_LEAST, SLICE_MOST));
+        let budget = job.last.map_or(SLICE_LEAST, |t| {
+            (t.elapsed() / 3).clamp(SLICE_LEAST, SLICE_MOST)
+        });
         let stepped = job.work.step(&mut doc.model, budget);
         job.last = Some(Instant::now());
         match stepped {
@@ -624,7 +633,13 @@ impl App {
                         renamed: &job.work.renamed,
                         styles: job.work.added_styles,
                     };
-                    self.import_said(&job.name, job.layers, job.work.slots.len(), &made, &job.skipped);
+                    self.import_said(
+                        &job.name,
+                        job.layers,
+                        job.work.slots.len(),
+                        &made,
+                        &job.skipped,
+                    );
                 }
             }
             Err(error) => {
@@ -643,17 +658,34 @@ impl App {
         job.work.stop(&mut doc.model);
         self.say(
             Level::Warn,
-            format!("“{}” içe aktarılması durduruldu; çizim olduğu gibi kaldı.", job.name),
+            format!(
+                "“{}” içe aktarılması durduruldu; çizim olduğu gibi kaldı.",
+                job.name
+            ),
         );
     }
 
-    fn import_done(&mut self, name: &str, chosen: usize, slots: &[Slot], made: &Made<'_>, skipped: &[ReportItem]) {
+    fn import_done(
+        &mut self,
+        name: &str,
+        chosen: usize,
+        slots: &[Slot],
+        made: &Made<'_>,
+        skipped: &[ReportItem],
+    ) {
         self.zoom_to(slots);
         self.import_said(name, chosen, slots.len(), made, skipped);
     }
 
     /// What went in, said in the message log (the web's `said`).
-    fn import_said(&mut self, name: &str, chosen: usize, count: usize, made: &Made<'_>, skipped: &[ReportItem]) {
+    fn import_said(
+        &mut self,
+        name: &str,
+        chosen: usize,
+        count: usize,
+        made: &Made<'_>,
+        skipped: &[ReportItem],
+    ) {
         let into = if made.layers.is_empty() {
             String::new()
         } else {
@@ -684,7 +716,10 @@ impl App {
         }
         if !skipped.is_empty() {
             let skipped: Vec<String> = skipped.iter().map(words::report_text).collect();
-            self.warn(format!("“{name}” içinde alınmayanlar: {}", skipped.join(" ")));
+            self.warn(format!(
+                "“{name}” içinde alınmayanlar: {}",
+                skipped.join(" ")
+            ));
         }
     }
 
@@ -741,7 +776,11 @@ impl App {
         let (done, total) = job.work.counts();
         let list = TaskList::new().push(
             Job::new(format!("İçe aktarılıyor: {}", job.name))
-                .detail(format!("{} / {} nesne çizime yazıldı", grouped(done as f64), grouped(total as f64)))
+                .detail(format!(
+                    "{} / {} nesne çizime yazıldı",
+                    grouped(done as f64),
+                    grouped(total as f64)
+                ))
                 .running(Some(job.work.share()))
                 .on_cancel(event(Event::Stop)),
         );
@@ -960,7 +999,13 @@ impl App {
         let taken = self
             .document
             .as_ref()
-            .map(|d| d.model.blocks().iter().map(|b| b.name.as_str()).collect::<Vec<_>>())
+            .map(|d| {
+                d.model
+                    .blocks()
+                    .iter()
+                    .map(|b| b.name.as_str())
+                    .collect::<Vec<_>>()
+            })
             .unwrap_or_default();
         let names = import_names(taken, r.blocks.iter().map(|b| b.name.as_str()));
         let renamed: Vec<(String, String)> = r

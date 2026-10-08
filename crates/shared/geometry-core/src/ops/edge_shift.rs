@@ -12,10 +12,10 @@
 
 use crate::api::Op;
 use crate::entity::{Entity, Shape, is_multi_part};
+use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_at, bulge_path_edges, bulge_ring_area};
 use crate::geom::intersect::closest_on_edge;
 use crate::jsmath::js_hypot;
-use crate::geom::arrangement::Ring;
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -74,9 +74,7 @@ fn rings_of(shape: &Shape) -> Result<Rings, &'static str> {
 /// The shape with its rings replaced, everything else kept.
 fn with_rings(shape: &Shape, mut rings: Vec<Ring>) -> Shape {
     match shape {
-        Shape::Polygon {
-            holes, parts, ..
-        } => {
+        Shape::Polygon { holes, parts, .. } => {
             let rest = rings.split_off(1.min(rings.len()));
             let outer = rings.pop().unwrap_or(Ring {
                 pts: Vec::new(),
@@ -89,9 +87,7 @@ fn with_rings(shape: &Shape, mut rings: Vec<Ring>) -> Shape {
                 parts: parts.clone(),
             }
         }
-        Shape::Polyline {
-            holes, parts, ..
-        } => {
+        Shape::Polyline { holes, parts, .. } => {
             let path = rings.into_iter().next().unwrap_or(Ring {
                 pts: Vec::new(),
                 bulges: None,
@@ -142,11 +138,7 @@ fn motion(shape: &Shape, ring: usize, edge: usize) -> Result<(Rings, Motion), &'
     let pts = &r.pts;
     let bulges = r.bulges.as_deref();
     let n = pts.len();
-    let edges = if rings.closed {
-        n
-    } else {
-        n.saturating_sub(1)
-    };
+    let edges = if rings.closed { n } else { n.saturating_sub(1) };
     if edge >= edges || n < 2 {
         return Err(NO_EDGE);
     }
@@ -416,26 +408,32 @@ pub(crate) static OPS: &[Op] = &[
             },
         }
     }),
-    op!("edgeShiftForArea", |e: Entity, ring: f64, edge: f64, target: f64| {
-        match for_area(&e.shape, index(ring), index(edge), target) {
-            Ok(d) => Reach {
-                distance: Some(d),
+    op!(
+        "edgeShiftForArea",
+        |e: Entity, ring: f64, edge: f64, target: f64| {
+            match for_area(&e.shape, index(ring), index(edge), target) {
+                Ok(d) => Reach {
+                    distance: Some(d),
+                    problem: None,
+                },
+                Err(why) => Reach {
+                    distance: None,
+                    problem: Some(why),
+                },
+            }
+        }
+    ),
+    op!(
+        "edgeShiftPick",
+        |e: Entity, p: Vec2| match pick(&e.shape, p) {
+            Ok(picked) => PickAnswer {
+                picked: Some(picked),
                 problem: None,
             },
-            Err(why) => Reach {
-                distance: None,
+            Err(why) => PickAnswer {
+                picked: None,
                 problem: Some(why),
             },
         }
-    }),
-    op!("edgeShiftPick", |e: Entity, p: Vec2| match pick(&e.shape, p) {
-        Ok(picked) => PickAnswer {
-            picked: Some(picked),
-            problem: None,
-        },
-        Err(why) => PickAnswer {
-            picked: None,
-            problem: Some(why),
-        },
-    }),
+    ),
 ];

@@ -13,7 +13,7 @@ import { rememberDimension } from './dimChainTools';
 import { PointInputTool } from './drawTools';
 import { drawTag, strokeGeometry, strokeLayout, strokePath } from './preview';
 import type { OptionChoice, ToolPointer } from './Tool';
-import { dimensionLookNow, dimensionStyleChoices, dimensionStyleName, stylesShown, takeDimensionStyle } from './styleOption';
+import { dimensionLookNow, dimensionStyleChoices, dimensionStyleName, standardDimensionHeight, stylesShown, takeDimensionStyle } from './styleOption';
 import { lookOfDimension, type DimensionLook } from '../model/annotationStyles';
 
 /** Paper sizes (mm) converted to world metres at the project's plot scale. */
@@ -169,7 +169,7 @@ export class DimensionTool extends PointInputTool {
 
   /** The value's height and the look, the dimension style's in a CAD project (docs/adr/0183 §4); else 2.5 mm and none. */
   private styled(): { look: DimensionLook; height: number } {
-    return dimensionLookNow(this.ctx, paper(this.ctx, 2.5));
+    return dimensionLookNow(this.ctx, standardDimensionHeight(this.ctx));
   }
 
   private height(): number {

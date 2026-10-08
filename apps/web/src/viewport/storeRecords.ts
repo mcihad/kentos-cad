@@ -29,6 +29,8 @@ export const LABEL = { dimension: 0, text: 1, center: 2, corner: 3, beside: 4, a
  * piece's e too (docs/adr/0147).
  */
 export const LABEL_STRIDE = 9;
+/** Numbers per record of the store's `labelsShown` (docs/adr/0205 §5): a label record, its factor and its anchor. */
+export const LABEL_SHOWN_STRIDE = 12;
 /*
  * A multi-line text's records (docs/adr/0182 §3): its mask's box (`paragraphMask`: x, y the box's corner under its
  * first letter's left, a the turn, b the box's width along the baseline, c its height up, d a block's piece's place),

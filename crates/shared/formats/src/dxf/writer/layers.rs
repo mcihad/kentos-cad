@@ -231,12 +231,25 @@ impl Layers {
         self.by_id.get(id).map(|&i| self.list[i].color)
     }
 
-    /// LTYPE: the built-in three and the dashed ones the layers use, sized for paper at `scale`.
-    pub fn ltype_table(&self, out: &mut Out, handles: &mut super::Handles, scale: f64) {
+    /// LTYPE: the built-in three and the dashed ones the layers use, sized
+    /// for paper at `scale`, then those only dimensions' lines take; `given`
+    /// the records given a handle before (docs/adr/0205 §6).
+    pub fn ltype_table(
+        &self,
+        out: &mut Out,
+        handles: &mut super::Handles,
+        scale: f64,
+        given: &[(LineType, u64)],
+    ) {
         let mut used: Vec<LineType> = Vec::new();
         for l in &self.list {
             if dashes(l.line_type).is_some() && !used.contains(&l.line_type) {
                 used.push(l.line_type);
+            }
+        }
+        for (t, _) in given {
+            if dashes(*t).is_some() && !used.contains(t) {
+                used.push(*t);
             }
         }
         template::table(out, "LTYPE", LTYPE_TABLE, 3 + used.len());
@@ -244,13 +257,11 @@ impl Layers {
         for t in used {
             let Some(d) = dashes(t) else { continue };
             let metres: Vec<f64> = d.mm.iter().map(|m| m * scale / 1000.0).collect();
-            template::record(
-                out,
-                "LTYPE",
-                handles.take(),
-                LTYPE_TABLE,
-                "AcDbLinetypeTableRecord",
-            );
+            let handle = given
+                .iter()
+                .find(|(x, _)| *x == t)
+                .map_or_else(|| handles.take(), |(_, h)| *h);
+            template::record(out, "LTYPE", handle, LTYPE_TABLE, "AcDbLinetypeTableRecord");
             out.str(2, d.name);
             out.int(70, 0);
             out.str(3, d.description);

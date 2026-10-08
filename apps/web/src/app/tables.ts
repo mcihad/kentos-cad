@@ -1,4 +1,5 @@
 import type { TableFileRead } from '../contracts/generated/TableFileRead';
+import { annotationHeight } from '../tools/annotationHeights';
 import { Signal } from '../core/signal';
 import { applyTextStyle, FACE_FIELDS, type TextFace } from '../model/annotationStyles';
 import type { Entity, TableEntity, TableGrid } from '../model/entities';
@@ -37,8 +38,6 @@ export const insertState = {
   rows: 4,
   columns: 3,
   header: true,
-  /** The cells' height on paper, mm. */
-  heightMm: 2.5,
   grid: 'all' as TableGrid | 'all',
   frame: false,
   /** Kalın çerçeve's width on paper, mm. */
@@ -56,11 +55,14 @@ export const SCHEDULE_KINDS: Readonly<Record<ScheduleKind, readonly Entity['kind
   attributes: undefined,
 };
 
-/** Tablo ekle's look: the chosen style's face and fixed height, else the paper height; lines and frame at the plot scale. */
+/**
+ * Tablo ekle's look: the chosen style's face and fixed height, else the paper height (typed in this drawing, else the
+ * project's Tablo height, docs/adr/0205 §2); lines and frame at the plot scale.
+ */
 export function lookOf(ctx: AppContext, style: string | null, header: boolean): TableLook {
   const scale = ctx.doc.settings.plotScale.value;
   const picked = ctx.doc.settings.textStyle(style ?? undefined);
-  const look = applyTextStyle(picked, { height: (insertState.heightMm / 1000) * scale }, scale);
+  const look = applyTextStyle(picked, { height: annotationHeight(ctx, 'table') }, scale);
   const face: TextFace = {};
   for (const k of FACE_FIELDS) if (look[k] !== undefined && look[k] !== null && look[k] !== false) (face as Record<string, unknown>)[k] = look[k];
   return {

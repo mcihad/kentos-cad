@@ -47,8 +47,14 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # A dimension's kinds (spec §6.6); schema 9 added the last five (docs/adr/0147).
 DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope")
 SCHEMA_9_STYLES = DIMENSION_STYLES[5:]
-# A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence.
+# A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence. Schema 30 added AutoCAD's
+# others (docs/adr/0205 §7).
 LEADER_ARROWS = ("open", "dot", "none")
+LEADER_ARROWS_30 = ("closed", "open30", "open90", "dotSmall", "dotBlank", "oblique", "archTick", "boxFilled", "boxBlank", "datumFilled")
+# Schema 30 (docs/adr/0205): the annotation heights' kinds, a dimension's line fields and their bounds.
+ANNOTATION_KINDS = ("text", "leader", "dimension", "table", "coordinate", "station", "measure")
+LINE_TYPES = ("continuous", "dashed", "dashdot", "dotted")
+DIMENSION_LINES = ("dimLineColor", "dimLineWeight", "dimLineType", "extColor", "extWeight", "extLineType", "textColor")
 # Schema 21 (docs/adr/0183): the drawing typefaces and a dimension's arrowheads by name.
 DRAWING_FONTS = ("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")
 DIMENSION_ARROWS = ("closed", "open", "dot", "none")
@@ -296,10 +302,45 @@ def settings(s):
                 "textStyles": (text_styles, False),
                 "dimensionStyles": (dimension_styles, False),
                 "topology": (topology, False),
+                "annotation": (annotation, False),
             },
             "settings",
         )
     )
+
+
+def annotation(h):
+    """The project's annotation heights (schema 30, spec §6.4.6, docs/adr/0205 §1): a kind's height on paper, over 0 and
+    at most 100 mm; not empty."""
+    assert h and all(0 < h[k] <= 100 for k in h), h
+    return cmap(fields(h, {k: (finite, False) for k in ANNOTATION_KINDS}, "annotation"))
+
+
+def hex_colour(c):
+    assert len(c) == 7 and c[0] == "#" and all(ch in "0123456789abcdefABCDEF" for ch in c[1:]), c
+    return text(c)
+
+
+def line_weight(w):
+    assert 0 <= w <= 100, w
+    return finite(w)
+
+
+# A dimension's and a dimension style's lines (schema 30, docs/adr/0205 §6).
+LINE_FIELDS = {
+    "dimLineColor": (hex_colour, False),
+    "dimLineWeight": (line_weight, False),
+    "dimLineType": (enum(LINE_TYPES), False),
+    "extColor": (hex_colour, False),
+    "extWeight": (line_weight, False),
+    "extLineType": (enum(LINE_TYPES), False),
+    "textColor": (hex_colour, False),
+}
+
+
+def leader_arrow_size(x):
+    assert 0.1 <= x <= 10, x
+    return finite(x)
 
 
 TOPOLOGY_KINDS = {
@@ -407,6 +448,7 @@ def dimension_styles(styles):
         "prefix": (text, False),
         "suffix": (text, False),
         "font": (enum(DRAWING_FONTS), False),
+        **LINE_FIELDS,
     }
     return array([cmap(fields(st, table, "dimensionStyle")) for st in styles])
 
@@ -750,6 +792,8 @@ KINDS = {
         "prefix": (text, False),
         "suffix": (text, False),
         "font": (enum(DRAWING_FONTS), False),
+        # Schema 30 (docs/adr/0205 §6): its lines.
+        **LINE_FIELDS,
     },
     # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the drawing.
     "hatch": {
@@ -809,13 +853,15 @@ KINDS = {
         "opacity": (f64, False),
     },
     # Schema 8 (docs/adr/0146): two vertices or more, a note only when there is one, an arrowhead by name, `mask` only when true.
+    # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.
     "leader": {
         "pts": (points, True),
         "text": (text, False),
         "height": (f64, True),
         "rotation": (f64, True),
-        "arrow": (enum(LEADER_ARROWS), False),
+        "arrow": (enum(LEADER_ARROWS + LEADER_ARROWS_30), False),
         "mask": (lambda b: boolean(b) if b is True else None, False),
+        "arrowSize": (leader_arrow_size, False),
     },
 }
 
@@ -940,7 +986,9 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 29 with a raster, only in the drawing (docs/adr/0204 §2), 28 with the
+    """The oldest schema that holds the drawing: 30 with the project's annotation heights, a dimension style's or a
+    dimension's lines, a leader's arrowhead's size or one of AutoCAD's arrowheads, in the drawing or a block definition
+    (docs/adr/0205), 29 with a raster, only in the drawing (docs/adr/0204 §2), 28 with the
     survey settings' a priori standard deviations (docs/adr/0203 §1), 27 with the project's topology settings (docs/adr/0202 §7), 26 with a
     layer's fields (docs/adr/0199 §1), 25 with a text along a
     curve, in the drawing or a block definition
@@ -987,6 +1035,17 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def schemas(nodes):
         return any("fields" in n or schemas(n["children"]) for n in nodes)
 
+    def annotated(es):
+        return any(
+            (e["kind"] == "dimension" and any(k in e for k in DIMENSION_LINES))
+            or (e["kind"] == "leader" and ("arrowSize" in e or e.get("arrow") in LEADER_ARROWS_30))
+            for e in es
+        )
+
+    if settings and ("annotation" in settings or any(k in st for st in settings.get("dimensionStyles", []) for k in DIMENSION_LINES)):
+        return 30
+    if annotated(entities) or any(annotated(b["entities"]) for b in blocks or []):
+        return 30
     if any(e["kind"] == "raster" for e in entities):
         return 29
     if settings and any(k in settings.get("survey", {}) for k in SIGMA_KEYS):
@@ -1236,7 +1295,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-30.kcad"] = container(root(cmap(parts), version=uint(30)))
+    files["schema-version-31.kcad"] = container(root(cmap(parts), version=uint(31)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1756,6 +1815,27 @@ def broken(minimal_content, minimal_file):
     files["topology-rule-angle-too-large.kcad"] = with_settings(27, topology=cmap({"rules": array([trule(kind="mustNotHaveSmallAngles", value=f64(2.0))])}))
     files["topology-exception-unknown-rule.kcad"] = with_settings(27, topology=cmap({"rules": array([trule()]), "exceptions": array([cmap({
         "at": array([f64(500000.0), f64(4400000.0)]), "rule": text("r9"), "objects": array([blob(uid_bytes(m["uids"][0]))])})])}))
+    # The annotation heights, a dimension's lines and a leader's AutoCAD arrowheads are schema 30's (docs/adr/0205): in
+    # schema 29 unknown fields and unknown values; heights not empty, of a known kind, floats over 0 and at most 100 mm;
+    # colours #RRGGBB, weights 0 to 100 mm, line types by name; an arrowhead's size 0.1 to 10 times the note's height.
+    files["annotation-in-schema-29.kcad"] = with_settings(29, annotation=cmap({"text": f64(3.5)}))
+    files["annotation-empty.kcad"] = with_settings(30, annotation=cmap({}))
+    files["annotation-zero.kcad"] = with_settings(30, annotation=cmap({"leader": f64(0.0)}))
+    files["annotation-too-tall.kcad"] = with_settings(30, annotation=cmap({"dimension": f64(101.0)}))
+    files["annotation-unknown-kind.kcad"] = with_settings(30, annotation=cmap({"label": f64(2.0)}))
+    files["annotation-int.kcad"] = with_settings(30, annotation=cmap({"text": uint(3)}))
+    files["dimension-lines-in-schema-29.kcad"] = in_schema(29, dimension_of(dimLineColor=text("#C0392B")))
+    files["dimension-line-colour-not-hex.kcad"] = in_schema(30, dimension_of(dimLineColor=text("red")))
+    files["dimension-ext-weight-negative.kcad"] = in_schema(30, dimension_of(extWeight=f64(-0.1)))
+    files["dimension-line-type-unknown.kcad"] = in_schema(30, dimension_of(dimLineType=text("zigzag")))
+    files["dimension-style-lines-in-schema-29.kcad"] = with_styles(29, dimensionStyles=array([dimension_style(textColor=text("#1F4E79"))]))
+    files["dimension-style-text-colour-short.kcad"] = with_styles(30, dimensionStyles=array([dimension_style(textColor=text("#F00"))]))
+    files["dimension-style-line-weight-too-big.kcad"] = with_styles(30, dimensionStyles=array([dimension_style(dimLineWeight=f64(101.0))]))
+    files["leader-arrow-closed-in-schema-29.kcad"] = in_schema(29, leader_of(arrow=text("closed")))
+    files["leader-arrow-size-in-schema-29.kcad"] = in_schema(29, leader_of(arrowSize=f64(1.5)))
+    files["leader-arrow-size-too-small.kcad"] = in_schema(30, leader_of(arrowSize=f64(0.05)))
+    files["leader-arrow-size-too-big.kcad"] = in_schema(30, leader_of(arrowSize=f64(10.5)))
+    files["leader-arrow-unknown.kcad"] = in_schema(30, leader_of(arrow=text("filled")))
     files["bad-source.kcad"] = container(with_parts({**parts, "migratedFrom": cmap({"format": text("kentos.document"), "version": uint(1), "sourceSha256": blob(bytes(31))})}))
     return files
 
@@ -1814,6 +1894,7 @@ def build():
     out["layer-fields.kcad"] = container(document(load("layer-fields.json")))
     out["topology.kcad"] = container(document(load("topology.json")))
     out["rasters.kcad"] = container(document(load("rasters.json")))
+    out["annotation.kcad"] = container(document(load("annotation.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

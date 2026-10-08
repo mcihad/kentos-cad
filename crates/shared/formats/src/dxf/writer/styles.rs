@@ -14,7 +14,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use kentos_contracts::{
     DimensionArrow, DimensionStyleDef, DimensionTextPlace, DrawingFont, DrawingUnit, Entity,
-    TextFace, TextStyleDef,
+    LineType, TextFace, TextStyleDef,
 };
 
 use super::Out;
@@ -307,12 +307,15 @@ pub fn dimlfac(unit: Option<DrawingUnit>, per_metre: f64) -> Option<f64> {
 /// A DIMSTYLE record's variables over Standard's: its value's height,
 /// arrowheads (DIMTSZ for ticks: half a 45° tick's length; DIMASZ 0 for
 /// none), arrow size, extension lines' offset and reach, the value's gap and
-/// place, decimals, prefix and suffix around “<>”, unit (DIMLFAC); `length`
-/// turns paper mm into drawing units, `per_metre` of them make a metre.
+/// place, decimals, prefix and suffix around “<>”, unit (DIMLFAC), its
+/// lines' colours, weights and types (docs/adr/0205 §6); `length` turns
+/// paper mm into drawing units, `per_metre` of them make a metre, `ltypes`
+/// the LTYPE records' handles.
 fn dimension_vars(
     s: &DimensionStyleDef,
     length: &dyn Fn(f64) -> f64,
     per_metre: f64,
+    ltypes: &[(LineType, u64)],
 ) -> Vec<(i32, String)> {
     let look = s.look();
     let h = length(s.height);
@@ -349,6 +352,33 @@ fn dimension_vars(
     if let Some(f) = dimlfac(s.unit, per_metre) {
         v.push((144, dxf_real(f)));
     }
+    for (code, color) in [
+        (176, &s.dim_line_color),
+        (177, &s.ext_color),
+        (178, &s.text_color),
+    ] {
+        if let Some(c) = color {
+            v.push((code, crate::dxf::aci::from_app(c).0.aci.to_string()));
+        }
+    }
+    for (code, weight) in [(371, s.dim_line_weight), (372, s.ext_weight)] {
+        if let Some(w) = weight {
+            v.push((code, super::layers::line_weight(w).0.to_string()));
+        }
+    }
+    let handle = |t: Option<LineType>| {
+        t.and_then(|t| ltypes.iter().find(|(x, _)| *x == t))
+            .map(|(_, h)| format!("{h:X}"))
+    };
+    for (code, h) in [
+        (345, handle(s.dim_line_type)),
+        (346, handle(s.ext_line_type)),
+        (347, handle(s.ext_line_type)),
+    ] {
+        if let Some(h) = h {
+            v.push((code, h));
+        }
+    }
     v
 }
 
@@ -360,6 +390,7 @@ pub fn dimstyle_table(
     styles: &[DimensionStyleDef],
     length: &dyn Fn(f64) -> f64,
     per_metre: f64,
+    ltypes: &[(LineType, u64)],
 ) {
     super::template::dimstyle_head(out, 1 + styles.len());
     super::template::dimstyle_standard(out);
@@ -373,7 +404,7 @@ pub fn dimstyle_table(
             out,
             h,
             name,
-            &dimension_vars(s, length, per_metre),
+            &dimension_vars(s, length, per_metre, ltypes),
             Some(&json),
         );
     }

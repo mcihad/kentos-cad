@@ -30,7 +30,7 @@ use kentos_contracts::{DrawingFont, Entity, LabelInk, LabelStyle};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::label_text::fill_template;
 use kentos_geometry_core::text::paragraph::{Run, Script, advance};
-use kentos_interaction::spatial::default_label;
+use kentos_interaction::spatial::{Grow, LabelSize, default_label};
 use kentos_interaction::{Format, LabelSpot, Spatial, Vec2};
 use kentos_native_application::geometry::core_runs;
 use kentos_render_wgpu::Camera;
@@ -47,10 +47,13 @@ use kentos_native_style::color::ColorMode;
 /// them in an overview), so a frame whose view and drawing stay (a pointer
 /// move, a button's hover) takes them from here.
 #[derive(Default)]
-pub struct Spots(RefCell<Option<(u64, Rc<Vec<LabelSpot>>)>>);
+pub struct Spots(RefCell<Option<(u64, Shown)>>);
+
+/// The labels shown, each with how much it grows (docs/adr/0205 §5).
+type Shown = Rc<Vec<(LabelSpot, Grow)>>;
 
 impl Spots {
-    fn get(&self, key: u64, ask: impl FnOnce() -> Vec<LabelSpot>) -> Rc<Vec<LabelSpot>> {
+    fn get(&self, key: u64, ask: impl FnOnce() -> Vec<(LabelSpot, Grow)>) -> Shown {
         let mut kept = self.0.borrow_mut();
         match kept.as_ref() {
             Some((known, spots)) if *known == key => spots.clone(),
@@ -77,9 +80,11 @@ pub fn layer<'a>(
     hidden: Option<Slot>,
     preview: Option<Preview>,
     mode: ColorMode,
+    size: LabelSize,
 ) -> Element<'a, Message> {
     build(
         doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, preview, true, mode,
+        size,
     )
 }
 
@@ -98,9 +103,11 @@ pub fn lens_layer<'a>(
     hidden: Option<Slot>,
     preview: Option<Preview>,
     mode: ColorMode,
+    size: LabelSize,
 ) -> Element<'a, Message> {
     build(
         doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, preview, false, mode,
+        size,
     )
 }
 
@@ -130,6 +137,7 @@ fn build<'a>(
     preview: Option<Preview>,
     map_marks: bool,
     mode: ColorMode,
+    size: LabelSize,
 ) -> Element<'a, Message> {
     let mut key = DefaultHasher::new();
     (
@@ -144,16 +152,19 @@ fn build<'a>(
         hidden.map(|s| s.0),
     )
         .hash(&mut key);
+    // How the text is sized on screen (docs/adr/0205 §5).
+    format!("{size:?}").hash(&mut key);
     let spots = kept.get(key.finish(), || {
         let view = camera.visible_bounds();
-        let mut spots = spatial.labels(
+        let mut spots = spatial.labels_shown(
             Vec2::new(view.min_x, view.min_y),
             Vec2::new(view.max_x, view.max_y),
             camera.scale,
+            size,
         );
         // A text or a dimension's value being edited in place (the web's `setEditing`).
         if let Some(hidden) = hidden {
-            spots.retain(|spot| match spot {
+            spots.retain(|(spot, _)| match spot {
                 LabelSpot::Text { slot, .. }
                 | LabelSpot::Dimension { slot, .. }
                 | LabelSpot::Line { slot, .. }
@@ -179,7 +190,8 @@ fn build<'a>(
     canvas::Canvas::new(Labels {
         doc,
         spots,
-        camera: *camera,
+        view: *camera,
+        camera: Cell::new(*camera),
         colors: colors(canvas, palette).in_mode(mode),
         font,
         format: *format,
@@ -293,8 +305,12 @@ pub fn colors(canvas: Canvas, palette: &Palette) -> Colors {
 
 struct Labels<'a> {
     doc: &'a Document,
-    spots: Rc<Vec<LabelSpot>>,
-    camera: Camera,
+    /// The labels and how each grows (docs/adr/0205 §5).
+    spots: Rc<Vec<(LabelSpot, Grow)>>,
+    /// The view's camera, and the one the label being drawn goes through:
+    /// the view's zoomed about a grown label's anchor.
+    view: Camera,
+    camera: Cell<Camera>,
     colors: Colors,
     font: DrawingFont,
     format: Format,
@@ -361,8 +377,9 @@ pub fn paint_in_map(
 ) {
     Labels {
         doc,
-        spots: Rc::new(spots),
-        camera,
+        spots: Rc::new(spots.into_iter().map(|s| (s, Grow::NONE)).collect()),
+        view: camera,
+        camera: Cell::new(camera),
         colors,
         font,
         format,
@@ -420,8 +437,9 @@ pub fn texts_in_map(
     };
     Labels {
         doc,
-        spots: Rc::new(spots),
-        camera,
+        spots: Rc::new(spots.into_iter().map(|s| (s, Grow::NONE)).collect()),
+        view: camera,
+        camera: Cell::new(camera),
         colors,
         font,
         format,
@@ -444,6 +462,10 @@ trait Ink {
     fn fill_quad(&mut self, quad: [Point; 4], color: Color, of: Option<Slot>);
     /// Grid north and the scale bar, or a CAD project's coordinate axes.
     fn marks(&mut self, camera: &Camera, colors: &Colors, axes: kentos_interaction::Axes);
+    /// A ring of the screen filled, and a line drawn (a grown leader's
+    /// arrowhead, docs/adr/0205 §5); a list of pieces takes none.
+    fn fill_ring(&mut self, _ring: &[Point], _color: Color) {}
+    fn stroke_line(&mut self, _pts: &[Point], _closed: bool, _color: Color) {}
 }
 
 impl Ink for Frame {
@@ -468,6 +490,52 @@ impl Ink for Frame {
 
     fn marks(&mut self, camera: &Camera, colors: &Colors, axes: kentos_interaction::Axes) {
         crate::map_marks::paint(self, camera, colors, axes);
+    }
+
+    fn fill_ring(&mut self, ring: &[Point], color: Color) {
+        let Some((first, rest)) = ring.split_first() else {
+            return;
+        };
+        let path = Path::new(|b| {
+            b.move_to(*first);
+            for p in rest {
+                b.line_to(*p);
+            }
+            b.close();
+        });
+        self.fill(&path, color);
+    }
+
+    fn stroke_line(&mut self, pts: &[Point], closed: bool, color: Color) {
+        let Some((first, rest)) = pts.split_first() else {
+            return;
+        };
+        let path = Path::new(|b| {
+            b.move_to(*first);
+            for p in rest {
+                b.line_to(*p);
+            }
+            if closed {
+                b.close();
+            }
+        });
+        self.stroke(&path, Stroke::default().with_color(color).with_width(1.2));
+    }
+}
+
+/// The view zoomed `g.k` times about `g.anchor`, the anchor staying where it
+/// is on screen (docs/adr/0205 §5): a grown label is drawn through it.
+fn grown(view: Camera, g: Grow) -> Camera {
+    if g.k == 1.0 || !g.k.is_finite() || g.k <= 0.0 {
+        return view;
+    }
+    Camera {
+        center: kentos_render_wgpu::Vec2::new(
+            g.anchor.x - (g.anchor.x - view.center.x) / g.k,
+            g.anchor.y - (g.anchor.y - view.center.y) / g.k,
+        ),
+        scale: view.scale * g.k,
+        ..view
     }
 }
 
@@ -711,12 +779,45 @@ fn contract_face(face: &kentos_geometry_core::text::face::Face) -> kentos_contra
 
 impl Labels<'_> {
     fn screen(&self, p: Vec2) -> Point {
-        let [x, y] = self.camera.world_to_screen(p);
+        let [x, y] = self.camera.get().world_to_screen(p);
         Point::new(x as f32, y as f32)
     }
 
     /// A layer's (or the object's) colour as the dimension's text takes it:
     /// the label colour for none and the theme's ink, else the colour itself.
+    /// A grown leader's arrowhead (docs/adr/0205 §5, §7): its areas solid
+    /// and its lines, `k` times its own about its tip, in `color`, over the
+    /// one the scene draws as it is.
+    fn grown_arrowhead(
+        &self,
+        frame: &mut impl Ink,
+        l: &kentos_contracts::LeaderEntity,
+        k: f64,
+        color: Color,
+    ) {
+        let s = kentos_native_application::geometry::shape(&Entity::Leader(l.clone()));
+        let (Some(layout), Some(tip)) = (
+            kentos_geometry_core::geom::leader::layout_of(&s),
+            l.pts.first(),
+        ) else {
+            return;
+        };
+        let view = self.view;
+        let at = |p: Vec2| {
+            let q = Vec2::new(tip.x + (p.x - tip.x) * k, tip.y + (p.y - tip.y) * k);
+            let [x, y] = view.world_to_screen(q);
+            Point::new(x as f32, y as f32)
+        };
+        for ring in &layout.head.fills {
+            let pts: Vec<Point> = ring.iter().map(|p| at(*p)).collect();
+            frame.fill_ring(&pts, color);
+        }
+        for line in &layout.head.lines {
+            let pts: Vec<Point> = line.pts.iter().map(|p| at(*p)).collect();
+            frame.stroke_line(&pts, line.closed, color);
+        }
+    }
+
     fn ink_of(&self, name: Option<&str>) -> Color {
         match name {
             None | Some("fg" | "fg-dim") => self.colors.label,
@@ -769,7 +870,7 @@ impl Labels<'_> {
         };
         let r = rotation.to_radians();
         let (c, s) = (r.cos(), r.sin());
-        let size = height * self.camera.scale;
+        let size = height * self.camera.get().scale;
         // Metres along the baseline: thousandths of an em, the height, the width factor.
         let em = height * width_factor / 1000.0;
         let look = |i: usize| -> Option<&Run> {
@@ -819,7 +920,7 @@ impl Labels<'_> {
                         width_factor: width_factor as f32,
                         mask: 0.0,
                         underline: if f.is_some_and(|r| r.underline) {
-                            (width * self.camera.scale / width_factor) as f32
+                            (width * self.camera.get().scale / width_factor) as f32
                         } else {
                             0.0
                         },
@@ -836,12 +937,14 @@ impl Labels<'_> {
     fn paint(&self, frame: &mut impl Ink) {
         // A map frame's labels keep apart on the camera's own picture.
         let size = match self.fence {
-            Some(_) => Size::new(self.camera.width as f32, self.camera.height as f32),
+            Some(_) => Size::new(self.view.width as f32, self.view.height as f32),
             None => frame.size(),
         };
         let mut room = Room::new(size.width, size.height);
         let layers = self.doc.layers();
-        for spot in self.spots.iter() {
+        for (spot, grow) in self.spots.iter() {
+            // A grown label goes through the view zoomed about its anchor (docs/adr/0205 §5).
+            self.camera.set(grown(self.view, *grow));
             let slot = match spot {
                 LabelSpot::Dimension { slot, .. }
                 | LabelSpot::Text { slot, .. }
@@ -885,12 +988,15 @@ impl Labels<'_> {
                         Some(own) => own.to_owned(),
                         None => self.format.dimension_in(prefix, unit, *value, &d.look),
                     };
+                    // Its value's own colour when its look names one (docs/adr/0205 §6), else the object's.
                     let color = self.ink_of(
-                        base.color
+                        d.look
+                            .text_color
                             .as_deref()
+                            .or(base.color.as_deref())
                             .or(layer.map(|l| l.style.color.as_str())),
                     );
-                    let size = (d.height * self.camera.scale) as f32;
+                    let size = (d.height * self.camera.get().scale) as f32;
                     let font = drawing_fonts::font(d.look.font.unwrap_or(self.font), 500, false);
                     self.draw(
                         frame,
@@ -928,12 +1034,12 @@ impl Labels<'_> {
                             text: &t.text,
                             at: self.screen(*at),
                             angle: (-rotation.to_radians()) as f32,
-                            size: (t.height * self.camera.scale) as f32,
+                            size: (t.height * self.camera.get().scale) as f32,
                             font,
                             anchor: Anchor::LeftBaseline,
                             color: self.colors.label,
                             width_factor: *width_factor as f32,
-                            mask: (mask * self.camera.scale) as f32,
+                            mask: (mask * self.camera.get().scale) as f32,
                             underline: 0.0,
                             lean,
                         },
@@ -977,7 +1083,7 @@ impl Labels<'_> {
                             text: words,
                             at: self.screen(*at),
                             angle: (-rotation.to_radians()) as f32,
-                            size: (t.height * self.camera.scale) as f32,
+                            size: (t.height * self.camera.get().scale) as f32,
                             font,
                             anchor: Anchor::LeftBaseline,
                             color,
@@ -989,13 +1095,21 @@ impl Labels<'_> {
                         self.colors.halo,
                     );
                 }
-                // A leader's note, as a text (docs/adr/0146 §5).
+                // A leader's note, as a text (docs/adr/0146 §5); grown, its arrowhead with it (docs/adr/0205 §5).
                 (
                     LabelSpot::Text {
                         at, rotation, mask, ..
                     },
                     Entity::Leader(l),
                 ) => {
+                    if grow.k > 1.0 {
+                        let color = self.ink_of(
+                            base.color
+                                .as_deref()
+                                .or(layer.map(|ly| ly.style.color.as_str())),
+                        );
+                        self.grown_arrowhead(frame, l, grow.k, color);
+                    }
                     let Some(note) = l.text.as_deref() else {
                         continue;
                     };
@@ -1006,12 +1120,12 @@ impl Labels<'_> {
                             text: note,
                             at: self.screen(*at),
                             angle: (-rotation.to_radians()) as f32,
-                            size: (l.height * self.camera.scale) as f32,
+                            size: (l.height * self.camera.get().scale) as f32,
                             font,
                             anchor: Anchor::LeftBaseline,
                             color: self.colors.label,
                             width_factor: 1.0,
-                            mask: (mask * self.camera.scale) as f32,
+                            mask: (mask * self.camera.get().scale) as f32,
                             underline: 0.0,
                             lean,
                         },
@@ -1049,12 +1163,12 @@ impl Labels<'_> {
                             text: shown,
                             at: self.screen(*at),
                             angle: (-rotation.to_radians()) as f32,
-                            size: (height * self.camera.scale) as f32,
+                            size: (height * self.camera.get().scale) as f32,
                             font,
                             anchor: Anchor::LeftBaseline,
                             color: self.colors.label,
                             width_factor: *width_factor as f32,
-                            mask: (mask * self.camera.scale) as f32,
+                            mask: (mask * self.camera.get().scale) as f32,
                             underline: 0.0,
                             lean,
                         },
@@ -1082,11 +1196,12 @@ impl Labels<'_> {
                         None => self.format.dimension_in(prefix, unit, *value, &look),
                     };
                     let color = self.ink_of(
-                        base.color
+                        look.text_color
                             .as_deref()
+                            .or(base.color.as_deref())
                             .or(layer.map(|l| l.style.color.as_str())),
                     );
-                    let size = (height * self.camera.scale) as f32;
+                    let size = (height * self.camera.get().scale) as f32;
                     let font = drawing_fonts::font(look.font.unwrap_or(self.font), 500, false);
                     self.draw(
                         frame,
@@ -1191,6 +1306,8 @@ impl Labels<'_> {
                 }
             }
         }
+        // The view's own camera again for what follows.
+        self.camera.set(self.view);
         // The multi-line text being written or edited, over the rest (docs/adr/0182 §4).
         if let Some(p) = &self.preview {
             for r in p
@@ -1237,7 +1354,7 @@ impl Labels<'_> {
         // Grid north and the scale bar over the text, or a CAD project's coordinate axes,
         // as the web's overlay (map_marks.rs); a sheet's map has its own.
         if self.fence.is_none() && self.map_marks {
-            frame.marks(&self.camera, &self.colors, self.format.axes);
+            frame.marks(&self.view, &self.colors, self.format.axes);
         }
     }
 
@@ -1278,7 +1395,7 @@ impl Labels<'_> {
         label: &str,
     ) {
         let size = (style.max_size.unwrap_or(style.size))
-            .min(style.size + style.grow.unwrap_or(0.0) * self.camera.scale)
+            .min(style.size + style.grow.unwrap_or(0.0) * self.camera.get().scale)
             as f32;
         // The template's first `{label}`, literally: the converted texts' rule (docs/adr/0175 §1).
         let text = fill_template(style.template.as_deref(), label);
@@ -2168,6 +2285,159 @@ fn dimension_screens() {
     }
 }
 
+/// The annotations of docs/adr/0205 as the drawing and its windows show
+/// them (fixtures/interaction/v1/annotations.kcad, the web's `shots.mjs
+/// annotations`; scripts/fixtures/annotation_scene.py writes it), dark and
+/// light, at 1440×900 (and the drawing at 1100×650); `.run/shots/aciklama-*`:
+///
+/// - the parcel with its dimensions, the one following “Renkli çizgiler”
+///   selected so that Öznitelikler shows its lines' rows; the leaders' rows
+///   of arrowheads closer in;
+/// - far out at 1:1000, Kaybolmasın and Gerçek boy;
+/// - Ölçü stilleri on the style, Proje ayarları › Ölçek ve yazılar, Ölçek yaz….
+///
+/// ```text
+/// cargo test -p kentos-desktop labels::annotation_screens -- --ignored --nocapture
+/// ```
+#[cfg(test)]
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn annotation_screens() {
+    use kentos_ui::snapshot::Snapshot;
+
+    use crate::app::App;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let drawing = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/interaction/v1/annotations.kcad"
+    );
+    let only = std::env::var("KENTOS_SHOTS_ONLY").ok();
+    let wanted = |name: &str| {
+        only.as_deref()
+            .is_none_or(|o| o.split(',').any(|w| name.starts_with(w)))
+    };
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            let open = || {
+                let (mut app, _) = App::boot(None);
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                let doc =
+                    crate::document::Document::read(std::path::Path::new(drawing)).expect("opens");
+                let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+                app
+            };
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            // Settled, then written when named.
+            let mut picture = |app: &mut App, name: Option<&str>| {
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(app, App::view, &mut update);
+                let Some(name) = name else { return };
+                let file = out.join(format!("{name}.png"));
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            };
+            // The drawing, the styled dimension selected.
+            let mut app = open();
+            picture(&mut app, None);
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            app.selection.set([kentos_domain::Slot(4)]);
+            // Genel closed, so that the dimension's line rows show.
+            let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+                "general",
+            )));
+            let name = format!("aciklama-{width}x{height}{suffix}");
+            if wanted("aciklama-cizim") {
+                picture(&mut app, Some(&name));
+            }
+            if width < 1440.0 {
+                continue;
+            }
+            // The arrowheads closer in, nothing selected.
+            app.selection.set([]);
+            let camera = &mut app.viewport.camera;
+            // The two rows (−40 … 140 m east) across the drawing area: 5.6 px a metre.
+            camera.center = kentos_interaction::Vec2::new(500_050.0, 4_400_072.0);
+            camera.scale = 5.6;
+            if wanted("aciklama-oklar") {
+                picture(&mut app, Some(&format!("aciklama-oklar{suffix}")));
+            }
+            // Far out: the texts 2.5 m high under a few pixels.
+            for (size, word) in [("legible", "kaybolmasin"), ("true", "gercek")] {
+                let _ = app
+                    .settings
+                    .choose(&[("graphics.annotationSize", serde_json::Value::from(size))]);
+                app.apply_settings();
+                let _ = app.update(Message::Run("view.zoomExtents"));
+                let camera = &mut app.viewport.camera;
+                camera.scale /= 5.0;
+                if wanted("aciklama-uzak") {
+                    picture(&mut app, Some(&format!("aciklama-uzak-{word}{suffix}")));
+                }
+            }
+            // The windows.
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            app.open_annotation_styles(crate::annotation_styles::Kind::Dimension);
+            let _ = app.update(Message::AnnotationStyles(
+                crate::annotation_styles::Event::Choose(Some(
+                    "0192f6a0-0000-7000-8000-000000000203".into(),
+                )),
+            ));
+            if wanted("aciklama-olcu-stilleri") {
+                picture(&mut app, Some(&format!("aciklama-olcu-stilleri{suffix}")));
+            }
+            let _ = app.update(Message::AnnotationStyles(
+                crate::annotation_styles::Event::Cancel,
+            ));
+            let _ = app.update(Message::Run("file.settings"));
+            let _ = app.update(crate::project::settings_message(
+                crate::project::SettingsEvent::Section(crate::project::settings::Section::Scale),
+            ));
+            if wanted("aciklama-proje-olcek") {
+                picture(&mut app, Some(&format!("aciklama-proje-olcek{suffix}")));
+            }
+            let _ = app.update(Message::Project(Box::new(crate::project::Event::Close)));
+            let _ = app.update(Message::PlotScale(crate::annotation_scale::Event::Open));
+            let _ = app.update(Message::PlotScale(crate::annotation_scale::Event::Edit(
+                "2500".into(),
+            )));
+            if wanted("aciklama-olcek-yaz") {
+                picture(&mut app, Some(&format!("aciklama-olcek-yaz{suffix}")));
+            }
+            // Öznitelikler's rows of the dimension's lines, in a window tall enough for them (an
+            // app of its own: the drawing area keeps the size it was laid out at).
+            if wanted("aciklama-oznitelikler") {
+                let mut app = open();
+                let mut tall = Snapshot::new(Size::new(1440.0, 1500.0)).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                tall.settle(&mut app, App::view, &mut update);
+                let _ = app.update(Message::Run("view.zoomExtents"));
+                app.selection.set([kentos_domain::Slot(4)]);
+                let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+                    "general",
+                )));
+                tall.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!("aciklama-oznitelikler{suffix}.png"));
+                tall.render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            }
+        }
+    }
+}
+
 /// Frame times with thousands of labels on screen, in release:
 ///
 /// ```text
@@ -2261,12 +2531,19 @@ fn perf() {
     let doc = &app.document.as_ref().expect("open").model;
     let labels = Labels {
         doc,
-        spots: Rc::new(app.spatial.labels(
-            Vec2::new(v.min_x, v.min_y),
-            Vec2::new(v.max_x, v.max_y),
-            4.0,
-        )),
-        camera,
+        spots: Rc::new(
+            app.spatial
+                .labels(
+                    Vec2::new(v.min_x, v.min_y),
+                    Vec2::new(v.max_x, v.max_y),
+                    4.0,
+                )
+                .into_iter()
+                .map(|s| (s, Grow::NONE))
+                .collect(),
+        ),
+        view: camera,
+        camera: Cell::new(camera),
         colors: colors(Canvas::Slate, &crate::viewport::palette(Canvas::Slate)),
         font: DrawingFont::Barlow,
         format: Format::of(doc.settings()),

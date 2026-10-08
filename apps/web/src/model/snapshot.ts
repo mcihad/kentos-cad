@@ -20,7 +20,21 @@ import { crsBySrid } from '../geo/crs';
 import { DIMENSION_ARROWS, faceProblem, lookProblem, type DimensionLook, type TextFace } from './annotationStyles';
 import { blockFaultMessage, definitionsFault, type AttributeDefinition, type BlockDefinition } from './blocks';
 import type { CadDocument, DocumentContent } from './document';
-import { MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, TEXT_ALIGNS, widthFactorOk, type Entity, type HatchAssoc, type HatchPattern, type TextAlign } from './entities';
+import {
+  LEADER_ARROWS,
+  leaderArrowHolds,
+  MAX_LEADER_ARROW,
+  MAX_LINE_WEIGHT,
+  MAX_WIDTH_FACTOR,
+  MIN_LEADER_ARROW,
+  TEXT_ALIGNS,
+  widthFactorOk,
+  type Entity,
+  type HatchAssoc,
+  type HatchPattern,
+  type TextAlign,
+} from './entities';
+import { annotationHeightsProblem, ANNOTATION_KINDS, type AnnotationHeights } from './annotationScale';
 import { assocProblem, patternProblem } from './hatchRules';
 import type { LayerInit, LayerSnap } from './layers';
 import { DRAWING_FONT_IDS, DRAWING_UNIT_IDS, LEGACY_HYBRID, WORKSPACE_IDS } from './projectSettings';
@@ -282,6 +296,17 @@ const second = (v: unknown, srid: number, custom: boolean): number => {
   return s === srid || (srid === 0 && !custom) ? fail(where, 'projeninkinden başka bir sistem olmalı; yerel projenin ikinci sistemi olmaz') : s;
 };
 /** The project's survey settings (docs/adr/0169 §3): their shape here, their rules where they are written and read (the KCAD codec). */
+/** The project's annotation heights (docs/adr/0205 §1): an object of numbers by kind, checked as a project keeps them. */
+function annotationOf(v: unknown): AnnotationHeights {
+  const where = 'Proje ayarları › yazı yükseklikleri';
+  if (!isObj(v)) return fail(where, 'nesne olmalı');
+  for (const key of Object.keys(v)) if (!(ANNOTATION_KINDS as readonly string[]).includes(key)) fail(at(where, key), 'bilinmeyen yazı türü');
+  for (const kind of ANNOTATION_KINDS) if (v[kind] !== undefined) num(v[kind], at(where, kind));
+  const problem = annotationHeightsProblem(v as AnnotationHeights);
+  if (problem) fail(at(where, problem[0]), problem[1]);
+  return v as AnnotationHeights;
+}
+
 const surveyOf = (v: unknown): SurveySettings =>
   isObj(v) && Object.values(v).every(finite) ? (v as SurveySettings) : fail('Proje ayarları › ölçme', 'sayılardan oluşan bir harita olmalı');
 /** A coordinate system definition of the project's (docs/adr/0168 §1): its shape here, its rules where it is written and read (the KCAD codec). */
@@ -313,6 +338,10 @@ function stylesOf<T>(v: unknown, kind: 'text' | 'dimension'): T[] {
       if (s.unit !== undefined) oneOf(s.unit, DRAWING_UNIT_IDS, at(w, 'birim'));
       for (const f of ['prefix', 'suffix'] as const) if (s[f] !== undefined) str(s[f], at(w, f));
       if (s.font !== undefined) oneOf(s.font, DRAWING_FONT_IDS, at(w, 'yazı tipi'));
+      // Its lines (docs/adr/0205 §6).
+      for (const f of ['dimLineColor', 'extColor', 'textColor'] as const) if (s[f] !== undefined) str(s[f], at(w, f));
+      for (const f of ['dimLineWeight', 'extWeight'] as const) if (s[f] !== undefined) num(s[f], at(w, f));
+      for (const f of ['dimLineType', 'extLineType'] as const) if (s[f] !== undefined) oneOf(s[f], LINE_TYPES, at(w, f));
     }
     return s as T;
   });
@@ -433,6 +462,8 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
           : isObj(settings.topology)
             ? { topology: settings.topology as unknown as TopologySettings }
             : fail('Proje ayarları › topoloji kuralları', 'nesne olmalı')),
+        // The project's annotation heights (docs/adr/0205 §1): numbers by kind, kept as a project keeps them.
+        ...(settings.annotation === undefined ? {} : { annotation: annotationOf(settings.annotation) }),
       },
       origin: vec(data.origin, 'Yerel orijin'),
       homeView: isObj(hv) ? { minX: num(hv.minX, 'Başlangıç görünümü'), minY: num(hv.minY, 'Başlangıç görünümü'), maxX: num(hv.maxX, 'Başlangıç görünümü'), maxY: num(hv.maxY, 'Başlangıç görünümü') } : null,
@@ -647,6 +678,10 @@ function lookAt(v: Record<string, unknown>, w: string): void {
   if (v.unit !== undefined) oneOf(v.unit, DRAWING_UNIT_IDS, at(w, 'birim'));
   for (const f of ['prefix', 'suffix'] as const) if (v[f] !== undefined) strAt(v[f], w, f === 'prefix' ? 'önek' : 'sonek');
   if (v.font !== undefined) oneOf(v.font, DRAWING_FONT_IDS, at(w, 'yazı tipi'));
+  // Its lines (docs/adr/0205 §6).
+  for (const f of ['dimLineColor', 'extColor', 'textColor'] as const) if (v[f] !== undefined) strAt(v[f], w, f);
+  for (const f of ['dimLineWeight', 'extWeight'] as const) if (v[f] !== undefined) numAt(v[f], w, f);
+  for (const f of ['dimLineType', 'extLineType'] as const) if (v[f] !== undefined) oneOf(v[f], LINE_TYPES, at(w, f));
   const problem = lookProblem(v as DimensionLook);
   if (problem) fail(at(w, problem[0]), problem[1]);
 }
@@ -853,7 +888,10 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
       if (numAt(v.height, w, 'yükseklik') <= 0) fail(at(w, 'yükseklik'), 'pozitif olmalı');
       numAt(v.rotation, w, 'açı');
       if (v.text !== undefined && strAt(v.text, w, 'not') === '') fail(at(w, 'not'), 'boş olamaz; notsuz kılavuzda alan yoktur');
-      if (v.arrow !== undefined) oneOf(v.arrow, ['open', 'dot', 'none'] as const, at(w, 'ok'));
+      if (v.arrow !== undefined) oneOf(v.arrow, LEADER_ARROWS, at(w, 'ok'));
+      // Its arrowhead's size, times its note's height (docs/adr/0205 §7).
+      if (v.arrowSize !== undefined && !leaderArrowHolds(numAt(v.arrowSize, w, 'ok boyu')))
+        fail(at(w, 'ok boyu'), `notun yüksekliğinin ${MIN_LEADER_ARROW} ile ${MAX_LEADER_ARROW} katı olmalı`);
       if (v.mask !== undefined && v.mask !== true) fail(at(w, 'zemin'), 'yalnız true yazılır; zeminsiz kılavuzda alan yoktur');
       break;
     // A table (docs/adr/0184 §1): its fields' types here, its rows, columns, cells and ranges by the contract's rule.

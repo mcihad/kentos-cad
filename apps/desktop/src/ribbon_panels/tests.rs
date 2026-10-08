@@ -342,9 +342,25 @@ fn ozellikler_offers_the_webs_values() {
         .map(|&w| serde_json::json!({ "mm": w, "text": weight_text(w) }))
         .collect();
     assert_eq!(serde_json::Value::from(weights), fields["weights"]);
-    let scales: Vec<serde_json::Value> = PLOT_SCALES
-        .iter()
-        .map(|&s| serde_json::json!({ "denominator": s as u64, "text": format!("1:{s}") }))
-        .collect();
-    assert_eq!(serde_json::Value::from(scales), fields["scales"]);
+    // Ölçek: the project's type's scales with the current one (docs/adr/0205 §4).
+    for c in fields["scales"].as_array().expect("scale cases") {
+        let (cad, current) = (
+            c["cad"].as_bool().unwrap_or(false),
+            c["current"].as_f64().unwrap_or(0.0),
+        );
+        let offered: Vec<serde_json::Value> = kentos_project::wizard::project_scales(cad, current)
+            .into_iter()
+            .map(|s| {
+                serde_json::json!({
+                    "denominator": s as u64,
+                    "text": kentos_project::wizard::scale_text(s)
+                })
+            })
+            .collect();
+        assert_eq!(
+            serde_json::Value::from(offered),
+            c["offered"],
+            "{cad} {current}"
+        );
+    }
 }

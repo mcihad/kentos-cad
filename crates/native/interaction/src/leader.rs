@@ -6,9 +6,11 @@
 //!   the landing's end, on the side the last segment goes (`ViewChange::Text`);
 //!   Enter there writes the leader with its note, Enter in the empty field
 //!   writes it without one (the arrow alone), Esc goes back to the vertices;
-//! - Ok (O) chooses the arrowhead from its menu or by its name, Yükseklik (Y)
-//!   is Yazı's (paper mm, shared), Zemin (Z) fills the note's box, Geri (G)
-//!   takes the last vertex back; they stay for as long as the app lives;
+//! - Ok (O) chooses the arrowhead from its menu or by its name, Ok boyu (B)
+//!   its length in the note's height (docs/adr/0205 §7), Yükseklik (Y) the
+//!   note's height on paper (the project's Kılavuz height until one is typed
+//!   in this drawing, docs/adr/0205 §2), Zemin (Z) fills the note's box, Geri
+//!   (G) takes the last vertex back; they stay for as long as the app lives;
 //! - Esc steps back: out of a question, then the leader being drawn, then
 //!   out of the tool; a locked active layer is said at the tip's click.
 //!
@@ -17,9 +19,12 @@
 //! through `cad.entities.create` (docs/adr/0146 §6): the active layer, the
 //! current colour and line weight, one undo step (“Kılavuz”).
 
-use kentos_contracts::{CreateOperation, EntityGeometry, LeaderArrow};
+use kentos_contracts::{
+    AnnotationKind, CreateOperation, EntityGeometry, LeaderArrow, MAX_LEADER_ARROW,
+    MIN_LEADER_ARROW, leader_arrow_holds,
+};
 use kentos_geometry_core::entity::Shape;
-use kentos_geometry_core::geom::leader::{self, Head, LeaderLayout};
+use kentos_geometry_core::geom::leader::{self, LeaderLayout};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 
 use crate::Vec2;
@@ -40,24 +45,116 @@ pub const LABEL: &str = "Kılavuz";
 /// The note's box at least this high on screen, logical pixels (the web's `Math.max(8, …)`).
 const LEAST_BOX_PX: f64 = 8.0;
 
-/// The arrowheads in Ok's menu: the value (none: the filled arrow, the
-/// field's absence), its name as the prompt writes and the user types it,
-/// its menu label and the web's icon. The web's `LEADER_ARROW_ROWS`.
-pub const ARROWS: [(Option<LeaderArrow>, &str, &str, &str); 4] = [
-    (None, "dolu", "Dolu", "leaderArrowFilled"),
-    (Some(LeaderArrow::Open), "açık", "Açık", "leaderArrowOpen"),
-    (Some(LeaderArrow::Dot), "nokta", "Nokta", "leaderArrowDot"),
+/// The arrowheads in Ok's menu (docs/adr/0146 §7, 0205 §7): the value
+/// (none: the filled triangle, the field's absence), its name as the prompt
+/// writes and the user types it (its label typed is read too), its menu
+/// label and its icon (drawn from its shape, scripts/ui/arrow_icons.py). The
+/// web's `LEADER_ARROW_ROWS`.
+pub const ARROWS: [(Option<LeaderArrow>, &str, &str, &str); 14] = [
+    (None, "dolu", "Dolu üçgen", "leaderArrowFilled"),
+    (
+        Some(LeaderArrow::Closed),
+        "boş",
+        "Boş üçgen",
+        "leaderArrowClosed",
+    ),
+    (
+        Some(LeaderArrow::Open),
+        "açık",
+        "Açık ok",
+        "leaderArrowOpen",
+    ),
+    (
+        Some(LeaderArrow::Open30),
+        "ince",
+        "İnce açık ok",
+        "leaderArrowOpen30",
+    ),
+    (
+        Some(LeaderArrow::Open90),
+        "dik",
+        "Dik açık ok",
+        "leaderArrowOpen90",
+    ),
+    (
+        Some(LeaderArrow::Dot),
+        "nokta",
+        "Dolu nokta",
+        "leaderArrowDot",
+    ),
+    (
+        Some(LeaderArrow::DotSmall),
+        "küçük nokta",
+        "Küçük nokta",
+        "leaderArrowDotSmall",
+    ),
+    (
+        Some(LeaderArrow::DotBlank),
+        "boş nokta",
+        "Boş nokta",
+        "leaderArrowDotBlank",
+    ),
+    (
+        Some(LeaderArrow::Oblique),
+        "eğik",
+        "Eğik çizgi",
+        "leaderArrowOblique",
+    ),
+    (
+        Some(LeaderArrow::ArchTick),
+        "çentik",
+        "Mimari çentik",
+        "leaderArrowArchTick",
+    ),
+    (
+        Some(LeaderArrow::BoxFilled),
+        "kare",
+        "Dolu kare",
+        "leaderArrowBoxFilled",
+    ),
+    (
+        Some(LeaderArrow::BoxBlank),
+        "boş kare",
+        "Boş kare",
+        "leaderArrowBoxBlank",
+    ),
+    (
+        Some(LeaderArrow::DatumFilled),
+        "dayanak",
+        "Dayanak üçgeni",
+        "leaderArrowDatum",
+    ),
     (Some(LeaderArrow::None), "yok", "Yok", "leaderArrowNone"),
 ];
 
-/// An arrowhead's name: “dolu”, “açık”, “nokta”, “yok”.
+/// An arrowhead's name as typed: “dolu”, “boş”, “açık” … “yok”.
 pub fn arrow_name(a: Option<LeaderArrow>) -> &'static str {
-    ARROWS.iter().find(|row| row.0 == a).map_or("dolu", |row| row.1)
+    ARROWS
+        .iter()
+        .find(|row| row.0 == a)
+        .map_or("dolu", |row| row.1)
 }
 
-/// An arrowhead's label at the head of a menu row or a cell: “Dolu”.
+/// An arrowhead's label at the head of a menu row or a cell: “Dolu üçgen”.
 pub fn arrow_label(a: Option<LeaderArrow>) -> &'static str {
-    ARROWS.iter().find(|row| row.0 == a).map_or("Dolu", |row| row.2)
+    ARROWS
+        .iter()
+        .find(|row| row.0 == a)
+        .map_or("Dolu üçgen", |row| row.2)
+}
+
+/// The names a warning lists when a typed word names no arrowhead.
+fn arrow_names() -> String {
+    ARROWS
+        .iter()
+        .map(|row| row.1)
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// An arrowhead size as the prompt writes it: “1”, “1.5”.
+pub fn size_text(size: Option<f64>) -> String {
+    js_number(size.unwrap_or(1.0))
 }
 
 /// An arrowhead's icon in the web's set (`ui/icons.ts`).
@@ -68,13 +165,13 @@ pub fn arrow_icon(a: Option<LeaderArrow>) -> &'static str {
         .map_or("leaderArrowFilled", |row| row.3)
 }
 
-/// The arrowhead a typed name is, with or without the Turkish marks; none
-/// when it names none (the web's `leaderArrowFromName`).
+/// The arrowhead a typed name or label is, with or without the Turkish
+/// marks and spaces; none when it names none (the web's `leaderArrowFromName`).
 pub fn arrow_from_name(typed: &str) -> Option<Option<LeaderArrow>> {
     let folded = fold_name(typed);
     ARROWS
         .iter()
-        .find(|row| fold_name(row.1) == folded)
+        .find(|row| fold_name(row.1) == folded || fold_name(row.2) == folded)
         .map(|row| row.0)
 }
 
@@ -102,6 +199,8 @@ enum Stage {
     Height,
     /// Ok: the arrowhead's name typed, or chosen from its menu.
     Arrow,
+    /// Ok boyu: the arrowhead's size typed, in the note's height.
+    Size,
     /// The note's field is open.
     Typing,
 }
@@ -118,8 +217,9 @@ pub struct Leader {
     /// The note's box height in metres at the last move: the note's own, at
     /// least 8 px on screen.
     box_height: f64,
-    /// The note's height in metres, as of the last call.
+    /// The note's height in metres and on paper (mm), as of the last call.
     height: f64,
+    height_mm: f64,
     /// What the session remembered and the project's units, as of the last call.
     seen: Option<(Memory, Format)>,
 }
@@ -136,24 +236,21 @@ fn active_locked(cx: &Context<'_>) -> Option<String> {
     })
 }
 
-/// Paper millimetres as metres at the project's plot scale (the web's `paper`).
-fn paper(mm: f64, cx: &Context<'_>) -> f64 {
-    mm / 1000.0 * cx.doc.settings().plot_scale
-}
-
 /// `açık` or `kapalı`, as the prompt says a switch.
 fn on_off(on: bool) -> &'static str {
     if on { "açık" } else { "kapalı" }
 }
 
-/// The core's layout of a leader through `pts` with this arrowhead, its note's place when `note`.
-fn layout(pts: &[Vec2], height: f64, arrow: Option<LeaderArrow>, note: bool) -> Option<LeaderLayout> {
+/// The core's layout of a leader through `pts` with this arrowhead and its
+/// size, its note's place when `note`.
+fn layout(pts: &[Vec2], height: f64, m: &Memory, note: bool) -> Option<LeaderLayout> {
     leader::layout_of(&Shape::Leader {
         pts: pts.to_vec(),
         text: note.then(|| "Not".to_owned()),
         height,
         rotation: 0.0,
-        arrow: arrow.map(|a| a.name().to_owned()),
+        arrow: m.leader_arrow.map(|a| a.name().to_owned()),
+        arrow_size: m.leader_arrow_size,
         mask: None,
     })
 }
@@ -165,7 +262,8 @@ impl Leader {
 
     fn see(&mut self, cx: &Context<'_>) {
         self.seen = Some((*cx.memory, cx.format()));
-        self.height = paper(cx.memory.text_height_mm, cx);
+        self.height_mm = cx.annotation_mm(AnnotationKind::Leader);
+        self.height = cx.annotation_height(AnnotationKind::Leader);
     }
 
     fn memory(&self) -> Memory {
@@ -178,6 +276,7 @@ impl Leader {
         }
         match key {
             "O" => self.stage = Stage::Arrow,
+            "B" => self.stage = Stage::Size,
             "Y" => self.stage = Stage::Height,
             "Z" => cx.memory.leader_mask = !cx.memory.leader_mask,
             "G" if !self.pts.is_empty() => {
@@ -199,7 +298,8 @@ impl Leader {
             None => cx.say(
                 Level::Warn,
                 format!(
-                    "“{typed}” bir ok başı adı değil. Ok başını menüden seçin ya da adını yazın: dolu, açık, nokta, yok."
+                    "“{typed}” bir ok başı adı değil. Ok başını menüden seçin ya da adını yazın: {}.",
+                    arrow_names()
                 ),
             ),
         }
@@ -232,8 +332,8 @@ impl Leader {
 
     /// The note's field, past the landing's end on the note's side.
     fn open_note(&mut self, cx: &mut Context<'_>) {
-        let height = paper(cx.memory.text_height_mm, cx);
-        let Some(l) = layout(&self.pts, height, cx.memory.leader_arrow, true) else {
+        let height = cx.annotation_height(AnnotationKind::Leader);
+        let Some(l) = layout(&self.pts, height, cx.memory, true) else {
             return;
         };
         let Some(at) = l.note_point else {
@@ -265,13 +365,13 @@ impl Leader {
         let geometry = EntityGeometry::Leader {
             pts: self.typing.iter().map(|p| points::wire(*p)).collect(),
             text: text.map(str::to_owned),
-            height: paper(m.text_height_mm, cx),
+            height: cx.annotation_height(AnnotationKind::Leader),
             rotation: 0.0,
             arrow: m.leader_arrow,
+            arrow_size: m.leader_arrow_size,
             mask: m.leader_mask && text.is_some(),
         };
-        if let Some(out) =
-            points::write_objects(vec![geometry], Some(CreateOperation::Leader), cx)
+        if let Some(out) = points::write_objects(vec![geometry], Some(CreateOperation::Leader), cx)
             && let Some(&id) = out.ids.first()
         {
             self.d.note(id, cx);
@@ -316,15 +416,20 @@ impl Tool for Leader {
     fn prompt(&self) -> Prompt {
         let memory = self.memory();
         match self.stage {
-            Stage::Height => Prompt::new(
+            Stage::Height => {
+                Prompt::new(LABEL, "kâğıt üzerindeki not yüksekliğini mm olarak yazın")
+            }
+            Stage::Arrow => Prompt::new(LABEL, "ok başını menüden seçin ya da adını yazın")
+                .option_with("Ok", "O", arrow_name(memory.leader_arrow)),
+            Stage::Size => Prompt::new(
                 LABEL,
-                "kâğıt üzerindeki not yüksekliğini mm olarak yazın (Yazı ile ortak)",
-            ),
-            Stage::Arrow => Prompt::new(
-                LABEL,
-                "ok başını seçin ya da adını yazın: dolu, açık, nokta, yok",
+                format!(
+                    "ok boyunu notun yüksekliğinin katı olarak yazın, {} ile {} arası",
+                    js_number(MIN_LEADER_ARROW),
+                    js_number(MAX_LEADER_ARROW)
+                ),
             )
-            .option_with("Ok", "O", arrow_name(memory.leader_arrow)),
+            .option_with("Ok boyu", "B", size_text(memory.leader_arrow_size)),
             Stage::Typing => Prompt::new(
                 LABEL,
                 "notu kolun ucuna yazın; Enter ekler, boş Enter notsuz ekler, Esc köşelere döner",
@@ -337,10 +442,11 @@ impl Tool for Leader {
                 };
                 let prompt = Prompt::new(LABEL, ask)
                     .option_with("Ok", "O", arrow_name(memory.leader_arrow))
+                    .option_with("Ok boyu", "B", size_text(memory.leader_arrow_size))
                     .option_with(
                         "Yükseklik",
                         "Y",
-                        format!("{} mm", js_number(memory.text_height_mm)),
+                        format!("{} mm", js_number(self.height_mm)),
                     )
                     .option_with("Zemin", "Z", on_off(memory.leader_mask));
                 if self.pts.is_empty() {
@@ -369,8 +475,9 @@ impl Tool for Leader {
         let (point, tracking) = points::constrain(self.pts.last().copied(), p, cx);
         self.d.tracking = tracking;
         self.d.hover = Some(point);
-        self.box_height =
-            paper(cx.memory.text_height_mm, cx).max(cx.view.world_length(LEAST_BOX_PX));
+        self.box_height = cx
+            .annotation_height(AnnotationKind::Leader)
+            .max(cx.view.world_length(LEAST_BOX_PX));
         self.see(cx);
     }
 
@@ -389,12 +496,29 @@ impl Tool for Leader {
                 Stage::Arrow => self.take_arrow(t, cx),
                 Stage::Height => match parse_number(t) {
                     Some(n) if n > 0.0 => {
-                        cx.memory.text_height_mm = n;
+                        cx.memory.heights.set(AnnotationKind::Leader, Some(n));
                         self.stage = Stage::Pts;
                         true
                     }
                     _ => false,
                 },
+                Stage::Size => {
+                    match parse_number(t).filter(|n| leader_arrow_holds(*n)) {
+                        Some(n) => {
+                            cx.memory.leader_arrow_size = (n != 1.0).then_some(n);
+                            self.stage = Stage::Pts;
+                        }
+                        None => cx.say(
+                            Level::Warn,
+                            format!(
+                                "Ok boyu notun yüksekliğinin {} ile {} katı olur; {t} yazıldı.",
+                                js_number(MIN_LEADER_ARROW),
+                                js_number(MAX_LEADER_ARROW)
+                            ),
+                        ),
+                    }
+                    true
+                }
                 Stage::Typing => false,
                 Stage::Pts => match cx.typed_point(text, self.pts.last().copied(), self.d.hover) {
                     Some(p) => {
@@ -409,7 +533,7 @@ impl Tool for Leader {
         done
     }
 
-    /// Ok's menu: the four arrowheads, while the tool waits for a vertex or for one.
+    /// Ok's menu: the arrowheads with their icons, while the tool waits for a vertex or for one.
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
         if key != "O" || !matches!(self.stage, Stage::Pts | Stage::Arrow) {
             return Vec::new();
@@ -426,6 +550,12 @@ impl Tool for Leader {
                 command: None,
             })
             .collect()
+    }
+
+    /// In Ok's step a name of two words is typed whole: Boşluk is a letter
+    /// there (“boş kare”).
+    fn takes_words(&self) -> bool {
+        self.stage == Stage::Arrow
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
@@ -456,7 +586,7 @@ impl Tool for Leader {
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
         let flow = match self.stage {
             Stage::Typing => Flow::Stay,
-            Stage::Height | Stage::Arrow => {
+            Stage::Height | Stage::Arrow | Stage::Size => {
                 self.stage = Stage::Pts;
                 Flow::Stay
             }
@@ -483,7 +613,7 @@ impl Tool for Leader {
     /// with nothing drawn the tool leaves.
     fn cancel(&mut self, _cx: &mut Context<'_>) -> bool {
         match self.stage {
-            Stage::Height | Stage::Arrow | Stage::Typing => {
+            Stage::Height | Stage::Arrow | Stage::Size | Stage::Typing => {
                 self.stage = Stage::Pts;
                 true
             }
@@ -520,7 +650,7 @@ impl Tool for Leader {
             return Preview::default();
         }
         let memory = self.memory();
-        let Some(l) = layout(&pts, self.height, memory.leader_arrow, true) else {
+        let Some(l) = layout(&pts, self.height, &memory, true) else {
             return Preview::default();
         };
         let accent = |pts: Vec<Vec2>, closed: bool| Stroke {
@@ -532,13 +662,14 @@ impl Tool for Leader {
         };
         let mut strokes = vec![accent(leader::drawn_path(&pts, &l), false)];
         let mut areas = Vec::new();
-        if let Head::Open { lines } = &l.head {
-            strokes.push(accent(lines.to_vec(), false));
-        } else if let Some(ring) = leader::head_ring(&l.head) {
+        for line in &l.head.lines {
+            strokes.push(accent(line.pts.clone(), line.closed));
+        }
+        for ring in &l.head.fills {
             areas.push(Area {
-                rings: vec![ring],
+                rings: vec![ring.clone()],
                 fill: 1.0,
-                width: 1.0,
+                width: 0.0,
                 dash: None,
                 fill_tone: Tone::Accent,
             });

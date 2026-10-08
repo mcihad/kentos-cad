@@ -15,7 +15,7 @@
 //!
 //! While it waits for the point the lines' boxes follow the pointer.
 
-use kentos_contracts::{CreateOperation, EntityGeometry};
+use kentos_contracts::{AnnotationKind, CreateOperation, EntityGeometry};
 use kentos_geometry_core::entity::TextPlace;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::{core_face, drawing_font};
@@ -150,18 +150,13 @@ pub struct PlaceTextFile {
     scale: f64,
 }
 
-/// Paper millimetres as metres at the project's plot scale.
-fn paper(mm: f64, cx: &Context<'_>) -> f64 {
-    mm / 1000.0 * cx.doc.settings().plot_scale
-}
-
 impl PlaceTextFile {
     pub fn new() -> Self {
         Self::default()
     }
 
     fn see(&mut self, cx: &Context<'_>) {
-        self.seen = Some(*cx.memory);
+        self.seen = Some(cx.seen_memory());
         self.styles = styles::Seen::text(cx);
         self.scale = cx.doc.settings().plot_scale;
     }
@@ -185,7 +180,7 @@ impl PlaceTextFile {
             return;
         }
         let m = *cx.memory;
-        let height = paper(m.text_height_mm, cx);
+        let height = cx.annotation_height(AnnotationKind::Text);
         let face = styles::text_face(cx);
         let r = m.text_angle.to_radians();
         // Down the texts' own up: each line 1.5 heights under the one before.
@@ -251,7 +246,7 @@ impl Tool for PlaceTextFile {
             .then()
             .note(format!(
                 "Yazı'nın seçenekleriyle: {style}{} mm, {}°, {}",
-                js_number(m.text_height_mm),
+                js_number(m.heights.mm(AnnotationKind::Text)),
                 js_number(
                     fixed(m.text_angle, 4)
                         .parse::<f64>()
@@ -353,7 +348,7 @@ impl Tool for PlaceTextFile {
         };
         let m = self.seen.unwrap_or_default();
         let (along, up) = m.text_align.map_or((0.0, 0.0), |a| (a.along(), a.up()));
-        let height = m.text_height_mm / 1000.0 * self.scale;
+        let height = m.heights.mm(AnnotationKind::Text) / 1000.0 * self.scale;
         let r = m.text_angle.to_radians();
         let (dx, dy) = (r.cos(), r.sin());
         // A point `x` along the texts' baseline and `y` up from it, counted from the pointer.

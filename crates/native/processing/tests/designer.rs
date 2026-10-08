@@ -99,6 +99,8 @@ fn defaults(f: &Value) -> Defaults {
         plot_scale: d["plotScale"].as_f64().expect("a scale"),
         drawing_font: "barlow",
         active_layer: d["activeLayer"].as_str().expect("a layer").to_owned(),
+        // The kind's default when the case names none (docs/adr/0205 §1).
+        measure_height_mm: d["measureHeightMm"].as_f64().unwrap_or(2.0),
     }
 }
 

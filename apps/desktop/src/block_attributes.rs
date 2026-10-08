@@ -176,7 +176,18 @@ impl App {
                 .map(|a| table::row_of(a, block.base))
                 .collect(),
             extent: table::outline_extent(&outlines),
-            height: 2.5 / 1000.0 * model.settings().plot_scale,
+            // As high as a text Yazı writes: typed in this drawing, else the project's (docs/adr/0205 §2).
+            height: kentos_contracts::paper_height(
+                self.memory
+                    .heights
+                    .get(kentos_contracts::AnnotationKind::Text)
+                    .unwrap_or_else(|| {
+                        model
+                            .settings()
+                            .annotation_mm(kentos_contracts::AnnotationKind::Text)
+                    }),
+                model.settings().plot_scale,
+            ),
             via: actions::attributes_insert(model, &self.selection, id),
             answer: Ok(()),
         });

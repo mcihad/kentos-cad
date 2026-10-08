@@ -989,9 +989,7 @@ impl shader::Program<Message> for Program {
             && let Some(hold) = right_hold(state, *now)
         {
             return Some(match hold {
-                Hold::Held(at) => {
-                    shader::Action::publish(Message::Viewport(Event::RightHeld(at)))
-                }
+                Hold::Held(at) => shader::Action::publish(Message::Viewport(Event::RightHeld(at))),
                 Hold::Wait(until) => shader::Action::request_redraw_at(until),
             });
         }
@@ -1610,9 +1608,15 @@ mod tests {
         let at = Point::new(300.0, 200.0);
         state.right = Some((now, at, false));
         // Before its time: a frame then.
-        assert_eq!(right_hold(&mut state, now), Some(Hold::Wait(now + RIGHT_HOLD)));
+        assert_eq!(
+            right_hold(&mut state, now),
+            Some(Hold::Wait(now + RIGHT_HOLD))
+        );
         // Its time up: told once.
-        assert_eq!(right_hold(&mut state, now + RIGHT_HOLD), Some(Hold::Held(at)));
+        assert_eq!(
+            right_hold(&mut state, now + RIGHT_HOLD),
+            Some(Hold::Held(at))
+        );
         assert_eq!(right_hold(&mut state, now + RIGHT_HOLD * 2), None);
         let released = gesture(
             &mut state,

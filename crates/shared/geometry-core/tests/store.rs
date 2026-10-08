@@ -416,7 +416,10 @@ fn check(path: &std::path::Path) {
             // KENTOS_DUMP_STORE=1 prints the answers that differ, whole, for reviewing a
             // deliberate change before the fixture is updated (docs/adr/0149 §5.3).
             if std::env::var_os("KENTOS_DUMP_STORE").is_some() {
-                println!("{}", json!({ "op": c["op"], "name": c["name"], "got": got }));
+                println!(
+                    "{}",
+                    json!({ "op": c["op"], "name": c["name"], "got": got })
+                );
             }
             failures.push(e);
         }

@@ -1,3 +1,4 @@
+import { ARROW_ICONS } from './arrowIcons';
 import { HATCH_ICONS, HATCH_PREVIEWS } from './hatchIcons';
 
 /**
@@ -128,11 +129,7 @@ export const ICONS = {
   labelSouthWest: `${dot(15, 5, 1.5)}<path d="M13.5 6.5 4.5 15.5"/><path d="M4.5 10.5v5h5"/>`,
   labelSouthEast: `${dot(5, 5, 1.5)}<path d="M6.5 6.5 15.5 15.5"/><path d="M15.5 10.5v5h-5"/>`,
   leader: '<path d="M4 16 10 9.5h2.5"/><path d="M4 16 7 14.2 5.6 12.8z" fill="currentColor" stroke="none"/><path d="M14 8.2h3.2M14 10.8h2.4" stroke-width="1.2"/>',
-  // Its arrowheads (Ok's menu): filled, open, a dot, none.
-  leaderArrowFilled: '<path d="M6.5 10H17"/><path d="M2.5 10 7.2 7.6v4.8z" fill="currentColor" stroke="none"/>',
-  leaderArrowOpen: '<path d="M2.5 10H17"/><path d="M7.2 7.6 2.5 10l4.7 2.4"/>',
-  leaderArrowDot: '<path d="M6.5 10H17"/><circle cx="4.3" cy="10" r="2.1" fill="currentColor" stroke="none"/>',
-  leaderArrowNone: '<path d="M2.5 10H17"/>',
+  // Its arrowheads (Ok's menu) are ARROW_ICONS, below.
   // Bul ve değiştir (docs/adr/0145 §6): the looking glass, and an arrow to what the words become.
   findReplace: '<circle cx="8" cy="8" r="4.3"/><path d="m11.1 11.1 2.4 2.4"/><path d="M10.5 17h6.5m-2-2 2 2-2 2"/>',
   // Okunur yap (docs/adr/0145 §6): a T inside the turning arrow.
@@ -477,6 +474,10 @@ export const ICONS = {
   lineWeight: '<path d="M3 5h14"/><path d="M3 10h14" stroke-width="2.4"/><path d="M3 15.5h14" stroke-width="3.6"/>',
   // Görünüm kipleri (docs/adr/0195): Renkli, Tek renk, Gri; Dolgular, Alan sınırları, Saydamlık (the option sheet's A, Tek renk its B: A's half disc is Tema's).
   colorModeColor: '<circle cx="7.5" cy="8" r="4.5"/><circle cx="12.5" cy="8" r="4.5"/><circle cx="10" cy="12.5" r="4.5"/>',
+  // Yazıların boyu (docs/adr/0205 §5): an A grown, an A on its ruler, an A on the screen.
+  annotationLegible: '<path d="M2.5 15.5 6.5 4.5l4 11M4 11.8h5"/><path d="M12.5 11.5 15 9l2.5 2.5M15 9v7"/>',
+  annotationTrue: '<path d="M3 12.5 7 2.5l4 10M4.5 8.8h5"/><path d="M2.5 16.5h15M5 15v1.5M10 15v1.5M15 15v1.5" stroke-width="1.2"/>',
+  annotationScreen: '<rect x="2.5" y="3" width="15" height="10.5" rx="1.5"/><path d="M7 17h6M10 13.5V17"/><path d="M7.2 11.2 10 5.4l2.8 5.8M8.1 9.4h3.8" stroke-width="1.2"/>',
   colorModeMono: '<rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 17 17 3v12a2 2 0 0 1-2 2z" fill="currentColor" stroke="none"/>',
   colorModeGray: '<rect x="2.5" y="6.5" width="5" height="7" rx="0.8" fill="currentColor" stroke="none" opacity="0.9"/><rect x="7.5" y="6.5" width="5" height="7" rx="0.8" fill="currentColor" stroke="none" opacity="0.5"/><rect x="12.5" y="6.5" width="5" height="7" rx="0.8" fill="currentColor" stroke="none" opacity="0.2"/><rect x="2.5" y="6.5" width="15" height="7" rx="0.8"/>',
   viewFills: '<path d="M3 4.5h11l3 11H6z"/><path d="m6.5 8 2.5-3.5M7 12l5-7M9 15l5.5-8M12.5 15.2l3-4.2" stroke-width="1.1"/>',
@@ -729,6 +730,8 @@ export const ICONS = {
   // wide samples for Desen's menus (`iconPreview`; the desktop draws them from the inventory).
   ...HATCH_ICONS,
   ...HATCH_PREVIEWS,
+  // The leader arrowheads, each drawn from its shape (docs/adr/0205 §7; written by scripts/ui/arrow_icons.py).
+  ...ARROW_ICONS,
 } as const;
 
 export type IconName = keyof typeof ICONS;

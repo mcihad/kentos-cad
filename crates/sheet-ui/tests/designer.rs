@@ -1388,3 +1388,135 @@ fn the_inspector_shows_the_north_arrow_s_declination_and_types_it_by_hand() {
     d.update(Message::North(NorthMessage::Hand(true)));
     assert_eq!(kind(&d).declination, -2170);
 }
+
+/// A fixed map's scale and centre from the drawing (docs/adr/0206 §1): Çizim
+/// ölçeğini al gives the project's plot scale, Görünüme sığdır the drawing
+/// area's centre and the largest standard scale its view fits at (each in one
+/// step), Görünümden al the centre alone; the scale typed stays the user's.
+#[test]
+fn a_map_takes_its_scale_and_place_from_the_drawing() {
+    use kentos_sheet::kinds::MapView;
+    let view = |d: &Designer| match &item(d, "Harita").kind {
+        ItemKind::Map(m) => match &m.view {
+            MapView::Fixed(v) => (v.scale, v.center),
+            MapView::Atlas(_) => panic!("a fixed map"),
+        },
+        other => panic!("{other:?}"),
+    };
+    // The map made at 1/1000; the project's scale is 1/2500 since.
+    let mut d = Designer::new(context());
+    new_sheet(&mut d);
+    assert_eq!(view(&d).0, 1000);
+    d.set_context(Context {
+        capabilities: Capabilities {
+            plot_scale: Some(2500),
+            ..context().capabilities
+        },
+        // The drawing area shows 1 200 × 600 m about (500 300, 4 420 150).
+        center: Some(GroundPoint {
+            x: 500_300.0,
+            y: 4_420_150.0,
+        }),
+        view_size: Some([1_200.0, 600.0]),
+        ..context()
+    });
+    let map = item(&d, "Harita").clone();
+    d.update(Message::Select(vec![map.id.clone()]));
+    d.update(Message::MapScaleFromDrawing);
+    assert_eq!(view(&d).0, 2500);
+    assert_eq!(
+        view(&d).1.map(|c| (c.x, c.y)),
+        Some((500_000.0, 4_420_000.0)),
+        "the centre stays"
+    );
+    // The frame's width and height in metres of paper, and the scale the view needs.
+    let (fw, fh) = (
+        f64::from(map.frame.width) / 1e6,
+        f64::from(map.frame.height) / 1e6,
+    );
+    let need = (1_200.0 / fw).max(600.0 / fh);
+    let want = [
+        100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 25000, 50000, 100000,
+    ]
+    .into_iter()
+    .find(|s| f64::from(*s) >= need)
+    .expect("a standard scale");
+    d.update(Message::MapFitView);
+    let (scale, centre) = view(&d);
+    assert_eq!(scale, want, "{need}");
+    assert_eq!(centre.map(|c| (c.x, c.y)), Some((500_300.0, 4_420_150.0)));
+    d.update(Message::Undo);
+    assert_eq!(view(&d).0, 2500, "one step");
+    // Görünümden al: the centre alone.
+    d.set_context(Context {
+        center: Some(GroundPoint {
+            x: 500_010.0,
+            y: 4_420_020.0,
+        }),
+        ..d.context().clone()
+    });
+    d.update(Message::MapCentreFromView);
+    let (scale, centre) = view(&d);
+    assert_eq!(scale, 2500);
+    assert_eq!(centre.map(|c| (c.x, c.y)), Some((500_010.0, 4_420_020.0)));
+}
+
+/// A coordinate list's source and headings (docs/adr/0206 §2, §3): the
+/// objects taken by their ids (the host answers “Seçimi al” with them), a
+/// layer, the drawing's choice now; the points numbered; a heading written
+/// and, emptied, its default again; each one step.
+#[test]
+fn a_coordinate_list_takes_its_objects_and_headings() {
+    use kentos_sheet::kinds::{CoordSource, PointNaming};
+    let mut d = Designer::new(Context {
+        layers: vec![("parsel".into(), "Parsel".into())],
+        ..context()
+    });
+    new_sheet(&mut d);
+    d.update(Message::Tool(Tool::Add {
+        tool: "coordinateList".into(),
+        preset: None,
+    }));
+    press(&mut d, [40_000.0, 40_000.0], false);
+    d.update(Message::Stage(StageEvent::Release {
+        at: [40_000.0, 40_000.0],
+        shift: false,
+        ctrl: false,
+        alt: false,
+    }));
+    let list = |d: &Designer| match &d.open_sheet().unwrap().items.last().unwrap().kind {
+        ItemKind::CoordinateList(c) => c.clone(),
+        other => panic!("{other:?}"),
+    };
+    // A new list reads the drawing's choice now, as before.
+    assert!(matches!(list(&d).source, CoordSource::Selection(_)));
+    assert!(matches!(
+        d.chosen_coordinate_source(),
+        Some(CoordSource::Selection(_))
+    ));
+    // “Seçimi al” is the host's; it answers with the objects' ids.
+    assert!(d.update(Message::CoordTakeSelection).is_empty());
+    d.update(Message::CoordObjects(vec![
+        "0192f6a0-0000-7000-8000-000000000001".into(),
+    ]));
+    assert!(matches!(&list(&d).source, CoordSource::Objects(o) if o.uids.len() == 1));
+    d.update(Message::CoordLayer("parsel".into()));
+    assert!(matches!(&list(&d).source, CoordSource::Layer(l) if l.layer == "parsel"));
+    d.update(Message::CoordLive);
+    assert!(matches!(list(&d).source, CoordSource::Selection(_)));
+    d.update(Message::CoordNumbered(true));
+    assert!(matches!(list(&d).naming, PointNaming::Sequence(_)));
+    d.update(Message::CoordHeading("east", "Sağa (Y)".into()));
+    assert_eq!(
+        list(&d).columns.and_then(|c| c.east).as_deref(),
+        Some("Sağa (Y)")
+    );
+    d.update(Message::CoordHeading("east", "  ".into()));
+    assert_eq!(list(&d).columns.and_then(|c| c.east), None);
+    d.update(Message::Undo);
+    assert_eq!(
+        list(&d).columns.and_then(|c| c.east).as_deref(),
+        Some("Sağa (Y)"),
+        "one step"
+    );
+}

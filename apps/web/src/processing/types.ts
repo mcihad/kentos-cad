@@ -46,6 +46,11 @@ export interface DefaultsContext {
   activeLayer: string;
   /** The drawing's typeface (`ProjectSettings.drawingFont`): texts a tool places are measured in it. */
   drawingFont: DrawingFont;
+  /**
+   * The project's Kenar ve köşe yazıları height on paper, mm (docs/adr/0205 §1): an edge length's or corner number's
+   * text height left empty is this one. Absent: 2 mm, the kind's default.
+   */
+  measureHeightMm?: number;
 }
 
 /**
@@ -94,11 +99,13 @@ export interface FeaturesParam<N extends string = string> extends ParamBase<N> {
 
 export interface NumberParam<N extends string = string> extends ParamBase<N> {
   readonly type: 'number';
-  readonly default?: Default<number>;
+  readonly default?: Default<number | null>;
   readonly min?: number;
   readonly max?: number;
   readonly integer?: boolean;
   readonly unit?: ParamUnit;
+  /** Shown in an optional field left empty (what empty means: “Proje”). */
+  readonly placeholder?: string;
 }
 
 export interface StringParam<N extends string = string> extends ParamBase<N> {

@@ -1,5 +1,7 @@
 import type { AssetMeta } from '../../contracts/generated/sheet/AssetMeta';
 import type { Capabilities } from '../../contracts/generated/sheet/Capabilities';
+import type { CoordinateInput } from '../../contracts/generated/sheet/CoordinateInput';
+import type { CoordSource } from '../../contracts/generated/sheet/CoordSource';
 import type { DisplayList } from '../../contracts/generated/sheet/DisplayList';
 import type { Finding } from '../../contracts/generated/sheet/Finding';
 import type { NorthInfo } from '../../contracts/generated/sheet/NorthInfo';
@@ -373,9 +375,19 @@ export class SheetService implements SheetHost {
     return (await this.parts()).addPicture(this.ctx, this, file);
   }
 
-  mapPlace(): { center: GroundPoint; scale: number } {
+  mapPlace(): { center: GroundPoint; scale: number; view: { width: number; height: number } } {
     const cam = this.ctx.view.camera;
-    return { center: { x: cam.center.x, y: cam.center.y }, scale: this.ctx.doc.settings.plotScale.value || 1000 };
+    // The drawing area's size in metres: its pixels over its pixels per metre.
+    return { center: { x: cam.center.x, y: cam.center.y }, scale: this.ctx.doc.settings.plotScale.value || 1000, view: { width: cam.width / cam.scale, height: cam.height / cam.scale } };
+  }
+
+  // The engine's parts are loaded while a sheet is open, and with them its inputs (docs/adr/0206 §2).
+  coordinateInput(item: string, source: CoordSource): CoordinateInput {
+    return this.partsRef?.coordinateInputOf(this.ctx, item, source) ?? { item, points: [], closed: false };
+  }
+
+  coordinateObjects(source: CoordSource): number[] {
+    return this.partsRef?.coordinateObjects(this.ctx, source).list.map((e) => e.id) ?? [];
   }
 
   galleryAbilities(): GalleryAbilities {

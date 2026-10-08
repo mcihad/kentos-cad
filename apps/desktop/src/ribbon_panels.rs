@@ -56,6 +56,12 @@ pub(crate) const DRAW_COLORS: [(&str, &str); 8] = [
     ("Gri", "#8C9AAA"),
 ];
 
+/// The colours a dimension's lines take (the web's `LINE_COLORS`, docs/adr/0205
+/// §6): the drawing colours but ink, which is the object's own.
+pub(crate) fn line_colors() -> impl Iterator<Item = (&'static str, &'static str)> {
+    DRAW_COLORS.iter().copied().filter(|(_, v)| *v != "ink")
+}
+
 /// Line types with the web's names (`LINE_TYPE_LABEL`, model/layers.ts).
 pub(crate) const LINE_TYPES: [(LineType, &str); 4] = [
     (LineType::Continuous, "Sürekli"),
@@ -66,9 +72,6 @@ pub(crate) const LINE_TYPES: [(LineType, &str); 4] = [
 
 /// Plot line weights in mm (the web's `LINE_WEIGHTS`).
 pub(crate) const LINE_WEIGHTS: [f64; 6] = [0.13, 0.18, 0.25, 0.35, 0.5, 0.7];
-
-/// The plot scales the ribbon offers (the web's `PLOT_SCALES`).
-pub(super) const PLOT_SCALES: [f64; 5] = [500.0, 1000.0, 2000.0, 5000.0, 25000.0];
 
 /// What the fields' choices ask; the active layer goes through the layer
 /// tree's own event (`layering::Event::Activate`).
@@ -117,13 +120,8 @@ impl App {
             Event::LineType(line_type) => self.new_line_type = line_type,
             // New objects drawn with lines take it (docs/adr/0139).
             Event::Weight(weight) => self.draft.line_weight = weight,
-            Event::Scale(scale) => {
-                if let Some(doc) = &mut self.document {
-                    let mut settings = doc.settings().clone();
-                    settings.plot_scale = scale;
-                    doc.model.set_settings(settings);
-                }
-            }
+            // Its annotations at the old general height follow it in one step (docs/adr/0205 §3).
+            Event::Scale(scale) => self.set_plot_scale(scale),
         }
     }
 
@@ -380,6 +378,7 @@ impl App {
             .collect();
         let (line_type, weight) = (self.new_line_type, self.draft.line_weight);
         let scale = doc.settings().plot_scale;
+        let cad = self.work_mode() == kentos_contracts::Workspace::Cad;
         let s = typography::scaled;
         let fields_width = move |level: Level| match level {
             0 => s(188.0),
@@ -396,7 +395,7 @@ impl App {
                     color_menu(color.as_ref().map(DraftColor::as_str), &swatches),
                     line_type_menu(line_type),
                     weight_menu(weight),
-                    scale_menu(scale),
+                    scale_menu(scale, cad),
                 )
             }
         };
@@ -433,7 +432,7 @@ impl App {
                     "Yeni nesnelerin çizim kalınlığı; “Katmana göre” katmanınkini kullanır.",
                 ));
             let m = view_menus.clone();
-            let scales = Choice::new(format!("1:{scale}"), move || m().3)
+            let scales = Choice::new(kentos_project::wizard::scale_text(scale), move || m().3)
                 .label("Ölçek")
                 .label_icon(glyph("plotScale"))
                 .width(scale_width(level))

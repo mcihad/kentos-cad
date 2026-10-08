@@ -38,6 +38,7 @@ __all__ = [
     "AlignTransform",
     "AngleUnit",
     "AngleUnitName",
+    "AnnotationHeights",
     "ArcCreate",
     "ArcCreated",
     "ArcEntity",

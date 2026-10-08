@@ -12,13 +12,13 @@ mod objects;
 mod styles;
 
 use kentos_contracts::{
-    AngleUnit, AreaUnit, Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
-    DocumentSnapshotV2, DrawingFont, DrawingUnit, FieldChoice, LabelInk, LabelPlacement,
-    LabelStyle, LayerField, LayerFieldKind, LayerNode, LayerNodeType, LayerSnap, LayerState,
-    LayerStateNode, LayerStyle, LineType, MigrationSource, PointStyle, PointSymbol, ProjectId,
-    ProjectSettings, ProjectStyles, SurveySettings, TopologyException, TopologyRule,
-    TopologyRuleKind, TopologySettings, Vec2, Workspace, layer_fields_problem,
-    layer_states_problem,
+    AngleUnit, AnnotationHeights, AnnotationKind, AreaUnit, Bounds, DOCUMENT_FORMAT,
+    DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont, DrawingUnit,
+    FieldChoice, LabelInk, LabelPlacement, LabelStyle, LayerField, LayerFieldKind, LayerNode,
+    LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, LineType, MAX_ANNOTATION_MM,
+    MigrationSource, PointStyle, PointSymbol, ProjectId, ProjectSettings, ProjectStyles,
+    SurveySettings, TopologyException, TopologyRule, TopologyRuleKind, TopologySettings, Vec2,
+    Workspace, annotation_mm_holds, layer_fields_problem, layer_states_problem,
 };
 
 use crate::SCHEMAS;
@@ -256,7 +256,9 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
             // blocks are known before its objects.
             "entities" => {
                 let none = Default::default();
-                let (list, index) = blocks.as_ref().map_or((&[][..], &none), |(l, i)| (&l[..], i));
+                let (list, index) = blocks
+                    .as_ref()
+                    .map_or((&[][..], &none), |(l, i)| (&l[..], i));
                 entities = Some(objects(
                     r,
                     name.as_deref(),
@@ -310,6 +312,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut survey = None;
     let mut layer_states = Vec::new();
     let mut topology = None;
+    let mut annotation = None;
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
@@ -378,8 +381,11 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "survey" if has.survey => survey = Some(survey_settings(r, has)?),
             "layerStates" if has.layer_states => layer_states = layer_states_list(r)?,
             "topology" if has.topology => topology = Some(topology_settings(r)?),
+            "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
-            "dimensionStyles" if has.styles => dimension_styles = styles::dimension_styles(r)?,
+            "dimensionStyles" if has.styles => {
+                dimension_styles = styles::dimension_styles(r, has.annotation)?
+            }
             // `srid` and `customCrs` come first in the encoded order: the project's own system is known.
             "secondSrid" if has.second_srid => {
                 let at = r.position();
@@ -444,7 +450,46 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         text_styles,
         dimension_styles,
         topology,
+        annotation,
     })
+}
+
+/// Schema 30's annotation heights (docs/adr/0205 §1): each kind's paper
+/// height, mm; a key the contract does not have is `unknown_field`, a height
+/// that does not hold and an empty map (a writer leaves none out but the
+/// field) are `bad_value`.
+fn annotation_heights(r: &mut Reader<'_>) -> Result<AnnotationHeights, KcadError> {
+    let at = r.position();
+    let mut heights = AnnotationHeights::default();
+    let mut any = false;
+    map(r, |r, key| {
+        let Some(kind) = AnnotationKind::from_key(key) else {
+            return Err(unknown(r));
+        };
+        let at = r.position();
+        let mm = r.float()?;
+        if !annotation_mm_holds(mm) {
+            return Err(r.fail_at(
+                Code::BadValue,
+                at,
+                &format!(
+                    "{} yüksekliği {mm} mm; sıfırdan büyük, en çok {MAX_ANNOTATION_MM} olmalı",
+                    kind.label()
+                ),
+            ));
+        }
+        heights = std::mem::take(&mut heights).with(kind, Some(mm));
+        any = true;
+        Ok(())
+    })?;
+    if !any {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            "yazı yükseklikleri boş; yüksekliği olmayan proje alanı yazmaz",
+        ));
+    }
+    Ok(heights)
 }
 
 /// Schema 27's topology settings (docs/adr/0202 §7): the tolerance, the
@@ -749,12 +794,7 @@ fn layer_field(r: &mut Reader<'_>) -> Result<LayerField, KcadError> {
         match key {
             "max" => max = Some(text(r)?),
             "min" => min = Some(text(r)?),
-            "kind" => {
-                kind = Some(named(
-                    r,
-                    &LayerFieldKind::ALL.map(|k| (k.name(), k)),
-                )?)
-            }
+            "kind" => kind = Some(named(r, &LayerFieldKind::ALL.map(|k| (k.name(), k)))?),
             "name" => name = Some(text(r)?),
             "alias" => alias = Some(text(r)?),
             "scale" => scale = Some(count(r)?),
@@ -827,6 +867,19 @@ fn layer_snap(r: &mut Reader<'_>) -> Result<LayerSnap, KcadError> {
     }
 }
 
+/// A line type by its name (a layer style's, a dimension's lines'; §6.4).
+pub(super) fn line_type_named(r: &mut Reader<'_>) -> Result<LineType, KcadError> {
+    named(
+        r,
+        &[
+            ("continuous", LineType::Continuous),
+            ("dashed", LineType::Dashed),
+            ("dashdot", LineType::Dashdot),
+            ("dotted", LineType::Dotted),
+        ],
+    )
+}
+
 fn layer_style(r: &mut Reader<'_>) -> Result<LayerStyle, KcadError> {
     let (mut fill, mut color, mut label, mut point_) = (None, None, None, None);
     let (mut line_type, mut renderer, mut line_weight, mut pick_interior) =
@@ -837,17 +890,7 @@ fn layer_style(r: &mut Reader<'_>) -> Result<LayerStyle, KcadError> {
             "color" => color = Some(text(r)?),
             "label" => label = Some(label_style(r)?),
             "point" => point_ = Some(point_style(r)?),
-            "lineType" => {
-                line_type = Some(named(
-                    r,
-                    &[
-                        ("continuous", LineType::Continuous),
-                        ("dashed", LineType::Dashed),
-                        ("dashdot", LineType::Dashdot),
-                        ("dotted", LineType::Dotted),
-                    ],
-                )?)
-            }
+            "lineType" => line_type = Some(line_type_named(r)?),
             "renderer" => {
                 if r.next_is_null() {
                     return Err(r.fail(

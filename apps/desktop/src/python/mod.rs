@@ -703,6 +703,7 @@ impl App {
             // Shortcuts wait silently; the console's own keys are its editor's.
             Message::Key(_) => true,
             Message::Run(_)
+            | Message::RunKept(_)
             | Message::RunMethod { .. }
             | Message::SplitChosen { .. }
             | Message::CommandSubmitted

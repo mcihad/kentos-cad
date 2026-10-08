@@ -447,17 +447,60 @@ export interface LeaderEntity extends EntityBase {
   height: number;
   /** The note's and the landing's direction, degrees counter-clockwise from east. */
   rotation: number;
-  /** The arrowhead; absent: a filled arrow. */
+  /** The arrowhead; absent: a filled triangle. */
   arrow?: LeaderArrow;
+  /** The arrowhead's length, times the note's height (docs/adr/0205 §7); absent: 1. */
+  arrowSize?: number;
   /** The note's box filled with the drawing area's colour, as a text's mask (docs/adr/0145). */
   mask?: boolean;
 }
 
-/** A leader's arrowhead other than the filled arrow, which is the field's absence (docs/adr/0146 §1). */
-export type LeaderArrow = 'open' | 'dot' | 'none';
+/**
+ * A leader's arrowhead other than the filled triangle (Dolu üçgen, AutoCAD's Closed filled), which is the field's
+ * absence (docs/adr/0146 §1): the first leaders' three, then AutoCAD's others (docs/adr/0205 §7).
+ */
+export type LeaderArrow =
+  | 'open'
+  | 'dot'
+  | 'none'
+  | 'closed'
+  | 'open30'
+  | 'open90'
+  | 'dotSmall'
+  | 'dotBlank'
+  | 'oblique'
+  | 'archTick'
+  | 'boxFilled'
+  | 'boxBlank'
+  | 'datumFilled';
 
 /** Every arrowhead name, in the contract's order (`LeaderArrow::ALL`). */
-export const LEADER_ARROWS: readonly LeaderArrow[] = ['open', 'dot', 'none'];
+export const LEADER_ARROWS: readonly LeaderArrow[] = ['open', 'dot', 'none', 'closed', 'open30', 'open90', 'dotSmall', 'dotBlank', 'oblique', 'archTick', 'boxFilled', 'boxBlank', 'datumFilled'];
+
+/** The arrowheads as the interface names them (the contract's `LeaderArrow::label`); the filled triangle under ''. */
+export const LEADER_ARROW_LABEL: Readonly<Record<LeaderArrow | '', string>> = {
+  '': 'Dolu üçgen',
+  open: 'Açık ok',
+  dot: 'Dolu nokta',
+  none: 'Yok',
+  closed: 'Boş üçgen',
+  open30: 'İnce açık ok',
+  open90: 'Dik açık ok',
+  dotSmall: 'Küçük nokta',
+  dotBlank: 'Boş nokta',
+  oblique: 'Eğik çizgi',
+  archTick: 'Mimari çentik',
+  boxFilled: 'Dolu kare',
+  boxBlank: 'Boş kare',
+  datumFilled: 'Dayanak üçgeni',
+};
+
+/** The shortest and the longest a leader's arrowhead may be, times its note's height (docs/adr/0205 §7). */
+export const MIN_LEADER_ARROW = 0.1;
+export const MAX_LEADER_ARROW = 10;
+
+/** Whether `size` may be a leader's arrowhead size (the contract's `leader_arrow_holds`). */
+export const leaderArrowHolds = (size: number): boolean => Number.isFinite(size) && size >= MIN_LEADER_ARROW && size <= MAX_LEADER_ARROW;
 
 /** A merged range of a table: `rows` × `cols` cells from row `row`, column `col` (docs/adr/0184 §1). */
 export interface CellRange {

@@ -81,7 +81,10 @@ fn shown(e: &Entity, name: &str) -> Option<String> {
 /// The value of property `name` whatever its switch says: the symbol's own
 /// settings (`choiceType`, `numberOfDecimalPlace`) have none.
 fn setting<'e>(e: &'e Entity, name: &str) -> Option<&'e str> {
-    e.properties.iter().find(|p| p.name == name).map(|p| p.value.as_str())
+    e.properties
+        .iter()
+        .find(|p| p.name == name)
+        .map(|p| p.value.as_str())
 }
 
 /// `value` as a number, `.` or `,` for the decimal point.
@@ -166,10 +169,16 @@ fn settlement(e: &Entity) -> Option<Symbol> {
     let arka = shown(e, "txtArka");
     let yan = shown(e, "txtYan");
     let kat = shown(e, "kat");
-    let code = shown(e, "nizam").map(|n| order_code(&n)).unwrap_or_default();
+    let code = shown(e, "nizam")
+        .map(|n| order_code(&n))
+        .unwrap_or_default();
     let mut top = on.unwrap_or_default();
     if let Some(a) = arka {
-        top = if top.is_empty() { a } else { format!("{top}-{a}") };
+        top = if top.is_empty() {
+            a
+        } else {
+            format!("{top}-{a}")
+        };
     }
 
     let h = 0.45 * R;
@@ -182,7 +191,9 @@ fn settlement(e: &Entity) -> Option<Symbol> {
             strokes.push(line(-0.1 * R, 0.0, 0.1 * R, 0.0));
             strokes.push(text(k.clone(), Anchor::MiddleLeft, 0.16 * R, 0.0, h));
         }
-        None if !code.is_empty() => strokes.push(text(code.clone(), Anchor::MiddleCentre, 0.0, 0.0, h)),
+        None if !code.is_empty() => {
+            strokes.push(text(code.clone(), Anchor::MiddleCentre, 0.0, 0.0, h))
+        }
         None => {}
     }
     if !top.is_empty() {
@@ -224,7 +235,8 @@ fn construction(e: &Entity) -> Option<Symbol> {
     };
     let taks = pair("taks", "minTaks");
     let kaks = pair("kaks", "minKaks");
-    let ratios = setting(e, "choiceType").unwrap_or("1") != "0" && (!taks.is_empty() || !kaks.is_empty());
+    let ratios =
+        setting(e, "choiceType").unwrap_or("1") != "0" && (!taks.is_empty() || !kaks.is_empty());
 
     if ratios {
         let range = shown(e, "minTaks").is_some() || shown(e, "minKaks").is_some();
@@ -250,7 +262,9 @@ fn construction(e: &Entity) -> Option<Symbol> {
         lines.push(format!("E={}", fixed(&v, decimals)));
     }
     if let Some(v) = shown(e, "hmax") {
-        let unit = shown(e, "HmaxType").map(|u| format!(" {u}")).unwrap_or_default();
+        let unit = shown(e, "HmaxType")
+            .map(|u| format!(" {u}"))
+            .unwrap_or_default();
         lines.push(format!("Hmax={}{unit}", fixed(&v, decimals)));
     }
     // In metres unless the symbol names its unit (`Kat`): the plan's own text
@@ -326,13 +340,23 @@ fn plan_note(e: &Entity) -> Option<Symbol> {
     // longest line allows: the RTF's own point sizes are relative to a page
     // Netcad scales into the box, so the box is what is known.
     let lines = body.split('\n').count();
-    let longest = body.split('\n').map(|l| l.chars().count()).max().unwrap_or(0);
+    let longest = body
+        .split('\n')
+        .map(|l| l.chars().count())
+        .max()
+        .unwrap_or(0);
     let mut height = h / (lines as f64 * 1.45);
     if longest > 0 {
         height = height.min(w / (longest as f64 * 0.62));
     }
     height = height.max(h / 400.0);
-    let first: String = body.split('\n').next().unwrap_or("").chars().take(40).collect();
+    let first: String = body
+        .split('\n')
+        .next()
+        .unwrap_or("")
+        .chars()
+        .take(40)
+        .collect();
     Some(Symbol {
         summary: format!("plan notu: {first}"),
         strokes: vec![
@@ -442,7 +466,10 @@ pub fn rtf_text(rtf: &[u8]) -> String {
         let c = rtf[i];
         match c {
             b'{' => {
-                let top = stack.last().copied().unwrap_or(Group { skip: false, uc: 1 });
+                let top = stack
+                    .last()
+                    .copied()
+                    .unwrap_or(Group { skip: false, uc: 1 });
                 stack.push(top);
                 group_head = true;
                 i += 1;
@@ -491,7 +518,9 @@ pub fn rtf_text(rtf: &[u8]) -> String {
             continue;
         }
         if next == b'\'' {
-            let hex = rtf.get(i + 2..i + 4).and_then(|h| std::str::from_utf8(h).ok());
+            let hex = rtf
+                .get(i + 2..i + 4)
+                .and_then(|h| std::str::from_utf8(h).ok());
             if let Some(byte) = hex.and_then(|h| u8::from_str_radix(h, 16).ok()) {
                 if fallback > 0 {
                     fallback -= 1;
@@ -524,7 +553,10 @@ pub fn rtf_text(rtf: &[u8]) -> String {
             while k < rtf.len() && rtf[k].is_ascii_digit() {
                 k += 1;
             }
-            if let Some(v) = std::str::from_utf8(&rtf[j..k]).ok().and_then(|s| s.parse::<i64>().ok()) {
+            if let Some(v) = std::str::from_utf8(&rtf[j..k])
+                .ok()
+                .and_then(|s| s.parse::<i64>().ok())
+            {
                 arg = Some(v);
                 j = k;
             }
@@ -612,40 +644,91 @@ mod tests {
     fn a_settlement_reads_its_order_storeys_and_gardens() {
         let e = object(
             SmartClass::Settlement,
-            &[("nizam", "AYRIK", false), ("kat", "3", false), ("txtOn", "5", false), ("txtArka", "", false), ("txtYan", "3", false)],
+            &[
+                ("nizam", "AYRIK", false),
+                ("kat", "3", false),
+                ("txtOn", "5", false),
+                ("txtArka", "", false),
+                ("txtYan", "3", false),
+            ],
         );
-        assert_eq!(texts(&planet_symbol(&e, &width).expect("drawn")), ["A", "3", "5", "3"]);
-        let off = object(SmartClass::Settlement, &[("nizam", "BİTİŞİK", false), ("kat", "4", false), ("txtOn", "0", true)]);
-        assert_eq!(texts(&planet_symbol(&off, &width).expect("drawn")), ["B", "4"]);
+        assert_eq!(
+            texts(&planet_symbol(&e, &width).expect("drawn")),
+            ["A", "3", "5", "3"]
+        );
+        let off = object(
+            SmartClass::Settlement,
+            &[
+                ("nizam", "BİTİŞİK", false),
+                ("kat", "4", false),
+                ("txtOn", "0", true),
+            ],
+        );
+        assert_eq!(
+            texts(&planet_symbol(&off, &width).expect("drawn")),
+            ["B", "4"]
+        );
     }
 
     #[test]
     fn construction_shows_ratios_ranges_and_emsal() {
-        let ratios = object(SmartClass::Construction, &[("choiceType", "1", false), ("taks", "0.3", false), ("kaks", "0.9", false)]);
-        assert_eq!(texts(&planet_symbol(&ratios, &width).expect("drawn")), ["0.30", "0.90"]);
+        let ratios = object(
+            SmartClass::Construction,
+            &[
+                ("choiceType", "1", false),
+                ("taks", "0.3", false),
+                ("kaks", "0.9", false),
+            ],
+        );
+        assert_eq!(
+            texts(&planet_symbol(&ratios, &width).expect("drawn")),
+            ["0.30", "0.90"]
+        );
         let range = object(
             SmartClass::Construction,
-            &[("taks", "0.40", false), ("minTaks", "0.30", false), ("kaks", "0.90", false), ("minKaks", "0.65", false)],
+            &[
+                ("taks", "0.40", false),
+                ("minTaks", "0.30", false),
+                ("kaks", "0.90", false),
+                ("minKaks", "0.65", false),
+            ],
         );
-        assert_eq!(texts(&planet_symbol(&range, &width).expect("drawn")), ["0.30-0.40", "0.65-0.90"]);
+        assert_eq!(
+            texts(&planet_symbol(&range, &width).expect("drawn")),
+            ["0.30-0.40", "0.65-0.90"]
+        );
         let emsal = object(
             SmartClass::Construction,
-            &[("choiceType", "0", false), ("emsal", "1.5", false), ("yEncok", "12.5", false), ("hmax", "0", true)],
+            &[
+                ("choiceType", "0", false),
+                ("emsal", "1.5", false),
+                ("yEncok", "12.5", false),
+                ("hmax", "0", true),
+            ],
         );
-        assert_eq!(texts(&planet_symbol(&emsal, &width).expect("drawn")), ["E=1.50", "Yençok=12.50 m"]);
+        assert_eq!(
+            texts(&planet_symbol(&emsal, &width).expect("drawn")),
+            ["E=1.50", "Yençok=12.50 m"]
+        );
     }
 
     #[test]
     fn a_road_writes_its_decimals_raised() {
         let e = object(SmartClass::Road, &[("genislik", "7.5", false)]);
-        assert_eq!(texts(&planet_symbol(&e, &width).expect("drawn")), ["7", "50"]);
+        assert_eq!(
+            texts(&planet_symbol(&e, &width).expect("drawn")),
+            ["7", "50"]
+        );
         assert!(planet_symbol(&object(SmartClass::Road, &[]), &width).is_none());
     }
 
     #[test]
     fn rtf_is_read_as_its_text() {
         let rtf = br"{\rtf1\ansi\ansicpg1254{\fonttbl{\f0 Arial;}}{\colortbl;\red0\green0\blue0;}\f0\fs20 PLAN NOTLARI\par 1. Bu alanda \u304\'ddmar Kanunu uygulan\u305\'fdr.\par }";
-        assert_eq!(rtf_text(rtf), "PLAN NOTLARI\n1. Bu alanda İmar Kanunu uygulanır.");
+        assert_eq!(
+            rtf_text(rtf),
+            "PLAN NOTLARI\n1. Bu alanda İmar Kanunu uygulanır."
+        );
         assert_eq!(base64_decode("UExBTg=="), b"PLAN");
         assert!(base64_decode("?!").is_empty());
     }

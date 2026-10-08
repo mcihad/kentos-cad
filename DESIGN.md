@@ -253,6 +253,7 @@ Kaldırıldı (2 Ekim, [ADR 0155](docs/adr/0155-web-ribbon-only.md)): menüler �
 - **Satır düzeni:** onay sütunu (✓ ya da radyo noktası), simge ya da renk örneği, etiket, ipucu (sayı, birim), kısayol ve alt menü oku.
 - **İki satırlı öğe** (`MenuItem.detail`): adın altında ne yaptığını ve nasıl kullanıldığını söyleyen üçüncül renkte bir satır; simge 22 px'e büyür. Adından anlaşılmayan yöntemler için kullanılır (ör. Nokta hesabı).
 - Açma ve kapama durumu olan komutlarda simge yerine onay sütunu gösterilir. Araç komutları eylem olarak simgeyle gösterilir.
+- **İşaret listesi** (art arda işaretlenen türler: Seçim süzgeci, Kenet türleri, Çakışma'nın katmanları; [ADR 0187](docs/adr/0187-selection-extras.md) 8 Ekim eki): yukarıdaki kuralın istisnasıdır. Her satır komutun kısa adını (“Nokta”, “Uç nokta”) ve simgesini onay sütununun yanında gösterir, başlıklı blok başlığıyla başlar, satır seçilince menü açık kalır ve işaretler yerinde yenilenir; toplu satırlar (“Bütün türler”, “Hiçbir tür”) da açık bırakır. Esc, dışarı tıklamak ya da sıradan bir satır kapatır. Şerit menüsünde `SubmenuSpec.checklist`, satırda `MenuItem.stay` (masaüstünde KentOS UI `Menu::stay`).
 - Devre dışı öğeler soluk görünür ama listede kalır; kullanıcı özelliğin varlığını görür.
 - Ekran kenarına sığmazsa yukarıya ya da sola açılır.
 
@@ -363,6 +364,7 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 
 - Hücreler: imleç koordinatı (tabular; CBS'de Y/X, CAD'de X/Y) │ son mesaj (5–9 sn görünür) │ seçim sayısı (amber) │ çizim yardımcıları │ ekran ölçeği (tıklanınca türün ölçekleri ve “Ölçek yaz…”; yazarken hücrenin yerinde “Ekran 1:” ve alan, Enter uygular, Esc bırakır) │ koordinat sistemi │ sunucu │ çizim motoru (en sağda; çip simgesi ve "WebGL2" / "WebGPU"; WebGPU'da simge amber; tıklayınca motor seçme menüsü).
 - **Çizim yardımcısı düğmeleri** bir gösterge lambası taşır: kapalıyken boş kare, açıkken dolu amber kare. Metin kapalıyken üçüncül renktedir.
+- Kenet, Çakışma ve Süzgeç'in sağ tık menüleri **işaret listesidir** (§7.2): türler ve katmanlar menü açıkken art arda işaretlenir. Süzgeç'in listesi Giriş › Seçim süzgeci ▾ ile aynıdır.
 - **Pencere daralınca** hücreler, son mesaja kısa bir ileti sığacak yer (yazı boyunun 15 katı) kalana dek sırayla yer açar; her hücre ipucunu ve tıklamasını korur: çizim motorunun adı (çip simgesi kalır), koordinat sistemi hücresi (sekme satırında da vardır), ekran ölçeği, sunucu ve kayıt hücrelerinin yazısı (lambaları kalır), proje türünün adı (simgesi kalır), en sonda yardımcı düğmelerinin iç boşluğu. Koordinat, seçim sayısı ve yardımcıların adları her zaman görünür.
 - **Sunucu hücresi** yuvarlak bir lamba taşır (yardımcıların kare lambasından ayrılsın diye): bağlıyken dolu yeşil (`--c-ok`), sunucu yokken boş halka ve üçüncül metin (Faz A'da olağan durumdur, hata rengi kullanılmaz), sözleşme sürümü uyuşmazken dolu amber (`--c-warn`). Tıklamak yeniden denetler; ipucu sürümü ya da nedeni yazar.
 - **Kayıt hücresi** yalnızca bir bulut projesi açıkken görünür, sunucu hücresinin solunda durur ve aynı yuvarlak lambayı taşır. Yazısı ve lambası:

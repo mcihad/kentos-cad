@@ -235,15 +235,11 @@ pub fn layer_call(
             for (i, shape) in x.shapes.iter().enumerate() {
                 let color = x.colors.get(i).cloned().flatten();
                 let color = color.as_deref().unwrap_or(color_of(base, style));
-                let weight = x
-                    .weights
-                    .get(i)
-                    .copied()
-                    .flatten()
-                    .unwrap_or(weight);
+                let weight = x.weights.get(i).copied().flatten().unwrap_or(weight);
                 let hatch = match shape {
-                    Shape::Hatch { .. } => edit_geometry(shape.clone())
-                        .map(|g| entity_of(&g, base.clone())),
+                    Shape::Hatch { .. } => {
+                        edit_geometry(shape.clone()).map(|g| entity_of(&g, base.clone()))
+                    }
                     _ => None,
                 };
                 pieces.push(match (hatch, shape) {
@@ -309,15 +305,19 @@ pub fn layer_call(
             assets.insert(id, json!([w, h]));
         }
     }
-    let program = json!({
+    let mut program = json!({
         "symbols": symbols,
         "renderer": renderer,
         "sets": sets,
         "refs": it.refs,
         "colors": it.colors,
         "assets": assets,
-    })
-    .to_string();
+    });
+    // Kalınlık off takes a dimension's own weights too (docs/adr/0205 §6); written as the web's page writes it.
+    if opts.hairlines {
+        program["hairlines"] = json!(true);
+    }
+    let program = program.to_string();
     LayerCall {
         program,
         objects,

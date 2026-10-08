@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 #![allow(clippy::excessive_precision)]
 
-use crate::lm::Lm;
 use crate::geodesic::{CARR_SIZE, GEODESIC_ORDER};
+use crate::lm::Lm;
 
 pub const DIGITS: u64 = 53;
 

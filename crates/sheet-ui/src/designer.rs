@@ -99,6 +99,12 @@ pub struct Context {
     pub crs: Option<display::CrsInfo>,
     /// Where a new map looks (the drawing area's centre).
     pub center: Option<GroundPoint>,
+    /// How much ground the drawing area shows, metres across and down
+    /// (Görünüme sığdır, docs/adr/0206 §1).
+    pub view_size: Option<[f64; 2]>,
+    /// The drawing's layers (id, name), for a coordinate list's source
+    /// (docs/adr/0206 §2).
+    pub layers: Vec<(String, String)>,
 }
 
 impl Default for Context {
@@ -115,6 +121,8 @@ impl Default for Context {
             },
             crs: None,
             center: None,
+            view_size: None,
+            layers: Vec::new(),
         }
     }
 }
@@ -443,6 +451,18 @@ impl Designer {
     }
 
     /// The host's data for the sheets' legends, tables and coordinate lists (its maps, layers and objects).
+    /// The source of the one chosen coordinate list (docs/adr/0206 §2): what
+    /// “Çizimde göster” shows.
+    pub fn chosen_coordinate_source(&self) -> Option<kentos_sheet::kinds::CoordSource> {
+        match self.chosen().as_slice() {
+            [one] => match &one.kind {
+                kentos_sheet::kinds::ItemKind::CoordinateList(c) => Some(c.source.clone()),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
     pub fn set_data(&mut self, data: RenderInputs) {
         self.data = data;
         self.refresh();

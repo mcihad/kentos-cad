@@ -224,7 +224,9 @@ export function menuControl(ctx: AppContext, spec: SubmenuSpec, d: DisposableSto
   );
   const open = (keyboard: boolean) => {
     b.setAttribute('aria-expanded', 'true');
-    const m = PopupMenu.open(afterEach(resolveMenu(ctx, spec.items), () => host.afterRun()), b.getBoundingClientRect(), {
+    // Read when opened and after a row that stays (a checklist's ticks, `SubmenuSpec.checklist`).
+    const rows = () => afterEach(resolveMenu(ctx, spec.items, { checklist: spec.checklist }), () => host.afterRun());
+    const m = PopupMenu.open(rows, b.getBoundingClientRect(), {
       minWidth: 220,
       owner: b,
       onClose: () => b.setAttribute('aria-expanded', 'false'),
@@ -257,14 +259,14 @@ export function menuControl(ctx: AppContext, spec: SubmenuSpec, d: DisposableSto
   return { el: b };
 }
 
-/** Runs `after` once an item of the menu (or of its submenus) has run. */
+/** Runs `after` once an item of the menu (or of its submenus) has run; not after a row that leaves the menu open. */
 function afterEach(items: MenuItem[], after: () => void): MenuItem[] {
   return items.map((i) => ({
     ...i,
     run: i.run &&
       (() => {
         i.run!();
-        after();
+        if (!i.stay) after();
       }),
     items: i.items && (() => afterEach(typeof i.items === 'function' ? i.items() : i.items!, after)),
   }));

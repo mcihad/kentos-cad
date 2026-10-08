@@ -565,7 +565,9 @@ fn typed(field: Option<&LayerField>, value: &str, out: &mut String) {
             .parse::<f64>()
             .ok()
             .filter(|x| x.is_finite())
-            .is_some_and(|x| compare_decimals(&c, &x.to_string()) == Some(std::cmp::Ordering::Equal));
+            .is_some_and(|x| {
+                compare_decimals(&c, &x.to_string()) == Some(std::cmp::Ordering::Equal)
+            });
         if exact {
             return out.push_str(&c);
         }

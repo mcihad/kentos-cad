@@ -67,7 +67,7 @@ export async function collectInPage() {
   const menuLayout = (specs) =>
     menus.menuBlocks(specs, tools).map((b) => ({
       label: b.label,
-      items: b.items.flatMap((e) => (typeof e === 'object' ? [{ label: e.label, items: menuLayout(e.items) }] : e === '@processing' ? toolIds : e === '@models' ? modelIds : [e])),
+      items: b.items.flatMap((e) => (typeof e === 'object' ? [{ label: e.label, checklist: e.checklist || undefined, items: menuLayout(e.items) }] : e === '@processing' ? toolIds : e === '@models' ? modelIds : [e])),
     }));
   const ribbonItem = (i) =>
     i.kind === 'command'
@@ -75,7 +75,8 @@ export async function collectInPage() {
       : i.kind === 'split'
         ? { split: i.entries.map((e) => ({ command: e.command, option: e.option, title: e.title, label: e.label, description: e.description, aliases: e.aliases, icon: e.icon })), key: i.key, size: i.size }
         : i.kind === 'menu'
-          ? { menu: i.menu.label, size: i.size, blocks: menuLayout(i.menu.items) }
+          ? // A checklist (docs/adr/0187 §5): its rows by short name and icon, its titled blocks headers, open as rows are ticked.
+            { menu: i.menu.label, size: i.size, checklist: i.menu.checklist || undefined, blocks: menuLayout(i.menu.items) }
           : { builtin: i.name };
   const ribbonLayout = (tabs) =>
     tabs.map((t) => ({

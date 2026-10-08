@@ -52,7 +52,10 @@ const MULTI_PART = 13;
  * (a count, −1 for none, of tag and value strings: what its block's attribute texts show, §7).
  */
 const INSERT = 14;
-/** A leader (docs/adr/0146): its vertices, height and turn, its note and arrowhead's name (−1 none), its mask flag. */
+/**
+ * A leader (docs/adr/0146): its vertices, height and turn, its note and arrowhead's name (−1 none), its mask flag, its
+ * arrowhead's size (NaN none, docs/adr/0205 §7).
+ */
 const LEADER = 15;
 /** A multi-part polyline (docs/adr/0174): laid out as a multi-part area. */
 const MULTI_PART_LINE = 16;
@@ -259,6 +262,12 @@ export function packEntities(list: Iterable<object>): Packed {
         out.push(e.textPlace === 'centre' ? 1 : 0);
         num(e.decimals);
         out.push(str(e.unit), str(e.prefix), str(e.suffix), place(FONTS, e.font));
+        // docs/adr/0205 §6: its lines, colours and types as strings (−1 none), weights NaN none.
+        out.push(str(e.dimLineColor));
+        num(e.dimLineWeight);
+        out.push(str(e.dimLineType), str(e.extColor));
+        num(e.extWeight);
+        out.push(str(e.extLineType), str(e.textColor));
         break;
       case 12: {
         points(e.ring);
@@ -326,6 +335,7 @@ export function packEntities(list: Iterable<object>): Packed {
         num(e.height);
         num(e.rotation);
         out.push(str(e.text), str(e.arrow), e.mask === true ? 1 : 0);
+        num(e.arrowSize);
         break;
       case RASTER: {
         const affine = Array.isArray(e.affine) ? (e.affine as unknown[]) : [];
@@ -613,6 +623,13 @@ export function unpackEntities(p: Packed): Unpacked[] {
         const prefix = str();
         const suffix = str();
         const font = num();
+        const lineColor = str();
+        const lineWeight = num();
+        const lineType = str();
+        const extColor = str();
+        const extWeight = num();
+        const extLineType = str();
+        const textColor = str();
         g = { kind, a, b, offset, height };
         if (text !== undefined) g.text = text;
         if (style !== undefined) g.style = style;
@@ -632,6 +649,13 @@ export function unpackEntities(p: Packed): Unpacked[] {
         if (prefix !== undefined) g.prefix = prefix;
         if (suffix !== undefined) g.suffix = suffix;
         if (font >= 0) g.font = FONTS[font];
+        if (lineColor !== undefined) g.dimLineColor = lineColor;
+        if (!Number.isNaN(lineWeight)) g.dimLineWeight = lineWeight;
+        if (lineType !== undefined) g.dimLineType = lineType;
+        if (extColor !== undefined) g.extColor = extColor;
+        if (!Number.isNaN(extWeight)) g.extWeight = extWeight;
+        if (extLineType !== undefined) g.extLineType = extLineType;
+        if (textColor !== undefined) g.textColor = textColor;
         break;
       }
       case 'hatch': {
@@ -694,11 +718,13 @@ export function unpackEntities(p: Packed): Unpacked[] {
         const text = str();
         const arrow = str();
         const mask = flag();
+        const arrowSize = num();
         g = { kind, pts };
         if (text !== undefined) g.text = text;
         g.height = height;
         g.rotation = rotation;
         if (arrow !== undefined) g.arrow = arrow;
+        if (!Number.isNaN(arrowSize)) g.arrowSize = arrowSize;
         if (mask) g.mask = true;
         break;
       }

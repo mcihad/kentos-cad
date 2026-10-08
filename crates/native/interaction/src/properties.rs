@@ -334,8 +334,11 @@ pub fn apply_dimension_style(doc: &mut Document, slots: &[Slot], id: Option<&str
     let style = id
         .and_then(|id| settings.dimension_styles.iter().find(|s| s.id == id))
         .cloned();
-    let (look, height) =
-        kentos_contracts::apply_dimension_style(style.as_ref(), settings.plot_scale);
+    let (look, height) = kentos_contracts::apply_dimension_style(
+        style.as_ref(),
+        settings.plot_scale,
+        settings.annotation_mm(kentos_contracts::AnnotationKind::Dimension),
+    );
     let changes: Vec<(Slot, Entity)> = slots
         .iter()
         .filter_map(|&slot| {

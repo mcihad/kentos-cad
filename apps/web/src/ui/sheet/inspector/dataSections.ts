@@ -95,16 +95,60 @@ function tableSection(c: SectionCtx, layers: () => { id: string; name: string }[
   return out;
 }
 
+/** A coordinate list item's kind. */
+type CoordinateKind = Extract<ItemKind, { type: 'coordinateList' }>;
+
+/**
+ * A coordinate list's section (docs/adr/0206 §2, §3): its title; where its points come from (the objects taken from the
+ * drawing's choice, a layer's, or the drawing's choice now), what that gives said in a line (the core's words), “Seçimi
+ * al” and “Çizimde göster”; the points' names, decimals, overflow and rows; its headings, each empty for its default.
+ */
 function coordinateSection(c: SectionCtx, layers: () => { id: string; name: string }[]): Child[] {
-  const v = <V>(of: (k: Extract<ItemKind, { type: 'coordinateList' }>) => V) => shared(c, 'coordinateList', of);
+  const v = <V>(of: (k: CoordinateKind) => V) => shared(c, 'coordinateList', of);
   const source = v((k) => k.source);
   const naming = v((k) => k.naming);
+  const one = c.items.length === 1 ? (c.items[0].source.kind as CoordinateKind) : null;
+  const engine = c.host.engine();
+  const ctx = c.ctx;
+  const layerName = (id: string) => layers().find((l) => l.id === id)?.name ?? null;
+  // What the source gives, for one list.
+  const summary =
+    one && engine ? engine.coordinateSummary(one.source, c.host.coordinateInput(c.items[0].id, one.source), one.source.type === 'layer' ? layerName(one.source.layer) : null) : null;
+  const chosen = () => [...ctx.selection.ids.value].map((id) => ctx.doc.uidOf(id)).filter((u): u is string => !!u);
+  const take = h('button', { class: 'btn btn--small', type: 'button', disabled: c.readOnly !== null || chosen().length === 0 }, icon('select', 14), 'Seçimi al');
+  take.addEventListener('click', () => patchKind(c, 'Koordinat kaynağı: seçimden', { source: { type: 'objects', uids: chosen() } }));
+  c.d.add(
+    tooltip(take, () => ({
+      title: 'Seçimi al',
+      description: 'Çizimde şu an seçili nesneler listenin kaynağı olur; seçim sonra değişse de liste onlardan okunur.',
+      note: c.readOnly ?? (chosen().length === 0 ? 'Çizimde seçili nesne yok: önce modelde nesneleri seçin.' : undefined),
+    })),
+  );
+  const objects = one ? c.host.coordinateObjects(one.source) : [];
+  const show = h('button', { class: 'btn btn--small', type: 'button', disabled: objects.length === 0 }, icon('zoomSelection', 14), 'Çizimde göster');
+  show.addEventListener('click', () => {
+    ctx.selection.set(objects);
+    ctx.commands.execute('sheet.model');
+    ctx.commands.execute('view.zoomSelection');
+  });
+  c.d.add(tooltip(show, () => ({ title: 'Çizimde göster', description: 'Listenin nesneleri çizimde seçilir ve onlara yakınlaşılır.', note: objects.length === 0 ? 'Listenin nesnesi yok.' : undefined })));
+  // The headings: each one's own, the default as its placeholder.
+  const defaults = one && engine ? engine.coordinateHeadings({ ...one, columns: undefined }, ctx.doc.settings.hasSystem) : null;
+  const heading = (label: string, key: 'point' | 'east' | 'north' | 'z' | 'area', at: number) =>
+    text(c, label, `coords.columns.${key}`, v((k) => k.columns?.[key] ?? ''), (value) => patchKind(c, 'Koordinat listesinin başlıkları', { columns: { [key]: value.trim() === '' ? null : value } }), defaults?.[at]);
   return [
     text(c, 'Başlık', 'coords.title', v((k) => k.title), (title) => patchKind(c, 'Koordinat listesi', { title })),
-    pick(c, 'Noktalar', 'coords.source', source ? (source.type === 'layer' ? `layer:${source.layer}` : 'selection') : null, [
-      { value: 'selection', label: 'Çizimde seçili nesneler', detail: 'Modelde seçtiğiniz parselin köşeleri, noktalar' },
+    pick(c, 'Noktalar', 'coords.source', source ? (source.type === 'layer' ? `layer:${source.layer}` : source.type) : null, [
+      { value: 'objects', label: 'Seçilen nesneler', detail: '“Seçimi al” ile alınanlar; seçim değişse de kalırlar' },
       ...layers().map((l) => ({ value: `layer:${l.id}`, label: `Katman: ${l.name}` })),
-    ], (val) => patchKind(c, 'Koordinat kaynağı', { source: val === 'selection' ? { type: 'selection' } : { type: 'layer', layer: val.slice(6) } })),
+      { value: 'selection', label: 'Çizimde şu an seçili olanlar (canlı)', detail: 'Seçim değiştikçe liste de değişir' },
+    ], (val) =>
+      patchKind(c, 'Koordinat kaynağı', {
+        source: val === 'selection' ? { type: 'selection' } : val === 'objects' ? { type: 'objects', uids: one?.source.type === 'objects' ? one.source.uids : chosen() } : { type: 'layer', layer: val.slice(6) },
+      }),
+    ),
+    ...(summary ? [h('p', { class: 'sheet-insp__hint', 'data-key': 'coords.summary' }, summary)] : []),
+    h('div', { class: 'sheet-insp__actions' }, take, show),
     pick(c, 'Nokta adları', 'coords.naming', naming ? naming.type : null, [
       { value: 'given', label: 'Kendi adları' },
       { value: 'sequence', label: 'Sıra numarası' },
@@ -116,6 +160,11 @@ function coordinateSection(c: SectionCtx, layers: () => { id: string; name: stri
     flag(c, 'Z sütunu', v((k) => k.z), (z) => patchKind(c, 'Z sütunu', { z })),
     flag(c, 'Kapanış satırı', v((k) => k.closingRow), (closingRow) => patchKind(c, 'Kapanış satırı', { closingRow }), 'İlk nokta son satırda yeniden: kapalı şekil.'),
     flag(c, 'Alan satırı', v((k) => k.areaRow), (areaRow) => patchKind(c, 'Alan satırı', { areaRow }), 'Kapalı şeklin alanı, çizimin ölçtüğü gibi (yaylar dahil).'),
+    h('h4', { class: 'sheet-insp__sub-head' }, 'Sütun başlıkları'),
+    pair(heading('Nokta', 'point', 0), heading('Doğu', 'east', 1)),
+    pair(heading('Kuzey', 'north', 2), heading('Z', 'z', 3)),
+    heading('Alan satırı', 'area', 4),
+    h('p', { class: 'sheet-insp__hint' }, 'Boş bırakılan başlık varsayılanıdır (soluk yazılan). Birimi başlığa siz yazarsınız.'),
   ];
 }
 

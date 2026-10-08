@@ -190,6 +190,10 @@
     "plotScale": 1000.0,
     "workspace": "gis",
     "drawingFont": "arimo",
+    "annotation": {
+     "text": 3.5,
+     "leader": 3.0
+    },
     "textStyles": [
      {
       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101",
@@ -709,6 +713,10 @@
     "plotScale": 1000.0,
     "workspace": "gis",
     "drawingFont": "arimo",
+    "annotation": {
+     "text": 3.5,
+     "leader": 3.0
+    },
     "textStyles": [
      {
       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101",
@@ -1247,6 +1255,10 @@
      "plotScale": 1000.0,
      "workspace": "gis",
      "drawingFont": "arimo",
+     "annotation": {
+      "text": 3.5,
+      "leader": 3.0
+     },
      "textStyles": [
       {
        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101",
@@ -1648,6 +1660,10 @@
      "plotScale": 1000.0,
      "workspace": "gis",
      "drawingFont": "arimo",
+     "annotation": {
+      "text": 3.5,
+      "leader": 3.0
+     },
      "textStyles": [
       {
        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101",
@@ -1753,6 +1769,10 @@
      "plotScale": 1000.0,
      "workspace": "gis",
      "drawingFont": "arimo",
+     "annotation": {
+      "text": 3.5,
+      "leader": 3.0
+     },
      "textStyles": [
       {
        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3101",
@@ -2448,6 +2468,10 @@
        ]
       }
      ],
+     "annotation": {
+      "text": 3.5,
+      "leader": 3.0
+     },
      "dimensionStyles": [
       {
        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3201",
@@ -2777,7 +2801,11 @@
         }
        ]
       }
-     ]
+     ],
+     "annotation": {
+      "text": 3.5,
+      "leader": 3.0
+     }
     },
     "origin": {
      "x": 487000.0,

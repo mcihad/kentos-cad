@@ -910,6 +910,11 @@ pub struct LeaderEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arrow: Option<LeaderArrow>,
+    /// The arrowhead's length, times the note's height (docs/adr/0205 §7);
+    /// absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arrow_size: Option<f64>,
     /// The note's box is filled with the drawing area's colour before the
     /// note is drawn, as a text's mask (docs/adr/0145).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -917,25 +922,72 @@ pub struct LeaderEntity {
     pub mask: bool,
 }
 
-/// A leader's arrowhead other than the filled arrow, which is no value but
-/// the field's absence: a leader has one spelling (docs/adr/0146 §1).
+/// The shortest and the longest a leader's arrowhead may be, times its
+/// note's height (docs/adr/0205 §7).
+pub const MIN_LEADER_ARROW: f64 = 0.1;
+pub const MAX_LEADER_ARROW: f64 = 10.0;
+
+/// Whether `size` may be a leader's arrowhead size.
+pub fn leader_arrow_holds(size: f64) -> bool {
+    size.is_finite() && (MIN_LEADER_ARROW..=MAX_LEADER_ARROW).contains(&size)
+}
+
+/// A leader's arrowhead other than the filled triangle (Dolu üçgen,
+/// AutoCAD's Closed filled), which is no value but the field's absence: a
+/// leader has one spelling (docs/adr/0146 §1). The first three are the
+/// first leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`
+/// schema 30).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum LeaderArrow {
-    /// The filled arrow's two sides.
+    /// Açık ok: the filled triangle's two sides (Open).
     Open,
-    /// A filled dot.
+    /// Dolu nokta: a filled dot (Dot).
     Dot,
-    /// No arrowhead: the line ends at the tip.
+    /// Yok: no arrowhead, the line ends at the tip (None).
     None,
+    /// Boş üçgen: the triangle's outline (Closed blank).
+    Closed,
+    /// İnce açık ok: two sides 15° off the line (Open 30).
+    Open30,
+    /// Dik açık ok: two sides square to each other (Open 90, Right angle).
+    Open90,
+    /// Küçük nokta (Dot small).
+    DotSmall,
+    /// Boş nokta: a ring (Dot blank).
+    DotBlank,
+    /// Eğik çizgi: a tick across the tip (Oblique).
+    Oblique,
+    /// Mimari çentik: a heavy tick (Architectural tick).
+    ArchTick,
+    /// Dolu kare (Box filled).
+    BoxFilled,
+    /// Boş kare (Box blank).
+    BoxBlank,
+    /// Dayanak üçgeni: a filled triangle standing on the tip (Datum triangle filled).
+    DatumFilled,
 }
 
 impl LeaderArrow {
-    /// Every arrowhead, in the order of the enum.
-    pub const ALL: [LeaderArrow; 3] = [LeaderArrow::Open, LeaderArrow::Dot, LeaderArrow::None];
+    /// Every arrowhead, in the order of the enum (the typed columns number them so).
+    pub const ALL: [LeaderArrow; 13] = [
+        LeaderArrow::Open,
+        LeaderArrow::Dot,
+        LeaderArrow::None,
+        LeaderArrow::Closed,
+        LeaderArrow::Open30,
+        LeaderArrow::Open90,
+        LeaderArrow::DotSmall,
+        LeaderArrow::DotBlank,
+        LeaderArrow::Oblique,
+        LeaderArrow::ArchTick,
+        LeaderArrow::BoxFilled,
+        LeaderArrow::BoxBlank,
+        LeaderArrow::DatumFilled,
+    ];
 
     /// The name files and the wire use.
     pub fn name(self) -> &'static str {
@@ -943,6 +995,44 @@ impl LeaderArrow {
             LeaderArrow::Open => "open",
             LeaderArrow::Dot => "dot",
             LeaderArrow::None => "none",
+            LeaderArrow::Closed => "closed",
+            LeaderArrow::Open30 => "open30",
+            LeaderArrow::Open90 => "open90",
+            LeaderArrow::DotSmall => "dotSmall",
+            LeaderArrow::DotBlank => "dotBlank",
+            LeaderArrow::Oblique => "oblique",
+            LeaderArrow::ArchTick => "archTick",
+            LeaderArrow::BoxFilled => "boxFilled",
+            LeaderArrow::BoxBlank => "boxBlank",
+            LeaderArrow::DatumFilled => "datumFilled",
+        }
+    }
+
+    /// Whether it is one of AutoCAD's arrowheads the first leaders did not
+    /// have (`.kcad` schema 30).
+    pub fn is_added(self) -> bool {
+        !matches!(
+            self,
+            LeaderArrow::Open | LeaderArrow::Dot | LeaderArrow::None
+        )
+    }
+
+    /// Its name as the interface says it.
+    pub fn label(self) -> &'static str {
+        match self {
+            LeaderArrow::Open => "Açık ok",
+            LeaderArrow::Dot => "Dolu nokta",
+            LeaderArrow::None => "Yok",
+            LeaderArrow::Closed => "Boş üçgen",
+            LeaderArrow::Open30 => "İnce açık ok",
+            LeaderArrow::Open90 => "Dik açık ok",
+            LeaderArrow::DotSmall => "Küçük nokta",
+            LeaderArrow::DotBlank => "Boş nokta",
+            LeaderArrow::Oblique => "Eğik çizgi",
+            LeaderArrow::ArchTick => "Mimari çentik",
+            LeaderArrow::BoxFilled => "Dolu kare",
+            LeaderArrow::BoxBlank => "Boş kare",
+            LeaderArrow::DatumFilled => "Dayanak üçgeni",
         }
     }
 

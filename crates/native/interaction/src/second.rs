@@ -235,6 +235,7 @@ mod tests {
             survey: None,
             dimension_styles: Vec::new(),
             topology: None,
+            annotation: None,
             text_styles: Vec::new(),
         }
     }

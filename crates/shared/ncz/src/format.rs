@@ -709,7 +709,10 @@ impl Parser<'_, '_> {
                 cursor += 1;
             }
             if cursor - from >= 3 {
-                return self.data[from..cursor].iter().map(|&b| char::from(b)).collect();
+                return self.data[from..cursor]
+                    .iter()
+                    .map(|&b| char::from(b))
+                    .collect();
             }
         }
         String::new()
@@ -718,7 +721,11 @@ impl Parser<'_, '_> {
     /// `_read_plan_box_name`.
     fn plan_box_name(&self, offset: usize, block_size: usize) -> String {
         let end = self.size().min(offset + block_size + 1);
-        let limit = if end >= 4 { offset.max(end - 4) } else { offset };
+        let limit = if end >= 4 {
+            offset.max(end - 4)
+        } else {
+            offset
+        };
         for index in offset..limit {
             // `bytes.lower()` folds ASCII A–Z only.
             let low = |k: usize| self.data[index + k].to_ascii_lowercase();
@@ -733,7 +740,10 @@ impl Parser<'_, '_> {
                 continue;
             }
             if self.data[index + 4..cursor].iter().all(u8::is_ascii_digit) {
-                return self.data[index..cursor].iter().map(|&b| char::from(b)).collect();
+                return self.data[index..cursor]
+                    .iter()
+                    .map(|&b| char::from(b))
+                    .collect();
             }
         }
         String::new()
@@ -831,7 +841,12 @@ impl Parser<'_, '_> {
         const HEX: &[u8; 16] = b"0123456789abcdef";
         let guid: String = rec[94..110]
             .iter()
-            .flat_map(|&b| [char::from(HEX[usize::from(b >> 4)]), char::from(HEX[usize::from(b & 15)])])
+            .flat_map(|&b| {
+                [
+                    char::from(HEX[usize::from(b >> 4)]),
+                    char::from(HEX[usize::from(b & 15)]),
+                ]
+            })
             .collect();
         e.smart = CLASSES
             .iter()
@@ -1116,7 +1131,11 @@ impl Parser<'_, '_> {
     /// `_parse_line`.
     fn parse_line(&mut self, offset: usize, block_size: usize) {
         let layer_code = self.byte(offset + 7);
-        let (raw_x1, raw_y1, z1) = (self.f64(offset + 8), self.f64(offset + 16), self.f32(offset + 24));
+        let (raw_x1, raw_y1, z1) = (
+            self.f64(offset + 8),
+            self.f64(offset + 16),
+            self.f32(offset + 24),
+        );
         let raw_x2 = self.f64(offset + block_size - 19);
         let raw_y2 = self.f64(offset + block_size - 11);
         let z2 = self.f32(offset + block_size - 3);
@@ -1124,8 +1143,12 @@ impl Parser<'_, '_> {
             return;
         }
         self.begin(Kind::Line);
-        self.entity.coords.push(Self::coordinate(raw_x1, raw_y1, z1));
-        self.entity.coords.push(Self::coordinate(raw_x2, raw_y2, z2));
+        self.entity
+            .coords
+            .push(Self::coordinate(raw_x1, raw_y1, z1));
+        self.entity
+            .coords
+            .push(Self::coordinate(raw_x2, raw_y2, z2));
         self.append(layer_code, self.byte(offset + 37));
     }
 
@@ -1154,20 +1177,28 @@ impl Parser<'_, '_> {
             return;
         }
         let closed = nearly_closed(&self.entity.coords);
-        let (first, last) = (self.entity.coords[0], self.entity.coords[self.entity.coords.len() - 1]);
+        let (first, last) = (
+            self.entity.coords[0],
+            self.entity.coords[self.entity.coords.len() - 1],
+        );
         if closed && !same_coordinate(&first, &last) {
             self.entity.coords.push(first);
         }
         let metrics = box_metrics(&self.entity.coords);
         let e = &mut self.entity;
-        e.kind = if closed { Kind::Polygon } else { Kind::Polyline };
+        e.kind = if closed {
+            Kind::Polygon
+        } else {
+            Kind::Polyline
+        };
         e.label = text;
         e.closed = closed;
         let (w, h, r) = metrics.unwrap_or((0.0, 0.0, 0.0));
         e.box_width = w;
         e.box_height = h;
         e.rotation = if metrics.is_some() { r } else { 0.0 };
-        e.set |= field::LABEL | field::CLOSED | field::BOX_WIDTH | field::BOX_HEIGHT | field::ROTATION;
+        e.set |=
+            field::LABEL | field::CLOSED | field::BOX_WIDTH | field::BOX_HEIGHT | field::ROTATION;
         self.append(layer_code, self.byte(offset + 37));
     }
 
@@ -1225,7 +1256,11 @@ impl Parser<'_, '_> {
     /// `_parse_circle`.
     fn parse_circle(&mut self, offset: usize) {
         let layer_code = self.byte(offset + 7);
-        let (raw_x, raw_y, z) = (self.f64(offset + 8), self.f64(offset + 16), self.f32(offset + 24));
+        let (raw_x, raw_y, z) = (
+            self.f64(offset + 8),
+            self.f64(offset + 16),
+            self.f32(offset + 24),
+        );
         if !Self::valid_xy(raw_x, raw_y) {
             return;
         }
@@ -1240,7 +1275,11 @@ impl Parser<'_, '_> {
     /// `_parse_arc`.
     fn parse_arc(&mut self, offset: usize, ext: usize) {
         let layer_code = self.byte(offset + 7);
-        let (raw_x, raw_y, z) = (self.f64(offset + 8), self.f64(offset + 16), self.f32(offset + 24));
+        let (raw_x, raw_y, z) = (
+            self.f64(offset + 8),
+            self.f64(offset + 16),
+            self.f32(offset + 24),
+        );
         if !Self::valid_xy(raw_x, raw_y) {
             return;
         }
@@ -1293,7 +1332,11 @@ impl Parser<'_, '_> {
     /// `_parse_symbol`.
     fn parse_symbol(&mut self, offset: usize, block_size: usize, ext: usize) {
         let layer_code = self.byte(offset + 7);
-        let (raw_x, raw_y, z) = (self.f64(offset + 8), self.f64(offset + 16), self.f32(offset + 24));
+        let (raw_x, raw_y, z) = (
+            self.f64(offset + 8),
+            self.f64(offset + 16),
+            self.f32(offset + 24),
+        );
         if !Self::valid_xy(raw_x, raw_y) {
             return;
         }
@@ -1323,7 +1366,11 @@ impl Parser<'_, '_> {
 
     /// `_parse_block_reference`.
     fn parse_block_reference(&mut self, offset: usize, block_size: usize, ext: usize) {
-        let (raw_x, raw_y, z) = (self.f64(offset + 8), self.f64(offset + 16), self.f32(offset + 24));
+        let (raw_x, raw_y, z) = (
+            self.f64(offset + 8),
+            self.f64(offset + 16),
+            self.f32(offset + 24),
+        );
         if !Self::valid_xy(raw_x, raw_y) {
             return;
         }
@@ -1375,7 +1422,8 @@ impl Parser<'_, '_> {
         e.box_height = height;
         e.rotation = rotation_degrees;
         e.label = label;
-        e.set |= field::CLOSED | field::BOX_WIDTH | field::BOX_HEIGHT | field::ROTATION | field::LABEL;
+        e.set |=
+            field::CLOSED | field::BOX_WIDTH | field::BOX_HEIGHT | field::ROTATION | field::LABEL;
         self.append(layer_code, self.byte(offset + 37));
     }
 
@@ -1395,7 +1443,13 @@ impl Parser<'_, '_> {
         let sheet = self.length_prefixed_name(offset + 86, offset + block_size + 1);
         self.begin(Kind::MapSheet);
         let e = &mut self.entity;
-        for (x, y) in [(min_x, min_y), (max_x, min_y), (max_x, max_y), (min_x, max_y), (min_x, min_y)] {
+        for (x, y) in [
+            (min_x, min_y),
+            (max_x, min_y),
+            (max_x, max_y),
+            (min_x, max_y),
+            (min_x, min_y),
+        ] {
             e.coords.push(Self::coordinate(x, y, 0.0));
         }
         e.closed = true;
@@ -1407,7 +1461,14 @@ impl Parser<'_, '_> {
     }
 
     /// `_parse_triangle_vertex`.
-    fn triangle_vertex(&self, offset: usize, xo: usize, yo: usize, zo: usize, has_z: bool) -> Option<Coord> {
+    fn triangle_vertex(
+        &self,
+        offset: usize,
+        xo: usize,
+        yo: usize,
+        zo: usize,
+        has_z: bool,
+    ) -> Option<Coord> {
         if offset + xo + 8 > self.size() || offset + yo + 8 > self.size() {
             return None;
         }
@@ -1447,7 +1508,13 @@ impl Parser<'_, '_> {
         if !Self::valid_xy(raw_x1, raw_y1) {
             return;
         }
-        let at_if = |end: usize, at: usize| if offset + end <= block_end { self.f64(offset + at) } else { 0.0 };
+        let at_if = |end: usize, at: usize| {
+            if offset + end <= block_end {
+                self.f64(offset + at)
+            } else {
+                0.0
+            }
+        };
         let mut width = at_if(177, 169);
         let mut height = at_if(185, 177);
         let grid_x = at_if(193, 185);
@@ -1469,7 +1536,8 @@ impl Parser<'_, '_> {
         // some kinds). What the reference would have KEPT still decides the
         // `S0` rule, so that stays the reference's.
         let reference_keeps = !(width < 0.001 || height < 0.001);
-        let rectangle = width >= 0.001 && height >= 0.001 && width <= 100_000_000.0 && height <= 100_000_000.0;
+        let rectangle =
+            width >= 0.001 && height >= 0.001 && width <= 100_000_000.0 && height <= 100_000_000.0;
         let angle_grads = self.f32(offset + 82);
         let rotation_degrees = if angle_grads.is_finite() {
             py_mod(angle_grads * 0.9, 360.0)
@@ -1694,8 +1762,12 @@ fn simplify_collinear_ring(points: &[Coord], count: usize) -> Option<[Coord; 4]>
     if count == 4 {
         return Some([points[0], points[1], points[2], points[3]]);
     }
-    let mut prev: Vec<usize> = (0..count).map(|i| if i == 0 { count - 1 } else { i - 1 }).collect();
-    let mut next: Vec<usize> = (0..count).map(|i| if i + 1 == count { 0 } else { i + 1 }).collect();
+    let mut prev: Vec<usize> = (0..count)
+        .map(|i| if i == 0 { count - 1 } else { i - 1 })
+        .collect();
+    let mut next: Vec<usize> = (0..count)
+        .map(|i| if i + 1 == count { 0 } else { i + 1 })
+        .collect();
     let mut alive = vec![true; count];
     let mut pending: BTreeSet<usize> = (0..count).collect();
     let removable = |i: usize, prev: &[usize], next: &[usize]| {
@@ -1761,25 +1833,37 @@ fn box_metrics(c: &[Coord]) -> Option<(f64, f64, f64)> {
     if lengths.iter().any(|&l| l < 0.001) {
         return None;
     }
-    let opposite_equal = nearly_equal(lengths[0], lengths[2]) && nearly_equal(lengths[1], lengths[3]);
+    let opposite_equal =
+        nearly_equal(lengths[0], lengths[2]) && nearly_equal(lengths[1], lengths[3]);
     let mut right_angles = true;
     for k in 0..4 {
         let j = (k + 1) % 4;
         right_angles =
-            nearly_orthogonal(e[k][0], e[k][1], e[j][0], e[j][1], lengths[k], lengths[j]) && right_angles;
+            nearly_orthogonal(e[k][0], e[k][1], e[j][0], e[j][1], lengths[k], lengths[j])
+                && right_angles;
     }
     if !opposite_equal || !right_angles {
         return None;
     }
-    Some((lengths[0], lengths[1], py_mod(atan2(e[0][1], e[0][0]) * RAD_TO_DEG, 360.0)))
+    Some((
+        lengths[0],
+        lengths[1],
+        py_mod(atan2(e[0][1], e[0][0]) * RAD_TO_DEG, 360.0),
+    ))
 }
 
 // ── reading ────────────────────────────────────────────────────────────
 
 /// Where the passes sit in the read's progress (thousandths of
 /// `PROGRESS_TOTAL`): the tables' pass is quick, the records' is the read.
-const HEADER_SPAN: Span = Span { from: 0, width: 100 };
-const ENTITY_SPAN: Span = Span { from: 100, width: 850 };
+const HEADER_SPAN: Span = Span {
+    from: 0,
+    width: 100,
+};
+const ENTITY_SPAN: Span = Span {
+    from: 100,
+    width: 850,
+};
 
 /// Only the tables: the first of the two passes.
 pub fn read_header(data: &[u8], header: &mut Header, watch: &mut dyn Watch) -> Outcome {
@@ -1802,7 +1886,12 @@ pub fn read_header(data: &[u8], header: &mut Header, watch: &mut dyn Watch) -> O
 /// Reads `data` the way the reference's `_NCZParser.parse` does (minus the
 /// attribute tables, which `attributes` reads), handing every record to
 /// `sink`, and fills `header`. Asks `watch` at least every megabyte.
-pub fn read(data: &[u8], sink: &mut dyn Sink, header: &mut Header, watch: &mut dyn Watch) -> Outcome {
+pub fn read(
+    data: &[u8],
+    sink: &mut dyn Sink,
+    header: &mut Header,
+    watch: &mut dyn Watch,
+) -> Outcome {
     // THE FIRST PASS: the tables as they stand at the end of the file, and
     // whether a smart object exists; the two things `_finalize_entities`
     // needs and one forward pass cannot know in time.
@@ -1864,16 +1953,32 @@ mod tests {
         // 10 × 4 metres with every side split in five: 20 vertices, four corners.
         let mut ring = Vec::new();
         for i in 0..5 {
-            ring.push(Coord { x: f64::from(i) * 2.0, y: 0.0, z: 0.0 });
+            ring.push(Coord {
+                x: f64::from(i) * 2.0,
+                y: 0.0,
+                z: 0.0,
+            });
         }
         for i in 0..5 {
-            ring.push(Coord { x: 10.0, y: f64::from(i) * 0.8, z: 0.0 });
+            ring.push(Coord {
+                x: 10.0,
+                y: f64::from(i) * 0.8,
+                z: 0.0,
+            });
         }
         for i in 0..5 {
-            ring.push(Coord { x: 10.0 - f64::from(i) * 2.0, y: 4.0, z: 0.0 });
+            ring.push(Coord {
+                x: 10.0 - f64::from(i) * 2.0,
+                y: 4.0,
+                z: 0.0,
+            });
         }
         for i in 0..5 {
-            ring.push(Coord { x: 0.0, y: 4.0 - f64::from(i) * 0.8, z: 0.0 });
+            ring.push(Coord {
+                x: 0.0,
+                y: 4.0 - f64::from(i) * 0.8,
+                z: 0.0,
+            });
         }
         ring.push(ring[0]);
         let (w, h, r) = box_metrics(&ring).expect("a box");

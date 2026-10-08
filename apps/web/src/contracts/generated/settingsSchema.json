@@ -1218,6 +1218,36 @@
       "apply": "live"
     },
     {
+      "key": "graphics.annotationSize",
+      "type": "enum",
+      "default": "legible",
+      "choices": [
+        {
+          "value": "legible",
+          "label": "Kaybolmasın"
+        },
+        {
+          "value": "true",
+          "label": "Gerçek boy"
+        },
+        {
+          "value": "screen",
+          "label": "Ekranda sabit"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Yazıların boyu",
+      "description": "Kaybolmasın: yazılar gerçek boylarında, ekranda 8 pikselden küçük kalan bu boyda ve birbirinin üstüne binmeden çizilir. Gerçek boy: 5 pikselden küçük yazı çizilmez. Ekranda sabit: her yazı kâğıttaki boyunda çizilir. Pafta ve çıktılar gerçek boyu kullanır.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "graphics.colorMode",
       "type": "enum",
       "default": "color",

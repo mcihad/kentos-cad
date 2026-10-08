@@ -350,6 +350,9 @@ impl Designer {
                     }
                     container(insp).padding([2, 4])
                 };
+                if let Some(part) = self.coordinate_part(&chosen, editable) {
+                    col = col.push(part);
+                }
                 match north {
                     Some(part) => {
                         col = col.push(fields(0..after_style)).push(part);
@@ -372,6 +375,9 @@ impl Designer {
                     None => col = col.push(fields(0..len)),
                 }
                 if let Some(row) = self.picture_row(&chosen, editable) {
+                    col = col.push(row);
+                }
+                if let Some(row) = self.map_row(&chosen, editable) {
                     col = col.push(row);
                 }
             }
@@ -595,6 +601,176 @@ impl Designer {
     }
 
     /// Picture frames: the picture they show and “Resim seç…” (the web's picture section).
+    /// A coordinate list's source and names (docs/adr/0206 §2, the web's `coordinateSection`):
+    /// Noktalar (the objects taken, a layer, or the drawing's choice now), what it gives in the
+    /// core's words, Seçimi al and Çizimde göster, Nokta adları. One list chosen.
+    fn coordinate_part(&self, chosen: &[&Item], editable: bool) -> Option<Element<'_, Message>> {
+        use kentos_sheet::kinds::{CoordSource, ItemKind, PointNaming};
+        let [one] = chosen else { return None };
+        let ItemKind::CoordinateList(c) = &one.kind else {
+            return None;
+        };
+        let layers = self.ctx.layers.clone();
+        // The choices: the objects taken, each layer, the drawing's choice now.
+        let mut labels = vec!["Seçilen nesneler".to_owned()];
+        labels.extend(layers.iter().map(|(_, name)| format!("Katman: {name}")));
+        labels.push("Çizimde şu an seçili olanlar (canlı)".to_owned());
+        let live = labels.len() - 1;
+        let at = match &c.source {
+            CoordSource::Objects(_) => Some(0),
+            CoordSource::Layer(l) => layers
+                .iter()
+                .position(|(id, _)| *id == l.layer)
+                .map(|i| i + 1),
+            CoordSource::Selection(_) => Some(live),
+        };
+        let pick = {
+            let layers = layers.clone();
+            move |i: usize| {
+                if i == 0 {
+                    Message::CoordTakeSelection
+                } else if i == live {
+                    Message::CoordLive
+                } else {
+                    Message::CoordLayer(
+                        layers
+                            .get(i - 1)
+                            .map(|(id, _)| id.clone())
+                            .unwrap_or_default(),
+                    )
+                }
+            }
+        };
+        let source = kentos_ui::widget::select::Select::new(
+            labels
+                .into_iter()
+                .map(kentos_ui::widget::select::Choice::new),
+            at,
+            pick,
+        )
+        .searchable(false);
+        let input = self.data.coordinates.iter().find(|x| x.item == one.id);
+        let layer = match &c.source {
+            CoordSource::Layer(l) => layers
+                .iter()
+                .find(|(id, _)| *id == l.layer)
+                .map(|(_, n)| n.as_str()),
+            _ => None,
+        };
+        let said = kentos_sheet::display::coordinate_summary(&c.source, input, layer);
+        let objects = input.and_then(|i| i.objects).unwrap_or(0);
+        let action = |text: &'static str, glyph: Icon, on: Option<Message>| {
+            button(
+                // The caption's size in the text's own colour: a faint caption reads as off.
+                row![
+                    icon(glyph).size(14.0),
+                    iced::widget::text(text).size(kentos_ui::theme::typography::caption())
+                ]
+                .spacing(6)
+                .align_y(Center),
+            )
+            .on_press_maybe(on)
+            .padding([3, 8])
+            .style(style::button::secondary)
+        };
+        let numbered = matches!(c.naming, PointNaming::Sequence(_));
+        let naming = kentos_ui::widget::select::Select::new(
+            ["Kendi adları", "Sıra numarası"].map(kentos_ui::widget::select::Choice::new),
+            Some(usize::from(numbered)),
+            |i| Message::CoordNumbered(i == 1),
+        )
+        .searchable(false);
+        Some(
+            column![
+                labelled("Noktalar", source.into(), said),
+                container(
+                    row![
+                        action(
+                            "Seçimi al",
+                            crate::icons::SELECT,
+                            editable.then_some(Message::CoordTakeSelection),
+                        ),
+                        action(
+                            "Çizimde göster",
+                            crate::icons::ZOOM_SELECTION,
+                            (objects > 0).then_some(Message::CoordShow),
+                        ),
+                    ]
+                    .spacing(6)
+                    .wrap()
+                )
+                .padding([0, 12]),
+                labelled("Nokta adları", naming.into(), String::new()),
+            ]
+            .spacing(6)
+            .padding([4, 4])
+            .into(),
+        )
+    }
+
+    /// Fixed maps' scale and centre from the drawing (docs/adr/0206 §1, the web's `mapSection`):
+    /// Çizim ölçeğini al (off when every map is at it), Görünüme sığdır and Görünümden al (off
+    /// without a drawing area); the scale typed above stays.
+    fn map_row(&self, chosen: &[&Item], editable: bool) -> Option<Element<'_, Message>> {
+        use crate::inspect::fixed_map;
+        if chosen.is_empty() || !chosen.iter().all(|i| fixed_map(i).is_some()) {
+            return None;
+        }
+        let plot = self.ctx.capabilities.plot_scale.filter(|s| *s >= 1);
+        let at_plot = plot.is_some_and(|p| {
+            chosen
+                .iter()
+                .all(|i| fixed_map(i).is_some_and(|v| v.scale == p))
+        });
+        let has_view = self.ctx.center.is_some();
+        let fit_view = self.ctx.center.is_some() && self.ctx.view_size.is_some();
+        let action = |text: &'static str, glyph: Icon, on: Option<Message>| {
+            button(
+                // The caption's size in the text's own colour: a faint caption reads as off.
+                row![
+                    icon(glyph).size(14.0),
+                    iced::widget::text(text).size(kentos_ui::theme::typography::caption())
+                ]
+                .spacing(6)
+                .align_y(Center),
+            )
+            .on_press_maybe(on.filter(|_| editable))
+            .padding([3, 8])
+            .style(style::button::secondary)
+        };
+        let scale = plot.map_or_else(String::new, |p| format!("Projenin çizim ölçeği 1/{p}. "));
+        Some(
+            column![
+                row![
+                    action(
+                        "Çizim ölçeğini al",
+                        crate::icons::PLOT_SCALE,
+                        (plot.is_some() && !at_plot).then_some(Message::MapScaleFromDrawing),
+                    ),
+                    action(
+                        "Görünüme sığdır",
+                        crate::icons::ZOOM_EXTENTS,
+                        fit_view.then_some(Message::MapFitView),
+                    ),
+                    action(
+                        "Görünümden al",
+                        crate::icons::TARGET,
+                        has_view.then_some(Message::MapCentreFromView),
+                    ),
+                ]
+                .spacing(6)
+                .wrap(),
+                label::caption(format!(
+                    "{scale}Görünüme sığdır: harita çizim alanında görüneni gösterir, ölçeği onu sığdıran en büyük standart ölçek olur."
+                ))
+                .style(style::text::muted),
+            ]
+            .spacing(6)
+            .padding([4, 16])
+            .into(),
+        )
+    }
+
     fn picture_row(&self, chosen: &[&Item], editable: bool) -> Option<Element<'_, Message>> {
         let asset = |i: &Item| match &i.kind {
             kentos_sheet::kinds::ItemKind::Picture(p) => Some(p.asset.clone()),

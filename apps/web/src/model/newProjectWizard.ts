@@ -43,6 +43,16 @@ export interface WizardDraft {
 export const GIS_SCALES = [500, 1000, 2000, 5000, 10_000, 25_000, 50_000] as const;
 export const CAD_SCALES = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000] as const;
 
+/**
+ * The plot scales a project's Ölçek offers (docs/adr/0205 §4): its type's (a CAD project's drawing scales, else the map
+ * scales), with the current one in its place when it is none of them. The desktop's `wizard::project_scales`.
+ */
+export function projectScales(cad: boolean, current: number): number[] {
+  const out: number[] = [...(cad ? CAD_SCALES : GIS_SCALES)];
+  if (Number.isFinite(current) && current > 0 && !out.includes(current)) out.push(current), out.sort((a, b) => a - b);
+  return out;
+}
+
 /** The units a local project is drawn in, with what each is for. */
 export const UNITS: readonly { id: DrawingUnit; name: string; mark: string; note: string }[] = [
   { id: 'mm', name: 'Milimetre', mark: 'mm', note: 'Makine, detay ve imalat çizimleri' },

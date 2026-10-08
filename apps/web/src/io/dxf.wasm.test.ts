@@ -356,7 +356,7 @@ describe.skipIf(!loader)('DXF WASM module', () => {
     const input = JSON.parse(new TextDecoder().decode(fixture('dxf-write/styles.input.json'))) as DxfWriteInput;
     const r = imported(w.readDxf(fixture('dxf-write/styles.dxf'), JSON.stringify({ maxEntities: 0 }), quiet));
     expect((r.textStyles ?? []).map((s) => s.name)).toEqual(['Ada no', 'Yol adı', 'Not']);
-    expect((r.dimensionStyles ?? []).map((s) => s.name)).toEqual(['Mimari', 'Kadastro', 'Noktalı', 'Açık', 'Oksuz']);
+    expect((r.dimensionStyles ?? []).map((s) => s.name)).toEqual(['Mimari', 'Kadastro', 'Noktalı', 'Açık', 'Oksuz', 'Renkli']);
     const given = new Map([...(input.textStyles ?? []), ...(input.dimensionStyles ?? [])].map((s) => [s.name, s.id]));
     const ids = new Map([...(r.textStyles ?? []), ...(r.dimensionStyles ?? [])].map((s) => [s.id, given.get(s.name)]));
     const ours = (entities: readonly Entity[]) =>

@@ -57,7 +57,10 @@ pub struct External {
 
 impl External {
     pub fn is_empty(&self) -> bool {
-        self.put.is_empty() && self.remove.is_empty() && self.meta.is_none() && self.blocks.is_none()
+        self.put.is_empty()
+            && self.remove.is_empty()
+            && self.meta.is_none()
+            && self.blocks.is_none()
     }
 }
 

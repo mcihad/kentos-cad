@@ -683,7 +683,8 @@ fn metadata_changed_here_and_elsewhere_is_a_conflict() {
         },
     )
     .unwrap();
-    sync.take_theirs(&mut o.document, Some(&info), None).unwrap();
+    sync.take_theirs(&mut o.document, Some(&info), None)
+        .unwrap();
     assert_eq!(o.document.name(), "Ada 101 (yeni ad)");
     assert_eq!(o.document.layers().get("bina").unwrap().name, "Bina");
     assert_eq!(sync.next(&o.document), None);
@@ -1252,7 +1253,10 @@ fn taking_the_servers_metadata_keeps_a_layer_with_unsent_objects() {
         )
         .unwrap();
     assert_eq!(taken.conflicts, 1);
-    let kept = sync.take_theirs(&mut o.document, Some(&info), None).unwrap().kept;
+    let kept = sync
+        .take_theirs(&mut o.document, Some(&info), None)
+        .unwrap()
+        .kept;
     assert_eq!(kept.len(), 1);
     assert_eq!(o.document.layers().get("parsel").unwrap().name, "Parsel");
     assert!(o.document.layers().get("bina").is_some());

@@ -6,48 +6,29 @@
 
 use crate::api::Op;
 use crate::entity::{Entity, Shape, TextPlace};
+use crate::geom::arrowhead::{ArrowKind, Arrowhead, arrowhead};
 use crate::jsmath::{PI, cos, js_hypot, sin};
 use crate::op;
 use crate::text::TextAlign;
 use crate::vec2::Vec2;
 
-/// The arrowhead's length, in the note's height (AutoCAD's: the arrow as long as the text is high).
-const HEAD: f64 = 1.0;
-/// Half the arrowhead's base: its base is a third of its length.
-const HEAD_HALF: f64 = 1.0 / 6.0;
-/// The dot's radius: its diameter is half the height.
-const DOT: f64 = 0.25;
 /// The landing's length.
 const LANDING: f64 = 2.0;
 /// The gap between the landing's end and the note.
 const GAP: f64 = 0.5;
-/// Segments of the dot's outline, a full turn's as the store draws a circle.
-const DOT_SEGMENTS: usize = 72;
-
-/// A leader's arrowhead, placed.
-#[derive(Clone, Debug, PartialEq)]
-pub enum Head {
-    /// A filled triangle: the tip, then its base's two corners.
-    Filled { triangle: [Vec2; 3] },
-    /// The triangle's two sides: a base corner, the tip, the other base corner.
-    Open { lines: [Vec2; 3] },
-    /// A filled circle about the tip.
-    Dot { center: Vec2, radius: f64 },
-    /// No arrowhead.
-    None {},
-}
-
-crate::json_tagged!(Head, "kind",
-    Filled => "filled" { triangle },
-    Open => "open" { lines },
-    Dot => "dot" { center, radius },
-    None => "none" {},
-);
 
 /// Where a leader's parts go.
 #[derive(Clone, Debug, PartialEq)]
 pub struct LeaderLayout {
-    pub head: Head,
+    /// Its arrowhead (docs/adr/0205 §7), its length the note's height
+    /// times the leader's arrowhead size.
+    pub head: Arrowhead,
+    /// Where its line starts: the tip, or on its first segment at the
+    /// head's back (a closed, boxed or dotted head's line does not run
+    /// through it).
+    pub start: Vec2,
+    /// The first of its vertices the line goes on to from `start`.
+    pub first: usize,
     /// 1: the landing runs along the note's direction; −1: against it.
     pub side: f64,
     /// From the last vertex to its end; none without a note.
@@ -58,7 +39,7 @@ pub struct LeaderLayout {
     pub note_align: Option<TextAlign>,
 }
 
-crate::json_struct!(out LeaderLayout { head, side, landing, note_point => "notePoint", note_align => "noteAlign" });
+crate::json_struct!(out LeaderLayout { head, start, first, side, landing, note_point => "notePoint", note_align => "noteAlign" });
 
 fn unit(v: Vec2) -> Option<Vec2> {
     let l = js_hypot(v.x, v.y);
@@ -67,40 +48,35 @@ fn unit(v: Vec2) -> Option<Vec2> {
 
 /// The layout of a leader through `pts` (the tip first) whose note is
 /// `height` high and turned `rotation` degrees; `arrow` its arrowhead's name
-/// (`open`, `dot`, `none`; none or any other: a filled arrow). None for a
-/// leader without a vertex.
+/// (none: the filled triangle) and `arrow_size` its length in the note's
+/// height (none: 1). None for a leader without a vertex.
 pub fn layout(
     pts: &[Vec2],
     height: f64,
     rotation: f64,
     arrow: Option<&str>,
+    arrow_size: Option<f64>,
     has_note: bool,
 ) -> Option<LeaderLayout> {
     let (&tip, &last) = (pts.first()?, pts.last()?);
     let r = rotation * PI / 180.0;
     let u = Vec2::new(cos(r), sin(r));
     // The first segment that has a length points the arrowhead; with none, the note's direction.
-    let d = pts[1..]
-        .iter()
-        .find_map(|q| unit(Vec2::new(q.x - tip.x, q.y - tip.y)))
-        .unwrap_or(u);
-    let n = Vec2::new(-d.y, d.x);
+    let lead = pts[1..].iter().enumerate().find_map(|(i, q)| {
+        let v = Vec2::new(q.x - tip.x, q.y - tip.y);
+        unit(v).map(|d| (i + 1, d, js_hypot(v.x, v.y)))
+    });
+    let d = lead.map_or(u, |(_, d, _)| d);
     let h = height;
-    let base = Vec2::new(tip.x + d.x * HEAD * h, tip.y + d.y * HEAD * h);
-    let left = Vec2::new(base.x + n.x * HEAD_HALF * h, base.y + n.y * HEAD_HALF * h);
-    let right = Vec2::new(base.x - n.x * HEAD_HALF * h, base.y - n.y * HEAD_HALF * h);
-    let head = match arrow {
-        Some("open") => Head::Open {
-            lines: [left, tip, right],
-        },
-        Some("dot") => Head::Dot {
-            center: tip,
-            radius: DOT * h,
-        },
-        Some("none") => Head::None {},
-        _ => Head::Filled {
-            triangle: [tip, left, right],
-        },
+    let head = arrowhead(ArrowKind::of(arrow), tip, d, arrow_size.unwrap_or(1.0) * h);
+    // The line leaves the head's back; a first segment no longer than that starts at its end.
+    let (start, first) = match lead {
+        Some((k, d, len)) if head.back > 0.0 && head.back < len => (
+            Vec2::new(tip.x + d.x * head.back, tip.y + d.y * head.back),
+            k,
+        ),
+        Some((k, _, _)) if head.back > 0.0 => (pts[k], k + 1),
+        _ => (tip, 1),
     };
     // The last segment that has a length goes to the right (its projection on the note's direction 0 or more) or left.
     let side = pts[..pts.len() - 1]
@@ -108,12 +84,20 @@ pub fn layout(
         .rev()
         .find_map(|q| {
             let v = Vec2::new(last.x - q.x, last.y - q.y);
-            unit(v).map(|_| if v.x * u.x + v.y * u.y >= 0.0 { 1.0 } else { -1.0 })
+            unit(v).map(|_| {
+                if v.x * u.x + v.y * u.y >= 0.0 {
+                    1.0
+                } else {
+                    -1.0
+                }
+            })
         })
         .unwrap_or(1.0);
     let along = |k: f64| Vec2::new(last.x + side * u.x * k * h, last.y + side * u.y * k * h);
     Some(LeaderLayout {
         head,
+        start,
+        first,
         side,
         landing: has_note.then(|| [last, along(LANDING)]),
         note_point: has_note.then(|| along(LANDING + GAP)),
@@ -133,12 +117,20 @@ pub fn layout_of(s: &Shape) -> Option<LeaderLayout> {
         height,
         rotation,
         arrow,
+        arrow_size,
         ..
     } = s
     else {
         return None;
     };
-    layout(pts, *height, *rotation, arrow.as_deref(), text.is_some())
+    layout(
+        pts,
+        *height,
+        *rotation,
+        arrow.as_deref(),
+        *arrow_size,
+        text.is_some(),
+    )
 }
 
 /// Its note as a text stands (docs/adr/0146 §2): at the note's point,
@@ -165,43 +157,21 @@ pub fn note_place(s: &Shape) -> Option<TextPlace<'_>> {
     ))
 }
 
-/// The line it draws: through its vertices and, with a note, on to the landing's end.
+/// The line it draws: from its start through its vertices and, with a
+/// note, on to the landing's end.
 pub fn drawn_path(pts: &[Vec2], l: &LeaderLayout) -> Vec<Vec2> {
-    let mut out = pts.to_vec();
+    let mut out = Vec::with_capacity(pts.len() + 2);
+    out.push(l.start);
+    out.extend_from_slice(pts.get(l.first..).unwrap_or(&[]));
     if let Some([_, end]) = l.landing {
         out.push(end);
     }
     out
 }
 
-/// The arrowhead's area: the filled triangle, or the dot's outline; none
-/// for an open arrowhead and for none.
-pub fn head_ring(head: &Head) -> Option<Vec<Vec2>> {
-    match head {
-        Head::Filled { triangle } => Some(triangle.to_vec()),
-        Head::Dot { center, radius } => Some(
-            (0..DOT_SEGMENTS)
-                .map(|i| {
-                    let t = 2.0 * PI * i as f64 / DOT_SEGMENTS as f64;
-                    Vec2::new(center.x + radius * cos(t), center.y + radius * sin(t))
-                })
-                .collect(),
-        ),
-        Head::Open { .. } | Head::None {} => None,
-    }
-}
-
-/// The points its arrowhead reaches: the triangle's corners, the dot's box.
-pub fn head_reach(head: &Head) -> Vec<Vec2> {
-    match head {
-        Head::Filled { triangle } => triangle.to_vec(),
-        Head::Open { lines } => lines.to_vec(),
-        Head::Dot { center, radius } => vec![
-            Vec2::new(center.x - radius, center.y - radius),
-            Vec2::new(center.x + radius, center.y + radius),
-        ],
-        Head::None {} => Vec::new(),
-    }
+/// The points its arrowhead reaches.
+pub fn head_reach(l: &LeaderLayout) -> Vec<Vec2> {
+    l.head.reach().collect()
 }
 
 pub(crate) static OPS: &[Op] = &[op!("leaderLayout", |e: Entity| layout_of(&e.shape))];

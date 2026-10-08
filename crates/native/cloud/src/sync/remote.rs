@@ -532,7 +532,11 @@ impl ProjectSync {
             }
         }
         // The definitions in conflict as the server has them, with the objects that may place them.
-        let force: HashSet<BlockId> = self.conflicts.iter().filter_map(|c| block_of_key(&c.id)).collect();
+        let force: HashSet<BlockId> = self
+            .conflicts
+            .iter()
+            .filter_map(|c| block_of_key(&c.id))
+            .collect();
         let mut learned = None;
         let mut blocks_left = !force.is_empty() && blocks.is_none();
         if let Some(server) = blocks
@@ -639,7 +643,9 @@ impl ProjectSync {
             let mut out: HashSet<BlockId> = arriving.iter().copied().collect();
             for e in doc.entities() {
                 if let Entity::Insert(i) = e
-                    && !doc.uid(Slot(e.base().id)).is_some_and(|u| leaving.contains(&u))
+                    && !doc
+                        .uid(Slot(e.base().id))
+                        .is_some_and(|u| leaving.contains(&u))
                 {
                     out.insert(i.block);
                 }
@@ -681,11 +687,21 @@ impl ProjectSync {
             .filter(|c| c.expected.is_some() && c.expected == c.actual)
             .filter_map(|c| block_of_key(&c.id))
             .collect();
-        let missing: HashSet<BlockId> = guarded.iter().copied().filter(|id| doc.block(*id).is_none()).collect();
+        let missing: HashSet<BlockId> = guarded
+            .iter()
+            .copied()
+            .filter(|id| doc.block(*id).is_none())
+            .collect();
         let mut notes = Vec::new();
         if !missing.is_empty() {
             let merge = self
-                .merge_with_objects(doc, server, Some(&HashSet::new()), &missing, &External::default())
+                .merge_with_objects(
+                    doc,
+                    server,
+                    Some(&HashSet::new()),
+                    &missing,
+                    &External::default(),
+                )
                 .map_err(|why| unmerged_text(&why))?;
             let learned = merge.learned;
             self.apply(
@@ -702,7 +718,10 @@ impl ProjectSync {
                 }
             }
         }
-        let keys: HashSet<String> = guarded.iter().map(|id| super::blocks::block_key(*id)).collect();
+        let keys: HashSet<String> = guarded
+            .iter()
+            .map(|id| super::blocks::block_key(*id))
+            .collect();
         self.conflicts.retain(|c| !keys.contains(&c.id));
         self.pending_blocks = self.plan_blocks(doc).len();
         if self.conflicts.is_empty() && !self.state.ended() {
@@ -940,7 +959,8 @@ impl ProjectSync {
 
 /// How many definitions differ between the drawing's list and `list`: made, changed or removed.
 fn differing(doc: &Document, list: &[kentos_contracts::BlockDefinition]) -> usize {
-    let now: HashMap<BlockId, &kentos_contracts::BlockDefinition> = list.iter().map(|b| (b.id, b)).collect();
+    let now: HashMap<BlockId, &kentos_contracts::BlockDefinition> =
+        list.iter().map(|b| (b.id, b)).collect();
     let was: HashSet<BlockId> = doc.blocks().iter().map(|b| b.id).collect();
     let changed = doc
         .blocks()

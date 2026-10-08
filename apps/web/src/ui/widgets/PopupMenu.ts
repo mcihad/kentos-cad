@@ -26,8 +26,21 @@ export interface MenuItem {
   run?: () => void;
   /** Called as the row is highlighted by the pointer or the keys (Sıradakini seç's list shows the candidate, docs/adr/0187 §1). */
   highlight?: () => void;
-  items?: MenuItem[] | (() => MenuItem[]);
+  /**
+   * Chosen, it leaves the menu open: a list ticked one row after another (the selection filter's kinds, docs/adr/0187
+   * §5; the snap kinds). Its rows are read again from the menu's source, so their ticks follow what the row changed.
+   */
+  stay?: boolean;
+  items?: MenuSource;
 }
+
+/** A menu's rows, or what gives them: a menu given a function reads its rows again after a row that stays. */
+export type MenuSource = MenuItem[] | (() => MenuItem[]);
+
+const read = (source: MenuSource): MenuItem[] => (typeof source === 'function' ? source() : source);
+
+/** What a row is, for telling whether a menu read again keeps its rows: a separator, a header, a submenu or a command. */
+const shapeOf = (item: MenuItem): string => (item.kind === 'separator' ? '-' : item.kind === 'header' ? `#${item.label}` : item.items ? '>' : '.');
 
 export interface PopupOptions {
   placement?: 'below' | 'right' | 'point';
@@ -44,8 +57,10 @@ type Anchor = DOMRect | { x: number; y: number };
 /** Dropdown, submenu and context menu — one implementation for all. */
 export class PopupMenu {
   private static root: PopupMenu | null = null;
+  private static running = false;
   readonly el: HTMLElement;
-  private readonly items: MenuItem[];
+  private readonly source: MenuSource;
+  private items: MenuItem[];
   private rows: (HTMLElement | null)[] = [];
   private active = -1;
   private child: PopupMenu | null = null;
@@ -54,7 +69,7 @@ export class PopupMenu {
   private readonly d = new DisposableStore();
   private hoverTimer = 0;
 
-  static open(items: MenuItem[], anchor: Anchor, opts: PopupOptions = {}): PopupMenu {
+  static open(items: MenuSource, anchor: Anchor, opts: PopupOptions = {}): PopupMenu {
     PopupMenu.root?.close();
     const m = new PopupMenu(items, anchor, opts, null);
     PopupMenu.root = m;
@@ -65,13 +80,22 @@ export class PopupMenu {
     return !!PopupMenu.root;
   }
 
+  /**
+   * Whether a row that stays is running (`MenuItem.stay`): what closes menus and pop-ups after a command (the ribbon's)
+   * leaves them open meanwhile.
+   */
+  static get staying(): boolean {
+    return PopupMenu.running;
+  }
+
   static closeAll(): void {
     PopupMenu.root?.close();
   }
 
-  private constructor(items: MenuItem[], anchor: Anchor, opts: PopupOptions, parent: PopupMenu | null) {
+  private constructor(source: MenuSource, anchor: Anchor, opts: PopupOptions, parent: PopupMenu | null) {
     hideTooltip();
-    this.items = items;
+    this.source = source;
+    this.items = read(source);
     this.opts = opts;
     this.parent = parent;
     this.el = h('div', { class: 'menu', role: 'menu', tabindex: '-1' });
@@ -79,8 +103,7 @@ export class PopupMenu {
     this.render();
     overlayRoot().append(this.el);
     this.position(anchor);
-    // A label the menu's width cuts keeps its whole text on hover (long layer names).
-    for (const l of this.el.querySelectorAll<HTMLElement>('.menu__label:not(.menu__label--2), .menu__title')) if (l.scrollWidth > l.clientWidth + 1) l.title = l.textContent ?? '';
+    this.markCut();
     if (!parent) {
       this.d.add(listen<KeyboardEvent>(window, 'keydown', (e) => this.leaf().onKey(e), true));
       this.d.add(
@@ -110,6 +133,11 @@ export class PopupMenu {
     return this.el.contains(t) || !!this.child?.contains(t);
   }
 
+  /** A label the menu's width cuts keeps its whole text on hover (long layer names). */
+  private markCut(): void {
+    for (const l of this.el.querySelectorAll<HTMLElement>('.menu__label:not(.menu__label--2), .menu__title')) if (l.scrollWidth > l.clientWidth + 1) l.title = l.textContent ?? '';
+  }
+
   private render(): void {
     this.rows = this.items.map((item, i) => {
       if (item.kind === 'separator') {
@@ -120,55 +148,92 @@ export class PopupMenu {
         this.el.append(h('div', { class: 'menu__header' }, item.label));
         return null;
       }
-      const hasSub = !!item.items;
-      const row = h(
-        'div',
-        {
-          class: 'menu__item',
-          role: item.radio ? 'menuitemradio' : item.checked !== undefined ? 'menuitemcheckbox' : 'menuitem',
-          'aria-checked': item.checked !== undefined ? String(item.checked) : null,
-          'aria-disabled': item.disabled ? 'true' : null,
-          'aria-haspopup': hasSub ? 'menu' : null,
-          'data-detail': item.detail ? '' : null,
-          'data-preview': item.preview ? '' : null,
-        },
-        h(
-          'span',
-          { class: 'menu__check' },
-          item.checked ? (item.radio ? h('span', { class: 'menu__dot' }) : icon('check', 14)) : null,
-        ),
-        h(
-          'span',
-          { class: 'menu__icon' },
-          item.preview
-            ? iconPreview(item.preview)
-            : item.swatch
-              ? h('span', { class: 'swatch', style: `--swatch:${item.swatch}` })
-              : item.drawIcon
-                ? item.drawIcon(item.detail ? 22 : 16)
-                : item.icon
-                  ? icon(item.icon, item.detail ? 22 : 16)
-                  : null,
-        ),
-        item.detail
-          ? h('span', { class: 'menu__label menu__label--2' }, h('span', { class: 'menu__title' }, item.label), h('span', { class: 'menu__detail' }, item.detail))
-          : h('span', { class: 'menu__label' }, item.label),
-        item.hint ? h('span', { class: 'menu__hint' }, item.hint) : null,
-        item.shortcut ? h('span', { class: 'menu__kbd' }, formatChord(item.shortcut)) : null,
-        hasSub ? h('span', { class: 'menu__sub' }, icon('chevronRight', 14)) : null,
-      );
-      row.addEventListener('pointerenter', () => {
-        this.setActive(i);
-        clearTimeout(this.hoverTimer);
-        this.hoverTimer = window.setTimeout(() => (hasSub ? this.openSub(i) : this.closeSub()), hasSub ? 90 : 160);
-      });
-      row.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.activate(i);
-      });
+      const row = this.row(item, i);
       this.el.append(row);
       return row;
     });
+  }
+
+  /** A command's or a submenu's row. */
+  private row(item: MenuItem, i: number): HTMLElement {
+    const hasSub = !!item.items;
+    const row = h(
+      'div',
+      {
+        class: 'menu__item',
+        role: item.radio ? 'menuitemradio' : item.checked !== undefined ? 'menuitemcheckbox' : 'menuitem',
+        'aria-checked': item.checked !== undefined ? String(item.checked) : null,
+        'aria-disabled': item.disabled ? 'true' : null,
+        'aria-haspopup': hasSub ? 'menu' : null,
+        'data-detail': item.detail ? '' : null,
+        'data-preview': item.preview ? '' : null,
+      },
+      h(
+        'span',
+        { class: 'menu__check' },
+        item.checked ? (item.radio ? h('span', { class: 'menu__dot' }) : icon('check', 14)) : null,
+      ),
+      h(
+        'span',
+        { class: 'menu__icon' },
+        item.preview
+          ? iconPreview(item.preview)
+          : item.swatch
+            ? h('span', { class: 'swatch', style: `--swatch:${item.swatch}` })
+            : item.drawIcon
+              ? item.drawIcon(item.detail ? 22 : 16)
+              : item.icon
+                ? icon(item.icon, item.detail ? 22 : 16)
+                : null,
+      ),
+      item.detail
+        ? h('span', { class: 'menu__label menu__label--2' }, h('span', { class: 'menu__title' }, item.label), h('span', { class: 'menu__detail' }, item.detail))
+        : h('span', { class: 'menu__label' }, item.label),
+      item.hint ? h('span', { class: 'menu__hint' }, item.hint) : null,
+      item.shortcut ? h('span', { class: 'menu__kbd' }, formatChord(item.shortcut)) : null,
+      hasSub ? h('span', { class: 'menu__sub' }, icon('chevronRight', 14)) : null,
+    );
+    row.addEventListener('pointerenter', () => {
+      this.setActive(i);
+      clearTimeout(this.hoverTimer);
+      this.hoverTimer = window.setTimeout(() => (hasSub ? this.openSub(i) : this.closeSub()), hasSub ? 90 : 160);
+    });
+    row.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.activate(i);
+    });
+    return row;
+  }
+
+  /**
+   * The rows read again from the menu's source after a row that stays ran: in place, each row rebuilt where it is, so
+   * the scroll, the highlighted row and an open submenu stay; a menu whose rows changed in kind is drawn again whole.
+   */
+  private refresh(): void {
+    if (!this.el.isConnected) return;
+    const next = read(this.source);
+    if (next.length === this.items.length && next.every((item, i) => shapeOf(item) === shapeOf(this.items[i]))) {
+      this.items = next;
+      next.forEach((item, i) => {
+        const old = this.rows[i];
+        if (!old) return;
+        const row = this.row(item, i);
+        if (i === this.active) row.setAttribute('data-active', '');
+        old.replaceWith(row);
+        this.rows[i] = row;
+      });
+    } else {
+      const scroll = this.el.scrollTop;
+      const active = this.active;
+      this.closeSub();
+      this.items = next;
+      this.el.replaceChildren();
+      this.render();
+      this.el.scrollTop = scroll;
+      this.active = -1;
+      if (this.rows[active] && !this.items[active].disabled) this.setActive(active);
+    }
+    this.markCut();
   }
 
   private position(anchor: Anchor): void {
@@ -217,8 +282,7 @@ export class PopupMenu {
     if (!item.items || item.disabled) return;
     if (this.child && this.child.anchorIndex === i) return;
     this.closeSub();
-    const list = typeof item.items === 'function' ? item.items() : item.items;
-    this.child = new PopupMenu(list, this.rows[i]!.getBoundingClientRect(), { placement: 'right' }, this);
+    this.child = new PopupMenu(item.items, this.rows[i]!.getBoundingClientRect(), { placement: 'right' }, this);
     this.child.anchorIndex = i;
   }
 
@@ -235,6 +299,17 @@ export class PopupMenu {
     if (item.items) {
       this.openSub(i);
       this.child?.move(1);
+      return;
+    }
+    if (item.stay) {
+      PopupMenu.running = true;
+      try {
+        item.run?.();
+      } finally {
+        PopupMenu.running = false;
+      }
+      // This menu and the ones it opened from read their rows again: their ticks follow the change.
+      for (let m: PopupMenu | null = this; m; m = m.parent) m.refresh();
       return;
     }
     this.rootMenu().close();

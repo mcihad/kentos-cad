@@ -283,9 +283,63 @@ pub(super) struct Writer<'a> {
     pub styles: &'a super::styles::StyleNames,
     /// How many of the file's unit make a metre (a dimension's DIMLFAC).
     pub per_metre: f64,
+    /// The LTYPE records given a handle before the table is written: the
+    /// dashed types a dimension's lines take (docs/adr/0205 §6).
+    pub ltypes: &'a mut Vec<(kentos_contracts::LineType, u64)>,
+    /// AutoCAD's arrow blocks written for leaders' arrowheads, their block
+    /// records (docs/adr/0205 §7).
+    pub arrows: &'a mut Vec<(kentos_contracts::LeaderArrow, u64)>,
+    /// What a block's objects are drawn with now (`block_head`).
+    pub pen: Pen,
+}
+
+/// What a block's object is drawn with (docs/adr/0205 §6): a colour, a line
+/// type and a weight of its own; by default BYBLOCK's colour and none of the
+/// others (the dimension's own).
+#[derive(Clone, Copy, Debug, Default)]
+pub(super) struct Pen {
+    pub color: Option<aci::DxfColor>,
+    pub ltype: Option<&'static str>,
+    pub weight: Option<i64>,
+}
+
+/// The LTYPE record's handle of `t` in `ltypes`, given one from `handles`
+/// the first time; none for a continuous line.
+pub(super) fn ltype_handle(
+    ltypes: &mut Vec<(kentos_contracts::LineType, u64)>,
+    handles: &mut super::Handles,
+    t: kentos_contracts::LineType,
+) -> Option<u64> {
+    if t == kentos_contracts::LineType::Continuous {
+        return None;
+    }
+    if let Some((_, h)) = ltypes.iter().find(|(x, _)| *x == t) {
+        return Some(*h);
+    }
+    let h = handles.take();
+    ltypes.push((t, h));
+    Some(h)
 }
 
 impl Writer<'_> {
+    /// A dimension's part's pen (docs/adr/0205 §6): its colour, its line
+    /// type (its LTYPE record written with the table) and its weight.
+    fn dimension_pen(
+        &mut self,
+        color: Option<&str>,
+        weight: Option<f64>,
+        line_type: Option<kentos_contracts::LineType>,
+    ) -> Pen {
+        let ltype = line_type.and_then(|t| {
+            ltype_handle(self.ltypes, self.handles, t).map(|_| super::layers::ltype_name(t))
+        });
+        Pen {
+            color: color.map(|c| aci::from_app(c).0),
+            ltype,
+            weight: weight.map(|w| super::layers::line_weight(w).0),
+        }
+    }
+
     fn grow(&mut self, p: Vec2) {
         let b = self.extent.get_or_insert(Bounds {
             min_x: p.x,
@@ -1248,6 +1302,20 @@ impl Writer<'_> {
         }
         let middle = dim::text_middle(&l, d.height);
 
+        // Its lines' pens (docs/adr/0205 §6): the dimension line's (its arrowheads' too), the
+        // extension lines', the value's; BYBLOCK where its look names none.
+        let look = &d.look;
+        let line_pen = self.dimension_pen(
+            look.dim_line_color.as_deref(),
+            look.dim_line_weight,
+            look.dim_line_type,
+        );
+        let ext_pen = self.dimension_pen(
+            look.ext_color.as_deref(),
+            look.ext_weight,
+            look.ext_line_type,
+        );
+        let text_pen = self.dimension_pen(look.text_color.as_deref(), None, None);
         // The block: the drawing on layer 0 in the dimension's colour (BYBLOCK), as AutoCAD writes it.
         let record = self.handles.take();
         *self.dimensions += 1;
@@ -1264,14 +1332,20 @@ impl Writer<'_> {
                 (hypot(p.x - c.x, p.y - c.y) - r).abs() <= 1e-9 * r.max(1.0)
             })
         };
-        for [p, q] in &l.lines {
+        for (i, [p, q]) in l.lines.iter().enumerate() {
             self.grow(app(*p));
             self.grow(app(*q));
             if on_arc(*p) && on_arc(*q) {
                 continue;
             }
+            self.pen = if l.ext.contains(&i) {
+                ext_pen
+            } else {
+                line_pen
+            };
             self.block_line(record, app(*p), app(*q));
         }
+        self.pen = line_pen;
         if let Some((c, r, a0, sweep)) = arc {
             self.block_arc(record, c, r, a0, a0 + sweep);
         }
@@ -1289,6 +1363,7 @@ impl Writer<'_> {
                 self.block_dot(record, c, r);
             }
         }
+        self.pen = text_pen;
         match shown.as_deref() {
             Some(t) if !t.trim().is_empty() => {
                 let style = self.styles.value(d.look.font).to_owned();
@@ -1301,6 +1376,7 @@ impl Writer<'_> {
                 0,
             ),
         }
+        self.pen = Pen::default();
         self.block_end(record);
 
         // The DIMENSION (an ARC_DIMENSION, a LARGE_RADIAL_DIMENSION): its common groups, then its kind's.
@@ -1319,6 +1395,9 @@ impl Writer<'_> {
             .str(3, self.styles.dimension(d.look.dim_style.as_ref()));
         self.dimension_kind(&def);
         let jogged = d.style == Some(DimensionStyle::Jogged);
+        // Its lines' types by their LTYPE records' handles (docs/adr/0205 §6).
+        let types = [d.look.dim_line_type, d.look.ext_line_type]
+            .map(|t| t.and_then(|t| ltype_handle(self.ltypes, self.handles, t)));
         self.out.xdata(&dim_overrides(
             d.height,
             self.decimals,
@@ -1327,6 +1406,7 @@ impl Writer<'_> {
             jogged,
             &d.look,
             self.per_metre,
+            types,
         ));
         if matches!(
             d.look.arrow,
@@ -1335,7 +1415,10 @@ impl Writer<'_> {
             self.report.note("Ölçü stili", super::styles::ARROW_NOTE, 0);
         }
         // Semt and Eğim have no DXF kind (docs/adr/0147 §8): an aligned one, drawn by its block.
-        if matches!(d.style, Some(DimensionStyle::Azimuth | DimensionStyle::Slope)) {
+        if matches!(
+            d.style,
+            Some(DimensionStyle::Azimuth | DimensionStyle::Slope)
+        ) {
             self.report.note(
                 "Ölçü",
                 "semt ve eğim ölçüleri DXF'te hizalı ölçü olarak, kendi çizgileri ve değeriyle yazıldı; başka programlar çizgilerini gösterir, KentOS ölçü olarak geri okur",
@@ -1433,19 +1516,41 @@ impl Writer<'_> {
         }
     }
 
-    /// A block entity's head: on layer 0, colour BYBLOCK, owned by the block.
+    /// A block entity's head: on layer 0, owned by the block, colour BYBLOCK
+    /// unless the pen has one (and its line type and weight, docs/adr/0205 §6).
     fn block_head(&mut self, kind: &str, record: u64) {
         let h = self.handles.take();
+        let pen = self.pen;
         let o = &mut *self.blocks;
         o.str(0, kind);
         o.handle(5, h);
         o.handle(330, record);
         o.str(100, "AcDbEntity");
         o.str(8, "0");
-        o.int(62, 0);
+        if let Some(name) = pen.ltype {
+            o.str(6, name);
+        }
+        match pen.color {
+            Some(c) => {
+                o.int(62, i64::from(c.aci));
+                if let Some(rgb) = c.rgb {
+                    o.int(420, rgb);
+                }
+            }
+            None => o.int(62, 0),
+        }
+        if let Some(w) = pen.weight {
+            o.int(370, w);
+        }
     }
 
+    /// An anonymous block's BLOCK (a dimension's, a table's).
     fn block_begin(&mut self, record: u64, name: &str) {
+        // 1: anonymous.
+        self.block_begin_flags(record, name, 1);
+    }
+
+    fn block_begin_flags(&mut self, record: u64, name: &str, flags: i64) {
         let h = self.handles.take();
         let o = &mut *self.blocks;
         o.str(0, "BLOCK");
@@ -1455,8 +1560,7 @@ impl Writer<'_> {
         o.str(8, "0");
         o.str(100, "AcDbBlockBegin");
         o.str(2, name);
-        // 1: anonymous.
-        o.int(70, 1);
+        o.int(70, flags);
         o.xyz(10, v(0.0, 0.0));
         o.str(3, name);
         o.str(1, "");
@@ -1518,6 +1622,28 @@ impl Writer<'_> {
         o.real(10, c.x + r / 2.0);
         o.real(20, c.y);
         o.real(42, 1.0);
+    }
+
+    /// A circle of radius `r` about `c` (a blank dot's).
+    fn block_circle(&mut self, record: u64, c: Vec2, r: f64) {
+        self.block_head("CIRCLE", record);
+        let o = &mut *self.blocks;
+        o.str(100, "AcDbCircle");
+        o.xyz(10, c);
+        o.real(40, r);
+    }
+
+    /// A polyline through `pts`, closed back to its first when `closed`.
+    fn block_polyline(&mut self, record: u64, pts: &[Vec2], closed: bool) {
+        self.block_head("LWPOLYLINE", record);
+        let o = &mut *self.blocks;
+        o.str(100, "AcDbPolyline");
+        o.int(90, pts.len() as i64);
+        o.int(70, i64::from(closed));
+        for p in pts {
+            o.real(10, p.x);
+            o.real(20, p.y);
+        }
     }
 
     /// Counter-clockwise from a0 to a1 (radians).
@@ -1787,6 +1913,7 @@ fn dim_overrides(
     jogged: bool,
     look: &kentos_contracts::DimensionLook,
     per_metre: f64,
+    types: [Option<u64>; 2],
 ) -> Vec<(i32, String)> {
     let mut g: Vec<(i32, String)> = vec![
         (1001, "ACAD".into()),
@@ -1848,6 +1975,31 @@ fn dim_overrides(
     if let Some(f) = super::styles::dimlfac(look.unit, per_metre) {
         g.push((1070, "144".into()));
         g.push((1040, dxf_real(f)));
+    }
+    // Its lines (docs/adr/0205 §6): colours as ACI numbers (DIMCLRD, DIMCLRE, DIMCLRT), weights
+    // (DIMLWD, DIMLWE), types by their LTYPE records (DIMLTYPE, DIMLTEX1, DIMLTEX2); only those it names.
+    for (code, color) in [
+        ("176", &look.dim_line_color),
+        ("177", &look.ext_color),
+        ("178", &look.text_color),
+    ] {
+        if let Some(c) = color {
+            g.push((1070, code.into()));
+            g.push((1070, aci::from_app(c).0.aci.to_string()));
+        }
+    }
+    for (code, weight) in [("371", look.dim_line_weight), ("372", look.ext_weight)] {
+        if let Some(w) = weight {
+            g.push((1070, code.into()));
+            g.push((1070, super::layers::line_weight(w).0.to_string()));
+        }
+    }
+    let [line, ext] = types;
+    for (code, h) in [("345", line), ("346", ext), ("347", ext)] {
+        if let Some(h) = h {
+            g.push((1070, code.into()));
+            g.push((1005, format!("{h:X}")));
+        }
     }
     g.push((1002, "}".into()));
     g

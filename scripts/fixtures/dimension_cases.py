@@ -19,6 +19,10 @@ dimension:
   to right; then its "above" is the other side), and it stands 0.35h above m
   on its reading side.
 
+Which of the lines are extension lines (docs/adr/0205 §6), by their place in
+the list: an arc length's two radial lines; none of an ordinate's, a jogged
+radius's, an azimuth's or a slope's.
+
 The new kinds:
 
 - ordinate (Koordinat): e is the measured axis (x for Y, `angle` 0 or
@@ -176,8 +180,10 @@ def arc_length(d):
     g = h / 2
     k = 1.0 if offset >= 0 else -1.0
     lines = []
+    ext = []
     if abs(offset) > g:
         for t in (t0, t0 + sweep):
+            ext.append(len(lines))
             lines.append([at(t, r + k * g), at(t, big + k * g)])
     steps = max(8, math.ceil(sweep / (math.pi / 36)))
     for i in range(steps):
@@ -204,6 +210,7 @@ def arc_length(d):
         lines.append([symbol(math.pi * i / 12), symbol(math.pi * (i + 1) / 12)])
     return {
         "lines": lines,
+        "ext": ext,
         "textAt": text_at,
         "rotation": rotation,
         "value": r * sweep,
@@ -349,6 +356,7 @@ def case(name, d):
     if out is not None:
         want = {
             "lines": [[pt(p), pt(q)] for p, q in out["lines"]],
+            "ext": out.get("ext", []),
             "textAt": pt(out["textAt"]),
             "rotation": out["rotation"],
             "value": out["value"],

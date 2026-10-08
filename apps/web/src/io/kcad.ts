@@ -174,11 +174,20 @@ export const OBJECT_FIELDS: Record<string, ReadonlySet<string>> = Object.fromEnt
       'prefix',
       'suffix',
       'font',
+      // Its lines (docs/adr/0205 §6).
+      'dimLineColor',
+      'dimLineWeight',
+      'dimLineType',
+      'extColor',
+      'extWeight',
+      'extLineType',
+      'textColor',
     ],
     // What its region follows (docs/adr/0186 §6).
     hatch: ['ring', 'holes', 'pattern', 'assoc'],
     insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
-    leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
+    // Its arrowhead's size (docs/adr/0205 §7).
+    leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'arrowSize', 'mask'],
     // docs/adr/0184: its cells, sizes, ranges, alignments, heading, lines, frame, face and source.
     table: [
       'p',
@@ -259,7 +268,7 @@ export function projectHead(head: DrawingHead): { head: DrawingHead; dropped: Dr
       format: same,
       version: same,
       name: same,
-      settings: (x, w) => p.fields(x, { srid: same, lengthDecimals: same, areaDecimals: same, areaUnit: same, angleUnit: same, plotScale: same, workspace: same, drawingFont: same, drawingUnit: same, secondSrid: same, customCrs: same, secondCustomCrs: same, datumTransforms: same, survey: same, layerStates: same, textStyles: same, dimensionStyles: same, topology: same }, w),
+      settings: (x, w) => p.fields(x, { srid: same, lengthDecimals: same, areaDecimals: same, areaUnit: same, angleUnit: same, plotScale: same, workspace: same, drawingFont: same, drawingUnit: same, secondSrid: same, customCrs: same, secondCustomCrs: same, datumTransforms: same, survey: same, layerStates: same, textStyles: same, dimensionStyles: same, topology: same, annotation: same }, w),
       origin: vec,
       homeView: (x, w) => p.fields(x, { minX: same, minY: same, maxX: same, maxY: same }, w),
       layers: p.list(layer),

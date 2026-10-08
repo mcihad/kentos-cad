@@ -376,7 +376,8 @@ export class StatusBar extends Component {
     if (options)
       b.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        PopupMenu.open(options(), { x: e.clientX, y: e.clientY }, { placement: 'point' });
+        // Given as a function: a row that stays reads the rows again (the selection filter's and the snap kinds).
+        PopupMenu.open(options, { x: e.clientX, y: e.clientY }, { placement: 'point' });
       });
     const sync = () => b.setAttribute('aria-pressed', String(!!cmd.isChecked?.()));
     sync();

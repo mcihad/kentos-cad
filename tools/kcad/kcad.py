@@ -116,6 +116,17 @@ SCHEMA_WITH_TOPOLOGY = 27
 SCHEMA_WITH_SURVEY_SIGMAS = 28
 # Schema 29: schema 28 and the `raster` kind, only in the drawing (docs/adr/0204 §2).
 SCHEMA_WITH_RASTERS = 29
+# Schema 30: schema 29 and the project's annotation heights, the settings' `annotation`; a dimension's and a dimension
+# style's lines (`dimLineColor`, `dimLineWeight`, `dimLineType`, `extColor`, `extWeight`, `extLineType`, `textColor`); a
+# leader's AutoCAD arrowheads and `arrowSize` (docs/adr/0205).
+SCHEMA_WITH_ANNOTATION = 30
+# The project's annotation heights by kind (docs/adr/0205 §1): each on paper, over 0 and at most 100 mm.
+ANNOTATION_KINDS = ("text", "leader", "dimension", "table", "coordinate", "station", "measure")
+MAX_ANNOTATION_MM = 100.0
+# A leader's arrowhead's size, times its note's height (docs/adr/0205 §7).
+MIN_LEADER_ARROW = 0.1
+MAX_LEADER_ARROW = 10.0
+LINE_TYPES = ("continuous", "dashed", "dashdot", "dotted")
 # The topology rules' kinds (docs/adr/0202 §1): whether each is between two layers and what value it takes.
 TOPOLOGY_KINDS = {
     "mustNotOverlap": (False, None),
@@ -174,8 +185,10 @@ REGISTRY_DATUMS = ("TUREF", "ED50", "WGS84")
 LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
 # A dimension's kinds; schema 9 added the last five.
 DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope")
-# A leader's arrowheads (spec §6.6); the filled arrow is the field's absence, no value.
+# A leader's arrowheads (spec §6.6); the filled arrow is the field's absence, no value. Schema 30 added AutoCAD's others
+# (docs/adr/0205 §7).
 LEADER_ARROWS = ("open", "dot", "none")
+LEADER_ARROWS_30 = LEADER_ARROWS + ("closed", "open30", "open90", "dotSmall", "dotBlank", "oblique", "archTick", "boxFilled", "boxBlank", "datumFilled")
 # A table's bounds (kentos_contracts::table): rows, columns, cells, a cell's letters, a size (m), a source's objects.
 MAX_TABLE_ROWS = 10_000
 MAX_TABLE_COLUMNS = 100
@@ -191,7 +204,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -817,6 +830,7 @@ class _Schema:
         self.layer_states = version >= SCHEMA_WITH_LAYER_STATES
         self.topology = version >= SCHEMA_WITH_TOPOLOGY
         self.survey_sigmas = version >= SCHEMA_WITH_SURVEY_SIGMAS
+        self.annotation = version >= SCHEMA_WITH_ANNOTATION
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -884,6 +898,7 @@ class _Schema:
                 **({"layerStates": (self.layer_states_, False)} if self.layer_states else {}),
                 **({"textStyles": (self.text_styles, False), "dimensionStyles": (self.dimension_styles, False)} if self.styles else {}),
                 **({"topology": (self.topology_, False)} if self.topology else {}),
+                **({"annotation": (self.annotation_, False)} if self.annotation else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -900,6 +915,19 @@ class _Schema:
             self.path.append("secondCustomCrs")
             self.fail("bad_value", "ikinci sistem ya EPSG kodu ya tanımdır; koordinat sistemi olmayan projenin ikinci sistemi olmaz")
         return s
+
+    def annotation_(self, v):
+        # The project's annotation heights (schema 30, spec §6.4.6, docs/adr/0205 §1): a kind's height on paper, finite,
+        # over 0 and at most 100 mm; not empty.
+        h = self.fields({k: (self.float, False) for k in ANNOTATION_KINDS})(v)
+        if not h:
+            self.fail("bad_value", "yazı yükseklikleri boş; yüksekliği olmayan proje alanı yazmaz")
+        for kind in ANNOTATION_KINDS:
+            mm = h.get(kind)
+            if mm is not None and not (0.0 < mm <= MAX_ANNOTATION_MM):
+                self.path.append(kind)
+                self.fail("bad_value", f"{kind} yüksekliği {mm:g} mm; sıfırdan büyük, en çok 100 olmalı")
+        return h
 
     def topology_(self, v):
         # The project's topology settings (schema 27, spec §6.4.5, docs/adr/0202 §7): a tolerance within [1e-6, 1] m; rules
@@ -1055,6 +1083,20 @@ class _Schema:
                     "prefix": (self.text, False),
                     "suffix": (self.text, False),
                     "font": (self.enum(DRAWING_FONTS), False),
+                    # Schema 30 (docs/adr/0205 §6): its lines.
+                    **(
+                        {
+                            "dimLineColor": (self.text, False),
+                            "dimLineWeight": (self.float, False),
+                            "dimLineType": (self.enum(LINE_TYPES), False),
+                            "extColor": (self.text, False),
+                            "extWeight": (self.float, False),
+                            "extLineType": (self.enum(LINE_TYPES), False),
+                            "textColor": (self.text, False),
+                        }
+                        if self.annotation
+                        else {}
+                    ),
                 }
             )
         )(v)
@@ -1072,7 +1114,45 @@ class _Schema:
             for key in ("prefix", "suffix"):
                 if key in st:
                     self.affix_rule(st[key], key)
+            for key in ("dimLineColor", "extColor", "textColor"):
+                if key in st:
+                    self.colour_rule(st[key], key)
+            for key in ("dimLineWeight", "extWeight"):
+                if key in st:
+                    self.weight_rule(st[key], key)
         return styles
+
+    # A dimension's lines (schema 30, docs/adr/0205 §6): colours #RRGGBB, weights 0 to 100 paper mm.
+
+    def colour_rule(self, c, key):
+        if not (len(c) == 7 and c[0] == "#" and all(ch in "0123456789abcdefABCDEF" for ch in c[1:])):
+            self.fail("bad_value", f"ölçünün {key} değeri “{c}”; #RRGGBB olmalı")
+
+    def weight_rule(self, w, key):
+        if not 0.0 <= w <= MAX_LINE_WEIGHT:
+            self.fail("bad_value", f"ölçünün {key} değeri {w:g}; 0 ile 100 mm arasında olmalı")
+
+    def dimension_colour(self, key):
+        def read(v):
+            c = self.text(v)
+            self.colour_rule(c, key)
+            return c
+
+        return read
+
+    def dimension_weight(self, key):
+        def read(v):
+            w = self.float(v)
+            self.weight_rule(w, key)
+            return w
+
+        return read
+
+    def leader_arrow_size(self, v):
+        x = self.float(v)
+        if not MIN_LEADER_ARROW <= x <= MAX_LEADER_ARROW:
+            self.fail("bad_value", f"kılavuzun ok boyu {x:g}; notun yüksekliğinin 0,1 ile 10 katı olmalı")
+        return x
 
     def affix_rule(self, text, key):
         if not text or len(text) > MAX_AFFIX or any(ord(c) < 32 or 0x7F <= ord(c) <= 0x9F for c in text):
@@ -2123,6 +2203,20 @@ ENTITY_KINDS = {
             if s.styles
             else {}
         ),
+        # Schema 30 (docs/adr/0205 §6): its lines.
+        **(
+            {
+                "dimLineColor": (s.dimension_colour("dimLineColor"), False),
+                "dimLineWeight": (s.dimension_weight("dimLineWeight"), False),
+                "dimLineType": (s.enum(LINE_TYPES), False),
+                "extColor": (s.dimension_colour("extColor"), False),
+                "extWeight": (s.dimension_weight("extWeight"), False),
+                "extLineType": (s.enum(LINE_TYPES), False),
+                "textColor": (s.dimension_colour("textColor"), False),
+            }
+            if s.annotation
+            else {}
+        ),
     },
     # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the
     # drawing (a block definition's objects have no persistent ids to name).
@@ -2183,13 +2277,15 @@ ENTITY_KINDS = {
         "opacity": (s.float, False),
     },
     # Schema 8 (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, `mask` only when true.
+    # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.
     "leader": lambda s: {
         "pts": (s.leader_points, True),
         "text": (s.note, False),
         "height": (s.leader_height, True),
         "rotation": (s.float, True),
-        "arrow": (s.enum(LEADER_ARROWS), False),
+        "arrow": (s.enum(LEADER_ARROWS_30 if s.annotation else LEADER_ARROWS), False),
         "mask": (s.mask, False),
+        **({"arrowSize": (s.leader_arrow_size, False)} if s.annotation else {}),
     },
 }
 

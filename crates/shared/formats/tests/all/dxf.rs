@@ -1482,7 +1482,15 @@ fn an_opened_blocks_attributes_come_in_as_texts() {
 
 /// A text as the texts' test reads it: words, place, height, turn, alignment,
 /// width factor and mask.
-type Placed<'a> = (&'a str, Vec2, f64, f64, Option<TextAlign>, Option<f64>, bool);
+type Placed<'a> = (
+    &'a str,
+    Vec2,
+    f64,
+    f64,
+    Option<TextAlign>,
+    Option<f64>,
+    bool,
+);
 
 fn placed(e: &Entity) -> Placed<'_> {
     let Entity::Text(t) = e else {
@@ -1518,8 +1526,30 @@ fn texts_take_their_alignment_width_factor_and_mask() {
     let at = |i: usize| placed(&e[i]);
     let h = 2.0;
     assert_eq!(at(0), ("SOL", v(0.0, 0.0), h, 0.0, None, None, false));
-    assert_eq!(at(1), ("ORTA", v(30.0, 0.0), h, 0.0, Some(BaselineCenter), None, false));
-    assert_eq!(at(2), ("SAG", v(60.0, 0.0), h, 0.0, Some(BaselineRight), None, false));
+    assert_eq!(
+        at(1),
+        (
+            "ORTA",
+            v(30.0, 0.0),
+            h,
+            0.0,
+            Some(BaselineCenter),
+            None,
+            false
+        )
+    );
+    assert_eq!(
+        at(2),
+        (
+            "SAG",
+            v(60.0, 0.0),
+            h,
+            0.0,
+            Some(BaselineRight),
+            None,
+            false
+        )
+    );
     let rows = [
         ["SOL ALT", "ORTA ALT", "SAG ALT"],
         ["SOL ORTA", "ORTA ORTA", "SAG ORTA"],
@@ -1533,27 +1563,70 @@ fn texts_take_their_alignment_width_factor_and_mask() {
     for (row, (words, aligns)) in rows.iter().zip(aligns).enumerate() {
         for (col, (words, align)) in words.iter().zip(aligns).enumerate() {
             let p = v(30.0 * col as f64, 10.0 * (row + 1) as f64);
-            assert_eq!(at(3 + 3 * row + col), (*words, p, h, 0.0, Some(align), None, false));
+            assert_eq!(
+                at(3 + 3 * row + col),
+                (*words, p, h, 0.0, Some(align), None, false)
+            );
         }
     }
-    assert_eq!(at(12), ("MIDDLE", v(100.0, 0.0), h, 0.0, Some(MiddleCenter), None, false));
-    assert_eq!(at(13), ("GENIS", v(100.0, 10.0), h, 30.0, None, Some(0.8), false));
+    assert_eq!(
+        at(12),
+        (
+            "MIDDLE",
+            v(100.0, 0.0),
+            h,
+            0.0,
+            Some(MiddleCenter),
+            None,
+            false
+        )
+    );
+    assert_eq!(
+        at(13),
+        ("GENIS", v(100.0, 10.0), h, 30.0, None, Some(0.8), false)
+    );
     assert_eq!(at(14), ("BOZUK", v(100.0, 20.0), h, 0.0, None, None, false));
     assert!(noted(&r, "Yazı genişliği (41)").is_some_and(|n| n.contains("1 alındı")));
     // HIZALI runs 10 m at a width factor of 1: its height makes it that long.
     let (words, p, height, rotation, align, widths, mask) = at(15);
-    assert_eq!((words, p, rotation, align, widths, mask), ("HIZALI", v(130.0, 0.0), 0.0, None, None, false));
-    assert!((height - 10.0 / text_width("HIZALI")).abs() < 1e-12, "{height}");
+    assert_eq!(
+        (words, p, rotation, align, widths, mask),
+        ("HIZALI", v(130.0, 0.0), 0.0, None, None, false)
+    );
+    assert!(
+        (height - 10.0 / text_width("HIZALI")).abs() < 1e-12,
+        "{height}"
+    );
     assert!(noted(&r, "Hizalı yazı (72 = 3)").is_some());
     // SIGDIR runs 10 m up at a height of 2: its width factor makes it that long.
     let (words, p, height, rotation, align, widths, mask) = at(16);
-    assert_eq!((words, p, height, align, mask), ("SIGDIR", v(130.0, 10.0), 2.0, None, false));
+    assert_eq!(
+        (words, p, height, align, mask),
+        ("SIGDIR", v(130.0, 10.0), 2.0, None, false)
+    );
     assert!((rotation - 90.0).abs() < 1e-12, "{rotation}");
     let fitted = widths.expect("a width factor");
-    assert!((fitted - 10.0 / (text_width("SIGDIR") * 2.0)).abs() < 1e-12, "{fitted}");
+    assert!(
+        (fitted - 10.0 / (text_width("SIGDIR") * 2.0)).abs() < 1e-12,
+        "{fitted}"
+    );
     assert!(noted(&r, "Sığdırılmış yazı (72 = 5)").is_some());
-    assert_eq!(at(17), ("TEK NOKTA", v(160.0, 0.0), h, 0.0, Some(MiddleCenter), None, false));
-    assert_eq!(at(18), ("ZEMINLI", v(160.0, 10.0), h, 0.0, None, None, true));
+    assert_eq!(
+        at(17),
+        (
+            "TEK NOKTA",
+            v(160.0, 0.0),
+            h,
+            0.0,
+            Some(MiddleCenter),
+            None,
+            false
+        )
+    );
+    assert_eq!(
+        at(18),
+        ("ZEMINLI", v(160.0, 10.0), h, 0.0, None, None, true)
+    );
     // An MTEXT is one multi-line text at its attachment point, its box's (docs/adr/0182 §5): the top's left.
     assert_eq!(
         at(19),
@@ -1609,7 +1682,11 @@ fn texts_take_their_alignment_width_factor_and_mask() {
         panic!("{:?}", e[23])
     };
     assert_eq!(etiket.base.attrs.get("NO").map(String::as_str), Some("7"));
-    let definition = r.blocks.iter().find(|b| b.name == "ETIKET").expect("ETIKET");
+    let definition = r
+        .blocks
+        .iter()
+        .find(|b| b.name == "ETIKET")
+        .expect("ETIKET");
     let [no] = definition.attributes.as_slice() else {
         panic!("{:?}", definition.attributes)
     };
@@ -1637,26 +1714,46 @@ fn texts_take_their_alignment_width_factor_and_mask() {
     );
     assert_eq!(e.len(), 27);
     // Nothing is placed by a guess of its width any more.
-    assert!(r.report.notes.iter().all(|n| !n.reason.contains("tahmin")), "{:?}", r.report.notes);
+    assert!(
+        r.report.notes.iter().all(|n| !n.reason.contains("tahmin")),
+        "{:?}",
+        r.report.notes
+    );
 }
 
 /// A leader's vertices, note, height, turn, arrowhead and mask.
-type Leader<'a> = (Vec<Vec2>, Option<&'a str>, f64, f64, Option<LeaderArrow>, bool);
+type Leader<'a> = (
+    Vec<Vec2>,
+    Option<&'a str>,
+    f64,
+    f64,
+    Option<LeaderArrow>,
+    bool,
+);
 
 fn leader(e: &Entity) -> Leader<'_> {
     let Entity::Leader(l) = e else {
         panic!("not a leader: {e:?}")
     };
-    (l.pts.clone(), l.text.as_deref(), l.height, l.rotation, l.arrow, l.mask)
+    (
+        l.pts.clone(),
+        l.text.as_deref(),
+        l.height,
+        l.rotation,
+        l.arrow,
+        l.mask,
+    )
 }
 
 /// The leaders of fixtures/formats/v1/leaders.dxf (docs/adr/0146 §8): a
 /// LEADER's MTEXT, after it or before it in the file, is its note (the
 /// first line; the others stay texts); a hookline's end gives way to the
 /// leader's own landing; the arrowhead comes from the arrow block's name
-/// (the style's, or the entity's own DSTYLE data); without a note the
-/// height is 40, else the style's arrow; a MULTILEADER is its first line
-/// with its content as the note.
+/// (the style's, or the entity's own DSTYLE data), every AutoCAD arrowhead
+/// KentOS has (docs/adr/0205 §7); without a note the height is 40, else the
+/// style's arrow; the arrowhead's size is the arrow (DIMASZ × DIMSCALE)
+/// over 40; a MULTILEADER is its first line with its content as the note,
+/// its arrowhead's size its arrow over its text's height.
 #[test]
 fn leaders_come_with_their_notes_arrowheads_and_heights() {
     let r = read("leaders.dxf");
@@ -1666,13 +1763,26 @@ fn leaders_come_with_their_notes_arrowheads_and_heights() {
     // A: its MTEXT after it; the hookline's end (8.5, 5) gives way to the leader's own landing.
     assert_eq!(
         leader(&e[0]),
-        (vec![v(0.0, 0.0), v(6.0, 5.0)], Some("Mevcut bina"), 2.5, 0.0, None, false)
+        (
+            vec![v(0.0, 0.0), v(6.0, 5.0)],
+            Some("Mevcut bina"),
+            2.5,
+            0.0,
+            None,
+            false
+        )
     );
     // B: its MTEXT before it, at 30° over a background; Harita's arrow block is _Dot.
     let (pts, note, height, turn, arrow, mask) = leader(&e[1]);
     assert_eq!(
         (pts, note, height, arrow, mask),
-        (vec![v(40.0, -10.0), v(36.0, -6.0)], Some("Ø150 PVC"), 2.0, dot, true)
+        (
+            vec![v(40.0, -10.0), v(36.0, -6.0)],
+            Some("Ø150 PVC"),
+            2.0,
+            dot,
+            true
+        )
     );
     assert!((turn - 30.0).abs() < 1e-9, "{turn}");
     // Its second line stays a text, under the note as it was under the first line, 2 × 5/3
@@ -1694,32 +1804,74 @@ fn leaders_come_with_their_notes_arrowheads_and_heights() {
     // C: neither an annotation nor an arrowhead; no 40: Harita's arrow, 1.8 × 2.
     assert_eq!(
         leader(&e[3]),
-        (vec![v(60.0, 0.0), v(64.0, 4.0)], None, 3.6, 0.0, Some(LeaderArrow::None), false)
+        (
+            vec![v(60.0, 0.0), v(64.0, 4.0)],
+            None,
+            3.6,
+            0.0,
+            Some(LeaderArrow::None),
+            false
+        )
     );
     // D: a spline path read straight; its MTEXT's formatting dropped.
     assert_eq!(
         leader(&e[4]),
-        (vec![v(80.0, 0.0), v(84.0, 3.0), v(88.0, 3.0)], Some("Vana"), 1.5, 0.0, None, false)
+        (
+            vec![v(80.0, 0.0), v(84.0, 3.0), v(88.0, 3.0)],
+            Some("Vana"),
+            1.5,
+            0.0,
+            None,
+            false
+        )
     );
     // F: the MTEXT it names is not in the file.
     assert_eq!(
         leader(&e[5]),
-        (vec![v(100.0, -20.0), v(104.0, -16.0)], None, 2.0, 0.0, None, false)
+        (
+            vec![v(100.0, -20.0), v(104.0, -16.0)],
+            None,
+            2.0,
+            0.0,
+            None,
+            false
+        )
     );
     // G: its own DSTYLE data gives _Open and an arrow of 3 (Standard's scale, 1).
     assert_eq!(
         leader(&e[6]),
-        (vec![v(120.0, -20.0), v(116.0, -16.0)], None, 3.0, 0.0, open, false)
+        (
+            vec![v(120.0, -20.0), v(116.0, -16.0)],
+            None,
+            3.0,
+            0.0,
+            open,
+            false
+        )
     );
-    // K: _ArchTick is no arrowhead KentOS has: filled.
+    // K: _ArchTick, Mimari çentik.
     assert_eq!(
         leader(&e[7]),
-        (vec![v(140.0, -20.0), v(144.0, -16.0)], None, 1.0, 0.0, None, false)
+        (
+            vec![v(140.0, -20.0), v(144.0, -16.0)],
+            None,
+            1.0,
+            0.0,
+            Some(LeaderArrow::ArchTick),
+            false
+        )
     );
     // H: its first leader line to its leader's last point; the content's first line its note.
     assert_eq!(
         leader(&e[8]),
-        (vec![v(100.0, 0.0), v(104.0, 4.0), v(106.0, 6.0)], Some("Ada 101"), 2.0, 0.0, open, true)
+        (
+            vec![v(100.0, 0.0), v(104.0, 4.0), v(106.0, 6.0)],
+            Some("Ada 101"),
+            2.0,
+            0.0,
+            open,
+            true
+        )
     );
     let Entity::Text(parsel) = &e[9] else {
         panic!("{:?}", e[9])
@@ -1737,7 +1889,14 @@ fn leaders_come_with_their_notes_arrowheads_and_heights() {
     // I: its block content is not taken; its height is the context's arrow, 1.5.
     assert_eq!(
         leader(&e[10]),
-        (vec![v(120.0, 0.0), v(124.0, 4.0), v(126.0, 4.0)], None, 1.5, 0.0, None, false)
+        (
+            vec![v(120.0, 0.0), v(124.0, 4.0), v(126.0, 4.0)],
+            None,
+            1.5,
+            0.0,
+            None,
+            false
+        )
     );
     assert!(matches!(&e[11], Entity::Insert(_)));
     assert_eq!(e.len(), 12);
@@ -1746,7 +1905,14 @@ fn leaders_come_with_their_notes_arrowheads_and_heights() {
     assert_eq!(vana.entities.len(), 2);
     assert_eq!(
         leader(&vana.entities[1]),
-        (vec![v(1.0, 0.0), v(3.0, 2.0)], Some("V"), 0.5, 0.0, None, false)
+        (
+            vec![v(1.0, 0.0), v(3.0, 2.0)],
+            Some("V"),
+            0.5,
+            0.0,
+            None,
+            false
+        )
     );
     assert_eq!(
         (count(&r, "leader"), count(&r, "text"), count(&r, "insert")),
@@ -1761,8 +1927,37 @@ fn leaders_come_with_their_notes_arrowheads_and_heights() {
     assert!(said("Kılavuz (LEADER)", "ilk satırı kılavuzun notu oldu"));
     assert!(said("Kılavuz (LEADER)", "eğri yolu"));
     assert!(said("Kılavuz (LEADER)", "bağlı notu (340) dosyada yok"));
-    assert!(said("Kılavuz (LEADER)", "“_ArchTick” KentOS'ta yok"));
-    assert!(said("Çoklu kılavuz (MULTILEADER)", "öbür 1 ok çizgisi alınmadı"));
+    assert!(
+        !r.report
+            .notes
+            .iter()
+            .any(|n| n.reason.contains("KentOS'ta yok"))
+    );
+    // The arrowheads' sizes (docs/adr/0205 §7): Standard's 2.5 over 40, Harita's 1.8 × 2 over 2, the
+    // MULTILEADER's 1 over its text's 2; none where 40 is not given or the arrow is as high as it.
+    let size = |e: &Entity| match e {
+        Entity::Leader(l) => l.arrow_size,
+        other => panic!("not a leader: {other:?}"),
+    };
+    assert_eq!(
+        [0, 1, 3, 4, 5, 6, 7, 8, 10].map(|i| size(&e[i])),
+        [
+            None,
+            Some(1.8),
+            None,
+            Some(2.5 / 1.5),
+            Some(1.25),
+            None,
+            Some(2.5),
+            Some(0.5),
+            None
+        ]
+    );
+    assert_eq!(size(&vana.entities[1]), Some(5.0));
+    assert!(said(
+        "Çoklu kılavuz (MULTILEADER)",
+        "öbür 1 ok çizgisi alınmadı"
+    ));
     assert!(said("Çoklu kılavuz (MULTILEADER)", "blok içeriği alınmadı"));
     assert!(said("Çoklu kılavuz (MULTILEADER)", "eğri ok çizgisi"));
     assert!(r.report.skipped.is_empty(), "{:?}", r.report.skipped);
@@ -1776,7 +1971,14 @@ fn leaders_come_with_their_notes_arrowheads_and_heights() {
         .collect();
     assert_eq!(
         opened,
-        vec![(vec![v(161.0, 0.0), v(163.0, 2.0)], Some("V"), 0.5, 0.0, None, false)]
+        vec![(
+            vec![v(161.0, 0.0), v(163.0, 2.0)],
+            Some("V"),
+            0.5,
+            0.0,
+            None,
+            false
+        )]
     );
     assert_eq!((count(&o, "leader"), count(&o, "text")), (10, 2));
 }
@@ -1805,7 +2007,14 @@ fn another_program_s_new_dimensions_come_in_as_kentos_s_own() {
     };
     // The east (AutoCAD's X type, bit 64): its point, its line's end; no offset, the style's height.
     assert_eq!(
-        (east.style, east.angle, east.a, east.b, east.offset, east.height),
+        (
+            east.style,
+            east.angle,
+            east.a,
+            east.b,
+            east.offset,
+            east.height
+        ),
         (
             Some(DimensionStyle::Ordinate),
             Some(0.0),
@@ -1815,7 +2024,10 @@ fn another_program_s_new_dimensions_come_in_as_kentos_s_own() {
             3.0
         )
     );
-    assert_eq!((east.text.as_deref(), east.mask, east.base.layer_id.as_str()), (None, false, "OLCU"));
+    assert_eq!(
+        (east.text.as_deref(), east.mask, east.base.layer_id.as_str()),
+        (None, false, "OLCU")
+    );
     // The north, with its own words.
     assert_eq!(
         (north.angle, north.b, north.text.as_deref()),
@@ -1836,7 +2048,13 @@ fn another_program_s_new_dimensions_come_in_as_kentos_s_own() {
     // The jogged radius: the true centre, the point on the arc, the centre shown; its jog 8 m
     // from the centre shown; "R<>" is the measured value.
     assert_eq!(
-        (jogged.style, jogged.a, jogged.b, jogged.c, jogged.text.as_deref()),
+        (
+            jogged.style,
+            jogged.a,
+            jogged.b,
+            jogged.c,
+            jogged.text.as_deref()
+        ),
         (
             Some(DimensionStyle::Jogged),
             v(452400.0, 4412100.0),
@@ -1848,9 +2066,12 @@ fn another_program_s_new_dimensions_come_in_as_kentos_s_own() {
     assert!((jogged.offset - 8.0).abs() < 1e-5, "{jogged:?}");
     // The ordinate from another origin and the aligned one: their blocks' lines and values.
     assert_eq!((count(&r, "line"), count(&r, "text")), (4, 2));
-    assert!(r.report.notes.iter().any(|n| n.what == "Ölçü (DIMENSION)"
-        && n.reason.starts_with("koordinat ölçüsünün başlangıcı (0, 0) değil")
-        && n.count == 1));
+    assert!(r.report.notes.iter().any(|n| {
+        n.what == "Ölçü (DIMENSION)"
+            && n.reason
+                .starts_with("koordinat ölçüsünün başlangıcı (0, 0) değil")
+            && n.count == 1
+    }));
 }
 
 /// Multi-line texts of docs/adr/0182 §5 (fixtures/formats/v1/mtext.dxf,
@@ -2097,6 +2318,7 @@ fn another_programs_styles_come_in_as_the_projects() {
         prefix: None,
         suffix: None,
         font: None,
+        ..Default::default()
     };
     assert_eq!(
         r.dimension_styles,

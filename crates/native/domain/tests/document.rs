@@ -275,7 +275,10 @@ fn an_open_groups_steps_move_the_generation_but_not_the_revision() {
     let (generation, revision) = (doc.generation(), doc.revision());
     let group = doc.begin_group("İçe aktar");
     doc.add(point("a", 1.0)).expect("slot");
-    assert!(doc.generation() > generation, "the drawing shows the new object");
+    assert!(
+        doc.generation() > generation,
+        "the drawing shows the new object"
+    );
     assert_eq!(doc.revision(), revision, "no edit yet");
     assert!(!doc.is_dirty());
     let shown = doc.generation();

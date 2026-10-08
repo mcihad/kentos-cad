@@ -92,6 +92,7 @@ fn dimension_styles() -> Vec<DimensionStyleDef> {
         prefix: None,
         suffix: None,
         font: None,
+        ..Default::default()
     };
     vec![
         DimensionStyleDef {
