@@ -241,6 +241,8 @@ pub fn entity(e: &mut Entity, s: Scale) {
                 *v = s.apply(*v);
             }
         }
+        // A cloud's points are in its files, which no unit scales; DXF carries none (docs/adr/0207 §11).
+        Entity::PointCloud(_) => {}
     }
 }
 

@@ -349,6 +349,11 @@ fn geometry(e: &Entity, blocks: &Placing, rep: &mut Report) -> Option<Geometry> 
             rep.skip("Resim", "GeoJSON'da resim nesnesi yok; yazılmadı", 0);
             return None;
         }
+        // Nor a point cloud (docs/adr/0207 §11).
+        Entity::PointCloud(_) => {
+            rep.skip("Nokta bulutu", "GeoJSON'da nokta bulutu yok; yazılmadı", 0);
+            return None;
+        }
         // GeoJSON holds no raster (docs/adr/0204 §10).
         Entity::Raster(_) => {
             rep.skip("Raster", "GeoJSON'da raster yok; yazılmadı", 0);

@@ -554,6 +554,8 @@ impl Viewport {
         // files for the raster service (docs/adr/0204 §5).
         let folder = doc.path.as_deref().and_then(std::path::Path::parent);
         let mut rasters = std::collections::HashSet::new();
+        // Its point clouds' files for the point cloud service (docs/adr/0207 §6).
+        let mut clouds = std::collections::HashSet::new();
         for part in &scene.layers {
             for b in &part.layer.batches {
                 use kentos_native_style::batches::{BatchKind, FillPaintBatch};
@@ -571,12 +573,20 @@ impl Viewport {
                             crate::rasters::origin_of(raster, &doc.model, folder)
                         });
                     }
+                    BatchKind::Fill {
+                        paint: FillPaintBatch::PointCloud { cloud, .. },
+                    } => {
+                        clouds.insert(cloud.clone());
+                    }
                     _ => {}
                 }
             }
         }
         if crate::rasters::tiles::in_use() {
             crate::rasters::tiles::service().keep_only(&rasters);
+        }
+        if !clouds.is_empty() || crate::pointclouds::service::in_use() {
+            crate::pointclouds::register_scene(&clouds, &doc.model, folder);
         }
         scene
     }
@@ -772,6 +782,7 @@ impl Viewport {
             | ViewChange::OpenTextFile
             | ViewChange::OpenImageFile
             | ViewChange::RasterValues(_)
+            | ViewChange::CloudQuery { .. }
             | ViewChange::PlaceTable(..) => {}
         }
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));

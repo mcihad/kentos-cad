@@ -38,6 +38,8 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
             .unwrap_or_default(),
         // None: its place is the file's georeference, not to be pulled by chance (docs/adr/0204 §7).
         Shape::Raster { .. } => Vec::new(),
+        // None: a cloud's place is its files' (docs/adr/0207 §3).
+        Shape::PointCloud { .. } => Vec::new(),
         Shape::Line { a, b } => vec![*a, *b],
         Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
             let polygon = matches!(e, Shape::Polygon { .. });
@@ -281,8 +283,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         },
         // Its corner moves it; a column's end on its top line sets the column's width (docs/adr/0184 §2).
         Shape::Table { .. } => crate::geom::table::table_geom(&e.shape)?.moved_grip(index, p)?,
-        // No grips (docs/adr/0204 §7).
-        Shape::Raster { .. } => return None,
+        // No grips (docs/adr/0204 §7, 0207 §3).
+        Shape::Raster { .. } | Shape::PointCloud { .. } => return None,
         // The lower left corner moves it; another corner scales it about the lower left, its
         // shape kept (docs/adr/0192 §4).
         Shape::Image { .. } => {

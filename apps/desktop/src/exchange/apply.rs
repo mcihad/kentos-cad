@@ -712,6 +712,7 @@ fn finite(e: &Entity) -> bool {
             Entity::Raster(e) => {
                 fs(&e.raster.affine) && e.raster.opacity.is_none_or(f64::is_finite)
             }
+            Entity::PointCloud(e) => kentos_native_application::edit::cloud_finite(&e.cloud),
             Entity::Leader(e) => ps(&e.pts) && fs(&[e.height, e.rotation]),
             Entity::Table(e) => {
                 p(&e.p)

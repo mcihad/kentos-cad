@@ -373,6 +373,7 @@ fn anchor(s: &Shape) -> Option<f64> {
         | Shape::Table { p, .. }
         | Shape::Image { p, .. } => p.x,
         Shape::Raster { affine, .. } => affine[0],
+        Shape::PointCloud { bounds, .. } => bounds[0],
         Shape::Polyline { pts, .. }
         | Shape::Polygon { pts, .. }
         | Shape::Spline { pts, .. }

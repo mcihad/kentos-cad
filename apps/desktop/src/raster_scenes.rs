@@ -106,6 +106,35 @@ pub(crate) fn pointed() -> Vec<Pointed> {
         ),
         // Raster ekle: the elevation model, in the project's system.
         ("raster-ekle", |app| adding(app, "dem.tif"), tiles_made),
+        // Raster ekle from an address (docs/adr/0207 §1): the photograph, a tiled GeoTIFF with its
+        // overviews, served by ranges from this computer; its header read, the address kept.
+        (
+            "raster-ekle-adres",
+            |app| {
+                adding(app, "dem.tif");
+                let server = crate::range_server::serve(
+                    vec![(
+                        "orto.tif",
+                        std::fs::read(folder().join("orto.tif")).expect("the photograph"),
+                    )],
+                    crate::range_server::Mode::Ranges,
+                );
+                let add = |app: &mut App, e: crate::rasters::add::Event| {
+                    let task = app.update(Message::Rasters(crate::rasters::Event::Add(e)));
+                    crate::files_testing::drive(app, task);
+                };
+                add(
+                    app,
+                    crate::rasters::add::Event::From(crate::rasters::add::From::Address),
+                );
+                add(
+                    app,
+                    crate::rasters::add::Event::Address(server.url("orto.tif")),
+                );
+                add(app, crate::rasters::add::Event::ReadAddress);
+            },
+            tiles_made,
+        ),
         // Raster ekle: the scanned sheet, its world file says no system: the user's yes is asked.
         (
             "raster-ekle-tarama",

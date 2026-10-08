@@ -46,8 +46,9 @@ fn every_tab_fits_1100_pixels_without_scrolling() {
         for tab in tabs {
             let (levels, overflow) = fitted(&app, tab, 1100.0);
             assert!(!overflow, "{mode} {tab}: does not fit 1100 px ({levels:?})");
-            // Wide windows show every panel as designed.
-            let (wide, _) = fitted(&app, tab, 3000.0);
+            // Wide windows show every panel as designed. CBS's Görünüm, eleven panels with
+            // the interface's own groups, is 3007 px since Yazıların boyu (docs/adr/0205).
+            let (wide, _) = fitted(&app, tab, 3200.0);
             assert!(wide.iter().all(|&l| l == 0), "{mode} {tab}: {wide:?}");
         }
     }

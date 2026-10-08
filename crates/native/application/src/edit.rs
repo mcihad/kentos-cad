@@ -186,6 +186,8 @@ pub fn label(operation: EditOperation) -> &'static str {
         // Raster stili and Raster oturt (docs/adr/0204 §9).
         EditOperation::RasterStyle => "Raster stili",
         EditOperation::RasterGeoref => "Raster oturt",
+        // Nokta bulutu stili (docs/adr/0207 §10).
+        EditOperation::PointCloudStyle => "Nokta bulutu stili",
         // Eğri boyunca yazı (docs/adr/0196 §4).
         EditOperation::TextPath => "Eğriye oturt",
         EditOperation::TextTurn => "Doğrultuya döndür",
@@ -876,6 +878,17 @@ pub(crate) fn check_geometry(
     {
         return Err(Stop::Failed(error(codes::INVALID_RASTER, words, at(""))));
     }
+    // A point cloud's files, bounds, points, look and opacity (docs/adr/0207 §10).
+    if let EntityGeometry::PointCloud(cloud) = g
+        && cloud_finite(cloud)
+        && let Some(words) = cloud.problem()
+    {
+        return Err(Stop::Failed(error(
+            codes::INVALID_POINTCLOUD,
+            words,
+            at(""),
+        )));
+    }
     // A text's face and a dimension's look (docs/adr/0183 §9).
     let style = match g {
         EntityGeometry::Text { face, .. } | EntityGeometry::Table { face, .. } => face.problem(),
@@ -965,6 +978,31 @@ pub fn raster_finite(r: &kentos_contracts::RasterFields) -> bool {
         .all(|v| v.is_finite())
 }
 
+/// Whether every number of a point cloud is finite: its bounds, its files', its opacity and its look's.
+pub fn cloud_finite(c: &kentos_contracts::PointCloudFields) -> bool {
+    let s = &c.style;
+    c.bounds
+        .iter()
+        .chain(c.sources.iter().flat_map(|f| f.bounds.iter()))
+        .chain(&c.opacity)
+        .chain(&s.min)
+        .chain(&s.max)
+        .chain(std::iter::once(&s.size))
+        .all(|v| v.is_finite())
+}
+
+/// Whether the project's library has the LAS, LAZ, COPC or XYZ cloud `id` (docs/adr/0207 §3).
+pub fn has_cloud(doc: &Document, id: &str) -> bool {
+    doc.styles().items.iter().any(|it| {
+        it.get("kind").and_then(|k| k.as_str()) == Some("asset")
+            && it.get("id").and_then(|k| k.as_str()) == Some(id)
+            && matches!(
+                it.get("format").and_then(|k| k.as_str()),
+                Some("las" | "laz" | "copc" | "xyz")
+            )
+    })
+}
+
 /// Whether the project's library has the GeoTIFF, PNG or JPEG raster `id` (docs/adr/0204 §2).
 pub fn has_raster(doc: &Document, id: &str) -> bool {
     doc.styles().items.iter().any(|it| {
@@ -999,6 +1037,22 @@ pub(crate) fn check_blocks<'a>(
     list: &str,
 ) -> Result<(), Stop> {
     for (i, g) in geometries {
+        if let EntityGeometry::PointCloud(cloud) = g
+            && let Some((k, asset)) = cloud.sources.iter().enumerate().find_map(|(k, s)| {
+                s.asset
+                    .as_ref()
+                    .filter(|a| !has_cloud(doc, a))
+                    .map(|a| (k, a))
+            })
+        {
+            return Err(Stop::Failed(error(
+                codes::UNKNOWN_ASSET,
+                format!(
+                    "“{asset}” kimlikli nokta bulutu projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir LAS, LAZ, COPC ya da XYZ bulutunun kimliğini verin."
+                ),
+                Some(format!("{list}[{i}].geometry.sources[{k}].asset")),
+            )));
+        }
         if let EntityGeometry::Raster(raster) = g
             && let Some(asset) = &raster.asset
             && !has_raster(doc, asset)
@@ -1273,5 +1327,6 @@ fn finite(g: &EntityGeometry) -> bool {
         } => pts(p) && height.is_finite() && rotation.is_finite(),
         EntityGeometry::Image(image) => image_finite(image),
         EntityGeometry::Raster(raster) => raster_finite(raster),
+        EntityGeometry::PointCloud(cloud) => cloud_finite(cloud),
     }
 }

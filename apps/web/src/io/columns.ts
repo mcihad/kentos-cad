@@ -45,7 +45,21 @@ export type DrawingHead = Omit<DocumentSnapshotV2, 'entities' | 'uids'>;
 export type PageEntity = ContractEntity & { uid?: string };
 
 /** The kinds, numbered as `kinds` holds them. */
-export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table', 'image', 'raster'] as const;
+export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table', 'image', 'raster', 'pointcloud'] as const;
+/** A point cloud's look kinds and files' formats, numbered as the columns hold them (`CloudRender::ALL`, `CloudFormat::ALL`). */
+const CLOUD_RENDERS = ['rgb', 'classification', 'elevation', 'intensity', 'returns', 'single'] as const;
+const CLOUD_FORMATS = ['las', 'laz', 'copc', 'xyz'] as const;
+/** A point cloud look's flags (the Rust side's `CLOUD_*`) and a file's source (`SOURCE_*`). */
+const CLOUD_MIN = 1;
+const CLOUD_MAX = 2;
+const CLOUD_RAMP = 4;
+const CLOUD_INVERT = 8;
+const CLOUD_RGB8 = 16;
+const CLOUD_METRES = 32;
+const CLOUD_SQUARE = 64;
+const SOURCE_ASSET = 1;
+const SOURCE_FILE = 2;
+const SOURCE_URL = 4;
 /** A raster's samples, numbered as the columns hold them (the Rust side's `RASTER_SAMPLES`). */
 const RASTER_SAMPLES = ['u8', 'i8', 'u16', 'i16', 'u32', 'i32', 'f32', 'f64'] as const;
 /** A raster look's kinds and stretches, numbered as the columns hold them (`RASTER_RENDERS`, `RASTER_STRETCHES`). */
@@ -680,6 +694,47 @@ class Packer {
         if (st.ramp !== undefined) this.text(st.ramp as string, 'style/ramp');
         if (e.asset !== undefined) (flags |= OPT[0]), this.text(e.asset, 'asset');
         if (e.file !== undefined) (flags |= OPT[1]), this.text(e.file, 'file');
+        // An address read by ranges (docs/adr/0207 §1).
+        if (e.url !== undefined) (flags |= OPT[3]), this.text(e.url, 'url');
+        break;
+      }
+      // docs/adr/0207: the system, the files' count, the look's kind, flags and hidden classes, each file's format and
+      // source as integers; the bounds, the points, the size, the opacity and the range, each file's points and bounds;
+      // the ramp and each file's asset, path or address. The web carries a cloud as it is (the desktop draws it).
+      case 'pointcloud': {
+        const st = e.style;
+        const sources = Array.isArray(e.sources) ? e.sources : [];
+        this.int(e.srid);
+        this.int(sources.length);
+        this.int(this.place(CLOUD_RENDERS, st.render, 'style.render', 'nokta bulutunun görünüş türü'));
+        let look = 0;
+        if (st.min !== undefined) look |= CLOUD_MIN;
+        if (st.max !== undefined) look |= CLOUD_MAX;
+        if (st.ramp !== undefined) look |= CLOUD_RAMP;
+        if (st.invert === true) look |= CLOUD_INVERT;
+        if (st.rgb8 === true) look |= CLOUD_RGB8;
+        if (st.sizeUnit === 'm') look |= CLOUD_METRES;
+        if (st.shape === 'square') look |= CLOUD_SQUARE;
+        this.int(look);
+        const hidden = st.hidden ?? [];
+        this.int(hidden.length);
+        for (const c of hidden) this.int(c);
+        for (const [i, f] of sources.entries()) {
+          this.int(this.place(CLOUD_FORMATS, f.format, `sources/${i}/format`, 'nokta bulutu dosyasının biçimi'));
+          this.int(f.asset !== undefined ? SOURCE_ASSET : f.file !== undefined ? SOURCE_FILE : SOURCE_URL);
+        }
+        for (const v of e.bounds) this.float(v, 'bounds');
+        this.float(e.count, 'count');
+        this.float(st.size, 'style/size');
+        if (e.opacity !== undefined) (flags |= OPT[0]), this.float(e.opacity, 'opacity');
+        if (st.min !== undefined) this.float(st.min, 'style/min');
+        if (st.max !== undefined) this.float(st.max, 'style/max');
+        for (const [i, f] of sources.entries()) {
+          this.float(f.count, `sources/${i}/count`);
+          for (const v of f.bounds) this.float(v, `sources/${i}/bounds`);
+        }
+        if (st.ramp !== undefined) this.text(st.ramp, 'style/ramp');
+        for (const [i, f] of sources.entries()) this.text(f.asset ?? f.file ?? f.url ?? '', `sources/${i}`);
         break;
       }
       // docs/adr/0146: the vertices, height and turn; the note a text, the arrowhead its place in LEADER_ARROWS, the mask a flag.
@@ -1166,6 +1221,45 @@ export class ColumnsReader {
         e.style = st;
         if (has(0)) e.asset = this.readText();
         if (has(1)) e.file = this.readText();
+        if (has(3)) e.url = this.readText();
+        break;
+      }
+      // docs/adr/0207: as the packer writes it.
+      case 'pointcloud': {
+        e.srid = this.readInt();
+        const n = this.readInt();
+        if (n > 4096) throw broken('nokta bulutunun dosya sayısı');
+        const st: Record<string, unknown> = { render: this.at(CLOUD_RENDERS, 'nokta bulutunun görünüş türü') };
+        const look = this.readInt();
+        const k = this.readInt();
+        if (k > 256) throw broken('nokta bulutunun gizlenen sınıfları');
+        const hidden = Array.from({ length: k }, () => this.readInt());
+        const kinds = Array.from({ length: n }, () => [this.at(CLOUD_FORMATS, 'nokta bulutu dosyasının biçimi'), this.readInt()] as const);
+        e.bounds = [this.num(), this.num(), this.num(), this.num(), this.num(), this.num()];
+        e.count = this.num();
+        const size = this.num();
+        if (has(0)) e.opacity = this.num();
+        const min = look & CLOUD_MIN ? this.num() : undefined;
+        const max = look & CLOUD_MAX ? this.num() : undefined;
+        const numbers = Array.from({ length: n }, () => [this.num(), [this.num(), this.num(), this.num(), this.num(), this.num(), this.num()]] as const);
+        // The look in the contract's field order, its defaults left out.
+        if (look & CLOUD_RAMP) st.ramp = this.readText();
+        if (look & CLOUD_INVERT) st.invert = true;
+        if (min !== undefined) st.min = min;
+        if (max !== undefined) st.max = max;
+        if (hidden.length) st.hidden = hidden;
+        if (look & CLOUD_RGB8) st.rgb8 = true;
+        st.size = size;
+        if (look & CLOUD_METRES) st.sizeUnit = 'm';
+        if (look & CLOUD_SQUARE) st.shape = 'square';
+        e.sources = kinds.map(([format, source], i) => {
+          const t = this.readText();
+          const [count, bounds] = numbers[i];
+          const where = source === SOURCE_ASSET ? 'asset' : source === SOURCE_FILE ? 'file' : source === SOURCE_URL ? 'url' : null;
+          if (!where) throw broken('nokta bulutu dosyasının kaynağı');
+          return { [where]: t, format, count, bounds };
+        });
+        e.style = st;
         break;
       }
       case 'leader':

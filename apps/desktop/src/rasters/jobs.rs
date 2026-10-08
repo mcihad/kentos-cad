@@ -204,10 +204,26 @@ impl App {
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
             .clone();
-        if passes.is_empty() && warp.is_none() {
+        // The point clouds' indexes, made once (pointclouds/index.rs, docs/adr/0207 §4).
+        let indexes = crate::pointclouds::index::progress();
+        if passes.is_empty() && warp.is_none() && indexes.is_empty() {
             return None;
         }
         let mut list = TaskList::new();
+        for p in indexes {
+            let key = p.key.clone();
+            list = list.push(
+                Job_::new(format!("Nokta bulutu dizini: {}", p.name))
+                    .detail(format!(
+                        "%{} hazır; bitince bulut kat kat çizilir",
+                        (p.done * 100.0).round()
+                    ))
+                    .running(Some(p.done as f32))
+                    .on_cancel(Message::PointClouds(crate::pointclouds::Event::StopIndex(
+                        key,
+                    ))),
+            );
+        }
         for p in passes {
             let key = p.key.clone();
             list = list.push(

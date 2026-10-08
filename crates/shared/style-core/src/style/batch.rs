@@ -392,7 +392,12 @@ impl Sink for BatchSink {
     fn fill(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
         if rings.first().is_none_or(|r| r.len() < 3)
             || (self.hide_fills
-                && !matches!(paint, FillPaint::Image { .. } | FillPaint::Raster { .. }))
+                && !matches!(
+                    paint,
+                    FillPaint::Image { .. }
+                        | FillPaint::Raster { .. }
+                        | FillPaint::PointCloud { .. }
+                ))
         {
             return;
         }

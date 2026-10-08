@@ -148,6 +148,29 @@ pub trait ImageSource {
     /// A frame of rasters begins: what the host was asked for before and is
     /// not asked for again by its end may be dropped.
     fn raster_frame(&self) {}
+
+    /// A point cloud's octrees by its paint's `cloud` (`cloud:<hash>`;
+    /// docs/adr/0207 §6); none while the host has not opened its files (the
+    /// plan alone shows).
+    fn cloud_trees(&self, _cloud: &str) -> Option<Arc<super::points::CloudTrees>> {
+        None
+    }
+
+    /// A node of file `member` of a cloud, its points coloured for `look`
+    /// (the style's JSON and the object's colour), when the host has it;
+    /// otherwise none, and the host starts making it and asks for a frame when done.
+    fn cloud_node(
+        &self,
+        _cloud: &str,
+        _member: u32,
+        _node: u32,
+        _look: &str,
+    ) -> Option<Arc<super::points::CloudNode>> {
+        None
+    }
+
+    /// A frame of clouds begins: what is not asked for again by its end may be dropped.
+    fn cloud_frame(&self) {}
 }
 
 /// No pictures and no glyphs: shapes, strokes and fills still draw (tests, previews without fonts).

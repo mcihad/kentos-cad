@@ -3,7 +3,7 @@ import type { Bounds, Vec2 } from './geometry';
 import type { DimensionStyle } from './geom/dimension';
 import type { DimensionLook, TextFace } from './annotationStyles';
 
-export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch' | 'insert' | 'leader' | 'table' | 'image' | 'raster';
+export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch' | 'insert' | 'leader' | 'table' | 'image' | 'raster' | 'pointcloud';
 
 /**
  * Half-length (1000 km) used when an infinite line meets finite geometry on
@@ -602,8 +602,9 @@ export interface RasterStyle {
 /**
  * A raster (docs/adr/0204 §2): an orthophoto, a scanned sheet or an elevation model whose pixels lie where `affine`
  * (`[x₀, a, b, y₀, c, d]`, GDAL's order: pixel corner (i, j) at x₀ + a·i + b·j, y₀ + c·i + d·j) puts them; its size,
- * bands and samples; its file the project library's `asset` (embedded) or `file` (linked), exactly one; the file's
- * system (0: the project's, taken by the user); its look and opacity (0.1–1). Its pixels are never in the drawing.
+ * bands and samples; its file the project library's `asset` (embedded), `file` (linked) or `url` (an address read by
+ * ranges, docs/adr/0207 §1; the desktop's for now), exactly one; the file's system (0: the project's, taken by the
+ * user); its look and opacity (0.1–1). Its pixels are never in the drawing.
  */
 export interface RasterEntity extends EntityBase {
   kind: 'raster';
@@ -614,8 +615,53 @@ export interface RasterEntity extends EntityBase {
   sample: RasterSample;
   asset?: string;
   file?: string;
+  url?: string;
   srid: number;
   style: RasterStyle;
+  opacity?: number;
+}
+
+/** A point cloud file's format (docs/adr/0207 §2). */
+export type CloudFormat = 'las' | 'laz' | 'copc' | 'xyz';
+/** How a cloud's points are coloured (docs/adr/0207 §5). */
+export type CloudRender = 'rgb' | 'classification' | 'elevation' | 'intensity' | 'returns' | 'single';
+
+/** A point cloud's look (docs/adr/0207 §5). */
+export interface PointCloudStyle {
+  render: CloudRender;
+  ramp?: string;
+  invert?: boolean;
+  min?: number;
+  max?: number;
+  hidden?: number[];
+  rgb8?: boolean;
+  size: number;
+  sizeUnit?: 'px' | 'm';
+  shape?: 'round' | 'square';
+}
+
+/** One file of a point cloud: embedded (`asset`), linked (`file`) or an address (`url`), exactly one. */
+export interface CloudSource {
+  asset?: string;
+  file?: string;
+  url?: string;
+  format: CloudFormat;
+  count: number;
+  bounds: [number, number, number, number, number, number];
+}
+
+/**
+ * A point cloud (docs/adr/0207 §3): its files (a virtual cloud when more), their bounds and points together, the
+ * files' system, its look and opacity. The desktop's for now (the owner's decision, 8 October): the web keeps it as it
+ * is and draws its plan's frame, its points waiting for the web's side.
+ */
+export interface PointCloudEntity extends EntityBase {
+  kind: 'pointcloud';
+  sources: CloudSource[];
+  bounds: [number, number, number, number, number, number];
+  count: number;
+  srid: number;
+  style: PointCloudStyle;
   opacity?: number;
 }
 
@@ -635,7 +681,8 @@ export type Entity =
   | LeaderEntity
   | TableEntity
   | ImageEntity
-  | RasterEntity;
+  | RasterEntity
+  | PointCloudEntity;
 
 /** An object of a drawing, as `CadDocument` gives it out: always with its persistent id. */
 export type DrawingEntity = Entity & { uid: string };
@@ -662,6 +709,7 @@ export const ENTITY_KIND_LABEL: Record<EntityKind, string> = {
   table: 'Tablo',
   image: 'Resim',
   raster: 'Raster',
+  pointcloud: 'Nokta bulutu',
 };
 
 export const HATCH_PATTERN_LABEL: Record<HatchPatternType, string> = {
@@ -737,7 +785,7 @@ export type EntityGeometry = DistributiveOmit<Entity, 'id' | 'uid' | 'layerId' |
  * hatch or a block (docs/adr/0139; the desktop's `Entity::draws_lines`).
  */
 export function drawsLines(e: { kind: Entity['kind'] }): boolean {
-  // A picture and a raster draw their frames as hairlines (docs/adr/0192 §3, 0204 §5).
+  // A picture, a raster and a point cloud draw their frames as hairlines (docs/adr/0192 §3, 0204 §5, 0207 §6).
   return (
     e.kind !== 'point' &&
     e.kind !== 'text' &&
@@ -745,7 +793,8 @@ export function drawsLines(e: { kind: Entity['kind'] }): boolean {
     e.kind !== 'hatch' &&
     e.kind !== 'insert' &&
     e.kind !== 'image' &&
-    e.kind !== 'raster'
+    e.kind !== 'raster' &&
+    e.kind !== 'pointcloud'
   );
 }
 

@@ -52,6 +52,20 @@ pub(crate) fn run<T: Send + 'static>(
     }
 }
 
+/// Runs `work` on the cloud's runtime and waits for it on this thread (one of
+/// the desktop's own reading threads, never the runtime's).
+pub(crate) fn wait<T: Send + 'static>(
+    work: impl Future<Output = Result<T, ApiFailure>> + Send + 'static,
+) -> Result<T, ApiFailure> {
+    let rt = runtime()?;
+    let (tx, rx) = std::sync::mpsc::channel();
+    rt.spawn(async move {
+        let _ = tx.send(work.await);
+    });
+    rx.recv()
+        .unwrap_or_else(|_| Err(ApiFailure::local("İstek yarıda kaldı.")))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

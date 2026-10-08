@@ -672,6 +672,28 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
                 r.affine.get_mut(i)
             }
         },
+        // A point cloud's bounds, its files', its look's numbers and its opacity
+        // (docs/adr/0207 §3): `bounds[2]`, `sources[0].bounds[5]`, `style.size` ….
+        EntityGeometry::PointCloud(c) => match rest {
+            "opacity" => c.opacity.as_mut(),
+            "style.min" => c.style.min.as_mut(),
+            "style.max" => c.style.max.as_mut(),
+            "style.size" => Some(&mut c.style.size),
+            _ => {
+                let index = |text: &str| -> Option<usize> {
+                    text.strip_prefix("bounds[")?
+                        .strip_suffix(']')?
+                        .parse()
+                        .ok()
+                };
+                if let Some(i) = index(rest) {
+                    return c.bounds.get_mut(i);
+                }
+                let (k, inner) = rest.strip_prefix("sources[")?.split_once("].")?;
+                let k: usize = k.parse().ok()?;
+                c.sources.get_mut(k)?.bounds.get_mut(index(inner)?)
+            }
+        },
         EntityGeometry::Table {
             p,
             rotation,
@@ -1027,16 +1049,16 @@ fn run_case(command: &str, setup: &Value, case: &Value, at: &str) -> Outcome<()>
     Ok(())
 }
 
-#[test]
-fn every_command_case_matches_the_desktop_handlers() {
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/commands/v1");
-    let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
-        .expect("fixtures/commands/v1")
+/// Runs every file of `dir`: each a desktop command's, with at least `least`
+/// cases. Answers the commands they were for, the cases run and what failed.
+fn run_folder(dir: &std::path::Path, least: usize) -> (Vec<String>, usize, Vec<String>) {
+    let mut files: Vec<PathBuf> = std::fs::read_dir(dir)
+        .unwrap_or_else(|e| panic!("{}: {e}", dir.display()))
         .filter_map(|entry| entry.ok().map(|e| e.path()))
         .filter(|path| path.extension().is_some_and(|x| x == "json"))
         .collect();
     files.sort();
-    assert!(!files.is_empty(), "fixtures/commands/v1: no files");
+    assert!(!files.is_empty(), "{}: no files", dir.display());
     let mut problems = Vec::new();
     let mut cases = 0;
     let mut commands = Vec::new();
@@ -1061,7 +1083,7 @@ fn every_command_case_matches_the_desktop_handlers() {
         );
         commands.push(command.0.to_owned());
         let listed = fixture["cases"].as_array().expect("cases");
-        assert!(listed.len() >= 20, "{file}: {} cases", listed.len());
+        assert!(listed.len() >= least, "{file}: {} cases", listed.len());
         for case in listed {
             cases += 1;
             let name = case["name"].as_str().unwrap_or("?");
@@ -1071,6 +1093,13 @@ fn every_command_case_matches_the_desktop_handlers() {
             }
         }
     }
+    (commands, cases, problems)
+}
+
+#[test]
+fn every_command_case_matches_the_desktop_handlers() {
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/commands/v1");
+    let (commands, cases, problems) = run_folder(&dir, 20);
     // Every command the desktop runs has its cases.
     for (id, _) in DESKTOP_COMMANDS {
         assert!(
@@ -1078,6 +1107,22 @@ fn every_command_case_matches_the_desktop_handlers() {
             "{id}: no file in fixtures/commands/v1"
         );
     }
+    assert!(
+        problems.is_empty(),
+        "{} of {cases} cases failed:\n{}",
+        problems.len(),
+        problems.join("\n")
+    );
+}
+
+/// The desktop's own cases (fixtures/commands/v1/desktop, docs/adr/0207 §10):
+/// point clouds, which only the desktop adds yet. The web's runner reads the
+/// folder above only.
+#[test]
+fn the_desktops_own_cases_match_its_handlers() {
+    let dir =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/commands/v1/desktop");
+    let (_, cases, problems) = run_folder(&dir, 1);
     assert!(
         problems.is_empty(),
         "{} of {cases} cases failed:\n{}",

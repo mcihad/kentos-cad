@@ -17,7 +17,8 @@
 //!    polar fill that is not zero and not past a full turn;
 //! 3. the expected revision (every command's, `checks.rs`);
 //! 4. every id names an object of the document (in order);
-//! 5. not every object on a locked layer (with others, a warning);
+//! 5. not every object on a locked layer (with others, a warning); no
+//!    point cloud (`pointcloud_fixed`, docs/adr/0207 §3);
 //! 6. no copy carried past the largest float64.
 //!
 //! Objects on a locked layer are not copied (docs/adr/0037). The web's
@@ -330,10 +331,19 @@ fn check(doc: &Document, input: &EntitiesArray) -> Result<Checked, Stop> {
     for (_, entity, uid) in checks::objects(doc, &input.uids)? {
         if doc.layers().is_locked(&entity.base().layer_id) {
             locked.push(uid.clone());
-        } else {
-            sources.push(uid.clone());
-            originals.push((entity, shape(entity)));
+            continue;
         }
+        // A cloud's place is its files' (docs/adr/0207 §3): no array copies it.
+        if matches!(entity, Entity::PointCloud(_)) {
+            let i = input.uids.iter().position(|u| u == uid).unwrap_or(0);
+            return Err(refuse(
+                codes::POINTCLOUD_FIXED,
+                "Nokta bulutu taşınmaz, döndürülmez, ölçeklenmez, aynalanmaz ve kopyalanmaz: konumu dosyasındadır. Bulutu seçimden çıkarın.",
+                &format!("uids[{i}]"),
+            ));
+        }
+        sources.push(uid.clone());
+        originals.push((entity, shape(entity)));
     }
     let path = path_maps(doc, &input.layout)?;
     if sources.is_empty() {

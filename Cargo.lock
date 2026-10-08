@@ -2581,6 +2581,7 @@ dependencies = [
  "kentos-native-application",
  "kentos-native-style",
  "kentos-ncz",
+ "kentos-pointcloud",
  "kentos-processing",
  "kentos-project",
  "kentos-render-wgpu",
@@ -2767,6 +2768,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-pointcloud"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-formats",
+ "kentos-geometry-core",
+ "laz",
+ "libm",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-pointcloud-wasm"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-formats",
+ "kentos-geometry-core",
+ "kentos-pointcloud",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "kentos-postgres"
 version = "0.1.0"
 dependencies = [
@@ -2784,6 +2811,7 @@ dependencies = [
  "kentos-formats",
  "kentos-geometry-core",
  "kentos-native-application",
+ "kentos-pointcloud",
  "kentos-project",
  "kentos-style-core",
  "serde",
@@ -2959,6 +2987,16 @@ dependencies = [
  "arrayvec",
  "euclid",
  "smallvec",
+]
+
+[[package]]
+name = "laz"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a1bd8242fad6a61a7520b73d072ddf63dff1f3680e3f5c157b1dc6e8e5ab2ec"
+dependencies = [
+ "byteorder",
+ "num-traits",
 ]
 
 [[package]]

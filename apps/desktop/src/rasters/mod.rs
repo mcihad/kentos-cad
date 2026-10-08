@@ -143,24 +143,27 @@ pub fn embed(model: &mut Model, slot: Slot, folder: Option<&Path>) -> Vec<String
     kentos_interaction::properties::set_geometry(model, slot, &Entity::Raster(raster))
 }
 
-/// Where the scene's raster `key` (`file:<path>`, `asset:<id>`) reads its bytes:
-/// a linked file beside the drawing (`folder`), an embedded one's from the library.
+/// Where the scene's raster `key` (`file:<path>`, `asset:<id>`, `url:<address>`)
+/// reads its bytes: a linked file beside the drawing (`folder`), an embedded
+/// one's from the library, an address by HTTP ranges (docs/adr/0207 §1).
 pub fn origin_of(key: &str, model: &Model, folder: Option<&Path>) -> Option<tiles::Origin> {
     if let Some(file) = key.strip_prefix("file:") {
         Some(tiles::Origin::File(crate::pictures::resolve(file, folder)))
     } else if let Some(id) = key.strip_prefix("asset:") {
         asset_bytes(model, id).map(|b| tiles::Origin::Bytes(Arc::new(b)))
     } else {
-        None
+        key.strip_prefix("url:")
+            .map(|u| tiles::Origin::Url(u.to_owned()))
     }
 }
 
-/// The scene's name of a raster's file: `asset:<id>` or `file:<path>`.
+/// The scene's name of a raster's file: `asset:<id>`, `file:<path>` or `url:<address>`.
 pub fn key_of(r: &RasterFields) -> String {
-    match (&r.asset, &r.file) {
-        (Some(a), _) => format!("asset:{a}"),
-        (None, Some(f)) => format!("file:{f}"),
-        (None, None) => String::new(),
+    match (&r.asset, &r.file, &r.url) {
+        (Some(a), _, _) => format!("asset:{a}"),
+        (None, Some(f), _) => format!("file:{f}"),
+        (None, None, Some(u)) => format!("url:{u}"),
+        (None, None, None) => String::new(),
     }
 }
 

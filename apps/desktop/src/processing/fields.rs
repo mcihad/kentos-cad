@@ -125,6 +125,7 @@ pub(super) fn control<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, M
             multiple,
         } => field(def, of, *allow_new, *multiple, env),
         ParamKind::File { .. } => file(def, env),
+        ParamKind::SaveFile { suffix, .. } => save_file(def, suffix, env),
         ParamKind::Expression {
             of, placeholder, ..
         } => expression(def, of.as_deref(), placeholder.as_deref(), env),
@@ -501,7 +502,7 @@ fn pick_button<'a>(caption: Option<&'a str>, on_press: Message, on: bool) -> Ele
 
 /// Every object kind in the web's order (`ENTITY_KIND_LABEL`): what a
 /// features field's note names as left out.
-const KINDS: [&str; 18] = [
+const KINDS: [&str; 19] = [
     "point",
     "line",
     "polyline",
@@ -520,6 +521,7 @@ const KINDS: [&str; 18] = [
     "table",
     "image",
     "raster",
+    "pointcloud",
 ];
 
 /// An attribute name: typed (a new one too, with `allow_new`) or picked
@@ -640,6 +642,51 @@ fn field<'a>(
         out = out.push(label::caption(note).style(style::text::muted));
     }
     out.into()
+}
+
+/// Where a result is written (docs/adr/0207 §7): the chosen path, or beside
+/// the source with the suffix; Konum… asks for it, × goes back to beside.
+fn save_file<'a>(def: &'a ParamDef, suffix: &'a str, env: &Env<'a, '_>) -> Element<'a, Message> {
+    let ev = env.send;
+    let path = env.value(&def.name).as_str().unwrap_or("").to_owned();
+    let chosen = !path.trim().is_empty();
+    let text = if chosen {
+        path.clone()
+    } else if suffix.is_empty() {
+        "Kaynağın yanına, kaynağın adıyla".to_owned()
+    } else {
+        format!("Kaynağın yanına, adının sonuna “{suffix}” eklenerek")
+    };
+    let shown = label::body(text);
+    let shown = if chosen {
+        shown
+    } else {
+        shown.style(style::text::muted)
+    };
+    let pick = button(
+        row![
+            icon(crate::icons::from_web(Some("save"))).size(14.0),
+            label::body("Konum…")
+        ]
+        .spacing(6)
+        .align_y(Center),
+    )
+    .padding([5, 10])
+    .style(style::button::secondary)
+    .on_press(ev(Event::ChooseSave(def.name.clone())));
+    let mut line = row![container(shown).width(Fill).clip(true)]
+        .spacing(10)
+        .align_y(Center);
+    if chosen {
+        let name = def.name.clone();
+        line = line.push(
+            button(label::body("×"))
+                .padding([5, 9])
+                .style(style::button::ghost)
+                .on_press(ev(Event::Value(name, json!("")))),
+        );
+    }
+    line.push(pick).into()
 }
 
 /// A file (docs/adr/0200 §7): its button, its name and what it holds, or

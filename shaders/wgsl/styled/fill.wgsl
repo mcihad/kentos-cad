@@ -78,6 +78,14 @@ struct RasterOut {
 @fragment fn rasterFs(i: RasterOut) -> @location(0) vec4f {
   return textureSampleLevel(atlasTex, atlasSmp, i.uv, 0.0) * st.b.z;
 }
+// Point cloud (docs/adr/0207 §6): its plan's area shows the cloud's own picture, which the points pass drew with
+// this frame's camera (points/points.wgsl), where the fragment lies; group 0 then holds the picture; b.z = opacity.
+// Premultiplied out.
+@fragment fn cloudFs(i: AreaOut) -> @location(0) vec4f {
+  let px = toPx(i.world);
+  let uv = vec2f(px.x / frame.viewport.x + 0.5, 0.5 - px.y / frame.viewport.y);
+  return textureSampleLevel(atlasTex, atlasSmp, uv, 0.0) * st.b.z;
+}
 // Tile: rect, a = (tile.x, tile.y, cos, sin), b = (shift.x, shift.y, opacity, 0), flags.x = unit. Premultiplied out.
 @fragment fn tileFs(i: AreaOut) -> @location(0) vec4f {
   var p = i.world;

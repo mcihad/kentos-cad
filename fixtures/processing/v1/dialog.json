@@ -8856,7 +8856,7 @@
          "empty": false
         },
         "kinds": {
-         "note": "Yardımcı çizgi, ışın, raster alınmaz."
+         "note": "Yardımcı çizgi, ışın, raster, nokta bulutu alınmaz."
         }
        }
       }
@@ -8997,7 +8997,7 @@
        "empty": true
       },
       "kinds": {
-       "note": "Yardımcı çizgi, ışın, raster alınmaz."
+       "note": "Yardımcı çizgi, ışın, raster, nokta bulutu alınmaz."
       }
      }
     }

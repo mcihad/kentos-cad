@@ -338,7 +338,20 @@
     "view.magnifier",
     "raster.add",
     "raster.style",
-    "raster.georef"
+    "raster.georef",
+    "pointcloud.add",
+    "pointcloud.style",
+    "pointcloud.query",
+    "pointcloud.vpcSave",
+    "processing.run.pointcloud.areaStats",
+    "processing.run.pointcloud.thin",
+    "processing.run.pointcloud.ground",
+    "processing.run.pointcloud.classify",
+    "processing.run.pointcloud.clip",
+    "processing.run.pointcloud.merge",
+    "processing.run.pointcloud.tile",
+    "processing.run.pointcloud.rasterize",
+    "processing.run.pointcloud.boundary"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

@@ -642,7 +642,8 @@ impl App {
         let tool = self.session.tool_id();
         self.session.is_running()
             && (id.strip_prefix("tool.") == Some(tool)
-                || (id == "crs.query" && tool == kentos_interaction::coordinate::ID))
+                || (id == "crs.query" && tool == kentos_interaction::coordinate::ID)
+                || (id == "pointcloud.query" && tool == kentos_interaction::cloud_query::ID))
     }
 
     /// Commands' on or off states for a menu, in its order.
@@ -1517,6 +1518,8 @@ impl App {
             Asking::DataCompare => self.data_compare_view(),
             Asking::RasterAdd => self.raster_add_view(),
             Asking::RasterStyle => self.raster_look_view(),
+            Asking::PointCloudAdd => self.cloud_add_view(),
+            Asking::PointCloudStyle => self.cloud_look_view(),
             Asking::Cogo => self.cogo_view(),
             Asking::TableInsert => self.table_insert_view(),
             Asking::TableEditor => self.table_editor_view(),

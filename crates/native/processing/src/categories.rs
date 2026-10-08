@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 8] = [
+pub const CATEGORIES: [Category; 9] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -75,5 +75,12 @@ pub const CATEGORIES: [Category; 8] = [
         "Seçim",
         "select",
         "Özniteliğe ve konuma göre seçim",
+    ),
+    // docs/adr/0207 §7: the desktop's point cloud tools.
+    category(
+        "pointcloud",
+        "Nokta bulutu",
+        "pointCloudAdd",
+        "Seyreltme, zemin, sınıflama, kırpma, karolama, raster ve sınır",
     ),
 ];

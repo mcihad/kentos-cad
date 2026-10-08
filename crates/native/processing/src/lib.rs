@@ -32,6 +32,7 @@ pub mod categories;
 pub mod designer;
 pub mod expression;
 pub mod features;
+pub mod files;
 pub mod geometry;
 pub mod model;
 pub mod model_edit;

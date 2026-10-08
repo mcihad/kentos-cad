@@ -29,6 +29,8 @@ pub mod drafts;
 pub mod failure;
 pub mod follow;
 pub mod open;
+// Public addresses read by ranges: a COG or a COPC on a web server (docs/adr/0207 §1).
+pub mod range;
 pub mod replica;
 mod runtime;
 pub mod saving;

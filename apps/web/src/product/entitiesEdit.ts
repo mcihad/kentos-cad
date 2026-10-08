@@ -14,6 +14,7 @@ import { leaderArrowHolds, MAX_LEADER_ARROW, MAX_WIDTH_FACTOR, MIN_LEADER_ARROW,
 import { assocProblem, patternProblem } from '../model/hatchRules';
 import { imageProblem } from '../model/imageRules';
 import { cleanRasterStyle, rasterProblem } from '../model/rasterRules';
+import { pointCloudProblem } from '../model/pointCloudRules';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
 import { checkLayer, checkLineWeight, checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
 import { checkDimension } from './dimension';
@@ -112,6 +113,8 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   // Raster stili and Raster oturt (docs/adr/0204 §9).
   rasterStyle: 'Raster stili',
   rasterGeoref: 'Raster oturt',
+  // Nokta bulutu stili (docs/adr/0207 §10): the desktop's; the web keeps the name of its step.
+  pointCloudStyle: 'Nokta bulutu stili',
   // Ölçek ya da genel yükseklik değişince izleyenler (docs/adr/0205 §3).
   annotationScale: 'Yazı yüksekliklerini uydur',
 };
@@ -136,7 +139,9 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'arrowSize', 'mask'],
   table: ['p', 'rotation', 'height', 'rows', 'columns', 'cells', 'merges', 'aligns', 'header', 'grid', 'frame', ...FACE_FIELDS, 'source'],
   image: ['p', 'width', 'height', 'rotation', 'mirror', 'asset', 'file', 'clip', 'opacity'],
-  raster: ['affine', 'width', 'height', 'bands', 'sample', 'asset', 'file', 'srid', 'style', 'opacity'],
+  raster: ['affine', 'width', 'height', 'bands', 'sample', 'asset', 'file', 'url', 'srid', 'style', 'opacity'],
+  // A point cloud's files, bounds, points, system, look and opacity (docs/adr/0207 §3), carried as they are.
+  pointcloud: ['sources', 'bounds', 'count', 'srid', 'style', 'opacity'],
 };
 
 interface Checked {
@@ -164,7 +169,7 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
   if (g.kind === 'image') for (const key of ['asset', 'file', 'clip', 'opacity']) if (out[key] === null) delete out[key];
   // A raster's (docs/adr/0204 §2): no value when null; its look's defaults are no fields.
   if (g.kind === 'raster') {
-    for (const key of ['asset', 'file', 'opacity']) if (out[key] === null) delete out[key];
+    for (const key of ['asset', 'file', 'url', 'opacity']) if (out[key] === null) delete out[key];
     out.style = cleanRasterStyle(out.style as RasterStyle);
   }
   // A text's defaults are no fields (docs/adr/0145): no mask, a width factor of 1.
@@ -403,6 +408,11 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
     const problem = rasterProblem(g);
     if (problem) return failed(error('invalid_raster', problem, at('')));
   }
+  // A point cloud's files, bounds, points, look and opacity (docs/adr/0207 §10).
+  if (g.kind === 'pointcloud') {
+    const problem = pointCloudProblem(g);
+    if (problem) return failed(error('invalid_pointcloud', problem, at('')));
+  }
   // A text's face and a dimension's look (docs/adr/0183 §9); a table's face as a text's.
   const style = g.kind === 'text' || g.kind === 'table' ? faceProblem(g) : g.kind === 'dimension' ? lookProblem(g) : null;
   if (style) return failed(error('invalid_style', style[1], at(`.${style[0]}`)));
@@ -439,6 +449,11 @@ export function hasRaster(doc: CadDocument, id: string): boolean {
   return doc.styles.value.items.some((it) => it.kind === 'asset' && it.id === id && (it.format === 'tiff' || it.format === 'png' || it.format === 'jpeg'));
 }
 
+/** Whether the project's library has the LAS, LAZ, COPC or XYZ cloud `id` (docs/adr/0207 §3). */
+export function hasCloud(doc: CadDocument, id: string): boolean {
+  return doc.styles.value.items.some((it) => it.kind === 'asset' && it.id === id && ['las', 'laz', 'copc', 'xyz'].includes(String(it.format)));
+}
+
 /** Whether the project's library has the PNG or JPEG image `id` (docs/adr/0192 §2). */
 export function hasPicture(doc: CadDocument, id: string): boolean {
   return doc.styles.value.items.some((it) => it.kind === 'asset' && it.id === id && (it.format === 'png' || it.format === 'jpeg'));
@@ -447,11 +462,21 @@ export function hasPicture(doc: CadDocument, id: string): boolean {
 /**
  * Every insert among the geometries names a block of the drawing, in order (docs/adr/0144): `unknown_block` at
  * `{list}[i].geometry.block`; every embedded picture an image of the project's library (docs/adr/0192 §6):
- * `unknown_asset` at `{list}[i].geometry.asset`.
+ * `unknown_asset` at `{list}[i].geometry.asset`; an embedded cloud's file one of its clouds (docs/adr/0207 §3), at
+ * `{list}[i].geometry.sources[k].asset`.
  */
 export function checkBlocks(doc: CadDocument, geometries: readonly (EntityGeometry | null)[], list: string): Stop | null {
   const known = new Set(doc.blocks.value.map((b) => b.id));
   for (const [i, g] of geometries.entries()) {
+    const cloud = g?.kind === 'pointcloud' ? g.sources.findIndex((f) => f.asset != null && !hasCloud(doc, f.asset)) : -1;
+    if (g?.kind === 'pointcloud' && cloud >= 0)
+      return failed(
+        error(
+          'unknown_asset',
+          `“${g.sources[cloud].asset}” kimlikli nokta bulutu projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir LAS, LAZ, COPC ya da XYZ bulutunun kimliğini verin.`,
+          `${list}[${i}].geometry.sources[${cloud}].asset`,
+        ),
+      );
     if (g?.kind === 'raster' && g.asset != null && !hasRaster(doc, g.asset))
       return failed(
         error(

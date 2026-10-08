@@ -16,18 +16,19 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use kentos_contracts::{
-    ArcEntity, AreaPart, BlockDefinition, BlockId, CellRange, CircleEntity, ConstructionEntity,
-    DimensionArrow, DimensionEntity, DimensionLook, DimensionStyle, DimensionTextPlace,
-    DrawingFont, DrawingUnit, EllipseEntity, Entity, EntityBase, EntityId, GradientShape,
-    HatchAssoc, HatchEntity, HatchGradient, HatchPattern, HatchPatternType, ImageEntity,
-    ImageFields, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, MAX_AFFIX,
-    MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO, MAX_LEADER_ARROW, MAX_LINE_SPACING,
-    MAX_LINE_WEIGHT, MAX_OBLIQUE, MAX_RASTER_BANDS, MAX_RASTER_SIDE, MAX_WIDTH_FACTOR,
-    MIN_LEADER_ARROW, MIN_LINE_SPACING, Paragraph, PathEntity, PatternLine, PointEntity, PointPart,
-    RasterEntity, RasterFields, RasterRender, RasterResampling, RasterSample, RasterStretch,
-    RasterStyle, RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource,
-    TextAlign, TextEntity, TextFace, TextRun, TextScript, Vec2, is_hex_colour, label_scale_ok,
-    leader_arrow_holds, line_weight_holds, oblique_holds, width_factor_ok,
+    ArcEntity, AreaPart, BlockDefinition, BlockId, CellRange, CircleEntity, CloudFormat,
+    CloudRender, CloudSource, ConstructionEntity, DimensionArrow, DimensionEntity, DimensionLook,
+    DimensionStyle, DimensionTextPlace, DrawingFont, DrawingUnit, EllipseEntity, Entity,
+    EntityBase, EntityId, GradientShape, HatchAssoc, HatchEntity, HatchGradient, HatchPattern,
+    HatchPatternType, ImageEntity, ImageFields, InsertEntity, LeaderArrow, LeaderEntity,
+    LineEntity, MAX_AFFIX, MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO, MAX_LEADER_ARROW,
+    MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_OBLIQUE, MAX_RASTER_BANDS, MAX_RASTER_SIDE,
+    MAX_WIDTH_FACTOR, MIN_LEADER_ARROW, MIN_LINE_SPACING, Paragraph, PathEntity, PatternLine,
+    PointCloudEntity, PointCloudFields, PointCloudStyle, PointEntity, PointPart, PointShape,
+    PointSizeUnit, RasterEntity, RasterFields, RasterRender, RasterResampling, RasterSample,
+    RasterStretch, RasterStyle, RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid,
+    TableSource, TextAlign, TextEntity, TextFace, TextRun, TextScript, Vec2, is_hex_colour,
+    label_scale_ok, leader_arrow_holds, line_weight_holds, oblique_holds, width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -40,9 +41,9 @@ use crate::{
     SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
-    SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
-    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS,
-    SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES,
+    SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -65,6 +66,7 @@ enum Kind {
     Table,
     Image,
     Raster,
+    PointCloud,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -89,6 +91,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("table", Kind::Table),
     ("image", Kind::Image),
     ("raster", Kind::Raster),
+    ("pointcloud", Kind::PointCloud),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -152,6 +155,8 @@ pub(super) struct Features {
     pub(super) survey_sigmas: bool,
     /// Schema 29: the `raster` kind (docs/adr/0204 §2).
     rasters: bool,
+    /// Schema 31: the `pointcloud` kind and a raster's `url` (docs/adr/0207).
+    point_clouds: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -191,6 +196,7 @@ impl Features {
             topology: schema >= SCHEMA_WITH_TOPOLOGY,
             survey_sigmas: schema >= SCHEMA_WITH_SURVEY_SIGMAS,
             rasters: schema >= SCHEMA_WITH_RASTERS,
+            point_clouds: schema >= SCHEMA_WITH_POINT_CLOUDS,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
             uids: true,
         }
@@ -315,18 +321,24 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     | "clip"
                     | "opacity"
             ),
-            Kind::Raster => matches!(
+            Kind::Raster => {
+                matches!(
+                    key,
+                    "affine"
+                        | "width"
+                        | "height"
+                        | "bands"
+                        | "sample"
+                        | "asset"
+                        | "file"
+                        | "srid"
+                        | "style"
+                        | "opacity"
+                ) || (has.point_clouds && key == "url")
+            }
+            Kind::PointCloud => matches!(
                 key,
-                "affine"
-                    | "width"
-                    | "height"
-                    | "bands"
-                    | "sample"
-                    | "asset"
-                    | "file"
-                    | "srid"
-                    | "style"
-                    | "opacity"
+                "sources" | "bounds" | "count" | "srid" | "style" | "opacity"
             ),
         }
 }
@@ -344,9 +356,20 @@ struct RasterRead {
     style: Option<RasterStyle>,
 }
 
+/// A point cloud's own fields (docs/adr/0207 §3).
+#[derive(Default)]
+struct CloudRead {
+    sources: Option<Vec<CloudSource>>,
+    bounds: Option<[f64; 6]>,
+    count: Option<u64>,
+    style: Option<PointCloudStyle>,
+}
+
 #[derive(Default)]
 struct Fields {
     raster: RasterRead,
+    cloud: CloudRead,
+    url: Option<String>,
     uid: Option<EntityId>,
     attrs: Option<BTreeMap<String, String>>,
     color: Option<String>,
@@ -551,6 +574,7 @@ pub(super) fn object(
             && (has.tables || *kind != Kind::Table)
             && (has.images || *kind != Kind::Image)
             && (has.rasters || *kind != Kind::Raster)
+            && (has.point_clouds || *kind != Kind::PointCloud)
     }) else {
         return Err(r.fail(
             Code::UnknownKind,
@@ -570,6 +594,10 @@ pub(super) fn object(
     // Nor a raster (docs/adr/0204 §2).
     if kind == Kind::Raster && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında raster olamaz"));
+    }
+    // Nor a point cloud (docs/adr/0207 §3).
+    if kind == Kind::PointCloud && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında nokta bulutu olamaz"));
     }
     let mut f = Fields::default();
     map(r, |r, key| {
@@ -664,6 +692,11 @@ pub(super) fn object(
                 f.raster.affine = Some(affine);
             }
             "style" if kind == Kind::Raster => f.raster.style = Some(raster_style(r)?),
+            "style" if kind == Kind::PointCloud => f.cloud.style = Some(cloud_style(r)?),
+            "sources" => f.cloud.sources = Some(cloud_sources(r)?),
+            "bounds" => f.cloud.bounds = Some(bounds6(r)?),
+            "count" => f.cloud.count = Some(r.uint(u64::MAX)?),
+            "url" => f.url = Some(text(r)?),
             "width" => f.width = Some(r.float()?),
             "asset" => f.asset = Some(text(r)?),
             "file" => f.file = Some(text(r)?),
@@ -1351,6 +1384,7 @@ fn build(
                 sample: required(r, f.raster.sample, "sample")?,
                 asset: f.asset.take(),
                 file: f.file.take(),
+                url: f.url.take(),
                 srid: required(r, f.raster.srid, "srid")?,
                 style: required(r, f.raster.style.take(), "style")?,
                 opacity: f.opacity,
@@ -1361,7 +1395,158 @@ fn build(
             }
             Entity::Raster(RasterEntity { base, raster })
         }
+        Kind::PointCloud => {
+            let cloud = PointCloudFields {
+                sources: required(r, f.cloud.sources.take(), "sources")?,
+                bounds: required(r, f.cloud.bounds, "bounds")?,
+                count: required(r, f.cloud.count, "count")?,
+                srid: required(r, f.raster.srid, "srid")?,
+                style: required(r, f.cloud.style.take(), "style")?,
+                opacity: f.opacity,
+            };
+            // Its files, bounds, points, look and opacity hold together (docs/adr/0207 §3).
+            if let Some(words) = cloud.problem() {
+                return Err(r.fail(Code::BadValue, &words));
+            }
+            Entity::PointCloud(PointCloudEntity { base, cloud })
+        }
     })
+}
+
+/// Six numbers: a bounds' `[x₁, y₁, z₁, x₂, y₂, z₂]`.
+fn bounds6(r: &mut Reader<'_>) -> Result<[f64; 6], KcadError> {
+    let at = r.position();
+    let v = floats(r)?;
+    v.as_slice().try_into().map_err(|_| {
+        r.fail_at(
+            Code::BadValue,
+            at,
+            &format!("kapsam 6 sayı olmalı, {} var", v.len()),
+        )
+    })
+}
+
+/// A point cloud's files (§6.6, docs/adr/0207 §3): each its one source, format, points and bounds.
+fn cloud_sources(r: &mut Reader<'_>) -> Result<Vec<CloudSource>, KcadError> {
+    list(r, |r, _| {
+        let (mut asset, mut file, mut url) = (None, None, None);
+        let (mut format, mut count, mut bounds) = (None, None, None);
+        map(r, |r, key| {
+            match key {
+                "asset" => asset = Some(text(r)?),
+                "file" => file = Some(text(r)?),
+                "url" => url = Some(text(r)?),
+                "format" => {
+                    let names: Vec<(&str, CloudFormat)> =
+                        CloudFormat::ALL.iter().map(|v| (v.name(), *v)).collect();
+                    format = Some(named(r, &names)?);
+                }
+                "count" => count = Some(r.uint(u64::MAX)?),
+                "bounds" => bounds = Some(bounds6(r)?),
+                _ => return Err(unknown(r)),
+            }
+            Ok(())
+        })?;
+        Ok(CloudSource {
+            asset,
+            file,
+            url,
+            format: required(r, format, "format")?,
+            count: required(r, count, "count")?,
+            bounds: required(r, bounds, "bounds")?,
+        })
+    })
+}
+
+/// A point cloud's look (§6.6, docs/adr/0207 §5): `render` and `size` always,
+/// the rest only when not their default (one spelling: no `invert` or `rgb8`
+/// false, no `sizeUnit` "px", no `shape` "round", no empty `hidden`).
+fn cloud_style(r: &mut Reader<'_>) -> Result<PointCloudStyle, KcadError> {
+    let (mut render, mut size) = (None, None);
+    let mut st = PointCloudStyle {
+        render: CloudRender::Rgb,
+        ramp: None,
+        invert: false,
+        min: None,
+        max: None,
+        hidden: Vec::new(),
+        rgb8: false,
+        size: 0.0,
+        size_unit: PointSizeUnit::Px,
+        shape: PointShape::Round,
+    };
+    let only_true = |r: &mut Reader<'_>, words: &str| -> Result<bool, KcadError> {
+        let at = r.position();
+        if !r.bool()? {
+            return Err(r.fail_at(Code::BadValue, at, words));
+        }
+        Ok(true)
+    };
+    map(r, |r, key| {
+        match key {
+            "render" => {
+                let names: Vec<(&str, CloudRender)> =
+                    CloudRender::ALL.iter().map(|v| (v.name(), *v)).collect();
+                render = Some(named(r, &names)?);
+            }
+            "size" => size = Some(r.float()?),
+            "ramp" => st.ramp = Some(text(r)?),
+            "min" => st.min = Some(r.float()?),
+            "max" => st.max = Some(r.float()?),
+            "invert" => {
+                st.invert = only_true(
+                    r,
+                    "ters çevirme false yazılmaz; çevrilmemiş rampada alan yoktur",
+                )?;
+            }
+            "rgb8" => {
+                st.rgb8 = only_true(r, "rgb8 false yazılmaz; 16 bitlik renklerde alan yoktur")?;
+            }
+            "hidden" => {
+                let at = r.position();
+                let v = list(r, |r, _| Ok(r.uint(255)? as u8))?;
+                if v.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "gizlenen sınıf listesi boş; gizlenen sınıf yoksa alan yazılmaz",
+                    ));
+                }
+                st.hidden = v;
+            }
+            "sizeUnit" => {
+                let at = r.position();
+                let names: Vec<(&str, PointSizeUnit)> =
+                    PointSizeUnit::ALL.iter().map(|v| (v.name(), *v)).collect();
+                st.size_unit = named(r, &names)?;
+                if st.size_unit == PointSizeUnit::Px {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boyun birimi “px” yazılmaz; piksel boyda alan yoktur",
+                    ));
+                }
+            }
+            "shape" => {
+                let at = r.position();
+                let names: Vec<(&str, PointShape)> =
+                    PointShape::ALL.iter().map(|v| (v.name(), *v)).collect();
+                st.shape = named(r, &names)?;
+                if st.shape == PointShape::Round {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "biçim “round” yazılmaz; yuvarlak noktada alan yoktur",
+                    ));
+                }
+            }
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    st.render = required(r, render, "render")?;
+    st.size = required(r, size, "size")?;
+    Ok(st)
 }
 
 /// A raster's look (§6.6, docs/adr/0204 §4): `render` and `bands` always, the

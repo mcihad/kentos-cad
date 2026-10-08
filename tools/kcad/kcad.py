@@ -120,6 +120,18 @@ SCHEMA_WITH_RASTERS = 29
 # style's lines (`dimLineColor`, `dimLineWeight`, `dimLineType`, `extColor`, `extWeight`, `extLineType`, `textColor`); a
 # leader's AutoCAD arrowheads and `arrowSize` (docs/adr/0205).
 SCHEMA_WITH_ANNOTATION = 30
+# Schema 31: schema 30 and the `pointcloud` kind, only in the drawing, and a raster's `url` (docs/adr/0207 §1, §3).
+SCHEMA_WITH_POINT_CLOUDS = 31
+# A point cloud's bounds (kentos_contracts::pointcloud): its files, a path's or an address's letters, a point's size,
+# its opacity; its files' formats, looks, units (px is the field's absence) and shapes (round is the field's absence).
+MAX_CLOUD_SOURCES = 4096
+MAX_CLOUD_PATH = 4096
+MIN_POINT_SIZE = 0.5
+MAX_POINT_SIZE = 32.0
+MIN_CLOUD_OPACITY = 0.1
+MAX_CLOUD_OPACITY = 1.0
+CLOUD_FORMATS = ("las", "laz", "copc", "xyz")
+CLOUD_RENDERS = ("rgb", "classification", "elevation", "intensity", "returns", "single")
 # The project's annotation heights by kind (docs/adr/0205 §1): each on paper, over 0 and at most 100 mm.
 ANNOTATION_KINDS = ("text", "leader", "dimension", "table", "coordinate", "station", "measure")
 MAX_ANNOTATION_MM = 100.0
@@ -204,7 +216,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -814,6 +826,7 @@ class _Schema:
         self.hatches = version >= SCHEMA_WITH_HATCH_PATTERNS
         self.images = version >= SCHEMA_WITH_IMAGES
         self.rasters = version >= SCHEMA_WITH_RASTERS
+        self.point_clouds = version >= SCHEMA_WITH_POINT_CLOUDS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -1460,7 +1473,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -1475,6 +1488,10 @@ class _Schema:
         if kind == "raster" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında raster olamaz")
+        # Nor a point cloud (docs/adr/0207 §3).
+        if kind == "pointcloud" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında nokta bulutu olamaz")
         table = dict(self.common())
         table.update(ENTITY_KINDS[kind](self))
         self.path.append(kind)
@@ -1501,6 +1518,8 @@ class _Schema:
                 self.image_rules(fields)
             if kind == "raster":
                 self.raster_rules(fields)
+            if kind == "pointcloud":
+                self.cloud_rules(fields)
             # Bold, italic and a slant need a typeface (docs/adr/0183 §2); a table's face is a text's.
             if kind in ("text", "table") and "font" not in fields and any(k in fields for k in ("bold", "italic", "oblique")):
                 self.path.append(next(k for k in ("textStyle", "bold", "italic", "oblique") if k in fields))
@@ -1796,10 +1815,16 @@ class _Schema:
             self.fail("bad_value", f"Rasterin 1 ile {MAX_RASTER_BANDS} arasında bandı olmalı.")
         asset = r.get("asset", "").strip() or None
         file = r.get("file", "").strip() or None
-        if asset and file:
-            self.fail("bad_value", "Rasterin kaynağı ya gömülü varlık (asset) ya bağlı dosya (file) olmalı, ikisi birden değil.")
-        if not ((asset and "file" not in r) or (file and "asset" not in r)):
-            self.fail("bad_value", "Rasterin kaynağı yok: gömülü varlığın kimliğini (asset) ya da bağlı dosyanın yolunu (file) verin.")
+        url = r.get("url", "").strip() or None
+        # One source given, the others absent (schema 31's address beside the asset and the file, docs/adr/0207 §1).
+        given = (asset is not None) + (file is not None) + (url is not None)
+        named = ("asset" in r) + ("file" in r) + ("url" in r)
+        if given == 0:
+            self.fail("bad_value", "Rasterin kaynağı yok: gömülü varlığın kimliğini (asset), bağlı dosyanın yolunu (file) ya da adresini (url) verin.")
+        if given != 1 or named != 1:
+            self.fail("bad_value", "Rasterin kaynağı ya gömülü varlık (asset), ya bağlı dosya (file), ya adres (url) olmalı; yalnız biri.")
+        if url:
+            self.url_rule(url)
         if file and (len(file) > MAX_RASTER_PATH or any(ord(ch) < 32 or 0x7F <= ord(ch) <= 0x9F for ch in file)):
             self.fail("bad_value", f"Bağlı dosyanın yolu en çok {MAX_RASTER_PATH} harf olmalı ve denetim karakteri içermemeli.")
         st = r["style"]
@@ -1820,6 +1845,117 @@ class _Schema:
         o = r.get("opacity")
         if o is not None and not (MIN_RASTER_OPACITY <= o <= MAX_RASTER_OPACITY):
             self.fail("bad_value", f"Rasterin donukluğu {MIN_RASTER_OPACITY} ile {MAX_RASTER_OPACITY} arasında olmalı; {o} verildi.")
+
+    def url_rule(self, u):
+        """The contract's `url_problem`: an HTTP or HTTPS address, its letters few and printable."""
+        lower = u.strip().lower()
+        if not (lower.startswith("http://") or lower.startswith("https://")) or len(u.strip()) < 9:
+            self.fail("bad_value", f"“{u}” bir HTTP ya da HTTPS adresi değil (http:// ya da https:// ile başlamalı).")
+        if len(u) > MAX_CLOUD_PATH or any(ord(ch) < 32 or 0x7F <= ord(ch) <= 0x9F for ch in u):
+            self.fail("bad_value", f"Adres en çok {MAX_CLOUD_PATH} harf olmalı ve denetim karakteri içermemeli.")
+
+    def bounds6(self, v):
+        a = self.array(self.float)(v)
+        if len(a) != 6:
+            self.fail("bad_value", f"kapsam 6 sayı olmalı, {len(a)} var")
+        return a
+
+    def cloud_source(self, v):
+        """A point cloud's file (§6.6, docs/adr/0207 §3): its one source, its format, points and bounds."""
+        return self.fields(
+            {
+                "asset": (self.text, False),
+                "file": (self.text, False),
+                "url": (self.text, False),
+                "format": (self.enum(CLOUD_FORMATS), True),
+                "count": (self.uint(64), True),
+                "bounds": (self.bounds6, True),
+            }
+        )(v)
+
+    def cloud_style(self, v):
+        """A point cloud's look (§6.6, docs/adr/0207 §5): `render` and `size`; the rest only when not their default."""
+        def only_true(words):
+            def check(v):
+                if self.bool(v) is not True:
+                    self.fail("bad_value", words)
+                return True
+
+            return check
+
+        def hidden(v):
+            h = self.array(lambda x: self.uint(8)(x))(v)
+            if not h:
+                self.fail("bad_value", "gizlenen sınıf listesi boş; gizlenen sınıf yoksa alan yazılmaz")
+            return h
+
+        def size_unit(v):
+            if self.text(v) == "px":
+                self.fail("bad_value", "boyun birimi “px” yazılmaz; piksel boyda alan yoktur")
+            return self.enum(("m",))(v)
+
+        def shape(v):
+            if self.text(v) == "round":
+                self.fail("bad_value", "biçim “round” yazılmaz; yuvarlak noktada alan yoktur")
+            return self.enum(("square",))(v)
+
+        return self.fields(
+            {
+                "render": (self.enum(CLOUD_RENDERS), True),
+                "ramp": (self.text, False),
+                "invert": (only_true("ters çevirme false yazılmaz; çevrilmemiş rampada alan yoktur"), False),
+                "min": (self.float, False),
+                "max": (self.float, False),
+                "hidden": (hidden, False),
+                "rgb8": (only_true("rgb8 false yazılmaz; 16 bitlik renklerde alan yoktur"), False),
+                "size": (self.float, True),
+                "sizeUnit": (size_unit, False),
+                "shape": (shape, False),
+            }
+        )(v)
+
+    def cloud_rules(self, c):
+        """The contract's `PointCloudFields::problem` and `PointCloudStyle::problem` (kentos_contracts::pointcloud), in
+        their order; the numbers are finite already."""
+        def bad(b):
+            return not (b[0] <= b[3] and b[1] <= b[4] and b[2] <= b[5])
+
+        sources = c["sources"]
+        if not sources:
+            self.fail("bad_value", "Nokta bulutunun en az bir dosyası olmalı.")
+        if len(sources) > MAX_CLOUD_SOURCES:
+            self.fail("bad_value", f"Sanal bulutun en çok {MAX_CLOUD_SOURCES} dosyası olabilir.")
+        for i, f in enumerate(sources, 1):
+            given = [f.get(k, "").strip() or None for k in ("asset", "file", "url")]
+            if sum(g is not None for g in given) != 1 or sum(k in f for k in ("asset", "file", "url")) != 1:
+                self.fail("bad_value", f"{i}. dosyanın kaynağı ya gömülü varlık (asset), ya bağlı dosya (file), ya adres (url) olmalı; yalnız biri.")
+            path = given[1]
+            if path and (len(path) > MAX_CLOUD_PATH or any(ord(ch) < 32 or 0x7F <= ord(ch) <= 0x9F for ch in path)):
+                self.fail("bad_value", f"Bağlı dosyanın yolu en çok {MAX_CLOUD_PATH} harf olmalı ve denetim karakteri içermemeli.")
+            if given[2]:
+                self.url_rule(given[2])
+            if bad(f["bounds"]):
+                self.fail("bad_value", f"{i}. dosyanın kapsamı sonlu altı sayı olmalı, her eksende en küçük en büyükten büyük olmamalı.")
+        if bad(c["bounds"]):
+            self.fail("bad_value", "Nokta bulutunun kapsamı sonlu altı sayı olmalı, her eksende en küçük en büyükten büyük olmamalı.")
+        if sum(f["count"] for f in sources) != c["count"]:
+            self.fail("bad_value", "Nokta bulutunun nokta sayısı dosyalarınkinin toplamı olmalı.")
+        st = c["style"]
+        if "ramp" in st and st["ramp"] not in RASTER_RAMPS:
+            self.fail("bad_value", f"“{st['ramp']}” diye bir renk rampası yok; {', '.join(RASTER_RAMPS)} rampalarından biri seçilmeli.")
+        lo, hi = st.get("min"), st.get("max")
+        if (lo is None) != (hi is None) or (lo is not None and not lo < hi):
+            self.fail("bad_value", "Görünüşün aralığı iki sonlu sayı olmalı, en küçük en büyükten küçük.")
+        if st["render"] in ("elevation", "intensity") and lo is None:
+            self.fail("bad_value", "Rampalı görünüşün aralığı (en küçük ve en büyük) verilmeli.")
+        if not MIN_POINT_SIZE <= st["size"] <= MAX_POINT_SIZE:
+            self.fail("bad_value", "Noktanın boyu 0.5 ile 32 arasında olmalı.")
+        h = st.get("hidden", [])
+        if any(a >= b for a, b in zip(h, h[1:])):
+            self.fail("bad_value", "Gizlenen sınıflar küçükten büyüğe ve birer kez yazılmalı.")
+        o = c.get("opacity")
+        if o is not None and not (MIN_CLOUD_OPACITY <= o <= MAX_CLOUD_OPACITY):
+            self.fail("bad_value", f"Nokta bulutunun donukluğu 0.1 ile 1 arasında olmalı; {o} verildi.")
 
     def table_rules(self, t):
         """The contract's `TableShape::problem` (kentos_contracts::table), in its order: what it names is refused at its field."""
@@ -2272,8 +2408,20 @@ ENTITY_KINDS = {
         "sample": (s.enum(RASTER_SAMPLES), True),
         "asset": (s.text, False),
         "file": (s.text, False),
+        # Schema 31 (docs/adr/0207 §1): an address read by ranges.
+        **({"url": (s.text, False)} if s.point_clouds else {}),
         "srid": (s.uint(32), True),
         "style": (s.raster_style, True),
+        "opacity": (s.float, False),
+    },
+    # Schema 31 (docs/adr/0207 §3): a point cloud's files, their bounds and points together, the files' system, its
+    # look and opacity; only in the drawing.
+    "pointcloud": lambda s: {
+        "sources": (s.array(s.cloud_source), True),
+        "bounds": (s.bounds6, True),
+        "count": (s.uint(64), True),
+        "srid": (s.uint(32), True),
+        "style": (s.cloud_style, True),
         "opacity": (s.float, False),
     },
     # Schema 8 (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, `mask` only when true.

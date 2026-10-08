@@ -218,6 +218,13 @@ pub enum ParamKind {
     File {
         accept: Vec<String>,
     },
+    /// Where a result is written (docs/adr/0207 §7): a path the user chooses,
+    /// or empty: beside the input, its name with `suffix`; `accept`: the
+    /// extensions offered (".laz"). The host's files decide the place.
+    SaveFile {
+        accept: Vec<String>,
+        suffix: String,
+    },
 }
 
 /// When a parameter is shown (the web's `visibleWhen`).
@@ -335,6 +342,7 @@ impl ParamDef {
             ParamKind::Expression { .. } => "expression",
             ParamKind::Field { .. } => "field",
             ParamKind::File { .. } => "file",
+            ParamKind::SaveFile { .. } => "saveFile",
         }
     }
 }
@@ -534,6 +542,10 @@ pub trait Feedback {
     fn info(&mut self, message: String);
     fn warn(&mut self, message: String);
     fn canceled(&self) -> bool;
+    /// The host's files, for the tools that read and write them (docs/adr/0207 §7); none where there are none.
+    fn files(&self) -> Option<std::sync::Arc<dyn crate::files::Files>> {
+        None
+    }
 }
 
 /// A change to one object: its whole attribute table and, when it changes, its label.

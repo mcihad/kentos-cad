@@ -279,8 +279,15 @@ pub const SCHEMA_WITH_RASTERS: u32 = 29;
 /// refuses them rather than draw another look.
 pub const SCHEMA_WITH_ANNOTATION: u32 = 30;
 
+/// Document schema 31 (docs/specs/kcad-v2.md §6.1): schema 30 and the
+/// `pointcloud` kind (docs/adr/0207 §3), in the drawing only, and a raster's
+/// address, `url` (§1). A writer writes it only when the drawing has a point
+/// cloud or a raster read from an address: any other drawing stays 30 or
+/// older, byte for byte; a reader of those refuses them rather than lose them.
+pub const SCHEMA_WITH_POINT_CLOUDS: u32 = 31;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 29] = [
+pub const SCHEMAS: [u32; 30] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -310,6 +317,7 @@ pub const SCHEMAS: [u32; 29] = [
     SCHEMA_WITH_SURVEY_SIGMAS,
     SCHEMA_WITH_RASTERS,
     SCHEMA_WITH_ANNOTATION,
+    SCHEMA_WITH_POINT_CLOUDS,
 ];
 
 /// The file a drawing is saved as.

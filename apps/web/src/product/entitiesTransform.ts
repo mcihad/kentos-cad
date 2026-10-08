@@ -301,6 +301,16 @@ function check(doc: CadDocument, input: EntitiesTransform): Stop | Checked {
     else sources.push(f);
   }
   if (!sources.length) return failed(error('layer_locked', lockedMessage(locked.length), 'uids'));
+  // A cloud's place is its files' (docs/adr/0207 §3): no transform moves or copies it.
+  const cloud = sources.find((s) => s.entity.kind === 'pointcloud');
+  if (cloud)
+    return failed(
+      error(
+        'pointcloud_fixed',
+        'Nokta bulutu taşınmaz, döndürülmez, ölçeklenmez, aynalanmaz ve kopyalanmaz: konumu dosyasındadır. Bulutu seçimden çıkarın.',
+        `uids[${input.uids.indexOf(cloud.uid)}]`,
+      ),
+    );
   const t = input.transform;
   // A raster under a projective transform or a rubber sheet: only resampling its pixels could follow (docs/adr/0204 §7).
   if (t.kind === 'projective' || t.kind === 'rubbersheet') {

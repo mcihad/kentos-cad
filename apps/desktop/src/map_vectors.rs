@@ -515,7 +515,7 @@ fn fill_paths(
         FillPaintBatch::Tile { .. } => Err("resimli dolgu"),
         FillPaintBatch::Image { .. } => Err("resim"),
         // A raster is out of a sheet's output (docs/adr/0204, Kapsam dışı; §16.4): left out.
-        FillPaintBatch::Raster { .. } => Ok(Vec::new()),
+        FillPaintBatch::Raster { .. } | FillPaintBatch::PointCloud { .. } => Ok(Vec::new()),
     }
 }
 
@@ -676,6 +676,8 @@ fn why_not(layer: &StyledLayer, b: &StyledBatch) -> Option<&'static str> {
             FillPaintBatch::Tile { .. } => Some("resimli dolgu"),
             FillPaintBatch::Image { .. } => Some("resim"),
             FillPaintBatch::Raster { .. } => None,
+            // A cloud's sheet output is a later item (docs/adr/0207, Kapsam dışı).
+            FillPaintBatch::PointCloud { .. } => Some("nokta bulutu"),
             FillPaintBatch::Gradient { .. } => Some("degrade dolgu"),
         },
         BatchKind::Marker { look, .. } => match look {

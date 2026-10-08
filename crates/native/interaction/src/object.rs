@@ -191,6 +191,7 @@ impl ObjectAction {
             Shape::Table { .. } => "tablo",
             Shape::Image { .. } => "resim",
             Shape::Raster { .. } => "raster",
+            Shape::PointCloud { .. } => "nokta bulutu",
         }
     }
 

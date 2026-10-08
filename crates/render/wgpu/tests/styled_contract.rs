@@ -1,5 +1,5 @@
 //! The styled drawing's shared WGSL and its layout contract
-//! (`shaders/wgsl/styled.layout.json`, version 6, docs/STYLE.md §6,
+//! (`shaders/wgsl/styled.layout.json`, version 7, docs/STYLE.md §6,
 //! docs/adr/0090): naga, the compiler wgpu runs, parses and validates the
 //! shared module, which the desktop builds as it is (two bind groups: the
 //! frame with the atlas, then the style; Iced's device takes two); the
@@ -113,7 +113,7 @@ fn the_shared_module_validates_and_the_desktop_builds_it_as_it_is() {
     let c = contract();
     assert_eq!(
         (c.format.as_str(), c.version, c.module.as_str()),
-        ("kentos.wgsl-layout", 6, "styled")
+        ("kentos.wgsl-layout", 7, "styled")
     );
     assert_eq!(shader::source(), shader::shared_source());
     let module = validate(&shader::shared_source());
@@ -291,4 +291,40 @@ fn the_pipelines_are_the_contract_s() {
             assert_eq!(have.operation, wgpu::BlendOperation::Add, "{}", p.name);
         }
     }
+}
+
+/// The points module (`shaders/wgsl/points`, `points.layout.json`, docs/adr/0207 §6): naga
+/// validates it, its entry points are the contract's, its Draw block is the 48 bytes the
+/// desktop writes at each dynamic offset.
+#[test]
+fn the_points_module_validates_and_is_the_contract_s() {
+    let source = include_str!("../../../../shaders/wgsl/points/points.wgsl");
+    let module = validate(source);
+    let layout: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../shaders/wgsl/points.layout.json"))
+            .expect("points.layout.json reads");
+    assert_eq!(layout["module"], "points");
+    assert_eq!(layout["structs"]["Draw"]["size"], 48);
+    for p in layout["pipelines"].as_array().expect("pipelines") {
+        for (key, stage) in [
+            ("vertex", naga::ShaderStage::Vertex),
+            ("fragment", naga::ShaderStage::Fragment),
+        ] {
+            let name = p[key].as_str().expect("entry point");
+            assert!(
+                module
+                    .entry_points
+                    .iter()
+                    .any(|e| e.name == name && e.stage == stage),
+                "{name} ({stage:?})"
+            );
+        }
+    }
+    let draw = module
+        .types
+        .iter()
+        .find(|(_, t)| t.name.as_deref() == Some("Draw"))
+        .map(|(_, t)| t.inner.size(module.to_ctx()))
+        .expect("Draw");
+    assert_eq!(draw, 48);
 }

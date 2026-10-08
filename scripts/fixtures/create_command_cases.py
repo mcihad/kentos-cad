@@ -1234,8 +1234,9 @@ def raster_message(kind, *given):
         "affine": "Rasterin dönüşümü tersinmiyor: pikselin iki kenarı aynı doğrultuda ya da sıfır.",
         "size": "Rasterin genişliği ve yüksekliği 1 ile 4000000 piksel arasında olmalı.",
         "bands": "Rasterin 1 ile 255 arasında bandı olmalı.",
-        "both": "Rasterin kaynağı ya gömülü varlık (asset) ya bağlı dosya (file) olmalı, ikisi birden değil.",
-        "none": "Rasterin kaynağı yok: gömülü varlığın kimliğini (asset) ya da bağlı dosyanın yolunu (file) verin.",
+        "both": "Rasterin kaynağı ya gömülü varlık (asset), ya bağlı dosya (file), ya adres (url) olmalı; yalnız biri.",
+        "none": "Rasterin kaynağı yok: gömülü varlığın kimliğini (asset), bağlı dosyanın yolunu (file) ya da adresini (url) verin.",
+        "url": f"“{given[0] if given else ''}” bir HTTP ya da HTTPS adresi değil (http:// ya da https:// ile başlamalı).",
         "path": "Bağlı dosyanın yolu en çok 4096 harf olmalı ve denetim karakteri içermemeli.",
         "rgb": "RGB görünüş üç bant ister (dördüncüsü alfa olabilir).",
         "one": "Bu görünüş tek bant ister.",
@@ -1245,6 +1246,9 @@ def raster_message(kind, *given):
         "light": "Gölgeli kabartmanın ışığı 0–360° doğrultudan, 0–90° yükseklikten gelmeli; yükseklik çarpanı sıfırdan büyük olmalı.",
         "opacity": f"Rasterin donukluğu 0.1 ile 1 arasında olmalı; {given[0] if given else 0} verildi.",
     }[kind]
+
+
+URL_RASTER = {**{k: v for k, v in RASTER.items() if k != "file"}, "url": "https://ornek.org/kentos/orto.tif"}
 
 
 def unknown_raster(asset):
@@ -1267,6 +1271,14 @@ cases.append({
     ],
 })
 cases.append({
+    "name": "Raster ekle: adresten okunan raster (url, docs/adr/0207 §1) tek adımda yazılır; adres yazıldığı gibi kalır",
+    "setup": R_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "raster", "objects": [O(URL_RASTER)]}, "result": done([3]),
+         "expect": {"ids": IDS + [3], "entities": {"3": made(O(URL_RASTER), 3)}, "uids": {"3": "new"}, "revision": "changed"}},
+    ],
+})
+cases.append({
     "name": "rasterin kuralları sırayla: invalid_raster, yolu nesnenin geometrisi; sonlu olmayan önce not_finite; gömülü rasterin dosyası projenin kitaplığında GeoTIFF, PNG ya da JPEG olmalı: unknown_asset (ADR 0204 §9)",
     "setup": R_SETUP,
     "steps": [
@@ -1280,6 +1292,11 @@ cases.append({
          "result": failed("invalid_raster", raster_message("both"), "objects[0].geometry"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**{k: v for k, v in RASTER.items() if k != "file"}})]},
          "result": failed("invalid_raster", raster_message("none"), "objects[0].geometry"), "expect": NOTHING},
+        # An address is a third source (docs/adr/0207 §1): beside a file it is two; it must be HTTP or HTTPS.
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**RASTER, "url": "https://ornek.org/orto.tif"})]},
+         "result": failed("invalid_raster", raster_message("both"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**{k: v for k, v in RASTER.items() if k != "file"}, "url": "ftp://ornek.org/orto.tif"})]},
+         "result": failed("invalid_raster", raster_message("url", "ftp://ornek.org/orto.tif"), "objects[0].geometry"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**RASTER, "file": "orto/\npafta.tif"})]},
          "result": failed("invalid_raster", raster_message("path"), "objects[0].geometry"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O(raster_with(bands=[1, 2]))]},

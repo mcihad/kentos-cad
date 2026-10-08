@@ -1,0 +1,261 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Nokta bulutları",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 500.0,
+  "workspace": "gis"
+ },
+ "origin": {
+  "x": 487600.0,
+  "y": 4420300.0
+ },
+ "layers": [
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.18
+   },
+   "children": []
+  },
+  {
+   "id": "koy",
+   "name": "Köy (LiDAR)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#5B8FCF",
+    "lineType": "continuous",
+    "lineWeight": 0.18
+   },
+   "children": []
+  },
+  {
+   "id": "ada",
+   "name": "Ada (sanal bulut)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#4C9A6A",
+    "lineType": "continuous",
+    "lineWeight": 0.18
+   },
+   "children": []
+  },
+  {
+   "id": "orto",
+   "name": "Ortofoto (COG)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#5B6B7F",
+    "lineType": "continuous",
+    "lineWeight": 0.18
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "koy",
+ "entities": [
+  {
+   "kind": "pointcloud",
+   "id": 1,
+   "layerId": "koy",
+   "attrs": {},
+   "sources": [
+    {
+     "file": "bulut/koy.laz",
+     "format": "laz",
+     "count": 71212,
+     "bounds": [
+      487600.0,
+      4420300.0,
+      838.991,
+      487719.838,
+      4420389.999,
+      862.618
+     ]
+    }
+   ],
+   "bounds": [
+    487600.0,
+    4420300.0,
+    838.991,
+    487719.838,
+    4420389.999,
+    862.618
+   ],
+   "count": 71212,
+   "srid": 5256,
+   "style": {
+    "render": "rgb",
+    "size": 3.0
+   }
+  },
+  {
+   "kind": "pointcloud",
+   "id": 2,
+   "layerId": "ada",
+   "attrs": {
+    "Kaynak": "İHA"
+   },
+   "sources": [
+    {
+     "url": "https://ornek.org/kentos/ada-1.copc.laz",
+     "format": "copc",
+     "count": 1250000,
+     "bounds": [
+      487700.0,
+      4420300.0,
+      840.0,
+      487800.0,
+      4420400.0,
+      870.5
+     ]
+    },
+    {
+     "file": "bulut/ada-2.laz",
+     "format": "laz",
+     "count": 980000,
+     "bounds": [
+      487800.0,
+      4420300.0,
+      841.25,
+      487900.0,
+      4420400.0,
+      868.0
+     ]
+    }
+   ],
+   "bounds": [
+    487700.0,
+    4420300.0,
+    840.0,
+    487900.0,
+    4420400.0,
+    870.5
+   ],
+   "count": 2230000,
+   "srid": 5256,
+   "style": {
+    "render": "classification",
+    "hidden": [
+     7,
+     18
+    ],
+    "size": 1.5,
+    "sizeUnit": "m",
+    "shape": "square"
+   },
+   "opacity": 0.8
+  },
+  {
+   "kind": "pointcloud",
+   "id": 3,
+   "layerId": "koy",
+   "attrs": {},
+   "label": "Örnek",
+   "sources": [
+    {
+     "asset": "pointcloud-ecf29f044cc8e743",
+     "format": "xyz",
+     "count": 3,
+     "bounds": [
+      487650.0,
+      4420320.0,
+      844.12,
+      487651.0,
+      4420320.5,
+      844.25
+     ]
+    }
+   ],
+   "bounds": [
+    487650.0,
+    4420320.0,
+    844.12,
+    487651.0,
+    4420320.5,
+    844.25
+   ],
+   "count": 3,
+   "srid": 0,
+   "style": {
+    "render": "elevation",
+    "ramp": "Spektral",
+    "invert": true,
+    "min": 844.0,
+    "max": 845.0,
+    "rgb8": true,
+    "size": 4.0
+   }
+  },
+  {
+   "kind": "raster",
+   "id": 4,
+   "layerId": "orto",
+   "attrs": {},
+   "affine": [
+    487600.0,
+    0.1,
+    0.0,
+    4420400.0,
+    0.0,
+    -0.1
+   ],
+   "width": 3000,
+   "height": 1000,
+   "bands": 3,
+   "sample": "u8",
+   "url": "https://ornek.org/kentos/orto.cog.tif",
+   "srid": 5256,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     1,
+     2,
+     3
+    ]
+   }
+  }
+ ],
+ "uids": [
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2601",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2602",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2603",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2604"
+ ],
+ "styles": {
+  "items": [
+   {
+    "kind": "asset",
+    "id": "pointcloud-ecf29f044cc8e743",
+    "name": "ornek",
+    "path": [
+     "Nokta bulutları"
+    ],
+    "format": "xyz",
+    "data": "data:application/octet-stream;base64,NDg3NjUwLjAwMCA0NDIwMzIwLjAwMCA4NDQuMTIwIDEyMCA4NyA2NAo0ODc2NTAuNTAwIDQ0MjAzMjAuMjUwIDg0NC4xODAgMTE4IDg2IDYyCjQ4NzY1MS4wMDAgNDQyMDMyMC41MDAgODQ0LjI1MCAxMjEgODggNjUK"
+   }
+  ],
+  "categories": []
+ }
+}

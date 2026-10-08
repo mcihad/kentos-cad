@@ -329,6 +329,9 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
             "Raster patlatılmaz; görünüşü için Raster stili'ni, yeri için Raster oturt'u kullanın."
                 .into(),
         ),
+        Shape::PointCloud { .. } => Cut::Error(
+            "Nokta bulutu patlatılmaz; görünüşü için Nokta bulutu stili'ni kullanın.".into(),
+        ),
         _ => Cut::Error("Bu nesne zaten temel bir nesne; patlatılacak bir şey yok.".into()),
     }
 }

@@ -41,9 +41,10 @@ pub fn default_value(def: &ParamDef, d: &Defaults) -> Value {
             }
         }
         ParamKind::Number { min, .. } => json!(min.unwrap_or(0.0)),
-        ParamKind::Text { .. } | ParamKind::Expression { .. } | ParamKind::Field { .. } => {
-            json!("")
-        }
+        ParamKind::Text { .. }
+        | ParamKind::Expression { .. }
+        | ParamKind::Field { .. }
+        | ParamKind::SaveFile { .. } => json!(""),
         ParamKind::Boolean => json!(false),
         ParamKind::Choice { options } => options.first().map_or(Value::Null, |o| json!(o.value)),
         ParamKind::Layer { .. } => json!({ "layerId": d.active_layer }),
@@ -184,6 +185,7 @@ pub fn fits(def: &ParamDef, v: &Value) -> bool {
                 && v.get("rows")
                     .is_none_or(|r| file_rows(v).is_some() && r.is_array())
         }
+        ParamKind::SaveFile { .. } => v.is_string(),
     }
 }
 
@@ -339,6 +341,12 @@ fn check_param(p: &ParamDef, v: &Value, layers: &LayerTree) -> Option<String> {
             )),
             LayerValue::Existing(_) => None,
         },
+        // An empty path is beside the input; a chosen one has a file name.
+        ParamKind::SaveFile { .. } => {
+            let path = v.as_str().unwrap_or("");
+            (!path.is_empty() && (path.ends_with('/') || path.ends_with('\\')))
+                .then(|| format!("{name}: dosyanın adını da yazın."))
+        }
         ParamKind::Boolean | ParamKind::Choice { .. } | ParamKind::Point => None,
     }
 }

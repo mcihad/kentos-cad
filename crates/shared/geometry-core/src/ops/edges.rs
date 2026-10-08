@@ -52,6 +52,8 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
         Shape::Image { .. } => path_edges(&crate::geom::image::shown(e), true),
         // Its frame's sides: a raster is picked by its edge (docs/adr/0204 §7).
         Shape::Raster { .. } => path_edges(&crate::entity::entity_vertices(e), true),
+        // Its plan's sides: a cloud is picked by its edge (docs/adr/0207 §3).
+        Shape::PointCloud { .. } => path_edges(&crate::entity::entity_vertices(e), true),
         // The lines it draws (docs/adr/0184 §2).
         Shape::Table { .. } => crate::geom::table::lines_of(e)
             .into_iter()

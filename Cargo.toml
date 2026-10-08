@@ -8,6 +8,9 @@ members = [
     "crates/shared/geometry-core",
     "crates/shared/contracts",
     "crates/shared/formats",
+    # Point clouds (docs/adr/0207): LAS, LAZ, COPC and text clouds, their index, looks and
+    # operations; a crate of its own so the formats worker does not carry LAZ.
+    "crates/shared/pointcloud",
     # Netcad NCZ drawings (docs/adr/0138): a port of the NCZ Reader plugin, GPL-2.0-or-later
     # (crates/shared/ncz/README.md: not distributed before the author's permission).
     "crates/shared/ncz",
@@ -22,6 +25,8 @@ members = [
     # Browser bindings (wasm-bindgen) of the shared libraries.
     "crates/wasm/geometry-wasm",
     "crates/wasm/formats-wasm",
+    # Point clouds in a module of their own, loaded when a point cloud is added or drawn.
+    "crates/wasm/pointcloud-wasm",
     # DXF and Netcad NCZ in modules of their own, loaded only when such a file is imported.
     "crates/wasm/dxf-wasm",
     "crates/wasm/ncz-wasm",
@@ -72,6 +77,7 @@ default-members = [
     "crates/shared/geometry-core",
     "crates/shared/contracts",
     "crates/shared/formats",
+    "crates/shared/pointcloud",
     "crates/shared/ncz",
     "crates/shared/kcad",
     "crates/shared/expression",
@@ -80,6 +86,7 @@ default-members = [
     "crates/shared/svg-core",
     "crates/wasm/geometry-wasm",
     "crates/wasm/formats-wasm",
+    "crates/wasm/pointcloud-wasm",
     "crates/wasm/dxf-wasm",
     "crates/wasm/ncz-wasm",
     "crates/wasm/sheet-wasm",
@@ -121,6 +128,12 @@ libm = "=0.2.16"
 # image decoders, so nothing new is downloaded.
 miniz_oxide = { version = "=0.9.1", default-features = false, features = ["with-alloc"] }
 rust_decimal = { version = "=1.43.0", default-features = false, features = ["std"] }
+# LAZ (LASzip) point records of point clouds (docs/adr/0207; the owner's approval, 2026-10-08):
+# laz-rs, the Rust port of LASzip, pure Rust (it builds for the browser too, whose point cloud
+# module waits); only its chunk compressors and decompressors are used, LAS and COPC are read and
+# written by KentOS.
+# Without `parallel` (rayon): the hosts decompress chunks on their own threads.
+laz = { version = "=0.13.0", default-features = false }
 # Geodesics and areas on the ellipsoid (Karney 2013): the measurements' ellipsoid and ground values
 # (docs/adr/0171, the owner's approval of 4 October). The crates.io release with libm's functions
 # on every target (crates/shared/geographiclib-rs, written by scripts/vendor/geographiclib.py):

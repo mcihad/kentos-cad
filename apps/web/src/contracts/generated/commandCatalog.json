@@ -479,6 +479,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -1674,6 +1770,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -3127,6 +3237,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -3222,6 +3494,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "PointStyle": {
             "properties": {
@@ -3575,6 +3870,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -7683,6 +7985,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -8878,6 +9276,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -10269,6 +10681,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -10364,6 +10938,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "PointStyle": {
             "properties": {
@@ -10803,6 +11400,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -17969,6 +18573,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -18737,6 +19437,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -19607,6 +20321,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -19702,6 +20578,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -19800,6 +20699,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -21189,6 +22095,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -21957,6 +22959,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -22827,6 +23843,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -22922,6 +24100,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -23020,6 +24221,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -24370,6 +25578,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -25138,6 +26442,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -26008,6 +27326,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -26103,6 +27583,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -26201,6 +27704,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -27686,6 +29196,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -28454,6 +30060,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -29324,6 +30944,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -29419,6 +31201,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -29517,6 +31322,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -30852,6 +32664,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -31620,6 +33528,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -32490,6 +34412,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -32585,6 +34669,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -32683,6 +34790,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -34028,6 +36142,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -34796,6 +37006,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -35666,6 +37890,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -35761,6 +38147,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -35859,6 +38268,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -37478,6 +39894,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -38246,6 +40758,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -39116,6 +41642,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -39211,6 +41899,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -39309,6 +42020,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -40445,6 +43163,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -40813,6 +43627,11 @@
               {
                 "const": "rasterGeoref",
                 "description": "Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster\nput in place of its resampled file, updated in place.",
+                "type": "string"
+              },
+              {
+                "const": "pointCloudStyle",
+                "description": "Nokta bulutu stili (docs/adr/0207 §5): clouds' looks and opacities written in place.",
                 "type": "string"
               },
               {
@@ -41978,10 +44797,24 @@
               },
               {
                 "$ref": "#/$defs/RasterFields",
-                "description": "A raster (docs/adr/0204 §2): its pixels placed by `affine`, its size,\nbands and samples, its file (`asset` embedded or `file` linked,\nexactly one), the file's system, its look and opacity.",
+                "description": "A raster (docs/adr/0204 §2): its pixels placed by `affine`, its size,\nbands and samples, its file (`asset` embedded, `file` linked or `url`\nread by ranges, exactly one), the file's system, its look and opacity.",
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudFields",
+                "description": "A point cloud (docs/adr/0207 §3): its files (each embedded, linked or\nan address), their points and bounds, the system, its look and opacity.",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -42340,6 +45173,120 @@
             ],
             "type": "object"
           },
+          "PointCloudFields": {
+            "description": "What places and shows a cloud: the object's own fields, and its geometry\nin the commands (`EntityGeometry::PointCloud`).",
+            "properties": {
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              }
+            },
+            "required": [
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointPart": {
             "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
             "properties": {
@@ -42358,6 +45305,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterFields": {
             "description": "What places and shows a raster: the raster object's own fields, and its\ngeometry in the commands (`EntityGeometry::Raster`).",
@@ -42415,6 +45385,13 @@
               },
               "style": {
                 "$ref": "#/$defs/RasterStyle"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "width": {
                 "description": "Its size in pixels.",
@@ -43171,6 +46148,102 @@
               "attrs",
               "c",
               "r"
+            ],
+            "type": "object"
+          },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
             ],
             "type": "object"
           },
@@ -43942,6 +47015,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -44812,6 +47899,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -44907,6 +48156,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -45005,6 +48277,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -46472,6 +49751,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -47240,6 +50615,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -48110,6 +51499,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -48205,6 +51756,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -48303,6 +51877,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -49408,6 +52989,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "CreateOperation": {
             "description": "The drawing tool or Hesap window whose step has its own name; without\none the step is “Ekle”, as for every object a drawing tool adds.",
             "oneOf": [
@@ -49569,6 +53246,11 @@
               {
                 "const": "raster",
                 "description": "Raster ekle (docs/adr/0204 §8): a raster placed.",
+                "type": "string"
+              },
+              {
+                "const": "pointCloud",
+                "description": "Nokta bulutu ekle (docs/adr/0207 §9): a point cloud added.",
                 "type": "string"
               }
             ]
@@ -50682,10 +54364,24 @@
               },
               {
                 "$ref": "#/$defs/RasterFields",
-                "description": "A raster (docs/adr/0204 §2): its pixels placed by `affine`, its size,\nbands and samples, its file (`asset` embedded or `file` linked,\nexactly one), the file's system, its look and opacity.",
+                "description": "A raster (docs/adr/0204 §2): its pixels placed by `affine`, its size,\nbands and samples, its file (`asset` embedded, `file` linked or `url`\nread by ranges, exactly one), the file's system, its look and opacity.",
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudFields",
+                "description": "A point cloud (docs/adr/0207 §3): its files (each embedded, linked or\nan address), their points and bounds, the system, its look and opacity.",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -51114,6 +54810,120 @@
             ],
             "type": "object"
           },
+          "PointCloudFields": {
+            "description": "What places and shows a cloud: the object's own fields, and its geometry\nin the commands (`EntityGeometry::PointCloud`).",
+            "properties": {
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              }
+            },
+            "required": [
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointPart": {
             "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
             "properties": {
@@ -51132,6 +54942,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterFields": {
             "description": "What places and shows a raster: the raster object's own fields, and its\ngeometry in the commands (`EntityGeometry::Raster`).",
@@ -51189,6 +55022,13 @@
               },
               "style": {
                 "$ref": "#/$defs/RasterStyle"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "width": {
                 "description": "Its size in pixels.",
@@ -51950,6 +55790,102 @@
               "attrs",
               "c",
               "r"
+            ],
+            "type": "object"
+          },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
             ],
             "type": "object"
           },
@@ -52721,6 +56657,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -53591,6 +57541,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -53686,6 +57798,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -53784,6 +57919,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -55261,6 +59403,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -56029,6 +60267,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -56899,6 +61151,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -56994,6 +61408,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -57092,6 +61529,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -58556,6 +63000,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -59324,6 +63864,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -60194,6 +64748,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -60289,6 +65005,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -60387,6 +65126,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"
@@ -62015,6 +66761,102 @@
             ],
             "type": "object"
           },
+          "CloudFormat": {
+            "description": "What a member's file is.",
+            "enum": [
+              "las",
+              "laz",
+              "copc",
+              "xyz"
+            ],
+            "type": "string"
+          },
+          "CloudRender": {
+            "description": "How points are coloured (docs/adr/0207 §5).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "The file's colours.",
+                "type": "string"
+              },
+              {
+                "const": "classification",
+                "description": "ASPRS's classes, each its colour.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Heights through a ramp.",
+                "type": "string"
+              },
+              {
+                "const": "intensity",
+                "description": "Intensity in grey.",
+                "type": "string"
+              },
+              {
+                "const": "returns",
+                "description": "Single, first, intermediate and last returns in four colours.",
+                "type": "string"
+              },
+              {
+                "const": "single",
+                "description": "The object's colour.",
+                "type": "string"
+              }
+            ]
+          },
+          "CloudSource": {
+            "description": "One file of a cloud.",
+            "properties": {
+              "asset": {
+                "description": "The project library's asset its bytes are (embedded); exactly one of\n`asset`, `file` and `url` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "count": {
+                "description": "Its points, as its header says.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "$ref": "#/$defs/CloudFormat"
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "format",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
           "ConstructionEntity": {
             "description": "Construction line or ray: base point and unit direction.",
             "properties": {
@@ -62783,6 +67625,20 @@
                 "properties": {
                   "kind": {
                     "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PointCloudEntity",
+                "description": "A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).",
+                "properties": {
+                  "kind": {
+                    "const": "pointcloud",
                     "type": "string"
                   }
                 },
@@ -63653,6 +68509,168 @@
             ],
             "type": "object"
           },
+          "PointCloudEntity": {
+            "description": "A point cloud (docs/adr/0207 §3).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bounds": {
+                "description": "The members' bounds together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "The members' points together.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSource"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The files' system; 0: they named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/PointCloudStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "sources",
+              "bounds",
+              "count",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "PointCloudStyle": {
+            "description": "A cloud's look (docs/adr/0207 §5).",
+            "properties": {
+              "hidden": {
+                "description": "Classes not drawn (0–255), in order.",
+                "items": {
+                  "format": "uint8",
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "The ramp's least and most value (heights in metres, or intensities).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/CloudRender"
+              },
+              "rgb8": {
+                "description": "Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).",
+                "type": "boolean"
+              },
+              "shape": {
+                "$ref": "#/$defs/PointShape"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "sizeUnit": {
+                "$ref": "#/$defs/PointSizeUnit"
+              }
+            },
+            "required": [
+              "render",
+              "size"
+            ],
+            "type": "object"
+          },
           "PointEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -63748,6 +68766,29 @@
               "p"
             ],
             "type": "object"
+          },
+          "PointShape": {
+            "description": "A point's shape.",
+            "enum": [
+              "round",
+              "square"
+            ],
+            "type": "string"
+          },
+          "PointSizeUnit": {
+            "description": "The unit of a point's size.",
+            "oneOf": [
+              {
+                "const": "px",
+                "description": "Pixels on the screen (independent of the device's pixels).",
+                "type": "string"
+              },
+              {
+                "const": "m",
+                "description": "Metres on the ground (at least a pixel).",
+                "type": "string"
+              }
+            ]
           },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
@@ -63846,6 +68887,13 @@
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "description": "An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).",
                 "type": [
                   "string",
                   "null"

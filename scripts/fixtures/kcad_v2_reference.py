@@ -343,6 +343,54 @@ def leader_arrow_size(x):
     return finite(x)
 
 
+# A point cloud's formats and looks (schema 31, docs/adr/0207 §5): pixels and round points are the fields' absence.
+CLOUD_FORMATS = ("las", "laz", "copc", "xyz")
+CLOUD_RENDERS = ("rgb", "classification", "elevation", "intensity", "returns", "single")
+
+
+def cloud_source(f):
+    """A point cloud's file (schema 31, docs/adr/0207 §3): its one source, format, points and bounds."""
+    table = {
+        "asset": (text, False),
+        "file": (text, False),
+        "url": (text, False),
+        "format": (enum(CLOUD_FORMATS), True),
+        "count": (uint, True),
+        "bounds": (floats, True),
+    }
+    return cmap(fields(f, table, "nokta bulutunun dosyası"))
+
+
+def cloud_style(st):
+    """A point cloud's look (schema 31, docs/adr/0207 §5): `render` and `size`, the rest only when not their default."""
+    table = {
+        "render": (enum(CLOUD_RENDERS), True),
+        "ramp": (enum(RASTER_RAMPS), False),
+        "invert": (lambda b: boolean(b) if b is True else None, False),
+        "min": (f64, False),
+        "max": (f64, False),
+        "hidden": (lambda hs: array([uint(h) for h in hs]) if hs else None, False),
+        "rgb8": (lambda b: boolean(b) if b is True else None, False),
+        "size": (f64, True),
+        "sizeUnit": (enum(("m",)), False),
+        "shape": (enum(("square",)), False),
+    }
+    out = fields(st, table, "nokta bulutunun görünüşü")
+    assert all(out.get(k, True) is not None for k in ("invert", "rgb8", "hidden")), "varsayılanlar alan değildir"
+    return cmap(out)
+
+
+def cloud_shape(e):
+    """The contract's point cloud rule, as far as an example needs it held (docs/adr/0207 §3)."""
+    assert 1 <= len(e["sources"]) <= 4096, "nokta bulutunun dosyaları"
+    assert all(sum(k in f for k in ("asset", "file", "url")) == 1 for f in e["sources"]), "her dosyanın tek kaynağı olmalı"
+    assert sum(f["count"] for f in e["sources"]) == e["count"], "nokta sayısı dosyalarınkinin toplamı"
+    st = e["style"]
+    assert 0.5 <= st["size"] <= 32.0, "noktanın boyu"
+    assert st["render"] not in ("elevation", "intensity") or ("min" in st and "max" in st and st["min"] < st["max"]), "rampanın aralığı"
+    assert 0.1 <= e.get("opacity", 1.0) <= 1.0, "donukluk 0,1 ile 1 arasında"
+
+
 TOPOLOGY_KINDS = {
     "mustNotOverlap": (False, None),
     "mustNotHaveGaps": (False, None),
@@ -720,7 +768,7 @@ def raster_shape(e):
     _, a, b, _, c, d = e["affine"]
     assert a * d - b * c != 0.0, "rasterin dönüşümü tersinmeli"
     assert 1 <= e["width"] <= 4_000_000 and 1 <= e["height"] <= 4_000_000 and 1 <= e["bands"] <= 255, "rasterin boyu ve bantları"
-    assert ("asset" in e) != ("file" in e), "rasterin tek kaynağı olmalı"
+    assert sum(k in e for k in ("asset", "file", "url")) == 1, "rasterin tek kaynağı olmalı"
     st = e["style"]
     assert len(st["bands"]) in ((3, 4) if st["render"] == "rgb" else (1,)) and all(1 <= x <= e["bands"] for x in st["bands"]), "görünüşün bantları"
     assert st.get("stretch") != "manual" or st["min"] < st["max"], "elle gerdirmenin aralığı"
@@ -848,8 +896,20 @@ KINDS = {
         "sample": (enum(RASTER_SAMPLES), True),
         "asset": (text, False),
         "file": (text, False),
+        # Schema 31 (docs/adr/0207 §1): an address read by ranges.
+        "url": (text, False),
         "srid": (uint, True),
         "style": (raster_style, True),
+        "opacity": (f64, False),
+    },
+    # Schema 31 (docs/adr/0207 §3): a point cloud's files, their bounds and points together, the files' system, its look
+    # and opacity; only in the drawing.
+    "pointcloud": {
+        "sources": (lambda fs: array([cloud_source(f) for f in fs]), True),
+        "bounds": (floats, True),
+        "count": (uint, True),
+        "srid": (uint, True),
+        "style": (cloud_style, True),
         "opacity": (f64, False),
     },
     # Schema 8 (docs/adr/0146): two vertices or more, a note only when there is one, an arrowhead by name, `mask` only when true.
@@ -925,6 +985,9 @@ def entity(e, uid, index):
     if kind == "raster":
         assert uid is not None, "blok tanımında raster olamaz"
         raster_shape(e)
+    if kind == "pointcloud":
+        assert uid is not None, "blok tanımında nokta bulutu olamaz"
+        cloud_shape(e)
     # A block definition's objects have no persistent ids to name (docs/adr/0186 §6).
     assert "assoc" not in e or uid is not None, "blok tanımının taraması nesnelere bağlı olamaz"
     body = fields({k: v for k, v in e.items() if k not in ("kind", "id")}, table, f"nesne {index} ({kind})")
@@ -986,7 +1049,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 30 with the project's annotation heights, a dimension style's or a
+    """The oldest schema that holds the drawing: 31 with a point cloud or a raster read from an address, only in the
+    drawing (docs/adr/0207), 30 with the project's annotation heights, a dimension style's or a
     dimension's lines, a leader's arrowhead's size or one of AutoCAD's arrowheads, in the drawing or a block definition
     (docs/adr/0205), 29 with a raster, only in the drawing (docs/adr/0204 §2), 28 with the
     survey settings' a priori standard deviations (docs/adr/0203 §1), 27 with the project's topology settings (docs/adr/0202 §7), 26 with a
@@ -1042,6 +1106,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
             for e in es
         )
 
+    if any(e["kind"] == "pointcloud" or (e["kind"] == "raster" and "url" in e) for e in entities):
+        return 31
     if settings and ("annotation" in settings or any(k in st for st in settings.get("dimensionStyles", []) for k in DIMENSION_LINES)):
         return 30
     if annotated(entities) or any(annotated(b["entities"]) for b in blocks or []):
@@ -1295,7 +1361,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-31.kcad"] = container(root(cmap(parts), version=uint(31)))
+    files["schema-version-32.kcad"] = container(root(cmap(parts), version=uint(32)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1581,6 +1647,43 @@ def broken(minimal_content, minimal_file):
     files["raster-invert-false.kcad"] = in_schema(29, raster_of(style=gray(invert=boolean(False))))
     files["raster-bilinear-written.kcad"] = in_schema(29, raster_of(style=gray(resampling=text("bilinear"))))
     files["raster-opacity-low.kcad"] = in_schema(29, raster_of(opacity=f64(0.05)))
+    # Schema 31 (docs/adr/0207): a raster's address beside its file is two sources; an address that is not HTTP; in
+    # schema 30 an unknown field.
+    files["raster-url-in-schema-30.kcad"] = in_schema(30, raster_of(file=None, url=text("https://ornek.org/orto.tif")))
+    files["raster-url-and-file.kcad"] = in_schema(31, raster_of(url=text("https://ornek.org/orto.tif")))
+    files["raster-url-ftp.kcad"] = in_schema(31, raster_of(file=None, url=text("ftp://ornek.org/orto.tif")))
+    # A point cloud is schema 31's (docs/adr/0207 §3): in schema 30 an unknown kind; only in the drawing; files each
+    # with one source, the points their sum, bounds in order, a look whose range a ramp needs, its defaults left out,
+    # a size from 0.5 to 32, an opacity from 0.1 to 1.
+    cloud_bounds = floats([487600.0, 4420300.0, 838.9, 487720.0, 4420390.0, 862.7])
+
+    def cloud_file(**extra):
+        body = {"file": text("koy.laz"), "format": text("laz"), "count": uint(71212), "bounds": cloud_bounds, **extra}
+        return cmap({k: v for k, v in body.items() if v is not None})
+
+    def cloud_of(style=None, sources=None, **extra):
+        look = style if style is not None else cmap({"render": text("rgb"), "size": f64(2.0)})
+        body = {**common, "sources": array(sources if sources is not None else [cloud_file()]), "bounds": cloud_bounds, "count": uint(71212), "srid": uint(5256), "style": look, **extra}
+        return cmap({"pointcloud": cmap({k: v for k, v in body.items() if v is not None})})
+
+    files["pointcloud-in-schema-30.kcad"] = in_schema(30, cloud_of())
+    files["pointcloud-in-block.kcad"] = with_blocks([block(1, "Bulut", [cmap({"pointcloud": cmap({"attrs": cmap({}), "layerId": text("0"), "sources": array([cloud_file()]), "bounds": cloud_bounds, "count": uint(71212), "srid": uint(5256), "style": cmap({"render": text("rgb"), "size": f64(2.0)})})})])], version=31)
+    files["pointcloud-no-files.kcad"] = in_schema(31, cloud_of(sources=[], count=uint(0)))
+    files["pointcloud-two-sources.kcad"] = in_schema(31, cloud_of(sources=[cloud_file(url=text("https://ornek.org/koy.laz"))]))
+    files["pointcloud-no-source.kcad"] = in_schema(31, cloud_of(sources=[cloud_file(file=None)]))
+    files["pointcloud-url-ftp.kcad"] = in_schema(31, cloud_of(sources=[cloud_file(file=None, url=text("ftp://ornek.org/koy.laz"))]))
+    files["pointcloud-format-unknown.kcad"] = in_schema(31, cloud_of(sources=[cloud_file(format=text("e57"))]))
+    files["pointcloud-count-not-sum.kcad"] = in_schema(31, cloud_of(count=uint(71213)))
+    files["pointcloud-bounds-five.kcad"] = in_schema(31, cloud_of(bounds=floats([487600.0, 4420300.0, 838.9, 487720.0, 4420390.0])))
+    files["pointcloud-bounds-upside-down.kcad"] = in_schema(31, cloud_of(bounds=floats([487720.0, 4420300.0, 838.9, 487600.0, 4420390.0, 862.7])))
+    files["pointcloud-ramp-without-range.kcad"] = in_schema(31, cloud_of(style=cmap({"render": text("elevation"), "size": f64(2.0)})))
+    files["pointcloud-size-zero.kcad"] = in_schema(31, cloud_of(style=cmap({"render": text("rgb"), "size": f64(0.0)})))
+    files["pointcloud-hidden-unsorted.kcad"] = in_schema(31, cloud_of(style=cmap({"render": text("classification"), "hidden": array([uint(7), uint(2)]), "size": f64(2.0)})))
+    files["pointcloud-hidden-empty.kcad"] = in_schema(31, cloud_of(style=cmap({"render": text("classification"), "hidden": array([]), "size": f64(2.0)})))
+    files["pointcloud-invert-false.kcad"] = in_schema(31, cloud_of(style=cmap({"render": text("rgb"), "invert": boolean(False), "size": f64(2.0)})))
+    files["pointcloud-px-written.kcad"] = in_schema(31, cloud_of(style=cmap({"render": text("rgb"), "size": f64(2.0), "sizeUnit": text("px")})))
+    files["pointcloud-round-written.kcad"] = in_schema(31, cloud_of(style=cmap({"render": text("rgb"), "size": f64(2.0), "shape": text("round")})))
+    files["pointcloud-opacity-low.kcad"] = in_schema(31, cloud_of(opacity=f64(0.05)))
     # A text's curve is schema 25's (docs/adr/0196 §1): in schema 24 an unknown field; a vertex at least, as many
     # bulges as vertices, some length, a text of one line, not linked; only `pts` and `bulges` in it.
     def curve(pts, bulges=None, **extra):
@@ -1895,6 +1998,7 @@ def build():
     out["topology.kcad"] = container(document(load("topology.json")))
     out["rasters.kcad"] = container(document(load("rasters.json")))
     out["annotation.kcad"] = container(document(load("annotation.json")))
+    out["pointclouds.kcad"] = container(document(load("pointclouds.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

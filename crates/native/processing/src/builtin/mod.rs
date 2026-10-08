@@ -8,6 +8,7 @@ pub mod info_from_inside;
 pub mod join_by_field;
 pub mod models;
 pub mod numbering;
+pub mod pointcloud;
 pub mod queries;
 pub mod select_by_expression;
 pub mod select_by_location;
@@ -40,6 +41,16 @@ pub fn tools() -> Vec<Tool> {
         geometry::validity::repair_tool(),
         geometry::simplify::tool(),
         geometry::reproject::tool(),
+        // Nokta bulutu (docs/adr/0207 §7): the desktop's; the web's side waits.
+        pointcloud::area_stats::tool(),
+        pointcloud::thin::tool(),
+        pointcloud::ground::tool(),
+        pointcloud::classify::tool(),
+        pointcloud::clip::tool(),
+        pointcloud::merge::tool(),
+        pointcloud::tile::tool(),
+        pointcloud::rasterize::tool(),
+        pointcloud::boundary::tool(),
     ]
 }
 

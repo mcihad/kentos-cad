@@ -109,8 +109,9 @@ describe('project types (docs/adr/0165)', () => {
     // Blocks are the drawing's library, on Veri, its pictures beside them (docs/adr/0192 §5): Düzenle keeps to
     // creating and changing objects.
     // Öznitelik tablosu, Alanlar and Kaynaklar beside the layers (docs/adr/0199).
-    // Raster katmanları beside the pictures (docs/adr/0204 §8).
-    expect(panels('data')).toEqual(['Katman', 'Tablo', 'Ara', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Blok', 'Resim', 'Raster']);
+    // Raster katmanları beside the pictures (docs/adr/0204 §8), point clouds after them (docs/adr/0207 §9: on the
+    // web its buttons wait with a note).
+    expect(panels('data')).toEqual(['Katman', 'Tablo', 'Ara', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Blok', 'Resim', 'Raster', 'Nokta bulutu']);
     expect(panels('edit')).not.toContain('Blok');
     expect(panels('edit')).not.toContain('Resim');
   });

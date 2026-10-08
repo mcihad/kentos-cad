@@ -10,10 +10,11 @@
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
-    AreaPart, BlockId, CellRange, DimensionStyle, DocumentSnapshotV2, Entity, EntityId, HatchAssoc,
-    HatchPattern, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PatternLine, PointPart, RasterResampling,
-    RasterStretch, RasterStyle, RingGeometry, TableAlign, TableSource, TextRun, TextScript, Vec2,
-    label_scale_ok, width_factor_ok,
+    AreaPart, BlockId, CellRange, CloudSource, DimensionStyle, DocumentSnapshotV2, Entity,
+    EntityId, HatchAssoc, HatchPattern, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PatternLine,
+    PointCloudStyle, PointPart, PointShape, PointSizeUnit, RasterResampling, RasterStretch,
+    RasterStyle, RingGeometry, TableAlign, TableSource, TextRun, TextScript, Vec2, label_scale_ok,
+    width_factor_ok,
 };
 
 use super::Encoder;
@@ -66,6 +67,10 @@ pub(super) enum Val<'d> {
     Source(&'d TableSource),
     /// A raster's look (§6.6, docs/adr/0204 §4).
     RasterStyle(&'d RasterStyle),
+    /// A point cloud's files (§6.6, docs/adr/0207 §3).
+    CloudSources(&'d [CloudSource]),
+    /// A point cloud's look (§6.6, docs/adr/0207 §5).
+    CloudStyle(&'d PointCloudStyle),
 }
 
 impl<'d> Encoder<'d> {
@@ -718,6 +723,8 @@ impl<'d> Encoder<'d> {
                         "affine"
                     } else if words.contains("donukluğu") {
                         "opacity"
+                    } else if words.contains("HTTP") || words.contains("Adres") {
+                        "url"
                     } else if words.contains("kaynağı") || words.contains("yolu") {
                         "asset"
                     } else if words.contains("genişliği") {
@@ -740,9 +747,61 @@ impl<'d> Encoder<'d> {
                 if let Some(file) = &r.file {
                     f.push(("file", Val::Text(file)));
                 }
+                // Schema 31 (docs/adr/0207 §1).
+                if let Some(url) = &r.url {
+                    f.push(("url", Val::Text(url)));
+                }
                 f.push(("srid", Val::Uint(u64::from(r.srid))));
                 f.push(("style", Val::RasterStyle(st)));
                 if let Some(o) = r.opacity {
+                    f.push(("opacity", Val::Float(o)));
+                }
+            }
+            Entity::PointCloud(e) => {
+                let refuse = |this: &mut Self, field: &'static str, words: &str| {
+                    this.path.push(Seg::Name(kind));
+                    this.path.push(Seg::Name(field));
+                    Err(this.fail(Code::BadValue, words))
+                };
+                // Only the drawing's: a block definition holds no cloud (docs/adr/0207 §3).
+                if uid.is_none() {
+                    return refuse(self, "sources", "blok tanımında nokta bulutu olamaz");
+                }
+                let c = &e.cloud;
+                let st = &c.style;
+                // A number that is not finite meets the float's own refusal (`non_finite`), with its place.
+                let finite = c
+                    .bounds
+                    .iter()
+                    .chain(c.sources.iter().flat_map(|s| s.bounds.iter()))
+                    .chain(&c.opacity)
+                    .chain(&st.min)
+                    .chain(&st.max)
+                    .chain(std::iter::once(&st.size))
+                    .all(|v| v.is_finite());
+                if finite && let Some(words) = c.problem() {
+                    let field = if words.contains("donukluğu") {
+                        "opacity"
+                    } else if words.contains("nokta sayısı") {
+                        "count"
+                    } else if words.contains("bulutunun kapsamı") {
+                        "bounds"
+                    } else if words.contains("dosya")
+                        || words.contains("Adres")
+                        || words.contains("adresi")
+                    {
+                        "sources"
+                    } else {
+                        "style"
+                    };
+                    return refuse(self, field, &words);
+                }
+                f.push(("sources", Val::CloudSources(&c.sources)));
+                f.push(("bounds", Val::Floats(&c.bounds)));
+                f.push(("count", Val::Uint(c.count)));
+                f.push(("srid", Val::Uint(u64::from(c.srid))));
+                f.push(("style", Val::CloudStyle(st)));
+                if let Some(o) = c.opacity {
                     f.push(("opacity", Val::Float(o)));
                 }
             }
@@ -1143,6 +1202,94 @@ impl<'d> Encoder<'d> {
                 if st.resampling != RasterResampling::Bilinear {
                     self.key("resampling");
                     self.w.text(st.resampling.name());
+                }
+                self.close();
+                Ok(())
+            }
+            Val::CloudSources(list) => {
+                self.open(list.len(), false)?;
+                for (i, s) in list.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        // url (3), file (4), asset (5), count (5), bounds (6), format (6).
+                        e.open(4, true)?;
+                        if let Some(u) = &s.url {
+                            e.key("url");
+                            e.at(Seg::Name("url"), |e| e.text(u))?;
+                        }
+                        if let Some(f) = &s.file {
+                            e.key("file");
+                            e.at(Seg::Name("file"), |e| e.text(f))?;
+                        }
+                        if let Some(a) = &s.asset {
+                            e.key("asset");
+                            e.at(Seg::Name("asset"), |e| e.text(a))?;
+                        }
+                        e.key("count");
+                        e.w.uint(s.count);
+                        e.key("bounds");
+                        e.at(Seg::Name("bounds"), |e| e.floats(&s.bounds))?;
+                        e.key("format");
+                        e.w.text(s.format.name());
+                        e.close();
+                        Ok(())
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
+            Val::CloudStyle(st) => {
+                let n = 2
+                    + usize::from(st.min.is_some())
+                    + usize::from(st.max.is_some())
+                    + usize::from(st.ramp.is_some())
+                    + usize::from(st.rgb8)
+                    + usize::from(st.shape != PointShape::Round)
+                    + usize::from(!st.hidden.is_empty())
+                    + usize::from(st.invert)
+                    + usize::from(st.size_unit != PointSizeUnit::Px);
+                self.open(n, true)?;
+                // max (3), min (3), ramp (4), rgb8 (4), size (4), shape (5), hidden (6),
+                // invert (6), render (6), sizeUnit (8).
+                let float =
+                    |e: &mut Self, key: &'static str, v: Option<f64>| -> Result<(), KcadError> {
+                        if let Some(x) = v {
+                            e.key(key);
+                            e.at(Seg::Name(key), |e| e.float(x))?;
+                        }
+                        Ok(())
+                    };
+                float(self, "max", st.max)?;
+                float(self, "min", st.min)?;
+                if let Some(r) = &st.ramp {
+                    self.key("ramp");
+                    self.at(Seg::Name("ramp"), |e| e.text(r))?;
+                }
+                if st.rgb8 {
+                    self.key("rgb8");
+                    self.w.bool(true);
+                }
+                float(self, "size", Some(st.size))?;
+                if st.shape != PointShape::Round {
+                    self.key("shape");
+                    self.w.text(st.shape.name());
+                }
+                if !st.hidden.is_empty() {
+                    self.key("hidden");
+                    self.open(st.hidden.len(), false)?;
+                    for &c in &st.hidden {
+                        self.w.uint(u64::from(c));
+                    }
+                    self.close();
+                }
+                if st.invert {
+                    self.key("invert");
+                    self.w.bool(true);
+                }
+                self.key("render");
+                self.w.text(st.render.name());
+                if st.size_unit != PointSizeUnit::Px {
+                    self.key("sizeUnit");
+                    self.w.text(st.size_unit.name());
                 }
                 self.close();
                 Ok(())

@@ -31,6 +31,8 @@ export interface RasterShape {
   readonly bands: number;
   readonly asset?: string | null;
   readonly file?: string | null;
+  /** An address read by ranges (docs/adr/0207 §1); the desktop reads it, the web keeps it. */
+  readonly url?: string | null;
   readonly style: RasterStyle;
   readonly opacity?: number | null;
 }
@@ -61,6 +63,15 @@ export function rasterStyleProblem(st: RasterStyle, bands: number): string | nul
   return null;
 }
 
+/** Why an address is not an HTTP or HTTPS one, in the commands' words (the contract's `url_problem`); null when it is. */
+export function urlProblem(u: string): string | null {
+  const lower = u.trim().toLowerCase();
+  if (!(lower.startsWith('http://') || lower.startsWith('https://')) || u.trim().length < 9)
+    return `“${u}” bir HTTP ya da HTTPS adresi değil (http:// ya da https:// ile başlamalı).`;
+  if ([...u].length > MAX_RASTER_PATH || CONTROL.test(u)) return `Adres en çok ${MAX_RASTER_PATH} harf olmalı ve denetim karakteri içermemeli.`;
+  return null;
+}
+
 /** Why the fields do not make a raster, in the commands' words; null when they do. */
 export function rasterProblem(g: RasterShape): string | null {
   if (g.affine.length !== 6 || !g.affine.every(Number.isFinite)) return 'Rasterin dönüşümü sonlu altı sayı olmalı.';
@@ -72,10 +83,14 @@ export function rasterProblem(g: RasterShape): string | null {
   if (!(Number.isInteger(g.bands) && g.bands >= 1 && g.bands <= MAX_RASTER_BANDS)) return `Rasterin 1 ile ${MAX_RASTER_BANDS} arasında bandı olmalı.`;
   const asset = g.asset?.trim() || null;
   const file = g.file?.trim() || null;
-  if (asset && file) return 'Rasterin kaynağı ya gömülü varlık (asset) ya bağlı dosya (file) olmalı, ikisi birden değil.';
-  // One given, the other absent (not only blank); a null is no value, as serde reads it.
-  if (!((asset && g.file == null) || (file && g.asset == null)))
-    return 'Rasterin kaynağı yok: gömülü varlığın kimliğini (asset) ya da bağlı dosyanın yolunu (file) verin.';
+  const url = g.url?.trim() || null;
+  // One given and the others absent (not only blank); a null is no value, as serde reads it.
+  const given = Number(asset != null) + Number(file != null) + Number(url != null);
+  const named = Number(g.asset != null) + Number(g.file != null) + Number(g.url != null);
+  if (given === 0) return 'Rasterin kaynağı yok: gömülü varlığın kimliğini (asset), bağlı dosyanın yolunu (file) ya da adresini (url) verin.';
+  if (given !== 1 || named !== 1) return 'Rasterin kaynağı ya gömülü varlık (asset), ya bağlı dosya (file), ya adres (url) olmalı; yalnız biri.';
+  const address = url ? urlProblem(url) : null;
+  if (address) return address;
   if (file && ([...file].length > MAX_RASTER_PATH || CONTROL.test(file)))
     return `Bağlı dosyanın yolu en çok ${MAX_RASTER_PATH} harf olmalı ve denetim karakteri içermemeli.`;
   const style = rasterStyleProblem(g.style, g.bands);

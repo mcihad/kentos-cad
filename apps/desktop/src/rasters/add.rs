@@ -8,12 +8,15 @@
 //! another, the middle of the view for an unplaced raster. Ekle writes a
 //! new layer named after the file and the raster on it as one undo step
 //! (Raster ekle), linked (its path) or embedded (its bytes in the project's
-//! library, at most 32 MB), and shows it.
+//! library, at most 32 MB), and shows it. A GeoTIFF (a COG) may come from
+//! an address instead (docs/adr/0207 §1): its header read by HTTP ranges,
+//! the drawing keeping the address. The window opens at once and the file
+//! dialog over it: closing the dialog leaves the window for an address.
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use iced::widget::{Column, column, container, row, text_input};
+use iced::widget::{Column, button, column, container, row, text_input};
 use iced::{Element, Fill, Task};
 use kentos_contracts::{
     CommandResult, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, RasterFields,
@@ -47,6 +50,22 @@ pub struct Read {
     pub bytes: u64,
 }
 
+/// Where the raster is read from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum From {
+    File,
+    Address,
+}
+
+impl std::fmt::Display for From {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            From::File => "Dosya",
+            From::Address => "Adres",
+        })
+    }
+}
+
 /// How the raster is kept.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Keep {
@@ -65,7 +84,11 @@ impl std::fmt::Display for Keep {
 
 #[derive(Debug, Clone)]
 pub struct State {
+    pub from: From,
+    /// The file chosen (empty while none is).
     pub path: PathBuf,
+    /// The address typed.
+    pub address: String,
     pub name: String,
     reading: u64,
     pub read: Option<Result<Read, String>>,
@@ -80,6 +103,10 @@ pub struct State {
 pub enum Event {
     /// The file to read, or none (the dialog cancelled).
     Picked(Option<PathBuf>),
+    From(From),
+    Address(String),
+    /// Oku: the address's header.
+    ReadAddress,
     /// Boxed: what the header said is the largest event.
     Read(u64, Box<Result<Read, String>>),
     Confirm,
@@ -115,10 +142,13 @@ fn world_beside(path: &Path) -> Option<(String, String)> {
 
 /// The header read: what the window shows, its look, the world file that placed it.
 pub fn inspect(path: &Path) -> Result<Read, String> {
-    let bytes = std::fs::metadata(path)
-        .map_err(|e| format!("“{}” okunamadı: {e}.", path.display()))?
-        .len();
-    let opened = super::tiles::open(&super::tiles::Origin::File(path.to_path_buf()))?;
+    inspect_origin(&super::tiles::Origin::File(path.to_path_buf()))
+}
+
+/// [`inspect`] of a file or an address (an address has no world file).
+pub fn inspect_origin(origin: &super::tiles::Origin) -> Result<Read, String> {
+    let opened = super::tiles::open(origin)?;
+    let bytes = opened.size;
     let reader = opened
         .reader
         .lock()
@@ -126,6 +156,7 @@ pub fn inspect(path: &Path) -> Result<Read, String> {
     let mut info = reader.info.clone();
     let mut world = None;
     if info.affine.is_none()
+        && let super::tiles::Origin::File(path) = origin
         && let Some((name, text)) = world_beside(path)
     {
         let affine = kentos_formats::raster::world::read(&text)
@@ -186,13 +217,54 @@ fn storage_words(info: &RasterInfo) -> String {
 }
 
 impl App {
-    /// `raster.add`: the file asked for, then the window.
+    /// `raster.add`: the window, and the file dialog over it.
     pub(crate) fn raster_add_command(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
             return Task::none();
         }
+        if let Picker::File(path) = &self.picker {
+            return Task::done(msg(Event::Picked(Some(path.clone()))));
+        }
+        self.raster_add_open(From::File, PathBuf::new(), String::new());
         self.raster_add_pick()
+    }
+
+    /// The window for a file or an address, nothing read yet; the reading's number.
+    fn raster_add_open(&mut self, from: From, path: PathBuf, address: String) -> u64 {
+        let id = READS.fetch_add(1, Ordering::Relaxed) + 1;
+        let name = match from {
+            From::File => path.file_name().map_or_else(
+                || path.display().to_string(),
+                |n| n.to_string_lossy().into_owned(),
+            ),
+            From::Address => address
+                .trim()
+                .trim_end_matches('/')
+                .rsplit('/')
+                .next()
+                .unwrap_or_default()
+                .to_owned(),
+        };
+        let layer = if name.is_empty() {
+            "Raster".to_owned()
+        } else {
+            words::base_name(&name)
+        };
+        self.rasters.add = Some(State {
+            from,
+            path,
+            address,
+            name,
+            reading: id,
+            read: None,
+            confirmed: false,
+            keep: Keep::Linked,
+            layer,
+            status: None,
+        });
+        self.dialog = Some(Asking::RasterAdd);
+        id
     }
 
     fn raster_add_pick(&mut self) -> Task<Message> {
@@ -217,26 +289,55 @@ impl App {
 
     pub(crate) fn raster_add_event(&mut self, e: Event) -> Task<Message> {
         match e {
+            // The dialog closed: the window stays, for another file or an address.
             Event::Picked(None) => return Task::none(),
             Event::Picked(Some(path)) => {
-                let id = READS.fetch_add(1, Ordering::Relaxed) + 1;
-                let name = path.file_name().map_or_else(
-                    || path.display().to_string(),
-                    |n| n.to_string_lossy().into_owned(),
-                );
-                let layer = words::base_name(&name);
-                self.rasters.add = Some(State {
-                    path: path.clone(),
-                    name,
-                    reading: id,
-                    read: None,
-                    confirmed: false,
-                    keep: Keep::Linked,
-                    layer,
-                    status: None,
-                });
-                self.dialog = Some(Asking::RasterAdd);
+                let id = self.raster_add_open(From::File, path.clone(), String::new());
                 return super::off_thread(move || msg(Event::Read(id, Box::new(inspect(&path)))));
+            }
+            Event::From(f) => {
+                if let Some(s) = &self.rasters.add
+                    && s.from != f
+                {
+                    if f == From::File {
+                        self.raster_add_open(From::File, PathBuf::new(), String::new());
+                        return self.raster_add_pick();
+                    }
+                    self.raster_add_open(From::Address, PathBuf::new(), String::new());
+                }
+            }
+            Event::Address(t) => {
+                if let Some(s) = &mut self.rasters.add {
+                    // Another address: what was read is not its; Oku reads it.
+                    if s.address.trim() != t.trim() {
+                        s.name.clear();
+                        s.read = None;
+                        s.status = None;
+                    }
+                    s.address = t;
+                }
+            }
+            Event::ReadAddress => {
+                let Some(address) = self
+                    .rasters
+                    .add
+                    .as_ref()
+                    .map(|s| s.address.trim().to_owned())
+                else {
+                    return Task::none();
+                };
+                if address.is_empty() {
+                    return Task::none();
+                }
+                if let Some(why) = kentos_contracts::url_problem(&address) {
+                    self.raster_add_status(why);
+                    return Task::none();
+                }
+                let id = self.raster_add_open(From::Address, PathBuf::new(), address.clone());
+                let origin = super::tiles::Origin::Url(address);
+                return super::off_thread(move || {
+                    msg(Event::Read(id, Box::new(inspect_origin(&origin))))
+                });
             }
             Event::Read(id, read) => {
                 let read = *read;
@@ -318,9 +419,12 @@ impl App {
         else {
             return;
         };
-        let (mut asset, mut file) = (None, Some(s.path.to_string_lossy().into_owned()));
+        let (mut asset, mut file, url) = match s.from {
+            From::File => (None, Some(s.path.to_string_lossy().into_owned()), None),
+            From::Address => (None, None, Some(s.address.trim().to_owned())),
+        };
         let mut library = None;
-        if s.keep == Keep::Embedded {
+        if s.keep == Keep::Embedded && s.from == From::File {
             let bytes = match std::fs::read(&s.path) {
                 Ok(b) => b,
                 Err(e) => {
@@ -348,6 +452,7 @@ impl App {
             sample: read.info.sample,
             asset,
             file,
+            url,
             srid,
             style: read.style.clone(),
             opacity: None,
@@ -392,10 +497,10 @@ impl App {
                 self.rasters.add = None;
                 self.dialog = None;
                 self.zoom_to(&slots);
-                let how = if s.keep == Keep::Embedded {
-                    "gömülü"
-                } else {
-                    "bağlı"
+                let how = match (s.from, s.keep) {
+                    (From::Address, _) => "adresten okunan",
+                    (From::File, Keep::Embedded) => "gömülü",
+                    (From::File, Keep::Linked) => "bağlı",
                 };
                 self.say(
                     Level::Success,
@@ -438,6 +543,46 @@ impl App {
         let Some(s) = &self.rasters.add else {
             return iced::widget::text("").into();
         };
+        let from = Segmented::new([From::File, From::Address], s.from, |f| msg(Event::From(f)));
+        let mut body = Column::new()
+            .spacing(12)
+            .push(words::field("Kaynak", from, None));
+        if s.from == From::Address {
+            let input = kentos_ui::widget::focus_ring(
+                text_input("https://…/ortofoto.tif", &s.address)
+                    .on_input(|t| msg(Event::Address(t)))
+                    .on_submit(msg(Event::ReadAddress))
+                    .padding([5, 8])
+                    .size(kentos_ui::theme::typography::body())
+                    .style(kentos_ui::style::field::input),
+            );
+            let read = button(label::body("Oku"))
+                .on_press_maybe((!s.address.trim().is_empty()).then(|| msg(Event::ReadAddress)))
+                .padding([5, 12])
+                .style(kentos_ui::style::button::secondary);
+            body = body.push(words::field(
+                "Adres",
+                row![container(input).width(Fill), read].spacing(8),
+                Some("Herkese açık HTTP ya da HTTPS adresindeki GeoTIFF (COG); yalnız gereken parçaları okunur.".to_owned()),
+            ));
+        }
+        // Nothing chosen yet: a file to pick, or an address to read.
+        let nothing = match s.from {
+            From::File => s.path.as_os_str().is_empty(),
+            From::Address => s.name.is_empty(),
+        };
+        if nothing {
+            if s.from == From::File {
+                body = body.push(words::summary(vec![words::text_line(
+                    Line::Info,
+                    "Dosya seçilmedi: Dosya seç… ile bir GeoTIFF, TIFF, PNG ya da JPEG seçin; ya da Kaynak'ta Adres'i seçip bir adres yazın.",
+                )]));
+            }
+            if let Some(why) = &s.status {
+                body = body.push(words::text_line(Line::Error, why.clone()));
+            }
+            return self.raster_add_frame(s, body);
+        }
         let meta = match &s.read {
             None => "okunuyor…".to_owned(),
             Some(Err(_)) => "okunamadı".to_owned(),
@@ -448,14 +593,16 @@ impl App {
                 size_words(r.bytes)
             ),
         };
-        let mut body = Column::new()
-            .spacing(12)
-            .push(words::file_line(&s.name, meta));
+        body = body.push(words::file_line(&s.name, meta));
         match &s.read {
             None => {
                 body = body.push(words::summary(vec![words::text_line(
                     Line::Info,
-                    "Dosyanın başlığı okunuyor…",
+                    if s.from == From::Address {
+                        "Adresteki dosyanın başlığı okunuyor…"
+                    } else {
+                        "Dosyanın başlığı okunuyor…"
+                    },
                 )]))
             }
             Some(Err(why)) => {
@@ -473,10 +620,26 @@ impl App {
         if let Some(why) = &s.status {
             body = body.push(words::text_line(Line::Error, why.clone()));
         }
+        self.raster_add_frame(s, body)
+    }
+
+    /// The window around `body`: Dosya seç… (a file's), Vazgeç and Ekle.
+    fn raster_add_frame<'a>(
+        &'a self,
+        s: &'a State,
+        body: Column<'a, Message>,
+    ) -> Element<'a, Message> {
+        let mut dialog = Dialog::new(TITLE).scroll(body);
+        if s.from == From::File {
+            let pick = if s.path.as_os_str().is_empty() {
+                "Dosya seç…"
+            } else {
+                "Başka dosya…"
+            };
+            dialog = dialog.action(words::ghost(pick, Some(msg(Event::Another))));
+        }
         overlay::blocking(
-            Dialog::new(TITLE)
-                .scroll(body)
-                .action(words::ghost("Başka dosya…", Some(msg(Event::Another))))
+            dialog
                 .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
                 .action(words::primary(
                     "Ekle",
@@ -577,23 +740,36 @@ impl App {
 
     fn raster_add_options<'a>(&self, s: &'a State, r: &'a Read) -> Element<'a, Message> {
         let large = r.bytes > super::MOST_EMBEDDED as u64;
-        let keep = Segmented::new_with(
-            [Keep::Linked, Keep::Embedded],
-            s.keep,
-            |k| msg(Event::Keep(k)),
-            move |k| k == Keep::Linked || !large,
-        );
-        let hint = if large {
-            format!(
-                "Dosya {}; gömülü raster en çok {} MB olabilir, bağlı kalır.",
-                size_words(r.bytes),
-                super::MOST_EMBEDDED >> 20
+        // An address is kept as it is: read by ranges each time, never embedded (docs/adr/0207 §1).
+        let keep: Element<'a, Message> = if s.from == From::Address {
+            words::field(
+                "Saklama",
+                label::body("Adres"),
+                Some(
+                    "Çizim adresi tutar; raster her açılışta adresten parça parça okunur."
+                        .to_owned(),
+                ),
             )
-        } else if s.keep == Keep::Embedded {
-            "Dosyanın baytları projenin kitaplığına alınır; çizim dosyayla birlikte taşınır."
-                .to_owned()
         } else {
-            "Çizim dosyanın yolunu tutar; dosya yerinden oynarsa raster bulunamaz.".to_owned()
+            let keep = Segmented::new_with(
+                [Keep::Linked, Keep::Embedded],
+                s.keep,
+                |k| msg(Event::Keep(k)),
+                move |k| k == Keep::Linked || !large,
+            );
+            let hint = if large {
+                format!(
+                    "Dosya {}; gömülü raster en çok {} MB olabilir, bağlı kalır.",
+                    size_words(r.bytes),
+                    super::MOST_EMBEDDED >> 20
+                )
+            } else if s.keep == Keep::Embedded {
+                "Dosyanın baytları projenin kitaplığına alınır; çizim dosyayla birlikte taşınır."
+                    .to_owned()
+            } else {
+                "Çizim dosyanın yolunu tutar; dosya yerinden oynarsa raster bulunamaz.".to_owned()
+            };
+            words::field("Saklama", keep, Some(hint))
         };
         let name = kentos_ui::widget::focus_ring(
             text_input("Katmanın adı", &s.layer)
@@ -604,7 +780,7 @@ impl App {
                 .style(kentos_ui::style::field::input),
         );
         row![
-            container(words::field("Kaynak", keep, Some(hint))).width(iced::Length::FillPortion(3)),
+            container(keep).width(iced::Length::FillPortion(3)),
             container(words::field(
                 "Yeni katman",
                 name,
@@ -614,5 +790,13 @@ impl App {
         ]
         .spacing(16)
         .into()
+    }
+}
+
+#[cfg(test)]
+impl State {
+    /// What the window says went wrong.
+    pub(crate) fn status_for_tests(&self) -> Option<&str> {
+        self.status.as_deref()
     }
 }

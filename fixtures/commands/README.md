@@ -21,6 +21,16 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.blocks.define.json` | `cad.blocks.define` v1 (ADR 0144: Blok oluştur) | 23 |
 | `v1/cad.blocks.edit.json` | `cad.blocks.edit` v1 (ADR 0144: Bloklar paneli) | 22 |
 
+**Yalnız masaüstünün durumları** `v1/desktop/`'tadır ([ADR 0207](../../docs/adr/0207-point-clouds-and-large-data.md) §10): nokta bulutunu şimdilik yalnız masaüstü ekler, çizer ve işler (sahibin kararı, 8 Ekim 2026), web'in koşucusu bu klasörü okumaz (`v1/*.json`). Biçim aynıdır; masaüstünün koşucusu (`the_desktops_own_cases_match_its_handlers`) dosya başına 20 durum aramaz. Durumları KentOS kodu olmadan sözleşmenin kurallarından `scripts/fixtures/pointcloud_command_cases.py` yazar (`--check` farkı arar). Web nokta bulutunu alınca durumlar yukarıdaki dosyalara taşınır.
+
+| Dosya | Komut | Durum |
+|---|---|---|
+| `v1/desktop/cad.entities.create.json` | `cad.entities.create` v1: Nokta bulutu ekle (`pointCloud`; bağlı, adres, gömülü, sanal bulut), `invalid_pointcloud`, `not_finite`, `unknown_asset`, katman | 5 |
+| `v1/desktop/cad.entities.edit.json` | `cad.entities.edit` v1: Nokta bulutu stili (`pointCloudStyle`) ve retleri | 2 |
+| `v1/desktop/cad.entities.transform.json` | `cad.entities.transform` v1: `pointcloud_fixed`, kilitli katmandaki bulut | 2 |
+| `v1/desktop/cad.entities.array.json` | `cad.entities.array` v1: `pointcloud_fixed` | 1 |
+| `v1/desktop/cad.blocks.define.json` | `cad.blocks.define` v1: `pointcloud_in_block` | 1 |
+
 ## Dosya
 
 ```json

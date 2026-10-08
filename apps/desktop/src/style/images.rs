@@ -342,6 +342,25 @@ impl ImageSource for Images {
         crate::rasters::tiles::service().frame();
     }
 
+    /// The points pass's clouds from the app's point cloud service (docs/adr/0207 §6).
+    fn cloud_trees(&self, cloud: &str) -> Option<Arc<kentos_render_wgpu::styled::CloudTrees>> {
+        crate::pointclouds::service::service().trees(cloud)
+    }
+
+    fn cloud_node(
+        &self,
+        cloud: &str,
+        member: u32,
+        node: u32,
+        look: &str,
+    ) -> Option<Arc<kentos_render_wgpu::styled::CloudNode>> {
+        crate::pointclouds::service::service().node(cloud, member, node, look)
+    }
+
+    fn cloud_frame(&self) {
+        crate::pointclouds::service::service().frame();
+    }
+
     fn bitmap(&self, key: &str) -> Option<Arc<kentos_render_wgpu::styled::Bitmap>> {
         self.bitmaps
             .lock()

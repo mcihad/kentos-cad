@@ -200,7 +200,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 20.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 21.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -597,6 +597,7 @@ impl Reader<'_> {
                 let sample = self.string()?.unwrap_or_default();
                 let asset = self.string()?;
                 let file = self.string()?;
+                let url = self.string()?;
                 let srid = self.num()?;
                 let style = Json::parse(&self.string()?.unwrap_or_default())
                     .map_err(|e| format!("rasterin görünüşü okunamadı: {e}"))?;
@@ -609,6 +610,30 @@ impl Reader<'_> {
                     sample,
                     asset,
                     file,
+                    url,
+                    srid,
+                    style,
+                    opacity: (!opacity.is_nan()).then_some(opacity),
+                }
+            }
+            // docs/adr/0207 §3: the bounds, the points, the files (their JSON text), the
+            // system, the look (its JSON text) and the opacity (NaN none).
+            21 => {
+                let mut bounds = [0.0; 6];
+                for v in &mut bounds {
+                    *v = self.num()?;
+                }
+                let count = self.num()?;
+                let sources = Json::parse(&self.string()?.unwrap_or_default())
+                    .map_err(|e| format!("nokta bulutunun dosyaları okunamadı: {e}"))?;
+                let srid = self.num()?;
+                let style = Json::parse(&self.string()?.unwrap_or_default())
+                    .map_err(|e| format!("nokta bulutunun görünüşü okunamadı: {e}"))?;
+                let opacity = self.num()?;
+                Shape::PointCloud {
+                    bounds,
+                    count,
+                    sources,
                     srid,
                     style,
                     opacity: (!opacity.is_nan()).then_some(opacity),
@@ -1136,6 +1161,21 @@ impl Packer {
                     arrow_size.unwrap_or(f64::NAN),
                 ]);
             }
+            // docs/adr/0207, as the reader's kind 21 says.
+            Shape::PointCloud {
+                bounds,
+                count,
+                sources,
+                srid,
+                style,
+                opacity,
+            } => {
+                let so = self.string(&crate::api::json::to_string(sources));
+                let st = self.string(&crate::api::json::to_string(style));
+                self.put(&[21.0]);
+                self.put(bounds);
+                self.put(&[*count, so, *srid, st, opacity.unwrap_or(f64::NAN)]);
+            }
             // docs/adr/0204, as the reader's kind 20 says.
             Shape::Raster {
                 affine,
@@ -1145,6 +1185,7 @@ impl Packer {
                 sample,
                 asset,
                 file,
+                url,
                 srid,
                 style,
                 opacity,
@@ -1152,6 +1193,7 @@ impl Packer {
                 let sm = self.string(sample);
                 let a = self.maybe_string(asset.as_deref());
                 let f = self.maybe_string(file.as_deref());
+                let u = self.maybe_string(url.as_deref());
                 let st = self.string(&crate::api::json::to_string(style));
                 self.put(&[20.0]);
                 self.put(affine);
@@ -1162,6 +1204,7 @@ impl Packer {
                     sm,
                     a,
                     f,
+                    u,
                     *srid,
                     st,
                     opacity.unwrap_or(f64::NAN),

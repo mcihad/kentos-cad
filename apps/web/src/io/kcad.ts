@@ -210,8 +210,10 @@ export const OBJECT_FIELDS: Record<string, ReadonlySet<string>> = Object.fromEnt
     ],
     // docs/adr/0192: its frame, mirror, one source, clip and opacity.
     image: ['p', 'width', 'height', 'rotation', 'mirror', 'asset', 'file', 'clip', 'opacity'],
-    // docs/adr/0204: its affine, size, bands, samples, one source, system, look and opacity.
-    raster: ['affine', 'width', 'height', 'bands', 'sample', 'asset', 'file', 'srid', 'style', 'opacity'],
+    // docs/adr/0204: its affine, size, bands, samples, one source, system, look and opacity; an address (docs/adr/0207 §1).
+    raster: ['affine', 'width', 'height', 'bands', 'sample', 'asset', 'file', 'url', 'srid', 'style', 'opacity'],
+    // docs/adr/0207: its bounds, points, files, system, look and opacity.
+    pointcloud: ['bounds', 'count', 'sources', 'srid', 'style', 'opacity'],
   }).map(([k, f]) => [k, new Set([...COMMON, ...f])]),
 );
 

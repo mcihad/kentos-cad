@@ -45,7 +45,8 @@
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation, arrow size if any | text if any |
 //! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet |
 //! | image | n if clip | p, width, height, rotation, clip (2n) if clip, opacity if any | asset if any, file if any |
-//! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`) | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any | the look's ramp if any, asset if any, file if any |
+//! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`) | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any | the look's ramp if any, asset if any, file if any, url if any |
+//! | pointcloud | srid, n (files); the look's kind (its place in `CloudRender::ALL`), its flags (`CLOUD_*`), the hidden classes' count and classes; per file its format (its place in `CloudFormat::ALL`) and source (1 asset, 2 file, 4 url) | bounds (6), count, the look's size, opacity if any, the look's min and max if any; per file its count and bounds (6) | the look's ramp if any; per file its asset, file or url |
 //!
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
 //! line weight (docs/adr/0139); a
@@ -66,7 +67,8 @@
 //! docs/adr/0146), arrow size (docs/adr/0205 §7); table: merges, aligns, header (no value), grid, text
 //! style, font, bold (no value), italic (no value), oblique, source, frame
 //! (docs/adr/0184); image: mirror (no value), asset, file, clip, opacity
-//! (docs/adr/0192); raster: asset, file, opacity (docs/adr/0204)). A
+//! (docs/adr/0192); raster: asset, file, opacity (docs/adr/0204), url
+//! (docs/adr/0207); pointcloud: opacity (docs/adr/0207)). A
 //! hole's flags: 1 bulges, 2 elevations; a part's: 1 bulges, 2 elevations, 4
 //! holes. Dimension styles and hatch pattern types are numbered in the
 //! contract's order.
@@ -146,7 +148,20 @@ const LOOK_Z_FACTOR: u32 = 64;
 const LOOK_NODATA: u32 = 128;
 const LOOK_NEAREST: u32 = 256;
 
-pub const KINDS: [&str; 18] = [
+/// A point cloud's look's flags (docs/adr/0207 §5).
+const CLOUD_MIN: u32 = 1;
+const CLOUD_MAX: u32 = 2;
+const CLOUD_RAMP: u32 = 4;
+const CLOUD_INVERT: u32 = 8;
+const CLOUD_RGB8: u32 = 16;
+const CLOUD_METRES: u32 = 32;
+const CLOUD_SQUARE: u32 = 64;
+/// A point cloud file's source.
+const SOURCE_ASSET: u32 = 1;
+const SOURCE_FILE: u32 = 2;
+const SOURCE_URL: u32 = 4;
+
+pub const KINDS: [&str; 19] = [
     "point",
     "line",
     "polyline",
@@ -165,6 +180,7 @@ pub const KINDS: [&str; 18] = [
     "table",
     "image",
     "raster",
+    "pointcloud",
 ];
 
 const COLOR: u32 = 1;
@@ -322,6 +338,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Table(_) => 15,
         Entity::Image(_) => 16,
         Entity::Raster(_) => 17,
+        Entity::PointCloud(_) => 18,
     }
 }
 
@@ -934,6 +951,7 @@ impl Packer {
                         sample,
                         asset,
                         file,
+                        url,
                         srid,
                         style,
                         opacity,
@@ -998,6 +1016,92 @@ impl Packer {
                 if let Some(f) = file {
                     flags |= OPT[1];
                     self.text(f);
+                }
+                if let Some(u) = url {
+                    flags |= OPT[3];
+                    self.text(u);
+                }
+            }
+            Entity::PointCloud(kentos_contracts::PointCloudEntity {
+                base: _,
+                cloud:
+                    kentos_contracts::PointCloudFields {
+                        sources,
+                        bounds,
+                        count: points,
+                        srid,
+                        style,
+                        opacity,
+                    },
+            }) => {
+                let render = kentos_contracts::CloudRender::ALL
+                    .iter()
+                    .position(|r| *r == style.render)
+                    .unwrap_or(0);
+                let mut look = 0;
+                for (bit, on) in [
+                    (CLOUD_MIN, style.min.is_some()),
+                    (CLOUD_MAX, style.max.is_some()),
+                    (CLOUD_RAMP, style.ramp.is_some()),
+                    (CLOUD_INVERT, style.invert),
+                    (CLOUD_RGB8, style.rgb8),
+                    (
+                        CLOUD_METRES,
+                        style.size_unit == kentos_contracts::PointSizeUnit::M,
+                    ),
+                    (
+                        CLOUD_SQUARE,
+                        style.shape == kentos_contracts::PointShape::Square,
+                    ),
+                ] {
+                    if on {
+                        look |= bit;
+                    }
+                }
+                self.out.ints.extend([
+                    *srid,
+                    count(sources.len()),
+                    count(render),
+                    look,
+                    count(style.hidden.len()),
+                ]);
+                self.out
+                    .ints
+                    .extend(style.hidden.iter().map(|&c| u32::from(c)));
+                for s in sources {
+                    let format = kentos_contracts::CloudFormat::ALL
+                        .iter()
+                        .position(|f| *f == s.format)
+                        .unwrap_or(0);
+                    let source = if s.asset.is_some() {
+                        SOURCE_ASSET
+                    } else if s.file.is_some() {
+                        SOURCE_FILE
+                    } else {
+                        SOURCE_URL
+                    };
+                    self.out.ints.extend([count(format), source]);
+                }
+                self.out.floats.extend(bounds);
+                self.out.floats.extend([*points as f64, style.size]);
+                if let Some(o) = opacity {
+                    flags |= OPT[0];
+                    self.float(*o);
+                }
+                for v in [style.min, style.max].into_iter().flatten() {
+                    self.float(v);
+                }
+                for s in sources {
+                    self.float(s.count as f64);
+                    self.out.floats.extend(s.bounds);
+                }
+                if let Some(r) = &style.ramp {
+                    self.text(r);
+                }
+                for s in sources {
+                    if let Some(t) = s.asset.as_ref().or(s.file.as_ref()).or(s.url.as_ref()) {
+                        self.text(t);
+                    }
                 }
             }
             Entity::Leader(LeaderEntity {
@@ -1447,8 +1551,10 @@ fn allowed(kind: u8) -> u32 {
         15 => OPT[..11].iter().fold(0, |m, b| m | b),
         // A picture: mirror, asset, file, clip, opacity (docs/adr/0192).
         16 => OPT[..5].iter().fold(0, |m, b| m | b),
-        // A raster: asset, file, opacity (docs/adr/0204).
-        17 => OPT[..3].iter().fold(0, |m, b| m | b),
+        // A raster: asset, file, opacity (docs/adr/0204), url (docs/adr/0207).
+        17 => OPT[..4].iter().fold(0, |m, b| m | b),
+        // A point cloud: opacity (docs/adr/0207).
+        18 => OPT[0],
         _ => 0,
     }
 }
@@ -2188,6 +2294,11 @@ fn geometry(
             } else {
                 None
             };
+            let url = if has(3) {
+                Some(c.text(|| place("url"))?)
+            } else {
+                None
+            };
             Entity::Raster(RasterEntity {
                 base,
                 raster: RasterFields {
@@ -2198,6 +2309,116 @@ fn geometry(
                     sample,
                     asset,
                     file,
+                    url,
+                    srid,
+                    style,
+                    opacity,
+                },
+            })
+        }
+        18 => {
+            let srid = c.int()?;
+            let n = c.usize()?;
+            if n > kentos_contracts::MAX_CLOUD_SOURCES {
+                return Err(broken("nokta bulutunun dosya sayısı"));
+            }
+            let render = *kentos_contracts::CloudRender::ALL
+                .get(c.usize()?)
+                .ok_or_else(|| broken("nokta bulutunun görünüş türü"))?;
+            let look = c.int()?;
+            let k = c.usize()?;
+            if k > 256 {
+                return Err(broken("nokta bulutunun gizlenen sınıfları"));
+            }
+            let mut hidden = Vec::with_capacity(k);
+            for _ in 0..k {
+                hidden.push(
+                    u8::try_from(c.int()?)
+                        .map_err(|_| broken("nokta bulutunun gizlenen sınıfı"))?,
+                );
+            }
+            let mut kinds = Vec::with_capacity(n);
+            for _ in 0..n {
+                let format = *kentos_contracts::CloudFormat::ALL
+                    .get(c.usize()?)
+                    .ok_or_else(|| broken("nokta bulutu dosyasının biçimi"))?;
+                kinds.push((format, c.int()?));
+            }
+            let mut bounds = [0.0; 6];
+            for v in &mut bounds {
+                *v = c.float()?;
+            }
+            let points = c.float()? as u64;
+            let size = c.float()?;
+            let opacity = if has(0) { Some(c.float()?) } else { None };
+            let min = if look & CLOUD_MIN != 0 {
+                Some(c.float()?)
+            } else {
+                None
+            };
+            let max = if look & CLOUD_MAX != 0 {
+                Some(c.float()?)
+            } else {
+                None
+            };
+            let mut numbers = Vec::with_capacity(n);
+            for _ in 0..n {
+                let count = c.float()? as u64;
+                let mut b = [0.0; 6];
+                for v in &mut b {
+                    *v = c.float()?;
+                }
+                numbers.push((count, b));
+            }
+            let ramp = if look & CLOUD_RAMP != 0 {
+                Some(c.text(|| place("style.ramp"))?)
+            } else {
+                None
+            };
+            let mut sources = Vec::with_capacity(n);
+            for (i, ((format, source), (count, b))) in kinds.into_iter().zip(numbers).enumerate() {
+                let t = c.text(|| place(&format!("sources[{i}]")))?;
+                let (asset, file, url) = match source {
+                    SOURCE_ASSET => (Some(t), None, None),
+                    SOURCE_FILE => (None, Some(t), None),
+                    SOURCE_URL => (None, None, Some(t)),
+                    _ => return Err(broken("nokta bulutu dosyasının kaynağı")),
+                };
+                sources.push(kentos_contracts::CloudSource {
+                    asset,
+                    file,
+                    url,
+                    format,
+                    count,
+                    bounds: b,
+                });
+            }
+            let style = kentos_contracts::PointCloudStyle {
+                render,
+                ramp,
+                invert: look & CLOUD_INVERT != 0,
+                min,
+                max,
+                hidden,
+                rgb8: look & CLOUD_RGB8 != 0,
+                size,
+                size_unit: if look & CLOUD_METRES != 0 {
+                    kentos_contracts::PointSizeUnit::M
+                } else {
+                    kentos_contracts::PointSizeUnit::Px
+                },
+                shape: if look & CLOUD_SQUARE != 0 {
+                    kentos_contracts::PointShape::Square
+                } else {
+                    kentos_contracts::PointShape::Round
+                },
+            };
+            Entity::PointCloud(kentos_contracts::PointCloudEntity {
+                base,
+                cloud: kentos_contracts::PointCloudFields {
+                    sources,
+                    bounds,
+                    count: points,
                     srid,
                     style,
                     opacity,

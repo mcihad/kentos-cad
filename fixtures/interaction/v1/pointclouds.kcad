@@ -1,0 +1,262 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Köy",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 2,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 500.0,
+  "workspace": "gis"
+ },
+ "origin": {
+  "x": 487660.0,
+  "y": 4420345.0
+ },
+ "layers": [
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E8B04A",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "koy",
+   "name": "Köy (LiDAR)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#5B8FCF",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "parsel",
+ "entities": [
+  {
+   "kind": "pointcloud",
+   "id": 1,
+   "layerId": "koy",
+   "attrs": {},
+   "sources": [
+    {
+     "file": "pointclouds/koy.laz",
+     "format": "laz",
+     "count": 71212,
+     "bounds": [
+      487600.0,
+      4420300.0,
+      838.991,
+      487719.838,
+      4420389.999,
+      862.618
+     ]
+    }
+   ],
+   "bounds": [
+    487600.0,
+    4420300.0,
+    838.991,
+    487719.838,
+    4420389.999,
+    862.618
+   ],
+   "count": 71212,
+   "srid": 5256,
+   "style": {
+    "render": "rgb",
+    "min": 843.76,
+    "max": 858.19,
+    "size": 3
+   }
+  },
+  {
+   "kind": "polygon",
+   "id": 2,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "211"
+   },
+   "pts": [
+    {
+     "x": 487604.0,
+     "y": 4420354.0
+    },
+    {
+     "x": 487636.0,
+     "y": 4420354.0
+    },
+    {
+     "x": 487636.0,
+     "y": 4420388.0
+    },
+    {
+     "x": 487604.0,
+     "y": 4420388.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 3,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "212"
+   },
+   "pts": [
+    {
+     "x": 487636.0,
+     "y": 4420356.0
+    },
+    {
+     "x": 487662.0,
+     "y": 4420356.0
+    },
+    {
+     "x": 487662.0,
+     "y": 4420388.0
+    },
+    {
+     "x": 487636.0,
+     "y": 4420388.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 4,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "213"
+   },
+   "pts": [
+    {
+     "x": 487662.0,
+     "y": 4420355.0
+    },
+    {
+     "x": 487692.0,
+     "y": 4420355.0
+    },
+    {
+     "x": 487692.0,
+     "y": 4420388.0
+    },
+    {
+     "x": 487662.0,
+     "y": 4420388.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 5,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "214"
+   },
+   "pts": [
+    {
+     "x": 487692.0,
+     "y": 4420352.0
+    },
+    {
+     "x": 487718.0,
+     "y": 4420352.0
+    },
+    {
+     "x": 487718.0,
+     "y": 4420388.0
+    },
+    {
+     "x": 487692.0,
+     "y": 4420388.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 6,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "215"
+   },
+   "pts": [
+    {
+     "x": 487604.0,
+     "y": 4420304.0
+    },
+    {
+     "x": 487656.0,
+     "y": 4420304.0
+    },
+    {
+     "x": 487656.0,
+     "y": 4420336.0
+    },
+    {
+     "x": 487604.0,
+     "y": 4420336.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 7,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "216"
+   },
+   "pts": [
+    {
+     "x": 487656.0,
+     "y": 4420304.0
+    },
+    {
+     "x": 487718.0,
+     "y": 4420304.0
+    },
+    {
+     "x": 487718.0,
+     "y": 4420338.0
+    },
+    {
+     "x": 487656.0,
+     "y": 4420338.0
+    }
+   ]
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

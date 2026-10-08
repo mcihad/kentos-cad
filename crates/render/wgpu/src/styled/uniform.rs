@@ -181,6 +181,8 @@ pub fn style_block(b: &StyledBatch) -> StyleBlock {
             }
             // A raster (docs/adr/0204 §5): b.z = opacity; its quads carry the rest.
             FillPaintBatch::Raster { opacity, .. } => s.set(24, &[0.0, 0.0, *opacity, 0.0]),
+            // A point cloud (docs/adr/0207 §6): b.z = opacity; its picture carries the rest.
+            FillPaintBatch::PointCloud { opacity, .. } => s.set(24, &[0.0, 0.0, *opacity, 0.0]),
             // A picture (docs/adr/0192 §3): a = (corner, width, height), b = (cos, sin, opacity, mirror).
             FillPaintBatch::Image {
                 corner,

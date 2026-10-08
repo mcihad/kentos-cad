@@ -15,6 +15,7 @@ mod leaders;
 mod line_parts;
 mod linked_texts;
 mod parts;
+mod pointclouds;
 mod rasters;
 mod robustness;
 mod survey_sigmas;

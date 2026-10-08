@@ -175,6 +175,8 @@ pub enum Event {
     ChooseFile(String),
     /// The file chosen for a parameter: its name, where it is and its bytes; none when given up.
     FileChosen(String, Option<(String, std::path::PathBuf, Vec<u8>)>),
+    /// Konum…: where a result is written asked for (docs/adr/0207 §7).
+    ChooseSave(String),
     /// Panoya kopyala for the run's table (Özet istatistik).
     CopyTable,
     /// CSV olarak kaydet for the run's table.
@@ -347,6 +349,7 @@ impl App {
                 return Task::none();
             }
             Event::ChooseFile(name) => return self.processing_choose_file(name),
+            Event::ChooseSave(name) => return self.processing_choose_save(name),
             Event::FileChosen(_, None) | Event::TableSaved(None) => return Task::none(),
             Event::FileChosen(name, Some((file, path, bytes))) => {
                 self.processing_file_read(name, &file, &path, &bytes);
@@ -471,6 +474,8 @@ impl App {
             &kentos_processing::parameters::stored_values(&tool, &values),
         );
         let session = doc.session;
+        // The files the point cloud tools read and write (pointclouds/files.rs, docs/adr/0207 §7).
+        let files = crate::pointclouds::files::for_drawing(&doc.model, doc.path.as_deref());
         let mut stage = Stage {
             doc: &mut doc.model,
             selection: &mut self.selection,
@@ -510,6 +515,7 @@ impl App {
                 stage.selection.ids().to_vec(),
                 stage.view,
                 session,
+                Some(files),
                 |id, reply| Message::Processing(Event::Background(id, reply)),
             )
         } else {
@@ -532,6 +538,7 @@ impl App {
                 job,
                 stage.doc.reading_copy(),
                 session,
+                Some(files),
                 |id, reply| Message::Processing(Event::Background(id, reply)),
             )
         };
@@ -752,6 +759,42 @@ impl App {
                 Some((file.file_name(), file.path().to_path_buf(), bytes))
             },
             move |read| Message::Processing(Event::FileChosen(name.clone(), read)),
+        )
+    }
+
+    /// Konum… (docs/adr/0207 §7): where a result goes, asked with the
+    /// parameter's extensions; the path becomes the parameter's value.
+    fn processing_choose_save(&mut self, name: String) -> Task<Message> {
+        let accept: Vec<String> = self
+            .processing
+            .dialog
+            .as_ref()
+            .and_then(|w| w.tool.parameters.iter().find(|p| p.name == name))
+            .and_then(|p| match &p.kind {
+                kentos_processing::ParamKind::SaveFile { accept, .. } => Some(accept.clone()),
+                _ => None,
+            })
+            .unwrap_or_default();
+        let extensions: Vec<String> = accept
+            .iter()
+            .map(|a| a.trim_start_matches('.').to_owned())
+            .collect();
+        let filter = format!("Çıktı ({})", accept.join(", "));
+        Task::perform(
+            async move {
+                let mut d = rfd::AsyncFileDialog::new().set_title("Çıktı dosyası");
+                if !extensions.is_empty() {
+                    d = d.add_filter(filter, &extensions);
+                }
+                d.save_file()
+                    .await
+                    .map(|f| f.path().to_string_lossy().into_owned())
+            },
+            move |path| match path {
+                Some(p) => Message::Processing(Event::Value(name.clone(), json!(p))),
+                // Given up: nothing changes.
+                None => Message::Processing(Event::FileChosen(name.clone(), None)),
+            },
         )
     }
 

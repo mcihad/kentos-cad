@@ -513,6 +513,21 @@ pub const PORTED: &[&str] = &[
     "raster.add",
     "raster.style",
     "raster.georef",
+    // docs/adr/0207: Nokta bulutu (pointclouds/) and İşlemler's point cloud tools; the desktop's
+    // only for now (the owner's decision, 8 October): the web shows them waiting.
+    "pointcloud.add",
+    "pointcloud.style",
+    "pointcloud.query",
+    "pointcloud.vpcSave",
+    "processing.run.pointcloud.areaStats",
+    "processing.run.pointcloud.thin",
+    "processing.run.pointcloud.ground",
+    "processing.run.pointcloud.classify",
+    "processing.run.pointcloud.clip",
+    "processing.run.pointcloud.merge",
+    "processing.run.pointcloud.tile",
+    "processing.run.pointcloud.rasterize",
+    "processing.run.pointcloud.boundary",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

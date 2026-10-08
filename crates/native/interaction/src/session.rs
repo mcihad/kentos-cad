@@ -59,9 +59,9 @@ use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View, sc
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 use crate::{
-    adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, construction,
-    continuation, coordinate, coordinate_labels, dimension, dimension_chain, divide, donut,
-    ellipse, hatch, hatch_selected, holes, labels_to_text, layer_move, layer_tools, leader,
+    adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, cloud_query,
+    construction, continuation, coordinate, coordinate_labels, dimension, dimension_chain, divide,
+    donut, ellipse, hatch, hatch_selected, holes, labels_to_text, layer_move, layer_tools, leader,
     match_properties, meeting, paragraph, parallel, polygonize, quick_dimension, reshape_by,
     revcloud, sector, select_circle, select_containing, select_fence, select_polygon,
     select_similar, set_elevation, spline, split, station_offset, text, text_file, topology,
@@ -165,6 +165,8 @@ pub const TOOLS: &[&str] = &[
     meeting::ID,
     angle::ID,
     coordinate::ID,
+    // docs/adr/0207 §7: Nokta bulutu XYZ sor.
+    cloud_query::ID,
     dimension_chain::CONTINUE_ID,
     dimension_chain::BASELINE_ID,
     // docs/adr/0147 §7: Hızlı ölçü.
@@ -393,6 +395,7 @@ impl Session {
             meeting::ID => Box::new(crate::meeting::IntersectPoint::new()),
             angle::ID => Box::new(crate::angle::MeasureAngle::new()),
             coordinate::ID => Box::new(crate::coordinate::CrsQuery::new()),
+            cloud_query::ID => Box::new(crate::cloud_query::CloudQuery::new()),
             dimension_chain::CONTINUE_ID => {
                 Box::new(crate::dimension_chain::DimensionChain::continued())
             }
@@ -1130,6 +1133,14 @@ impl Session {
     pub fn file_given(&mut self, file: Option<(&str, &[u8])>, cx: &mut Context<'_>) {
         if let Some(tool) = self.tool.as_mut() {
             tool.file_given(file, cx);
+        }
+        self.settle(cx);
+    }
+
+    /// The point XYZ sor's place found (docs/adr/0207 §7), or none.
+    pub fn cloud_found(&mut self, found: Option<[f64; 3]>, cx: &mut Context<'_>) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.cloud_found(found, cx);
         }
         self.settle(cx);
     }

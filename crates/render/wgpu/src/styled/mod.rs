@@ -13,6 +13,8 @@
 //!   glyph outlines) so this crate reads no files and knows no fonts;
 //! - [`raster_tiles`]: rasters' tiles (docs/adr/0204 §5): the raster atlas
 //!   and each frame's quads of the tiles in view;
+//! - [`points`]: point clouds (docs/adr/0207 §6): each cloud's nodes in view
+//!   drawn into a picture of its own with their depth, shown over its plan;
 //! - [`uniform`]: the frame and style blocks as the contract lays them out;
 //! - [`cpu`]: the same shaders on the CPU, for a sheet's map drawn as a
 //!   picture (a PDF's, and the screen's where the map has something no
@@ -23,6 +25,7 @@ pub mod cpu;
 pub mod gpu;
 pub mod picture;
 pub mod pictures;
+pub mod points;
 pub mod raster;
 pub mod raster_tiles;
 pub mod shader;
@@ -30,3 +33,4 @@ pub mod uniform;
 
 pub use gpu::{StyledFrame, StyledGpu, StyledLayerPart, StyledScene, ViewStyled};
 pub use picture::{Bitmap, ImageSource, NoImages, Picture, TextOutline};
+pub use points::{CloudNode, CloudTrees};

@@ -283,6 +283,16 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
+        // The file's rules (docs/adr/0207 §3): its files, bounds, points, look and opacity; the
+        // drawing's only.
+        PointCloud(x) => {
+            if in_block {
+                return Err("Blok tanımında nokta bulutu olamaz".into());
+            }
+            if let Some(why) = x.cloud.problem() {
+                return Err(why);
+            }
+        }
     }
     Ok(())
 }
@@ -484,6 +494,18 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
                 .collect();
             ring.extend(ring.first().copied());
             Geometry::Polygon(vec![ring])
+        }
+        // Its plan's rectangle (docs/adr/0207 §11): its points are its files'.
+        Entity::PointCloud(x) => {
+            let [x1, y1, x2, y2] = x.cloud.rect();
+            let c = |x: f64, y: f64| p(kentos_contracts::Vec2 { x, y });
+            Geometry::Polygon(vec![vec![
+                c(x1, y1),
+                c(x2, y1),
+                c(x2, y2),
+                c(x1, y2),
+                c(x1, y1),
+            ]])
         }
         // Its block's objects placed (the core's expansion, nested blocks opened), each as it is projected.
         Entity::Insert(i) => Geometry::Collection(

@@ -23,4 +23,5 @@ export const ENTITY_KIND_ICON: Record<EntityKind, string> = {
   table: 'table',
   image: 'imageInsert',
   raster: 'rasterAdd',
+  pointcloud: 'pointCloudAdd',
 };

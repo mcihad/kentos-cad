@@ -134,6 +134,17 @@ pub enum FillPaint {
         opacity: f64,
         level: f64,
     },
+    /// A point cloud's picture over its plan (docs/adr/0207 §6): `cloud`
+    /// names its files (`geom::pointcloud::cloud_key`), `look` its style (the
+    /// contract's JSON). The points pass draws its nodes in view.
+    PointCloud {
+        cloud: String,
+        look: String,
+        /// The object's colour (`single`'s).
+        color: String,
+        opacity: f64,
+        level: f64,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -581,6 +592,20 @@ impl FillPaint {
                 o.num("opacity", *opacity);
                 o.num("level", *level);
             }
+            FillPaint::PointCloud {
+                cloud,
+                look,
+                color,
+                opacity,
+                level,
+            } => {
+                o.str("kind", "pointcloud");
+                o.str("cloud", cloud);
+                o.str("look", look);
+                o.str("color", color);
+                o.num("opacity", *opacity);
+                o.num("level", *level);
+            }
             FillPaint::Image {
                 image,
                 corner,
@@ -611,7 +636,8 @@ impl FillPaint {
             | FillPaint::Pattern { level, .. }
             | FillPaint::Tile { level, .. }
             | FillPaint::Image { level, .. }
-            | FillPaint::Raster { level, .. } => *level,
+            | FillPaint::Raster { level, .. }
+            | FillPaint::PointCloud { level, .. } => *level,
         }
     }
 }

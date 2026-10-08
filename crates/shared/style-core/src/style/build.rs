@@ -226,6 +226,9 @@ pub const MODE_IMAGE: i32 = 5;
 /// A raster: its tiles over its frame, drawn by the raster pass, and its
 /// frame as a hairline (docs/adr/0204 §5); never a symbol.
 pub const MODE_RASTER: i32 = 6;
+/// A point cloud: its picture over its plan, drawn by the points pass, and
+/// its plan as a hairline (docs/adr/0207 §6); never a symbol.
+pub const MODE_POINTCLOUD: i32 = 7;
 
 /// Everything one layer build draws with: the renderer, the symbol sets
 /// (the layer's simple look for each colour, hatches' own patterns), the
@@ -566,6 +569,10 @@ fn draw_object(
         draw_raster(shape, &parts, color, program, sink);
         return;
     }
+    if mode == MODE_POINTCLOUD {
+        draw_pointcloud(shape, &parts, color, program, sink);
+        return;
+    }
     if mode == MODE_DIMENSION {
         // Dimensions keep their own look: their layout lines, hairlines in the dimension's
         // colour unless its look names the dimension line's or the extension lines' colour,
@@ -743,17 +750,20 @@ fn draw_image(shape: &Shape, parts: &[Geom], color: i32, program: &Program, sink
     }
 }
 
-/// A raster (docs/adr/0204 §5): its frame filled with the raster paint,
-/// which the raster pass draws as the tiles in view, in the order of the
-/// drawing; its frame as a hairline in the object's colour. The paint names
-/// its file (`asset:` or `file:`) and look; equal ones share their tiles.
-fn draw_raster(shape: &Shape, parts: &[Geom], color: i32, program: &Program, sink: &mut BatchSink) {
-    let Shape::Raster {
-        affine,
-        width,
-        height,
-        asset,
-        file,
+/// A point cloud (docs/adr/0207 §6): its plan filled with the points paint,
+/// which the points pass draws as the cloud's own picture (its points with
+/// their depth), in the order of the drawing; its plan as a hairline in the
+/// object's colour. The paint names its files (`geom::pointcloud::cloud_key`)
+/// and look; equal files share their nodes.
+fn draw_pointcloud(
+    shape: &Shape,
+    parts: &[Geom],
+    color: i32,
+    program: &Program,
+    sink: &mut BatchSink,
+) {
+    let Shape::PointCloud {
+        sources,
         style,
         opacity,
         ..
@@ -761,10 +771,73 @@ fn draw_raster(shape: &Shape, parts: &[Geom], color: i32, program: &Program, sin
     else {
         return;
     };
-    let raster = match (asset, file) {
-        (Some(a), _) => format!("asset:{a}"),
-        (None, Some(f)) => format!("file:{f}"),
-        (None, None) => return,
+    let cloud = kentos_geometry_core::geom::pointcloud::cloud_key(sources);
+    let look = kentos_geometry_core::api::json::to_string(style);
+    let ink = usize::try_from(color)
+        .ok()
+        .and_then(|c| program.colors.get(c))
+        .cloned()
+        .unwrap_or_default();
+    sink.set_scale(Scale::default());
+    for part in parts {
+        match part {
+            Geom::Fill(rings) => sink.fill(
+                &FillPaint::PointCloud {
+                    cloud: cloud.clone(),
+                    look: look.clone(),
+                    color: ink.clone(),
+                    opacity: opacity.unwrap_or(1.0),
+                    level: LEVEL_FILL,
+                },
+                rings,
+            ),
+            Geom::Line(paths) => {
+                let ink = ink.clone();
+                let hair = StrokeStyle {
+                    color: ink,
+                    opacity: 1.0,
+                    width: 0.0,
+                    unit: PrimUnit::Px,
+                    dash: None,
+                    dash_offset: 0.0,
+                    cap: "butt".into(),
+                    join: "miter".into(),
+                    blur: 0.0,
+                    level: LEVEL_LINE,
+                };
+                for (pts, closed) in paths {
+                    sink.stroke(&hair, pts, *closed);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+/// A raster (docs/adr/0204 §5): its frame filled with the raster paint,
+/// which the raster pass draws as the tiles in view, in the order of the
+/// drawing; its frame as a hairline in the object's colour. The paint names
+/// its file (`asset:`, `file:` or `url:`) and look; equal ones share their tiles.
+fn draw_raster(shape: &Shape, parts: &[Geom], color: i32, program: &Program, sink: &mut BatchSink) {
+    let Shape::Raster {
+        affine,
+        width,
+        height,
+        asset,
+        file,
+        url,
+        style,
+        opacity,
+        ..
+    } = shape
+    else {
+        return;
+    };
+    let raster = match (asset, file, url) {
+        (Some(a), _, _) => format!("asset:{a}"),
+        (None, Some(f), _) => format!("file:{f}"),
+        (None, None, Some(u)) => format!("url:{u}"),
+        (None, None, None) => return,
     };
     let look = kentos_geometry_core::api::json::to_string(style);
     let nearest = matches!(style.get("resampling"), Json::Str(r) if r == "nearest");

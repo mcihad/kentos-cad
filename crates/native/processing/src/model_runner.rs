@@ -292,6 +292,10 @@ struct Share<'a> {
 }
 
 impl Feedback for Share<'_> {
+    fn files(&self) -> Option<std::sync::Arc<dyn crate::files::Files>> {
+        self.inner.files()
+    }
+
     fn progress(&mut self, fraction: f64, label: &str) {
         let share = (self.done as f64 + fraction.clamp(0.0, 1.0)) / self.count as f64;
         self.inner.progress(share, label);

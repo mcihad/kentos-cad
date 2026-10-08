@@ -151,6 +151,8 @@ pub enum Field {
     ImageClear(Slot),
     /// A raster's see-through share (0 to 90 %; docs/adr/0204 §8).
     RasterClear(Slot),
+    /// A point cloud's see-through share (0 to 90 %; docs/adr/0207 §9).
+    CloudClear(Slot),
     /// Leaders' note (trimmed; emptied, the arrow alone), height (above zero)
     /// and turn (degrees) (docs/adr/0146 §7).
     LeaderNote(Vec<Slot>),
@@ -779,6 +781,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::ImageTurn(s)
         | Field::ImageClear(s)
         | Field::RasterClear(s)
+        | Field::CloudClear(s)
         | Field::Attribute(s, _) => *s,
         // Taken above.
         Field::Elevation(..)
@@ -908,6 +911,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         }
         (Field::RasterClear(_), Entity::Raster(r)) if finite && (0.0..=90.0).contains(&n) => {
             r.raster.opacity = (n > 0.0).then(|| 1.0 - n / 100.0);
+            true
+        }
+        (Field::CloudClear(_), Entity::PointCloud(c)) if finite && (0.0..=90.0).contains(&n) => {
+            c.cloud.opacity = (n > 0.0).then(|| 1.0 - n / 100.0);
             true
         }
         _ => false,

@@ -27,6 +27,10 @@ asset?: string,
  */
 file?: string, 
 /**
+ * An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
+ */
+url?: string, 
+/**
  * The file's coordinate system; 0: the file named none and the user took the project's.
  */
 srid: number, style: RasterStyle, 

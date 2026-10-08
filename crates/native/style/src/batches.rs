@@ -313,6 +313,15 @@ pub enum FillPaintBatch {
         nearest: bool,
         opacity: f64,
     },
+    /// A point cloud's picture over its plan (docs/adr/0207 §6): `cloud`
+    /// names its files (`cloud:<hash>`), `look` its style's JSON, `color` the
+    /// object's colour. The points pass draws its nodes in view.
+    PointCloud {
+        cloud: String,
+        look: String,
+        color: String,
+        opacity: f64,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -748,6 +757,12 @@ impl Looks<'_> {
                     opacity: self.fill_opacity(n(p, "opacity")),
                 }
             }
+            "pointcloud" => FillPaintBatch::PointCloud {
+                cloud: s(p, "cloud").to_owned(),
+                look: s(p, "look").to_owned(),
+                color: s(p, "color").to_owned(),
+                opacity: self.fill_opacity(n(p, "opacity")),
+            },
             "image" => FillPaintBatch::Image {
                 image: s(p, "image").to_owned(),
                 corner: pair(p, "corner"),
@@ -1632,6 +1647,18 @@ fn paint_json(p: &FillPaintBatch) -> Value {
             "to": to,
             "centre": centre,
             "radius": radius,
+        }),
+        FillPaintBatch::PointCloud {
+            cloud,
+            look,
+            color,
+            opacity,
+        } => json!({
+            "kind": "pointcloud",
+            "cloud": cloud,
+            "look": look,
+            "color": color,
+            "opacity": opacity,
         }),
         FillPaintBatch::Raster {
             raster,

@@ -27,6 +27,8 @@ use kentos_formats::raster::source::{BlockNeed, PYRAMID_FIRST, Put, Reader, deco
 use kentos_formats::raster::stats::Stats;
 use kentos_formats::raster::{ByteStore, Step, tiff};
 
+use crate::pointclouds::bytes::{Bytes, Remote};
+
 /// Bytes a raster's decoded blocks may take.
 const READER_BUDGET: usize = 96 * 1024 * 1024;
 /// Bytes the finished tiles may take (about 240 tiles).
@@ -43,6 +45,8 @@ pub enum Origin {
     File(PathBuf),
     /// An embedded raster's bytes from the project's library.
     Bytes(Arc<Vec<u8>>),
+    /// A GeoTIFF (a COG) at an address, read by HTTP ranges (docs/adr/0207 §1).
+    Url(String),
 }
 
 impl PartialEq for Origin {
@@ -50,6 +54,7 @@ impl PartialEq for Origin {
         match (self, other) {
             (Origin::File(a), Origin::File(b)) => a == b,
             (Origin::Bytes(a), Origin::Bytes(b)) => Arc::ptr_eq(a, b) || a == b,
+            (Origin::Url(a), Origin::Url(b)) => a == b,
             _ => false,
         }
     }
@@ -144,9 +149,14 @@ impl TileCache {
 /// A raster opened: its reader, the file blocks are read from, its statistics.
 pub(super) struct Opened {
     pub(super) reader: Mutex<Reader>,
-    /// Level 0's file (a TIFF read in pieces), or none (a whole image, or bytes).
-    file: Option<File>,
-    bytes: Option<Arc<Vec<u8>>>,
+    /// Level 0's bytes (a TIFF read in pieces: a file, an address or the
+    /// library's), or none (a whole image decoded at once).
+    source: Option<Bytes>,
+    /// The file's size in bytes.
+    pub(super) size: u64,
+    /// What names its pyramid file: a linked file's path, size and change
+    /// time, an address with its size and version; none when embedded.
+    pub(super) identity: Option<String>,
     /// The pyramid file once made (blocks of file 1).
     pub(super) pyramid: Mutex<Option<File>>,
     stats: Mutex<Option<Stats>>,
@@ -165,17 +175,9 @@ impl Opened {
                 None => Err("Önizleme piramidi henüz yok.".into()),
             };
         }
-        match (&self.file, &self.bytes) {
-            (Some(f), _) => read_at(f, need.offset, need.len),
-            (None, Some(b)) => {
-                let a = usize::try_from(need.offset)
-                    .map_err(|_| "Rasterin bloğu dosyanın dışında.".to_owned())?;
-                let e = a.saturating_add(need.len as usize);
-                b.get(a..e)
-                    .map(<[u8]>::to_vec)
-                    .ok_or_else(|| "Rasterin bloğu dosyanın dışında.".into())
-            }
-            (None, None) => Err("Rasterin dosyası açık değil.".into()),
+        match &self.source {
+            Some(b) => b.read(need.offset, need.len),
+            None => Err("Rasterin dosyası açık değil.".into()),
         }
     }
 
@@ -248,7 +250,7 @@ impl Opened {
 }
 
 /// `len` bytes of `file` from `offset`, without moving a shared cursor.
-pub(super) fn read_at(file: &File, offset: u64, len: u64) -> Result<Vec<u8>, String> {
+pub(crate) fn read_at(file: &File, offset: u64, len: u64) -> Result<Vec<u8>, String> {
     let mut out = vec![0u8; usize::try_from(len).map_err(|_| "Blok çok büyük.".to_owned())?];
     #[cfg(unix)]
     {
@@ -285,22 +287,42 @@ pub(super) fn jpeg_pixels(stream: &[u8]) -> Result<(Vec<u8>, u32), String> {
     Ok((pixels, 3))
 }
 
+/// A linked file's identity for its pyramid: its path, size and change time.
+fn file_identity(path: &std::path::Path) -> Option<String> {
+    let meta = std::fs::metadata(path).ok()?;
+    let changed = meta
+        .modified()
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map_or(0, |d| d.as_nanos());
+    Some(format!("{}|{}|{changed}", path.display(), meta.len()))
+}
+
 /// A raster opened from where its bytes are; why not when it cannot be.
 pub(super) fn open(origin: &Origin) -> Result<Opened, String> {
-    let (file, bytes, size) = match origin {
-        Origin::File(path) => {
-            let f =
-                File::open(path).map_err(|e| format!("“{}” açılamadı: {e}.", path.display()))?;
-            let size = f.metadata().map_err(|e| e.to_string())?.len();
-            (Some(f), None, size)
+    let (source, identity) = match origin {
+        Origin::File(path) => (Bytes::file(path)?, file_identity(path)),
+        Origin::Bytes(b) => (Bytes::Memory(b.clone()), None),
+        Origin::Url(u) => {
+            let r = Remote::open(u.trim())?;
+            let id = format!(
+                "url|{}|{}|{}",
+                r.url,
+                r.size,
+                r.version.clone().unwrap_or_default()
+            );
+            (Bytes::Remote(r), Some(id))
         }
-        Origin::Bytes(b) => (None, Some(b.clone()), b.len() as u64),
     };
-    let head = match (&file, &bytes) {
-        (Some(f), _) => read_at(f, 0, size.min(16))?,
-        (None, Some(b)) => b[..b.len().min(16)].to_vec(),
-        _ => Vec::new(),
-    };
+    let size = source.size();
+    let head = source.read(0, size.min(16))?;
+    let remote = matches!(origin, Origin::Url(_));
+    if remote && !tiff::sniff(&head) {
+        return Err(
+            "Adresten yalnız GeoTIFF (COG) eklenir; PNG ve JPEG'i indirip dosya olarak ekleyin."
+                .into(),
+        );
+    }
     let whole = |limit: u64| -> Result<Vec<u8>, String> {
         if size > limit {
             return Err(format!(
@@ -309,11 +331,7 @@ pub(super) fn open(origin: &Origin) -> Result<Opened, String> {
                 limit >> 20
             ));
         }
-        match (&file, &bytes) {
-            (Some(f), _) => read_at(f, 0, size),
-            (None, Some(b)) => Ok(b.to_vec()),
-            _ => Err("Rasterin dosyası yok.".into()),
-        }
+        source.read(0, size)
     };
     let reader = if tiff::sniff(&head) {
         let mut store = ByteStore::new();
@@ -326,17 +344,7 @@ pub(super) fn open(origin: &Origin) -> Result<Opened, String> {
                     if taken > HEADER_MOST {
                         return Err("TIFF'in başlığı çok büyük.".into());
                     }
-                    let chunk = match (&file, &bytes) {
-                        (Some(f), _) => read_at(f, n.offset, n.len)?,
-                        (None, Some(b)) => {
-                            let a = n.offset as usize;
-                            b.get(a..a.saturating_add(n.len as usize))
-                                .map(<[u8]>::to_vec)
-                                .ok_or_else(|| "TIFF kısa.".to_owned())?
-                        }
-                        _ => return Err("Rasterin dosyası yok.".into()),
-                    };
-                    store.put(n.offset, chunk);
+                    store.put(n.offset, source.read(n.offset, n.len)?);
                 }
             }
         };
@@ -370,10 +378,12 @@ pub(super) fn open(origin: &Origin) -> Result<Opened, String> {
     } else {
         return Err("Dosya GeoTIFF, TIFF, PNG ya da JPEG değil.".into());
     };
+    let tiled = tiff::sniff(&head);
     Ok(Opened {
         reader: Mutex::new(reader),
-        file: file.filter(|_| tiff::sniff(&head)),
-        bytes: bytes.filter(|_| tiff::sniff(&head)),
+        source: tiled.then_some(source),
+        size,
+        identity: identity.filter(|_| tiled),
         pyramid: Mutex::new(None),
         stats: Mutex::new(None),
     })
@@ -435,6 +445,10 @@ fn wants_stats(style: &RasterStyle, sample: RasterSample) -> bool {
 /// The service's shared state.
 pub(super) struct Shared {
     pub(super) sources: Mutex<HashMap<String, Arc<Source>>>,
+    /// The rasters each drawing thread's scene shows: the interface's one
+    /// thread in the app; in the tests each test's own, so that one test's
+    /// scene never lets go of another's rasters.
+    shown: Mutex<HashMap<std::thread::ThreadId, HashSet<String>>>,
     looks: Mutex<HashMap<String, Arc<RasterStyle>>>,
     queue: Mutex<Queue>,
     work: Condvar,
@@ -463,6 +477,7 @@ pub fn service() -> &'static Service {
     SERVICE.get_or_init(|| {
         let shared = Arc::new(Shared {
             sources: Mutex::new(HashMap::new()),
+            shown: Mutex::new(HashMap::new()),
             looks: Mutex::new(HashMap::new()),
             queue: Mutex::new(Queue::default()),
             work: Condvar::new(),
@@ -489,6 +504,18 @@ impl Service {
     /// tiles let go when it now comes from elsewhere.
     pub fn register(&self, key: &str, origin: impl FnOnce() -> Option<Origin>) {
         USED.store(true, Ordering::Relaxed);
+        // This thread shows it until its scene says otherwise (`keep_only`).
+        {
+            let mut shown = self
+                .shared
+                .shown
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner);
+            let mine = shown.entry(std::thread::current().id()).or_default();
+            if !mine.contains(key) {
+                mine.insert(key.to_owned());
+            }
+        }
         let mut sources = self
             .shared
             .sources
@@ -510,15 +537,26 @@ impl Service {
         }
     }
 
-    /// Lets go of every raster but those `keep` names (another drawing opened, a raster removed).
+    /// Lets go of every raster no drawing thread's scene shows (another drawing opened, a raster
+    /// removed): `keep` is this thread's.
     pub fn keep_only(&self, keep: &HashSet<String>) {
+        let mut shown = self
+            .shared
+            .shown
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
+        let thread = std::thread::current().id();
+        if shown.get(&thread) != Some(keep) {
+            shown.insert(thread, keep.clone());
+        }
         let mut sources = self
             .shared
             .sources
             .lock()
             .unwrap_or_else(PoisonError::into_inner);
         let before = sources.len();
-        sources.retain(|k, _| keep.contains(k));
+        sources.retain(|k, _| shown.values().any(|s| s.contains(k)));
+        drop(shown);
         if sources.len() != before {
             let alive: HashSet<String> = sources.keys().cloned().collect();
             drop(sources);

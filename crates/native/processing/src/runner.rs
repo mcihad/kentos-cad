@@ -533,7 +533,13 @@ impl Runner {
                 }
             }
         }
-        let Some(run) = tool.run.filter(|_| tool.targets.contains(&Target::Client)) else {
+        // This program runs a tool here or on its own thread (the web's worker);
+        // the server and PostGIS are elsewhere.
+        let Some(run) = tool.run.filter(|_| {
+            tool.targets
+                .iter()
+                .any(|t| matches!(t, Target::Client | Target::Worker))
+        }) else {
             let wanted: Vec<&str> = tool.targets.iter().map(|t| t.id()).collect();
             let message = format!(
                 "“{}” bu ortamda çalıştırılamıyor ({} gerekli).",

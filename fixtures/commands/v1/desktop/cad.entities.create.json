@@ -1,0 +1,2511 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.create",
+ "commandVersion": 1,
+ "title": "Nokta bulutu ekle (masaüstü)",
+ "note": "Yalnız masaüstünün durumları (ADR 0207 §10): nokta bulutunu şimdilik masaüstü ekler, çizer ve işler; web'in koşucusu bu klasörü okumaz.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Nokta bulutu komutları",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487600,
+   "y": 4420300
+  },
+  "layers": [
+   {
+    "id": "yapi",
+    "name": "Yapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "bulut",
+    "name": "Bulut",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli katman",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli katman",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "bulut",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "yapi",
+    "attrs": {},
+    "a": {
+     "x": 487600,
+     "y": 4420290
+    },
+    "b": {
+     "x": 487620,
+     "y": 4420290
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 2,
+    "layerId": "bulut",
+    "attrs": {
+     "Kaynak": "LiDAR"
+    },
+    "sources": [
+     {
+      "file": "bulut/koy.laz",
+      "format": "laz",
+      "count": 71212,
+      "bounds": [
+       487600,
+       4420300,
+       838.991,
+       487719.838,
+       4420389.999,
+       862.618
+      ]
+     }
+    ],
+    "bounds": [
+     487600,
+     4420300,
+     838.991,
+     487719.838,
+     4420389.999,
+     862.618
+    ],
+    "count": 71212,
+    "srid": 5256,
+    "style": {
+     "render": "rgb",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 3,
+    "layerId": "kilitli",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "bulut/eski.laz",
+      "format": "laz",
+      "count": 71212,
+      "bounds": [
+       487600,
+       4420300,
+       838.991,
+       487719.838,
+       4420389.999,
+       862.618
+      ]
+     }
+    ],
+    "bounds": [
+     487600,
+     4420300,
+     838.991,
+     487719.838,
+     4420389.999,
+     862.618
+    ],
+    "count": 71212,
+    "srid": 5256,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 4,
+    "layerId": "yapi",
+    "attrs": {},
+    "c": {
+     "x": 487640,
+     "y": 4420290
+    },
+    "r": 5
+   }
+  ],
+  "styles": {
+   "items": [
+    {
+     "kind": "asset",
+     "id": "pointcloud-0011223344556677",
+     "name": "ornek",
+     "path": [
+      "Nokta bulutları"
+     ],
+     "format": "xyz",
+     "data": "data:application/octet-stream;base64,NDg3NjUwIDQ0MjAzMjAgODQ0LjEyCg=="
+    },
+    {
+     "kind": "asset",
+     "id": "raster-0011223344556677",
+     "name": "dem",
+     "path": [
+      "Rasterler"
+     ],
+     "format": "tiff",
+     "data": "data:image/tiff;base64,SUkqAA==",
+     "width": 50,
+     "height": 40
+    }
+   ],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Nokta bulutu ekle: bağlı, adresten okunan ve gömülü dosyalı sanal bulut tek adımda yazılır, adı “Nokta bulutu ekle”; görünüşün varsayılanları alan değildir (ADR 0207 §3, §10)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       },
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "url": "https://ornek.org/kentos/ada-1.copc.laz",
+           "format": "copc",
+           "count": 1250000,
+           "bounds": [
+            487700,
+            4420300,
+            840,
+            487800,
+            4420400,
+            870.5
+           ]
+          }
+         ],
+         "bounds": [
+          487700,
+          4420300,
+          840,
+          487800,
+          4420400,
+          870.5
+         ],
+         "count": 1250000,
+         "srid": 5256,
+         "style": {
+          "render": "classification",
+          "hidden": [
+           7,
+           18
+          ],
+          "size": 1.5,
+          "sizeUnit": "m",
+          "shape": "square"
+         },
+         "opacity": 0.8
+        }
+       },
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/ada-2.laz",
+           "format": "laz",
+           "count": 980000,
+           "bounds": [
+            487800,
+            4420300,
+            841.25,
+            487900,
+            4420400,
+            868
+           ]
+          },
+          {
+           "asset": "pointcloud-0011223344556677",
+           "format": "xyz",
+           "count": 3,
+           "bounds": [
+            487650,
+            4420320,
+            844.12,
+            487651,
+            4420320.5,
+            844.25
+           ]
+          }
+         ],
+         "bounds": [
+          487650,
+          4420300,
+          841.25,
+          487900,
+          4420400,
+          868
+         ],
+         "count": 980003,
+         "srid": 0,
+         "style": {
+          "render": "elevation",
+          "ramp": "Spektral",
+          "invert": true,
+          "min": 838,
+          "max": 871,
+          "rgb8": true,
+          "size": 3,
+          "hidden": [],
+          "sizeUnit": "px",
+          "shape": "round"
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7"
+       ],
+       "ids": [
+        5,
+        6,
+        7
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "5": {
+        "kind": "pointcloud",
+        "sources": [
+         {
+          "file": "bulut/koy.laz",
+          "format": "laz",
+          "count": 71212,
+          "bounds": [
+           487600,
+           4420300,
+           838.991,
+           487719.838,
+           4420389.999,
+           862.618
+          ]
+         }
+        ],
+        "bounds": [
+         487600,
+         4420300,
+         838.991,
+         487719.838,
+         4420389.999,
+         862.618
+        ],
+        "count": 71212,
+        "srid": 5256,
+        "style": {
+         "render": "rgb",
+         "size": 2
+        },
+        "id": 5,
+        "layerId": "bulut",
+        "attrs": {}
+       },
+       "6": {
+        "kind": "pointcloud",
+        "sources": [
+         {
+          "url": "https://ornek.org/kentos/ada-1.copc.laz",
+          "format": "copc",
+          "count": 1250000,
+          "bounds": [
+           487700,
+           4420300,
+           840,
+           487800,
+           4420400,
+           870.5
+          ]
+         }
+        ],
+        "bounds": [
+         487700,
+         4420300,
+         840,
+         487800,
+         4420400,
+         870.5
+        ],
+        "count": 1250000,
+        "srid": 5256,
+        "style": {
+         "render": "classification",
+         "hidden": [
+          7,
+          18
+         ],
+         "size": 1.5,
+         "sizeUnit": "m",
+         "shape": "square"
+        },
+        "opacity": 0.8,
+        "id": 6,
+        "layerId": "bulut",
+        "attrs": {}
+       },
+       "7": {
+        "kind": "pointcloud",
+        "sources": [
+         {
+          "file": "bulut/ada-2.laz",
+          "format": "laz",
+          "count": 980000,
+          "bounds": [
+           487800,
+           4420300,
+           841.25,
+           487900,
+           4420400,
+           868
+          ]
+         },
+         {
+          "asset": "pointcloud-0011223344556677",
+          "format": "xyz",
+          "count": 3,
+          "bounds": [
+           487650,
+           4420320,
+           844.12,
+           487651,
+           4420320.5,
+           844.25
+          ]
+         }
+        ],
+        "bounds": [
+         487650,
+         4420300,
+         841.25,
+         487900,
+         4420400,
+         868
+        ],
+        "count": 980003,
+        "srid": 0,
+        "style": {
+         "render": "elevation",
+         "ramp": "Spektral",
+         "invert": true,
+         "min": 838,
+         "max": 871,
+         "rgb8": true,
+         "size": 3
+        },
+        "id": 7,
+        "layerId": "bulut",
+        "attrs": {}
+       }
+      },
+      "uids": {
+       "5": "new",
+       "6": "new",
+       "7": "new"
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Nokta bulutu ekle",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Nokta bulutu ekle",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "6": {
+        "kind": "pointcloud",
+        "sources": [
+         {
+          "url": "https://ornek.org/kentos/ada-1.copc.laz",
+          "format": "copc",
+          "count": 1250000,
+          "bounds": [
+           487700,
+           4420300,
+           840,
+           487800,
+           4420400,
+           870.5
+          ]
+         }
+        ],
+        "bounds": [
+         487700,
+         4420300,
+         840,
+         487800,
+         4420400,
+         870.5
+        ],
+        "count": 1250000,
+        "srid": 5256,
+        "style": {
+         "render": "classification",
+         "hidden": [
+          7,
+          18
+         ],
+         "size": 1.5,
+         "sizeUnit": "m",
+         "shape": "square"
+        },
+        "opacity": 0.8,
+        "id": 6,
+        "layerId": "bulut",
+        "attrs": {}
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "gizli katmana eklenen bulut yazılır, layer_hidden uyarısıyla; kilitli katmana eklenmez (ADR 0207 §10)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "gizli",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:5"
+       ],
+       "ids": [
+        5
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_hidden",
+        "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+        "path": "layerId"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "entities": {
+       "5": {
+        "kind": "pointcloud",
+        "sources": [
+         {
+          "file": "bulut/koy.laz",
+          "format": "laz",
+          "count": 71212,
+          "bounds": [
+           487600,
+           4420300,
+           838.991,
+           487719.838,
+           4420389.999,
+           862.618
+          ]
+         }
+        ],
+        "bounds": [
+         487600,
+         4420300,
+         838.991,
+         487719.838,
+         4420389.999,
+         862.618
+        ],
+        "count": 71212,
+        "srid": 5256,
+        "style": {
+         "render": "rgb",
+         "size": 2
+        },
+        "id": 5,
+        "layerId": "gizli",
+        "attrs": {}
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Nokta bulutu ekle",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kilitli",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+       "path": "layerId"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "nokta bulutunun dosyaları sırayla: invalid_pointcloud, yolu nesnenin geometrisi; hiçbir şey yazılmaz (ADR 0207 §3, §10)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 0,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "Nokta bulutunun en az bir dosyası olmalı.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       },
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ],
+           "url": "https://ornek.org/kentos/koy.laz"
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "1. dosyanın kaynağı ya gömülü varlık (asset), ya bağlı dosya (file), ya adres (url) olmalı; yalnız biri.",
+       "path": "objects[1].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "1. dosyanın kaynağı ya gömülü varlık (asset), ya bağlı dosya (file), ya adres (url) olmalı; yalnız biri.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "   ",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "1. dosyanın kaynağı ya gömülü varlık (asset), ya bağlı dosya (file), ya adres (url) olmalı; yalnız biri.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ],
+           "url": "ftp://ornek.org/koy.laz"
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "“ftp://ornek.org/koy.laz” bir HTTP ya da HTTPS adresi değil (http:// ya da https:// ile başlamalı).",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487720,
+            4420300,
+            838.991,
+            487600,
+            4420390,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "1. dosyanın kapsamı sonlu altı sayı olmalı, her eksende en küçük en büyükten büyük olmamalı.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          870,
+          487720,
+          4420390,
+          838
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "Nokta bulutunun kapsamı sonlu altı sayı olmalı, her eksende en küçük en büyükten büyük olmamalı.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71213,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "Nokta bulutunun nokta sayısı dosyalarınkinin toplamı olmalı.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "nokta bulutunun görünüşü ve donukluğu sırayla: rampa, aralık, rampalı görünüşün aralığı, boy, gizlenen sınıflar, donukluk; invalid_pointcloud (ADR 0207 §5, §10)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2,
+          "ramp": "Gökkuşağı"
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "“Gökkuşağı” diye bir renk rampası yok; Gri, Arazi, Spektral, Viridis, Mavi-kırmızı, Sıcaklık rampalarından biri seçilmeli.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2,
+          "min": 10
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "Görünüşün aralığı iki sonlu sayı olmalı, en küçük en büyükten küçük.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2,
+          "min": 10,
+          "max": 10
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "Görünüşün aralığı iki sonlu sayı olmalı, en küçük en büyükten küçük.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "intensity",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "Rampalı görünüşün aralığı (en küçük ve en büyük) verilmeli.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 0.25
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "Noktanın boyu 0.5 ile 32 arasında olmalı.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 33
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "Noktanın boyu 0.5 ile 32 arasında olmalı.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2,
+          "hidden": [
+           7,
+           2
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "Gizlenen sınıflar küçükten büyüğe ve birer kez yazılmalı.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2,
+          "hidden": [
+           7,
+           7
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "Gizlenen sınıflar küçükten büyüğe ve birer kez yazılmalı.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         },
+         "opacity": 0.05
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "Nokta bulutunun donukluğu 0.1 ile 1 arasında olmalı; 0.05 verildi.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         },
+         "opacity": 1.5
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pointcloud",
+       "message": "Nokta bulutunun donukluğu 0.1 ile 1 arasında olmalı; 1.5 verildi.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sonlu olmayan sayı önce not_finite; kitaplıkta olmayan ya da bulut olmayan varlık unknown_asset, yolu dosyanın asset'i; katmandan sonra (ADR 0207 §10)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "1. nesnenin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "objects[0].geometry.bounds[2]": "NaN"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       },
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "2. nesnenin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.",
+       "path": "objects[1].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "objects[1].geometry.sources[0].bounds[5]": "Infinity"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "1. nesnenin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "objects[0].geometry.style.size": "-Infinity"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         },
+         "opacity": 0.5
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "1. nesnenin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.",
+       "path": "objects[0].geometry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "objects[0].geometry.opacity": "NaN"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/koy.laz",
+           "format": "laz",
+           "count": 71212,
+           "bounds": [
+            487600,
+            4420300,
+            838.991,
+            487719.838,
+            4420389.999,
+            862.618
+           ]
+          }
+         ],
+         "bounds": [
+          487600,
+          4420300,
+          838.991,
+          487719.838,
+          4420389.999,
+          862.618
+         ],
+         "count": 71212,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       },
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "file": "bulut/ada-2.laz",
+           "format": "laz",
+           "count": 980000,
+           "bounds": [
+            487800,
+            4420300,
+            841.25,
+            487900,
+            4420400,
+            868
+           ]
+          },
+          {
+           "asset": "pointcloud-ffffffffffffffff",
+           "format": "xyz",
+           "count": 3,
+           "bounds": [
+            487650,
+            4420320,
+            844.12,
+            487651,
+            4420320.5,
+            844.25
+           ]
+          }
+         ],
+         "bounds": [
+          487650,
+          4420300,
+          841.25,
+          487900,
+          4420400,
+          868
+         ],
+         "count": 980003,
+         "srid": 0,
+         "style": {
+          "render": "elevation",
+          "ramp": "Spektral",
+          "invert": true,
+          "min": 838,
+          "max": 871,
+          "rgb8": true,
+          "size": 3,
+          "hidden": [],
+          "sizeUnit": "px",
+          "shape": "round"
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_asset",
+       "message": "“pointcloud-ffffffffffffffff” kimlikli nokta bulutu projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir LAS, LAZ, COPC ya da XYZ bulutunun kimliğini verin.",
+       "path": "objects[1].geometry.sources[1].asset"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bulut",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "asset": "raster-0011223344556677",
+           "format": "laz",
+           "count": 3,
+           "bounds": [
+            487650,
+            4420320,
+            844.12,
+            487651,
+            4420320.5,
+            844.25
+           ]
+          }
+         ],
+         "bounds": [
+          487650,
+          4420320,
+          844.12,
+          487651,
+          4420320.5,
+          844.25
+         ],
+         "count": 3,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_asset",
+       "message": "“raster-0011223344556677” kimlikli nokta bulutu projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir LAS, LAZ, COPC ya da XYZ bulutunun kimliğini verin.",
+       "path": "objects[0].geometry.sources[0].asset"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kilitli",
+      "operation": "pointCloud",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "pointcloud",
+         "sources": [
+          {
+           "asset": "pointcloud-ffffffffffffffff",
+           "format": "laz",
+           "count": 3,
+           "bounds": [
+            487650,
+            4420320,
+            844.12,
+            487651,
+            4420320.5,
+            844.25
+           ]
+          }
+         ],
+         "bounds": [
+          487650,
+          4420320,
+          844.12,
+          487651,
+          4420320.5,
+          844.25
+         ],
+         "count": 3,
+         "srid": 5256,
+         "style": {
+          "render": "rgb",
+          "size": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+       "path": "layerId"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -369,6 +369,10 @@ pub struct RasterFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub file: Option<String>,
+    /// An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub url: Option<String>,
     /// The file's coordinate system; 0: the file named none and the user took the project's.
     pub srid: u32,
     pub style: RasterStyle,
@@ -451,14 +455,20 @@ impl RasterFields {
             .as_deref()
             .map(str::trim)
             .filter(|s| !s.is_empty());
-        match (asset, file, &self.asset, &self.file) {
-            (Some(_), None, _, None) | (None, Some(_), None, _) => {}
-            (Some(_), Some(_), ..) => {
-                return Some("Rasterin kaynağı ya gömülü varlık (asset) ya bağlı dosya (file) olmalı, ikisi birden değil.".into());
-            }
-            _ => {
-                return Some("Rasterin kaynağı yok: gömülü varlığın kimliğini (asset) ya da bağlı dosyanın yolunu (file) verin.".into());
-            }
+        let url = self.url.as_deref().map(str::trim).filter(|s| !s.is_empty());
+        let given =
+            usize::from(asset.is_some()) + usize::from(file.is_some()) + usize::from(url.is_some());
+        let named = usize::from(self.asset.is_some())
+            + usize::from(self.file.is_some())
+            + usize::from(self.url.is_some());
+        if given == 0 {
+            return Some("Rasterin kaynağı yok: gömülü varlığın kimliğini (asset), bağlı dosyanın yolunu (file) ya da adresini (url) verin.".into());
+        }
+        if given != 1 || named != 1 {
+            return Some("Rasterin kaynağı ya gömülü varlık (asset), ya bağlı dosya (file), ya adres (url) olmalı; yalnız biri.".into());
+        }
+        if let Some(p) = url.and_then(crate::url_problem) {
+            return Some(p);
         }
         if file
             .is_some_and(|f| f.chars().count() > MAX_RASTER_PATH || f.chars().any(char::is_control))

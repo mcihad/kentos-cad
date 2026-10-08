@@ -2,6 +2,7 @@ import type { CategoryNode } from '../processing/registry';
 import type { ToolDescriptor, ToolGroup } from '../tools/Tool';
 import { toolSections } from '../tools/sections';
 import { menuBlocks, menuById, type MenuBlock, type SubmenuSpec } from './menus';
+import { POINT_CLOUD_TOOLS, POINT_CLOUDS } from './pointCloudCommands';
 import { modelCommandId, processingCommandId } from './processing';
 import { SHOW_ALL, type WorkspaceFilter } from './workspaces';
 import type { Workspace } from '../model/projectSettings';
@@ -185,6 +186,8 @@ const SELECTION_TAB: RibbonTabSpec = RIBBON_TABS.find((t) => t.contextual === 's
 
 /** Raster katmanları (docs/adr/0204 §8): CAD's Ekle › Raster and CBS's Veri › Raster. */
 const RASTERS = ['raster.add', 'raster.style', 'raster.georef'];
+/** Nokta bulutu (docs/adr/0207 §9), the desktop's for now: CAD's Ekle and CBS's Veri, İşlemler's tools under ▾. */
+const POINT_CLOUD_PANEL = { pick: 'Nokta bulutu', icon: 'pointCloudAdd', commands: POINT_CLOUDS, under: POINT_CLOUD_TOOLS } as const;
 
 /**
  * A CAD project's ribbon (docs/adr/0165 §6), AutoCAD's 2D drafting tabs: Giriş with drawing, modifying, annotation,
@@ -221,6 +224,7 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { menu: 'draw', sections: ['Resim'] },
       // Raster (docs/adr/0204 §8): Netcad's Raster Yükle, AutoCAD Map's Insert › Image.
       { pick: 'Raster', icon: 'rasterAdd', commands: RASTERS },
+      POINT_CLOUD_PANEL,
       { pick: 'İçe aktar', icon: 'import', commands: IMPORTS },
       // Çizimler arası alışveriş (docs/adr/0193): AutoCAD's DesignCenter and WBLOCK.
       { pick: 'Alışveriş', icon: 'takeFrom', commands: ['file.takeFrom', 'file.saveSelection'] },
@@ -339,6 +343,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { menu: 'draw', sections: ['Blok', 'Resim'] },
       // Raster katmanları (docs/adr/0204 §8): QGIS's Add Raster Layer and Georeferencer.
       { pick: 'Raster', icon: 'rasterAdd', commands: RASTERS },
+      // Nokta bulutu (docs/adr/0207 §9): QGIS's Add Point Cloud Layer and its PDAL tools.
+      POINT_CLOUD_PANEL,
     ],
     lead: ['tool.blockInsert'],
   },

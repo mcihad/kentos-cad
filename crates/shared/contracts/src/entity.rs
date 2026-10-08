@@ -1073,6 +1073,8 @@ pub enum Entity {
     Image(crate::ImageEntity),
     /// An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).
     Raster(crate::RasterEntity),
+    /// A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).
+    PointCloud(crate::PointCloudEntity),
 }
 
 impl Entity {
@@ -1089,6 +1091,7 @@ impl Entity {
                 | Entity::Insert(_)
                 | Entity::Image(_)
                 | Entity::Raster(_)
+                | Entity::PointCloud(_)
         )
     }
 
@@ -1111,6 +1114,7 @@ impl Entity {
             Entity::Table(e) => &e.base,
             Entity::Image(e) => &e.base,
             Entity::Raster(e) => &e.base,
+            Entity::PointCloud(e) => &e.base,
         }
     }
 
@@ -1134,6 +1138,7 @@ impl Entity {
             Entity::Table(e) => &mut e.base,
             Entity::Image(e) => &mut e.base,
             Entity::Raster(e) => &mut e.base,
+            Entity::PointCloud(e) => &mut e.base,
         }
     }
 
@@ -1158,6 +1163,7 @@ impl Entity {
             Entity::Table(_) => "table",
             Entity::Image(_) => "image",
             Entity::Raster(_) => "raster",
+            Entity::PointCloud(_) => "pointcloud",
         }
     }
 }

@@ -1,0 +1,42 @@
+{
+  "format": "kentos.wgsl-layout",
+  "version": 1,
+  "module": "points",
+  "description": "KentOS point clouds (docs/adr/0207 §6): each cloud's points drawn into a picture of its own (the view's size in device pixels, rgba8unorm premultiplied, transparent where no point is) with a depth32float buffer, the highest point nearest (depth compare less); one draw per octree node with its Draw block at a dynamic offset, its points instances of a six-vertex quad. The styled module's cloud pipeline (styled.layout.json, version 7) then shows the picture over the cloud's plan. The web's WebGPU backend builds the same pipeline from this file; its WebGL2 twin is apps/web/src/render/webgl2/pointShaders.ts.",
+  "sources": ["points/points.wgsl"],
+  "bindGroups": [
+    {
+      "group": 0,
+      "bindings": [
+        { "binding": 0, "name": "draw", "type": "uniform", "struct": "Draw", "dynamicOffset": true, "visibility": ["vertex", "fragment"] }
+      ]
+    }
+  ],
+  "structs": {
+    "Draw": {
+      "size": 48,
+      "align": 16,
+      "fields": [
+        { "name": "d", "type": "vec4<f32>", "offset": 0 },
+        { "name": "view", "type": "vec4<f32>", "offset": 16 },
+        { "name": "depth", "type": "vec4<f32>", "offset": 32 }
+      ]
+    }
+  },
+  "pipelines": [
+    {
+      "name": "points",
+      "vertex": "pointsVs",
+      "fragment": "pointsFs",
+      "topology": "triangle-list",
+      "vertexCount": 6,
+      "blend": "none",
+      "depth": { "format": "depth32float", "compare": "less", "write": true },
+      "target": "rgba8unorm",
+      "buffers": [
+        { "stepMode": "instance", "arrayStride": 12, "attributes": [{ "location": 0, "name": "p", "format": "float32x3", "offset": 0 }] },
+        { "stepMode": "instance", "arrayStride": 4, "attributes": [{ "location": 1, "name": "c", "format": "unorm8x4", "offset": 0 }] }
+      ]
+    }
+  ]
+}

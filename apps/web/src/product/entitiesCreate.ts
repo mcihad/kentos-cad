@@ -35,6 +35,8 @@ import { checkBlocks, checkGeometry, checkStyles, geometryOf } from './entitiesE
 
 /** The undo step's name: the drawing tool's when it has its own, else the document's “Ekle”. */
 export const CREATE_LABEL: Record<CreateOperation, string> = {
+  // Nokta bulutu ekle (docs/adr/0207 §10): the desktop's; the web keeps the name of its step.
+  pointCloud: 'Nokta bulutu ekle',
   parallel: 'Paralel çizgi',
   perpendicularIn: 'Dik in',
   perpendicularOut: 'Dik çık',

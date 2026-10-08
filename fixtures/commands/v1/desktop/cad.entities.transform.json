@@ -1,0 +1,549 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.transform",
+ "commandVersion": 1,
+ "title": "Nokta bulutunun yeri (masaüstü)",
+ "note": "Yalnız masaüstünün durumları (ADR 0207 §10): nokta bulutunu şimdilik masaüstü ekler, çizer ve işler; web'in koşucusu bu klasörü okumaz.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Nokta bulutu komutları",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487600,
+   "y": 4420300
+  },
+  "layers": [
+   {
+    "id": "yapi",
+    "name": "Yapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "bulut",
+    "name": "Bulut",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli katman",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli katman",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "bulut",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "yapi",
+    "attrs": {},
+    "a": {
+     "x": 487600,
+     "y": 4420290
+    },
+    "b": {
+     "x": 487620,
+     "y": 4420290
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 2,
+    "layerId": "bulut",
+    "attrs": {
+     "Kaynak": "LiDAR"
+    },
+    "sources": [
+     {
+      "file": "bulut/koy.laz",
+      "format": "laz",
+      "count": 71212,
+      "bounds": [
+       487600,
+       4420300,
+       838.991,
+       487719.838,
+       4420389.999,
+       862.618
+      ]
+     }
+    ],
+    "bounds": [
+     487600,
+     4420300,
+     838.991,
+     487719.838,
+     4420389.999,
+     862.618
+    ],
+    "count": 71212,
+    "srid": 5256,
+    "style": {
+     "render": "rgb",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 3,
+    "layerId": "kilitli",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "bulut/eski.laz",
+      "format": "laz",
+      "count": 71212,
+      "bounds": [
+       487600,
+       4420300,
+       838.991,
+       487719.838,
+       4420389.999,
+       862.618
+      ]
+     }
+    ],
+    "bounds": [
+     487600,
+     4420300,
+     838.991,
+     487719.838,
+     4420389.999,
+     862.618
+    ],
+    "count": 71212,
+    "srid": 5256,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 4,
+    "layerId": "yapi",
+    "attrs": {},
+    "c": {
+     "x": 487640,
+     "y": 4420290
+    },
+    "r": 5
+   }
+  ],
+  "styles": {
+   "items": [
+    {
+     "kind": "asset",
+     "id": "pointcloud-0011223344556677",
+     "name": "ornek",
+     "path": [
+      "Nokta bulutları"
+     ],
+     "format": "xyz",
+     "data": "data:application/octet-stream;base64,NDg3NjUwIDQ0MjAzMjAgODQ0LjEyCg=="
+    },
+    {
+     "kind": "asset",
+     "id": "raster-0011223344556677",
+     "name": "dem",
+     "path": [
+      "Rasterler"
+     ],
+     "format": "tiff",
+     "data": "data:image/tiff;base64,SUkqAA==",
+     "width": 50,
+     "height": 40
+    }
+   ],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "nokta bulutu taşınmaz, döndürülmez, ölçeklenmez, aynalanmaz ve kopyalanmaz: pointcloud_fixed, yolu bulutun yeri; hiçbir şey yazılmaz (ADR 0207 §3)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 10,
+       "dy": 5
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "pointcloud_fixed",
+       "message": "Nokta bulutu taşınmaz, döndürülmez, ölçeklenmez, aynalanmaz ve kopyalanmaz: konumu dosyasındadır. Bulutu seçimden çıkarın.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "rotate",
+       "center": {
+        "x": 487650,
+        "y": 4420340
+       },
+       "angle": 0.5
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "pointcloud_fixed",
+       "message": "Nokta bulutu taşınmaz, döndürülmez, ölçeklenmez, aynalanmaz ve kopyalanmaz: konumu dosyasındadır. Bulutu seçimden çıkarın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "scale",
+       "center": {
+        "x": 487650,
+        "y": 4420340
+       },
+       "factor": 2
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "pointcloud_fixed",
+       "message": "Nokta bulutu taşınmaz, döndürülmez, ölçeklenmez, aynalanmaz ve kopyalanmaz: konumu dosyasındadır. Bulutu seçimden çıkarın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 487650,
+        "y": 4420300
+       },
+       "b": {
+        "x": 487650,
+        "y": 4420400
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "pointcloud_fixed",
+       "message": "Nokta bulutu taşınmaz, döndürülmez, ölçeklenmez, aynalanmaz ve kopyalanmaz: konumu dosyasındadır. Bulutu seçimden çıkarın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 10,
+       "dy": 5
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "pointcloud_fixed",
+       "message": "Nokta bulutu taşınmaz, döndürülmez, ölçeklenmez, aynalanmaz ve kopyalanmaz: konumu dosyasındadır. Bulutu seçimden çıkarın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katmandaki bulut öbür kilitliler gibi atlanır; seçimin kalanı taşınır (ADR 0037, 0207 §3)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:1"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 10,
+       "dy": 5
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "locked": [
+        "$uidOf:3"
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+         "x": 487610,
+         "y": 4420295
+        },
+        "b": {
+         "x": 487630,
+         "y": 4420295
+        }
+       },
+       "3": {
+        "kind": "pointcloud",
+        "sources": [
+         {
+          "file": "bulut/eski.laz",
+          "format": "laz",
+          "count": 71212,
+          "bounds": [
+           487600,
+           4420300,
+           838.991,
+           487719.838,
+           4420389.999,
+           862.618
+          ]
+         }
+        ],
+        "bounds": [
+         487600,
+         4420300,
+         838.991,
+         487719.838,
+         4420389.999,
+         862.618
+        ],
+        "count": 71212,
+        "srid": 5256,
+        "style": {
+         "render": "classification",
+         "size": 2
+        },
+        "id": 3,
+        "layerId": "kilitli",
+        "attrs": {}
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Taşı",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+         "x": 487600,
+         "y": 4420290
+        },
+        "b": {
+         "x": 487620,
+         "y": 4420290
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 10,
+       "dy": 5
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

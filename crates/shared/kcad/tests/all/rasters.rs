@@ -47,6 +47,7 @@ fn raster(fields: impl FnOnce(&mut RasterFields)) -> Entity {
         sample: RasterSample::U8,
         asset: None,
         file: Some("pafta-12.tif".into()),
+        url: None,
         srid: 5256,
         style: RasterStyle {
             render: RasterRender::Rgb,
@@ -168,7 +169,7 @@ fn the_writer_refuses_what_the_reader_would() {
         (
             raster(|r| r.asset = Some("raster-0011223344556677".into())),
             "raster/asset",
-            "ikisi birden değil",
+            "yalnız biri",
         ),
         (raster(|r| r.file = None), "raster/asset", "kaynağı yok"),
         (
@@ -240,7 +241,7 @@ fn the_readers_errors_name_their_places() {
         (
             "broken/raster-two-sources.kcad",
             Code::BadValue,
-            "ikisi birden değil",
+            "yalnız biri",
         ),
         (
             "broken/raster-no-source.kcad",

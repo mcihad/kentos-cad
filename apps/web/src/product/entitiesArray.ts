@@ -32,8 +32,9 @@ import type { ProductCommand } from './command';
  * their order, the counts in their ranges (whole numbers), a spacing for
  * each grid direction with more than one place, a polar fill that is not
  * zero and not past a full turn; the expected revision (checks.ts); each id
- * names an object; not every object on a locked layer; no copy carried past
- * the largest float64. A repeated id counts once.
+ * names an object; not every object on a locked layer; no point cloud
+ * (`pointcloud_fixed`, docs/adr/0207 §3); no copy carried past the largest
+ * float64. A repeated id counts once.
  *
  * Objects on a locked layer are not copied (docs/adr/0037). The tools used
  * to copy them onto their locked layer; ADR 0047 records the change.
@@ -113,11 +114,21 @@ function check(doc: CadDocument, input: EntitiesArray): Stop | Checked {
   const sources: string[] = [];
   const locked: string[] = [];
   for (const f of found) {
-    if (doc.layers.isLocked(f.entity.layerId)) locked.push(f.uid);
-    else {
-      originals.push(f.entity);
-      sources.push(f.uid);
+    if (doc.layers.isLocked(f.entity.layerId)) {
+      locked.push(f.uid);
+      continue;
     }
+    // A cloud's place is its files' (docs/adr/0207 §3): no array copies it.
+    if (f.entity.kind === 'pointcloud')
+      return failed(
+        error(
+          'pointcloud_fixed',
+          'Nokta bulutu taşınmaz, döndürülmez, ölçeklenmez, aynalanmaz ve kopyalanmaz: konumu dosyasındadır. Bulutu seçimden çıkarın.',
+          `uids[${input.uids.indexOf(f.uid)}]`,
+        ),
+      );
+    originals.push(f.entity);
+    sources.push(f.uid);
   }
   const maps = pathMaps(doc, input.layout);
   if (maps && 'status' in maps) return maps;

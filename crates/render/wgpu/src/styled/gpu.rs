@@ -47,6 +47,8 @@ pub struct StyledScene {
 pub struct StyledFrame {
     /// Camera centre relative to the layers' origin, metres.
     pub center: [f64; 2],
+    /// The layers' origin in the world (a cloud's nodes are placed in the world; docs/adr/0207 §6).
+    pub origin: [f64; 2],
     /// Logical pixels per metre.
     pub scale: f64,
     /// Device pixels per logical pixel of the target drawn into.
@@ -68,6 +70,7 @@ enum Pipe {
     Gradient,
     Image,
     Raster,
+    Cloud,
 }
 
 struct Pipelines {
@@ -80,6 +83,7 @@ struct Pipelines {
     gradient: wgpu::RenderPipeline,
     image: wgpu::RenderPipeline,
     raster: wgpu::RenderPipeline,
+    cloud: wgpu::RenderPipeline,
 }
 
 impl Pipelines {
@@ -94,6 +98,7 @@ impl Pipelines {
             Pipe::Gradient => &self.gradient,
             Pipe::Image => &self.image,
             Pipe::Raster => &self.raster,
+            Pipe::Cloud => &self.cloud,
         }
     }
 }
@@ -171,8 +176,8 @@ pub struct StyledPipelineSpec {
     pub buffer: wgpu::VertexBufferLayout<'static>,
 }
 
-/// The contract's pipelines, in its order: stroke, solid, hatch, pattern, tile, marker, gradient, image, raster.
-pub const STYLED_PIPELINES: [StyledPipelineSpec; 9] = [
+/// The contract's pipelines, in its order: stroke, solid, hatch, pattern, tile, marker, gradient, image, raster, cloud.
+pub const STYLED_PIPELINES: [StyledPipelineSpec; 10] = [
     StyledPipelineSpec {
         name: "stroke",
         vertex: "strokeVs",
@@ -245,6 +250,14 @@ pub const STYLED_PIPELINES: [StyledPipelineSpec; 9] = [
         blend: PREMULTIPLIED,
         buffer: RASTER_BUFFER,
     },
+    StyledPipelineSpec {
+        name: "cloud",
+        vertex: "areaVs",
+        fragment: "cloudFs",
+        vertex_count: None,
+        blend: PREMULTIPLIED,
+        buffer: AREA_BUFFER,
+    },
 ];
 
 /// The styled pipelines, layouts and atlas of one device.
@@ -263,6 +276,8 @@ pub struct StyledGpu {
     pictures: super::pictures::PictureTextures,
     /// The rasters' tiles (docs/adr/0204 §5).
     rasters: super::raster_tiles::RasterAtlas,
+    /// The point clouds' nodes and pictures (docs/adr/0207 §6).
+    points: super::points::PointsGpu,
     /// The device's alignment of dynamic uniform offsets.
     align: u64,
     /// Colours are sRGB-encoded as written; an sRGB target would encode them twice.
@@ -356,6 +371,7 @@ impl StyledGpu {
         StyledGpu {
             pictures: super::pictures::PictureTextures::new(device),
             rasters: super::raster_tiles::RasterAtlas::new(device),
+            points: super::points::PointsGpu::new(device, format.is_srgb()),
             format,
             module,
             frame_layout,
@@ -419,6 +435,7 @@ impl StyledGpu {
                 gradient,
                 image,
                 raster,
+                cloud,
             ] = &STYLED_PIPELINES;
             Pipelines {
                 stroke: pipe(stroke),
@@ -430,6 +447,7 @@ impl StyledGpu {
                 gradient: pipe(gradient),
                 image: pipe(image),
                 raster: pipe(raster),
+                cloud: pipe(cloud),
             }
         })
     }
@@ -471,6 +489,7 @@ impl StyledGpu {
                         FillPaintBatch::Tile { .. } => Pipe::Tile,
                         FillPaintBatch::Image { .. } => Pipe::Image,
                         FillPaintBatch::Raster { .. } => Pipe::Raster,
+                        FillPaintBatch::PointCloud { .. } => Pipe::Cloud,
                     },
                     AREA_FLOATS,
                     false,
@@ -504,8 +523,19 @@ impl StyledGpu {
                 )),
                 _ => None,
             };
+            // A cloud shows its picture over its plan (docs/adr/0207 §6).
+            let cloud = match &b.kind {
+                BatchKind::Fill {
+                    paint:
+                        FillPaintBatch::PointCloud {
+                            cloud, look, color, ..
+                        },
+                } => Some(super::points::CloudPaint::new(cloud, look, color)),
+                _ => None,
+            };
             batches.push(GpuBatch {
                 raster,
+                cloud,
                 quads: 0..0,
                 picture,
                 pipe,
@@ -660,6 +690,8 @@ impl StyledGpu {
         view.pictures.retain(|k, _| drawn.contains(k));
         // The rasters' tiles in view (docs/adr/0204 §5): their quads in one buffer, the atlas filled.
         let raster_waits = self.prepare_rasters(device, queue, view, box_, px_per_m, images);
+        // The clouds' pictures (docs/adr/0207 §6), each bound with the frame.
+        let cloud_waits = self.prepare_clouds(device, queue, view, frame, images);
         for up in self.atlas.take_uploads() {
             queue.write_texture(
                 wgpu::TexelCopyTextureInfo {
@@ -685,7 +717,73 @@ impl StyledGpu {
                 },
             );
         }
-        self.atlas.pending || raster_waits
+        self.atlas.pending || raster_waits || cloud_waits
+    }
+
+    /// The clouds in view drawn into their pictures; whether a node waits for another frame.
+    fn prepare_clouds(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        view: &mut ViewStyled,
+        frame: &StyledFrame,
+        images: &dyn ImageSource,
+    ) -> bool {
+        let mut paints: Vec<super::points::CloudPaint> = Vec::new();
+        for layer in &view.layers {
+            for g in &layer.batches {
+                if let (true, Some(p)) = (g.visible, &g.cloud)
+                    && !paints.iter().any(|q| q.key == p.key)
+                {
+                    paints.push(p.clone());
+                }
+            }
+        }
+        if paints.is_empty() {
+            view.cloud_targets.clear();
+            view.cloud_binds.clear();
+            return false;
+        }
+        let waiting = self.points.prepare(
+            device,
+            queue,
+            &paints,
+            &mut view.cloud_targets,
+            [
+                frame.center[0] + frame.origin[0],
+                frame.center[1] + frame.origin[1],
+            ],
+            frame.scale * frame.dpr,
+            frame.dpr,
+            frame.size_px,
+            images,
+        );
+        view.cloud_rev = view.cloud_rev.wrapping_add(1);
+        for (key, target) in &view.cloud_targets {
+            let fresh = view
+                .cloud_binds
+                .get(key)
+                .is_some_and(|(t, _)| Arc::ptr_eq(t, &target.view));
+            if !fresh {
+                let bind = super::pictures::binding(
+                    device,
+                    &self.frame_layout,
+                    &view.frame,
+                    &target.view,
+                    &self.pictures.sampler,
+                );
+                view.cloud_binds
+                    .insert(key.clone(), (target.view.clone(), bind));
+            }
+        }
+        view.cloud_binds
+            .retain(|k, _| view.cloud_targets.contains_key(k));
+        waiting
+    }
+
+    /// Points the clouds keep on the GPU (statistics).
+    pub fn cloud_points(&self) -> u64 {
+        self.points.resident()
     }
 
     /// The rasters' quads of a frame and their bindings; whether a tile waits for another frame.
@@ -882,6 +980,25 @@ impl StyledGpu {
             if !b.visible || b.count == 0 {
                 return;
             }
+            // A cloud: its picture over its plan, the main camera's only (docs/adr/0207 §6).
+            if let Some(paint) = &b.cloud {
+                if seen.is_some() {
+                    return;
+                }
+                let Some((_, bind)) = view.cloud_binds.get(&paint.key) else {
+                    return;
+                };
+                if current != Some(Pipe::Cloud) {
+                    pass.set_pipeline(pipes.get(Pipe::Cloud));
+                    current = Some(Pipe::Cloud);
+                }
+                pass.set_bind_group(0, bind, &[]);
+                pass.set_bind_group(1, &layer.bind, &[b.offset]);
+                pass.set_vertex_buffer(0, vertex.slice(b.bytes.clone()));
+                pass.draw(0..b.count, 0..1);
+                pass.set_bind_group(0, frame_bind, &[]);
+                return;
+            }
             // A raster: its tiles' quads with the raster atlas in group 0 (docs/adr/0204 §5).
             if let Some(paint) = &b.raster {
                 let (Some(binds), Some(quads)) = (rasters, &view.quad_buffer) else {
@@ -1028,6 +1145,8 @@ fn srgb_to_linear(c: f32) -> f32 {
 struct GpuBatch {
     /// A raster's paint (docs/adr/0204 §5): its tiles in view are drawn instead of its frame.
     raster: Option<super::raster_tiles::RasterPaint>,
+    /// A cloud's paint (docs/adr/0207 §6): its picture is shown over its plan.
+    cloud: Option<super::points::CloudPaint>,
     /// The vertices of the view's raster quads this frame's tiles take.
     quads: Range<u32>,
     /// A picture's key (docs/adr/0192 §3): its texture is bound in group 0 for it.
@@ -1081,6 +1200,11 @@ pub struct ViewStyled {
     quad_buffer: Option<wgpu::Buffer>,
     raster_binds: Option<super::raster_tiles::RasterBinds>,
     lens_raster_binds: Option<super::raster_tiles::RasterBinds>,
+    /// The clouds' pictures by their paint's key, each bound with the frame
+    /// uniform; a count of their drawing, for the kept picture (docs/adr/0207 §6).
+    cloud_targets: HashMap<String, super::points::CloudTarget>,
+    cloud_binds: HashMap<String, (Arc<wgpu::TextureView>, wgpu::BindGroup)>,
+    cloud_rev: u64,
 }
 
 impl ViewStyled {
@@ -1101,6 +1225,9 @@ impl ViewStyled {
             quad_buffer: None,
             raster_binds: None,
             lens_raster_binds: None,
+            cloud_targets: HashMap::new(),
+            cloud_binds: HashMap::new(),
+            cloud_rev: 0,
         }
     }
 
@@ -1114,6 +1241,10 @@ impl ViewStyled {
         // The rasters' tiles drawn and where they sit in the atlas (docs/adr/0204 §5).
         for f in &self.quads.data {
             f.to_bits().hash(hasher);
+        }
+        // A cloud's picture is drawn again each frame it shows (docs/adr/0207 §6).
+        if !self.cloud_targets.is_empty() {
+            self.cloud_rev.hash(hasher);
         }
         for layer in &self.layers {
             layer.id.hash(hasher);

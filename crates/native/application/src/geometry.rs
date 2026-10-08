@@ -513,6 +513,7 @@ pub fn core_raster(r: &RasterFields) -> Shape {
         sample: r.sample.name().to_owned(),
         asset: r.asset.clone(),
         file: r.file.clone(),
+        url: r.url.clone(),
         srid: f64::from(r.srid),
         style: Json::parse(&r.style.to_json_text()).unwrap_or(Json::Null),
         opacity: r.opacity,
@@ -530,6 +531,7 @@ pub fn contract_raster(shape: Shape) -> Option<RasterFields> {
         sample,
         asset,
         file,
+        url,
         srid,
         style,
         opacity,
@@ -547,8 +549,52 @@ pub fn contract_raster(shape: Shape) -> Option<RasterFields> {
         sample: RasterSample::from_name(&sample)?,
         asset,
         file,
+        url,
         srid: whole(srid)?,
         style: kentos_contracts::RasterStyle::from_json_text(
+            &kentos_geometry_core::api::json::to_string(&style),
+        )?,
+        opacity,
+    })
+}
+
+/// A point cloud's fields as the geometry core takes them (docs/adr/0207 §3):
+/// its files and look as the contract's JSON, which the core carries.
+pub fn core_cloud(c: &kentos_contracts::PointCloudFields) -> Shape {
+    Shape::PointCloud {
+        bounds: c.bounds,
+        count: c.count as f64,
+        sources: Json::parse(&kentos_contracts::sources_json_text(&c.sources))
+            .unwrap_or(Json::Null),
+        srid: f64::from(c.srid),
+        style: Json::parse(&c.style.to_json_text()).unwrap_or(Json::Null),
+        opacity: c.opacity,
+    }
+}
+
+/// A point cloud the core carried as the contract holds it; none for another
+/// shape, or numbers, files and a look the contract cannot hold.
+pub fn contract_cloud(shape: Shape) -> Option<kentos_contracts::PointCloudFields> {
+    let Shape::PointCloud {
+        bounds,
+        count,
+        sources,
+        srid,
+        style,
+        opacity,
+    } = shape
+    else {
+        return None;
+    };
+    let whole = |v: f64| (v >= 0.0 && v.fract() == 0.0 && v.is_finite()).then_some(v as u64);
+    Some(kentos_contracts::PointCloudFields {
+        sources: kentos_contracts::sources_from_json_text(
+            &kentos_geometry_core::api::json::to_string(&sources),
+        )?,
+        bounds,
+        count: whole(count)?,
+        srid: u32::try_from(whole(srid)?).ok()?,
+        style: kentos_contracts::PointCloudStyle::from_json_text(
             &kentos_geometry_core::api::json::to_string(&style),
         )?,
         opacity,
@@ -594,6 +640,7 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Table(t) => core_table(t),
         Entity::Image(i) => core_image(&i.image),
         Entity::Raster(r) => core_raster(&r.raster),
+        Entity::PointCloud(c) => core_cloud(&c.cloud),
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,
@@ -1015,6 +1062,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         }
         (Entity::Image(e), s @ Shape::Image { .. }) => e.image = contract_image(s)?,
         (Entity::Raster(e), s @ Shape::Raster { .. }) => e.raster = contract_raster(s)?,
+        (Entity::PointCloud(e), s @ Shape::PointCloud { .. }) => e.cloud = contract_cloud(s)?,
         _ => return None,
     }
     Some(out)
@@ -1274,6 +1322,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
         }),
         EntityGeometry::Image(image) => Entity::Image(ImageEntity { base, image }),
         EntityGeometry::Raster(raster) => Entity::Raster(RasterEntity { base, raster }),
+        EntityGeometry::PointCloud(cloud) => {
+            Entity::PointCloud(kentos_contracts::PointCloudEntity { base, cloud })
+        }
     }
 }
 
@@ -1500,6 +1551,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         },
         s @ Shape::Image { .. } => EntityGeometry::Image(contract_image(s)?),
         s @ Shape::Raster { .. } => EntityGeometry::Raster(contract_raster(s)?),
+        s @ Shape::PointCloud { .. } => EntityGeometry::PointCloud(contract_cloud(s)?),
     })
 }
 

@@ -79,16 +79,10 @@ fn folder() -> Option<PathBuf> {
     Some(base.join("kentos-cad").join("raster"))
 }
 
-/// The pyramid file's name for a linked file: its path, size and change time hashed.
-fn cache_path(path: &std::path::Path) -> Option<PathBuf> {
-    let meta = std::fs::metadata(path).ok()?;
-    let changed = meta
-        .modified()
-        .ok()
-        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-        .map_or(0, |d| d.as_nanos());
-    let id = format!("{}|{}|{changed}", path.display(), meta.len());
-    let hex = kentos_sheet::template::sha256_hex(id.as_bytes());
+/// The pyramid file's name: the raster's identity hashed (a linked file's
+/// path, size and change time; an address with its size and version).
+fn cache_path(identity: &str) -> Option<PathBuf> {
+    let hex = kentos_sheet::template::sha256_hex(identity.as_bytes());
     Some(folder()?.join(format!("{hex}.tif")))
 }
 
@@ -119,13 +113,15 @@ fn attach(opened: &Opened, path: &std::path::Path) -> Result<(), String> {
 /// Starts the raster's pyramid unless it is under way, made or stopped:
 /// a file made before is taken at once, else a pass begins.
 pub(super) fn start(service: &Service, key: &str, source: &Arc<Source>, opened: &Arc<Opened>) {
-    let Origin::File(path) = &source.origin else {
+    // A linked file's or an address's: an embedded raster is small enough without one.
+    let Some(identity) = opened.identity.clone() else {
         return;
     };
     if source.declined.load(Ordering::Relaxed) || source.building.swap(true, Ordering::Relaxed) {
         return;
     }
-    let Some(target) = cache_path(path) else {
+    let Some(target) = cache_path(&identity) else {
+        source.building.store(false, Ordering::Relaxed);
         return;
     };
     if target.is_file() && attach(opened, &target).is_ok() {
@@ -133,9 +129,17 @@ pub(super) fn start(service: &Service, key: &str, source: &Arc<Source>, opened: 
         service.forget_tiles();
         return;
     }
-    let name = path
-        .file_name()
-        .map_or_else(|| key.to_owned(), |n| n.to_string_lossy().into_owned());
+    let name = match &source.origin {
+        Origin::File(path) => path
+            .file_name()
+            .map_or_else(|| key.to_owned(), |n| n.to_string_lossy().into_owned()),
+        Origin::Url(u) => u
+            .trim_end_matches('/')
+            .rsplit('/')
+            .next()
+            .map_or_else(|| key.to_owned(), str::to_owned),
+        Origin::Bytes(_) => key.to_owned(),
+    };
     let stop = Arc::new(AtomicBool::new(false));
     {
         let mut running = passes().lock().unwrap_or_else(PoisonError::into_inner);

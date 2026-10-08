@@ -12,6 +12,7 @@ import type { HatchPattern } from "./HatchPattern";
 import type { ImageFields } from "./ImageFields";
 import type { LeaderArrow } from "./LeaderArrow";
 import type { LineType } from "./LineType";
+import type { PointCloudFields } from "./PointCloudFields";
 import type { PointPart } from "./PointPart";
 import type { RasterFields } from "./RasterFields";
 import type { RingGeometry } from "./RingGeometry";
@@ -257,4 +258,4 @@ font?: DrawingFont, bold?: boolean, italic?: boolean,
  * How far its letters lean, degrees, positive with their tops to the
  * right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
  */
-oblique?: number, } | { "kind": "image" } & ImageFields | { "kind": "raster" } & RasterFields;
+oblique?: number, } | { "kind": "image" } & ImageFields | { "kind": "raster" } & RasterFields | { "kind": "pointcloud" } & PointCloudFields;

@@ -17,6 +17,7 @@ pub mod leader;
 pub mod offset;
 pub mod overlay;
 pub mod parallel;
+pub mod pointcloud;
 pub mod quadrature;
 pub mod raster;
 pub mod region;

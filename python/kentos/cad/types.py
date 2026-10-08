@@ -122,6 +122,40 @@ CheckpointKindName = Literal["snapshot", "revision"]
 """The names of :class:`CheckpointKind`, for a plain string."""
 
 
+class CloudFormat(_StrEnum):
+    """What a member's file is."""
+    LAS = "las"
+    LAZ = "laz"
+    COPC = "copc"
+    XYZ = "xyz"
+
+
+CloudFormatName = Literal["las", "laz", "copc", "xyz"]
+"""The names of :class:`CloudFormat`, for a plain string."""
+
+
+class CloudRender(_StrEnum):
+    """How points are coloured (docs/adr/0207 §5).
+
+    - ``rgb``: The file's colours.
+    - ``classification``: ASPRS's classes, each its colour.
+    - ``elevation``: Heights through a ramp.
+    - ``intensity``: Intensity in grey.
+    - ``returns``: Single, first, intermediate and last returns in four colours.
+    - ``single``: The object's colour.
+    """
+    RGB = "rgb"
+    CLASSIFICATION = "classification"
+    ELEVATION = "elevation"
+    INTENSITY = "intensity"
+    RETURNS = "returns"
+    SINGLE = "single"
+
+
+CloudRenderName = Literal["rgb", "classification", "elevation", "intensity", "returns", "single"]
+"""The names of :class:`CloudRender`, for a plain string."""
+
+
 class Convention(_StrEnum):
     """Which way a Helmert transformation's rotations turn: EPSG's position
     vector convention (9606) or its coordinate frame convention (9607).
@@ -170,6 +204,7 @@ class CreateOperation(_StrEnum):
     - ``planRoad``: Plan yolu (docs/adr/0198 §2): a road's areas from its axis, and the axis.
     - ``networkAdjust``: Yatay ağ dengelemesi (docs/adr/0203 §8): the network's new points the drawing has not.
     - ``raster``: Raster ekle (docs/adr/0204 §8): a raster placed.
+    - ``pointCloud``: Nokta bulutu ekle (docs/adr/0207 §9): a point cloud added.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -203,9 +238,10 @@ class CreateOperation(_StrEnum):
     PLAN_ROAD = "planRoad"
     NETWORK_ADJUST = "networkAdjust"
     RASTER = "raster"
+    POINT_CLOUD = "pointCloud"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -363,6 +399,7 @@ class EditOperation(_StrEnum):
     - ``levelAdjust``: Kot ağı dengelemesi (docs/adr/0203 §8): points given their adjusted heights, vertices on them too.
     - ``rasterStyle``: Raster stili (docs/adr/0204 §4): rasters' looks and opacities written in place.
     - ``rasterGeoref``: Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster
+    - ``pointCloudStyle``: Nokta bulutu stili (docs/adr/0207 §5): clouds' looks and opacities written in place.
     - ``annotationScale``: Yazı yüksekliklerini uydur (docs/adr/0205 §3): after the plot scale or
     """
     OFFSET = "offset"
@@ -419,10 +456,11 @@ class EditOperation(_StrEnum):
     LEVEL_ADJUST = "levelAdjust"
     RASTER_STYLE = "rasterStyle"
     RASTER_GEOREF = "rasterGeoref"
+    POINT_CLOUD_STYLE = "pointCloudStyle"
     ANNOTATION_SCALE = "annotationScale"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "annotationScale"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "annotationScale"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -582,6 +620,30 @@ class LineType(_StrEnum):
 
 LineTypeName = Literal["continuous", "dashed", "dashdot", "dotted"]
 """The names of :class:`LineType`, for a plain string."""
+
+
+class PointShape(_StrEnum):
+    """A point's shape."""
+    ROUND = "round"
+    SQUARE = "square"
+
+
+PointShapeName = Literal["round", "square"]
+"""The names of :class:`PointShape`, for a plain string."""
+
+
+class PointSizeUnit(_StrEnum):
+    """The unit of a point's size.
+
+    - ``px``: Pixels on the screen (independent of the device's pixels).
+    - ``m``: Metres on the ground (at least a pixel).
+    """
+    PX = "px"
+    M = "m"
+
+
+PointSizeUnitName = Literal["px", "m"]
+"""The names of :class:`PointSizeUnit`, for a plain string."""
 
 
 class PointSymbol(_StrEnum):
@@ -1048,6 +1110,7 @@ class Entity(_Union):
     - :class:`TableEntity` (``kind: table``)
     - :class:`ImageEntity` (``kind: image``)
     - :class:`RasterEntity` (``kind: raster``)
+    - :class:`PointcloudEntity` (``kind: pointcloud``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -1122,6 +1185,7 @@ class EntityGeometry(_Union):
     - :class:`TableEntityGeometry` (``kind: table``)
     - :class:`ImageEntityGeometry` (``kind: image``)
     - :class:`RasterEntityGeometry` (``kind: raster``)
+    - :class:`PointcloudEntityGeometry` (``kind: pointcloud``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -1229,6 +1293,12 @@ _LocalDefinitionT = TypeVar("_LocalDefinitionT", bound="LocalDefinition")
 
 
 _PathEntityT = TypeVar("_PathEntityT", bound="PathEntity")
+
+
+_PointCloudEntityT = TypeVar("_PointCloudEntityT", bound="PointCloudEntity")
+
+
+_PointCloudFieldsT = TypeVar("_PointCloudFieldsT", bound="PointCloudFields")
 
 
 _RasterFieldsT = TypeVar("_RasterFieldsT", bound="RasterFields")
@@ -2354,6 +2424,49 @@ class CirclePlan(_Model):
         return cls(
             entity=Entity.from_json(data["entity"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CloudSource(_Model):
+    """One file of a cloud.
+    Attributes:
+        count: Its points, as its header says.
+        bounds: `[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.
+        asset: The project library's asset its bytes are (embedded); exactly one of
+            `asset`, `file` and `url` is given.
+        file: The file (linked): absolute, or relative to the drawing's folder.
+        url: An HTTP or HTTPS address read by ranges.
+    """
+    format: CloudFormat | CloudFormatName
+    count: int
+    bounds: list[float]
+    asset: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+    url: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = _enum_out(self.format)
+        out["count"] = self.count
+        out["bounds"] = [float(e0) for e0 in self.bounds]
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.url is not UNSET:
+            out["url"] = self.url
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudSource:
+        return cls(
+            format=_enum_in(CloudFormat, data["format"]),
+            count=data["count"],
+            bounds=[float(e0) for e0 in data["bounds"]],
+            asset=data.get("asset", UNSET),
+            file=data.get("file", UNSET),
+            url=data.get("url", UNSET),
         )
 
 
@@ -5183,6 +5296,175 @@ class PatternLine(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PointCloudEntity(_Model):
+    """A point cloud (docs/adr/0207 §3).
+    Attributes:
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        bounds: The members' bounds together.
+        count: The members' points together.
+        srid: The files' system; 0: they named none and the user took the project's.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
+        opacity: 0.1 to 1; absent: opaque.
+        symbol: Library symbol overriding the layer's style.
+    """
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    sources: list[CloudSource]
+    bounds: list[float]
+    count: int
+    srid: int
+    style: PointCloudStyle
+    color: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    opacity: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["sources"] = [e0.to_json() for e0 in self.sources]
+        out["bounds"] = [float(e0) for e0 in self.bounds]
+        out["count"] = self.count
+        out["srid"] = self.srid
+        out["style"] = self.style.to_json()
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.opacity is not UNSET:
+            out["opacity"] = None if self.opacity is None else float(self.opacity)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls: type[_PointCloudEntityT], data: Mapping[str, Any]) -> _PointCloudEntityT:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            sources=[CloudSource.from_json(e0) for e0 in data["sources"]],
+            bounds=[float(e0) for e0 in data["bounds"]],
+            count=data["count"],
+            srid=data["srid"],
+            style=PointCloudStyle.from_json(data["style"]),
+            color=data.get("color", UNSET),
+            label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudFields(_Model):
+    """What places and shows a cloud: the object's own fields, and its geometry
+    in the commands (`EntityGeometry::PointCloud`).
+    Attributes:
+        bounds: The members' bounds together.
+        count: The members' points together.
+        srid: The files' system; 0: they named none and the user took the project's.
+        opacity: 0.1 to 1; absent: opaque.
+    """
+    sources: list[CloudSource]
+    bounds: list[float]
+    count: int
+    srid: int
+    style: PointCloudStyle
+    opacity: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sources"] = [e0.to_json() for e0 in self.sources]
+        out["bounds"] = [float(e0) for e0 in self.bounds]
+        out["count"] = self.count
+        out["srid"] = self.srid
+        out["style"] = self.style.to_json()
+        if self.opacity is not UNSET:
+            out["opacity"] = None if self.opacity is None else float(self.opacity)
+        return out
+
+    @classmethod
+    def from_json(cls: type[_PointCloudFieldsT], data: Mapping[str, Any]) -> _PointCloudFieldsT:
+        return cls(
+            sources=[CloudSource.from_json(e0) for e0 in data["sources"]],
+            bounds=[float(e0) for e0 in data["bounds"]],
+            count=data["count"],
+            srid=data["srid"],
+            style=PointCloudStyle.from_json(data["style"]),
+            opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudStyle(_Model):
+    """A cloud's look (docs/adr/0207 §5).
+    Attributes:
+        hidden: Classes not drawn (0–255), in order.
+        min: The ramp's least and most value (heights in metres, or intensities).
+        ramp: One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.
+        rgb8: Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).
+    """
+    render: CloudRender | CloudRenderName
+    size: float
+    hidden: list[int] | Unset = UNSET
+    invert: bool | Unset = UNSET
+    max: float | None | Unset = UNSET
+    min: float | None | Unset = UNSET
+    ramp: str | None | Unset = UNSET
+    rgb8: bool | Unset = UNSET
+    shape: PointShape | PointShapeName | Unset = UNSET
+    size_unit: PointSizeUnit | PointSizeUnitName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["render"] = _enum_out(self.render)
+        out["size"] = float(self.size)
+        if self.hidden is not UNSET:
+            out["hidden"] = list(self.hidden)
+        if self.invert is not UNSET:
+            out["invert"] = self.invert
+        if self.max is not UNSET:
+            out["max"] = None if self.max is None else float(self.max)
+        if self.min is not UNSET:
+            out["min"] = None if self.min is None else float(self.min)
+        if self.ramp is not UNSET:
+            out["ramp"] = self.ramp
+        if self.rgb8 is not UNSET:
+            out["rgb8"] = self.rgb8
+        if self.shape is not UNSET:
+            out["shape"] = _enum_out(self.shape)
+        if self.size_unit is not UNSET:
+            out["sizeUnit"] = _enum_out(self.size_unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudStyle:
+        return cls(
+            render=_enum_in(CloudRender, data["render"]),
+            size=float(data["size"]),
+            hidden=list(data["hidden"]) if "hidden" in data else UNSET,
+            invert=data.get("invert", UNSET),
+            max=UNSET if "max" not in data else None if data["max"] is None else float(data["max"]),
+            min=UNSET if "min" not in data else None if data["min"] is None else float(data["min"]),
+            ramp=data.get("ramp", UNSET),
+            rgb8=data.get("rgb8", UNSET),
+            shape=_enum_in(PointShape, data["shape"]) if "shape" in data else UNSET,
+            size_unit=_enum_in(PointSizeUnit, data["sizeUnit"]) if "sizeUnit" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointCreate(_Model):
     """Input of `cad.point.create` v1: one point object on a named layer, written
     as one undo step. The point tool calls it once per point it places.
@@ -6686,6 +6968,7 @@ class RasterEntity(Entity):
             object (docs/adr/0139).
         opacity: 0.1 to 1; absent: opaque.
         symbol: Library symbol overriding the layer's style.
+        url: An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
     """
     TAG_VALUE: ClassVar[str] = "raster"
     id: int
@@ -6705,6 +6988,7 @@ class RasterEntity(Entity):
     line_weight: float | None | Unset = UNSET
     opacity: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    url: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "raster"}
@@ -6732,6 +7016,8 @@ class RasterEntity(Entity):
             out["opacity"] = None if self.opacity is None else float(self.opacity)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.url is not UNSET:
+            out["url"] = self.url
         return out
 
     @classmethod
@@ -6754,6 +7040,7 @@ class RasterEntity(Entity):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
             symbol=data.get("symbol", UNSET),
+            url=data.get("url", UNSET),
         )
 
 
@@ -6771,6 +7058,7 @@ class RasterFields(_Model):
             `asset` and `file` is given.
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
         opacity: 0.1 to 1; absent: opaque.
+        url: An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
     """
     affine: list[float]
     width: int
@@ -6782,6 +7070,7 @@ class RasterFields(_Model):
     asset: str | None | Unset = UNSET
     file: str | None | Unset = UNSET
     opacity: float | None | Unset = UNSET
+    url: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -6798,6 +7087,8 @@ class RasterFields(_Model):
             out["file"] = self.file
         if self.opacity is not UNSET:
             out["opacity"] = None if self.opacity is None else float(self.opacity)
+        if self.url is not UNSET:
+            out["url"] = self.url
         return out
 
     @classmethod
@@ -6813,6 +7104,7 @@ class RasterFields(_Model):
             asset=data.get("asset", UNSET),
             file=data.get("file", UNSET),
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+            url=data.get("url", UNSET),
         )
 
 
@@ -7945,6 +8237,15 @@ class RayEntity(ConstructionEntity, Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class PointcloudEntity(PointCloudEntity, Entity):
+    """A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207)."""
+    TAG_VALUE: ClassVar[str] = "pointcloud"
+
+    def to_json(self) -> dict[str, Any]:
+        return {"kind": "pointcloud", **PointCloudEntity.to_json(self)}
+
+
+@dataclass(kw_only=True, slots=True)
 class UpdateEntityEdit(EntityEdit):
     """The object takes a new geometry and keeps everything else: its slot,
     persistent id, layer, colour, attributes, label and symbol (an end
@@ -8838,13 +9139,24 @@ class ImageEntityGeometry(ImageFields, EntityGeometry):
 @dataclass(kw_only=True, slots=True)
 class RasterEntityGeometry(RasterFields, EntityGeometry):
     """A raster (docs/adr/0204 §2): its pixels placed by `affine`, its size,
-    bands and samples, its file (`asset` embedded or `file` linked,
-    exactly one), the file's system, its look and opacity.
+    bands and samples, its file (`asset` embedded, `file` linked or `url`
+    read by ranges, exactly one), the file's system, its look and opacity.
     """
     TAG_VALUE: ClassVar[str] = "raster"
 
     def to_json(self) -> dict[str, Any]:
         return {"kind": "raster", **RasterFields.to_json(self)}
+
+
+@dataclass(kw_only=True, slots=True)
+class PointcloudEntityGeometry(PointCloudFields, EntityGeometry):
+    """A point cloud (docs/adr/0207 §3): its files (each embedded, linked or
+    an address), their points and bounds, the system, its look and opacity.
+    """
+    TAG_VALUE: ClassVar[str] = "pointcloud"
+
+    def to_json(self) -> dict[str, Any]:
+        return {"kind": "pointcloud", **PointCloudFields.to_json(self)}
 
 
 @dataclass(kw_only=True, slots=True)
@@ -9265,13 +9577,13 @@ _CRS_PLANE: dict[str, type[CrsPlane]] = {"similarity": SimilarityCrsPlane, "affi
 _CRS_SYSTEM: dict[str, type[CrsSystem]] = {"tm": TmCrsSystem, "geographic": GeographicCrsSystem, "local": LocalCrsSystem}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
 
 
-_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry, "image": ImageEntityGeometry, "raster": RasterEntityGeometry}
+_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry, "image": ImageEntityGeometry, "raster": RasterEntityGeometry, "pointcloud": PointcloudEntityGeometry}
 
 
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
@@ -9333,6 +9645,11 @@ __all__ = [
     "CircleEntity",
     "CircleEntityGeometry",
     "CirclePlan",
+    "CloudFormat",
+    "CloudFormatName",
+    "CloudRender",
+    "CloudRenderName",
+    "CloudSource",
     "CommitResult",
     "ConstructionEntity",
     "Convention",
@@ -9454,15 +9771,24 @@ __all__ = [
     "PathArrayLayout",
     "PathEntity",
     "PatternLine",
+    "PointCloudEntity",
+    "PointCloudFields",
+    "PointCloudStyle",
     "PointCreate",
     "PointCreated",
     "PointEntity",
     "PointEntityGeometry",
     "PointPart",
     "PointPlan",
+    "PointShape",
+    "PointShapeName",
+    "PointSizeUnit",
+    "PointSizeUnitName",
     "PointStyle",
     "PointSymbol",
     "PointSymbolName",
+    "PointcloudEntity",
+    "PointcloudEntityGeometry",
     "PolarArrayLayout",
     "PolygonCreate",
     "PolygonCreated",

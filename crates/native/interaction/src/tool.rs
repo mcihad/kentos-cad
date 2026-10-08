@@ -120,6 +120,10 @@ pub enum ViewChange {
     /// Koordinat oku's point (docs/adr/0204 §8): the host reads the values
     /// of the shown rasters under it and says them once read.
     RasterValues(Vec2),
+    /// Nokta bulutu XYZ sor's place (docs/adr/0207 §7): the host reads the
+    /// shown clouds' nearest point within `reach` (world units) of `at` at
+    /// full resolution, says it and gives it back with [`Tool::cloud_found`].
+    CloudQuery { at: Vec2, reach: f64 },
 }
 
 /// Where a text field opens and how its text will look: its start, height in
@@ -1419,6 +1423,8 @@ pub trait Tool {
     /// The picture it asked for ([`ViewChange::OpenImageFile`]), read; none
     /// when the picker was cancelled or the file could not be read (said).
     fn image_given(&mut self, _file: Option<ImageFile>, _cx: &mut Context<'_>) {}
+    /// The point XYZ sor's place found ([`ViewChange::CloudQuery`]), or none.
+    fn cloud_found(&mut self, _found: Option<[f64; 3]>, _cx: &mut Context<'_>) {}
     /// The answer of the values it asked for ([`ViewChange::AttributeValues`]):
     /// the attributes to write (Yerleştir), or none (Vazgeç, Esc).
     fn values_given(

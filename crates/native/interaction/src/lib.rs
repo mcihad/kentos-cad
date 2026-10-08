@@ -113,6 +113,7 @@ pub mod centerline;
 pub mod circle;
 pub mod cleanup;
 pub mod clipboard;
+pub mod cloud_query;
 pub mod construction;
 pub mod continuation;
 pub mod coordinate;

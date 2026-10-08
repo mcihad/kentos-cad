@@ -224,6 +224,7 @@ mod tests {
             sample: "u8".into(),
             asset: None,
             file: Some("a.tif".into()),
+            url: None,
             srid: 5256.0,
             style: crate::api::json::Json::Null,
             opacity: None,

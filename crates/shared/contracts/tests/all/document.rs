@@ -39,6 +39,7 @@ fn the_typescript_snapshot_round_trips_through_the_contracts() {
             Entity::Table(_) => "table",
             Entity::Image(_) => "image",
             Entity::Raster(_) => "raster",
+            Entity::PointCloud(_) => "pointcloud",
         })
         .collect();
     assert_eq!(

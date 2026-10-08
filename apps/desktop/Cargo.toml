@@ -39,6 +39,8 @@ kentos-cloud = { path = "../../crates/native/cloud" }
 # File exchange (exchange/): the shared readers and writers of coordinate lists and DXF,
 # the ones the web runs in its formats worker (CLAUDE.md §9.7, docs/adr/0009).
 kentos-formats = { path = "../../crates/shared/formats" }
+# Point clouds (docs/adr/0207): LAS, LAZ, COPC and text clouds, their index, looks and operations.
+kentos-pointcloud = { path = "../../crates/shared/pointcloud" }
 # Netcad NCZ in (docs/adr/0138): a port of GPL-2.0-or-later code, not distributed before the
 # author's permission (crates/shared/ncz/README.md).
 kentos-ncz = { path = "../../crates/shared/ncz" }

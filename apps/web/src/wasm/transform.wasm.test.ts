@@ -24,7 +24,7 @@ import { packEntities, unpackEntities } from './pack';
 
 const env = (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env ?? {};
 const ROUNDS = Number(env.TRANSFORM_ROUNDS ?? 200);
-const KINDS: Exclude<EntityKind, 'image' | 'raster'>[] = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch', 'insert'];
+const KINDS: Exclude<EntityKind, 'image' | 'raster' | 'pointcloud'>[] = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch', 'insert'];
 
 /** The first difference: keys in order, numbers bit for bit (NaN equals NaN, −0 is not 0). */
 function difference(a: unknown, b: unknown, path = ''): string | null {
@@ -192,8 +192,52 @@ describe('move, copy and paste through the geometry store, packed', () => {
     expect([Object.is((point.p as { x: number }).x, -0), Number.isNaN((point.p as { y: number }).y), Object.is(point.z, -0)]).toEqual([true, true, true]);
     // 13 is the multi-part area (docs/adr/0143), 14 a block's insert (docs/adr/0144), 15 a leader (docs/adr/0146), 16 a
     // multi-part polyline and 17 a multi-point object (docs/adr/0174), 18 a table (docs/adr/0184), 19 a picture
-    // (docs/adr/0192), 20 a raster (docs/adr/0204); the first number that is no kind is 21.
-    expect(() => unpackEntities({ nums: Float64Array.of(1, 0, 0, 21), strings: '["a"]' })).toThrow(/bilinmeyen bir nesne türü/);
+    // (docs/adr/0192), 20 a raster (docs/adr/0204), 21 a point cloud (docs/adr/0207); the first number that is no kind is 22.
+    expect(() => unpackEntities({ nums: Float64Array.of(1, 0, 0, 22), strings: '["a"]' })).toThrow(/bilinmeyen bir nesne türü/);
+  });
+
+  it('carries a raster’s address and a point cloud through the store as they are (docs/adr/0207 §1, §3)', () => {
+    const raster = {
+      id: 7001,
+      layerId: 'a',
+      attrs: {},
+      kind: 'raster',
+      affine: [0.5, 0, 0, -0.5, 486500, 4420300],
+      width: 400,
+      height: 300,
+      bands: 1,
+      sample: 'f32',
+      url: 'https://ornek.test/dem.tif',
+      srid: 5254,
+      style: { render: 'ramp', bands: [1] },
+    };
+    const cloud = {
+      id: 7002,
+      layerId: 'a',
+      attrs: {},
+      kind: 'pointcloud',
+      sources: [
+        { url: 'https://ornek.test/a.copc.laz', format: 'copc', count: 10, bounds: [0, 0, 0, 1, 1, 1] },
+        { file: 'b.laz', format: 'laz', count: 5, bounds: [1, 1, -0.5, 2, 2, 1] },
+      ],
+      bounds: [0, 0, -0.5, 2, 2, 1],
+      count: 15,
+      srid: 5254,
+      style: { render: 'classification', hidden: [7], size: 2 },
+      opacity: 0.8,
+    };
+    const list = [raster, cloud] as unknown as Entity[];
+    const geometry = ({ id: _i, layerId: _l, attrs: _a, ...g }: Record<string, unknown>) => g;
+    const back = unpackEntities(packEntities(list));
+    expect(back.map((b) => b.geometry)).toEqual([geometry(raster), geometry(cloud)]);
+    const store = new CoreStore();
+    const p = packEntities(list);
+    store.putPacked(p.nums, p.strings);
+    for (const e of [raster, cloud]) {
+      const { id: _id, layerId: _l, label: _t, ...kept } = JSON.parse(store.itemJson(e.id)!) as Record<string, unknown>;
+      expect(kept).toEqual(geometry(e));
+    }
+    store.dispose();
   });
 
   it('gives what the JSON call gives, bit for bit, on random objects and affines', () => {

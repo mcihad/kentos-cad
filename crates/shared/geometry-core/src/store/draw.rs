@@ -177,6 +177,16 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
             }
             None => out.push(NONE),
         },
+        // Its plan as a line, then as an area the points pass paints its picture on (docs/adr/0207 §6).
+        Shape::PointCloud { .. } => match crate::geom::pointcloud::corners(s) {
+            Some(c) => {
+                out.extend([MIXED, 1.0]);
+                path(out, true, &c);
+                out.push(1.0);
+                ring(out, &c, false, oriented.then_some(true));
+            }
+            None => out.push(NONE),
+        },
         // Its frame as a line, then as an area the raster pass paints (docs/adr/0204 §5).
         Shape::Raster { .. } => match crate::geom::raster::corners(s) {
             Some(c) => {

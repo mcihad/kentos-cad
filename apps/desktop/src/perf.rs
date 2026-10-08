@@ -36,6 +36,7 @@ use serde_json::{Value, json};
 
 use crate::document::{self, Document};
 
+mod clouds;
 mod frame;
 
 /// The drawing of measure.rs: `n` parcels of 20 vertices on one layer.

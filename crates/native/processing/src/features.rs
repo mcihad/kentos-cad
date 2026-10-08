@@ -73,6 +73,7 @@ pub fn kind_label(kind: &str) -> &'static str {
         "table" => "Tablo",
         "image" => "Resim",
         "raster" => "Raster",
+        "pointcloud" => "Nokta bulutu",
         _ => "Nesne",
     }
 }

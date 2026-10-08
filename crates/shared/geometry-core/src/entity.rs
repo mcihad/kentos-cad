@@ -353,6 +353,20 @@ pub enum Shape {
         sample: String,
         asset: Option<String>,
         file: Option<String>,
+        /// An address read by ranges (docs/adr/0207 §1).
+        url: Option<String>,
+        srid: f64,
+        style: crate::api::json::Json,
+        opacity: Option<f64>,
+    },
+    /// A point cloud (docs/adr/0207 §3): its files' bounds together
+    /// (`[x₁, y₁, z₁, x₂, y₂, z₂]`), its points, its files (the contract's
+    /// JSON), system, look and opacity, which the core carries through and the
+    /// points pass draws with; the core sees its plan's rectangle (`geom::pointcloud`).
+    PointCloud {
+        bounds: [f64; 6],
+        count: f64,
+        sources: crate::api::json::Json,
         srid: f64,
         style: crate::api::json::Json,
         opacity: Option<f64>,
@@ -377,7 +391,8 @@ crate::json_tagged!(Shape, "kind",
     Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask },
     Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
-    Raster => "raster" { affine, width, height, bands, sample, asset, file, srid, style, opacity },
+    Raster => "raster" { affine, width, height, bands, sample, asset, file, url, srid, style, opacity },
+    PointCloud => "pointcloud" { bounds, count, sources, srid, style, opacity },
 );
 
 /// An entity: its geometry and every other field, untouched and in order.
@@ -564,6 +579,10 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         Shape::Raster { .. } => crate::geom::raster::corners(e)
             .map(|c| c.to_vec())
             .unwrap_or_default(),
+        // Its plan's rectangle (docs/adr/0207 §3).
+        Shape::PointCloud { .. } => crate::geom::pointcloud::corners(e)
+            .map(|c| c.to_vec())
+            .unwrap_or_default(),
         // Its corners, its top left first (docs/adr/0184 §2).
         Shape::Table { .. } => crate::geom::table::table_geom(e)
             .map(|t| t.outline().to_vec())
@@ -644,7 +663,10 @@ pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
             None => pts.clone(),
         },
         // Its outline, closed (docs/adr/0184 §2); a picture's, the part shown (docs/adr/0192 §4); a raster's frame.
-        Shape::Table { .. } | Shape::Image { .. } | Shape::Raster { .. } => {
+        Shape::Table { .. }
+        | Shape::Image { .. }
+        | Shape::Raster { .. }
+        | Shape::PointCloud { .. } => {
             let mut ring = entity_vertices(e);
             if let Some(&first) = ring.first() {
                 ring.push(first);
@@ -1430,8 +1452,8 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
         | Shape::Table { p, .. } => *p,
         // The middle of the part shown (docs/adr/0192).
         Shape::Image { .. } => centroid(&crate::geom::image::shown(e)),
-        // The middle of its frame (docs/adr/0204).
-        Shape::Raster { .. } => centroid(&entity_vertices(e)),
+        // The middle of its frame (docs/adr/0204, 0207).
+        Shape::Raster { .. } | Shape::PointCloud { .. } => centroid(&entity_vertices(e)),
     })
 }
 

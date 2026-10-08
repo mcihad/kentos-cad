@@ -585,6 +585,15 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
             locked.push(uid.clone());
             continue;
         }
+        // A cloud's place is its files' (docs/adr/0207 §3): no transform moves or copies it.
+        if matches!(entity, Entity::PointCloud(_)) {
+            let i = input.uids.iter().position(|u| u == uid).unwrap_or(0);
+            return Err(Stop::Failed(checks::error(
+                codes::POINTCLOUD_FIXED,
+                "Nokta bulutu taşınmaz, döndürülmez, ölçeklenmez, aynalanmaz ve kopyalanmaz: konumu dosyasındadır. Bulutu seçimden çıkarın.".into(),
+                Some(format!("uids[{i}]")),
+            )));
+        }
         let before = shape(entity);
         // Only resampling its pixels could follow a projective map or a rubber sheet (docs/adr/0204 §7).
         let bends = matches!(&how, How::Sheet(_) | How::Warp(Warp::Projective { .. }));
@@ -810,6 +819,9 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
                 && height.is_finite()
                 && opacity.is_none_or(f64::is_finite)
         }
+        Shape::PointCloud {
+            bounds, opacity, ..
+        } => bounds.iter().all(|v| v.is_finite()) && opacity.is_none_or(f64::is_finite),
         Shape::Line { a, b } => pt(a) && pt(b),
         Shape::Polyline {
             pts: p,

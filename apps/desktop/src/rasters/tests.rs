@@ -380,3 +380,101 @@ fn a_large_raster_gets_its_pyramid_file_once() {
         .collect();
     assert_eq!(made.len(), 1, "one pyramid file");
 }
+
+/// A GeoTIFF read from an address (docs/adr/0207 §1): the window reads its
+/// header by ranges, Ekle keeps the address, and the scene's tiles are the
+/// file's own pixels.
+#[test]
+fn raster_ekle_reads_a_geotiff_from_an_address() {
+    use crate::range_server::{Mode, serve};
+    let data = std::fs::read(fixture("dem.tif")).expect("the elevation model");
+    let server = serve(vec![("dem.tif", data.clone())], Mode::Ranges);
+    let url = server.url("dem.tif");
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(fixture("dem.tif"));
+    let task = app.run("raster.add");
+    drive(&mut app, task);
+    let add =
+        |app: &mut App, e: super::add::Event| send(app, Message::Rasters(super::Event::Add(e)));
+    add(&mut app, super::add::Event::From(super::add::From::Address));
+    let s = app.rasters.add.as_ref().expect("the window");
+    assert!(
+        s.read.is_none() && s.name.is_empty(),
+        "nothing read for an address yet"
+    );
+    add(&mut app, super::add::Event::Address(url.clone()));
+    add(&mut app, super::add::Event::ReadAddress);
+    let s = app.rasters.add.as_ref().expect("the window");
+    let read = s
+        .read
+        .as_ref()
+        .expect("read")
+        .as_ref()
+        .expect("a raster from the address");
+    assert_eq!(
+        (read.info.width, read.info.height, read.info.bands),
+        (480, 324, 1)
+    );
+    assert_eq!(read.bytes, data.len() as u64);
+    assert_eq!(s.layer, "dem");
+    // Another address typed: what was read is not its until Oku.
+    add(&mut app, super::add::Event::Address(format!("{url}?v=2")));
+    assert!(app.rasters.add.as_ref().expect("the window").read.is_none());
+    add(&mut app, super::add::Event::Address(url.clone()));
+    add(&mut app, super::add::Event::ReadAddress);
+    add(&mut app, super::add::Event::Run);
+    let r = rasters(&app).remove(0);
+    assert_eq!(r.raster.url.as_deref(), Some(url.as_str()));
+    assert!(r.raster.file.is_none() && r.raster.asset.is_none());
+    assert_eq!(super::key_of(&r.raster), format!("url:{url}"));
+    // The same pixels by ranges as from the file.
+    let from_url = super::tiles::open(&super::tiles::Origin::Url(url.clone())).expect("opens");
+    let from_file =
+        super::tiles::open(&super::tiles::Origin::File(fixture("dem.tif"))).expect("opens");
+    from_url.fill(0, 0, 0, 480, 324).expect("reads");
+    from_file.fill(0, 0, 0, 480, 324).expect("reads");
+    let region = |o: &super::tiles::Opened| {
+        o.reader
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .region(0, 0, 0, 480, 324)
+            .expect("the pixels")
+    };
+    assert!(region(&from_url) == region(&from_file), "the same pixels");
+}
+
+#[test]
+fn an_address_takes_only_a_geotiff() {
+    use crate::range_server::{Mode, serve};
+    let png = std::fs::read(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/raster/v1/files/rgb.png"),
+    )
+    .expect("a PNG");
+    let server = serve(vec![("rgb.png", png)], Mode::Ranges);
+    let why = super::add::inspect_origin(&super::tiles::Origin::Url(server.url("rgb.png")))
+        .expect_err("refused");
+    assert!(
+        why.contains("Adresten yalnız GeoTIFF (COG) eklenir"),
+        "{why}"
+    );
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(fixture("dem.tif"));
+    let task = app.run("raster.add");
+    drive(&mut app, task);
+    let add =
+        |app: &mut App, e: super::add::Event| send(app, Message::Rasters(super::Event::Add(e)));
+    add(&mut app, super::add::Event::From(super::add::From::Address));
+    add(
+        &mut app,
+        super::add::Event::Address("ftp://ornek.org/dem.tif".into()),
+    );
+    add(&mut app, super::add::Event::ReadAddress);
+    let s = app.rasters.add.as_ref().expect("the window");
+    assert!(s.read.is_none());
+    assert!(
+        s.status_for_tests()
+            .is_some_and(|w| w.contains("HTTP ya da HTTPS adresi değil")),
+        "{:?}",
+        s.status_for_tests()
+    );
+}

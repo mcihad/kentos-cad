@@ -178,6 +178,8 @@ pub enum EditOperation {
     /// Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster
     /// put in place of its resampled file, updated in place.
     RasterGeoref,
+    /// Nokta bulutu stili (docs/adr/0207 §5): clouds' looks and opacities written in place.
+    PointCloudStyle,
     /// Yazı yüksekliklerini uydur (docs/adr/0205 §3): after the plot scale or
     /// an annotation height changed, the texts, leaders, dimensions and
     /// tables still at the old height given the new one
@@ -485,9 +487,12 @@ pub enum EntityGeometry {
     /// `opacity`.
     Image(crate::ImageFields),
     /// A raster (docs/adr/0204 §2): its pixels placed by `affine`, its size,
-    /// bands and samples, its file (`asset` embedded or `file` linked,
-    /// exactly one), the file's system, its look and opacity.
+    /// bands and samples, its file (`asset` embedded, `file` linked or `url`
+    /// read by ranges, exactly one), the file's system, its look and opacity.
     Raster(crate::RasterFields),
+    /// A point cloud (docs/adr/0207 §3): its files (each embedded, linked or
+    /// an address), their points and bounds, the system, its look and opacity.
+    PointCloud(crate::PointCloudFields),
 }
 
 impl EntityGeometry {
@@ -504,6 +509,7 @@ impl EntityGeometry {
                 | EntityGeometry::Insert { .. }
                 | EntityGeometry::Image(_)
                 | EntityGeometry::Raster(_)
+                | EntityGeometry::PointCloud(_)
         )
     }
 }

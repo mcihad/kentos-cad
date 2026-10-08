@@ -105,6 +105,8 @@ pub enum CreateOperation {
     NetworkAdjust,
     /// Raster ekle (docs/adr/0204 §8): a raster placed.
     Raster,
+    /// Nokta bulutu ekle (docs/adr/0207 §9): a point cloud added.
+    PointCloud,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

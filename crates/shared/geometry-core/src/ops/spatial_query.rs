@@ -150,6 +150,7 @@ pub fn geometry_of(s: &Shape) -> Option<Geometry> {
         | Shape::Table { .. }
         | Shape::Image { .. }
         | Shape::Raster { .. }
+        | Shape::PointCloud { .. }
         | Shape::Dimension { .. } => g.points.extend(entity_anchor(s)),
         Shape::Hatch { ring, holes, .. } => g.areas.push(area_of_hatch(ring, holes.as_ref())),
         _ => {

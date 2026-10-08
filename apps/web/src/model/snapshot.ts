@@ -3,6 +3,8 @@ import { layerFieldsProblem } from './layerFields';
 import { tableProblem, type TableShape } from './tables';
 import { imageProblem, type ImageShape } from './imageRules';
 import { rasterProblem, type RasterShape } from './rasterRules';
+import { pointCloudProblem } from './pointCloudRules';
+import type { PointCloudFields } from '../contracts/generated/PointCloudFields';
 import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
 import type { DimensionStyleDef } from '../contracts/generated/DimensionStyleDef';
@@ -368,7 +370,7 @@ const numbersAt = (v: unknown, w: string, f: string): number => {
   return v.length;
 };
 
-const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table', 'image', 'raster'] as const;
+const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table', 'image', 'raster', 'pointcloud'] as const;
 /** The dimension's kinds; KCAD schema 9 added the last five (docs/adr/0147). */
 const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter', 'ordinate', 'arcLength', 'jogged', 'azimuth', 'slope'] as const;
 const LINE_TYPES = ['continuous', 'dashed', 'dashdot', 'dotted'] as const;
@@ -948,6 +950,7 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
       oneOf(v.sample, ['u8', 'i8', 'u16', 'i16', 'u32', 'i32', 'f32', 'f64'] as const, at(w, 'örnek türü'));
       if (v.asset !== undefined) strAt(v.asset, w, 'varlık');
       if (v.file !== undefined) strAt(v.file, w, 'dosya');
+      if (v.url !== undefined) strAt(v.url, w, 'adres');
       numAt(v.srid, w, 'sistem');
       const st = isObj(v.style) ? v.style : fail(at(w, 'görünüş'), 'nesne olmalı');
       oneOf(st.render, ['rgb', 'gray', 'palette', 'ramp', 'hillshade', 'rampShade'] as const, at(w, 'görünüş türü'));
@@ -960,6 +963,42 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
       if (v.opacity !== undefined) numAt(v.opacity, w, 'donukluk');
       const problem = rasterProblem(v as unknown as RasterShape);
       if (problem) fail(at(w, 'raster'), problem);
+      break;
+    }
+    // docs/adr/0207 §3: its files (each one source, a format, points and bounds), bounds, points, system, look and
+    // opacity; the web keeps it as it is and checks it as the desktop does.
+    case 'pointcloud': {
+      const count = (c: unknown, ww: string) => {
+        if (!Number.isSafeInteger(c) || (c as number) < 0) fail(at(ww, 'nokta sayısı'), 'eksi olmayan tam sayı olmalı');
+      };
+      const six = (b: unknown, ww: string) => {
+        if (numbersAt(b, ww, 'kapsam') !== 6) fail(at(ww, 'kapsam'), 'altı sayı olmalı');
+      };
+      const sources = Array.isArray(v.sources) ? (v.sources as unknown[]) : fail(at(w, 'dosyalar'), 'liste olmalı');
+      sources.forEach((f, i) => {
+        const ws = `${at(w, 'dosyalar')} › ${i + 1}`;
+        if (!isObj(f)) return fail(ws, 'nesne olmalı');
+        for (const [k, name] of [['asset', 'varlık'], ['file', 'dosya'], ['url', 'adres']] as const) if (f[k] !== undefined) strAt(f[k], ws, name);
+        oneOf(f.format, ['las', 'laz', 'copc', 'xyz'] as const, at(ws, 'biçim'));
+        count(f.count, ws);
+        six(f.bounds, ws);
+      });
+      six(v.bounds, w);
+      count(v.count, w);
+      numAt(v.srid, w, 'sistem');
+      const st = isObj(v.style) ? v.style : fail(at(w, 'görünüş'), 'nesne olmalı');
+      oneOf(st.render, ['rgb', 'classification', 'elevation', 'intensity', 'returns', 'single'] as const, at(w, 'görünüş türü'));
+      if (st.ramp !== undefined) strAt(st.ramp, w, 'rampa');
+      for (const k of ['min', 'max'] as const) if (st[k] !== undefined) numAt(st[k], w, k);
+      for (const k of ['invert', 'rgb8'] as const) if (st[k] !== undefined) bool(st[k], at(w, k));
+      if (st.hidden !== undefined && (!Array.isArray(st.hidden) || !st.hidden.every((c) => Number.isInteger(c) && (c as number) >= 0 && (c as number) <= 255)))
+        fail(at(w, 'gizlenen sınıflar'), '0 ile 255 arasında tam sayı listesi olmalı');
+      numAt(st.size, w, 'boy');
+      if (st.sizeUnit !== undefined) oneOf(st.sizeUnit, ['px', 'm'] as const, at(w, 'boyun birimi'));
+      if (st.shape !== undefined) oneOf(st.shape, ['round', 'square'] as const, at(w, 'biçim'));
+      if (v.opacity !== undefined) numAt(v.opacity, w, 'donukluk');
+      const problem = pointCloudProblem(v as unknown as PointCloudFields);
+      if (problem) fail(at(w, 'nokta bulutu'), problem);
       break;
     }
   }

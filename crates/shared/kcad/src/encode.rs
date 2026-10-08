@@ -37,9 +37,9 @@ use crate::{
     SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
-    SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
-    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS,
-    SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES,
+    SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -944,7 +944,8 @@ fn has_heights(s: &ProjectSettings) -> bool {
         .is_some_and(|a| *a != AnnotationHeights::default())
 }
 
-/// The oldest schema that holds the drawing: 30 when the project has
+/// The oldest schema that holds the drawing: 31 when it has a point cloud or
+/// a raster read from an address (docs/adr/0207), 30 when the project has
 /// annotation heights or a dimension style lines, or a dimension of it or of
 /// a block definition has lines or a leader an arrowhead size or one of
 /// AutoCAD's arrowheads (docs/adr/0205), 29 when it has a raster
@@ -975,6 +976,14 @@ fn has_heights(s: &ProjectSettings) -> bool {
 fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     fn snaps(nodes: &[LayerNode]) -> bool {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
+    }
+    // Schema 31 (docs/adr/0207): a point cloud, or a raster read from an address; the drawing's only.
+    if doc.entities.iter().any(|e| match e {
+        Entity::PointCloud(_) => true,
+        Entity::Raster(r) => r.raster.url.is_some(),
+        _ => false,
+    }) {
+        return SCHEMA_WITH_POINT_CLOUDS;
     }
     // Schema 30 (docs/adr/0205): annotation heights, a dimension's lines, a
     // leader's arrowhead size or one of AutoCAD's arrowheads.

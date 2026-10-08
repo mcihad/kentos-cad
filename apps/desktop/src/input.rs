@@ -157,6 +157,8 @@ impl App {
                 ViewChange::OpenImageFile => self.image_file_wanted = true,
                 // Koordinat oku: the rasters' values under the point, read off the thread (rasters/).
                 ViewChange::RasterValues(p) => self.raster_values_wanted.push(p),
+                // XYZ sor: the clouds' nearest point, read off the thread (pointclouds/query.rs).
+                ViewChange::CloudQuery { at, reach } => self.cloud_query_wanted.push((at, reach)),
                 // Köşelere koordinat yaz's schedule hangs from the cursor (docs/adr/0185 §1).
                 ViewChange::PlaceTable(table, label) => self.place_table(*table, label),
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
@@ -210,12 +212,18 @@ impl App {
             }
             // The web logs the tool as a command, by its name (`ToolManager.activate`).
             let command = catalog().get(&format!("tool.{id}")).or_else(|| {
-                // Koordinat oku is a menu command, not `tool.<id>`.
-                (id == kentos_interaction::coordinate::ID)
-                    .then(|| catalog().get("crs.query"))
-                    .flatten()
+                // Koordinat oku and XYZ sor are menu commands, not `tool.<id>`.
+                match id {
+                    kentos_interaction::coordinate::ID => catalog().get("crs.query"),
+                    kentos_interaction::cloud_query::ID => catalog().get("pointcloud.query"),
+                    _ => None,
+                }
             });
-            let name = command.map_or(id, |command| command.title);
+            // A tool with no command of its own says its own name, never its id.
+            let name = command
+                .map(|command| command.title)
+                .or_else(|| self.session.label())
+                .unwrap_or(id);
             self.say(Level::Command, name);
             // It may act at once: the erase tool deletes a selection and leaves.
             self.with_tool(|s, cx| s.activate(cx));

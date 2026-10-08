@@ -43,9 +43,11 @@ pub(super) fn rows(
     f: &Format,
 ) -> Vec<Row> {
     let x = &r.raster;
-    let (source, linked) = match (&x.asset, &x.file) {
-        (Some(a), _) => (crate::pictures::asset_words(&doc.model, a), false),
-        (None, Some(path)) => (crate::pictures::file_words(path, doc.path.as_deref()), true),
+    let (source, linked) = match (&x.asset, &x.file, &x.url) {
+        (Some(a), _, _) => (crate::pictures::asset_words(&doc.model, a), false),
+        (None, Some(path), _) => (crate::pictures::file_words(path, doc.path.as_deref()), true),
+        // An address is read by ranges, not embedded (docs/adr/0207 §1).
+        (None, None, Some(u)) => (format!("Adres: {u}"), false),
         _ => ("—".to_owned(), false),
     };
     let embed = (linked && !locked).then(|| Editor::Select {

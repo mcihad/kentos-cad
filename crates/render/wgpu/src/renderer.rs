@@ -375,6 +375,7 @@ impl Renderer {
                 frame.camera.center.x - frame.origin.x,
                 frame.camera.center.y - frame.origin.y,
             ],
+            origin: [frame.origin.x, frame.origin.y],
             scale: frame.camera.scale,
             screen_scale: frame.camera.screen_scale(),
         };
@@ -472,6 +473,7 @@ impl Renderer {
             scene,
             &StyledFrame {
                 center: d.center,
+                origin: d.origin,
                 scale: d.scale,
                 dpr: d.scale_factor,
                 size_px: d.size_px,
@@ -618,6 +620,7 @@ impl Renderer {
                         lens.camera.center.x - lens.origin.x,
                         lens.camera.center.y - lens.origin.y,
                     ],
+                    origin: [lens.origin.x, lens.origin.y],
                     scale: lens.camera.scale,
                     dpr: lens.scale_factor,
                     size_px: lens.size_px,
@@ -812,6 +815,8 @@ struct Drawn {
     scale_factor: f64,
     /// Camera centre relative to the origin, metres.
     center: [f64; 2],
+    /// The origin in the world.
+    origin: [f64; 2],
     /// Logical pixels per metre.
     scale: f64,
     /// The screen scale 1:N at 96 dpi.

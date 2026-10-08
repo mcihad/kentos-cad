@@ -20,8 +20,8 @@ use kentos_geometry_core::jsmath::{js_max, js_round};
 use kentos_geometry_core::store::Store;
 use kentos_style_core::style::batch::Batches;
 use kentos_style_core::style::build::{
-    LayerObjects, MODE_DIMENSION, MODE_IMAGE, MODE_OWN, MODE_RASTER, MODE_RENDERER, MODE_SET,
-    MODE_SKIP, Program, View, build_layer_with as core_build,
+    LayerObjects, MODE_DIMENSION, MODE_IMAGE, MODE_OWN, MODE_POINTCLOUD, MODE_RASTER,
+    MODE_RENDERER, MODE_SET, MODE_SKIP, Program, View, build_layer_with as core_build,
 };
 use serde_json::{Map, Value, json};
 
@@ -261,6 +261,7 @@ pub fn layer_call(
             Entity::Image(_) => (MODE_IMAGE, 0),
             // Its tiles over its frame, its frame a hairline (docs/adr/0204 §5).
             Entity::Raster(_) => (MODE_RASTER, 0),
+            Entity::PointCloud(_) => (MODE_POINTCLOUD, 0),
             Entity::Hatch(h) => (
                 MODE_SET,
                 it.set(json!({ "fill": hatch_symbol_of(h, color) })),

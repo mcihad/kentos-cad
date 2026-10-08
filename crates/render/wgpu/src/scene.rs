@@ -1234,10 +1234,24 @@ fn shape(entity: &Entity) -> Shape {
             sample: r.raster.sample.name().to_owned(),
             asset: r.raster.asset.clone(),
             file: r.raster.file.clone(),
+            url: r.raster.url.clone(),
             srid: f64::from(r.raster.srid),
             style: kentos_geometry_core::api::json::Json::parse(&r.raster.style.to_json_text())
                 .unwrap_or(kentos_geometry_core::api::json::Json::Null),
             opacity: r.raster.opacity,
+        },
+        // A point cloud (docs/adr/0207): its plan, the points pass's paint.
+        Entity::PointCloud(c) => Shape::PointCloud {
+            bounds: c.cloud.bounds,
+            count: c.cloud.count as f64,
+            sources: kentos_geometry_core::api::json::Json::parse(
+                &kentos_contracts::sources_json_text(&c.cloud.sources),
+            )
+            .unwrap_or(kentos_geometry_core::api::json::Json::Null),
+            srid: f64::from(c.cloud.srid),
+            style: kentos_geometry_core::api::json::Json::parse(&c.cloud.style.to_json_text())
+                .unwrap_or(kentos_geometry_core::api::json::Json::Null),
+            opacity: c.cloud.opacity,
         },
         Entity::Table(t) => Shape::Table {
             p: v(&t.p),

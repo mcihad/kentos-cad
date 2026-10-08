@@ -170,6 +170,12 @@ pub const RASTER_IN_BLOCK: &str = "raster_in_block";
 /// A raster under a projective transform or a rubber sheet, which only
 /// resampling its pixels could follow (docs/adr/0204 §7).
 pub const RASTER_NOT_WARPED: &str = "raster_not_warped";
+/// A point cloud's files, bounds, points, look or opacity out of their rules (docs/adr/0207 §10).
+pub const INVALID_POINTCLOUD: &str = "invalid_pointcloud";
+/// A point cloud among the objects a block is defined from (docs/adr/0207 §3).
+pub const POINTCLOUD_IN_BLOCK: &str = "pointcloud_in_block";
+/// A point cloud moved, turned, scaled, mirrored or copied: its place is its files' (docs/adr/0207 §3).
+pub const POINTCLOUD_FIXED: &str = "pointcloud_fixed";
 /// Tablo's edit (`table`, `tableUpdate`) changing an object that is not a
 /// table, or into one that is not (docs/adr/0184 §6).
 pub const NOT_A_TABLE: &str = "not_a_table";

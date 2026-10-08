@@ -17,6 +17,7 @@ use kentos_ui::icon::Icon;
 
 use super::{Event, Field, Spot};
 
+pub(crate) mod cloud;
 mod dimension;
 pub(crate) mod raster;
 
@@ -965,6 +966,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         }
         // Its file, size, bands, pixel, system, nodata and opacity (docs/adr/0204 §8).
         Entity::Raster(r) => geo.extend(raster::rows(doc, slot, r, locked, &f)),
+        // Its files, points, bounds, density, system, index, look and opacity (docs/adr/0207 §9).
+        Entity::PointCloud(c) => geo.extend(cloud::rows(doc, slot, c, locked, &f)),
         // Its note, height, turn, arrowhead and mask, its corners and length (docs/adr/0146 §7).
         Entity::Leader(l) => {
             geo.extend(leader_rows(&[l], &ids, locked, &f));

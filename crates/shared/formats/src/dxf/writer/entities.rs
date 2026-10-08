@@ -79,6 +79,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Table(_) => "Tablo",
         Entity::Image(_) => "Resim",
         Entity::Raster(_) => "Raster",
+        Entity::PointCloud(_) => "Nokta bulutu",
     }
 }
 
@@ -173,7 +174,7 @@ fn finite(e: &Entity) -> bool {
         Entity::Insert(i) => ok(i.p) && nums_ok(&[i.scale, i.rotation]),
         Entity::Leader(l) => all_ok(&l.pts) && nums_ok(&[l.height, l.rotation]),
         // Never written (docs/adr/0192, 0204, Kapsam dışı): said in the report.
-        Entity::Image(_) | Entity::Raster(_) => true,
+        Entity::Image(_) | Entity::Raster(_) | Entity::PointCloud(_) => true,
         Entity::Table(t) => {
             ok(t.p)
                 && nums_ok(&[t.height, t.rotation])
@@ -587,6 +588,15 @@ impl Writer<'_> {
             Entity::Insert(i) => self.insert(i),
             Entity::Leader(l) => self.leader(l),
             Entity::Table(t) => self.table(t),
+            // Nor a point cloud (docs/adr/0207 §11).
+            Entity::PointCloud(_) => {
+                self.report.skip(
+                    "Nokta bulutu",
+                    "DXF'e nokta bulutu yazılmaz: bulut kendi dosyasındadır (LAS, LAZ, COPC); dosyayı ayrıca verin",
+                    0,
+                );
+                false
+            }
             // Nor a raster (docs/adr/0204 §10).
             Entity::Raster(_) => {
                 self.report.skip(

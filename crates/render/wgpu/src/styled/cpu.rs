@@ -526,6 +526,8 @@ fn fill(
                 // A raster is the raster pass's on the screen; a sheet's picture shows none
                 // (docs/adr/0204, Kapsam dışı: the raster in a sheet's output, §16.4).
                 FillPaintBatch::Raster { .. } => continue,
+                // Nor a point cloud (docs/adr/0207, Kapsam dışı).
+                FillPaintBatch::PointCloud { .. } => continue,
             };
             let cov = f64::from(m) / 255.0;
             over(

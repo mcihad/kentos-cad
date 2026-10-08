@@ -23,6 +23,8 @@ mod catalog;
 mod centerline_scenes;
 mod clipboard;
 mod cloud;
+#[cfg(test)]
+mod cloud_scenes;
 mod cogo;
 mod command_bar;
 #[cfg(test)]
@@ -103,6 +105,7 @@ mod pictures;
 mod point_calc;
 #[cfg(test)]
 mod point_calc_scenes;
+mod pointclouds;
 mod points;
 mod preview;
 mod processing;
@@ -111,6 +114,8 @@ mod properties;
 mod python;
 #[cfg(test)]
 mod query_tests;
+#[cfg(test)]
+mod range_server;
 #[cfg(test)]
 mod raster_scenes;
 mod rasters;

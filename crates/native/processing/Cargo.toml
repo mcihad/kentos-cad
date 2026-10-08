@@ -16,6 +16,11 @@ kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-domain = { path = "../domain" }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 kentos-native-application = { path = "../application" }
+# Point clouds read whole and their results written (docs/adr/0207 §7): the machines
+# of the point cloud core; the host's files do the reading and writing (files.rs).
+kentos-pointcloud = { path = "../../shared/pointcloud" }
+# Rasterleştir's GeoTIFF and its look (docs/adr/0207 §7, ADR 0204's writer).
+kentos-formats = { path = "../../shared/formats" }
 # The project's coordinate systems (Koordinat sistemine dönüştür, docs/adr/0201 §8).
 kentos-project = { path = "../project" }
 kentos-style-core = { path = "../../shared/style-core" }
@@ -25,6 +30,5 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 # The shared cases' file values (fixtures/processing/v1/queries.json) are read
-# as the dialog reads a chosen file: Tablo ekle's reader (docs/adr/0200 §7).
-[dev-dependencies]
-kentos-formats = { path = "../../shared/formats" }
+# as the dialog reads a chosen file: Tablo ekle's reader (docs/adr/0200 §7),
+# the formats core above.

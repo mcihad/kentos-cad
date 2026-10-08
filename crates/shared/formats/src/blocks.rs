@@ -265,6 +265,17 @@ pub fn raster_corners(r: &kentos_contracts::RasterEntity) -> Vec<Vec2> {
         .collect()
 }
 
+/// A point cloud's plan's four corners (docs/adr/0207 §3).
+pub fn cloud_corners(c: &kentos_contracts::PointCloudEntity) -> Vec<Vec2> {
+    let [x1, y1, x2, y2] = c.cloud.rect();
+    vec![
+        Vec2 { x: x1, y: y1 },
+        Vec2 { x: x2, y: y1 },
+        Vec2 { x: x2, y: y2 },
+        Vec2 { x: x1, y: y2 },
+    ]
+}
+
 /// A table's four corners (docs/adr/0184 §2): top left, top right, bottom
 /// right, bottom left.
 pub fn table_corners(t: &TableEntity) -> Vec<Vec2> {
@@ -610,6 +621,22 @@ pub(crate) fn shape(e: &Entity) -> Shape {
                 .map(|c| c.iter().map(|q| core(*q)).collect()),
             opacity: i.image.opacity,
         },
+        // A point cloud is no block's piece either (docs/adr/0207 §3); its plan for what it covers.
+        Entity::PointCloud(c) => {
+            let f = &c.cloud;
+            let json = |t: String| {
+                kentos_geometry_core::api::json::Json::parse(&t)
+                    .unwrap_or(kentos_geometry_core::api::json::Json::Null)
+            };
+            Shape::PointCloud {
+                bounds: f.bounds,
+                count: f.count as f64,
+                sources: json(kentos_contracts::sources_json_text(&f.sources)),
+                srid: f64::from(f.srid),
+                style: json(f.style.to_json_text()),
+                opacity: f.opacity,
+            }
+        }
         // A raster is no block's piece either (docs/adr/0204 §2); its frame for what it covers.
         Entity::Raster(r) => {
             let f = &r.raster;
@@ -621,6 +648,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
                 sample: f.sample.name().to_owned(),
                 asset: f.asset.clone(),
                 file: f.file.clone(),
+                url: f.url.clone(),
                 srid: f64::from(f.srid),
                 style: kentos_geometry_core::api::json::Json::parse(&f.style.to_json_text())
                     .unwrap_or(kentos_geometry_core::api::json::Json::Null),
@@ -853,7 +881,11 @@ fn entity(s: &Shape) -> Option<Entity> {
             assoc: None,
         }),
         // A block holds no table (docs/adr/0184 §1); the core opens inserts.
-        Shape::Insert { .. } | Shape::Table { .. } | Shape::Image { .. } | Shape::Raster { .. } => {
+        Shape::Insert { .. }
+        | Shape::Table { .. }
+        | Shape::Image { .. }
+        | Shape::Raster { .. }
+        | Shape::PointCloud { .. } => {
             return None;
         }
     })

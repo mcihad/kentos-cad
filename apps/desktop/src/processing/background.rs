@@ -22,6 +22,7 @@ use std::time::{Duration, Instant};
 use iced::Task;
 use iced::futures::channel::mpsc;
 use kentos_domain::{Document, Slot};
+use kentos_processing::files::Files;
 use kentos_processing::model_runner::{RecordedStep, record_model};
 use kentos_processing::{
     Bounds, Feedback, Host, Job, Level, LogLine, Model, RunResult, Runner, Scene, Tool, Values,
@@ -120,16 +121,18 @@ pub(crate) fn start_tool<M: Send + 'static>(
     job: Job,
     copy: Document,
     session: u64,
+    files: Option<Arc<dyn Files>>,
     to: impl Fn(u64, Reply) -> M + Send + 'static,
 ) -> (Running, Task<M>) {
     let work = job.clone();
-    start(id, Work::Tool(job), session, to, move |feedback| {
+    start(id, Work::Tool(job), session, files, to, move |feedback| {
         Answer::Tool(Runner::compute(&work, &copy, feedback))
     })
 }
 
 /// Starts running a model on `copy` with the selection and the view it
 /// was started with; what the thread says comes back as messages made by `to`.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn start_model<M: Send + 'static>(
     id: u64,
     run: ModelRun,
@@ -137,10 +140,11 @@ pub(crate) fn start_model<M: Send + 'static>(
     selection: Vec<Slot>,
     view: Option<Bounds>,
     session: u64,
+    files: Option<Arc<dyn Files>>,
     to: impl Fn(u64, Reply) -> M + Send + 'static,
 ) -> (Running, Task<M>) {
     let there = run.clone();
-    start(id, Work::Model(run), session, to, move |feedback| {
+    start(id, Work::Model(run), session, files, to, move |feedback| {
         let mut host = Copy {
             doc: copy,
             selection,
@@ -166,6 +170,7 @@ fn start<M: Send + 'static>(
     id: u64,
     work: Work,
     session: u64,
+    files: Option<Arc<dyn Files>>,
     to: impl Fn(u64, Reply) -> M + Send + 'static,
     compute: impl FnOnce(&mut dyn Feedback) -> Answer + Send + 'static,
 ) -> (Running, Task<M>) {
@@ -176,6 +181,7 @@ fn start<M: Send + 'static>(
         out: out.clone(),
         stop: stop.clone(),
         last: None,
+        files,
     };
     let slot = answer.clone();
     let spawned = std::thread::Builder::new()
@@ -257,9 +263,15 @@ struct Apart {
     out: mpsc::UnboundedSender<Reply>,
     stop: Arc<AtomicBool>,
     last: Option<Instant>,
+    /// The host's files for the tools that read and write them (docs/adr/0207 §7).
+    files: Option<Arc<dyn Files>>,
 }
 
 impl Feedback for Apart {
+    fn files(&self) -> Option<Arc<dyn Files>> {
+        self.files.clone()
+    }
+
     fn progress(&mut self, fraction: f64, label: &str) {
         let now = Instant::now();
         if fraction < 1.0 && self.last.is_some_and(|t| now - t < PROGRESS_EVERY) {

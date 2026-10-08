@@ -111,6 +111,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çizim hattında raster atlası (stilli çizimin 6. sürümü); Raster ekle (sistemin kuralı, oturtulmamış yer), Raster stili (canlı önizleme),
   Raster oturt (Helmert, afin, projektif, polinom 2 ve 3, ince plaka; artıklar ve m0; afin dönüşümü değiştirir, ötekiler GeoTIFF'e yeniden
   örnekler), Koordinat oku'da rasterin değerleri; CBS'de Veri › Raster, CAD'de Ekle › Raster (ADR 0204);
+  nokta bulutu, şimdilik yalnız masaüstünde (sahibin kararı, 8 Ekim; web'in şeridinde aynı düğmeler “Yalnız masaüstünde; web için
+  hazırlanıyor” notuyla bekler): LAS 1.0–1.4, LAZ (laz-rs), COPC ve metin bulutları (XYZ, PTS, TXT, CSV); bağlı dosya, HTTP adresi (parça
+  parça) ya da gömülü (32 MB'a kadar), birden çok dosya tek sanal bulut, .vpc okunur ve yazılır; `pointcloud` nesnesi (`.kcad` şema 31;
+  rasterin adresi `url` de); COPC olmayan dosyanın dizini cihazın önbelleğinde bir kez (Durdur'lu panel); çizimde kat kat, karede en çok
+  4 milyon nokta, düğümler iş parçacıklarında yalnız görünüşün alanlarıyla çözülür; görünüş: renkler, sınıflar, yükseklik ve yoğunluk
+  rampası, dönüşler, tek renk, gizlenen sınıflar, piksel ya da metre boy, kare ya da yuvarlak, saydamlık; Nokta bulutu ekle, Nokta bulutu
+  stili (canlı önizleme), XYZ sor, Sanal bulut olarak kaydet; İşlemler'in Nokta bulutu kategorisi: alan sorgusu, Seyrelt, Zemin süzgeci
+  (SMRF), Yüksekliğe göre sınıfla, Bulutu kırp, Bulutları birleştir, Karola, Rasterleştir (GeoTIFF), Sınır çıkar; sonuçlar LAS, LAZ ya da
+  COPC; Raster ekle'de Adres (GeoTIFF ve COG, HTTP aralıklarıyla) (ADR 0207);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -360,6 +369,14 @@ python3 scripts/fixtures/raster_georef_cases.py --check   # Raster oturt'un dön
 python3 scripts/fixtures/raster_scene.py --check   # rasterlerin ortak sahnesini (fixtures/interaction/v1/rasters.kcad ve rasters/: DEM, ortofoto, taranmış pafta) KentOS kodu olmadan GDAL'la yeniden üretip karşılaştır (ADR 0204)
 KENTOS_SHOTS_ONLY=raster-vadi,raster-orto,raster-dem,raster-ekle,raster-ekle-tarama,raster-stili,raster-oturt cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # rasterlerin masaüstü resimleri, .run/shots/arac-raster-* (web'inkiler ve işçinin piramit ve yeniden örnekleme sahneleri: (cd apps/web && node scripts/e2e/shots.mjs rasters), WebGPU'yla --renderer webgpu; ADR 0204)
 cargo test --release -p kentos-formats --test all raster_timing -- --ignored --nocapture   # raster karolarının, ilk görüntünün, piramit geçişinin ve ince plakalı yeniden örneklemenin süreleri (ADR 0204 §11)
+python3 scripts/fixtures/pointcloud_cases.py --check   # nokta bulutu okuyucusunun örnek dosyalarını (laspy ve LASzip'in yazdığı LAS 1.2–1.4, biçimler 0–8, sistemler, ek baytlar, çok parçalı LAZ; metin bulutları; bozuk dosyalar) KentOS kodu olmadan denetle; durumlar fixtures/pointcloud/v1/cases.json (ADR 0207)
+python3 scripts/fixtures/pointcloud_index_cases.py --check   # COPC dizinini (kutular, yapraklar, ızgaranın hücreleri, düğümlerin noktaları) KentOS kodu olmadan yeniden kurup karşılaştır; --verify KentOS'un yazdığı COPC'yi LASzip'le nokta nokta denetler; durumlar fixtures/pointcloud/v1/index.json (ADR 0207 §4)
+python3 scripts/fixtures/pointcloud_ops_cases.py --check   # nokta bulutu işlemlerini (Seyrelt, Zemin süzgeci, Yüksekliğe göre sınıfla, Bulutu kırp, alan sorgusu, Karola, Rasterleştir, Sınır çıkar, Bulutları birleştir) ADR'nin tanımlarından laspy ve numpy'la denetle; durumlar fixtures/pointcloud/v1/ops.json (ADR 0207 §7)
+python3 scripts/fixtures/pointcloud_scene.py --check   # nokta bulutlarının sahnesini (fixtures/interaction/v1/pointclouds.kcad ve pointclouds/koy.laz) KentOS kodu olmadan laspy ve LASzip'le yeniden üretip karşılaştır (ADR 0207)
+python3 scripts/fixtures/pointcloud_command_cases.py --check   # nokta bulutunun masaüstüne özgü komut durumlarını (fixtures/commands/v1/desktop) sözleşmenin kurallarından denetle (ADR 0207 §10)
+KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
+cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
+cargo test --release -p kentos-pointcloud --test all timing -- --ignored --nocapture   # aynı bulutta düğümün görünüşe göre çözülmesi (katman katman) ve LAZ yazma, tek ve dört iş parçacığıyla (önce perf::clouds dosyayı yazar; ADR 0207 §12)
 python3 scripts/fixtures/exchange_cases.py --check   # Çizimler arası alışverişin kurallarını (seçimin çizimi: budanan ağaç, iç içe bloklar, kitaplığın kullanılanları, düşen bağlar; Başka çizimden al: yollar, katlanan adlar, Atla ve Değiştir, kimliklerin ekleri, katman durumlarının yolları; Dosyadan blok ekle: ad sayısı, sol alt köşe, resim ve tablo; Kaynaklar'ın Katman olarak ekle'si: katman nesneleriyle, aynı adlı blok ve stil, açılan katmanın görünüşünün simgesi) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/exchange/v1/cases.json (ADR 0193, 0199 §7)
 python3 scripts/fixtures/image_cases.py --check   # Resim ekle'nin çerçevesini (genişlik, yükseklik, dönüş) ve Resmi kırp'ın sınırını resmin kendi kesirleriyle (taşan, saran, saat yönünde, aynalı, dönük, dışarıda) kesirlerle bağımsız başvurudan denetle; durumlar fixtures/image/v1/cases.json (ADR 0192)
 KENTOS_SHOTS_ONLY=resim-ekle,resim-ekle-yazildi,resim-kirp,resim-kirpildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # resim nesnesinin resimleri, .run/shots/arac-resim-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs images), WebGPU'yla --renderer webgpu; ADR 0192)
@@ -1191,8 +1208,17 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `formats::raster` (`tiff`, `geotiff`, `codec`, `png`, `source`, `style`, `pyramid`, `write`, `warp`, `place`; bağımsız başvurular
   `raster_cases.py`, `raster_georef_cases.py`, ortak `fixtures/raster/v1`), geometri çekirdeğinin `geom::raster` ve `ops::georef`'i, stilli
   çizimin 6. sürümü; masaüstünde `rasters/` ve `calc/raster_fit.rs`, çizim hattı `styled/raster_tiles.rs`; web'de `io/rasterWorker.ts`,
-  `render/rasterService.ts`, `render/rasterPass.ts`, `ui/raster/`; sahne `fixtures/interaction/v1/rasters.kcad`. Sıradaki `GIS-09`; sahibin
-  isteğiyle (8 Ekim: “bu madde bittikten sonra sonrakine geçme, başka bir işimiz var”) bu maddeden sonra durulur, sahibin işi beklenir.
+  `render/rasterService.ts`, `render/rasterPass.ts`, `ui/raster/`; sahne `fixtures/interaction/v1/rasters.kcad`. `GIS-09` nokta bulutu
+  ([ADR 0207](docs/adr/0207-point-clouds-and-large-data.md); kapsam sahibin kararları: LAS, LAZ, COPC ve XYZ; LAZ için `laz`; 2B plan, kat kat
+  ve renk kipleriyle; dört işlem grubu; dosya, URL ve sanal bulut; simgeler sahibin seçtikleri) tek parçada, **yalnız masaüstünde** bitti
+  (8 Ekim; sahibin kararı: “Nokta bulutu çok ağır bir iş … Sadece masaüstü ile kalalım”, web'de düğmeler notuyla bekler, web'in modülü
+  TODOS.md `GIS-09`'un alt maddesi): sözleşmenin `pointcloud`'u ve rasterin `url`'si, `.kcad` şema 31 (`FORMATS_VERSION` 41), çekirdek
+  `kentos-pointcloud` (`source`, `las`, `chunks`, `copc`, `text`, `crs`, `index`, `write`, `vpc`, `look`, `nodes`, `place`, `ops`; bağımsız
+  başvurular `pointcloud_cases.py`, `pointcloud_index_cases.py`, `pointcloud_ops_cases.py`), geometri çekirdeğinin `geom::pointcloud`'u,
+  noktaların çizim hattı (`styled/points.rs`, `shaders/wgsl/points`, stilli çizimin 7. sürümü); masaüstünde `pointclouds/`, İşlemler'in
+  `builtin/pointcloud/`'u ve `files`'ı, rasterin adresi (`rasters/tiles.rs`'in `Origin::Url`'si); komut durumları `fixtures/commands/v1/desktop`;
+  sahne `fixtures/interaction/v1/pointclouds.kcad`; süreler `perf::clouds`. Sahip aksini söyleyene dek her modül iki platformda, gerektiğinde
+  bulut tarafıyla yapılır; platform sorulmaz, ikonları sorulmadan seçilir (sahibin kararları, 8 Ekim akşamı). Sıradaki `GIS-10`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

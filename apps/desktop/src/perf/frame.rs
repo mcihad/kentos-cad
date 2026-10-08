@@ -39,11 +39,11 @@ use crate::app::{App, Message};
 use crate::document::Document;
 
 /// The window measured: the owner's reference size.
-const WINDOW: Size = Size::new(1440.0, 900.0);
+pub(super) const WINDOW: Size = Size::new(1440.0, 900.0);
 
 /// One frame's parts, milliseconds.
 #[derive(Debug, Clone, Copy, Default)]
-struct Parts {
+pub(super) struct Parts {
     event: f64,
     app: f64,
     view: f64,
@@ -60,8 +60,8 @@ impl Parts {
 }
 
 /// The interface without a window, driven as Iced's runtime drives it.
-struct Harness {
-    renderer: Renderer,
+pub(super) struct Harness {
+    pub(super) renderer: Renderer,
     cache: user_interface::Cache,
     cursor: mouse::Cursor,
     gpu: bool,
@@ -71,7 +71,7 @@ fn redraw() -> Event {
     Event::Window(window::Event::RedrawRequested(iced::time::Instant::now()))
 }
 
-fn moved(position: Point) -> Event {
+pub(super) fn moved(position: Point) -> Event {
     Event::Mouse(mouse::Event::CursorMoved { position })
 }
 
@@ -85,7 +85,7 @@ fn click(position: Point) -> [Event; 3] {
 }
 
 impl Harness {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         typography::load();
         let asked = std::env::var("KENTOS_SNAPSHOT_BACKEND").unwrap_or_else(|_| "wgpu".into());
         let make = |backend: &str| {
@@ -109,7 +109,12 @@ impl Harness {
 
     /// One input: `act` is the app taking it (by default, the widgets'
     /// messages for `events`), then the interface built, laid out and drawn.
-    fn frame_with(&mut self, app: &mut App, events: &[Event], act: impl FnOnce(&mut App)) -> Parts {
+    pub(super) fn frame_with(
+        &mut self,
+        app: &mut App,
+        events: &[Event],
+        act: impl FnOnce(&mut App),
+    ) -> Parts {
         for event in events {
             if let Event::Mouse(mouse::Event::CursorMoved { position }) = event {
                 self.cursor = mouse::Cursor::Available(*position);
@@ -199,12 +204,12 @@ impl Harness {
         parts
     }
 
-    fn frame(&mut self, app: &mut App, events: &[Event]) -> Parts {
+    pub(super) fn frame(&mut self, app: &mut App, events: &[Event]) -> Parts {
         self.frame_with(app, events, |_| {})
     }
 
     /// Frames until the interface asks for nothing more (the area's size, the first fit).
-    fn settle(&mut self, app: &mut App) {
+    pub(super) fn settle(&mut self, app: &mut App) {
         for _ in 0..12 {
             let mut messages = Vec::new();
             let mut ui = UserInterface::build(
@@ -232,7 +237,7 @@ impl Harness {
 }
 
 /// A pan with the middle button from `center`, 20 steps out and back: its frames.
-fn pan(app: &mut App, h: &mut Harness, center: Point) -> Vec<Parts> {
+pub(super) fn pan(app: &mut App, h: &mut Harness, center: Point) -> Vec<Parts> {
     h.frame(
         app,
         &[
@@ -586,7 +591,7 @@ fn percentile(xs: &[f64], p: f64) -> f64 {
     xs[at.min(xs.len() - 1)]
 }
 
-fn summary(frames: &[Parts]) -> Value {
+pub(super) fn summary(frames: &[Parts]) -> Value {
     let part = |f: &dyn Fn(&Parts) -> f64| median(frames.iter().map(f).collect());
     let cpu: Vec<f64> = frames.iter().map(Parts::cpu).collect();
     let gpu: Vec<f64> = frames.iter().filter_map(|p| p.gpu).collect();

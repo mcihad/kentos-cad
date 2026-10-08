@@ -21,6 +21,7 @@ import { registerCloudCommands } from './cloud/commands';
 import { CloudSession } from './cloud/session';
 import { pendingInvitation } from './cloud/invitationLink';
 import { registerCalcCommands } from './calc';
+import { registerPointCloudCommands } from './pointCloudCommands';
 import { registerRasterCommands } from './rasterCommands';
 import { mountRasterJobs } from '../ui/raster/RasterJobs';
 import { registerFileExchangeCommands } from './fileExchange';
@@ -167,6 +168,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   registerFileExchangeCommands(ctx);
   registerCalcCommands(ctx);
   registerRasterCommands(ctx);
+  registerPointCloudCommands(ctx);
   // The open cloud project as the rename and delete dialogs name it.
   const openTarget = () => {
     const p = ctx.cloud.project.value;

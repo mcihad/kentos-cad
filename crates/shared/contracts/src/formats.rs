@@ -93,7 +93,9 @@ use crate::layer::LineType;
 /// 40: annotation heights and lines (docs/adr/0205): `.kcad` document schema 30, the settings'
 ///    `annotation`, a dimension's and a dimension style's line fields, a leader's `arrowSize` and
 ///    AutoCAD's arrowheads; the columns' dimension line flags and leader arrowhead size.
-pub const FORMATS_VERSION: u32 = 40;
+/// 41: point clouds (docs/adr/0207): `.kcad` document schema 31, the typed columns'
+///    `pointcloud` kind and a raster's `url`; DXF and GeoJSON leave point clouds out and say so.
+pub const FORMATS_VERSION: u32 = 41;
 
 // ── Every import ────────────────────────────────────────────────────────
 

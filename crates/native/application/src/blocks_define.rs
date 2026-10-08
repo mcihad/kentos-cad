@@ -196,12 +196,25 @@ fn base_mut(e: &mut Entity) -> &mut EntityBase {
         Entity::Table(x) => &mut x.base,
         Entity::Image(x) => &mut x.base,
         Entity::Raster(x) => &mut x.base,
+        Entity::PointCloud(x) => &mut x.base,
     }
 }
 
 /// None of the objects a block is defined from is a table: a block holds no
 /// table (docs/adr/0184 §1), `table_in_block` at the first one's id.
 pub(crate) fn no_tables(named: &[(usize, Slot, &Entity, &String)]) -> Result<(), Stop> {
+    // Nor a point cloud (docs/adr/0207 §3), `pointcloud_in_block`.
+    if let Some((i, ..)) = named
+        .iter()
+        .find(|(_, _, e, _)| matches!(e, Entity::PointCloud(_)))
+    {
+        return Err(Stop::Failed(error(
+            codes::POINTCLOUD_IN_BLOCK,
+            "Seçilenlerde nokta bulutu var; nokta bulutu bloğa konamaz. Bulutu seçimden çıkarın."
+                .into(),
+            Some(format!("uids[{i}]")),
+        )));
+    }
     // Nor a raster (docs/adr/0204 §2), `raster_in_block`.
     if let Some((i, ..)) = named
         .iter()

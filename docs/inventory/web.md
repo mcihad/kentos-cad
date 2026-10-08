@@ -4,21 +4,21 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 411 | 399 | 0 | 12 |
+| Komutlar | 424 | 399 | 0 | 25 |
 | Araçlar | 121 | 119 | 0 | 2 |
 | İşlem araçları | 20 | 20 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
 | Ayarlar | 93 | 93 | 0 | 0 |
 | Tarayıcı depoları | 12 | 12 | 0 | 0 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 559 | 559 | 0 | 0 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 593 | 593 | 0 | 0 |
 | Pencereler ve paneller | 122 | 122 | 0 | 0 |
 
 ## Kısmi (0)
 
 Yok.
 
-## Bekleyen (16)
+## Bekleyen (29)
 
 - Komutlar: `analysis.slope` Eğim analizi…
 - Komutlar: `analysis.volume` Hacim hesabı…
@@ -28,6 +28,19 @@ Yok.
 - Komutlar: `map.parcelReport` Parsel alan çizelgesi
 - Komutlar: `map.profile` Boy kesit al…
 - Komutlar: `map.sheet` Pafta bölümlemesi…
+- Komutlar: `pointcloud.add` Nokta bulutu ekle… — Yalnız masaüstünde; web için hazırlanıyor
+- Komutlar: `pointcloud.query` Nokta bulutu XYZ sor — Yalnız masaüstünde; web için hazırlanıyor
+- Komutlar: `pointcloud.style` Nokta bulutu stili… — Yalnız masaüstünde; web için hazırlanıyor
+- Komutlar: `pointcloud.vpcSave` Sanal bulut olarak kaydet… — Yalnız masaüstünde; web için hazırlanıyor
+- Komutlar: `processing.run.pointcloud.areaStats` Nokta bulutu alan sorgusu… — Yalnız masaüstünde; web için hazırlanıyor
+- Komutlar: `processing.run.pointcloud.boundary` Sınır çıkar… — Yalnız masaüstünde; web için hazırlanıyor
+- Komutlar: `processing.run.pointcloud.classify` Yüksekliğe göre sınıfla… — Yalnız masaüstünde; web için hazırlanıyor
+- Komutlar: `processing.run.pointcloud.clip` Bulutu kırp… — Yalnız masaüstünde; web için hazırlanıyor
+- Komutlar: `processing.run.pointcloud.ground` Zemin süzgeci… — Yalnız masaüstünde; web için hazırlanıyor
+- Komutlar: `processing.run.pointcloud.merge` Bulutları birleştir… — Yalnız masaüstünde; web için hazırlanıyor
+- Komutlar: `processing.run.pointcloud.rasterize` Rasterleştir… — Yalnız masaüstünde; web için hazırlanıyor
+- Komutlar: `processing.run.pointcloud.thin` Seyrelt… — Yalnız masaüstünde; web için hazırlanıyor
+- Komutlar: `processing.run.pointcloud.tile` Karola… — Yalnız masaüstünde; web için hazırlanıyor
 - Komutlar: `tool.stakeout` Aplikasyon
 - Komutlar: `tool.subdivide` İfraz
 - Komutlar: `workspace.disaster` Afet Analizi — Yakında
@@ -49,14 +62,14 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 339 | 0 | 58 | 12 | 2 | 411 |
+| Komutlar | 352 | 0 | 58 | 12 | 2 | 424 |
 | Araçlar | 119 | 0 | 0 | 2 | 0 | 121 |
 | İşlem araçları | 20 | 0 | 0 | 0 | 0 | 20 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
 | Ayarlar | 89 | 0 | 3 | 0 | 1 | 93 |
 | Tarayıcı depoları | 10 | 0 | 0 | 0 | 2 | 12 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 559 | 0 | 0 | 0 | 0 | 559 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 593 | 0 | 0 | 0 | 0 | 593 |
 | Pencereler ve paneller | 102 | 2 | 17 | 0 | 1 | 122 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
@@ -76,7 +89,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 411; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 424; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -177,7 +190,7 @@ Yok.
 
 Yok.
 
-#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 559)
+#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 593)
 
 Yok.
 
@@ -205,4 +218,4 @@ Yok.
 
 ## Test başvurusu
 
-149 / 411 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+162 / 424 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

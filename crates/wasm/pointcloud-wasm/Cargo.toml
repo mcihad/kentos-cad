@@ -1,0 +1,19 @@
+[package]
+name = "kentos-pointcloud-wasm"
+description = "KentOS point clouds for the browser: the point cloud worker's wasm-bindgen boundary, loaded only when a point cloud is added or drawn (docs/adr/0207)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-pointcloud = { path = "../../shared/pointcloud" }
+kentos-formats = { path = "../../shared/formats" }
+kentos-geometry-core = { path = "../../shared/geometry-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+wasm-bindgen = { workspace = true }
