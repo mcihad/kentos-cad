@@ -60,6 +60,28 @@ fn needed(w: f64, h: f64, frame: &RectUm) -> f64 {
     (w / fw).max(h / fh)
 }
 
+/// The scale a fixed map's `frame` needs to show `w` × `h` metres of ground
+/// (the drawing area's view) with its content turned `rotation` in it
+/// (Görünüme sığdır, docs/adr/0206 §1): the view's box turned grows to
+/// `w·|cos θ| + h·|sin θ|` by `w·|sin θ| + h·|cos θ|`; the largest standard
+/// scale that holds it (the smallest standard denominator at least the
+/// one needed), else the smallest whole one; none for no ground.
+pub fn fit_view_scale(w: f64, h: f64, rotation: Mdeg, frame: &RectUm) -> Option<u32> {
+    if !(w.is_finite() && h.is_finite() && w > 0.0 && h > 0.0) {
+        return None;
+    }
+    let t = f64::from(rotation) / 1000.0 * core::f64::consts::PI / 180.0;
+    let (s, c) = (libm::fabs(libm::sin(t)), libm::fabs(libm::cos(t)));
+    let need = needed(w * c + h * s, w * s + h * c, frame);
+    Some(
+        paper::standard_scales()
+            .iter()
+            .copied()
+            .find(|s| f64::from(*s) >= need)
+            .unwrap_or_else(|| libm::ceil(need).clamp(1.0, 100_000_000.0) as u32),
+    )
+}
+
 /// The scale a policy picks for an object `w` × `h` metres in a frame.
 fn pick(
     policy: &AtlasScale,

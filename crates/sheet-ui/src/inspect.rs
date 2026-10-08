@@ -14,6 +14,9 @@ use crate::designer::Designer;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum Conv {
     Text,
+    /// A text whose absence is the default (a coordinate list's heading,
+    /// docs/adr/0206 §3): empty writes none.
+    Optional,
     /// A whole number.
     Int,
     /// Micrometres shown as millimetres.
@@ -187,7 +190,50 @@ pub(crate) fn props_of(kind: &str) -> Vec<Prop> {
             prop(&["kind", "header"], "Başlık satırı", Conv::Bool),
             prop(&["kind", "zebra"], "Zebra rengi", Conv::Text),
         ],
-        "coordinateList" => vec![prop(&["kind", "title"], "Başlık", Conv::Text)],
+        // Its source, what it gives and the points' names are the inspector's own part
+        // (inspector_view.rs `coordinate_part`, docs/adr/0206 §2); its headings here, each empty
+        // for its default (§3).
+        "coordinateList" => vec![
+            prop(&["kind", "title"], "Başlık", Conv::Text),
+            prop(&["kind", "decimals"], "Ondalık", Conv::Int),
+            prop(&["kind", "z"], "Z sütunu", Conv::Bool),
+            Prop {
+                description: "İlk nokta son satırda yeniden: kapalı şekil.",
+                ..prop(&["kind", "closingRow"], "Kapanış satırı", Conv::Bool)
+            },
+            Prop {
+                description: "Kapalı şeklin alanı, çizimin ölçtüğü gibi (yaylar dahil).",
+                ..prop(&["kind", "areaRow"], "Alan satırı", Conv::Bool)
+            },
+            Prop {
+                description: "Sütun başlığı; boş: Nokta.",
+                ..prop(
+                    &["kind", "columns", "point"],
+                    "Nokta başlığı",
+                    Conv::Optional,
+                )
+            },
+            Prop {
+                description: "Boş: Y (m); yerel projede X (m). Birimi başlığa siz yazarsınız.",
+                ..prop(&["kind", "columns", "east"], "Doğu başlığı", Conv::Optional)
+            },
+            Prop {
+                description: "Boş: X (m); yerel projede Y (m).",
+                ..prop(
+                    &["kind", "columns", "north"],
+                    "Kuzey başlığı",
+                    Conv::Optional,
+                )
+            },
+            Prop {
+                description: "Boş: Z (m).",
+                ..prop(&["kind", "columns", "z"], "Z başlığı", Conv::Optional)
+            },
+            Prop {
+                description: "Alan satırının sözü; boş: Alan.",
+                ..prop(&["kind", "columns", "area"], "Alan sözü", Conv::Optional)
+            },
+        ],
         "border" => vec![prop(&["kind", "style"], "Biçim", Conv::Choice(BORDER))],
         _ => Vec::new(),
     }
@@ -197,13 +243,24 @@ fn at<'a>(v: &'a Json, path: &[&str]) -> Option<&'a Json> {
     path.iter().try_fold(v, |v, k| v.get(*k))
 }
 
+/// A map's fixed view; none for another item or an atlas map (docs/adr/0206 §1).
+pub(crate) fn fixed_map(i: &Item) -> Option<&kentos_sheet::kinds::FixedView> {
+    match &i.kind {
+        kentos_sheet::kinds::ItemKind::Map(m) => match &m.view {
+            kentos_sheet::kinds::MapView::Fixed(v) => Some(v),
+            kentos_sheet::kinds::MapView::Atlas(_) => None,
+        },
+        _ => None,
+    }
+}
+
 /// The item's value of a property, as the inspector shows it.
 pub(crate) fn read(item_json: &Json, p: &Prop, maps: &[(String, String)]) -> Value {
     let Some(v) = at(item_json, p.path) else {
         return Value::Null;
     };
     match p.conv {
-        Conv::Text => v
+        Conv::Text | Conv::Optional => v
             .as_str()
             .map_or(Value::Null, |s| Value::Text(s.to_owned())),
         Conv::Int => v.as_i64().map_or(Value::Null, Value::Integer),
@@ -238,6 +295,8 @@ pub(crate) fn write(p: &Prop, value: &Value, maps: &[(String, String)]) -> Optio
     let leaf = match (p.conv, value) {
         (Conv::Text, Value::Text(s)) => json!(s),
         (Conv::Text, Value::Null) => json!(""),
+        (Conv::Optional, Value::Text(s)) if !s.trim().is_empty() => json!(s),
+        (Conv::Optional, Value::Text(_) | Value::Null) => Json::Null,
         (Conv::Int, v) => json!(v.as_f64()?.round() as i64),
         (Conv::Mm | Conv::Deg | Conv::Deg2, v) => json!((v.as_f64()? * 1000.0).round() as i64),
         (Conv::Bool, Value::Bool(b)) => json!(b),
@@ -264,7 +323,7 @@ pub(crate) fn write(p: &Prop, value: &Value, maps: &[(String, String)]) -> Optio
 /// The inspector field of a property.
 pub(crate) fn field_of(p: &Prop, maps: &[(String, String)]) -> Field {
     let mut f = match p.conv {
-        Conv::Text => Field::text(p.label),
+        Conv::Text | Conv::Optional => Field::text(p.label),
         Conv::Int => Field::integer(p.label),
         // The display rule (ADR 0149): a point, never a comma.
         Conv::Mm => Field::real(p.label, 1).unit("mm").point(),
@@ -335,7 +394,9 @@ pub(crate) fn refresh_fields(d: &mut Designer) {
         }
         let values: Vec<Value> = jsons.iter().map(|j| read(j, &p, &maps)).collect();
         // A property none of the items has (a map without a fixed view's scale) is not shown.
-        if values.iter().all(Value::is_null) && !matches!(p.conv, Conv::Text | Conv::Map) && !typed
+        if values.iter().all(Value::is_null)
+            && !matches!(p.conv, Conv::Text | Conv::Optional | Conv::Map)
+            && !typed
         {
             continue;
         }
@@ -618,7 +679,7 @@ mod tests {
             for p in props_of(kind) {
                 // Optional fields of the defaults (a map's link, a shape's fill, a typed
                 // declination's year) may be absent.
-                let optional = matches!(p.conv, Conv::Map)
+                let optional = matches!(p.conv, Conv::Map | Conv::Optional)
                     || p.path.last() == Some(&"fill")
                     || p.path.last() == Some(&"zebra")
                     || p.path.last() == Some(&"declinationYear");

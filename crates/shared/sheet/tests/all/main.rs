@@ -3,6 +3,8 @@
 //! One binary links once where each file was linked on its own.
 
 mod common;
+mod coordinates;
+mod fit;
 mod fixtures;
 mod ops;
 mod pdf;

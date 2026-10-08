@@ -93,7 +93,6 @@
       "sheet.export.svg",
       "sheet.matchSize.height",
       "sheet.matchSize.width",
-      "sheet.model",
       "sheet.nudge",
       "sheet.print",
       "sheet.redo",
@@ -6132,7 +6131,9 @@
       "ribbon": [],
       "quickAccess": false,
       "hiddenIn": [],
-      "uiSources": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/inspector/dataSections.ts"
+      ],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -12970,6 +12971,7 @@
         "apps/web/src/ui/bottom/PointTable.ts",
         "apps/web/src/ui/bottom/SearchPanel.ts",
         "apps/web/src/ui/ribbon/panels.ts",
+        "apps/web/src/ui/sheet/inspector/dataSections.ts",
         "apps/web/src/ui/shell/viewportMenus.ts"
       ],
       "status": "implemented",

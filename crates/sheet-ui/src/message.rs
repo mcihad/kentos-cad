@@ -259,6 +259,26 @@ pub enum Message {
     Pdf(PdfMessage),
     /// “Resim seç…”: the host asks which picture file the chosen picture frames show.
     ChoosePicture,
+    /// The chosen fixed maps (docs/adr/0206 §1): Çizim ölçeğini al (the project's plot scale),
+    /// Görünüme sığdır (the scale and centre that show the drawing area's view), Görünümden al
+    /// (the drawing area's centre).
+    MapScaleFromDrawing,
+    MapFitView,
+    MapCentreFromView,
+    /// The chosen coordinate lists (docs/adr/0206 §2, §3): the drawing's
+    /// choice now as their source (live), a layer (its id), or the objects
+    /// taken by their ids; “Seçimi al” (the host answers with
+    /// `CoordObjects` of the drawing's choice), “Çizimde göster” (the host
+    /// chooses the list's objects in the drawing and shows them); the points'
+    /// names given or numbered; a heading (`point`, `east`, `north`, `z`,
+    /// `area`; empty: the default).
+    CoordLive,
+    CoordLayer(String),
+    CoordObjects(Vec<String>),
+    CoordTakeSelection,
+    CoordShow,
+    CoordNumbered(bool),
+    CoordHeading(&'static str, String),
     /// That file's name and bytes, read by the host.
     PictureFile(String, Vec<u8>),
     /// “.kpafta dosyasından…”: the host asks which file.

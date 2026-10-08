@@ -3,6 +3,9 @@ import type { Applied } from '../../contracts/generated/sheet/Applied';
 import type { AssetWithBytes } from '../../contracts/generated/sheet/AssetWithBytes';
 import type { Bindable } from '../../contracts/generated/sheet/Bindable';
 import type { Capabilities } from '../../contracts/generated/sheet/Capabilities';
+import type { CoordinateInput } from '../../contracts/generated/sheet/CoordinateInput';
+import type { CoordinateListItem } from '../../contracts/generated/sheet/CoordinateListItem';
+import type { CoordSource } from '../../contracts/generated/sheet/CoordSource';
 import type { DisplayList } from '../../contracts/generated/sheet/DisplayList';
 import type { EngineInfo } from '../../contracts/generated/sheet/EngineInfo';
 import type { Finding } from '../../contracts/generated/sheet/Finding';
@@ -12,6 +15,7 @@ import type { Instance } from '../../contracts/generated/sheet/Instance';
 import type { InstanceIds } from '../../contracts/generated/sheet/InstanceIds';
 import type { InstanceOptions } from '../../contracts/generated/sheet/InstanceOptions';
 import type { Item } from '../../contracts/generated/sheet/Item';
+import type { ItemKind } from '../../contracts/generated/sheet/ItemKind';
 import type { LocalTemplate } from '../../contracts/generated/sheet/LocalTemplate';
 import type { RemoteTemplate } from '../../contracts/generated/sheet/RemoteTemplate';
 import type { SyncPlan } from '../../contracts/generated/sheet/SyncPlan';
@@ -144,6 +148,25 @@ export class SheetEngine {
   /** The standard scales' denominators, smallest first. */
   standardScales(): readonly number[] {
     return (this.scales ??= open<number[]>(this.m.standardScales()));
+  }
+
+  /**
+   * The scale a fixed map's frame needs to show `width` × `height` metres of ground, turned `rotation` (m°, the map's
+   * own turn) in it: the smallest standard scale that holds it all, else the smallest whole one; null for no ground
+   * (Görünüme sığdır, docs/sheet/design.md §3.1).
+   */
+  fitViewScale(width: number, height: number, rotation: number, frame: RectUm): number | null {
+    return open<number | null>(this.m.fitViewScale(width, height, rotation, JSON.stringify(frame)));
+  }
+
+  /** What a coordinate list's source gives, as its section says it (docs/adr/0206 §2). */
+  coordinateSummary(source: CoordSource, input: CoordinateInput | null, layer: string | null): string {
+    return open<string>(this.m.coordinateSummary(JSON.stringify(source), input ? JSON.stringify(input) : '', layer ?? ''));
+  }
+
+  /** A coordinate list's headings (Nokta, east, north, Z) and its area row's word, each given or the default (docs/adr/0206 §3). */
+  coordinateHeadings(item: CoordinateListItem | Extract<ItemKind, { type: 'coordinateList' }>, georeferenced: boolean): readonly [string, string, string, string, string] {
+    return open<[string, string, string, string, string]>(this.m.coordinateHeadings(JSON.stringify(item), georeferenced));
   }
 
   /** What an expression may drive (ƒ). */

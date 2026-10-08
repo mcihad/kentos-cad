@@ -102,6 +102,58 @@ fn text_style(path: &str, t: &TextStyle) -> Result<()> {
     color(&format!("{path}.color"), &t.color)
 }
 
+/// The objects a coordinate list reads (docs/adr/0206 §2): at most
+/// `MAX_COORD_OBJECTS` ids, each one an id.
+pub const MAX_COORD_OBJECTS: usize = 10_000;
+
+fn coord_source(path: &str, s: &CoordSource) -> Result<()> {
+    if let CoordSource::Objects(o) = s {
+        if o.uids.len() > MAX_COORD_OBJECTS {
+            return Err(err(
+                "out_of_range",
+                &format!("{path}.uids"),
+                format!(
+                    "Koordinat listesi en çok {MAX_COORD_OBJECTS} nesne okur; {} verildi. Daha az nesne seçin ya da katmanı kaynak yapın.",
+                    o.uids.len()
+                ),
+            ));
+        }
+        if let Some(i) = o.uids.iter().position(|u| !valid_id(u)) {
+            return Err(err(
+                "bad_id",
+                &format!("{path}.uids[{i}]"),
+                "Nesne kimliği 1–128 karakter, denetim karaktersiz olmalı.",
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// A coordinate list's headings (docs/adr/0206 §3): one line, at most
+/// `MAX_COLUMN_NAME` characters each.
+fn coord_columns(path: &str, c: &CoordColumns) -> Result<()> {
+    for (key, what, v) in [
+        ("point", "Nokta sütununun başlığı", &c.point),
+        ("east", "Doğu sütununun başlığı", &c.east),
+        ("north", "Kuzey sütununun başlığı", &c.north),
+        ("z", "Z sütununun başlığı", &c.z),
+        ("area", "Alan satırının sözü", &c.area),
+    ] {
+        if let Some(v) = v
+            && (v.chars().count() > MAX_COLUMN_NAME || v.chars().any(char::is_control))
+        {
+            return Err(err(
+                "invalid_column_name",
+                &format!("{path}.{key}"),
+                format!(
+                    "{what} tek satır, en çok {MAX_COLUMN_NAME} karakter olmalı. Kısaltın ya da boş bırakın (varsayılan)."
+                ),
+            ));
+        }
+    }
+    Ok(())
+}
+
 fn range<T: PartialOrd + Copy + std::fmt::Display>(
     path: &str,
     v: T,
@@ -723,6 +775,10 @@ fn kind(path: &str, item: &Item) -> Result<()> {
         }
         ItemKind::CoordinateList(c) => {
             range(&format!("{p}.decimals"), c.decimals, 0, 6, "Ondalık")?;
+            coord_source(&format!("{p}.source"), &c.source)?;
+            if let Some(cols) = &c.columns {
+                coord_columns(&format!("{p}.columns"), cols)?;
+            }
             text_style(&format!("{p}.titleStyle"), &c.title_style)?;
             cell_style(&format!("{p}.headerStyle"), &c.header_style)?;
             cell_style(&format!("{p}.cellStyle"), &c.cell_style)?;

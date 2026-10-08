@@ -334,6 +334,42 @@ fn features(doc: &Document, layer: &str, shown: Option<&HashSet<Slot>>) -> Vec<F
         .collect()
 }
 
+/// A coordinate list's objects (docs/adr/0206 §2, the web's `coordinateObjects`): the drawing's
+/// chosen ones now (live), a layer's, or the ones taken by their lasting ids, and how many of
+/// those the drawing no longer has.
+pub fn coordinate_objects(
+    doc: &Document,
+    selection: &[Slot],
+    source: &CoordSource,
+) -> (Vec<Slot>, u32) {
+    match source {
+        CoordSource::Selection(_) => (
+            selection
+                .iter()
+                .copied()
+                .filter(|s| doc.get(*s).is_some())
+                .collect(),
+            0,
+        ),
+        CoordSource::Layer(l) => (
+            layer_of(doc, &l.layer)
+                .map(|layer| doc.by_layer(&layer).map(|e| Slot(e.base().id)).collect())
+                .unwrap_or_default(),
+            0,
+        ),
+        CoordSource::Objects(o) => {
+            let slots: Vec<Slot> = o
+                .uids
+                .iter()
+                .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+                .filter_map(|u| doc.slot_of(u))
+                .collect();
+            let missing = o.uids.len().saturating_sub(slots.len()) as u32;
+            (slots, missing)
+        }
+    }
+}
+
 /// A coordinate list's points: one closed figure's corners (with its area), or the points and vertices of all.
 fn coordinates_of(item: &str, list: &[&Entity]) -> CoordinateInput {
     if let [Entity::Polygon(p)] = list {
@@ -352,6 +388,8 @@ fn coordinates_of(item: &str, list: &[&Entity]) -> CoordinateInput {
                 .collect(),
             closed: true,
             area: area.filter(|a| *a > 0.0),
+            objects: None,
+            missing: None,
         };
     }
     let mut points = Vec::new();
@@ -381,6 +419,8 @@ fn coordinates_of(item: &str, list: &[&Entity]) -> CoordinateInput {
         points,
         closed: false,
         area: None,
+        objects: None,
+        missing: None,
     }
 }
 
@@ -471,15 +511,13 @@ pub fn sheet_data(
                 }
             }
             ItemKind::CoordinateList(c) => {
-                let list: Vec<&Entity> = match &c.source {
-                    CoordSource::Selection(_) => {
-                        selection.iter().filter_map(|s| doc.get(*s)).collect()
-                    }
-                    CoordSource::Layer(l) => layer_of(doc, &l.layer)
-                        .map(|layer| doc.by_layer(&layer).collect())
-                        .unwrap_or_default(),
-                };
-                out.coordinates.push(coordinates_of(&it.id, &list));
+                let (slots, missing) = coordinate_objects(doc, selection, &c.source);
+                let list: Vec<&Entity> = slots.iter().filter_map(|s| doc.get(*s)).collect();
+                out.coordinates.push(CoordinateInput {
+                    objects: Some(list.len() as u32),
+                    missing: (missing > 0).then_some(missing),
+                    ..coordinates_of(&it.id, &list)
+                });
             }
             ItemKind::Legend(l) => {
                 let map = l
@@ -553,6 +591,44 @@ mod tests {
                 ..
             })
         ));
+    }
+
+    /// A coordinate list's objects (docs/adr/0206 §2): the ones taken by their
+    /// lasting ids, those the drawing no longer has counted; a layer's; the
+    /// drawing's choice now.
+    #[test]
+    fn a_coordinate_list_reads_its_objects_by_their_ids() {
+        use kentos_sheet::kinds::{CoordLayer, CoordObjects, Empty};
+        let app = crate::files_testing::app_with_drawing();
+        let doc = &app.document.as_ref().expect("open").model;
+        let parcels: Vec<Slot> = doc.entities().map(|e| Slot(e.base().id)).take(2).collect();
+        assert_eq!(parcels.len(), 2, "the sample has objects");
+        let mut uids: Vec<String> = parcels
+            .iter()
+            .map(|s| doc.uid(*s).expect("a uid").to_string())
+            .collect();
+        uids.push("0192f6a0-0000-7000-8000-00000000dead".into());
+        let (slots, missing) =
+            coordinate_objects(doc, &[], &CoordSource::Objects(CoordObjects { uids }));
+        assert_eq!((slots, missing), (parcels.clone(), 1));
+        let (layer, _) = coordinate_objects(
+            doc,
+            &[],
+            &CoordSource::Layer(CoordLayer {
+                layer: "parsel".into(),
+            }),
+        );
+        assert_eq!(layer.len(), doc.by_layer("parsel").count());
+        let (live, _) = coordinate_objects(
+            doc,
+            &[parcels[1], Slot(999_999)],
+            &CoordSource::Selection(Empty {}),
+        );
+        assert_eq!(
+            live,
+            [parcels[1]],
+            "an object the drawing lacks is left out"
+        );
     }
 
     /// The sample drawing's parcel layer as a table, its parcels in the map or not.

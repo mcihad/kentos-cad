@@ -1,5 +1,7 @@
 import type { AssetMeta } from '../../contracts/generated/sheet/AssetMeta';
 import type { Capabilities } from '../../contracts/generated/sheet/Capabilities';
+import type { CoordinateInput } from '../../contracts/generated/sheet/CoordinateInput';
+import type { CoordSource } from '../../contracts/generated/sheet/CoordSource';
 import type { DisplayList } from '../../contracts/generated/sheet/DisplayList';
 import type { Finding } from '../../contracts/generated/sheet/Finding';
 import type { NorthInfo } from '../../contracts/generated/sheet/NorthInfo';
@@ -72,10 +74,17 @@ export interface SheetHost {
   newId(): string;
   /** Keeps a picture file's bytes on this device (PNG, JPEG, SVG; checked and measured); its metadata, or null (said why). */
   addPicture(file: File): Promise<AssetMeta | null>;
-  /** Where a new map looks and at what scale: the drawing area's centre and the project's plot scale. */
-  mapPlace(): { readonly center: GroundPoint; readonly scale: number };
+  /**
+   * Where a new map looks and at what scale: the drawing area's centre and the project's plot scale; and how much ground the
+   * drawing area shows (metres, its width and height), for Görünüme sığdır.
+   */
+  mapPlace(): { readonly center: GroundPoint; readonly scale: number; readonly view: { readonly width: number; readonly height: number } };
   /** What the gallery can do now: the engine (use, copy, edit) and the cloud (sync, share). */
   galleryAbilities(): GalleryAbilities;
+  /** A coordinate list's input from a source: its points and how many objects gave them (docs/adr/0206 §2). */
+  coordinateInput(item: string, source: CoordSource): CoordinateInput;
+  /** The drawing's objects (ids) a coordinate list's source reads. */
+  coordinateObjects(source: CoordSource): number[];
   /** What a template needs that the project lacks (the engine's preflight of a sheet made from it), said before it is used. */
   templateNeeds(template: Template): Finding[];
   /** A sheet made from a template for its picture (as Kullan would make it: the drawing's centre, the plot scale); null when refused. */

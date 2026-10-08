@@ -267,6 +267,8 @@ pub fn sample_inputs(book: &SheetBook, sheet_id: &str, georeferenced: bool) -> R
                 points: corners(),
                 closed: true,
                 area: None,
+                objects: Some(1),
+                missing: None,
             }),
             _ => {}
         }

@@ -9,4 +9,9 @@ closed: boolean,
 /**
  * The figure's area as the drawing measures it (arcs included); none: from the points.
  */
-area?: number, };
+area?: number, 
+/**
+ * How many objects the source gave, and how many of the list's own
+ * objects the drawing no longer has (docs/adr/0206 §2); none: not said.
+ */
+objects?: number, missing?: number, };

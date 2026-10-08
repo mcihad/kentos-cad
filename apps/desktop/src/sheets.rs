@@ -921,6 +921,20 @@ impl App {
                     .unwrap_or(CrsInfo { name, tm: None })
             }),
             center: doc.map(|_| GroundPoint { x: c.x, y: c.y }),
+            // The layers a coordinate list may read (docs/adr/0206 §2).
+            layers: doc.map_or_else(Vec::new, |d| {
+                d.model
+                    .layers()
+                    .leaves()
+                    .into_iter()
+                    .map(|l| (l.id.clone(), l.name.clone()))
+                    .collect()
+            }),
+            // How much ground the drawing area shows (Görünüme sığdır, docs/adr/0206 §1).
+            view_size: doc
+                .map(|_| &self.viewport.camera)
+                .filter(|cam| cam.scale > 0.0 && cam.width > 0.0 && cam.height > 0.0)
+                .map(|cam| [cam.width / cam.scale, cam.height / cam.scale]),
         }
     }
 
@@ -990,8 +1004,8 @@ impl App {
         let same = {
             let mut a = ctx.clone();
             let mut b = self.sheets.context().clone();
-            a.center = None;
-            b.center = None;
+            (a.center, a.view_size) = (None, None);
+            (b.center, b.view_size) = (None, None);
             a == b
         };
         if !same {
@@ -1067,17 +1081,54 @@ impl App {
 
     /// A message of the sheet mode, and what it asks of the desktop.
     pub(crate) fn sheet_message(&mut self, m: kentos_sheet_ui::Message) -> Task<Message> {
-        // A new map looks where the drawing area does now.
+        // A new map looks where the drawing area does now; a map takes its place and scale from
+        // it (docs/adr/0206 §1).
         if matches!(
             &m,
             kentos_sheet_ui::Message::Stage(_)
                 | kentos_sheet_ui::Message::NewSheet
                 | kentos_sheet_ui::Message::Gallery(_)
+                | kentos_sheet_ui::Message::MapFitView
+                | kentos_sheet_ui::Message::MapCentreFromView
         ) {
             let ctx = self.sheet_context();
-            if ctx.center != self.sheets.context().center {
+            let now = self.sheets.context();
+            if ctx.center != now.center || ctx.view_size != now.view_size {
                 self.sheets.set_context(ctx);
             }
+        }
+        // A coordinate list takes the drawing's choice by its objects' lasting ids, and shows its
+        // objects in the drawing (docs/adr/0206 §2).
+        if matches!(&m, kentos_sheet_ui::Message::CoordTakeSelection) {
+            let uids: Vec<String> = self.document.as_ref().map_or_else(Vec::new, |d| {
+                self.selection
+                    .ids()
+                    .iter()
+                    .filter_map(|s| d.model.uid(*s))
+                    .map(|u| u.to_string())
+                    .collect()
+            });
+            if uids.is_empty() {
+                self.warn("Çizimde seçili nesne yok: önce modelde nesneleri seçin, sonra “Seçimi al”a basın.");
+                return Task::none();
+            }
+            return self.sheet_message(kentos_sheet_ui::Message::CoordObjects(uids));
+        }
+        if matches!(&m, kentos_sheet_ui::Message::CoordShow) {
+            let (Some(doc), Some(source)) = (
+                self.document.as_ref(),
+                self.sheets.chosen_coordinate_source(),
+            ) else {
+                return Task::none();
+            };
+            let (slots, _) =
+                crate::sheet_inputs::coordinate_objects(&doc.model, self.selection.ids(), &source);
+            if slots.is_empty() {
+                return Task::none();
+            }
+            self.selection.set(slots);
+            self.sheet_tab = false;
+            return self.update(Message::Run("view.zoomSelection"));
         }
         // The gallery's pictures show the drawing as it is now.
         if matches!(&m, kentos_sheet_ui::Message::Gallery(_)) {

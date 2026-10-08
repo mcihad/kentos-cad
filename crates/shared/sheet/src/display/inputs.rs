@@ -271,6 +271,14 @@ pub struct CoordinateInput {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub area: Option<f64>,
+    /// How many objects the source gave, and how many of the list's own
+    /// objects the drawing no longer has (docs/adr/0206 §2); none: not said.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub objects: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub missing: Option<u32>,
 }
 
 /// An atlas object: its id, box and fields.

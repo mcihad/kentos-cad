@@ -51,7 +51,8 @@ export function detailOf(item: Item, items: readonly Item[]): string | undefined
     case 'table':
       return k.source.type === 'fixed' ? `${k.source.rows.length} satır` : k.source.type === 'layer' ? `katman: ${k.source.layer || '—'}` : 'önceki tablonun devamı';
     case 'coordinateList':
-      return k.source.type === 'selection' ? 'seçili nesneler' : `katman: ${k.source.layer || '—'}`;
+      // Where its points come from (docs/adr/0206 §2).
+      return k.source.type === 'selection' ? 'şu an seçili nesneler' : k.source.type === 'objects' ? `${k.source.uids.length} seçilen nesne` : `katman: ${k.source.layer || '—'}`;
     case 'titleBlock':
       return `${k.rows.reduce((n, r) => n + r.cells.length, 0)} hücre`;
     case 'picture':

@@ -116,6 +116,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
   (`graphics.annotationSize`), ölçünün çizgilerinin rengi, kalınlığı ve tipi (Ölçü stilleri'nin Çizgiler'i, Öznitelikler, DXF), kılavuzun
   AutoCAD gibi 14 ucu ve Ok boyu, DXF'te AutoCAD'in ok blokları (ADR 0205);
+  paftada haritanın ölçeği: Çizim ölçeğini al, Görünüme sığdır, Görünümden al; koordinat listesinin kaynağı kimlikleriyle
+  (Seçimi al), katman ya da canlı seçim, ne verdiği bir satırla, Çizimde göster, sütun başlıkları (ADR 0206);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -474,6 +476,7 @@ node apps/web/scripts/e2e/sheet-shots.mjs   # pafta kipinin web resimleri, apps/
 node apps/web/scripts/e2e/sheet-pdf.mjs   # paftanın PDF ve GeoPDF'i poppler ve GDAL ile (pdfinfo, pdffonts, pdftotext, gdalinfo)
 node apps/web/scripts/e2e/sheet-cloud.mjs   # şablon kitaplığı gerçek kentosd ile, kendi geçici docker veritabanında (5432'ye dokunmaz)
 cargo test -p kentos-sheet-ui --test screens -- --ignored   # masaüstünün pafta tasarımcısı resimleri, .run/shots/sheet-desktop/
+cargo test -p kentos-sheet-ui --test screens adr_0206 -- --ignored --nocapture   # haritanın ölçek düğmeleri ve koordinat listesinin kaynağı, .run/shots/sheet-desktop/*-0206-* (web'inkiler: node apps/web/scripts/e2e/sheet-shots.mjs --only harita-olcek-dugmeleri,koordinat-listesi-kaynak; ADR 0206)
 .run/py/bin/python scripts/python/live.py   # SDK ve MCP sunucusu gerçek kentosd ile, geçici veritabanında (önce: cargo build -p kentos-api --bin kentosd --example e2e_database; cargo build -p kentos-mcp)
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}
 pnpm inventory:check     # envanter güncel değilse düşer

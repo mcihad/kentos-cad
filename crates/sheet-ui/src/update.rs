@@ -368,6 +368,60 @@ impl Designer {
             }
             Message::Print => self.open_pdf(true),
             Message::Pdf(m) => return self.pdf_update(m),
+            Message::MapScaleFromDrawing => {
+                if let Some(s) = self.ctx.capabilities.plot_scale.filter(|s| *s >= 1) {
+                    self.patch_maps(|_| json!({ "kind": { "view": { "scale": s } } }));
+                }
+            }
+            Message::MapFitView => {
+                if let (Some(c), Some([w, h])) = (self.ctx.center, self.ctx.view_size) {
+                    self.patch_maps(|i| {
+                        let rotation = match &i.kind {
+                            kentos_sheet::kinds::ItemKind::Map(m) => match &m.view {
+                                kentos_sheet::kinds::MapView::Fixed(v) => v.rotation,
+                                kentos_sheet::kinds::MapView::Atlas(_) => 0,
+                            },
+                            _ => 0,
+                        };
+                        let center = json!({ "x": c.x, "y": c.y });
+                        match kentos_sheet::atlas::fit_view_scale(w, h, rotation, &i.frame) {
+                            Some(s) => {
+                                json!({ "kind": { "view": { "center": center, "scale": s } } })
+                            }
+                            None => json!({ "kind": { "view": { "center": center } } }),
+                        }
+                    });
+                }
+            }
+            Message::CoordLive => {
+                self.patch_coordinate_lists(json!({ "source": { "type": "selection" } }))
+            }
+            Message::CoordLayer(layer) => self
+                .patch_coordinate_lists(json!({ "source": { "type": "layer", "layer": layer } })),
+            Message::CoordObjects(uids) => self
+                .patch_coordinate_lists(json!({ "source": { "type": "objects", "uids": uids } })),
+            // The host turns these into the drawing's choice (`CoordObjects`) and its showing.
+            Message::CoordTakeSelection | Message::CoordShow => {}
+            Message::CoordNumbered(on) => self.patch_coordinate_lists(if on {
+                json!({ "naming": { "type": "sequence", "prefix": "", "start": 1 } })
+            } else {
+                json!({ "naming": { "type": "given" } })
+            }),
+            Message::CoordHeading(key, text) => {
+                let value = if text.trim().is_empty() {
+                    serde_json::Value::Null
+                } else {
+                    serde_json::Value::String(text)
+                };
+                self.patch_coordinate_lists(json!({ "columns": { key: value } }));
+            }
+            Message::MapCentreFromView => {
+                if let Some(c) = self.ctx.center {
+                    self.patch_maps(
+                        |_| json!({ "kind": { "view": { "center": { "x": c.x, "y": c.y } } } }),
+                    );
+                }
+            }
             Message::ChoosePicture => {
                 if self.picture_frames().is_empty() {
                     return Vec::new();
@@ -553,6 +607,44 @@ impl Designer {
             })
             .collect();
         self.commit(ops);
+    }
+
+    /// Each chosen, unlocked coordinate list's kind patched (docs/adr/0206 §2), in one step.
+    fn patch_coordinate_lists(&mut self, kind: serde_json::Value) {
+        let ops: Vec<Op> = self
+            .chosen()
+            .into_iter()
+            .filter(|i| {
+                !i.locked && matches!(i.kind, kentos_sheet::kinds::ItemKind::CoordinateList(_))
+            })
+            .map(|i| {
+                Op::SetItemProps(SetItemProps {
+                    id: i.id.clone(),
+                    patch: json!({ "kind": kind }),
+                })
+            })
+            .collect();
+        if !ops.is_empty() {
+            self.commit(ops);
+        }
+    }
+
+    /// Each chosen, unlocked map with a fixed view patched (docs/adr/0206 §1), in one step.
+    fn patch_maps(&mut self, patch: impl Fn(&kentos_sheet::model::Item) -> serde_json::Value) {
+        let ops: Vec<Op> = self
+            .chosen()
+            .into_iter()
+            .filter(|i| !i.locked && crate::inspect::fixed_map(i).is_some())
+            .map(|i| {
+                Op::SetItemProps(SetItemProps {
+                    id: i.id.clone(),
+                    patch: patch(i),
+                })
+            })
+            .collect();
+        if !ops.is_empty() {
+            self.commit(ops);
+        }
     }
 
     fn set_frame(&mut self, field: FrameField, v: f64) {

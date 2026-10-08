@@ -1205,16 +1205,59 @@ pub struct CoordLayer {
     pub layer: String,
 }
 
+/// The objects a coordinate list reads, by their lasting ids (`uid`s,
+/// docs/adr/0206 §2): the ones chosen in the drawing when “Seçimi al” was
+/// pressed.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+pub struct CoordObjects {
+    #[serde(default)]
+    pub uids: Vec<String>,
+}
+
 /// Where a coordinate list's points come from; the host gives them.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[serde(tag = "type", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub enum CoordSource {
-    /// The objects selected when the list was made.
+    /// The objects chosen in the drawing now (live; the first lists').
     Selection(Empty),
     Layer(CoordLayer),
+    /// The objects taken from the drawing's choice (docs/adr/0206 §2).
+    Objects(CoordObjects),
 }
+
+/// A coordinate list's column headings and its area row's word
+/// (docs/adr/0206 §3); each absent: the default (Nokta; Y (m) and X (m), or
+/// a local project's X (m) and Y (m); Z (m); Alan).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+pub struct CoordColumns {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub point: Option<String>,
+    /// The east coordinate's: Y in surveying, a local project's X.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub east: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub north: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub z: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub area: Option<String>,
+}
+
+/// A heading's characters at most (docs/adr/0206 §3).
+pub const MAX_COLUMN_NAME: usize = 40;
 
 impl Default for CoordSource {
     fn default() -> Self {
@@ -1289,6 +1332,10 @@ pub struct CoordinateListItem {
     pub lines: TableLines,
     #[serde(default)]
     pub overflow: Overflow,
+    /// Its headings and its area row's word (docs/adr/0206 §3); none: the defaults.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<CoordColumns>,
 }
 
 // ── Title block ──────────────────────────────────────────────────────────
@@ -1582,6 +1629,7 @@ pub fn default_kind(type_name: &str) -> Option<ItemKind> {
             cell_style: CellStyle::default(),
             lines: TableLines::default(),
             overflow: Overflow::Clip(Empty {}),
+            columns: None,
         }),
         "titleBlock" => ItemKind::TitleBlock(TitleBlockItem {
             rows: Vec::new(),

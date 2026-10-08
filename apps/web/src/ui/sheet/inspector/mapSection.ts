@@ -5,15 +5,17 @@ import { h, type Child } from '../../dom';
 import { icon } from '../../icons';
 import { segmented, toggleSwitch } from '../../widgets/controls';
 import { tooltip } from '../../widgets/tooltip';
-import { flag, kinds, labelled, mmField, numField, pair, patchKind, patchKindEach, pick, shared, type SectionCtx } from './parts';
+import { flag, kinds, labelled, mmField, numField, pair, patchEach, patchKind, patchKindEach, pick, shared, type SectionCtx } from './parts';
 
 /**
  * A map frame's section (docs/sheet/design.md §3.1, §11): its scale from the
- * engine's standard list or typed, its centre (Y east, X north, metres) with
- * “Görünümden al” taking the drawing area's centre, its own turn, the
- * layers it shows (all, or some), its grids (karelaj) and the band their
- * labels are written in, and an overview's map. Several maps share a value
- * or show “—”.
+ * engine's standard list or typed, “Çizim ölçeğini al” taking the project's
+ * plot scale and “Görünüme sığdır” the scale and centre that show the drawing
+ * area's view in the frame (the smallest standard scale that holds it), its
+ * centre (Y east, X north, metres) with “Görünümden al” taking the drawing
+ * area's centre, its own turn, the layers it shows (all, or some), its grids
+ * (karelaj) and the band their labels are written in, and an overview's map.
+ * Several maps share a value or show “—”.
  */
 
 type MapKind = Extract<ItemKind, { type: 'map' }>;
@@ -21,6 +23,10 @@ type MapKind = Extract<ItemKind, { type: 'map' }>;
 export interface MapHooks {
   /** The drawing area's centre (ground metres): Görünümden al. */
   viewCentre(): { x: number; y: number };
+  /** How much ground the drawing area shows (metres): Görünüme sığdır. */
+  viewSize(): { width: number; height: number };
+  /** The project's plot scale's denominator: Çizim ölçeğini al. */
+  plotScale(): number;
   /** The layers of the drawing, top first: their ids and names. */
   layers(): { id: string; name: string }[];
 }
@@ -36,6 +42,23 @@ export function mapSection(c: SectionCtx, hooks: MapHooks): Child[] {
   const takeView = h('button', { class: 'btn btn--small', type: 'button', disabled: c.readOnly !== null || !fixedView }, icon('target', 14), 'Görünümden al');
   takeView.addEventListener('click', () => patchKind(c, 'Harita merkezi: görünümden', { view: { center: hooks.viewCentre() } }));
   c.d.add(tooltip(takeView, () => ({ title: 'Görünümden al', description: 'Haritanın merkezi çizim alanının şu anki merkezi olur; ölçek değişmez.', note: c.readOnly ?? undefined })));
+  // The project's plot scale, and the scale and centre that show the drawing area's view (each map by its own frame and turn).
+  const plot = Math.max(1, Math.round(hooks.plotScale()));
+  const takeScale = h('button', { class: 'btn btn--small', type: 'button', disabled: c.readOnly !== null || !fixedView || scale === plot }, icon('plotScale', 14), 'Çizim ölçeğini al');
+  takeScale.addEventListener('click', () => patchKind(c, 'Harita ölçeği: çizimden', { view: { scale: plot } }));
+  c.d.add(tooltip(takeScale, () => ({ title: 'Çizim ölçeğini al', description: `Haritanın ölçeği projenin çizim ölçeği (1/${plot}) olur; merkez değişmez. Ölçek elle de yazılabilir.`, note: c.readOnly ?? (scale === plot ? 'Harita zaten çizim ölçeğinde.' : undefined) })));
+  const engine = c.host.engine();
+  const fit = h('button', { class: 'btn btn--small', type: 'button', disabled: c.readOnly !== null || !fixedView || !engine }, icon('zoomExtents', 14), 'Görünüme sığdır');
+  fit.addEventListener('click', () => {
+    const view = hooks.viewSize();
+    const center = hooks.viewCentre();
+    patchEach(c, 'Harita: görünüme sığdır', (item) => {
+      const k = item.kind as MapKind;
+      const s = engine?.fitViewScale(view.width, view.height, k.view.type === 'fixed' ? k.view.rotation : 0, item.frame) ?? null;
+      return { kind: { view: s === null ? { center } : { center, scale: s } } };
+    });
+  });
+  c.d.add(tooltip(fit, () => ({ title: 'Görünüme sığdır', description: 'Harita çizim alanında şu an görüneni gösterir: merkezi görünümün merkezi, ölçeği onu çerçeveye sığdıran en büyük standart ölçek olur.', note: c.readOnly ?? undefined })));
   const out: Child[] = [];
   if (!fixedView) out.push(h('p', { class: 'sheet-insp__hint' }, 'Atlas haritası: yeri ve ölçeği her atlas sayfasının nesnesinden gelir.'));
   else {
@@ -48,7 +71,7 @@ export function mapSection(c: SectionCtx, hooks: MapHooks): Child[] {
         numField(c, 'Merkez Y (doğu)', 'map.center.x', centre ? centre.x : null, (x) => patchKindEach(c, 'map', 'Harita merkezi', (k) => ({ view: { center: { x, y: k.view.type === 'fixed' ? (k.view.center?.y ?? hooks.viewCentre().y) : 0 } } })), { decimals: 2, unit: 'm' }),
         numField(c, 'Merkez X (kuzey)', 'map.center.y', centre ? centre.y : null, (y) => patchKindEach(c, 'map', 'Harita merkezi', (k) => ({ view: { center: { x: k.view.type === 'fixed' ? (k.view.center?.x ?? hooks.viewCentre().x) : 0, y } } })), { decimals: 2, unit: 'm' }),
       ),
-      h('div', { class: 'sheet-insp__actions' }, takeView),
+      h('div', { class: 'sheet-insp__actions' }, takeScale, fit, takeView),
       numField(c, 'Harita dönüşü', 'map.rotation', v((k) => (k.view.type === 'fixed' ? k.view.rotation / 1000 : null)), (deg) => patchKind(c, 'Harita dönüşü', { view: { rotation: Math.round((((deg % 360) + 360) % 360) * 1000) } }), { decimals: 1, unit: '°' }),
     );
     if (!centre && v((k) => (k.view.type === 'fixed' ? !k.view.center : false))) out.push(h('p', { class: 'sheet-insp__hint' }, 'Haritanın yeri seçilmedi: “Görünümden al” ile çizim alanının merkezini verin.'));

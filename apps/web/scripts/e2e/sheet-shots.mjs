@@ -275,6 +275,38 @@ const SCENES = [
     },
   },
   {
+    // docs/adr/0206 §1: the map's Çizim ölçeğini al, Görünüme sığdır and Görünümden al under its scale.
+    id: 'harita-olcek-dugmeleri',
+    open: async (ui) => {
+      await opened(ui);
+      await ui.eval(CHOOSE('Harita'));
+      await ui.sleep(300);
+      await ui.eval(`document.querySelector('[data-key="map.scale"]')?.scrollIntoView({ block: 'start' })`);
+      await ui.sleep(200);
+      await ui.move(2, 2);
+    },
+  },
+  {
+    // docs/adr/0206 §2, §3: the aplikasyon sketch's coordinate list reading two parcels taken from the drawing's choice,
+    // what they give said, its headings given (Nokta No, Sağa (Y), Yukarı (X)) and drawn so.
+    id: 'koordinat-listesi-kaynak',
+    open: async (ui) => {
+      await opened(ui, 'cad', 'sys:aplikasyon-krokisi');
+      await ui.eval(
+        run(`const parcels = [...k.doc.all()].filter((e) => e.kind === 'polygon' && !e.symbol && k.doc.layers.isVisible(e.layerId)).slice(0, 1);
+          const it = s.state.sheet.items.find((i) => (i.source ?? i).kind.type === 'coordinateList');
+          s.apply([{ op: 'setItemProps', id: it.id, patch: { kind: { source: { type: 'objects', uids: parcels.map((e) => k.doc.uidOf(e.id)) }, columns: { point: 'Nokta No', east: 'Sağa (Y)', north: 'Yukarı (X)' }, closingRow: true, areaRow: true } } }], 'Koordinat listesi');
+          s.state.select([it.id]);
+          return parcels.length;`),
+      );
+      await ui.sleep(400);
+      await ui.eval(`document.querySelector('[data-key="coords.title"]')?.scrollIntoView({ block: 'start' })`);
+      await ui.sleep(200);
+      await ui.move(2, 2);
+    },
+    close: async (ui) => (await ui.eval(run(`for (let i = 0; i < 3; i++) s.undo(); return true;`)), await ui.eval(BACK)),
+  },
+  {
     // The constraint editor on the title block: its pins say what is kept; a pin's tooltip says how.
     id: 'kisit-ipucu',
     open: async (ui) => {

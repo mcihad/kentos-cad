@@ -104,6 +104,8 @@ export class SheetInspector extends Panel {
           section,
           choosePicture: () => this.choosePicture(),
           viewCentre: () => this.host.mapPlace().center,
+          viewSize: () => this.host.mapPlace().view,
+          plotScale: () => this.host.mapPlace().scale,
           layers: () => this.ctx.doc.layers.leaves().filter((l) => l.type === 'layer').map((l) => ({ id: l.id, name: l.name })),
         });
       }
