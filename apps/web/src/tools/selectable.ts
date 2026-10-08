@@ -26,6 +26,7 @@ export const FILTER_KINDS: readonly EntityKind[] = [
   'insert',
   'leader',
   'table',
+  'image',
 ];
 
 /** Whether an object of this kind may be selected now. */

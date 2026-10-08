@@ -14,7 +14,9 @@
 //!
 //! [`ContextMenu`] herhangi bir öğeyi sarar. Menü, pencerenin kenarına
 //! taşacaksa sola ya da yukarı açılır. Kendi açık/kapalı durumunu tutar:
-//! komut seçilince, dışarı tıklanınca ya da Esc'e basılınca kapanır. Başka
+//! komut seçilince, dışarı tıklanınca ya da Esc'e basılınca kapanır;
+//! [`Menu::stay`] ile işaretlenen komut seçilince açık kalır, böylece bir
+//! listeden art arda işaretlenir (seçim süzgecinin türleri). Başka
 //! bir yere sağ tıklamak menüyü orada yeniden açar. Klavyeyle de kullanılır:
 //! oklar komutlar arasında gezinir, sağ ok alt menüyü açar, Enter seçer.
 //!
@@ -229,6 +231,8 @@ struct Command<Message> {
     danger: bool,
     /// A muted note at the right, before the shortcut (“sabit”, what a method does).
     hint: Option<String>,
+    /// Chosen, it leaves the menu open ([`Menu::stay`]).
+    stay: bool,
 }
 
 impl<Message> Item<Message> {
@@ -280,6 +284,7 @@ impl<Message> Menu<Message> {
             highlight: None,
             danger: false,
             hint: None,
+            stay: false,
         }));
         self
     }
@@ -304,6 +309,7 @@ impl<Message> Menu<Message> {
             highlight: None,
             danger: false,
             hint: None,
+            stay: false,
         }));
         self
     }
@@ -329,6 +335,7 @@ impl<Message> Menu<Message> {
             highlight: None,
             danger: false,
             hint: None,
+            stay: false,
         }));
         self
     }
@@ -454,6 +461,19 @@ impl<Message> Menu<Message> {
     pub fn danger(mut self) -> Self {
         if let Some(Item::Command(command)) = self.items.last_mut() {
             command.danger = true;
+        }
+
+        self
+    }
+
+    /// Son eklenen komut seçilince menü açık kalır: bir listeden art arda
+    /// işaretlenen komut (seçim süzgecinin türleri, kenet türleri). İletisi
+    /// yayınlanır, menü uygulamanın yeni durumuyla yeniden kurulur; işareti
+    /// o durumdan gelir. Esc, dışarı tıklamak ya da başka bir komut menüyü
+    /// kapatır.
+    pub fn stay(mut self) -> Self {
+        if let Some(Item::Command(command)) = self.items.last_mut() {
+            command.stay = true;
         }
 
         self
@@ -1309,7 +1329,8 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
         })
     }
 
-    /// Komutu çalıştırır: alt menüyü açar ya da mesajı yayınlayıp kapatır.
+    /// Komutu çalıştırır: alt menüyü açar ya da mesajı yayınlayıp kapatır
+    /// ([`Menu::stay`] komutunda açık kalır).
     fn activate(&mut self, target: Target, shell: &mut Shell<'_, Message>) {
         let menu: &'b Menu<Message> = self.menu;
 
@@ -1319,6 +1340,16 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
         };
 
         match item {
+            Some(Item::Command(Command {
+                on_press: Some(message),
+                stay: true,
+                ..
+            })) => {
+                // The menu stays: it is built again from the app's new state (its ticks).
+                shell.publish(message.clone());
+                shell.invalidate_layout();
+                shell.request_redraw();
+            }
             Some(Item::Command(Command {
                 on_press: Some(message),
                 ..
@@ -1396,6 +1427,27 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
 }
 
 impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, '_, Message> {
+    /// The panels' rows to an operation: their texts can be found (a test
+    /// presses a row by its caption).
+    fn operate(
+        &mut self,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+        operation: &mut dyn widget::Operation,
+    ) {
+        let mut children = layout.children();
+        // The main panel sits in its window (moved by the scroll), the submenu beside it.
+        if let Some(panel) = children.next().and_then(|window| window.children().next()) {
+            self.main
+                .as_widget_mut()
+                .operate(self.main_tree, panel, renderer, operation);
+        }
+        if let (Some(sub), Some(panel)) = (self.sub.as_mut(), children.next()) {
+            sub.as_widget_mut()
+                .operate(self.sub_tree, panel, renderer, operation);
+        }
+    }
+
     fn layout(&mut self, renderer: &Renderer, bounds: Size) -> layout::Node {
         // Opened from the keyboard: its first command is lit, as the web's.
         if self.state.from_keyboard {
@@ -2177,6 +2229,91 @@ mod tests {
         snapshot.step(&mut picked, view, &mut update, &click(60.0, 40.0));
         assert_eq!(picked.len(), 2, "{picked:?}");
         assert!(picked[1] > first, "{picked:?}");
+    }
+
+    #[test]
+    fn a_command_that_stays_leaves_the_menu_open_with_its_new_tick() {
+        use crate::snapshot::{Input, Snapshot};
+        use iced::keyboard::key::Named;
+        use std::sync::{Arc, Mutex};
+
+        // Two kinds, ticked or not, and every message sent.
+        type State = (u8, Vec<u8>);
+        fn view(s: &State) -> Element<'_, u8> {
+            let ticks = s.0;
+            container(MenuButton::new(label::body("Türler"), move || {
+                Menu::new()
+                    .check("Nokta", ticks & 1 != 0, 0_u8)
+                    .stay()
+                    .check("Çizgi", ticks & 2 != 0, 1_u8)
+                    .stay()
+                    .item("Kapat", 9_u8)
+            }))
+            .padding(iced::Padding {
+                top: 20.0,
+                left: 20.0,
+                ..iced::Padding::default()
+            })
+            .into()
+        }
+        /// Where a text of the open menu is drawn (`operate` reaches its rows).
+        fn row(snapshot: &mut Snapshot, state: &State, caption: &str) -> Option<Point> {
+            struct Find(String, Arc<Mutex<Option<Rectangle>>>);
+            impl widget::Operation for Find {
+                fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn widget::Operation)) {
+                    operate(self);
+                }
+                fn text(&mut self, _id: Option<&widget::Id>, bounds: Rectangle, text: &str) {
+                    if text == self.0
+                        && let Ok(mut found) = self.1.lock()
+                    {
+                        *found = Some(bounds);
+                    }
+                }
+            }
+            let found = Arc::new(Mutex::new(None));
+            snapshot.operate(view(state), Box::new(Find(caption.to_owned(), found.clone())));
+            let at = found.lock().ok().and_then(|f| *f);
+            at.map(|r| r.center())
+        }
+        let mut update = |s: &mut State, m: u8| {
+            if m < 8 {
+                s.0 ^= 1 << m;
+            }
+            s.1.push(m);
+        };
+        let mut snapshot = Snapshot::new(Size::new(400.0, 300.0)).expect("a renderer");
+        let mut state: State = (0b11, Vec::new());
+
+        snapshot.input(
+            &mut state,
+            view,
+            &mut update,
+            Input::Click(Point::new(30.0, 28.0)),
+        );
+        // By the mouse: both kinds unticked from one opening of the menu.
+        for caption in ["Nokta", "Çizgi"] {
+            let at = row(&mut snapshot, &state, caption).expect("the menu is open");
+            snapshot.input(&mut state, view, &mut update, Input::Click(at));
+        }
+        assert_eq!(state, (0, vec![0, 1]));
+
+        // By the keys: Çizgi is lit, Yukarı lights Nokta, Enter ticks it again.
+        for key in [Named::ArrowUp, Named::Enter] {
+            snapshot.input(&mut state, view, &mut update, Input::Key(key));
+        }
+        assert_eq!(state, (0b01, vec![0, 1, 0]));
+
+        // A plain command still closes it: its rows are gone, the keys after it reach nothing.
+        for key in [Named::ArrowDown, Named::ArrowDown, Named::Enter] {
+            snapshot.input(&mut state, view, &mut update, Input::Key(key));
+        }
+        assert_eq!(state, (0b01, vec![0, 1, 0, 9]));
+        assert_eq!(row(&mut snapshot, &state, "Nokta"), None);
+        for key in [Named::ArrowDown, Named::Enter] {
+            snapshot.input(&mut state, view, &mut update, Input::Key(key));
+        }
+        assert_eq!(state.1, vec![0, 1, 0, 9]);
     }
 
     #[test]

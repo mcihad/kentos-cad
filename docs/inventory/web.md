@@ -4,7 +4,7 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 405 | 393 | 0 | 12 |
+| Komutlar | 408 | 396 | 0 | 12 |
 | Araçlar | 121 | 119 | 0 | 2 |
 | İşlem araçları | 20 | 20 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
@@ -49,7 +49,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 333 | 0 | 58 | 12 | 2 | 405 |
+| Komutlar | 336 | 0 | 58 | 12 | 2 | 408 |
 | Araçlar | 119 | 0 | 0 | 2 | 0 | 121 |
 | İşlem araçları | 20 | 0 | 0 | 0 | 0 | 20 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -76,7 +76,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 405; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 408; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -205,4 +205,4 @@ Yok.
 
 ## Test başvurusu
 
-147 / 405 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+146 / 408 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

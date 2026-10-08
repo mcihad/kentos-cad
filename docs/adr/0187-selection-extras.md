@@ -66,9 +66,11 @@ eklenir. Kural iki platformda aynı ortak durumlarla sınanır (`fixtures/select
 ### 5. Seçim süzgeci
 
 Durum çubuğunda **Süzgeç** hücresi (`edit.selectFilter`, oturumun ayarı `drafting.selectFilter`, kapalı başlar): açıkken yalnız
-işaretli türlerin nesneleri seçilir. Türler hücrenin sağ tık menüsünde ve Düzen › Seçim › Seçim süzgeci ▾'de tek tek işaretlenir
-(`edit.selectFilter.point` … `edit.selectFilter.table`, on altı tür, hepsi işaretli başlar); bir türü işaretlemek ya da kaldırmak
-süzgeci açar. Süzgeç Seç'in tıklamasına ve üzerine gelmesine, pencere ve kesişim kutusuna, Çitle, Daireyle, Çokgenle ve İçeren alanı
+işaretli türlerin nesneleri seçilir. Türler hücrenin sağ tık menüsünde ve Giriş › Seçim › Seçim süzgeci ▾'de işaretlenir
+(`edit.selectFilter.point` … `edit.selectFilter.image`, on yedi tür, hepsi işaretli başlar); bir türü işaretlemek ya da kaldırmak
+süzgeci açar. İki menü aynı listedir: türler kısa adları ve çizim araçlarının ikonlarıyla, menü açık kalır ve art arda işaretlenir,
+ardından **Bütün türler** ve **Hiçbir tür** (`edit.selectFilterAll`, `edit.selectFilterNone`; ikisi de süzgeci açar). Şeridin menüsü
+listenin üstünde süzgecin kendisini (“Süzgeç”) de gösterir (8 Ekim eki). Süzgeç Seç'in tıklamasına ve üzerine gelmesine, pencere ve kesişim kutusuna, Çitle, Daireyle, Çokgenle ve İçeren alanı
 seç'e, Benzerini seç'e, Tümünü seç ve Ters çevir'e ve seçim yokken nesne seçen komutların seçme adımına (Taşı, Kopyala … ortak
 tabanı) uygulanır. Tıklanan yerdeki adaylardan süzgeçten
 geçen ilki seçilir. Süzgecin dışarıda bıraktığı söylenir (“Seçim süzgeci 4 nesneyi dışarıda bıraktı.”). Önceki seçim, İfadeyle seç,
@@ -106,6 +108,24 @@ kesikli kutu ve geri al oku; Seçim süzgeci huni; Sıradakini seç üst üste i
 `fixtures/selection/v1` (`hits.json`, `polygon.json`, `similar.json`; bağımsız başvuru `scripts/fixtures/selection_cases.py`), ortak iz
 `selection-extras.json` (oynatıcılarda `cycle` beklentisi).
 
+- **8 Ekim eki (sahibin isteği):** “Seçim süzgecinde Nokta, Seçim süzgecinde Çizgi gibi menü öğeleri durum çubuğundaki gibi olacak ve
+  ikonlu olacak … sadece tek şeyi seçebiliyoruz, ikincisi için tekrar menü açmak gerekiyor, toplu düzenleme için de bir yol olmalı.”
+  Şeridin Seçim süzgeci ▾'i artık bir **işaret listesidir** (web `SubmenuSpec.checklist`, menü modelinin `checklistItem`'ı; masaüstü
+  kataloğun `Item::Menu`'sünün `checklist`'i ve blok başlıkları, envanterin şerit menüsüne `checklist` ve blok `label`'ı eklendi,
+  `view::checklist_of`): satırlar komutun kısa adı ve ikonuyla, başlıklı blok başlığıyla, her satır menüyü açık bırakır. Durum
+  çubuğunun Süzgeç menüsü aynı listedir (web `SELECT_FILTER_KINDS`, masaüstü `select_filter_blocks`). Açık kalan satır iki platformun
+  menü bileşeninde ortak bir yeteneğe dayanır: web `PopupMenu`'de `MenuItem.stay` (menü kaynağını işlev olarak tutar ve satır
+  çalışınca satırlarını yerinde yeniden okur; kaydırma, vurgulu satır ve açık alt menü kalır; `PopupMenu.staying` çalışırken şeridin
+  açılır paneli ve çizimin üstünde açılan şerit kapanmaz), KentOS UI `Menu::stay` (iletisi yayınlanır, menü kapanmaz, uygulamanın yeni
+  durumuyla yeniden kurulur; masaüstünde `Message::RunKept` komutu `Run` gibi çalıştırır ama üstte açılan şeridi kapatmaz). Aynı
+  davranış Kenet hücresinin türlerine ve Çizilmekte olan nesneye'ye, Çakışma hücresinin Katmanlar listesine de verildi; öbür
+  menüler (seçenekler, ayarlar, sıradan aç-kapa komutları) seçilince kapanmaya devam eder. Toplu düzenleme için Bütün türler ve
+  Hiçbir tür komut oldu (eski kapanışların ve `Message::SelectKinds`'ın yerine), menü açıkken “Hiçbir tür, sonra Yazı ve Ölçü”
+  gibi süzgeçler tek açılışta kurulur. Resim (ADR 0192) süzgeçte yoktu, süzgeç açıkken resimler hiç seçilemiyordu: on yedinci tür
+  `edit.selectFilter.image` oldu (masaüstünde türün adı ve ikonu da, Sıradakini seç'in listesinde ve üzerine gelme kartında
+  “Nesne” yerine “Resim”). KentOS UI menüsünün katmanı satırlarını işlemlere açar (`Overlay::operate`): testler satırı yazısından
+  bulup tıklar. Ortak iz `selection-extras.json`'a Hiçbir tür, tek tür, pencere ve Bütün türler adımları eklendi.
+
 ## Doğrulama
 
 - `python3 scripts/fixtures/selection_cases.py --check` (tıklamanın adayları, çokgenin üç kipi ve halka sorunları kesirlerle, benzerlik;
@@ -113,5 +133,10 @@ kesikli kutu ve geri al oku; Seçim süzgeci huni; Sıradakini seç üst üste i
   dosyalar), iki platformda benzerlik (`select_similar` testleri, `model/selectSimilar.test.ts`).
 - Ortak iz `selection-extras.json` iki platformda üç türde.
 - Resimler: `(cd apps/web && node scripts/e2e/shots.mjs selecting)`,
-  `KENTOS_SHOTS_ONLY=secim-cip,secim-cip-liste,secim-cokgen,secim-cokgen-sonuc,secim-benzeri,secim-suzgec,secim-suzgec-menu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture`
-  (`.run/shots/arac-secim-*`).
+  `KENTOS_SHOTS_ONLY=secim-cip,secim-cip-liste,secim-cokgen,secim-cokgen-sonuc,secim-benzeri,secim-suzgec,secim-suzgec-menu,secim-suzgec-coklu,secim-suzgec-serit cargo test -p kentos-desktop tools_screens -- --ignored --nocapture`
+  (`.run/shots/arac-secim-*`); 8 Ekim ekinin resimleri `selection-filter-multi`, `selection-filter-ribbon` (web) ve
+  `secim-suzgec-coklu`, `secim-suzgec-serit` (masaüstü; dar pencerede katlanmış Seçim panelinin menüsünden).
+- 8 Ekim eki: KentOS UI `a_command_that_stays_leaves_the_menu_open_with_its_new_tick` (fareyle ve klavyeyle, satırlar yazısından
+  bulunarak), masaüstü `selection_commands` ve `snap_menu` testleri, web `ui/statusbar/selectFilterMenu.test.ts` ve
+  `snapMenu.test.ts`, duman testinin iki denetimi (gerçek fareyle iki menü), yerleşim testinin `status-selectfilter` ve
+  `ribbon-selectfilter` görünümleri (iki boyut, iki tema, büyük yazı).

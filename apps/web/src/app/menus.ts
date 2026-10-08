@@ -40,6 +40,11 @@ export interface SubmenuSpec {
   readonly inline?: boolean;
   /** Ribbon: the main thing of its panel, drawn large. */
   readonly primary?: boolean;
+  /**
+   * A list ticked one row after another (Seçim süzgeci's kinds, docs/adr/0187 §5): each row says its command's short
+   * name with its icon beside its tick, a titled block is a header, and the menu stays open as a row runs.
+   */
+  readonly checklist?: boolean;
 }
 
 /** What a block holds once references are expanded: command ids, submenus, `@processing`, `@models`. */
@@ -58,6 +63,9 @@ export interface TopMenu {
 }
 
 const sec = (section: string): MenuSection => ({ section });
+
+/** Seçim süzgeci's list under its on/off command: the kinds, then every kind or none at once (docs/adr/0187 §5). */
+export const SELECT_FILTER_KINDS: readonly MenuSpec[] = [sec('Seçilebilir türler'), ...FILTER_KINDS.map((k) => `edit.selectFilter.${k}`), '-', 'edit.selectFilterAll', 'edit.selectFilterNone'];
 
 export const MAIN_MENU: TopMenu[] = [
   {
@@ -114,8 +122,9 @@ export const MAIN_MENU: TopMenu[] = [
       'edit.invertSelection',
       'edit.previousSelection',
       'edit.cycleSelection',
-      // Seçim süzgeci and its kinds (docs/adr/0187 §5); the status bar's Süzgeç cell has them on its right-click menu.
-      { label: 'Seçim süzgeci', icon: 'selectFilter', items: ['edit.selectFilter', ...FILTER_KINDS.map((k) => `edit.selectFilter.${k}`)] },
+      // Seçim süzgeci and its kinds, ticked one after another (docs/adr/0187 §5); the status bar's Süzgeç cell has the
+      // same list on its right-click menu (ui/statusbar/selectFilterMenu.ts).
+      { label: 'Seçim süzgeci', icon: 'selectFilter', checklist: true, items: ['edit.selectFilter', ...SELECT_FILTER_KINDS] },
       sec('Bul'),
       'data.search',
       'data.unmark',
@@ -292,21 +301,25 @@ export function menuBlocks(specs: readonly MenuSpec[], allTools: readonly ToolDe
   return out.filter((b) => b.items.length);
 }
 
-/** Resolves specs against the live command registry (enabled/checked/shortcut). */
-export function resolveMenu(ctx: AppContext, specs: readonly MenuSpec[]): MenuItem[] {
+/**
+ * Resolves specs against the live command registry (enabled/checked/shortcut). As a checklist (`SubmenuSpec.checklist`)
+ * a titled block starts with its header and every command is a `checklistItem`.
+ */
+export function resolveMenu(ctx: AppContext, specs: readonly MenuSpec[], opts: { readonly checklist?: boolean } = {}): MenuItem[] {
   const out: MenuItem[] = [];
   for (const block of menuBlocks(specs, ctx.tools.list(), filterOf(ctx))) {
     if (out.length) out.push({ kind: 'separator' });
-    for (const e of block.items) out.push(...entryItems(ctx, e));
+    if (opts.checklist && block.label) out.push({ kind: 'header', label: block.label });
+    for (const e of block.items) out.push(...entryItems(ctx, e, opts.checklist));
   }
   return out;
 }
 
-function entryItems(ctx: AppContext, e: MenuEntry): MenuItem[] {
+function entryItems(ctx: AppContext, e: MenuEntry, checklist = false): MenuItem[] {
   if (e === '@processing') return processingMenu(ctx, ctx.processing.registry.tree());
   if (e === '@models') return [modelsMenu(ctx)];
-  if (typeof e === 'object') return [{ label: e.label, icon: e.icon, items: () => resolveMenu(ctx, e.items) }];
-  return [commandItem(ctx, e)];
+  if (typeof e === 'object') return [{ label: e.label, icon: e.icon, items: () => resolveMenu(ctx, e.items, { checklist: e.checklist }) }];
+  return [checklist ? checklistItem(ctx, e) : commandItem(ctx, e)];
 }
 
 /** The model library: run a model, or design a new one. */
@@ -338,6 +351,15 @@ export function menuRowLook(id: string, checked: boolean | undefined): { icon: b
     (id.startsWith('view.theme.') && id !== 'view.theme.toggle') || id.startsWith('view.renderer.') || id.startsWith('view.symbols.') || id.startsWith('workspace.') || id.startsWith('draft.overlap.');
   const tool = id.startsWith('tool.');
   return { icon: checked === undefined || radio || tool, checked: tool ? undefined : checked, radio };
+}
+
+/**
+ * A row of a list ticked one row after another (`SubmenuSpec.checklist`; DESIGN.md §7.2's exception): the command's
+ * short name, its icon beside its tick, and the menu stays open as it runs.
+ */
+export function checklistItem(ctx: AppContext, id: string, overrides: Partial<MenuItem> = {}): MenuItem {
+  const cmd = ctx.commands.get(id);
+  return commandItem(ctx, id, cmd ? { label: cmd.short ?? cmd.title, icon: cmd.icon, stay: true, ...overrides } : overrides);
 }
 
 export function commandItem(ctx: AppContext, id: string, overrides: Partial<MenuItem> = {}): MenuItem {

@@ -80,7 +80,7 @@ fn settle(app: &mut App, mut snapshot: Snapshot) -> Snapshot {
 /// layer, Parsel; a click goes back to Serbest, the next to the last mode.
 #[test]
 fn the_status_cell_turns_the_control_and_its_menu_chooses_mode_and_layers() {
-    use Named::{ArrowDown, ArrowRight, Enter};
+    use Named::{ArrowDown, ArrowRight, Enter, Escape};
     let size = Size::new(1440.0, 900.0);
     let mut app = opened(size, "dark");
     let mut snapshot = settled(&mut app, size);
@@ -114,6 +114,14 @@ fn the_status_cell_turns_the_control_and_its_menu_chooses_mode_and_layers() {
     );
     assert_eq!(app.overlap_layers, ["parsel"]);
     assert_eq!(app.draft.overlap, Overlap::Layers);
+    // The layers are ticked one after another (docs/adr/0187 §5, 8 Ekim):
+    // the menu is still open, the next layer one key away; Esc closes the
+    // list, then the menu (a click outside would only close it).
+    keys(&mut snapshot, &mut app, &[ArrowDown, Enter]);
+    assert_eq!(app.overlap_layers.len(), 2, "a second layer from the same opening");
+    keys(&mut snapshot, &mut app, &[Enter]);
+    assert_eq!(app.overlap_layers, ["parsel"], "and off again, the row still lit");
+    keys(&mut snapshot, &mut app, &[Escape, Escape]);
     press(&mut snapshot, &mut app, cell.center(), mouse::Button::Left);
     assert_eq!(
         app.draft.overlap,

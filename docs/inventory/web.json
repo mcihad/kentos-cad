@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 405,
-      "implemented": 393,
+      "total": 408,
+      "implemented": 396,
       "partial": 0,
       "pending": 12
     },
@@ -101,12 +101,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 147,
-    "commandsOnDesktop": 333,
+    "commandsWithoutTests": 146,
+    "commandsOnDesktop": 336,
     "desktop": {
       "commands": {
-        "total": 405,
-        "implemented": 333,
+        "total": 408,
+        "implemented": 336,
         "partial": 0,
         "pending": 12,
         "none": 58,
@@ -2701,7 +2701,7 @@
       "short": "Süzgeç",
       "category": "Düzen",
       "icon": "selectFilter",
-      "description": "Açıkken yalnız işaretli türlerin nesneleri seçilir; türler hücrenin sağ tık menüsündedir.",
+      "description": "Açıkken yalnız işaretli türlerin nesneleri seçilir. Türler Giriş › Seçim süzgeci ▾ menüsünde ve hücrenin sağ tık menüsünde; menü açık kalır, art arda işaretlenir.",
       "aliases": [
         "SUZGEC",
         "SECIMSUZGECI",
@@ -2727,6 +2727,8 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/selection-extras.json"
       ]
     },
@@ -2740,7 +2742,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2766,7 +2768,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2780,7 +2782,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
     },
     {
       "id": "edit.selectFilter.dimension",
@@ -2792,7 +2796,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2818,7 +2822,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2844,7 +2848,33 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.image",
+      "title": "Seçim süzgecinde Resim",
+      "short": "Resim",
+      "category": "Düzen",
+      "icon": "imageInsert",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2870,7 +2900,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2896,7 +2926,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2922,7 +2952,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2948,7 +2978,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -2974,7 +3004,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -3002,7 +3032,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -3028,7 +3058,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -3054,7 +3084,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -3080,7 +3110,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -3106,7 +3136,35 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Düzen › Seçim › Seçim süzgeci"
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/src/ui/statusbar/selectFilterMenu.test.ts"
+      ]
+    },
+    {
+      "id": "edit.selectFilter.xline",
+      "title": "Seçim süzgecinde Yardımcı çizgi",
+      "short": "Yardımcı çizgi",
+      "category": "Düzen",
+      "icon": "xline",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci › Seçilebilir türler"
       ],
       "ribbon": [
         "CAD › Giriş › Seçim",
@@ -3123,13 +3181,14 @@
       "tests": []
     },
     {
-      "id": "edit.selectFilter.xline",
-      "title": "Seçim süzgecinde Yardımcı çizgi",
-      "short": "Yardımcı çizgi",
+      "id": "edit.selectFilterAll",
+      "title": "Seçim süzgecinde bütün türler",
+      "short": "Bütün türler",
       "category": "Düzen",
-      "icon": "xline",
+      "icon": "selectAll",
+      "description": "Seçim süzgecinde bütün türleri işaretler ve süzgeci açar.",
       "aliases": [],
-      "kind": "toggle",
+      "kind": "action",
       "shortcuts": [],
       "menus": [
         "Düzen › Seçim › Seçim süzgeci"
@@ -3146,7 +3205,38 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
+    },
+    {
+      "id": "edit.selectFilterNone",
+      "title": "Seçim süzgecinde hiçbir tür",
+      "short": "Hiçbir tür",
+      "category": "Düzen",
+      "icon": "deselect",
+      "description": "Seçim süzgecinde bütün türlerin işaretini kaldırır ve süzgeci açar: ardından seçilecek türler işaretlenir.",
+      "aliases": [],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
     },
     {
       "id": "edit.undo",
@@ -27920,11 +28010,17 @@
               "edit.cycleSelection",
               {
                 "label": "Seçim süzgeci",
+                "checklist": true,
                 "items": [
                   {
                     "label": "",
                     "items": [
-                      "edit.selectFilter",
+                      "edit.selectFilter"
+                    ]
+                  },
+                  {
+                    "label": "Seçilebilir türler",
+                    "items": [
                       "edit.selectFilter.point",
                       "edit.selectFilter.line",
                       "edit.selectFilter.polyline",
@@ -27940,7 +28036,15 @@
                       "edit.selectFilter.hatch",
                       "edit.selectFilter.insert",
                       "edit.selectFilter.leader",
-                      "edit.selectFilter.table"
+                      "edit.selectFilter.table",
+                      "edit.selectFilter.image"
+                    ]
+                  },
+                  {
+                    "label": "",
+                    "items": [
+                      "edit.selectFilterAll",
+                      "edit.selectFilterNone"
                     ]
                   }
                 ]
@@ -28844,11 +28948,17 @@
               {
                 "menu": "Seçim süzgeci",
                 "size": "small",
+                "checklist": true,
                 "blocks": [
                   {
                     "label": "",
                     "items": [
-                      "edit.selectFilter",
+                      "edit.selectFilter"
+                    ]
+                  },
+                  {
+                    "label": "Seçilebilir türler",
+                    "items": [
                       "edit.selectFilter.point",
                       "edit.selectFilter.line",
                       "edit.selectFilter.polyline",
@@ -28864,7 +28974,15 @@
                       "edit.selectFilter.hatch",
                       "edit.selectFilter.insert",
                       "edit.selectFilter.leader",
-                      "edit.selectFilter.table"
+                      "edit.selectFilter.table",
+                      "edit.selectFilter.image"
+                    ]
+                  },
+                  {
+                    "label": "",
+                    "items": [
+                      "edit.selectFilterAll",
+                      "edit.selectFilterNone"
                     ]
                   }
                 ]
@@ -31353,11 +31471,17 @@
                 {
                   "menu": "Seçim süzgeci",
                   "size": "small",
+                  "checklist": true,
                   "blocks": [
                     {
                       "label": "",
                       "items": [
-                        "edit.selectFilter",
+                        "edit.selectFilter"
+                      ]
+                    },
+                    {
+                      "label": "Seçilebilir türler",
+                      "items": [
                         "edit.selectFilter.point",
                         "edit.selectFilter.line",
                         "edit.selectFilter.polyline",
@@ -31373,7 +31497,15 @@
                         "edit.selectFilter.hatch",
                         "edit.selectFilter.insert",
                         "edit.selectFilter.leader",
-                        "edit.selectFilter.table"
+                        "edit.selectFilter.table",
+                        "edit.selectFilter.image"
+                      ]
+                    },
+                    {
+                      "label": "",
+                      "items": [
+                        "edit.selectFilterAll",
+                        "edit.selectFilterNone"
                       ]
                     }
                   ]
@@ -33733,11 +33865,17 @@
                 {
                   "menu": "Seçim süzgeci",
                   "size": "small",
+                  "checklist": true,
                   "blocks": [
                     {
                       "label": "",
                       "items": [
-                        "edit.selectFilter",
+                        "edit.selectFilter"
+                      ]
+                    },
+                    {
+                      "label": "Seçilebilir türler",
+                      "items": [
                         "edit.selectFilter.point",
                         "edit.selectFilter.line",
                         "edit.selectFilter.polyline",
@@ -33753,7 +33891,15 @@
                         "edit.selectFilter.hatch",
                         "edit.selectFilter.insert",
                         "edit.selectFilter.leader",
-                        "edit.selectFilter.table"
+                        "edit.selectFilter.table",
+                        "edit.selectFilter.image"
+                      ]
+                    },
+                    {
+                      "label": "",
+                      "items": [
+                        "edit.selectFilterAll",
+                        "edit.selectFilterNone"
                       ]
                     }
                   ]

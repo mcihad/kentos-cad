@@ -6036,7 +6036,48 @@ function selectingScenes() {
     },
     { id: 'selection-filter', open: filtered, close },
     { id: 'selection-filter-menu', open: async (ui) => (await filtered(ui), await rightClick(ui, '.status__toggle[data-command="edit.selectFilter"]')), close },
+    // Two more kinds unticked from one opening: the menu stays open (docs/adr/0187 §5, 8 Ekim); the desktop's
+    // “secim-suzgec-coklu”.
+    {
+      id: 'selection-filter-multi',
+      open: async (ui) => {
+        await filtered(ui);
+        await rightClick(ui, '.status__toggle[data-command="edit.selectFilter"]');
+        await menuRow(ui, 'Nokta');
+        await menuRow(ui, 'Çizgi');
+      },
+      close,
+    },
+    // Giriş › Seçim süzgeci ▾: the cell's list under its on/off row; the desktop's “secim-suzgec-serit”.
+    {
+      id: 'selection-filter-ribbon',
+      open: async (ui) => {
+        await filtered(ui);
+        const shown = await ui.eval(`(() => { const b = document.querySelector('.rbtn[data-menu="Seçim süzgeci"]'); return !!b && b.offsetParent !== null; })()`);
+        if (!shown) {
+          await ui.clickSel('.rpanel[data-panel="Seçim"] .rpanel__collapsed');
+          await ui.sleep(300);
+        }
+        await ui.clickSel('.rbtn[data-menu="Seçim süzgeci"]');
+        await ui.waitFor(`!!document.querySelector('.menu')`);
+        await ui.sleep(300);
+      },
+      close,
+    },
   ];
+}
+
+/** A click on an open menu's row by its label; the pointer stays on it. A menu already closed is said, not a stop. */
+async function menuRow(ui, label) {
+  const at = await ui.eval(`(() => {
+    const row = [...document.querySelectorAll('.menu .menu__item')].find((r) => r.querySelector('.menu__label')?.textContent === ${JSON.stringify(label)});
+    if (!row) return null;
+    const b = row.getBoundingClientRect();
+    return [b.x + b.width / 2, b.y + b.height / 2];
+  })()`);
+  if (!at) return console.warn(`  açık menüde “${label}” satırı yok (menü kapandı mı?)`);
+  await ui.clickAt(...at);
+  await ui.sleep(300);
 }
 
 function coordinateScenes() {

@@ -606,7 +606,13 @@ impl App {
                 let menu = move || crate::ribbon_bar::split_list(key, &entries);
                 Some(with_family(button, &ids, command.title, menu))
             }
-            Item::Menu { label, ids, size } => {
+            Item::Menu {
+                label,
+                ids,
+                blocks,
+                checklist,
+                size,
+            } => {
                 let icon = ids
                     .first()
                     .and_then(|id| catalog.get(id))
@@ -617,6 +623,12 @@ impl App {
                 .key_tips(self.key_tip(&TipKey::Menu(label)), None);
                 let members = ids.clone();
                 let checked = self.checks(&members);
+                if *checklist {
+                    // Ticked one row after another, the menu open (docs/adr/0187 §5).
+                    let blocks = blocks.clone();
+                    let menu = move || checklist_of(&blocks, &checked);
+                    return Some(with_family(button, ids, label, menu));
+                }
                 let menu = move || menu_of(&members, &checked);
                 Some(with_family(button, ids, label, menu))
             }
@@ -1319,12 +1331,14 @@ impl App {
                     continue;
                 }
                 let chosen = self.overlap_layers.contains(&node.id);
+                // Several layers are ticked one after another: the menu stays open.
                 layers_menu = layers_menu
                     .check(
                         node.name.clone(),
                         chosen,
                         Message::OverlapLayer(node.id.clone()),
                     )
+                    .stay()
                     .swatch(self.drawing_color(&node.style.color));
                 if !layers.is_visible(&node.id) {
                     layers_menu = layers_menu.hint("gizli");
@@ -1585,6 +1599,40 @@ fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
                 None => menu,
             }
         })
+}
+
+/// A list ticked one row after another (the web's `checklistItem`,
+/// docs/adr/0187 §5): each command by its short name with its icon beside
+/// its tick, a titled block under its header, a separator between blocks.
+/// A row leaves the menu open (`Message::RunKept`) and the menu, built again,
+/// reads its ticks from the app. `checked` follows the blocks' commands in
+/// order.
+pub(crate) fn checklist_of(
+    blocks: &[(&'static str, Vec<&'static str>)],
+    checked: &[Option<bool>],
+) -> Menu<Message> {
+    let mut ticks = checked.iter().copied().chain(std::iter::repeat(None));
+    let mut menu = Menu::new();
+    for (title, ids) in blocks {
+        menu = menu.separator();
+        if !title.is_empty() {
+            menu = menu.header(*title);
+        }
+        for id in ids {
+            let tick = ticks.next().flatten();
+            let Some(command) = catalog().get(id) else {
+                continue;
+            };
+            let run = (command.standing == Standing::Ported).then_some(Message::RunKept(command.id));
+            menu = match tick {
+                Some(on) => menu.check(command.short, on, run),
+                None => menu.item(command.short, run),
+            }
+            .icon(command.icon)
+            .stay();
+        }
+    }
+    menu
 }
 
 /// The status bar's drafting aids, as the web's (`StatusBar.ts`).

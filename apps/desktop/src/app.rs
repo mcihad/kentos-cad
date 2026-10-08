@@ -235,6 +235,10 @@ pub enum Picker {
 pub enum Message {
     /// Run a web command id (ribbon, shortcut, command line, dialog).
     Run(&'static str),
+    /// Run a command ticked on a menu that stays open (a checklist's row:
+    /// the selection filter's and the snap kinds, docs/adr/0187 §5): as
+    /// `Run`, but the ribbon opened over the drawing stays as it is.
+    RunKept(&'static str),
     /// Draw with the style library's object template of this id
     /// (`template.draw`, docs/adr/0176 §3; templates.rs).
     DrawTemplate(String),
@@ -458,8 +462,6 @@ pub enum Message {
     ServerChecked(Result<kentos_contracts::Health, String>),
     /// A layer ticked or unticked on the Çakışma cell's menu (docs/adr/0162 §1).
     OverlapLayer(String),
-    /// Seçim süzgeci's kinds all ticked or none (the Süzgeç cell's menu, docs/adr/0187 §5).
-    SelectKinds(bool),
     /// Sıradakini seç's list: the chip's candidate to choose (docs/adr/0187 §1).
     CycleTo(usize),
     /// The candidate the pointer rests on in that list: highlighted in the drawing.
@@ -1243,7 +1245,7 @@ impl App {
             self.vertices.keyboard = false;
         }
         match message {
-            Message::Run(id) => return self.run(id),
+            Message::Run(id) | Message::RunKept(id) => return self.run(id),
             Message::DrawTemplate(id) => return self.draw_template(&id),
             Message::ApplyTemplate(id) => self.apply_template(&id),
             Message::RunMethod { id, option, label } => {
@@ -1520,7 +1522,6 @@ impl App {
             Message::Recovery(event) => return self.recovery_event(event),
             Message::ServerChecked(answer) => self.server_checked(answer),
             Message::OverlapLayer(id) => self.toggle_overlap_layer(id),
-            Message::SelectKinds(on) => self.select_all_kinds(on),
             Message::CycleTo(index) => self.selection.cycle_to(index),
             Message::CycleHover(slot) => self.selection.set_hover(slot),
             Message::Snap(event) => self.snap_event(event),
@@ -1915,6 +1916,8 @@ impl App {
             "edit.previousSelection" => self.previous_selection(),
             "edit.cycleSelection" => self.cycle_selection(),
             "edit.selectFilter" => self.toggle_select_filter(),
+            "edit.selectFilterAll" => self.select_all_kinds(true),
+            "edit.selectFilterNone" => self.select_all_kinds(false),
             id if id.starts_with("edit.selectFilter.") => {
                 self.toggle_select_kind(&id["edit.selectFilter.".len()..]);
             }

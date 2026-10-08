@@ -400,6 +400,7 @@ impl App {
             }
             // A click on the drawing is a tool's point; moving the view is not an edit.
             Message::Run(_)
+            | Message::RunKept(_)
             | Message::CommandSubmitted
             | Message::CommandRun(_)
             | Message::PromptOption(_)

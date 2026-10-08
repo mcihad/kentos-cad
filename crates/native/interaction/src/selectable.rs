@@ -13,7 +13,7 @@ use crate::log::Level;
 use crate::tool::Context;
 
 /// The kinds the filter can hold, in its menu's order (the web's `FILTER_KINDS`).
-pub const KINDS: [&str; 16] = [
+pub const KINDS: [&str; 17] = [
     "point",
     "line",
     "polyline",
@@ -30,6 +30,7 @@ pub const KINDS: [&str; 16] = [
     "insert",
     "leader",
     "table",
+    "image",
 ];
 
 /// Every kind: the filter's kinds at the start of a session.
@@ -132,5 +133,8 @@ mod tests {
         assert!(!kind_allowed(Some(0), "table"), "none ticked: nothing");
         assert_eq!(ALL.count_ones() as usize, KINDS.len());
         assert_eq!(bit("nothing"), 0);
+        // Every kind of object is one of the filter's: a picture too (docs/adr/0187 §5, 8 Ekim).
+        assert!(kind_allowed(Some(ALL), "image"));
+        assert!(!kind_allowed(Some(ALL & !bit("image")), "image"));
     }
 }

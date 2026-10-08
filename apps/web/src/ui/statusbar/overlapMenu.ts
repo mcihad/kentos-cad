@@ -26,6 +26,8 @@ export function overlapMenu(ctx: AppContext): MenuItem[] {
           swatch: layerSwatch(n, ctx.view.palette),
           checked: s.overlapLayers.value.has(n.id),
           hint: layers.isVisible(n.id) ? undefined : 'gizli',
+          // Several layers are ticked one after another: the menu stays open.
+          stay: true,
           run: () => {
             const next = new Set(s.overlapLayers.value);
             if (!next.delete(n.id)) next.add(n.id);

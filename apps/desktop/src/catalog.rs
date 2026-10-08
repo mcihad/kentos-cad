@@ -449,6 +449,11 @@ pub const PORTED: &[&str] = &[
     "edit.selectFilter.insert",
     "edit.selectFilter.leader",
     "edit.selectFilter.table",
+    // The selection filter's seventeenth kind and its bulk rows (docs/adr/0187 §5, 8 Ekim):
+    // Resim, Bütün türler and Hiçbir tür, ticked with the menu open.
+    "edit.selectFilter.image",
+    "edit.selectFilterAll",
+    "edit.selectFilterNone",
     // Kot ver (docs/adr/0142): the vertices of the selection given elevations, through
     // cad.entities.edit as Kot ver; Sabit, Artır and Sıfırla are its methods.
     "tool.setElevation",
@@ -752,7 +757,14 @@ pub enum Item {
     /// A drop-down button with a submenu of commands.
     Menu {
         label: &'static str,
+        /// Every command of its blocks and submenus, in order.
         ids: Vec<&'static str>,
+        /// Its blocks, by title ('' for none), each block's commands in order.
+        blocks: Vec<(&'static str, Vec<&'static str>)>,
+        /// A list ticked one row after another (the web's
+        /// `SubmenuSpec.checklist`, docs/adr/0187 §5): short names with
+        /// icons, titled blocks under headers, open as rows are ticked.
+        checklist: bool,
         size: Size,
     },
     /// A panel the web draws itself, by its name: `layers` (the active
@@ -1076,11 +1088,20 @@ fn item(raw: RawItem) -> Item {
             menu,
             size: s,
             blocks,
-        } => Item::Menu {
-            label: leak(menu),
-            ids: flatten(blocks),
-            size: size(&s),
-        },
+            checklist,
+        } => {
+            let blocks: Vec<(&'static str, Vec<&'static str>)> = blocks
+                .into_iter()
+                .map(|block| (leak(block.label), entries(block.items)))
+                .collect();
+            Item::Menu {
+                label: leak(menu),
+                ids: blocks.iter().flat_map(|(_, ids)| ids.iter().copied()).collect(),
+                blocks,
+                checklist,
+                size: size(&s),
+            }
+        }
         RawItem::Builtin { builtin } => Item::Builtin(leak(builtin)),
     }
 }
@@ -1089,7 +1110,14 @@ fn item(raw: RawItem) -> Item {
 fn flatten(blocks: Vec<RawBlock>) -> Vec<&'static str> {
     blocks
         .into_iter()
-        .flat_map(|block| block.items)
+        .flat_map(|block| entries(block.items))
+        .collect()
+}
+
+/// Every command id of a block's entries and their submenus, in order.
+fn entries(items: Vec<RawEntry>) -> Vec<&'static str> {
+    items
+        .into_iter()
         .flat_map(|entry| match entry {
             RawEntry::Command(id) => vec![leak(id)],
             RawEntry::Submenu { items, .. } => flatten(items),
@@ -1237,6 +1265,8 @@ enum RawItem {
         menu: String,
         size: String,
         blocks: Vec<RawBlock>,
+        #[serde(default)]
+        checklist: bool,
     },
     Builtin {
         builtin: String,
@@ -1261,6 +1291,9 @@ struct RawSplit {
 
 #[derive(Deserialize)]
 struct RawBlock {
+    /// Its title; '' for an untitled block.
+    #[serde(default)]
+    label: String,
     items: Vec<RawEntry>,
 }
 

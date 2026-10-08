@@ -206,8 +206,9 @@ export class Ribbon extends Component {
       this.d.add(() => fonts.removeEventListener('loadingdone', loaded));
     }
 
-    // Whatever runs a command (a shortcut too) closes the ribbon opened over the drawing and a folded panel's pop-up.
-    this.d.add(ctx.commands.events.on('executed', ({ command }) => command.id !== 'view.ribbonCollapse' && this.afterRun()));
+    // Whatever runs a command (a shortcut too) closes the ribbon opened over the drawing and a folded panel's pop-up;
+    // not a menu's row that stays open (a checklist's tick, docs/adr/0187 §5).
+    this.d.add(ctx.commands.events.on('executed', ({ command }) => command.id !== 'view.ribbonCollapse' && !PopupMenu.staying && this.afterRun()));
 
     this.keyTips = new KeyTips({
       root: this.el,

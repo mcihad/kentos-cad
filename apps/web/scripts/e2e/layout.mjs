@@ -103,6 +103,16 @@ const ITEMS = [
     open: async (ui) => (await ui.rightClick('.status__toggle[data-command="draft.snap"]'), await ui.clickText('.menu__item', 'Karelaj aralığı')),
     close: (ui) => ui.escapeAll(2),
   },
+  // Süzgeç's right-click menu and Giriş › Seçim süzgeci ▾: the seventeen kinds by short name and icon, then every kind
+  // or none (docs/adr/0187 §5, 8 Ekim); the drop-down under its folded panel's button in a narrow window.
+  { id: 'status-selectfilter', open: (ui) => ui.rightClick('.status__toggle[data-command="edit.selectFilter"]') },
+  {
+    id: 'ribbon-selectfilter',
+    open: async (ui) => {
+      if (!(await ui.visible('.ribbon__strip .rbtn[data-menu="Seçim süzgeci"]'))) await ui.click('.ribbon__strip .rpanel__collapsed[aria-label="Seçim"]');
+      await ui.clickFirst(['.ribbon__strip .rbtn[data-menu="Seçim süzgeci"]', '.ribbon-pop .rbtn[data-menu="Seçim süzgeci"]']);
+    },
+  },
   { id: 'status-account', open: (ui) => ui.click('.status__server') },
   { id: 'layer-row', open: (ui) => ui.rightClick('.panel--layers .tree__row[data-id="taslak"] .tree__name') },
   { id: 'layer-color', open: (ui) => ui.click('.panel--layers .tree__row[data-id="taslak"] .swatch--btn') },

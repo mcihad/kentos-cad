@@ -14,6 +14,11 @@ export function selectionCommands(ctx: AppContext): Command[] {
   const { doc, selection, settings, log } = ctx;
   const E = 'Düzen';
   const visible = () => [...doc.all()].filter((e) => doc.layers.isVisible(e.layerId));
+  /** The filter's kinds set at once, and the filter on (as ticking a kind turns it on). */
+  const setKinds = (kinds: readonly EntityKind[]) => {
+    settings.selectKinds.set(new Set(kinds));
+    settings.selectFilter.set(true);
+  };
   /** Önceki seçim's objects still in the drawing and shown, in their order. */
   const previous = () => selection.previous.value.filter((id) => {
     const e = doc.get(id);
@@ -76,7 +81,7 @@ export function selectionCommands(ctx: AppContext): Command[] {
       category: E,
       icon: 'selectFilter',
       aliases: ['SUZGEC', 'SECIMSUZGECI', 'FILTER'],
-      description: 'Açıkken yalnız işaretli türlerin nesneleri seçilir; türler hücrenin sağ tık menüsündedir.',
+      description: 'Açıkken yalnız işaretli türlerin nesneleri seçilir. Türler Giriş › Seçim süzgeci ▾ menüsünde ve hücrenin sağ tık menüsünde; menü açık kalır, art arda işaretlenir.',
       run: () => {
         const on = !settings.selectFilter.value;
         settings.selectFilter.set(on);
@@ -103,6 +108,25 @@ export function selectionCommands(ctx: AppContext): Command[] {
         watch: [settings.selectKinds],
       }),
     ),
+    // Every kind or none at once (docs/adr/0187 §5): then a few ticks make the filter, with the menu open.
+    {
+      id: 'edit.selectFilterAll',
+      title: 'Seçim süzgecinde bütün türler',
+      short: 'Bütün türler',
+      category: E,
+      icon: 'selectAll',
+      description: 'Seçim süzgecinde bütün türleri işaretler ve süzgeci açar.',
+      run: () => setKinds(FILTER_KINDS),
+    },
+    {
+      id: 'edit.selectFilterNone',
+      title: 'Seçim süzgecinde hiçbir tür',
+      short: 'Hiçbir tür',
+      category: E,
+      icon: 'deselect',
+      description: 'Seçim süzgecinde bütün türlerin işaretini kaldırır ve süzgeci açar: ardından seçilecek türler işaretlenir.',
+      run: () => setKinds([]),
+    },
   ];
 }
 
