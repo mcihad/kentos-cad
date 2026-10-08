@@ -20,7 +20,7 @@ use crate::app::Message;
 /// A typed field with its unit, and under it what is wrong.
 fn field<'a>(
     value: &'a str,
-    placeholder: &'a str,
+    placeholder: &str,
     unit: &'a str,
     problem: Option<&'static str>,
     on: impl Fn(String) -> Message + 'a,
@@ -50,7 +50,7 @@ fn field<'a>(
 /// `reduce` is the switch as kept beside the texts; `why_not`, why it
 /// cannot be turned on with these settings.
 pub(super) fn view<'a>(
-    texts: &'a [String; 8],
+    texts: &'a [String; survey_form::FIELDS],
     unit: AngleUnit,
     reduce: bool,
     why_not: Option<&'static str>,
@@ -59,7 +59,12 @@ pub(super) fn view<'a>(
 ) -> Element<'a, Message> {
     let read = survey_form::read(texts, unit);
     let mark = survey_form::angle_mark(unit);
-    let typed = |f: Field, placeholder: &'a str, unit: &'a str| {
+    let holders = survey_form::placeholders(unit);
+    let holder = |f: Field| {
+        let i = Field::ALL.iter().position(|g| *g == f).unwrap_or(0);
+        holders[i].clone()
+    };
+    let typed = |f: Field, placeholder: &str, unit: &'a str| {
         let i = Field::ALL.iter().position(|g| *g == f).unwrap_or(0);
         field(&texts[i], placeholder, unit, read.problems[i], move |t| {
             on(f, t)
@@ -136,6 +141,46 @@ pub(super) fn view<'a>(
                     typed(Field::TraverseCoord, "", "mm"),
                 )),
         ),
+        // Ağ dengelemesi's a priori standard deviations (docs/adr/0203 §1): an
+        // empty field is the default, shown as its placeholder.
+        group(
+            "Ağ dengelemesi",
+            Column::new()
+                .spacing(10)
+                .push(Banner::info(
+                    "Yatay ağ ve kot ağı dengelemesinde gözlemlerin önsel doğrulukları (ağırlıkları). Boş bırakılan varsayılandır: 3″ sınıfı total station ve mühendislik nivelmanı.",
+                ))
+                .push(setting(
+                    "Doğrultu",
+                    Some("Bir doğrultu ölçüsünün standart sapması."),
+                    typed(Field::SigmaDirection, &holder(Field::SigmaDirection), mark),
+                ))
+                .push(setting(
+                    "Kenar, sabit pay",
+                    Some("Kenar ölçüsünün uzunluktan bağımsız payı."),
+                    typed(Field::SigmaDistance, &holder(Field::SigmaDistance), "mm"),
+                ))
+                .push(setting(
+                    "Kenar, uzunlukla artan pay",
+                    Some("Kenarın uzunluğunun milyonda biri başına payı."),
+                    typed(Field::SigmaPpm, &holder(Field::SigmaPpm), "ppm"),
+                ))
+                .push(setting(
+                    "Merkezleme",
+                    Some("Aletin ve hedefin her birinin merkezleme doğruluğu."),
+                    typed(Field::SigmaCentering, &holder(Field::SigmaCentering), "mm"),
+                ))
+                .push(setting(
+                    "Başucu açısı",
+                    Some("Trigonometrik kot farkında başucu açısının standart sapması."),
+                    typed(Field::SigmaZenith, &holder(Field::SigmaZenith), mark),
+                ))
+                .push(setting(
+                    "Nivelman, km başına",
+                    Some("Geometrik nivelmanda kilometre başına standart sapma: σ = s·√L."),
+                    typed(Field::SigmaLevelling, &holder(Field::SigmaLevelling), "mm"),
+                )),
+        ),
     ]
     .spacing(16)
     .into()
@@ -200,7 +245,9 @@ mod tests {
         };
         assert_eq!(
             kentos_project::survey_form::texts(s_survey(s).as_ref(), AngleUnit::Deg),
-            ["0.14", "6.48", "3.24", "5", "", "", "", ""]
+            [
+                "0.14", "6.48", "3.24", "5", "", "", "", "", "", "", "", "", "", ""
+            ]
         );
         send(&mut app, SettingsEvent::Section(Section::Survey));
         send(&mut app, SettingsEvent::ResetSection);

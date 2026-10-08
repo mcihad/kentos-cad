@@ -203,7 +203,7 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { builtin: 'templates' },
       { pick: 'Blok', icon: 'blockInsert', commands: ['tool.blockInsert', 'tool.blockDefine', 'block.panel'], more: 'insert' },
       { builtin: 'properties' },
-      { pick: 'Ölçme', icon: 'measure', commands: ['tool.measure', 'tool.area', 'tool.measureAngle', 'tool.stationOffset', 'crs.query'], under: ['calc.fieldbook', 'file.import.gnss', 'field.send', 'calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection'] },
+      { pick: 'Ölçme', icon: 'measure', commands: ['tool.measure', 'tool.area', 'tool.measureAngle', 'tool.stationOffset', 'crs.query'], under: ['calc.fieldbook', 'file.import.gnss', 'field.send', 'calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection', 'calc.network', 'calc.levelNetwork'] },
     ],
     lead: ['edit.paste'],
     keep: ['Çizim', 'Değiştir'],

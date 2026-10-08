@@ -270,6 +270,10 @@ export const ICONS = {
   surveyStakeout: `<path d="M4 15 13 8.2" stroke-dasharray="2.4 1.6"/><path d="M15 4.5v10.5M13 15h4"/><path d="m10.3 7.9 2.7.3-1 2.5"/>${grip(4, 15)}`,
   surveyForward: `<path d="M4 15 10 5l6 10"/><path d="M6.6 15a2.6 2.6 0 0 0-.9-2.1M13.4 15a2.6 2.6 0 0 1 .9-2.1"/>${grip(4, 15)}${grip(16, 15)}<circle cx="10" cy="5" r="1.6"/>`,
   surveyResection: `<path d="M10 15 3.5 5.5M10 15V3.5M10 15l6.5-9.5"/><path d="M7.9 12a2.6 2.6 0 0 1 2.1-.6"/>${grip(3.5, 5.5)}${grip(10, 3.5)}${grip(16.5, 5.5)}<circle cx="10" cy="15" r="1.6"/>`,
+  // Yatay ağ dengelemesi (docs/adr/0203): a braced quadrilateral, two fixed points, a new one's error ellipse.
+  surveyNetwork: `<path d="M3.5 16 16.5 16M3.5 16 6 5.5M16.5 16 14 6.5M6 5.5 14 6.5M3.5 16 14 6.5M16.5 16 6 5.5" stroke-width="1.1"/>${grip(3.5, 16)}${grip(16.5, 16)}${dot(6, 5.5, 1.2)}<ellipse cx="14" cy="6.5" rx="3.4" ry="1.7" transform="rotate(-28 14 6.5)" stroke-width="1.3"/>${dot(14, 6.5, 0.9)}`,
+  // Kot ağı dengelemesi: two staffs, the level between them and its horizontal sight.
+  surveyLevel: '<path d="M3 3.5v13M17 6v10.5" stroke-width="1.6"/><path d="M3 6.5h1.5M3 9.5h1.5M3 12.5h1.5M15.5 9h1.5M15.5 12h1.5" stroke-width="1"/><path d="M5 8.2h10" stroke-dasharray="1.6 1.3" stroke-width="1"/><rect x="8" y="6.8" width="4" height="2.8" rx=".6" stroke-width="1.2"/><path d="M10 9.6 7.6 16.5M10 9.6v6.9M10 9.6l2.4 6.9" stroke-width="1"/>',
   perpOut: `<path d="M3 16h14M8 16V4M8 13.3h2.7V16"/><path d="m6 6 2-2 2 2"/>${grip(8, 16)}`,
   arrayPolar: '<circle cx="10" cy="10" r="6.5" stroke-dasharray="2 2"/><rect x="8.3" y="1.8" width="3.4" height="3.4"/><rect x="14.8" y="8.3" width="3.4" height="3.4"/><rect x="8.3" y="14.8" width="3.4" height="3.4"/><rect x="1.8" y="8.3" width="3.4" height="3.4"/><circle cx="10" cy="10" r=".9" fill="currentColor" stroke="none"/>',
   align: `<path d="M4 9.5 8.5 4.5l4 3.6" stroke-dasharray="2 1.5"/><path d="M4 16h9v-5"/>${grip(4, 16)}${grip(13, 16)}`,

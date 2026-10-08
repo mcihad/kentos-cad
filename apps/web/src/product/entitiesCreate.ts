@@ -71,6 +71,8 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   fourthCorner: 'Dördüncü köşe',
   rangeRings: 'Menzil halkaları',
   planRoad: 'Plan yolu',
+  // Yatay ağ dengelemesi (docs/adr/0203 §8).
+  networkAdjust: 'Yatay ağ dengelemesi',
 };
 
 /**

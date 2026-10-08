@@ -111,6 +111,9 @@ SCHEMA_WITH_TEXT_PATHS = 25
 SCHEMA_WITH_LAYER_FIELDS = 26
 # Schema 27: schema 26 and the project's topology rules, tolerance and exceptions, the settings' `topology` (docs/adr/0202 §7).
 SCHEMA_WITH_TOPOLOGY = 27
+# Schema 28: schema 27 and the survey settings' a priori standard deviations, `sigmaDirection`, `sigmaDistance`,
+# `sigmaPpm`, `sigmaCentering`, `sigmaZenith`, `sigmaLevelling` (docs/adr/0203 §1).
+SCHEMA_WITH_SURVEY_SIGMAS = 28
 # The topology rules' kinds (docs/adr/0202 §1): whether each is between two layers and what value it takes.
 TOPOLOGY_KINDS = {
     "mustNotOverlap": (False, None),
@@ -174,7 +177,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -798,6 +801,7 @@ class _Schema:
         self.ground = version >= SCHEMA_WITH_GROUND
         self.layer_states = version >= SCHEMA_WITH_LAYER_STATES
         self.topology = version >= SCHEMA_WITH_TOPOLOGY
+        self.survey_sigmas = version >= SCHEMA_WITH_SURVEY_SIGMAS
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -1104,7 +1108,8 @@ class _Schema:
     def survey(self, v):
         # The project's survey constants and tolerances (schema 14, spec §6.4.2, docs/adr/0169 §3): at least one, k
         # within [−1, 1], tolerances above zero; schema 16's ground height within [−500, 9000] m, the reduction to the
-        # grid only with one (docs/adr/0171).
+        # grid only with one (docs/adr/0171); schema 28's a priori standard deviations above zero, the parts per million
+        # and the centering not below (docs/adr/0203 §1).
         table = {"index": (self.float, False), "faceHz": (self.float, False), "faceSlope": (self.float, False), "refraction": (self.float, False)}
         if self.traverse_tolerances:
             # Schema 15: the traverse tolerances.
@@ -1112,6 +1117,9 @@ class _Schema:
         if self.ground:
             # Schema 16: the mean ellipsoidal height and the reduction to the grid (docs/adr/0171).
             table.update({"groundHeight": (self.float, False), "reduceToGrid": (self.bool, False)})
+        if self.survey_sigmas:
+            # Schema 28: the a priori standard deviations of a network adjustment (docs/adr/0203 §1).
+            table.update({k: (self.float, False) for k in ("sigmaDirection", "sigmaDistance", "sigmaPpm", "sigmaCentering", "sigmaZenith", "sigmaLevelling")})
         s = self.fields(table)(v)
         if not s:
             self.fail("bad_value", "ölçme ayarları boş; ayarı olmayan proje alanı yazmaz")
@@ -1126,6 +1134,12 @@ class _Schema:
         for key in ("faceHz", "index", "faceSlope", "twoWay", "traverseAngle", "traverseCoord"):
             if key in s and not s[key] > 0.0:
                 self.fail("bad_value", f"{key} toleransı {s[key]}; sıfırdan büyük olmalı")
+        for key in ("sigmaDirection", "sigmaDistance", "sigmaZenith", "sigmaLevelling"):
+            if key in s and not s[key] > 0.0:
+                self.fail("bad_value", f"{key} önsel doğruluğu {s[key]}; sıfırdan büyük olmalı")
+        for key in ("sigmaPpm", "sigmaCentering"):
+            if key in s and not s[key] >= 0.0:
+                self.fail("bad_value", f"{key} {s[key]}; sıfırdan küçük olamaz")
         return s
 
     def source(self, v):

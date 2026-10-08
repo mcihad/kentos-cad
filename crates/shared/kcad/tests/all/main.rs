@@ -15,5 +15,6 @@ mod line_parts;
 mod linked_texts;
 mod parts;
 mod robustness;
+mod survey_sigmas;
 mod texts;
 mod topology;

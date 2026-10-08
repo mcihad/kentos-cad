@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SurveySettings } from '../contracts/generated/SurveySettings';
-import { readSurvey, SURVEY_FIELDS, SURVEY_TEXTS, surveyTexts, withReduction } from './surveyForm';
+import { readSurvey, SURVEY_FIELDS, SURVEY_TEXTS, surveyPlaceholders, surveyTexts, withReduction } from './surveyForm';
 import type { AngleUnit } from './projectSettings';
 
 /**
@@ -16,6 +16,7 @@ interface File {
   messages: typeof SURVEY_TEXTS;
   texts: { name: string; unit: AngleUnit; survey: SurveySettings | null; texts: string[] }[];
   reads: { name: string; unit: AngleUnit; texts: string[]; survey: SurveySettings | null; problems: Record<string, string> }[];
+  placeholders: Record<AngleUnit, string[]>;
 }
 
 const file = JSON.parse(fs.readFileSync(new URL('../../../../fixtures/project/v1/survey-form.json', import.meta.url), 'utf8')) as File;
@@ -29,6 +30,8 @@ describe('Proje ayarları › Ölçme (docs/adr/0169 §3)', () => {
     for (const c of file.texts) expect(surveyTexts(c.survey, c.unit), c.name).toEqual(c.texts);
     expect(file.reads.length).toBeGreaterThanOrEqual(9);
     for (const c of file.reads) expect(readSurvey(c.texts, c.unit), c.name).toEqual({ survey: c.survey, problems: c.problems });
+    // The a priori standard deviations' defaults as placeholders (docs/adr/0203 §1).
+    for (const unit of ['grad', 'deg'] as const) expect(surveyPlaceholders(unit), unit).toEqual(file.placeholders[unit]);
   });
 
   it('keeps the reduction to the grid beside the texts, only with a height (docs/adr/0171 §4)', () => {

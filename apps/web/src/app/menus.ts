@@ -197,7 +197,7 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'calc',
     label: 'Hesap',
-    items: [sec('Saha'), 'calc.fieldbook', 'file.import.gnss', 'field.send', sec('Poligon'), 'calc.traverse', sec('Nokta alımı'), 'calc.polar', 'calc.stakeout', sec('Kestirme'), 'calc.forward', 'calc.resection', sec('Kayıtlı ölçüler'), 'cogo.check', 'cogo.update'],
+    items: [sec('Saha'), 'calc.fieldbook', 'file.import.gnss', 'field.send', sec('Poligon'), 'calc.traverse', sec('Nokta alımı'), 'calc.polar', 'calc.stakeout', sec('Kestirme'), 'calc.forward', 'calc.resection', sec('Dengeleme'), 'calc.network', 'calc.levelNetwork', sec('Kayıtlı ölçüler'), 'cogo.check', 'cogo.update'],
   },
   {
     id: 'analysis',

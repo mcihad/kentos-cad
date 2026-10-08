@@ -101,10 +101,56 @@ export const GROUND_HEIGHTS = [-500, 9000] as const;
 /** Whether `h` is a mean ellipsoidal height a project may name (the contract's `SurveySettings::ground_height_holds`). */
 export const groundHeightHolds = (h: number): boolean => Number.isFinite(h) && h >= GROUND_HEIGHTS[0] && h <= GROUND_HEIGHTS[1];
 
+/** A network's a priori standard deviations (docs/adr/0203 §1): radians, metres, parts per million, m/√km. */
+export interface SurveySigmas {
+  direction: number;
+  distance: number;
+  ppm: number;
+  centering: number;
+  zenith: number;
+  levelling: number;
+}
+
+/**
+ * The a priori standard deviations a project names none of (the contract's `SIGMA_DEFAULTS`, docs/adr/0203 §1): a 3″
+ * total station's (10 cc, 2 mm + 2 ppm, 1 mm centering) and engineering levelling's (2 mm/√km).
+ */
+export const SIGMA_DEFAULTS: Readonly<SurveySigmas> = {
+  direction: Math.PI / 200_000,
+  distance: 0.002,
+  ppm: 2,
+  centering: 0.001,
+  zenith: Math.PI / 200_000,
+  levelling: 0.002,
+};
+
+/** Whether `s` is a standard deviation (a direction's, a distance's constant part, a zenith angle's, levelling's): finite and above zero. */
+export const sigmaHolds = (s: number): boolean => Number.isFinite(s) && s > 0;
+
+/** Whether `s` is a part that may be nothing (the parts per million, the centering): finite and not below zero. */
+export const sigmaPartHolds = (s: number): boolean => Number.isFinite(s) && s >= 0;
+
+/** The a priori standard deviations: the project's, else the defaults (the contract's `SurveySettings::sigmas`). */
+export function surveySigmas(s: SurveySettings | null | undefined): SurveySigmas {
+  const d = SIGMA_DEFAULTS;
+  return {
+    direction: s?.sigmaDirection ?? d.direction,
+    distance: s?.sigmaDistance ?? d.distance,
+    ppm: s?.sigmaPpm ?? d.ppm,
+    centering: s?.sigmaCentering ?? d.centering,
+    zenith: s?.sigmaZenith ?? d.zenith,
+    levelling: s?.sigmaLevelling ?? d.levelling,
+  };
+}
+
+/** Whether the project names any a priori standard deviation (the contract's `SurveySettings::has_sigmas`). */
+export const hasSigmas = (s: SurveySettings | null | undefined): boolean =>
+  !!s && [s.sigmaDirection, s.sigmaDistance, s.sigmaPpm, s.sigmaCentering, s.sigmaZenith, s.sigmaLevelling].some((v) => v !== undefined);
+
 /**
  * The survey settings as a project keeps them (the contract's `SurveySettings::sanitized`): k where it holds and is not
  * the default, the tolerances and the ground height that hold, the reduction to the grid when asked for with a height
- * (docs/adr/0171); null when nothing is left.
+ * (docs/adr/0171), the a priori standard deviations that hold (docs/adr/0203 §1); null when nothing is left.
  */
 export function sanitizeSurvey(s: SurveySettings | null | undefined): SurveySettings | null {
   if (!s) return null;
@@ -118,6 +164,12 @@ export function sanitizeSurvey(s: SurveySettings | null | undefined): SurveySett
     ...(s.traverseAngle !== undefined && toleranceHolds(s.traverseAngle) ? { traverseAngle: s.traverseAngle } : {}),
     ...(s.traverseCoord !== undefined && toleranceHolds(s.traverseCoord) ? { traverseCoord: s.traverseCoord } : {}),
     ...(s.groundHeight !== undefined && groundHeightHolds(s.groundHeight) ? { groundHeight: s.groundHeight } : {}),
+    ...(s.sigmaDirection !== undefined && sigmaHolds(s.sigmaDirection) ? { sigmaDirection: s.sigmaDirection } : {}),
+    ...(s.sigmaDistance !== undefined && sigmaHolds(s.sigmaDistance) ? { sigmaDistance: s.sigmaDistance } : {}),
+    ...(s.sigmaPpm !== undefined && sigmaPartHolds(s.sigmaPpm) ? { sigmaPpm: s.sigmaPpm } : {}),
+    ...(s.sigmaCentering !== undefined && sigmaPartHolds(s.sigmaCentering) ? { sigmaCentering: s.sigmaCentering } : {}),
+    ...(s.sigmaZenith !== undefined && sigmaHolds(s.sigmaZenith) ? { sigmaZenith: s.sigmaZenith } : {}),
+    ...(s.sigmaLevelling !== undefined && sigmaHolds(s.sigmaLevelling) ? { sigmaLevelling: s.sigmaLevelling } : {}),
   };
   // Reduced to the grid only when asked for and with a height to do it with.
   if (s.reduceToGrid === true && kept.groundHeight !== undefined) kept.reduceToGrid = true;
@@ -136,7 +188,13 @@ const sameSurvey = (a: SurveySettings | null, b: SurveySettings | null): boolean
     a.traverseAngle === b.traverseAngle &&
     a.traverseCoord === b.traverseCoord &&
     a.groundHeight === b.groundHeight &&
-    a.reduceToGrid === b.reduceToGrid);
+    a.reduceToGrid === b.reduceToGrid &&
+    a.sigmaDirection === b.sigmaDirection &&
+    a.sigmaDistance === b.sigmaDistance &&
+    a.sigmaPpm === b.sigmaPpm &&
+    a.sigmaCentering === b.sigmaCentering &&
+    a.sigmaZenith === b.sigmaZenith &&
+    a.sigmaLevelling === b.sigmaLevelling);
 
 /**
  * Whether `second` may be the second system of a project in `crs`: another system, and the project has one — the

@@ -1,15 +1,15 @@
 import type { SurveySettings } from '../contracts/generated/SurveySettings';
 import { fixed } from '../core/displayNumber';
 import { number } from './definitionForm';
-import { groundHeightHolds, REFRACTION, refractionHolds, sanitizeSurvey, toleranceHolds, type AngleUnit } from './projectSettings';
+import { groundHeightHolds, REFRACTION, refractionHolds, sanitizeSurvey, SIGMA_DEFAULTS, sigmaPartHolds, toleranceHolds, type AngleUnit } from './projectSettings';
 
 /**
- * Proje ayarları › Ölçme's form (docs/adr/0169 §3): the project's survey settings as eight texts (the refraction
+ * Proje ayarları › Ölçme's form (docs/adr/0169 §3): the project's survey settings as fourteen texts (the refraction
  * coefficient k, the two faces' horizontal reading difference, the index error, the two faces' slope distance difference;
  * a traverse leg's two-way difference, a traverse's angular and linear misclosure; the mean ellipsoidal height of the
- * ground values, docs/adr/0171 §2) and the texts read back. The tolerances' angles are typed in cc in a gon project and in
- * arc seconds in a degree one and kept in radians; the lengths are typed in millimetres and kept in metres, the height in
- * metres. The desktop's twin is
+ * ground values, docs/adr/0171 §2; a network's a priori standard deviations, docs/adr/0203 §1) and the texts read back.
+ * The angles are typed in cc in a gon project and in arc seconds in a degree one and kept in radians; the lengths are
+ * typed in millimetres and kept in metres, the height in metres, the parts per million as they are. The desktop's twin is
  * `kentos_project::survey_form`; both pass fixtures/project/v1/survey-form.json (scripts/fixtures/survey_form_cases.py).
  */
 
@@ -19,28 +19,56 @@ export const SURVEY_TEXTS = {
   refraction: '−1 ile 1 arasında bir sayı yazın; boş bırakılırsa 0.13.',
   tolerance: 'Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın.',
   height: '−500 ile 9000 m arasında bir yükseklik yazın; zemin değerleri gerekmiyorsa boş bırakın.',
+  sigma: 'Sıfırdan büyük bir sayı yazın; boş bırakılırsa varsayılan.',
+  part: 'Sıfır ya da sıfırdan büyük bir sayı yazın; boş bırakılırsa varsayılan.',
 } as const;
 
 /** The form's fields, in order (the settings' keys). */
-export const SURVEY_FIELDS = ['refraction', 'faceHz', 'index', 'faceSlope', 'twoWay', 'traverseAngle', 'traverseCoord', 'groundHeight'] as const;
+export const SURVEY_FIELDS = [
+  'refraction',
+  'faceHz',
+  'index',
+  'faceSlope',
+  'twoWay',
+  'traverseAngle',
+  'traverseCoord',
+  'groundHeight',
+  'sigmaDirection',
+  'sigmaDistance',
+  'sigmaPpm',
+  'sigmaCentering',
+  'sigmaZenith',
+  'sigmaLevelling',
+] as const;
 export type SurveyField = (typeof SURVEY_FIELDS)[number];
-export type SurveyTexts = [string, string, string, string, string, string, string, string];
+export type SurveyTexts = string[];
 /** The fields that are lengths (typed in millimetres). */
-const LENGTHS: readonly SurveyField[] = ['faceSlope', 'twoWay', 'traverseCoord'];
+const LENGTHS: readonly SurveyField[] = ['faceSlope', 'twoWay', 'traverseCoord', 'sigmaDistance', 'sigmaCentering', 'sigmaLevelling'];
+/** The fields kept as typed: k, the height, the parts per million. */
+const PLAIN: readonly SurveyField[] = ['refraction', 'groundHeight', 'sigmaPpm'];
+/** The a priori standard deviations' defaults (the contract's `SIGMA_DEFAULTS`, docs/adr/0203 §1): the placeholders. */
+const SIGMA_FIELD_DEFAULTS: Partial<Record<SurveyField, number>> = {
+  sigmaDirection: SIGMA_DEFAULTS.direction,
+  sigmaDistance: SIGMA_DEFAULTS.distance,
+  sigmaPpm: SIGMA_DEFAULTS.ppm,
+  sigmaCentering: SIGMA_DEFAULTS.centering,
+  sigmaZenith: SIGMA_DEFAULTS.zenith,
+  sigmaLevelling: SIGMA_DEFAULTS.levelling,
+};
 
 /** The mark a tolerance's angle is typed with: cc (a ten-thousandth of a gon) in a gon project, ″ in a degree one. */
 export const angleMark = (unit: AngleUnit): string => (unit === 'grad' ? 'cc' : '″');
 
 /** A typed value as the settings keep it: cc × π / 2 000 000 and ″ × π / 648 000 rad, mm ÷ 1000 m. */
 function stored(field: SurveyField, v: number, unit: AngleUnit): number {
-  if (field === 'refraction' || field === 'groundHeight') return v;
+  if (PLAIN.includes(field)) return v;
   if (LENGTHS.includes(field)) return v / 1000;
   return unit === 'grad' ? (v * Math.PI) / 2_000_000 : (v * Math.PI) / 648_000;
 }
 
 /** A kept value in the unit it is typed in. */
 function typed(field: SurveyField, v: number, unit: AngleUnit): number {
-  if (field === 'refraction' || field === 'groundHeight') return v;
+  if (PLAIN.includes(field)) return v;
   if (LENGTHS.includes(field)) return v * 1000;
   return unit === 'grad' ? (v * 2_000_000) / Math.PI : (v * 648_000) / Math.PI;
 }
@@ -57,7 +85,15 @@ export function surveyTexts(survey: SurveySettings | null | undefined, unit: Ang
   return SURVEY_FIELDS.map((f) => {
     const v = survey?.[f];
     return v === undefined ? '' : trimmed(typed(f, v, unit));
-  }) as SurveyTexts;
+  });
+}
+
+/** What an empty field shows: an a priori standard deviation's default in the unit it is typed in; nothing for the others. */
+export function surveyPlaceholders(unit: AngleUnit): SurveyTexts {
+  return SURVEY_FIELDS.map((f) => {
+    const v = SIGMA_FIELD_DEFAULTS[f];
+    return v === undefined ? '' : trimmed(typed(f, v, unit));
+  });
 }
 
 /** The texts read: the settings of the values that hold (null: the defaults), and what is said of each text that does not. */
@@ -83,8 +119,14 @@ export function readSurvey(texts: readonly string[], unit: AngleUnit): { survey:
       return;
     }
     const kept = stored(f, v, unit);
+    if (f === 'sigmaPpm' || f === 'sigmaCentering') {
+      if (v >= 0 && sigmaPartHolds(kept)) survey[f] = kept;
+      else problems[f] = SURVEY_TEXTS.part;
+      return;
+    }
+    const said = SIGMA_FIELD_DEFAULTS[f] === undefined ? SURVEY_TEXTS.tolerance : SURVEY_TEXTS.sigma;
     if (!(v > 0 && toleranceHolds(kept))) {
-      problems[f] = SURVEY_TEXTS.tolerance;
+      problems[f] = said;
       return;
     }
     survey[f] = kept;

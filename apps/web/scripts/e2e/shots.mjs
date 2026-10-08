@@ -38,6 +38,7 @@
 // fieldsend (Cihaza gönder: Leica GSI-16, Trimble JobXML, Leica GSI-8 over TM coordinates); ground (docs/adr/0171 §4:
 // Ölçme's reduction to the grid switched on, Kutupsal alım, Aplikasyon and Poligon hesabı reducing at 850 m);
 // vertextable (docs/adr/0172: Köşe tablosu, a row selected, a value typed, a radius refused, a road, two objects);
+// network (docs/adr/0203: Yatay ağ and Kot ağı dengelemesi solved, their results, a blunder, what does not hold, written);
 // sources (docs/adr/0199 §7: Kaynaklar with a folder added and a folder inside it open, a file's menu); fields
 // (docs/adr/0199 §5: Öznitelikler's fields by their kinds).
 import { createHash } from 'node:crypto';
@@ -4278,6 +4279,166 @@ SCENES.fieldbook = [
       await ui.sleep(400);
     },
     close: fieldBookClose,
+  },
+];
+
+/**
+ * Yatay ağ and Kot ağı dengelemesi (docs/adr/0203 §7–§8) on fixtures/interaction/v1/network-adjust.kcad, the scenes the
+ * desktop's `calc::network::tests::screens` draws (ag-*): the braced quadrilateral of fixtures/network-adjust/v1 with K1
+ * and K2 by their names alone (the drawing's points), its results, a distance 6 cm long typed with the known points'
+ * coordinates, what does not hold, the levelling rings and a height difference 3 cm off; then Çizime yaz of both windows
+ * (Y1 moved with the line's vertex, Y2 added; N1 and N2 given their heights), each one undo step. The tables are pasted
+ * as a spreadsheet copies them.
+ */
+const NETWORK_DRAWING = readFileSync(new URL('../../../../fixtures/interaction/v1/network-adjust.kcad', import.meta.url), 'utf8');
+const NETWORK_CASES = JSON.parse(readFileSync(new URL('../../../../fixtures/network-adjust/v1/cases.json', import.meta.url), 'utf8')).cases;
+const NET = '.dialog--network';
+const networkCase = (start) => NETWORK_CASES.find((c) => c.name.startsWith(start));
+const typedNumber = (v) => (v === null || v === undefined ? '' : String(v));
+const sigmaMm = (k) => (k.sigma === undefined ? '' : String(k.sigma * 1000));
+/** Lines pasted into a table's cell as a spreadsheet copies them: tab-separated, a row a line. */
+const pasteRows = (ui, sel, rows) =>
+  ui.eval(`(() => {
+    const input = document.querySelector(${JSON.stringify(sel)});
+    if (!input) throw new Error('no cell ${sel.replace(/'/g, '')}');
+    input.focus();
+    const dt = new DataTransfer();
+    dt.setData('text/plain', ${JSON.stringify(rows.map((r) => r.join('\t')).join('\n'))});
+    input.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+  })()`);
+const typeCell = (ui, sel, value) =>
+  ui.eval(`(() => { const i = document.querySelector(${JSON.stringify(sel)}); i.value = ${JSON.stringify(value)}; i.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+const knownCell = (row, key) => `${NET} .calc-tables__side:first-child input[data-row="${row}"][data-key="${key}"]`;
+const observationCell = (row, key) => `${NET} .calc-tables__side:last-child input[data-row="${row}"][data-key="${key}"]`;
+/** The scene drawing, then a window with the case typed in; its known points by their names alone when `byName`. */
+const openNetworkCase = async (ui, start, byName) => {
+  const c = networkCase(start);
+  const level = c.kind === 'level';
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(NETWORK_DRAWING)}, null))) throw new Error('network-adjust.kcad did not load');
+    k.view.zoomExtents();
+    k.selection.clear();
+    const m = await import('/src/ui/calc/NetworkDialog.ts');
+    m.${level ? 'openLevelWith' : 'openNetworkWith'}(k, []);
+  })()`);
+  await ui.waitFor(`!!document.querySelector('${NET}')`, 8000);
+  await ui.sleep(200);
+  if (level && c.levelKind === 'geometric') await ui.clickText(`${NET} .seg__opt`, 'Geometrik nivelman');
+  const known = c.known.map((k) => (level ? [k.name, byName ? '' : typedNumber(k.h), byName ? '' : sigmaMm(k)] : [k.name, byName ? '' : typedNumber(k.y), byName ? '' : typedNumber(k.x), byName ? '' : sigmaMm(k)]));
+  await pasteRows(ui, knownCell(0, 'name'), known);
+  const rows = c.rows.map((r) => (level ? [r.from, r.to, typedNumber(r.dh), typedNumber(r.length)] : [r.station, r.target, typedNumber(r.direction), typedNumber(r.distance)]));
+  await pasteRows(ui, observationCell(0, level ? 'from' : 'station'), rows);
+  // As a user leaves the tables after pasting: nothing focused, the observations from their first row.
+  await ui.eval(`(() => { document.activeElement?.blur(); for (const w of document.querySelectorAll('${NET} .calc-grid__wrap')) w.scrollTop = 0; })()`);
+  await ui.sleep(250);
+};
+const networkSaid = (ui) => ui.eval(`document.querySelector('${NET} .io-summary').textContent`);
+const expectSaid = async (ui, ...parts) => {
+  const said = await networkSaid(ui);
+  for (const p of parts) if (!said.includes(p)) throw new Error(`özet: ${said}`);
+};
+const networkClose = (ui) => ui.escapeAll(2);
+SCENES.network = [
+  {
+    id: 'ag-yatay',
+    open: async (ui) => (await openNetworkCase(ui, 'Çaprazlı dörtgen', true), await expectSaid(ui, '18 gözlem, 8 bilinmeyen, serbestlik derecesi 10;', 'model testi geçti')),
+    close: networkClose,
+  },
+  {
+    id: 'ag-yatay-sonuc',
+    open: async (ui) => (await openNetworkCase(ui, 'Çaprazlı dörtgen', true), await bodyToEnd(ui, NET), await ui.sleep(200)),
+    close: networkClose,
+  },
+  {
+    // A distance 6 cm long: its row and the others the test flags in the danger colour, the summary names it.
+    id: 'ag-uyusumsuz',
+    open: async (ui) => {
+      await openNetworkCase(ui, 'Uyuşumsuz ölçü', false);
+      await expectSaid(ui, 'model testi kaldı', 'Uyuşumsuz ölçü olabilir: K2 → Y1 kenarı (w ');
+      const flagged = await ui.eval(`document.querySelectorAll('${NET} .calc-results tr[data-flag="blunder"]').length`);
+      if (flagged < 1) throw new Error('işaretli satır yok');
+      await bodyToEnd(ui, NET);
+      // The distance's row (the ninth observation) in view in its table.
+      await ui.eval(`document.querySelectorAll('${NET} .calc-results')[1].querySelectorAll('tbody tr')[8].scrollIntoView({ block: 'nearest' })`);
+      await ui.sleep(200);
+    },
+    close: networkClose,
+  },
+  {
+    id: 'ag-sorunlar',
+    open: async (ui) => {
+      await openNetworkCase(ui, 'Çaprazlı dörtgen', true);
+      await typeCell(ui, knownCell(1, 'name'), 'K9');
+      await typeCell(ui, observationCell(3, 'direction'), 'abc');
+      await ui.sleep(200);
+      await expectSaid(ui, 'K9: çizimde bu adla nokta yok; Y ve X yazın.', '4. gözlemde doğrultu bir sayı değil.');
+    },
+    close: networkClose,
+  },
+  {
+    id: 'ag-kot',
+    open: async (ui) => (await openNetworkCase(ui, 'Nivelman halkaları', true), await expectSaid(ui, '7 gözlem, 3 bilinmeyen, serbestlik derecesi 4;', 'model testi geçti')),
+    close: networkClose,
+  },
+  {
+    id: 'ag-kot-uyusumsuz',
+    open: async (ui) => {
+      await openNetworkCase(ui, 'Uyuşumsuz kot farkı', true);
+      await expectSaid(ui, 'model testi kaldı', 'Uyuşumsuz ölçü olabilir: N2 → R2 kot farkı (w ');
+      await bodyToEnd(ui, NET);
+      await ui.sleep(200);
+    },
+    close: networkClose,
+  },
+  {
+    // Çizime yaz: Y1 to its adjusted place with the line's vertex on it, Y2 added on Poligon; one undo step.
+    id: 'ag-yazildi',
+    open: async (ui) => {
+      await openNetworkCase(ui, 'Çaprazlı dörtgen', true);
+      await ui.clickText(`${NET} .btn--primary`, 'Çizime yaz');
+      await ui.sleep(300);
+      const seen = await ui.eval(`(() => {
+        const k = window.kentos;
+        const pts = [...k.doc.all()].filter((e) => e.kind === 'point');
+        const y1 = pts.find((e) => e.label === 'Y1');
+        const y2 = pts.find((e) => e.label === 'Y2');
+        const line = [...k.doc.all()].find((e) => e.kind === 'polyline' && e.pts.length === 3);
+        return { open: !!document.querySelector('${NET}'), y1: y1.p, y2: y2 && { p: y2.p, layer: y2.layerId, kind: y2.attrs['Tür'] }, vertex: line.pts[1], selected: k.selection.size };
+      })()`);
+      const want = networkCase('Çaprazlı dörtgen').expect.points;
+      const near = (a, b) => Math.abs(a - b) <= 1e-6;
+      if (seen.open || !near(seen.y1.x, want[0].y) || !near(seen.y1.y, want[0].x) || !seen.y2 || seen.y2.layer !== 'poligon' || seen.y2.kind !== 'Ağ noktası' || seen.vertex.x !== seen.y1.x || seen.vertex.y !== seen.y1.y || seen.selected !== 2)
+        throw new Error(`Çizime yaz: ${JSON.stringify(seen)}`);
+      await ui.eval(`(() => { const k = window.kentos; k.view.zoomExtents(); })()`);
+      await ui.sleep(300);
+    },
+    close: async (ui) => {
+      const undone = await ui.eval(`window.kentos.doc.undo()`);
+      if (undone !== 'Yatay ağ dengelemesi') throw new Error(`geri alma: ${undone}`);
+    },
+  },
+  {
+    // Kot ağı's Çizime yaz: N1 and N2 their heights and Z (m), the vertex on N1 its height; N3 is not drawn (said).
+    id: 'ag-kot-yazildi',
+    open: async (ui) => {
+      await openNetworkCase(ui, 'Nivelman halkaları', true);
+      await ui.clickText(`${NET} .btn--primary`, 'Çizime yaz');
+      await ui.sleep(300);
+      const seen = await ui.eval(`(() => {
+        const k = window.kentos;
+        const n1 = [...k.doc.all()].find((e) => e.kind === 'point' && e.label === 'N1');
+        const line = [...k.doc.all()].find((e) => e.kind === 'polyline' && e.pts.length === 2);
+        return { z: n1.z, zm: n1.attrs['Z (m)'], vertex: line.zs?.[1] };
+      })()`);
+      const h = networkCase('Nivelman halkaları').expect.points[0].h;
+      if (Math.abs(seen.z - h) > 1e-7 || seen.zm !== h.toFixed(3) || seen.vertex !== seen.z) throw new Error(`Kot ağı, Çizime yaz: ${JSON.stringify(seen)}`);
+    },
+    close: async (ui) => {
+      const undone = await ui.eval(`window.kentos.doc.undo()`);
+      if (undone !== 'Kot ağı dengelemesi') throw new Error(`geri alma: ${undone}`);
+    },
   },
 ];
 

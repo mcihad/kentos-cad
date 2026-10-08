@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `27`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-28.kcad`) |
+| `version` | tam sayı | `2`'den `28`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-29.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -249,7 +249,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 27**, şema 26'nın kendisi ve projenin topoloji kurallarıdır: proje ayarlarının `topology` alanı (§6.4, §6.4.5; ADR 0202 §7). Yazıcı `27`'yi **yalnız projenin topoloji ayarı varken** yazar. Başka her çizim şema 2–26'dır ve eskisiyle bayt bayt aynıdır. Şema 2–26 yükünde `topology` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/topology-in-schema-26.kcad`): eski okuyucu kuralları ve istisnaları bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 27 şema 26'yı kapsar. Örnek dosya `topology.kcad`.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 28**, şema 27'nin kendisi ve ölçme ayarlarının önsel doğruluklarıdır: `survey`'in `sigmaDirection`, `sigmaDistance`, `sigmaPpm`, `sigmaCentering`, `sigmaZenith` ve `sigmaLevelling`'i (§6.4.2; ADR 0203 §1). Yazıcı `28`'i **yalnız bunlardan biri varken** yazar. Başka her çizim şema 2–27'dir ve eskisiyle bayt bayt aynıdır. Şema 27 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/survey-sigma-in-schema-27.kcad`): eski okuyucu ağ dengelemesini başka ağırlıklarla yapmaz, dosyayı açmaz. Şema 28 şema 27'yi kapsar. Örnek dosya `survey-sigmas.kcad`.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -350,6 +352,12 @@ Bütün sayılar sonludur. Bu kurallardan biri tutmazsa `bad_value` (`broken/cus
 | `traverseCoord` | şema 15'te: poligonun koordinat kapanması (fs) toleransı, m; 0'dan büyük |
 | `groundHeight` | şema 16'da: projenin ortalama elipsoit yüksekliği, m; −500 ile 9000 arası (`broken/survey-ground-range.kcad`); Mesafe ölç ve Alan hesapla'nın zemin değerleri (ADR 0171 §2) |
 | `reduceToGrid` | şema 16'da: bool; Hesap pencereleri ölçülen uzunlukları düzleme indirir, Aplikasyon düzlemdekini zemine çevirir (ADR 0171 §4); `true` yalnız `groundHeight` varken (`broken/survey-reduce-without-height.kcad`), bool değilse `wrong_type` (`broken/survey-reduce-not-bool.kcad`); uygulamalar `false`'u yazmaz, okuyucu yazılmış `false`'u da okur |
+| `sigmaDirection` | şema 28'de: doğrultu ölçüsünün önsel standart sapması, radyan; 0'dan büyük (ADR 0203 §1) |
+| `sigmaDistance` | şema 28'de: kenarın sabit payı, m; 0'dan büyük (`broken/survey-sigma-zero.kcad`) |
+| `sigmaPpm` | şema 28'de: kenarın uzunlukla artan payı, milyonda; 0'dan küçük değil (`broken/survey-sigma-ppm-negative.kcad`) |
+| `sigmaCentering` | şema 28'de: alet ve hedefin her birinin merkezlemesi, m; 0'dan küçük değil |
+| `sigmaZenith` | şema 28'de: başucu açısının önsel standart sapması, radyan; 0'dan büyük |
+| `sigmaLevelling` | şema 28'de: geometrik nivelmanın kilometre başına standart sapması, m; 0'dan büyük |
 
 Yokluğu denetlenmeyen toleranstır: farklar gösterilir, karşılaştırılmaz. Uygulamalar varsayılan k'yı (0.13) yazmaz; okuyucu yazılmış 0.13'ü de okur.
 

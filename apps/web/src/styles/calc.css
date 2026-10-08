@@ -300,3 +300,32 @@
   color: var(--c-danger);
   font-weight: 600;
 }
+
+/* Yatay ağ and Kot ağı dengelemesi (docs/adr/0203 §7): the known points and the observations side by side (2 : 3), a
+   flagged observation of the results in the danger colour. */
+.calc-tables {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 18px;
+  align-items: start;
+}
+.calc-tables__side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.calc-tables__side .io-field__hint {
+  margin: 0;
+}
+/* Four columns in two fifths of the window: the cells narrower than the Hesap tables' own. */
+.calc-tables .calc-grid__cell {
+  min-width: calc(56px * var(--ui-scale));
+}
+/* The observations are the result to read: their table taller than the Hesap windows' results. */
+.dialog--network .calc-results {
+  max-height: calc(360px * var(--ui-scale));
+}
+.calc-results tr[data-flag='blunder'] td {
+  color: var(--c-danger);
+}

@@ -147,6 +147,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::FourthCorner) => "Dördüncü köşe",
         Some(CreateOperation::RangeRings) => "Menzil halkaları",
         Some(CreateOperation::PlanRoad) => "Plan yolu",
+        // Yatay ağ dengelemesi (docs/adr/0203 §8).
+        Some(CreateOperation::NetworkAdjust) => "Yatay ağ dengelemesi",
     }
 }
 

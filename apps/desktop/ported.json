@@ -136,6 +136,8 @@
     "calc.traverse",
     "calc.polar",
     "calc.fieldbook",
+    "calc.network",
+    "calc.levelNetwork",
     "transform.fit",
     "transform.edgematch",
     "crs.transform",

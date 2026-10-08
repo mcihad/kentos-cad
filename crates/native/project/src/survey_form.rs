@@ -1,20 +1,20 @@
 //! Proje ayarları › Ölçme's form (docs/adr/0169 §3): the project's survey
-//! settings as eight texts (the refraction coefficient k, the two faces'
+//! settings as fourteen texts (the refraction coefficient k, the two faces'
 //! horizontal reading difference, the index error, the two faces' slope
 //! distance difference; a traverse leg's two-way difference, a traverse's
 //! angular and linear misclosure; the mean ellipsoidal height of the ground
-//! values, docs/adr/0171 §2) and the texts read back. The height is typed
-//! in metres. The tolerances'
-//! angles are typed in cc in a gon project and in arc seconds in a degree
-//! one and kept in radians; the lengths are typed in millimetres and kept in
-//! metres. The
+//! values, docs/adr/0171 §2; a network's a priori standard deviations,
+//! docs/adr/0203 §1) and the texts read back. The height is typed in
+//! metres, the parts per million as they are. The angles are typed in cc
+//! in a gon project and in arc seconds in a degree one and kept in radians;
+//! the lengths are typed in millimetres and kept in metres. The
 //! web's twin is `apps/web/src/model/surveyForm.ts`; both pass
 //! `fixtures/project/v1/survey-form.json`, which
 //! `scripts/fixtures/survey_form_cases.py` writes from the rules alone.
 
 use std::f64::consts::PI;
 
-use kentos_contracts::{AngleUnit, REFRACTION, SurveySettings};
+use kentos_contracts::{AngleUnit, REFRACTION, SIGMA_DEFAULTS, SurveySettings};
 use kentos_geometry_core::display::fixed;
 
 use crate::definition_form::number;
@@ -25,6 +25,11 @@ pub const REFRACTION_RANGE: &str = "−1 ile 1 arasında bir sayı yazın; boş 
 pub const TOLERANCE: &str = "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın.";
 pub const HEIGHT: &str =
     "−500 ile 9000 m arasında bir yükseklik yazın; zemin değerleri gerekmiyorsa boş bırakın.";
+pub const SIGMA: &str = "Sıfırdan büyük bir sayı yazın; boş bırakılırsa varsayılan.";
+pub const PART: &str = "Sıfır ya da sıfırdan büyük bir sayı yazın; boş bırakılırsa varsayılan.";
+
+/// The form's number of fields.
+pub const FIELDS: usize = 14;
 
 /// The form's fields, in order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -37,10 +42,16 @@ pub enum Field {
     TraverseAngle,
     TraverseCoord,
     GroundHeight,
+    SigmaDirection,
+    SigmaDistance,
+    SigmaPpm,
+    SigmaCentering,
+    SigmaZenith,
+    SigmaLevelling,
 }
 
 impl Field {
-    pub const ALL: [Field; 8] = [
+    pub const ALL: [Field; FIELDS] = [
         Field::Refraction,
         Field::FaceHz,
         Field::Index,
@@ -49,6 +60,12 @@ impl Field {
         Field::TraverseAngle,
         Field::TraverseCoord,
         Field::GroundHeight,
+        Field::SigmaDirection,
+        Field::SigmaDistance,
+        Field::SigmaPpm,
+        Field::SigmaCentering,
+        Field::SigmaZenith,
+        Field::SigmaLevelling,
     ];
 
     /// The settings' key (`refraction`, `faceHz`, `index`, `faceSlope`).
@@ -62,6 +79,12 @@ impl Field {
             Field::TraverseAngle => "traverseAngle",
             Field::TraverseCoord => "traverseCoord",
             Field::GroundHeight => "groundHeight",
+            Field::SigmaDirection => "sigmaDirection",
+            Field::SigmaDistance => "sigmaDistance",
+            Field::SigmaPpm => "sigmaPpm",
+            Field::SigmaCentering => "sigmaCentering",
+            Field::SigmaZenith => "sigmaZenith",
+            Field::SigmaLevelling => "sigmaLevelling",
         }
     }
 
@@ -75,6 +98,27 @@ impl Field {
             Field::TraverseAngle => s.traverse_angle,
             Field::TraverseCoord => s.traverse_coord,
             Field::GroundHeight => s.ground_height,
+            Field::SigmaDirection => s.sigma_direction,
+            Field::SigmaDistance => s.sigma_distance,
+            Field::SigmaPpm => s.sigma_ppm,
+            Field::SigmaCentering => s.sigma_centering,
+            Field::SigmaZenith => s.sigma_zenith,
+            Field::SigmaLevelling => s.sigma_levelling,
+        }
+    }
+
+    /// The default of an a priori standard deviation (the contract's
+    /// [`SIGMA_DEFAULTS`]); none for the other fields.
+    fn default_value(self) -> Option<f64> {
+        let d = SIGMA_DEFAULTS;
+        match self {
+            Field::SigmaDirection => Some(d.direction),
+            Field::SigmaDistance => Some(d.distance),
+            Field::SigmaPpm => Some(d.ppm),
+            Field::SigmaCentering => Some(d.centering),
+            Field::SigmaZenith => Some(d.zenith),
+            Field::SigmaLevelling => Some(d.levelling),
+            _ => None,
         }
     }
 
@@ -88,6 +132,12 @@ impl Field {
             Field::TraverseAngle => &mut s.traverse_angle,
             Field::TraverseCoord => &mut s.traverse_coord,
             Field::GroundHeight => &mut s.ground_height,
+            Field::SigmaDirection => &mut s.sigma_direction,
+            Field::SigmaDistance => &mut s.sigma_distance,
+            Field::SigmaPpm => &mut s.sigma_ppm,
+            Field::SigmaCentering => &mut s.sigma_centering,
+            Field::SigmaZenith => &mut s.sigma_zenith,
+            Field::SigmaLevelling => &mut s.sigma_levelling,
         };
         *slot = Some(v);
     }
@@ -96,7 +146,20 @@ impl Field {
     fn length(self) -> bool {
         matches!(
             self,
-            Field::FaceSlope | Field::TwoWay | Field::TraverseCoord
+            Field::FaceSlope
+                | Field::TwoWay
+                | Field::TraverseCoord
+                | Field::SigmaDistance
+                | Field::SigmaCentering
+                | Field::SigmaLevelling
+        )
+    }
+
+    /// Whether the field is kept as typed (k, the height, the parts per million).
+    fn plain(self) -> bool {
+        matches!(
+            self,
+            Field::Refraction | Field::GroundHeight | Field::SigmaPpm
         )
     }
 
@@ -104,7 +167,7 @@ impl Field {
     /// ″ × π / 648 000 rad, mm ÷ 1000 m.
     fn stored(self, v: f64, unit: AngleUnit) -> f64 {
         match (self, unit) {
-            (Field::Refraction | Field::GroundHeight, _) => v,
+            (f, _) if f.plain() => v,
             (f, _) if f.length() => v / 1000.0,
             (_, AngleUnit::Grad) => v * PI / 2_000_000.0,
             (_, AngleUnit::Deg) => v * PI / 648_000.0,
@@ -114,7 +177,7 @@ impl Field {
     /// A kept value in the unit it is typed in.
     fn typed(self, v: f64, unit: AngleUnit) -> f64 {
         match (self, unit) {
-            (Field::Refraction | Field::GroundHeight, _) => v,
+            (f, _) if f.plain() => v,
             (f, _) if f.length() => v * 1000.0,
             (_, AngleUnit::Grad) => v * 2_000_000.0 / PI,
             (_, AngleUnit::Deg) => v * 648_000.0 / PI,
@@ -148,10 +211,20 @@ fn trimmed(v: f64) -> String {
 
 /// The texts the form shows for the settings; an absent value (k's
 /// default too) is an empty text.
-pub fn texts(survey: Option<&SurveySettings>, unit: AngleUnit) -> [String; 8] {
+pub fn texts(survey: Option<&SurveySettings>, unit: AngleUnit) -> [String; FIELDS] {
     Field::ALL.map(|f| {
         survey
             .and_then(|s| f.get(s))
+            .map(|v| trimmed(f.typed(v, unit)))
+            .unwrap_or_default()
+    })
+}
+
+/// What an empty field shows: an a priori standard deviation's default in
+/// the unit it is typed in; nothing for the other fields.
+pub fn placeholders(unit: AngleUnit) -> [String; FIELDS] {
+    Field::ALL.map(|f| {
+        f.default_value()
             .map(|v| trimmed(f.typed(v, unit)))
             .unwrap_or_default()
     })
@@ -162,7 +235,7 @@ pub fn texts(survey: Option<&SurveySettings>, unit: AngleUnit) -> [String; 8] {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Read {
     pub survey: Option<SurveySettings>,
-    pub problems: [Option<&'static str>; 8],
+    pub problems: [Option<&'static str>; FIELDS],
 }
 
 impl Read {
@@ -173,9 +246,9 @@ impl Read {
 }
 
 /// Reads the form's texts in a project of `unit`.
-pub fn read<S: AsRef<str>>(texts: &[S; 8], unit: AngleUnit) -> Read {
+pub fn read<S: AsRef<str>>(texts: &[S; FIELDS], unit: AngleUnit) -> Read {
     let mut survey = SurveySettings::default();
-    let mut problems = [None; 8];
+    let mut problems = [None; FIELDS];
     for (i, (f, t)) in Field::ALL.iter().zip(texts).enumerate() {
         let t = t.as_ref();
         if t.trim().is_empty() {
@@ -202,8 +275,21 @@ pub fn read<S: AsRef<str>>(texts: &[S; 8], unit: AngleUnit) -> Read {
             continue;
         }
         let kept = f.stored(v, unit);
+        if matches!(f, Field::SigmaPpm | Field::SigmaCentering) {
+            if v >= 0.0 && SurveySettings::sigma_part_holds(kept) {
+                f.set(&mut survey, kept);
+            } else {
+                problems[i] = Some(PART);
+            }
+            continue;
+        }
+        let said = if f.default_value().is_some() {
+            SIGMA
+        } else {
+            TOLERANCE
+        };
         if !(v > 0.0 && SurveySettings::tolerance_holds(kept)) {
-            problems[i] = Some(TOLERANCE);
+            problems[i] = Some(said);
             continue;
         }
         f.set(&mut survey, kept);
@@ -251,6 +337,8 @@ mod tests {
             ("refraction", REFRACTION_RANGE),
             ("tolerance", TOLERANCE),
             ("height", HEIGHT),
+            ("sigma", SIGMA),
+            ("part", PART),
         ] {
             assert_eq!(file["messages"][key], text, "{key}");
         }
@@ -285,7 +373,8 @@ mod tests {
             })
         );
         for case in file["reads"].as_array().expect("reads") {
-            let typed: [String; 8] = serde_json::from_value(case["texts"].clone()).expect("texts");
+            let typed: [String; FIELDS] =
+                serde_json::from_value(case["texts"].clone()).expect("texts");
             let got = read(&typed, unit(&case["unit"]));
             let want: Option<SurveySettings> =
                 serde_json::from_value(case["survey"].clone()).expect("settings");
@@ -299,6 +388,15 @@ mod tests {
                     f.key()
                 );
             }
+        }
+        for unit_name in ["grad", "deg"] {
+            let want: Vec<String> = serde_json::from_value(file["placeholders"][unit_name].clone())
+                .expect("placeholders");
+            assert_eq!(
+                placeholders(unit(&serde_json::json!(unit_name))).to_vec(),
+                want,
+                "{unit_name}"
+            );
         }
     }
 }

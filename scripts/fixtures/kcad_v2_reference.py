@@ -440,9 +440,16 @@ def survey(s):
     assert all(s[k] > 0.0 for k in ("faceHz", "index", "faceSlope", "twoWay", "traverseAngle", "traverseCoord") if k in s), "tolerans sıfırdan büyük olmalı"
     assert "groundHeight" not in s or -500.0 <= s["groundHeight"] <= 9000.0, "ortalama yükseklik −500 ile 9000 m arasında olmalı"
     assert s.get("reduceToGrid") is not True or "groundHeight" in s, "projeksiyona indirme yükseklik ister"
+    assert all(s[k] > 0.0 for k in ("sigmaDirection", "sigmaDistance", "sigmaZenith", "sigmaLevelling") if k in s), "önsel doğruluk sıfırdan büyük olmalı"
+    assert all(s[k] >= 0.0 for k in ("sigmaPpm", "sigmaCentering") if k in s), "ppm ve merkezleme sıfırdan küçük olamaz"
     return cmap(fields(s, {"index": (f64, False), "faceHz": (f64, False), "faceSlope": (f64, False), "refraction": (f64, False),
                            "twoWay": (f64, False), "traverseAngle": (f64, False), "traverseCoord": (f64, False),
-                           "groundHeight": (f64, False), "reduceToGrid": (boolean, False)}, "survey"))
+                           "groundHeight": (f64, False), "reduceToGrid": (boolean, False),
+                           **{k: (f64, False) for k in SIGMA_KEYS}}, "survey"))
+
+
+# The survey settings' a priori standard deviations (schema 28, docs/adr/0203 §1).
+SIGMA_KEYS = ("sigmaDirection", "sigmaDistance", "sigmaPpm", "sigmaCentering", "sigmaZenith", "sigmaLevelling")
 
 
 def label_style(s):
@@ -875,7 +882,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 27 with the project's topology settings (docs/adr/0202 §7), 26 with a
+    """The oldest schema that holds the drawing: 28 with the survey settings' a priori standard deviations (docs/adr/0203
+    §1), 27 with the project's topology settings (docs/adr/0202 §7), 26 with a
     layer's fields (docs/adr/0199 §1), 25 with a text along a
     curve, in the drawing or a block definition
     (docs/adr/0196), 24 with a picture, only in the drawing (docs/adr/0192), 23 with a hatch's pattern of families or gradient (a field of theirs) or
@@ -921,6 +929,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def schemas(nodes):
         return any("fields" in n or schemas(n["children"]) for n in nodes)
 
+    if settings and any(k in settings.get("survey", {}) for k in SIGMA_KEYS):
+        return 28
     if settings and "topology" in settings:
         return 27
     if schemas(layers):
@@ -1166,7 +1176,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-28.kcad"] = container(root(cmap(parts), version=uint(28)))
+    files["schema-version-29.kcad"] = container(root(cmap(parts), version=uint(29)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1625,6 +1635,11 @@ def broken(minimal_content, minimal_file):
     files["survey-ground-range.kcad"] = with_settings(16, survey=cmap({"groundHeight": f64(9500.0)}))
     files["survey-reduce-without-height.kcad"] = with_settings(16, survey=cmap({"reduceToGrid": b"\xf5"}))
     files["survey-reduce-not-bool.kcad"] = with_settings(16, survey=cmap({"groundHeight": f64(850.0), "reduceToGrid": uint(1)}))
+    # The a priori standard deviations are schema 28's (docs/adr/0203 §1): unknown fields in schema 27; a deviation
+    # above zero, the parts per million not below.
+    files["survey-sigma-in-schema-27.kcad"] = with_settings(27, survey=cmap({"sigmaDirection": f64(1.5e-5)}))
+    files["survey-sigma-zero.kcad"] = with_settings(28, survey=cmap({"sigmaDistance": f64(0.0)}))
+    files["survey-sigma-ppm-negative.kcad"] = with_settings(28, survey=cmap({"sigmaPpm": f64(-1.0)}))
     # The layer states are schema 19's (docs/adr/0177 §4): an unknown field in schema 18; an id and a name, neither empty
     # nor twice; in a state, no node empty or twice; a visibility that is a bool.
     node = lambda n, **more: cmap({"node": text(n), "visible": b"\xf5", **more})
@@ -1698,6 +1713,7 @@ def build():
     out["survey.kcad"] = container(document(load("survey.json")))
     out["survey-traverse.kcad"] = container(document(load("survey-traverse.json")))
     out["survey-ground.kcad"] = container(document(load("survey-ground.json")))
+    out["survey-sigmas.kcad"] = container(document(load("survey-sigmas.json")))
     out["multi-part-lines.kcad"] = container(document(load("multi-part-lines.json")))
     out["linked-texts.kcad"] = container(document(load("linked-texts.json")))
     out["layer-states.kcad"] = container(document(load("layer-states.json")))

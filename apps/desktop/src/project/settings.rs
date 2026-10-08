@@ -152,7 +152,7 @@ pub struct State {
     second_defined: Option<CrsDefinition>,
     /// Ölçme's texts as typed (k, the six tolerances and the ground height;
     /// survey.rs).
-    survey: [String; 8],
+    survey: [String; survey_form::FIELDS],
     /// Whether the survey windows reduce lengths to the grid (docs/adr/0171
     /// §4): beside the texts, so a height typed wrong for a while does not
     /// lose it.

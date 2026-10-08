@@ -1,0 +1,215 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Etkileşim izi: Ağ dengelemesi",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "nokta",
+   "name": "Nokta",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "ring",
+     "size": 7
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "poligon",
+   "name": "Poligon",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E63DD",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "cross",
+     "size": 7
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "hat",
+   "name": "Hat",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#30A46C",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "hat",
+ "entities": [
+  {
+   "kind": "point",
+   "id": 1,
+   "layerId": "nokta",
+   "attrs": {
+    "Ad": "K1"
+   },
+   "p": {
+    "x": 487000.0,
+    "y": 4420000.0
+   },
+   "label": "K1"
+  },
+  {
+   "kind": "point",
+   "id": 2,
+   "layerId": "nokta",
+   "attrs": {
+    "Ad": "K2"
+   },
+   "p": {
+    "x": 487400.0,
+    "y": 4420020.0
+   },
+   "label": "K2"
+  },
+  {
+   "kind": "point",
+   "id": 3,
+   "layerId": "nokta",
+   "attrs": {
+    "Ad": "Y1"
+   },
+   "p": {
+    "x": 487030.02,
+    "y": 4420349.97
+   },
+   "label": "Y1"
+  },
+  {
+   "kind": "polyline",
+   "id": 4,
+   "layerId": "hat",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487030.02,
+     "y": 4420349.97
+    },
+    {
+     "x": 487400.0,
+     "y": 4420020.0
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 5,
+   "layerId": "nokta",
+   "attrs": {
+    "Ad": "R1"
+   },
+   "p": {
+    "x": 487100.0,
+    "y": 4420100.0
+   },
+   "label": "R1",
+   "z": 102.4567
+  },
+  {
+   "kind": "point",
+   "id": 6,
+   "layerId": "nokta",
+   "attrs": {
+    "Ad": "R2"
+   },
+   "p": {
+    "x": 487300.0,
+    "y": 4420120.0
+   },
+   "label": "R2",
+   "z": 98.1234
+  },
+  {
+   "kind": "point",
+   "id": 7,
+   "layerId": "nokta",
+   "attrs": {
+    "Ad": "N1",
+    "Z (m)": "105.000"
+   },
+   "p": {
+    "x": 487150.0,
+    "y": 4420200.0
+   },
+   "label": "N1",
+   "z": 105.0
+  },
+  {
+   "kind": "point",
+   "id": 8,
+   "layerId": "nokta",
+   "attrs": {
+    "Ad": "N2",
+    "Z (m)": "101.780"
+   },
+   "p": {
+    "x": 487250.0,
+    "y": 4420215.0
+   },
+   "label": "N2",
+   "z": 101.78
+  },
+  {
+   "kind": "polyline",
+   "id": 9,
+   "layerId": "hat",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 487100.0,
+     "y": 4420100.0
+    },
+    {
+     "x": 487150.0,
+     "y": 4420200.0
+    }
+   ],
+   "zs": [
+    102.4567,
+    105.0
+   ]
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

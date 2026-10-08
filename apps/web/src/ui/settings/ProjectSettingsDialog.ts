@@ -23,7 +23,7 @@ import { effectiveWorkspace } from '../../app/workspaces';
 import { drawingFontPicker } from './appearancePickers';
 import { group, SettingsShell, type DraftApi, type SectionDef } from './SettingsShell';
 import { fixed } from '../../core/displayNumber';
-import { angleMark, readSurvey, SURVEY_FIELDS, surveyTexts, withReduction, type SurveyField, type SurveyTexts } from '../../model/surveyForm';
+import { angleMark, readSurvey, SURVEY_FIELDS, surveyPlaceholders, surveyTexts, withReduction, type SurveyField, type SurveyTexts } from '../../model/surveyForm';
 import { whyNotGrid } from '../../model/groundMeasures';
 import type { AngleUnit } from '../../model/projectSettings';
 
@@ -546,6 +546,8 @@ function surveySection(api: DraftApi<ProjectDraft>, state: SurveyState): Child {
     return h('div', { class: 'survey-field' }, h('div', { class: 'survey-field__row' }, input, h('span', { class: 'survey-field__unit' }, mark)), problem);
   };
   const mark = angleMark(unit);
+  const holders = surveyPlaceholders(unit);
+  const holder = (f: SurveyField): string => holders[SURVEY_FIELDS.indexOf(f)] ?? '';
   const rows = [
     group(
       'İndirgeme',
@@ -576,6 +578,17 @@ function surveySection(api: DraftApi<ProjectDraft>, state: SurveyState): Child {
       settingRow('Kenarın iki yönden farkı', 'Bir poligon kenarının iki ucundan ölçülen yatay uzunlukları.', field('twoWay', 'Kenarın iki yönden farkı', 'mm')),
       settingRow('Açı kapanması', "Poligon hesabı'nın açı kapanma hatası fβ.", field('traverseAngle', 'Açı kapanması', mark)),
       settingRow('Koordinat kapanması', "Poligon hesabı'nın koordinat kapanma hatası fs.", field('traverseCoord', 'Koordinat kapanması', 'mm')),
+    ),
+    // Ağ dengelemesi's a priori standard deviations (docs/adr/0203 §1): an empty field is the default, shown as its placeholder.
+    group(
+      'Ağ dengelemesi',
+      note('info', 'Yatay ağ ve kot ağı dengelemesinde gözlemlerin önsel doğrulukları (ağırlıkları). Boş bırakılan varsayılandır: 3″ sınıfı total station ve mühendislik nivelmanı.'),
+      settingRow('Doğrultu', 'Bir doğrultu ölçüsünün standart sapması.', field('sigmaDirection', 'Doğrultu', mark, holder('sigmaDirection'))),
+      settingRow('Kenar, sabit pay', 'Kenar ölçüsünün uzunluktan bağımsız payı.', field('sigmaDistance', 'Kenar, sabit pay', 'mm', holder('sigmaDistance'))),
+      settingRow('Kenar, uzunlukla artan pay', 'Kenarın uzunluğunun milyonda biri başına payı.', field('sigmaPpm', 'Kenar, uzunlukla artan pay', 'ppm', holder('sigmaPpm'))),
+      settingRow('Merkezleme', 'Aletin ve hedefin her birinin merkezleme doğruluğu.', field('sigmaCentering', 'Merkezleme', 'mm', holder('sigmaCentering'))),
+      settingRow('Başucu açısı', 'Trigonometrik kot farkında başucu açısının standart sapması.', field('sigmaZenith', 'Başucu açısı', mark, holder('sigmaZenith'))),
+      settingRow('Nivelman, km başına', 'Geometrik nivelmanda kilometre başına standart sapma: σ = s·√L.', field('sigmaLevelling', 'Nivelman, km başına', 'mm', holder('sigmaLevelling'))),
     ),
   ];
   paint();

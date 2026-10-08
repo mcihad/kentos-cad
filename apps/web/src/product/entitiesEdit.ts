@@ -105,6 +105,9 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   medianClose: 'Refüj kapat',
   // Topoloji sekmesinin düzeltmeleri (docs/adr/0202 §4).
   topologyFix: 'Topoloji düzelt',
+  // Ağ dengelemelerinin Çizime yaz'ı (docs/adr/0203 §8).
+  networkAdjust: 'Yatay ağ dengelemesi',
+  levelAdjust: 'Kot ağı dengelemesi',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */

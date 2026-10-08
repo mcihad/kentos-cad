@@ -9,6 +9,8 @@
 //! (mpmath, 50 digits).
 
 use super::Unit;
+use super::adjust::horizontal::NetRow;
+use super::adjust::levelling::LevelRow;
 use crate::api::Op;
 use crate::jsmath::{cos, sin};
 use crate::op;
@@ -524,6 +526,65 @@ pub fn traverse_transfer(
     }
 }
 
+/// Yatay ağ dengelemesi's rows from a book's reduced stations (docs/adr/0203
+/// §6): every station's rows in order, the station, the target, the
+/// direction in `to` (the two faces' mean) and the horizontal distance (none
+/// without a slope distance and a zenith angle).
+pub fn network_rows(stations: &[(String, Reduction)], from: Unit, to: Unit) -> Vec<NetRow> {
+    let turn = |v: f64| {
+        if from.full() == to.full() {
+            v
+        } else {
+            v * to.full() / from.full()
+        }
+    };
+    stations
+        .iter()
+        .flat_map(|(name, reduction)| {
+            reduction.rows.iter().map(move |r| NetRow {
+                station: name.clone(),
+                target: r.target.clone(),
+                direction: Some(turn(r.hz)),
+                distance: r.horizontal,
+                line: None,
+            })
+        })
+        .collect()
+}
+
+/// Kot ağı dengelemesi's rows from a book's reduced stations (docs/adr/0203
+/// §6): every row with a height difference, station to target, with its
+/// horizontal distance as its length.
+pub fn level_rows(stations: &[(String, Reduction)]) -> Vec<LevelRow> {
+    stations
+        .iter()
+        .flat_map(|(name, reduction)| {
+            reduction.rows.iter().filter_map(move |r| {
+                Some(LevelRow {
+                    from: name.clone(),
+                    to: r.target.clone(),
+                    dh: r.dh?,
+                    length: r.horizontal?,
+                    line: None,
+                })
+            })
+        })
+        .collect()
+}
+
+/// A book's stations reduced in the named unit, each named.
+fn reduced_named(
+    stations: &[Station],
+    unit: Unit,
+    k: f64,
+    tolerances: &Tolerances,
+) -> Vec<(String, Reduction)> {
+    stations
+        .iter()
+        .map(|s| (s.station.clone(), reduce(s, unit, k, tolerances)))
+        .collect()
+}
+
 /// A book's stations reduced and turned into Poligon hesabı's fields (the
 /// web's `fieldTraverse`).
 fn traverse_named(
@@ -597,6 +658,23 @@ pub(crate) static OPS: &[Op] = &[
                        to: String| {
         polar_named(&station, &unit, k, tolerances, back, &to)
     }),
+    op!("fieldNetwork", |stations: Vec<Station>,
+                         unit: String,
+                         k: f64,
+                         tolerances: Option<Tolerances>,
+                         to: String| {
+        let from = Unit::parse(&unit)?;
+        let reduced = reduced_named(&stations, from, k, &tolerances.unwrap_or_default());
+        Ok::<_, String>(network_rows(&reduced, from, Unit::parse(&to)?))
+    }),
+    op!(
+        "fieldLevels",
+        |stations: Vec<Station>, unit: String, k: f64, tolerances: Option<Tolerances>| {
+            let from = Unit::parse(&unit)?;
+            let reduced = reduced_named(&stations, from, k, &tolerances.unwrap_or_default());
+            Ok::<_, String>(level_rows(&reduced))
+        }
+    ),
     op!("fieldTraverse", |stations: Vec<Station>,
                           unit: String,
                           k: f64,

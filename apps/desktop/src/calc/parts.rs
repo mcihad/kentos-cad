@@ -159,6 +159,18 @@ pub(crate) fn result_table<'a>(
     rows: Vec<Vec<String>>,
     numeric: &[bool],
 ) -> Element<'a, Message> {
+    let marked = vec![false; rows.len()];
+    result_table_marked(head, rows, numeric, &marked)
+}
+
+/// A results table whose `marked` rows read in the danger colour (an
+/// observation the test flags, docs/adr/0203 §4).
+pub(crate) fn result_table_marked<'a>(
+    head: &[&'a str],
+    rows: Vec<Vec<String>>,
+    numeric: &[bool],
+    marked: &[bool],
+) -> Element<'a, Message> {
     let cell = |t: String, n: bool, strong: bool| -> Element<'a, Message> {
         let text = if n { label::mono(t) } else { label::body(t) };
         let text = if strong {
@@ -166,12 +178,11 @@ pub(crate) fn result_table<'a>(
         } else {
             text
         };
-        let c = container(text).width(Fill).padding([4, 8]);
-        if n {
-            c.align_x(iced::Right).into()
-        } else {
-            c.into()
-        }
+        cell_of(text, n)
+    };
+    let flagged = |t: String, n: bool| -> Element<'a, Message> {
+        let text = if n { label::mono(t) } else { label::body(t) };
+        cell_of(text.style(style::text::danger), n)
     };
     let head_row = row(head
         .iter()
@@ -182,16 +193,27 @@ pub(crate) fn result_table<'a>(
             .width(Fill)
             .style(style::container::header),
     );
-    for r in rows {
-        table = table.push(row(r
-            .into_iter()
-            .zip(numeric)
-            .map(|(t, &n)| cell(t, n, false))));
+    for (i, r) in rows.into_iter().enumerate() {
+        let on = marked.get(i).copied().unwrap_or(false);
+        table = table
+            .push(row(r.into_iter().zip(numeric).map(|(t, &n)| {
+                if on { flagged(t, n) } else { cell(t, n, false) }
+            })));
     }
     container(table)
         .width(Fill)
         .style(style::container::bordered)
         .into()
+}
+
+/// A results cell: its text padded, a number at the right.
+fn cell_of<'a>(text: iced::widget::Text<'a>, numeric: bool) -> Element<'a, Message> {
+    let c = container(text).width(Fill).padding([4, 8]);
+    if numeric {
+        c.align_x(iced::Right).into()
+    } else {
+        c.into()
+    }
 }
 
 /// The layer select of the footer (the web's `layerChoice`): locked layers marked.

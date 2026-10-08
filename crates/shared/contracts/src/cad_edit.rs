@@ -169,6 +169,10 @@ pub enum EditOperation {
     MedianClose,
     /// Topoloji düzelt (docs/adr/0202 §4): a topology finding fixed, its objects updated in place or deleted.
     TopologyFix,
+    /// Yatay ağ dengelemesi (docs/adr/0203 §8): points moved to their adjusted places, vertices on them with them.
+    NetworkAdjust,
+    /// Kot ağı dengelemesi (docs/adr/0203 §8): points given their adjusted heights, vertices on them too.
+    LevelAdjust,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and

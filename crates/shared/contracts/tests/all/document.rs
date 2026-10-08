@@ -326,3 +326,58 @@ fn layer_states_are_kept_as_a_project_keeps_them() {
     let json = serde_json::to_string(&settings).expect("json");
     assert!(!json.contains("layerStates"), "{json}");
 }
+
+#[test]
+fn a_networks_a_priori_sigmas_keep_their_rules_and_defaults() {
+    use kentos_contracts::{ProjectSettings, SIGMA_DEFAULTS, SurveySettings};
+    // docs/adr/0203 §1: the defaults are the independent reference's.
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/network-adjust/v1/cases.json"
+    );
+    let file: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("fixture")).expect("JSON");
+    let d = &file["defaults"];
+    for (key, ours) in [
+        ("direction", SIGMA_DEFAULTS.direction),
+        ("distance", SIGMA_DEFAULTS.distance),
+        ("ppm", SIGMA_DEFAULTS.ppm),
+        ("centering", SIGMA_DEFAULTS.centering),
+        ("zenith", SIGMA_DEFAULTS.zenith),
+        ("levelling", SIGMA_DEFAULTS.levelling),
+    ] {
+        assert_eq!(d[key].as_f64(), Some(ours), "{key}");
+    }
+    let some = SurveySettings {
+        sigma_direction: Some(1e-5),
+        sigma_ppm: Some(0.0),
+        ..SurveySettings::default()
+    };
+    assert!(some.has_sigmas() && some.problem().is_none());
+    let s = some.sigmas();
+    assert_eq!((s.direction, s.ppm, s.distance), (1e-5, 0.0, 0.002));
+    let zero = SurveySettings {
+        sigma_levelling: Some(0.0),
+        ..SurveySettings::default()
+    };
+    assert_eq!(
+        zero.problem().as_deref(),
+        Some("nivelmanın önsel doğruluğu 0; sıfırdan büyük olmalı")
+    );
+    let negative = SurveySettings {
+        sigma_centering: Some(-0.001),
+        ..SurveySettings::default()
+    };
+    assert_eq!(
+        negative.problem().as_deref(),
+        Some("merkezleme doğruluğu -0.001; sıfırdan küçük olamaz")
+    );
+    // As a project keeps them: the ones that hold; nothing left, none.
+    assert_eq!(zero.sanitized(), None);
+    assert_eq!(some.clone().sanitized(), Some(some));
+    let plain: ProjectSettings = serde_json::from_str(
+        r#"{"srid":5254,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000}"#,
+    )
+    .expect("settings");
+    assert_eq!(plain.sigmas(), SIGMA_DEFAULTS);
+}

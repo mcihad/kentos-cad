@@ -575,7 +575,9 @@ fn layer_state_node(r: &mut Reader<'_>) -> Result<LayerStateNode, KcadError> {
 /// Schema 14's survey settings (docs/adr/0169 §3), checked whole: at least
 /// one, k within [−1, 1], tolerances above zero; schema 15's traverse
 /// tolerances too; schema 16's ground height within [−500, 9000] m and its
-/// reduction to the grid only with one (docs/adr/0171).
+/// reduction to the grid only with one (docs/adr/0171); schema 28's a priori
+/// standard deviations above zero, the parts per million and the centering
+/// not below (docs/adr/0203 §1).
 fn survey_settings(r: &mut Reader<'_>, has: Features) -> Result<SurveySettings, KcadError> {
     let at = r.position();
     let mut s = SurveySettings::default();
@@ -590,6 +592,12 @@ fn survey_settings(r: &mut Reader<'_>, has: Features) -> Result<SurveySettings, 
             "traverseCoord" if has.traverse_tolerances => s.traverse_coord = Some(r.float()?),
             "groundHeight" if has.ground => s.ground_height = Some(r.float()?),
             "reduceToGrid" if has.ground => s.reduce_to_grid = Some(r.bool()?),
+            "sigmaDirection" if has.survey_sigmas => s.sigma_direction = Some(r.float()?),
+            "sigmaDistance" if has.survey_sigmas => s.sigma_distance = Some(r.float()?),
+            "sigmaPpm" if has.survey_sigmas => s.sigma_ppm = Some(r.float()?),
+            "sigmaCentering" if has.survey_sigmas => s.sigma_centering = Some(r.float()?),
+            "sigmaZenith" if has.survey_sigmas => s.sigma_zenith = Some(r.float()?),
+            "sigmaLevelling" if has.survey_sigmas => s.sigma_levelling = Some(r.float()?),
             _ => return Err(unknown(r)),
         }
         Ok(())

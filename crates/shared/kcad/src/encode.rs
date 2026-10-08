@@ -36,8 +36,9 @@ use crate::{
     SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
-    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS,
-    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES,
+    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -527,12 +528,18 @@ impl<'d> Encoder<'d> {
             ("index", v.index.map(Ok)),
             ("faceHz", v.face_hz.map(Ok)),
             ("twoWay", v.two_way.map(Ok)),
+            ("sigmaPpm", v.sigma_ppm.map(Ok)),
             ("faceSlope", v.face_slope.map(Ok)),
             ("refraction", v.refraction.map(Ok)),
+            ("sigmaZenith", v.sigma_zenith.map(Ok)),
             ("groundHeight", v.ground_height.map(Ok)),
             ("reduceToGrid", v.reduce_to_grid.map(Err)),
+            ("sigmaDistance", v.sigma_distance.map(Ok)),
             ("traverseAngle", v.traverse_angle.map(Ok)),
             ("traverseCoord", v.traverse_coord.map(Ok)),
+            ("sigmaCentering", v.sigma_centering.map(Ok)),
+            ("sigmaDirection", v.sigma_direction.map(Ok)),
+            ("sigmaLevelling", v.sigma_levelling.map(Ok)),
         ];
         self.open(fields.iter().filter(|(_, x)| x.is_some()).count(), true)?;
         for (key, x) in fields {
@@ -892,8 +899,9 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 27 when the project has
-/// topology settings (docs/adr/0202 §7), 26 when a layer has fields
+/// The oldest schema that holds the drawing: 28 when its survey settings
+/// name an a priori standard deviation (docs/adr/0203 §1), 27 when the
+/// project has topology settings (docs/adr/0202 §7), 26 when a layer has fields
 /// (docs/adr/0199 §1), 25 when a text of it or of a block definition has a
 /// curve (docs/adr/0196), 24 when it has a picture (docs/adr/0192), 23 when a
 /// hatch has a pattern, a gradient or a tie (docs/adr/0186), 22 when it has a table
@@ -923,6 +931,14 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| !n.fields.is_empty() || schemas(&n.children))
+    }
+    if doc
+        .settings
+        .survey
+        .as_ref()
+        .is_some_and(SurveySettings::has_sigmas)
+    {
+        return SCHEMA_WITH_SURVEY_SIGMAS;
     }
     if doc.settings.topology.is_some() {
         return SCHEMA_WITH_TOPOLOGY;

@@ -1,11 +1,14 @@
 //! Surveying computations, Netcad's "Hesap" menu: traverses (poligon),
 //! polar surveys from a station (kutupsal alım), stake-out values
 //! (aplikasyon), forward and backward intersections (önden ve geriden
-//! kestirme). Conventions of Turkish field notes: Y is east (`x`), X north
-//! (`y`); a bearing (semt) runs clockwise from north; horizontal angles
-//! and direction readings run clockwise. Angles come and go in the
-//! project's unit (grad or degrees), distances in metres.
+//! kestirme), and the least squares adjustment of horizontal and levelling
+//! networks ([`adjust`], docs/adr/0203). Conventions of Turkish field
+//! notes: Y is east (`x`), X north (`y`); a bearing (semt) runs clockwise
+//! from north; horizontal angles and direction readings run clockwise.
+//! Angles come and go in the project's unit (grad or degrees), distances in
+//! metres.
 
+pub mod adjust;
 pub mod fieldbook;
 pub mod intersection;
 pub mod polar;

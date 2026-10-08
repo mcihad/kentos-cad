@@ -130,6 +130,9 @@ pub enum Event {
     /// Poligon hesabı'na aktar.
     Fore(Option<usize>),
     TransferTraverse,
+    /// Ağ dengelemesine aktar and Kot ağına aktar (docs/adr/0203 §6).
+    TransferNetwork,
+    TransferLevels,
 }
 
 /// A text book's mapping, remembered while the app runs.
@@ -419,6 +422,54 @@ impl Form {
             ));
             self.ends = Some((back, fore));
         }
+    }
+
+    /// Every station of the book reduced in its unit, each named (docs/adr/0203 §6).
+    fn reduced_all(
+        &self,
+        settings: &kentos_contracts::ProjectSettings,
+    ) -> (Unit, Vec<(String, Reduction)>) {
+        let core = core_unit(self.unit(settings.angle_unit));
+        let survey = settings.survey.clone().unwrap_or_default();
+        let tolerances = Tolerances {
+            face_hz: survey.face_hz,
+            index: survey.index,
+            face_slope: survey.face_slope,
+            two_way: survey.two_way,
+        };
+        let n = self.book.as_ref().map_or(0, |b| b.stations.len());
+        let reduced = (0..n)
+            .filter_map(|i| {
+                let (st, _) = self.core_station(i)?;
+                let r = reduce(&st, core, settings.refraction(), &tolerances);
+                Some((st.station, r))
+            })
+            .collect();
+        (core, reduced)
+    }
+
+    /// Yatay ağ dengelemesi's observations from the book's stations, the
+    /// directions in the project's unit (docs/adr/0203 §6).
+    pub fn network_rows(
+        &self,
+        settings: &kentos_contracts::ProjectSettings,
+    ) -> Vec<kentos_geometry_core::survey::adjust::horizontal::NetRow> {
+        let (core, reduced) = self.reduced_all(settings);
+        kentos_geometry_core::survey::fieldbook::network_rows(
+            &reduced,
+            core,
+            core_unit(settings.angle_unit),
+        )
+    }
+
+    /// Kot ağı dengelemesi's height differences from the book's stations
+    /// (trigonometric, with their horizontal distances).
+    pub fn level_rows(
+        &self,
+        settings: &kentos_contracts::ProjectSettings,
+    ) -> Vec<kentos_geometry_core::survey::adjust::levelling::LevelRow> {
+        let (_, reduced) = self.reduced_all(settings);
+        kentos_geometry_core::survey::fieldbook::level_rows(&reduced)
     }
 
     /// The traverse through the stations, when the book has two or more.

@@ -78,6 +78,8 @@ impl crate::app::App {
             Event::Transfer => return self.fieldbook_transfer(),
             Event::Fore(j) => form.fore = j,
             Event::TransferTraverse => return self.fieldbook_traverse(),
+            Event::TransferNetwork => return self.fieldbook_network(),
+            Event::TransferLevels => return self.fieldbook_levels(),
             Event::Height(t) => {
                 if let Some(e) = form.edits.get_mut(form.station) {
                     e.height = t;
@@ -149,6 +151,66 @@ impl crate::app::App {
             ));
         }
         self.calc_show(Window::Polar);
+        Task::none()
+    }
+
+    /// Ağ dengelemesine aktar (docs/adr/0203 §6): every station's reduced
+    /// rows as the observations; the known points stay. Yatay ağ
+    /// dengelemesi opens; this window waits.
+    fn fieldbook_network(&mut self) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let rows = self.calc.fieldbook.network_rows(doc.model.settings());
+        if rows.is_empty() {
+            return Task::none();
+        }
+        let n = rows.len();
+        let cells = rows
+            .into_iter()
+            .map(|r| {
+                vec![
+                    r.station,
+                    r.target,
+                    r.direction.map(|v| exact(v, 8)).unwrap_or_default(),
+                    r.distance.map(|v| exact(v, 6)).unwrap_or_default(),
+                ]
+            })
+            .collect();
+        self.calc.network.rows =
+            super::super::network::Cells::of(super::super::network::ROW_COLS, cells);
+        self.say(
+            Level::Success,
+            format!("Karne editörü: {n} gözlem Yatay ağ dengelemesi'ne aktarıldı."),
+        );
+        self.calc_show(Window::Network);
+        Task::none()
+    }
+
+    /// Kot ağına aktar (docs/adr/0203 §6): every reduced row with a height
+    /// difference, its horizontal distance as its length; the kind
+    /// trigonometric. Kot ağı dengelemesi opens; this window waits.
+    fn fieldbook_levels(&mut self) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let rows = self.calc.fieldbook.level_rows(doc.model.settings());
+        if rows.is_empty() {
+            return Task::none();
+        }
+        let n = rows.len();
+        let cells = rows
+            .into_iter()
+            .map(|r| vec![r.from, r.to, exact(r.dh, 6), exact(r.length, 6)])
+            .collect();
+        let level = &mut self.calc.level;
+        level.rows = super::super::network::Cells::of(super::super::network::LEVEL_COLS, cells);
+        level.kind = super::super::network::LevelKind::Trigonometric;
+        self.say(
+            Level::Success,
+            format!("Karne editörü: {n} kot farkı Kot ağı dengelemesi'ne aktarıldı."),
+        );
+        self.calc_show(Window::Level);
         Task::none()
     }
 

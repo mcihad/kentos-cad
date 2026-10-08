@@ -101,6 +101,8 @@ pub enum CreateOperation {
     RangeRings,
     /// Plan yolu (docs/adr/0198 §2): a road's areas from its axis, and the axis.
     PlanRoad,
+    /// Yatay ağ dengelemesi (docs/adr/0203 §8): the network's new points the drawing has not.
+    NetworkAdjust,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

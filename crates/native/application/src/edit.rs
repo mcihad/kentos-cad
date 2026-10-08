@@ -191,6 +191,9 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::MedianClose => "Refüj kapat",
         // Topoloji sekmesinin düzeltmeleri (docs/adr/0202 §4).
         EditOperation::TopologyFix => "Topoloji düzelt",
+        // Ağ dengelemelerinin Çizime yaz'ı (docs/adr/0203 §8).
+        EditOperation::NetworkAdjust => "Yatay ağ dengelemesi",
+        EditOperation::LevelAdjust => "Kot ağı dengelemesi",
     }
 }
 

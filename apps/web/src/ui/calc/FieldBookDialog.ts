@@ -4,6 +4,7 @@ import type { FieldCsvOptions } from '../../contracts/generated/FieldCsvOptions'
 import type { FieldStation } from '../../contracts/generated/FieldStation';
 import { fixed } from '../../core/displayNumber';
 import { formats } from '../../io/client';
+import { fieldLevels, fieldNetwork } from '../../model/geom/networkAdjust';
 import { fieldPolar, fieldReduce, fieldTraverse, type FieldStation as CoreStation, type Reduction, type Tolerances, type TraverseTransfer } from '../../model/geom/surveyCalc';
 import type { AngleUnit } from '../../model/projectSettings';
 import { surveyTexts } from '../../model/surveyForm';
@@ -12,6 +13,7 @@ import { checkField, field, fileLine, select } from '../io/common';
 import { segmented } from '../widgets/controls';
 import { Dialog } from '../widgets/Dialog';
 import { copyReport, Grid, readNumber, resolvePoint, summary, summaryLine, type GridModel, type Row } from './common';
+import { openLevelWith, openNetworkWith } from './NetworkDialog';
 import { openPolarWith } from './PolarDialog';
 import { openTraverseWith } from './TraverseDialog';
 
@@ -122,6 +124,9 @@ class FieldBookDialog {
   private readonly copy = h('button', { class: 'btn', type: 'button' }, 'Raporu kopyala');
   private readonly transfer = h('button', { class: 'btn btn--primary', type: 'button' }, "Kutupsal alım'a aktar");
   private readonly toTraverseButton = h('button', { class: 'btn', type: 'button' }, "Poligon hesabı'na aktar");
+  /** Ağ dengelemesine aktar and Kot ağına aktar (docs/adr/0203 §6): every station's reduced rows. */
+  private readonly toNetworkButton = h('button', { class: 'btn', type: 'button' }, 'Ağ dengelemesine aktar');
+  private readonly toLevelsButton = h('button', { class: 'btn', type: 'button' }, 'Kot ağına aktar');
   /** Poligon: the stations in order, the fore sight, the legs (two stations or more). */
   private readonly traverseBox = h('div', { class: 'calc-section' });
   private traverse: TraverseTransfer | null = null;
@@ -145,12 +150,14 @@ class FieldBookDialog {
       width: 1040,
       className: 'dialog--io dialog--calc dialog--fieldbook',
       content: [this.fileBox, this.mappingBox, this.stationBox, this.tableBox, this.reducedBox, this.traverseBox, this.summaryBox],
-      footer: [h('div', { class: 'dialog__spacer' }), this.copy, this.toTraverseButton, this.transfer, close],
+      footer: [h('div', { class: 'dialog__spacer' }), this.copy, this.toNetworkButton, this.toLevelsButton, this.toTraverseButton, this.transfer, close],
     });
     close.addEventListener('click', () => this.dialog.close());
     this.copy.addEventListener('click', () => this.copyReport());
     this.transfer.addEventListener('click', () => this.toPolar());
     this.toTraverseButton.addEventListener('click', () => this.toTraverse());
+    this.toNetworkButton.addEventListener('click', () => this.toNetwork());
+    this.toLevelsButton.addEventListener('click', () => this.toLevels());
     this.render();
   }
 
@@ -306,6 +313,8 @@ class FieldBookDialog {
       replaceChildren(this.traverseBox);
       this.traverse = null;
       this.toTraverseButton.disabled = true;
+      this.toNetworkButton.disabled = true;
+      this.toLevelsButton.disabled = true;
       this.core = null;
       this.copy.disabled = true;
       this.transfer.disabled = true;
@@ -319,6 +328,8 @@ class FieldBookDialog {
     this.from = from;
     const tolerances = survey ? { faceHz: survey.faceHz, index: survey.index, faceSlope: survey.faceSlope, twoWay: survey.twoWay } : null;
     this.syncTraverse(unit, tolerances);
+    this.toNetworkButton.disabled = false;
+    this.toLevelsButton.disabled = false;
     this.reduction = fieldReduce(station, unit, settings.refraction, tolerances);
     this.core = { station, tolerances };
     // Kutupsal alım is oriented on a reduced row: the first, or the one chosen.
@@ -578,6 +589,42 @@ class FieldBookDialog {
     this.ctx.log.success(`Karne editörü: ${n} istasyonlu poligon Poligon hesabı'na aktarıldı.`);
     if (t.missing.length)
       this.ctx.log.warn(`Poligonda bulunamayan gözlemler: ${t.missing.map((m) => `${m.station} istasyonunda ${m.target}`).join('; ')}. Açısı ya da kenarı olmayan satırları Poligon hesabı'nda yazın.`);
+    this.dialog.close();
+  }
+
+  /** Every station of the book in the core's terms, with the project's tolerances (docs/adr/0203 §6). */
+  private allStations(): { stations: CoreStation[]; tolerances: Tolerances | null } {
+    const survey = this.ctx.doc.settings.survey.value;
+    const tolerances = survey ? { faceHz: survey.faceHz, index: survey.index, faceSlope: survey.faceSlope, twoWay: survey.twoWay } : null;
+    const n = state.book?.stations.length ?? 0;
+    const stations = Array.from({ length: n }, (_, i) => coreStation(i)?.station).filter((s): s is CoreStation => !!s);
+    return { stations, tolerances };
+  }
+
+  /**
+   * Ağ dengelemesine aktar (docs/adr/0203 §6): every station's reduced rows as Yatay ağ dengelemesi's observations, the
+   * directions in the project's unit; the known points stay. Yatay ağ dengelemesi opens.
+   */
+  private toNetwork(): void {
+    const { stations, tolerances } = this.allStations();
+    const settings = this.ctx.doc.settings;
+    const rows = fieldNetwork(stations, this.unit(), settings.refraction, tolerances, settings.angleUnit.value);
+    if (!rows.length) return;
+    openNetworkWith(
+      this.ctx,
+      rows.map((r) => ({ station: r.station, target: r.target, direction: r.direction != null ? exact(r.direction, 8) : '', distance: r.distance != null ? exact(r.distance, 6) : '' })),
+    );
+    this.ctx.log.success(`Karne editörü: ${rows.length} gözlem Yatay ağ dengelemesi'ne aktarıldı.`);
+    this.dialog.close();
+  }
+
+  /** Kot ağına aktar: every reduced row with a height difference, its horizontal distance its length; the kind trigonometric. */
+  private toLevels(): void {
+    const { stations, tolerances } = this.allStations();
+    const rows = fieldLevels(stations, this.unit(), this.ctx.doc.settings.refraction, tolerances);
+    if (!rows.length) return;
+    openLevelWith(this.ctx, rows.map((r) => ({ from: r.from, to: r.to, dh: exact(r.dh, 6), length: exact(r.length, 6) })));
+    this.ctx.log.success(`Karne editörü: ${rows.length} kot farkı Kot ağı dengelemesi'ne aktarıldı.`);
     this.dialog.close();
   }
 

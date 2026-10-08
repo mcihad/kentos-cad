@@ -2,8 +2,9 @@
 //! 0071): Poligon hesabı ([`traverse`]), Kutupsal alım ([`polar`]), Önden
 //! and Geriden kestirme ([`intersection`]), Aplikasyon ([`stakeout`]),
 //! Vektör oturtma ([`fit`], docs/adr/0156), Koordinat dönüştür
-//! ([`convert`], docs/adr/0167 §4) and Karne editörü ([`fieldbook`],
-//! docs/adr/0169 §6).
+//! ([`convert`], docs/adr/0167 §4), Karne editörü ([`fieldbook`],
+//! docs/adr/0169 §6), Yatay ağ dengelemesi and Kot ağı dengelemesi
+//! ([`network`], docs/adr/0203).
 //! What they share, as the web's `common.ts`:
 //!
 //! - a known point: a point object's name in the drawing or “Y,X”, or shown
@@ -27,6 +28,7 @@ pub mod fieldbook;
 pub mod fit;
 pub mod grid;
 pub mod intersection;
+pub mod network;
 mod parts;
 pub mod polar;
 pub mod read;
@@ -59,6 +61,8 @@ pub const COMMANDS: &[&str] = &[
     "transform.edgematch",
     "crs.transform",
     "calc.fieldbook",
+    "calc.network",
+    "calc.levelNetwork",
 ];
 
 /// The windows' greatest height: the web's body of at most 760 px with the
@@ -76,6 +80,9 @@ pub enum Window {
     Edgematch,
     Convert,
     FieldBook,
+    /// Yatay ağ dengelemesi and Kot ağı dengelemesi (docs/adr/0203).
+    Network,
+    Level,
 }
 
 /// A known point field of the window it is in.
@@ -142,6 +149,8 @@ pub enum Event {
     Convert(convert::Event),
     /// Karne editörü's own controls.
     FieldBook(fieldbook::Event),
+    /// Yatay ağ dengelemesi's and Kot ağı dengelemesi's own controls.
+    Network(network::Event),
 }
 
 /// The windows' state while the app runs (the web's module state).
@@ -156,6 +165,8 @@ pub struct Calc {
     pub edgematch: edgematch::Form,
     pub convert: convert::Form,
     pub fieldbook: fieldbook::Form,
+    pub network: network::NetworkForm,
+    pub level: network::LevelForm,
     /// The field Çizimden picks for, while its window is closed.
     picking: Option<(Window, Field)>,
 }
@@ -171,7 +182,7 @@ impl Calc {
             Window::Edgematch => Some(&mut self.edgematch),
             Window::Convert => Some(&mut self.convert),
             Window::FieldBook => Some(&mut self.fieldbook),
-            Window::Intersection => None,
+            Window::Intersection | Window::Network | Window::Level => None,
         }
     }
 
@@ -181,11 +192,13 @@ impl Calc {
             Window::Traverse => Some(&mut self.traverse.layer),
             Window::Polar => Some(&mut self.polar.layer),
             Window::Intersection => Some(&mut self.intersection.layer),
+            Window::Network => Some(&mut self.network.layer),
             Window::Stakeout
             | Window::Fit
             | Window::Edgematch
             | Window::Convert
-            | Window::FieldBook => None,
+            | Window::FieldBook
+            | Window::Level => None,
         }
     }
 }
@@ -234,6 +247,8 @@ impl App {
             "transform.edgematch" => self.calc_show(Window::Edgematch),
             "crs.transform" => self.calc_show(Window::Convert),
             "calc.fieldbook" => self.calc_show(Window::FieldBook),
+            "calc.network" => self.calc_show(Window::Network),
+            "calc.levelNetwork" => self.calc_show(Window::Level),
             _ => {}
         }
         Task::none()
@@ -278,6 +293,8 @@ impl App {
         }
         self.calc.open = Some(window);
         self.dialog = Some(Asking::Calc);
+        // The adjustments are solved again on the drawing as it is now.
+        self.network_solve();
     }
 
     pub(crate) fn calc_event(&mut self, e: Event) -> Task<Message> {
@@ -312,10 +329,15 @@ impl App {
             }
             Event::Convert(e) => self.convert_event(e),
             Event::FieldBook(e) => self.fieldbook_event(e),
+            Event::Network(e) => self.network_event(e),
             Event::CopyReport => self.calc_copy_report(window),
             Event::SendToDevice => self.calc_send_stakeout(),
             Event::AddPoints => {
-                self.calc_add_points(window);
+                match window {
+                    Window::Network => self.network_write(),
+                    Window::Level => self.level_write(),
+                    _ => self.calc_add_points(window),
+                }
                 Task::none()
             }
             Event::Layer(i) => {
@@ -389,6 +411,9 @@ impl App {
             },
             Event::Arrow(up, from) => match self.calc.table(window) {
                 Some(table) => grid::arrow(table, window, &from, up),
+                None if matches!(window, Window::Network | Window::Level) => {
+                    self.network_arrow(up, &from)
+                }
                 None => Task::none(),
             },
             Event::AddRow => match self.calc.table(window) {
@@ -455,6 +480,8 @@ impl App {
             Window::Edgematch => edgematch::TITLE,
             Window::Convert => convert::TITLE,
             Window::FieldBook => fieldbook::TITLE,
+            Window::Network => network::NETWORK_TITLE,
+            Window::Level => network::LEVEL_TITLE,
         }
     }
 
@@ -477,7 +504,7 @@ impl App {
             (Window::Fit, _) => return None,
             (Window::Edgematch, _) => return None,
             (Window::Convert, _) => return None,
-            (Window::FieldBook, _) => return None,
+            (Window::FieldBook | Window::Network | Window::Level, _) => return None,
         })
     }
 
@@ -567,6 +594,8 @@ impl App {
             // Koordinat dönüştür copies its values itself (Panoya kopyala).
             Window::Convert => None,
             Window::FieldBook => self.calc.fieldbook.report(),
+            Window::Network => self.calc.network.report(model, &format),
+            Window::Level => self.calc.level.report(model, &format),
         };
         let Some(lines) = lines else {
             return Task::none();
@@ -631,7 +660,9 @@ impl App {
             | Window::Fit
             | Window::Edgematch
             | Window::Convert
-            | Window::FieldBook => return,
+            | Window::FieldBook
+            | Window::Network
+            | Window::Level => return,
         };
         let (Some(layer), false) = (layer.clone(), points.is_empty()) else {
             return;
@@ -758,6 +789,8 @@ impl App {
                 &convert::ConvertFormat::of(doc.settings(), self.draft.geographic),
             ),
             Window::FieldBook => self.calc.fieldbook.view(model, &format),
+            Window::Network => self.calc.network.view(model, &format),
+            Window::Level => self.calc.level.view(model, &format),
         };
         kentos_ui::widget::overlay::modal(dialog, event(Event::Close))
     }
@@ -786,7 +819,7 @@ fn field_label(window: Window, field: Field) -> &'static str {
         (Window::Fit, _) => "Taban noktası",
         (Window::Edgematch, _) => "Sınır",
         (Window::Convert, _) => "Nokta",
-        (Window::FieldBook, _) => "Nokta",
+        (Window::FieldBook | Window::Network | Window::Level, _) => "Nokta",
     }
 }
 

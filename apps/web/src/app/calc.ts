@@ -105,6 +105,30 @@ export function registerCalcCommands(ctx: AppContext): void {
       run: () => void import('../ui/calc/IntersectionDialog').then((m) => m.openIntersection(ctx, 'resection')).catch(failed),
     },
     {
+      // Yatay ağ dengelemesi (docs/adr/0203): directions and distances adjusted by least squares, with their statistics.
+      id: 'calc.network',
+      title: 'Yatay ağ dengelemesi…',
+      short: 'Yatay ağ',
+      category: 'Hesap',
+      icon: 'surveyNetwork',
+      description:
+        'Doğrultu ve kenar ölçülerinden oluşan yatay ağı en küçük kareler yöntemiyle dengeler: sabit ya da ağırlıklı bilinen noktalar, istasyon başına yöneltme, ağırlıklar Proje ayarları › Ölçme’nin önsel doğruluklarından. Noktaların koordinatları, standart sapmaları ve hata elipsleri; gözlemlerin düzeltmeleri, denetlenebilirliği ve uyuşumsuz ölçü testi; m₀ ve model testi. Yeni noktalar çizime yazılır.',
+      aliases: ['AGDENGELE', 'AĞDENGELE', 'YATAYAG', 'DENGELEME', 'NETWORK'],
+      run: () => void import('../ui/calc/NetworkDialog').then((m) => m.openNetwork(ctx)).catch(failed),
+    },
+    {
+      // Kot ağı dengelemesi (docs/adr/0203 §5): height differences adjusted by least squares.
+      id: 'calc.levelNetwork',
+      title: 'Kot ağı dengelemesi…',
+      short: 'Kot ağı',
+      category: 'Hesap',
+      icon: 'surveyLevel',
+      description:
+        'Geometrik nivelman ya da trigonometrik kot farklarından oluşan kot ağını en küçük kareler yöntemiyle dengeler: sabit ya da ağırlıklı reperler, ağırlıklar hat uzunluğundan. Kotlar ve standart sapmaları, gözlemlerin düzeltmeleri, uyuşumsuz ölçü testi ve model testi; çizimdeki aynı adlı noktaların kotları yazılır.',
+      aliases: ['KOTAGI', 'KOTAĞI', 'NIVELMAN', 'NİVELMAN', 'LEVELNETWORK'],
+      run: () => void import('../ui/calc/NetworkDialog').then((m) => m.openLevel(ctx)).catch(failed),
+    },
+    {
       // Vektör oturtma (docs/adr/0156): a drawing or a layer fitted to another system by control points.
       id: 'transform.fit',
       title: 'Vektör oturtma…',

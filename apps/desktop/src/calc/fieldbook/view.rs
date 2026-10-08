@@ -141,6 +141,22 @@ impl Form {
                 false,
             ))
             .action(footer_button(
+                "Ağ dengelemesine aktar",
+                self.book
+                    .as_ref()
+                    .filter(|b| !b.stations.is_empty())
+                    .map(|_| fb(Event::TransferNetwork)),
+                false,
+            ))
+            .action(footer_button(
+                "Kot ağına aktar",
+                self.book
+                    .as_ref()
+                    .filter(|b| !b.stations.is_empty())
+                    .map(|_| fb(Event::TransferLevels)),
+                false,
+            ))
+            .action(footer_button(
                 "Poligon hesabı'na aktar",
                 self.traverse().map(|_| fb(Event::TransferTraverse)),
                 false,

@@ -775,6 +775,24 @@ cases.append({
     ],
 })
 
+# Yatay ağ and Kot ağı dengelemesi (docs/adr/0203 §8): a point to its adjusted place, then its adjusted height; its
+# attributes and label stay; the steps are named after the windows.
+adjusted = geometry_of(1, p=P(487080.0123, 4419999.9876))
+levelled = geometry_of(1, p=P(487080.0123, 4419999.9876), z=12.5143)
+cases.append({
+    "name": "Yatay ağ ve Kot ağı dengelemesi: noktanın dengelenmiş yeri, sonra kotu; öznitelikleri ve etiketi kalır; adımlar pencerelerin adıyla (ADR 0203 §8)",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "nokta"},
+        {"op": "execute", "input": {"operation": "networkAdjust", "changes": [{"kind": "update", "uid": uid(1), "geometry": adjusted}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": reshaped(PE(1), adjusted)}, "uids": {"1": "nokta"}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "levelAdjust", "changes": [{"kind": "update", "uid": uid(1), "geometry": levelled}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": reshaped(PE(1), levelled)}, "uids": {"1": "nokta"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Kot ağı dengelemesi", "expect": {"entities": {"1": reshaped(PE(1), adjusted)}}},
+        {"op": "undo", "returns": "Yatay ağ dengelemesi", "expect": {"entities": {"1": PE(1)}, "canUndo": False}},
+    ],
+})
+
 renamed = {**dressed, "text": "Parsel 7"}
 cases.append({
     "name": "Bul ve değiştir: yazının yeni metni yazılır; hizası, çarpanı ve zemini kalır; adım “Bul ve değiştir” (ADR 0145 §6)",

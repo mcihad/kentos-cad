@@ -168,6 +168,7 @@ class CreateOperation(_StrEnum):
     - ``fourthCorner``: Dördüncü köşe (docs/adr/0197 §2): a parallelogram's fourth corner, a point or the four as an area.
     - ``rangeRings``: Menzil halkaları (docs/adr/0197 §3): rings round a centre and rays to the outer one.
     - ``planRoad``: Plan yolu (docs/adr/0198 §2): a road's areas from its axis, and the axis.
+    - ``networkAdjust``: Yatay ağ dengelemesi (docs/adr/0203 §8): the network's new points the drawing has not.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -199,9 +200,10 @@ class CreateOperation(_StrEnum):
     FOURTH_CORNER = "fourthCorner"
     RANGE_RINGS = "rangeRings"
     PLAN_ROAD = "planRoad"
+    NETWORK_ADJUST = "networkAdjust"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -355,6 +357,8 @@ class EditOperation(_StrEnum):
     - ``roadJunctions``: Kavşak temizle (docs/adr/0198 §3): road areas joined kind by kind, their inner corners rounded.
     - ``medianClose``: Refüj kapat (docs/adr/0198 §4): two lines closed into a median, an area.
     - ``topologyFix``: Topoloji düzelt (docs/adr/0202 §4): a topology finding fixed, its objects updated in place or deleted.
+    - ``networkAdjust``: Yatay ağ dengelemesi (docs/adr/0203 §8): points moved to their adjusted places, vertices on them with them.
+    - ``levelAdjust``: Kot ağı dengelemesi (docs/adr/0203 §8): points given their adjusted heights, vertices on them too.
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -406,9 +410,11 @@ class EditOperation(_StrEnum):
     ROAD_JUNCTIONS = "roadJunctions"
     MEDIAN_CLOSE = "medianClose"
     TOPOLOGY_FIX = "topologyFix"
+    NETWORK_ADJUST = "networkAdjust"
+    LEVEL_ADJUST = "levelAdjust"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -6550,9 +6556,10 @@ class SurveySettings(_Model):
     refraction coefficient k of trigonometric heights, and the greatest
     differences a field book's two faces are checked against; the mean
     ellipsoidal height of the ground values and whether the survey windows
-    reduce lengths to the grid (docs/adr/0171). Angles are in radians,
-    lengths in metres. An absent tolerance is not checked; the differences
-    are still shown.
+    reduce lengths to the grid (docs/adr/0171); the a priori standard
+    deviations of a network adjustment (docs/adr/0203 §1). Angles are in
+    radians, lengths in metres. An absent tolerance is not checked; the
+    differences are still shown.
     Attributes:
         face_hz: The two faces' horizontal reading difference.
         face_slope: The two faces' slope distance difference.
@@ -6565,6 +6572,13 @@ class SurveySettings(_Model):
             grid, Aplikasyon gives grid lengths on the ground (docs/adr/0171 §4;
             schema 16): only with a ground height; absent, off.
         refraction: k, within [−1, 1]; absent: [`REFRACTION`].
+        sigma_centering: Each end's centering, the instrument's and the target's, m (schema 28).
+        sigma_direction: A direction's a priori standard deviation, radians (docs/adr/0203 §1;
+            schema 28); absent: [`SIGMA_DEFAULTS`]'s.
+        sigma_distance: A distance's constant part, m (schema 28).
+        sigma_levelling: Geometric levelling's per √km, m (schema 28).
+        sigma_ppm: A distance's part per million of its length (schema 28).
+        sigma_zenith: A zenith angle's, radians (schema 28).
         traverse_angle: A traverse's angular misclosure (schema 15).
         traverse_coord: A traverse's linear (coordinate) misclosure (schema 15).
         two_way: A traverse leg's horizontal distance measured from its two ends
@@ -6576,6 +6590,12 @@ class SurveySettings(_Model):
     index: float | None | Unset = UNSET
     reduce_to_grid: bool | None | Unset = UNSET
     refraction: float | None | Unset = UNSET
+    sigma_centering: float | None | Unset = UNSET
+    sigma_direction: float | None | Unset = UNSET
+    sigma_distance: float | None | Unset = UNSET
+    sigma_levelling: float | None | Unset = UNSET
+    sigma_ppm: float | None | Unset = UNSET
+    sigma_zenith: float | None | Unset = UNSET
     traverse_angle: float | None | Unset = UNSET
     traverse_coord: float | None | Unset = UNSET
     two_way: float | None | Unset = UNSET
@@ -6594,6 +6614,18 @@ class SurveySettings(_Model):
             out["reduceToGrid"] = self.reduce_to_grid
         if self.refraction is not UNSET:
             out["refraction"] = None if self.refraction is None else float(self.refraction)
+        if self.sigma_centering is not UNSET:
+            out["sigmaCentering"] = None if self.sigma_centering is None else float(self.sigma_centering)
+        if self.sigma_direction is not UNSET:
+            out["sigmaDirection"] = None if self.sigma_direction is None else float(self.sigma_direction)
+        if self.sigma_distance is not UNSET:
+            out["sigmaDistance"] = None if self.sigma_distance is None else float(self.sigma_distance)
+        if self.sigma_levelling is not UNSET:
+            out["sigmaLevelling"] = None if self.sigma_levelling is None else float(self.sigma_levelling)
+        if self.sigma_ppm is not UNSET:
+            out["sigmaPpm"] = None if self.sigma_ppm is None else float(self.sigma_ppm)
+        if self.sigma_zenith is not UNSET:
+            out["sigmaZenith"] = None if self.sigma_zenith is None else float(self.sigma_zenith)
         if self.traverse_angle is not UNSET:
             out["traverseAngle"] = None if self.traverse_angle is None else float(self.traverse_angle)
         if self.traverse_coord is not UNSET:
@@ -6611,6 +6643,12 @@ class SurveySettings(_Model):
             index=UNSET if "index" not in data else None if data["index"] is None else float(data["index"]),
             reduce_to_grid=data.get("reduceToGrid", UNSET),
             refraction=UNSET if "refraction" not in data else None if data["refraction"] is None else float(data["refraction"]),
+            sigma_centering=UNSET if "sigmaCentering" not in data else None if data["sigmaCentering"] is None else float(data["sigmaCentering"]),
+            sigma_direction=UNSET if "sigmaDirection" not in data else None if data["sigmaDirection"] is None else float(data["sigmaDirection"]),
+            sigma_distance=UNSET if "sigmaDistance" not in data else None if data["sigmaDistance"] is None else float(data["sigmaDistance"]),
+            sigma_levelling=UNSET if "sigmaLevelling" not in data else None if data["sigmaLevelling"] is None else float(data["sigmaLevelling"]),
+            sigma_ppm=UNSET if "sigmaPpm" not in data else None if data["sigmaPpm"] is None else float(data["sigmaPpm"]),
+            sigma_zenith=UNSET if "sigmaZenith" not in data else None if data["sigmaZenith"] is None else float(data["sigmaZenith"]),
             traverse_angle=UNSET if "traverseAngle" not in data else None if data["traverseAngle"] is None else float(data["traverseAngle"]),
             traverse_coord=UNSET if "traverseCoord" not in data else None if data["traverseCoord"] is None else float(data["traverseCoord"]),
             two_way=UNSET if "twoWay" not in data else None if data["twoWay"] is None else float(data["twoWay"]),

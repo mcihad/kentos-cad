@@ -224,6 +224,10 @@ pub const PORTED: &[&str] = &[
     "calc.traverse",
     "calc.polar",
     "calc.fieldbook",
+    // Yatay ağ and Kot ağı dengelemesi: least squares with their statistics,
+    // written through cad.entities.edit and .create (calc/network/, docs/adr/0203).
+    "calc.network",
+    "calc.levelNetwork",
     // Vektör oturtma: control points, Helmert, affine or projective by least squares,
     // written through cad.entities.transform (calc/fit/, docs/adr/0156 §7).
     "transform.fit",

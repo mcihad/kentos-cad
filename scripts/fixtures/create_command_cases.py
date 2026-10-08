@@ -1280,6 +1280,21 @@ for operation, step, objects in extras:
         ],
     })
 
+# Yatay ağ dengelemesi's new points (docs/adr/0203 §8): named, their kind “Ağ noktası”, one step named after the window.
+network_points = [O({"kind": "point", "p": P(487040.0123, 4420040.0456)}, label="Y2", attrs={"Ad": "Y2", "Tür": "Ağ noktası"}),
+                  O({"kind": "point", "p": P(487060.5, 4420020.25)}, label="Y3", attrs={"Ad": "Y3", "Tür": "Ağ noktası"})]
+new = [3 + i for i in range(len(network_points))]
+cases.append({
+    "name": "Yatay ağ dengelemesi: yeni noktalar adlarıyla ve “Ağ noktası” türüyle tek adımda yazılır, adı “Yatay ağ dengelemesi” (ADR 0203 §8)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "networkAdjust", "objects": network_points}, "result": done(new),
+         "expect": {"ids": IDS + new, "entities": {str(i): made(o, i) for i, o in zip(new, network_points)}, "uids": {str(i): "new" for i in new},
+                    "revision": "changed"}},
+        {"op": "undo", "returns": "Yatay ağ dengelemesi", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Yatay ağ dengelemesi", "expect": {"ids": IDS + new}},
+    ],
+})
+
 
 # ── Kılavuz (docs/adr/0146) ─────────────────────────────────────────────
 

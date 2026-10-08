@@ -1,7 +1,7 @@
 {
   "format": "kentos.survey-form",
   "version": 1,
-  "source": "scripts/fixtures/survey_form_cases.py (docs/adr/0169 §3, docs/adr/0171 §2)",
+  "source": "scripts/fixtures/survey_form_cases.py (docs/adr/0169 §3, docs/adr/0171 §2, docs/adr/0203 §1)",
   "fields": [
     "refraction",
     "faceHz",
@@ -10,13 +10,21 @@
     "twoWay",
     "traverseAngle",
     "traverseCoord",
-    "groundHeight"
+    "groundHeight",
+    "sigmaDirection",
+    "sigmaDistance",
+    "sigmaPpm",
+    "sigmaCentering",
+    "sigmaZenith",
+    "sigmaLevelling"
   ],
   "messages": {
     "number": "Sayı yazın.",
     "refraction": "−1 ile 1 arasında bir sayı yazın; boş bırakılırsa 0.13.",
     "tolerance": "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın.",
-    "height": "−500 ile 9000 m arasında bir yükseklik yazın; zemin değerleri gerekmiyorsa boş bırakın."
+    "height": "−500 ile 9000 m arasında bir yükseklik yazın; zemin değerleri gerekmiyorsa boş bırakın.",
+    "sigma": "Sıfırdan büyük bir sayı yazın; boş bırakılırsa varsayılan.",
+    "part": "Sıfır ya da sıfırdan büyük bir sayı yazın; boş bırakılırsa varsayılan."
   },
   "texts": [
     {
@@ -24,6 +32,12 @@
       "unit": "grad",
       "survey": null,
       "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         "",
         "",
         "",
@@ -50,6 +64,12 @@
         "10",
         "30",
         "50",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         ""
       ]
     },
@@ -69,6 +89,12 @@
         "10",
         "9.72",
         "50",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         ""
       ]
     },
@@ -86,6 +112,12 @@
         "20",
         "10",
         "5",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         "",
         "",
         "",
@@ -109,6 +141,12 @@
         "",
         "",
         "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         ""
       ]
     },
@@ -127,6 +165,12 @@
         "",
         "",
         "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         ""
       ]
     },
@@ -139,6 +183,12 @@
       "texts": [
         "",
         "6.48",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         "",
         "",
         "",
@@ -162,6 +212,12 @@
         "",
         "",
         "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         ""
       ]
     },
@@ -179,7 +235,13 @@
         "",
         "",
         "",
-        "850.25"
+        "850.25",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
       ]
     },
     {
@@ -197,7 +259,13 @@
         "",
         "",
         "",
-        "-27.1235"
+        "-27.1235",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
       ]
     },
     {
@@ -214,7 +282,66 @@
         "",
         "",
         "",
-        "0"
+        "0",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "önsel doğruluklar, gon",
+      "unit": "grad",
+      "survey": {
+        "sigmaDirection": 7.853981633974482e-06,
+        "sigmaDistance": 0.001,
+        "sigmaPpm": 1.5,
+        "sigmaCentering": 0.0005,
+        "sigmaZenith": 2.3561944901923446e-05,
+        "sigmaLevelling": 0.0008
+      },
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "5",
+        "1",
+        "1.5",
+        "0.5",
+        "15",
+        "0.8"
+      ]
+    },
+    {
+      "name": "önsel doğruluklar, derece",
+      "unit": "deg",
+      "survey": {
+        "sigmaDirection": 4.84813681109536e-06,
+        "sigmaPpm": 0.0,
+        "sigmaCentering": 0.0
+      },
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "1",
+        "",
+        "0",
+        "0",
+        "",
+        ""
       ]
     }
   ],
@@ -223,6 +350,12 @@
       "name": "boş",
       "unit": "grad",
       "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         "",
         "",
         "",
@@ -246,6 +379,12 @@
         "10",
         "30",
         "50",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         ""
       ],
       "survey": {
@@ -270,6 +409,12 @@
         "10",
         "9.72",
         "50",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         ""
       ],
       "survey": {
@@ -294,6 +439,12 @@
         "",
         "",
         "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         ""
       ],
       "survey": null,
@@ -307,6 +458,12 @@
         "1e1",
         "",
         " 5 ",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         "",
         "",
         "",
@@ -330,6 +487,12 @@
         "0",
         "-1",
         "x",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         ""
       ],
       "survey": {
@@ -355,6 +518,12 @@
         "",
         "",
         "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         ""
       ],
       "survey": null,
@@ -370,6 +539,12 @@
       "unit": "grad",
       "texts": [
         "-1",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         "",
         "",
         "",
@@ -394,6 +569,12 @@
         "",
         "",
         "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         ""
       ],
       "survey": {
@@ -413,7 +594,13 @@
         "",
         "",
         "",
-        "850.25"
+        "850.25",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
       ],
       "survey": {
         "groundHeight": 850.25
@@ -431,7 +618,13 @@
         "",
         "",
         "",
-        " 1250,5 "
+        " 1250,5 ",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
       ],
       "survey": {
         "groundHeight": 1250.5
@@ -449,7 +642,13 @@
         "",
         "",
         "",
-        "-500"
+        "-500",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
       ],
       "survey": {
         "groundHeight": -500.0
@@ -467,7 +666,13 @@
         "",
         "",
         "",
-        "9000"
+        "9000",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
       ],
       "survey": {
         "groundHeight": 9000.0
@@ -485,7 +690,13 @@
         "",
         "",
         "",
-        "9000.5"
+        "9000.5",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
       ],
       "survey": {
         "refraction": 0.14
@@ -505,7 +716,13 @@
         "",
         "",
         "",
-        "850 m"
+        "850 m",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
       ],
       "survey": null,
       "problems": {
@@ -523,12 +740,168 @@
         "",
         "",
         "",
-        "0"
+        "0",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
       ],
       "survey": {
         "groundHeight": 0.0
       },
       "problems": {}
+    },
+    {
+      "name": "önsel doğruluklar, gon",
+      "unit": "grad",
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "5",
+        "1",
+        "1,5",
+        "0.5",
+        "15",
+        "0.8"
+      ],
+      "survey": {
+        "sigmaDirection": 7.853981633974482e-06,
+        "sigmaDistance": 0.001,
+        "sigmaPpm": 1.5,
+        "sigmaCentering": 0.0005,
+        "sigmaZenith": 2.3561944901923446e-05,
+        "sigmaLevelling": 0.0008
+      },
+      "problems": {}
+    },
+    {
+      "name": "önsel doğruluklar, derece",
+      "unit": "deg",
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "1",
+        "3",
+        "0",
+        "0",
+        "2.5",
+        "1"
+      ],
+      "survey": {
+        "sigmaDirection": 4.84813681109536e-06,
+        "sigmaDistance": 0.003,
+        "sigmaPpm": 0.0,
+        "sigmaCentering": 0.0,
+        "sigmaZenith": 1.21203420277384e-05,
+        "sigmaLevelling": 0.001
+      },
+      "problems": {}
+    },
+    {
+      "name": "varsayılana eşit de yazılır",
+      "unit": "grad",
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "10",
+        "2",
+        "2",
+        "1",
+        "10",
+        "2"
+      ],
+      "survey": {
+        "sigmaDirection": 1.5707963267948964e-05,
+        "sigmaDistance": 0.002,
+        "sigmaPpm": 2.0,
+        "sigmaCentering": 0.001,
+        "sigmaZenith": 1.5707963267948964e-05,
+        "sigmaLevelling": 0.002
+      },
+      "problems": {}
+    },
+    {
+      "name": "sıfır ve eksi önsel doğruluk",
+      "unit": "grad",
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "0",
+        "-1",
+        "-0.5",
+        "-1",
+        "x",
+        "0"
+      ],
+      "survey": null,
+      "problems": {
+        "sigmaDirection": "Sıfırdan büyük bir sayı yazın; boş bırakılırsa varsayılan.",
+        "sigmaDistance": "Sıfırdan büyük bir sayı yazın; boş bırakılırsa varsayılan.",
+        "sigmaPpm": "Sıfır ya da sıfırdan büyük bir sayı yazın; boş bırakılırsa varsayılan.",
+        "sigmaCentering": "Sıfır ya da sıfırdan büyük bir sayı yazın; boş bırakılırsa varsayılan.",
+        "sigmaZenith": "Sayı yazın.",
+        "sigmaLevelling": "Sıfırdan büyük bir sayı yazın; boş bırakılırsa varsayılan."
+      }
     }
-  ]
+  ],
+  "placeholders": {
+    "grad": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "10",
+      "2",
+      "2",
+      "1",
+      "10",
+      "2"
+    ],
+    "deg": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "3.24",
+      "2",
+      "2",
+      "1",
+      "3.24",
+      "2"
+    ]
+  }
 }

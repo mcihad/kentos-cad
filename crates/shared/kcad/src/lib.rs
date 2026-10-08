@@ -254,8 +254,17 @@ pub const SCHEMA_WITH_LAYER_FIELDS: u32 = 26;
 /// exceptions on its next save.
 pub const SCHEMA_WITH_TOPOLOGY: u32 = 27;
 
+/// Document schema 28 (docs/specs/kcad-v2.md §6.1): schema 27 and the
+/// survey settings' a priori standard deviations of a network adjustment,
+/// `sigmaDirection`, `sigmaDistance`, `sigmaPpm`, `sigmaCentering`,
+/// `sigmaZenith` and `sigmaLevelling` (docs/adr/0203 §1). A writer writes
+/// it only when a project names one: any other drawing stays 27 or older,
+/// byte for byte; a reader of those refuses a drawing that has them rather
+/// than drop them on its next save.
+pub const SCHEMA_WITH_SURVEY_SIGMAS: u32 = 28;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 26] = [
+pub const SCHEMAS: [u32; 27] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -282,6 +291,7 @@ pub const SCHEMAS: [u32; 26] = [
     SCHEMA_WITH_TEXT_PATHS,
     SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_TOPOLOGY,
+    SCHEMA_WITH_SURVEY_SIGMAS,
 ];
 
 /// The file a drawing is saved as.

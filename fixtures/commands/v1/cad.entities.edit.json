@@ -622,6 +622,38 @@
       ]
     },
     {
+      "name": "Yatay ağ ve Kot ağı dengelemesi: noktanın dengelenmiş yeri, sonra kotu; öznitelikleri ve etiketi kalır; adımlar pencerelerin adıyla (ADR 0203 §8)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "p": {"x": 487080, "y": 4420000}, "z": 12.5},
+          {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 0},
+          {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 3, "height": 0.5, "text": "20 m", "style": "linear", "angle": 0},
+          {"kind": "hatch", "id": 4, "layerId": "yapi", "attrs": {"Tür": "Yeşil"}, "symbol": "cim", "ring": [{"x": 487030, "y": 4420060}, {"x": 487050, "y": 4420060}, {"x": 487050, "y": 4420080}, {"x": 487030, "y": 4420080}], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}},
+          {"kind": "text", "id": 5, "layerId": "kilitli", "attrs": {}, "p": {"x": 487080, "y": 4420030}, "text": "Kilit", "height": 2.5, "rotation": 0}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "captureUid", "id": 1, "as": "nokta"},
+        {"op": "execute", "input": {"operation": "networkAdjust", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "point", "p": {"x": 487080.0123, "y": 4419999.9876}, "z": 12.5}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "kind": "point", "p": {"x": 487080.0123, "y": 4419999.9876}, "z": 12.5}}, "uids": {"1": "nokta"}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "levelAdjust", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "point", "p": {"x": 487080.0123, "y": 4419999.9876}, "z": 12.5143}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "kind": "point", "p": {"x": 487080.0123, "y": 4419999.9876}, "z": 12.5143}}, "uids": {"1": "nokta"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Kot ağı dengelemesi", "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "kind": "point", "p": {"x": 487080.0123, "y": 4419999.9876}, "z": 12.5}}}},
+        {"op": "undo", "returns": "Yatay ağ dengelemesi", "expect": {"entities": {"1": {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "p": {"x": 487080, "y": 4420000}, "z": 12.5}}, "canUndo": false}}
+      ]
+    },
+    {
       "name": "Bul ve değiştir: yazının yeni metni yazılır; hizası, çarpanı ve zemini kalır; adım “Bul ve değiştir” (ADR 0145 §6)",
       "setup": {
         "format": "kentos.document",

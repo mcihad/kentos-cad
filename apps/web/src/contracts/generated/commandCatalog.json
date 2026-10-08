@@ -3344,7 +3344,7 @@
             "type": "object"
           },
           "SurveySettings": {
-            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171). Angles are in radians,\nlengths in metres. An absent tolerance is not checked; the differences\nare still shown.",
+            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171); the a priori standard\ndeviations of a network adjustment (docs/adr/0203 §1). Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
             "properties": {
               "faceHz": {
                 "description": "The two faces' horizontal reading difference.",
@@ -3387,6 +3387,54 @@
               },
               "refraction": {
                 "description": "k, within [−1, 1]; absent: [`REFRACTION`].",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaCentering": {
+                "description": "Each end's centering, the instrument's and the target's, m (schema 28).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaDirection": {
+                "description": "A direction's a priori standard deviation, radians (docs/adr/0203 §1;\nschema 28); absent: [`SIGMA_DEFAULTS`]'s.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaDistance": {
+                "description": "A distance's constant part, m (schema 28).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaLevelling": {
+                "description": "Geometric levelling's per √km, m (schema 28).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaPpm": {
+                "description": "A distance's part per million of its length (schema 28).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaZenith": {
+                "description": "A zenith angle's, radians (schema 28).",
                 "format": "double",
                 "type": [
                   "number",
@@ -5993,7 +6041,7 @@
             "type": "string"
           },
           "SurveySettings": {
-            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171). Angles are in radians,\nlengths in metres. An absent tolerance is not checked; the differences\nare still shown.",
+            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171); the a priori standard\ndeviations of a network adjustment (docs/adr/0203 §1). Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
             "properties": {
               "faceHz": {
                 "description": "The two faces' horizontal reading difference.",
@@ -6036,6 +6084,54 @@
               },
               "refraction": {
                 "description": "k, within [−1, 1]; absent: [`REFRACTION`].",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaCentering": {
+                "description": "Each end's centering, the instrument's and the target's, m (schema 28).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaDirection": {
+                "description": "A direction's a priori standard deviation, radians (docs/adr/0203 §1;\nschema 28); absent: [`SIGMA_DEFAULTS`]'s.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaDistance": {
+                "description": "A distance's constant part, m (schema 28).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaLevelling": {
+                "description": "Geometric levelling's per √km, m (schema 28).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaPpm": {
+                "description": "A distance's part per million of its length (schema 28).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaZenith": {
+                "description": "A zenith angle's, radians (schema 28).",
                 "format": "double",
                 "type": [
                   "number",
@@ -9816,7 +9912,7 @@
             "type": "object"
           },
           "SurveySettings": {
-            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171). Angles are in radians,\nlengths in metres. An absent tolerance is not checked; the differences\nare still shown.",
+            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171); the a priori standard\ndeviations of a network adjustment (docs/adr/0203 §1). Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
             "properties": {
               "faceHz": {
                 "description": "The two faces' horizontal reading difference.",
@@ -9859,6 +9955,54 @@
               },
               "refraction": {
                 "description": "k, within [−1, 1]; absent: [`REFRACTION`].",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaCentering": {
+                "description": "Each end's centering, the instrument's and the target's, m (schema 28).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaDirection": {
+                "description": "A direction's a priori standard deviation, radians (docs/adr/0203 §1;\nschema 28); absent: [`SIGMA_DEFAULTS`]'s.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaDistance": {
+                "description": "A distance's constant part, m (schema 28).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaLevelling": {
+                "description": "Geometric levelling's per √km, m (schema 28).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaPpm": {
+                "description": "A distance's part per million of its length (schema 28).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sigmaZenith": {
+                "description": "A zenith angle's, radians (schema 28).",
                 "format": "double",
                 "type": [
                   "number",
@@ -36432,6 +36576,16 @@
                 "const": "topologyFix",
                 "description": "Topoloji düzelt (docs/adr/0202 §4): a topology finding fixed, its objects updated in place or deleted.",
                 "type": "string"
+              },
+              {
+                "const": "networkAdjust",
+                "description": "Yatay ağ dengelemesi (docs/adr/0203 §8): points moved to their adjusted places, vertices on them with them.",
+                "type": "string"
+              },
+              {
+                "const": "levelAdjust",
+                "description": "Kot ağı dengelemesi (docs/adr/0203 §8): points given their adjusted heights, vertices on them too.",
+                "type": "string"
               }
             ]
           },
@@ -43927,6 +44081,11 @@
               {
                 "const": "planRoad",
                 "description": "Plan yolu (docs/adr/0198 §2): a road's areas from its axis, and the axis.",
+                "type": "string"
+              },
+              {
+                "const": "networkAdjust",
+                "description": "Yatay ağ dengelemesi (docs/adr/0203 §8): the network's new points the drawing has not.",
                 "type": "string"
               }
             ]

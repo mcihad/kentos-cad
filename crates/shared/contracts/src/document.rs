@@ -200,9 +200,10 @@ pub const REFRACTION: f64 = 0.13;
 /// refraction coefficient k of trigonometric heights, and the greatest
 /// differences a field book's two faces are checked against; the mean
 /// ellipsoidal height of the ground values and whether the survey windows
-/// reduce lengths to the grid (docs/adr/0171). Angles are in radians,
-/// lengths in metres. An absent tolerance is not checked; the differences
-/// are still shown.
+/// reduce lengths to the grid (docs/adr/0171); the a priori standard
+/// deviations of a network adjustment (docs/adr/0203 §1). Angles are in
+/// radians, lengths in metres. An absent tolerance is not checked; the
+/// differences are still shown.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -251,7 +252,58 @@ pub struct SurveySettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub reduce_to_grid: Option<bool>,
+    /// A direction's a priori standard deviation, radians (docs/adr/0203 §1;
+    /// schema 28); absent: [`SIGMA_DEFAULTS`]'s.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sigma_direction: Option<f64>,
+    /// A distance's constant part, m (schema 28).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sigma_distance: Option<f64>,
+    /// A distance's part per million of its length (schema 28).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sigma_ppm: Option<f64>,
+    /// Each end's centering, the instrument's and the target's, m (schema 28).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sigma_centering: Option<f64>,
+    /// A zenith angle's, radians (schema 28).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sigma_zenith: Option<f64>,
+    /// Geometric levelling's per √km, m (schema 28).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sigma_levelling: Option<f64>,
 }
+
+/// The a priori standard deviations of a network's observations
+/// (docs/adr/0203 §1): a direction's and a zenith angle's (radians), a
+/// distance's constant part (m) and its part per million, each end's
+/// centering (m), geometric levelling's per √km (m).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SurveySigmas {
+    pub direction: f64,
+    pub distance: f64,
+    pub ppm: f64,
+    pub centering: f64,
+    pub zenith: f64,
+    pub levelling: f64,
+}
+
+/// The a priori standard deviations a project names none of (docs/adr/0203
+/// §1): a 3″ total station's (10 cc, 2 mm + 2 ppm, 1 mm centering) and
+/// engineering levelling's (2 mm/√km). The owner gives a project's own.
+pub const SIGMA_DEFAULTS: SurveySigmas = SurveySigmas {
+    direction: std::f64::consts::PI / 200_000.0,
+    distance: 0.002,
+    ppm: 2.0,
+    centering: 0.001,
+    zenith: std::f64::consts::PI / 200_000.0,
+    levelling: 0.002,
+};
 
 /// The lowest and the highest mean ellipsoidal height a project may name (m;
 /// docs/adr/0171 §2): below the Dead Sea's shore, above the highest summit.
@@ -295,6 +347,41 @@ impl SurveySettings {
         self.reduce_to_grid == Some(true) && self.ground_height.is_some()
     }
 
+    /// Whether `s` is a standard deviation: finite and above zero (a
+    /// direction's, a distance's constant part, a zenith angle's, levelling's).
+    pub fn sigma_holds(s: f64) -> bool {
+        s.is_finite() && s > 0.0
+    }
+
+    /// Whether `s` is a part that may be nothing: finite and not below zero
+    /// (the parts per million, the centering).
+    pub fn sigma_part_holds(s: f64) -> bool {
+        s.is_finite() && s >= 0.0
+    }
+
+    /// Whether the settings name an a priori standard deviation (schema 28's fields).
+    pub fn has_sigmas(&self) -> bool {
+        self.sigma_direction.is_some()
+            || self.sigma_distance.is_some()
+            || self.sigma_ppm.is_some()
+            || self.sigma_centering.is_some()
+            || self.sigma_zenith.is_some()
+            || self.sigma_levelling.is_some()
+    }
+
+    /// The a priori standard deviations: the project's, else [`SIGMA_DEFAULTS`]'.
+    pub fn sigmas(&self) -> SurveySigmas {
+        let d = SIGMA_DEFAULTS;
+        SurveySigmas {
+            direction: self.sigma_direction.unwrap_or(d.direction),
+            distance: self.sigma_distance.unwrap_or(d.distance),
+            ppm: self.sigma_ppm.unwrap_or(d.ppm),
+            centering: self.sigma_centering.unwrap_or(d.centering),
+            zenith: self.sigma_zenith.unwrap_or(d.zenith),
+            levelling: self.sigma_levelling.unwrap_or(d.levelling),
+        }
+    }
+
     /// What is wrong with the settings as a file holds them: none of them,
     /// k out of [−1, 1], a ground height out of [`GROUND_HEIGHTS`], the
     /// reduction to the grid without a height, a tolerance not above zero;
@@ -327,9 +414,31 @@ impl SurveySettings {
             ("poligonun açı kapanması", self.traverse_angle),
             ("poligonun koordinat kapanması", self.traverse_coord),
         ];
-        tolerances.into_iter().find_map(|(what, t)| {
+        if let Some(problem) = tolerances.into_iter().find_map(|(what, t)| {
             t.filter(|t| !Self::tolerance_holds(*t))
                 .map(|t| format!("{what} toleransı {t}; sıfırdan büyük olmalı"))
+        }) {
+            return Some(problem);
+        }
+        let sigmas = [
+            ("doğrultunun", self.sigma_direction),
+            ("kenarın sabit payının", self.sigma_distance),
+            ("başucu açısının", self.sigma_zenith),
+            ("nivelmanın", self.sigma_levelling),
+        ];
+        if let Some(problem) = sigmas.into_iter().find_map(|(what, s)| {
+            s.filter(|s| !Self::sigma_holds(*s))
+                .map(|s| format!("{what} önsel doğruluğu {s}; sıfırdan büyük olmalı"))
+        }) {
+            return Some(problem);
+        }
+        let parts = [
+            ("kenarın ppm payı", self.sigma_ppm),
+            ("merkezleme doğruluğu", self.sigma_centering),
+        ];
+        parts.into_iter().find_map(|(what, s)| {
+            s.filter(|s| !Self::sigma_part_holds(*s))
+                .map(|s| format!("{what} {s}; sıfırdan küçük olamaz"))
         })
     }
 
@@ -350,6 +459,12 @@ impl SurveySettings {
             traverse_coord: self.traverse_coord.filter(|t| Self::tolerance_holds(*t)),
             ground_height: self.ground_height.filter(|h| Self::ground_height_holds(*h)),
             reduce_to_grid: None,
+            sigma_direction: self.sigma_direction.filter(|s| Self::sigma_holds(*s)),
+            sigma_distance: self.sigma_distance.filter(|s| Self::sigma_holds(*s)),
+            sigma_ppm: self.sigma_ppm.filter(|s| Self::sigma_part_holds(*s)),
+            sigma_centering: self.sigma_centering.filter(|s| Self::sigma_part_holds(*s)),
+            sigma_zenith: self.sigma_zenith.filter(|s| Self::sigma_holds(*s)),
+            sigma_levelling: self.sigma_levelling.filter(|s| Self::sigma_holds(*s)),
         };
         // Reduced to the grid only when asked for and with a height to do it with.
         let kept = Self {
@@ -380,6 +495,14 @@ impl ProjectSettings {
     /// (docs/adr/0171 §2); none when it names none.
     pub fn ground_height(&self) -> Option<f64> {
         self.survey.as_ref().and_then(|s| s.ground_height)
+    }
+
+    /// The a priori standard deviations of a network's observations: the
+    /// project's, else the defaults (docs/adr/0203 §1).
+    pub fn sigmas(&self) -> SurveySigmas {
+        self.survey
+            .as_ref()
+            .map_or(SIGMA_DEFAULTS, SurveySettings::sigmas)
     }
 
     /// Whether the survey windows take lengths between the ground and the

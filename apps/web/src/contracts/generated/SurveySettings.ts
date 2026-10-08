@@ -5,9 +5,10 @@
  * refraction coefficient k of trigonometric heights, and the greatest
  * differences a field book's two faces are checked against; the mean
  * ellipsoidal height of the ground values and whether the survey windows
- * reduce lengths to the grid (docs/adr/0171). Angles are in radians,
- * lengths in metres. An absent tolerance is not checked; the differences
- * are still shown.
+ * reduce lengths to the grid (docs/adr/0171); the a priori standard
+ * deviations of a network adjustment (docs/adr/0203 §1). Angles are in
+ * radians, lengths in metres. An absent tolerance is not checked; the
+ * differences are still shown.
  */
 export type SurveySettings = { 
 /**
@@ -51,4 +52,29 @@ groundHeight?: number,
  * grid, Aplikasyon gives grid lengths on the ground (docs/adr/0171 §4;
  * schema 16): only with a ground height; absent, off.
  */
-reduceToGrid?: boolean, };
+reduceToGrid?: boolean, 
+/**
+ * A direction's a priori standard deviation, radians (docs/adr/0203 §1;
+ * schema 28); absent: [`SIGMA_DEFAULTS`]'s.
+ */
+sigmaDirection?: number, 
+/**
+ * A distance's constant part, m (schema 28).
+ */
+sigmaDistance?: number, 
+/**
+ * A distance's part per million of its length (schema 28).
+ */
+sigmaPpm?: number, 
+/**
+ * Each end's centering, the instrument's and the target's, m (schema 28).
+ */
+sigmaCentering?: number, 
+/**
+ * A zenith angle's, radians (schema 28).
+ */
+sigmaZenith?: number, 
+/**
+ * Geometric levelling's per √km, m (schema 28).
+ */
+sigmaLevelling?: number, };
