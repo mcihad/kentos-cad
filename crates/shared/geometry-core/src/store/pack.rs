@@ -19,11 +19,11 @@
 //! | 7 xline, 8 ray | p.x, p.y, dir.x, dir.y |
 //! | 9 spline | points, closed |
 //! | 10 text | p.x, p.y, height, rotation, text, align, widthFactor, mask, boxWidth, lineSpacing, runs, textStyle?, font, bold, italic, oblique |
-//! | 11 dimension | a.x, a.y, b.x, b.y, offset, height, text?, style?, hasAngle, angle, hasC, c.x, c.y, mask, za, zb, dimStyle?, arrow, arrowSize, extOffset, extBeyond, textGap, centre, decimals, unit?, prefix?, suffix?, font |
+//! | 11 dimension | a.x, a.y, b.x, b.y, offset, height, text?, style?, hasAngle, angle, hasC, c.x, c.y, mask, za, zb, dimStyle?, arrow, arrowSize, extOffset, extBeyond, textGap, centre, decimals, unit?, prefix?, suffix?, font, dimLineColor?, dimLineWeight, dimLineType?, extColor?, extWeight, extLineType?, textColor? |
 //! | 12 hatch | points, hatch holes, pattern type, angle, spacing, name?, scale, families, gradient, assoc |
 //! | 13 multi-part polygon | path, holes, part count, then per part: path, holes |
 //! | 14 insert | p.x, p.y, scale, rotation, mirror, block, attributes |
-//! | 15 leader | points, height, rotation, text?, arrow?, mask |
+//! | 15 leader | points, height, rotation, text?, arrow?, mask, arrowSize |
 //! | 16 multi-part polyline | path, holes, part count, then per part: path, holes |
 //! | 17 multi-point object | x, y, hasZ, z, point count, then per point: x, y, hasZ, z |
 //! | 19 image | p.x, p.y, width, height, rotation, mirror, asset?, file?, clip (count, −1 none, then x, y each), opacity (NaN none) |
@@ -47,7 +47,9 @@
 //! the style ids, a value's unit, prefix and suffix as strings (−1 none), a typeface's place
 //! in the core's tables (−1: the project's), bold, italic and centre as flags, the slant, the
 //! sizes and the decimals NaN when absent, an arrowhead's place in `Arrow::ALL` (−1: the
-//! tick): all cross, so a moved, copied or pasted object keeps them. A multi-part area (docs/adr/0143) is kind
+//! tick): all cross, so a moved, copied or pasted object keeps them. A dimension's lines
+//! (docs/adr/0205 §6): colours and line types as strings (−1 none), weights NaN when absent;
+//! a leader's arrowhead size NaN when absent. A multi-part area (docs/adr/0143) is kind
 //! 13, its first part as a polygon's fields and its other parts after them;
 //! a one-part area stays kind 3, laid out as it always was. A multi-part
 //! polyline (16) and a multi-point object (17) likewise (docs/adr/0174). A text's curve
@@ -66,7 +68,7 @@ use crate::api::json::Json;
 use crate::entity::{Attrs, CellRange, HatchAssoc, HatchPattern, Part, PointPart, Shape};
 use crate::geom::affine::Affine;
 use crate::geom::arrangement::Ring;
-use crate::geom::dimension::{Arrow, Look};
+use crate::geom::dimension::{Arrow, Look, LookLines};
 use crate::geom::hatch_pattern::{Gradient, PatternLine};
 use crate::ops::transform::transform_shape;
 use crate::text::face::Face;
@@ -456,6 +458,13 @@ impl Reader<'_> {
                 };
                 let (unit, prefix, suffix) = (self.string()?, self.string()?, self.string()?);
                 let font = self.font()?;
+                let dim_line_color = self.string()?;
+                let dim_line_weight = self.num()?;
+                let dim_line_type = self.string()?;
+                let ext_color = self.string()?;
+                let ext_weight = self.num()?;
+                let ext_line_type = self.string()?;
+                let text_color = self.string()?;
                 Shape::Dimension {
                     a,
                     b,
@@ -481,6 +490,16 @@ impl Reader<'_> {
                         prefix,
                         suffix,
                         font,
+                        lines: LookLines {
+                            dim_line_color,
+                            dim_line_weight: (!dim_line_weight.is_nan()).then_some(dim_line_weight),
+                            dim_line_type,
+                            ext_color,
+                            ext_weight: (!ext_weight.is_nan()).then_some(ext_weight),
+                            ext_line_type,
+                            text_color,
+                        }
+                        .boxed(),
                     },
                 }
             }
@@ -549,14 +568,24 @@ impl Reader<'_> {
                     assoc,
                 }
             }
-            15 => Shape::Leader {
-                pts: self.points()?,
-                height: self.num()?,
-                rotation: self.num()?,
-                text: self.string()?,
-                arrow: self.string()?,
-                mask: self.flag()?.then_some(true),
-            },
+            15 => {
+                let pts = self.points()?;
+                let height = self.num()?;
+                let rotation = self.num()?;
+                let text = self.string()?;
+                let arrow = self.string()?;
+                let mask = self.flag()?.then_some(true);
+                let size = self.num()?;
+                Shape::Leader {
+                    pts,
+                    height,
+                    rotation,
+                    text,
+                    arrow,
+                    arrow_size: (!size.is_nan()).then_some(size),
+                    mask,
+                }
+            }
             // docs/adr/0204: the affine, the size, bands and samples, the source, the system, the
             // look (its JSON text) and the opacity (NaN none).
             20 => {
@@ -957,6 +986,12 @@ impl Packer {
                 let unit = self.maybe_string(look.unit.as_deref());
                 let prefix = self.maybe_string(look.prefix.as_deref());
                 let suffix = self.maybe_string(look.suffix.as_deref());
+                let lines = look.lines.as_deref().unwrap_or(&LookLines::NONE);
+                let line_color = self.maybe_string(lines.dim_line_color.as_deref());
+                let line_type = self.maybe_string(lines.dim_line_type.as_deref());
+                let ext_color = self.maybe_string(lines.ext_color.as_deref());
+                let ext_type = self.maybe_string(lines.ext_line_type.as_deref());
+                let text_color = self.maybe_string(lines.text_color.as_deref());
                 let at = c.unwrap_or(NONE);
                 self.put(&[
                     11.0,
@@ -990,6 +1025,13 @@ impl Packer {
                     prefix,
                     suffix,
                     font_place(look.font),
+                    line_color,
+                    lines.dim_line_weight.unwrap_or(f64::NAN),
+                    line_type,
+                    ext_color,
+                    lines.ext_weight.unwrap_or(f64::NAN),
+                    ext_type,
+                    text_color,
                 ]);
             }
             Shape::Hatch {
@@ -1078,13 +1120,21 @@ impl Packer {
                 height,
                 rotation,
                 arrow,
+                arrow_size,
                 mask,
             } => {
                 self.put(&[15.0]);
                 self.points(pts);
                 let t = self.maybe_string(text.as_deref());
                 let a = self.maybe_string(arrow.as_deref());
-                self.put(&[*height, *rotation, t, a, flag(*mask == Some(true))]);
+                self.put(&[
+                    *height,
+                    *rotation,
+                    t,
+                    a,
+                    flag(*mask == Some(true)),
+                    arrow_size.unwrap_or(f64::NAN),
+                ]);
             }
             // docs/adr/0204, as the reader's kind 20 says.
             Shape::Raster {
@@ -1397,6 +1447,14 @@ mod tests {
             f64::NAN,
             -1.0,
             -1.0,
+            -1.0,
+            -1.0,
+            // No lines (docs/adr/0205 §6): colours and types −1, weights NaN.
+            -1.0,
+            f64::NAN,
+            -1.0,
+            -1.0,
+            f64::NAN,
             -1.0,
             -1.0,
             // A hatch with one hole.

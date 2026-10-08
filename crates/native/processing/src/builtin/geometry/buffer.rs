@@ -58,6 +58,7 @@ pub fn tool() -> Tool {
                     max: None,
                     integer: false,
                     unit: "m".into(),
+                    placeholder: None,
                 },
             )
             .default_value(json!(5))
@@ -83,6 +84,7 @@ pub fn tool() -> Tool {
                     max: Some(20.0),
                     integer: true,
                     unit: String::new(),
+                    placeholder: None,
                 },
             )
             .default_value(json!(1))

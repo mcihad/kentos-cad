@@ -7,7 +7,9 @@ import { BUILTIN_MODELS } from '../../processing/builtin/models';
 import { ProcessingRegistry } from '../../processing/registry';
 import { LINE_TYPE_LABEL } from '../../model/layers';
 import { TOOL_CATALOG } from '../../tools/catalog';
-import { DRAW_COLORS, LINE_WEIGHTS, PLOT_SCALES, weightText } from './fields';
+import { DRAW_COLORS, LINE_WEIGHTS, weightText } from './fields';
+import { scaleText } from '../../app/annotationScale';
+import { projectScales } from '../../model/newProjectWizard';
 import { assignKeyTips, firstLevelTips, keyTipStep, lettersOf } from './keytips';
 import { commandMenu, QUICK_ACCESS_OFFERS, quickAccessMenu, RIBBON_TEXTS, ribbonMenu, splitFace, splitMenu, withQuickAccess } from './ribbonPlan';
 
@@ -41,7 +43,7 @@ const F = JSON.parse(Object.values(files)[0]) as {
   ribbonMenu: unknown;
   splitMenus: { entries: SplitEntry[]; menu: unknown }[];
   splitFaces: { entry: SplitEntry; face: unknown }[];
-  fields: { byLayer: string; colors: unknown; lineTypes: unknown; weights: { mm: number; text: string }[]; scales: { denominator: number; text: string }[] };
+  fields: { byLayer: string; colors: unknown; lineTypes: unknown; weights: { mm: number; text: string }[]; scales: { cad: boolean; current: number; offered: { denominator: number; text: string }[] }[] };
   menuRows: { id: string; checked: boolean | null; expect: { icon: boolean; checked: boolean | null; radio: boolean } }[];
 };
 
@@ -102,7 +104,9 @@ describe('the ribbon (fixtures/shell/v1/ribbon.json)', () => {
     expect(plain(DRAW_COLORS)).toEqual(F.fields.colors);
     expect(LINE_TYPE_LABEL).toEqual(F.fields.lineTypes);
     expect(LINE_WEIGHTS.map((mm) => ({ mm, text: weightText(mm) }))).toEqual(F.fields.weights);
-    expect(PLOT_SCALES.map((denominator) => ({ denominator, text: `1:${denominator}` }))).toEqual(F.fields.scales);
+    // Ölçek: the project's type's scales with the current one (docs/adr/0205 §4).
+    for (const c of F.fields.scales)
+      expect(projectScales(c.cad, c.current).map((denominator) => ({ denominator, text: scaleText(denominator) })), JSON.stringify([c.cad, c.current])).toEqual(c.offered);
   });
 
   it('draws a command’s row in a menu: a check for a toggle, a radio for a choice, a tool as an action', () => {

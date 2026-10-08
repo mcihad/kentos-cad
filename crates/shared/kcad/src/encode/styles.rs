@@ -105,6 +105,32 @@ impl<'d> Encoder<'d> {
             if let Some(font) = s.font {
                 f.push(("font", Val::Name(font.id())));
             }
+            // Its lines (docs/adr/0205 §6).
+            for (key, c) in [
+                ("dimLineColor", &s.dim_line_color),
+                ("extColor", &s.ext_color),
+                ("textColor", &s.text_color),
+            ] {
+                if let Some(c) = c {
+                    f.push((key, Val::Text(c)));
+                }
+            }
+            for (key, w) in [
+                ("dimLineWeight", s.dim_line_weight),
+                ("extWeight", s.ext_weight),
+            ] {
+                if let Some(w) = w {
+                    f.push((key, Val::Float(w)));
+                }
+            }
+            for (key, t) in [
+                ("dimLineType", s.dim_line_type),
+                ("extLineType", s.ext_line_type),
+            ] {
+                if let Some(t) = t {
+                    f.push((key, Val::Name(super::names::line_type(t))));
+                }
+            }
             self.at(Seg::Index(i), |e| e.style_map(f))?;
         }
         self.close();

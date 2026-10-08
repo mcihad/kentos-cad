@@ -154,7 +154,11 @@ impl Runner {
                 "{what}: {} s içinde olmadı. Son iletiler: {:?}; kataloğun satırı: {:?}",
                 limit.as_secs(),
                 said(&self.app).iter().rev().take(6).collect::<Vec<_>>(),
-                self.app.cloud.catalog.as_ref().and_then(|c| c.status.clone())
+                self.app
+                    .cloud
+                    .catalog
+                    .as_ref()
+                    .and_then(|c| c.status.clone())
             );
             if let Ok(message) = self.rx.recv_timeout(Duration::from_millis(20)) {
                 self.send(message);
@@ -513,7 +517,14 @@ fn cloud_live() {
     );
     web(
         &server,
-        &["rename-block", "mehmet", &tenant, &project, &block, "Rögar (web)"],
+        &[
+            "rename-block",
+            "mehmet",
+            &tenant,
+            &project,
+            &block,
+            "Rögar (web)",
+        ],
     );
     r.until("web'in blok adı", Duration::from_secs(15), |a| {
         block_name(a, &block).as_deref() == Some("Rögar (web)")
@@ -524,7 +535,14 @@ fn cloud_live() {
     rename_block(&mut r, &block, "Rögar (masaüstü)");
     web(
         &server,
-        &["rename-block", "mehmet", &tenant, &project, &block, "Rögar (web 2)"],
+        &[
+            "rename-block",
+            "mehmet",
+            &tenant,
+            &project,
+            &block,
+            "Rögar (web 2)",
+        ],
     );
     r.until("blok çakışması", Duration::from_secs(20), |a| {
         a.cloud
@@ -772,7 +790,10 @@ fn share_live(r: &mut Runner, mehmet: &str, stamp: &str) {
             .is_some_and(|s| s.access.is_some() && matches!(s.invitations, Listed::Ready(_)))
     });
     assert!(
-        r.app.share_rows().iter().any(|p| p.user_id == mehmet && p.can_change),
+        r.app
+            .share_rows()
+            .iter()
+            .any(|p| p.user_id == mehmet && p.can_change),
         "mehmet's grant, from the run's start"
     );
     r.shot("30-paylas");
@@ -798,12 +819,16 @@ fn share_live(r: &mut Runner, mehmet: &str, stamp: &str) {
             .and_then(|s| s.found.as_ref())
             .and_then(|(_, f)| f.iter().position(|c| c.user_id == mehmet))
     };
-    r.until("kişi arama", Duration::from_secs(15), |a| found(a).is_some());
+    r.until("kişi arama", Duration::from_secs(15), |a| {
+        found(a).is_some()
+    });
     let field = iced::widget::Id::new(FIND_FIELD);
     r.snapshot
         .operate(r.app.view(), Box::new(focusable::focus(field.clone())));
-    r.snapshot
-        .operate(r.app.view(), Box::new(text_input::move_cursor_to_end(field)));
+    r.snapshot.operate(
+        r.app.view(),
+        Box::new(text_input::move_cursor_to_end(field)),
+    );
     r.shot("32-paylas-bul");
     let index = found(&r.app).expect("found");
     r.cloud(Event::Share(Share::Pick(index)));
@@ -814,7 +839,10 @@ fn share_live(r: &mut Runner, mehmet: &str, stamp: &str) {
     // An invitation: its link once, never in the log; then withdrawn.
     let address = format!(
         "canli-{}@ornek.example",
-        stamp.chars().filter(char::is_ascii_digit).collect::<String>()
+        stamp
+            .chars()
+            .filter(char::is_ascii_digit)
+            .collect::<String>()
     );
     r.cloud(Event::Share(Share::Tab(Tab::Invites)));
     r.cloud(Event::Share(Share::Email(address.clone())));

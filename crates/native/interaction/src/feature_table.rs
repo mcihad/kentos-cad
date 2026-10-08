@@ -10,9 +10,7 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use kentos_contracts::{
-    Entity, LayerField, LayerFieldKind, check_value, display_value, js_trim,
-};
+use kentos_contracts::{Entity, LayerField, LayerFieldKind, check_value, display_value, js_trim};
 use kentos_geometry_core::ops::feature_table::{Cell, Column, Row};
 use kentos_geometry_core::ops::point_editor::natural_order;
 
@@ -104,16 +102,12 @@ pub fn feature_columns(fields: &[LayerField], entities: &[&Entity]) -> Vec<Featu
         field: Some(f.clone()),
         order: order_of(f),
     }));
-    columns.extend(
-        natural_order(&others)
-            .into_iter()
-            .map(|i| FeatureColumn {
-                key: Some(others[i as usize].clone()),
-                label: others[i as usize].clone(),
-                field: None,
-                order: "text",
-            }),
-    );
+    columns.extend(natural_order(&others).into_iter().map(|i| FeatureColumn {
+        key: Some(others[i as usize].clone()),
+        label: others[i as usize].clone(),
+        field: None,
+        order: "text",
+    }));
     columns
 }
 
@@ -165,7 +159,10 @@ pub fn feature_table_of(
                         }
                         None => Cell {
                             shown: raw.unwrap_or_default().to_owned(),
-                            key: raw.map(js_trim).filter(|v| !v.is_empty()).map(str::to_owned),
+                            key: raw
+                                .map(js_trim)
+                                .filter(|v| !v.is_empty())
+                                .map(str::to_owned),
                         },
                     }
                 })
@@ -245,10 +242,21 @@ mod tests {
         let headers: Vec<&str> = t.columns.iter().map(|c| c.label.as_str()).collect();
         assert_eq!(
             headers,
-            ["Tür", "Kullanım", "Kat sayısı", "Tarih", "Ada", "Not 2", "not 10"]
+            [
+                "Tür",
+                "Kullanım",
+                "Kat sayısı",
+                "Tarih",
+                "Ada",
+                "Not 2",
+                "not 10"
+            ]
         );
         let orders: Vec<&str> = t.columns.iter().map(|c| c.order).collect();
-        assert_eq!(orders, ["text", "text", "number", "date", "text", "text", "text"]);
+        assert_eq!(
+            orders,
+            ["text", "text", "number", "date", "text", "text", "text"]
+        );
         let shown = |r: usize| -> Vec<(String, Option<String>)> {
             t.rows[r]
                 .cells

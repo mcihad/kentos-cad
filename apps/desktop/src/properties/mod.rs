@@ -23,6 +23,7 @@
 
 pub(crate) mod rows;
 
+pub(crate) use crate::annotation_styles::Part;
 pub(crate) use rows::layer_path;
 #[cfg(test)]
 mod tests;
@@ -88,6 +89,13 @@ pub enum Event {
     /// angle, 0 for Y and 90 for X (docs/adr/0147 §7).
     DimensionMask(Vec<Slot>, bool),
     DimensionAxis(Vec<Slot>, f64),
+    /// A dimension's line's colour (`#RRGGBB`; none: the object's), weight
+    /// on paper (mm; none: a hairline) and type (none: continuous): the
+    /// dimension line's and its arrowheads', the extension lines', the
+    /// value's colour (docs/adr/0205 §6).
+    DimensionLineColor(Vec<Slot>, Part, Option<String>),
+    DimensionLineWeight(Vec<Slot>, Part, Option<f64>),
+    DimensionLineType(Vec<Slot>, Part, Option<kentos_contracts::LineType>),
     /// Bağlı nesne ▾ of a linked text: Nesneyi seç selects its object,
     /// Bağı kopar breaks the texts' links (docs/adr/0175 §4).
     SelectObject(Slot),
@@ -148,6 +156,9 @@ pub enum Field {
     LeaderNote(Vec<Slot>),
     LeaderHeight(Vec<Slot>),
     LeaderTurn(Vec<Slot>),
+    /// Leaders' arrowhead size in the note's height, 0.1 to 10; 1 is no
+    /// field (docs/adr/0205 §7).
+    LeaderArrowSize(Vec<Slot>),
     /// Slopes' first and second elevation, metres (docs/adr/0147 §7).
     DimensionZa(Vec<Slot>),
     DimensionZb(Vec<Slot>),
@@ -499,7 +510,9 @@ impl App {
             },
             Event::TextAlign(slots, to) => properties::realign_texts(model, &slots, to),
             Event::TextMask(slots, on) => properties::set_text_mask(model, &slots, on),
-            Event::TextStyle(slots, id) => properties::apply_text_style(model, &slots, id.as_deref()),
+            Event::TextStyle(slots, id) => {
+                properties::apply_text_style(model, &slots, id.as_deref())
+            }
             Event::DimensionStyle(slots, id) => {
                 properties::apply_dimension_style(model, &slots, id.as_deref())
             }
@@ -521,6 +534,56 @@ impl App {
                         angle: Some(angle),
                         ..d.clone()
                     })
+                })
+            }
+            // The same colour whatever its case is left out.
+            Event::DimensionLineColor(slots, part, color) => {
+                properties::change_dimensions(model, &slots, |d| {
+                    let mut look = d.look.clone();
+                    let field = match part {
+                        Part::Line => &mut look.dim_line_color,
+                        Part::Ext => &mut look.ext_color,
+                        Part::Value => &mut look.text_color,
+                    };
+                    let same = match (field.as_deref(), color.as_deref()) {
+                        (Some(a), Some(b)) => a.eq_ignore_ascii_case(b),
+                        (a, b) => a == b,
+                    };
+                    if same {
+                        return None;
+                    }
+                    *field = color.clone();
+                    Some(DimensionEntity { look, ..d.clone() })
+                })
+            }
+            Event::DimensionLineWeight(slots, part, weight) => {
+                properties::change_dimensions(model, &slots, |d| {
+                    let mut look = d.look.clone();
+                    let field = match part {
+                        Part::Line => &mut look.dim_line_weight,
+                        Part::Ext => &mut look.ext_weight,
+                        Part::Value => return None,
+                    };
+                    if *field == weight {
+                        return None;
+                    }
+                    *field = weight;
+                    Some(DimensionEntity { look, ..d.clone() })
+                })
+            }
+            Event::DimensionLineType(slots, part, kind) => {
+                properties::change_dimensions(model, &slots, |d| {
+                    let mut look = d.look.clone();
+                    let field = match part {
+                        Part::Line => &mut look.dim_line_type,
+                        Part::Ext => &mut look.ext_line_type,
+                        Part::Value => return None,
+                    };
+                    if *field == kind {
+                        return None;
+                    }
+                    *field = kind;
+                    Some(DimensionEntity { look, ..d.clone() })
                 })
             }
             Event::Commit(field, text) => commit(model, &field, &text),
@@ -650,6 +713,19 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 })
             });
         }
+        Field::LeaderArrowSize(slots) => {
+            let n = web_number(text);
+            if !kentos_contracts::leader_arrow_holds(n) {
+                return Vec::new();
+            }
+            let size = (n != 1.0).then_some(n);
+            return properties::change_leaders(model, slots, |l| {
+                (l.arrow_size.unwrap_or(1.0) != n).then(|| LeaderEntity {
+                    arrow_size: size,
+                    ..l.clone()
+                })
+            });
+        }
         Field::LeaderTurn(slots) => {
             let n = web_number(text);
             if !n.is_finite() {
@@ -713,6 +789,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::LeaderNote(_)
         | Field::LeaderHeight(_)
         | Field::LeaderTurn(_)
+        | Field::LeaderArrowSize(_)
         | Field::DimensionZa(_)
         | Field::DimensionZb(_) => return Vec::new(),
     };

@@ -632,7 +632,11 @@ impl App {
                 let n = rows
                     .slots
                     .iter()
-                    .filter(|&&s| doc.model.get(s).is_some_and(|e| e.base().attrs.contains_key(&k)))
+                    .filter(|&&s| {
+                        doc.model
+                            .get(s)
+                            .is_some_and(|e| e.base().attrs.contains_key(&k))
+                    })
                     .count();
                 (k, n)
             })

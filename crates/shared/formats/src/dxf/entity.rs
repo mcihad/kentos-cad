@@ -610,9 +610,7 @@ pub fn parse(
             style: g.string(3),
             own_style: super::leaders::own_style(all),
         },
-        "MULTILEADER" | "MLEADER" => {
-            Kind::MLeader(Box::new(super::leaders::mleader(list, dec)?))
-        }
+        "MULTILEADER" | "MLEADER" => Kind::MLeader(Box::new(super::leaders::mleader(list, dec)?)),
         other => Kind::Unsupported(other.to_string()),
     };
     Ok(Parsed {

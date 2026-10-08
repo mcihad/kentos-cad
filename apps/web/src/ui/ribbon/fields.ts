@@ -1,4 +1,7 @@
 import type { AppContext } from '../../app/context';
+import { scaleText, setPlotScale } from '../../app/annotationScale';
+import { projectScales } from '../../model/newProjectWizard';
+import { openPlotScaleDialog } from '../settings/PlotScaleDialog';
 import type { DisposableStore } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { LINE_TYPE_LABEL, type LayerNode, type LineType } from '../../model/layers';
@@ -32,8 +35,10 @@ export const DRAW_COLORS: { name: string; value: string }[] = [
   { name: 'Gri', value: '#8C9AAA' },
 ];
 
+/** The colours a dimension's lines take (docs/adr/0205 §6): the drawing colours but ink, which is the object's own. */
+export const LINE_COLORS = DRAW_COLORS.filter((c) => c.value !== 'ink');
+
 export const LINE_WEIGHTS = [0.13, 0.18, 0.25, 0.35, 0.5, 0.7];
-export const PLOT_SCALES = [500, 1000, 2000, 5000, 25000];
 
 export interface FieldOptions {
   /** Width in CSS px at the standard type scale. */
@@ -180,6 +185,10 @@ export function weightField(ctx: AppContext, d: DisposableStore, opts: FieldOpti
   return dd.el;
 }
 
+/**
+ * Ölçek (docs/adr/0205 §4): the project's type's scales and the current one when it is none of them, then Ölçek yaz…;
+ * a choice sets the plot scale and the annotations at the old general height follow it in one step (`setPlotScale`).
+ */
 export function scaleField(ctx: AppContext, d: DisposableStore, opts: FieldOptions = {}): HTMLElement {
   const s = ctx.doc.settings.plotScale;
   const dd = new Dropdown({
@@ -187,9 +196,13 @@ export function scaleField(ctx: AppContext, d: DisposableStore, opts: FieldOptio
     glyph: FIELD_GLYPHS.scale,
     label: opts.label === false ? undefined : (opts.label ?? 'Ölçek'),
     width: opts.width ?? 128,
-    items: () => PLOT_SCALES.map((v): MenuItem => ({ label: `1:${v}`, radio: true, checked: s.value === v, run: () => s.set(v) })),
+    items: (): MenuItem[] => [
+      ...projectScales(ctx.doc.settings.workspace.value === 'cad', s.value).map((v): MenuItem => ({ label: scaleText(v), radio: true, checked: s.value === v, run: () => void setPlotScale(ctx, v) })),
+      { kind: 'separator' },
+      { label: 'Ölçek yaz…', run: () => openPlotScaleDialog(ctx) },
+    ],
   });
-  d.add(s.subscribe((v) => dd.set(h('span', { class: 'dropdown__text num' }, `1:${v}`)), true));
+  d.add(s.subscribe((v) => dd.set(h('span', { class: 'dropdown__text num' }, scaleText(v))), true));
   return dd.el;
 }
 

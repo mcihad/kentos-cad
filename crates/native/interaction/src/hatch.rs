@@ -403,7 +403,10 @@ impl Tool for Hatch {
                 );
         let prompt = options::with_region_options(prompt, &m, !m.hatch_by_lines);
         if m.hatch_by_lines {
-            let layer = self.boundary_name.clone().unwrap_or_else(|| "tümü".to_owned());
+            let layer = self
+                .boundary_name
+                .clone()
+                .unwrap_or_else(|| "tümü".to_owned());
             return prompt.option_with("Sınır katmanı", "K", layer);
         }
         prompt

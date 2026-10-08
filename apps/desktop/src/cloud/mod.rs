@@ -950,7 +950,8 @@ impl App {
             Some(Dialog::AnnotationStyles)
                 if self.annotation_styles.as_ref().is_some_and(|w| w.asking()) =>
             {
-                let _ = self.annotation_styles_event(crate::annotation_styles::Event::RemoveDropped);
+                let _ =
+                    self.annotation_styles_event(crate::annotation_styles::Event::RemoveDropped);
                 self.dialog = Some(Dialog::AnnotationStyles);
             }
             Some(Dialog::AnnotationStyles) => self.annotation_styles = None,

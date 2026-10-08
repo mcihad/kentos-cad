@@ -117,10 +117,16 @@ fn a_method_s_name_starts_its_tool_with_the_method() {
         ("KOORDINATOLCU", "koordinat ölçüsünün noktasını belirtin"),
         ("DAR", "yay uzunluğu ölçülecek yaya tıklayın"),
         ("YAYUZUNLUGU", "yay uzunluğu ölçülecek yaya tıklayın"),
-        ("DIMLIN", "doğrusal ölçünün (ΔY / ΔX) ilk noktasını belirtin"),
+        (
+            "DIMLIN",
+            "doğrusal ölçünün (ΔY / ΔX) ilk noktasını belirtin",
+        ),
         ("DIMRAD", "yarıçapı ölçülecek daireye ya da yaya tıklayın"),
         ("DAL", "hizalı ölçünün ilk noktasını belirtin"),
-        ("DJO", "kırıklı yarıçapı ölçülecek daireye ya da yaya tıklayın"),
+        (
+            "DJO",
+            "kırıklı yarıçapı ölçülecek daireye ya da yaya tıklayın",
+        ),
         ("semt", "semt ölçüsünün başlangıcını gösterin"),
         ("EGIM", "eğim ölçüsünün birinci noktasını gösterin"),
     ] {
@@ -129,7 +135,10 @@ fn a_method_s_name_starts_its_tool_with_the_method() {
         assert!(app.session.is_running(), "{name} starts a tool");
         assert_eq!(app.session.tool_id(), "dimension", "{name}");
         let prompt = app.session.prompt().text();
-        assert!(prompt.starts_with(&format!("Ölçü: {step}")), "{name}: {prompt}");
+        assert!(
+            prompt.starts_with(&format!("Ölçü: {step}")),
+            "{name}: {prompt}"
+        );
     }
     // Every method's name answers to its method alone (one ribbon's splits).
     let methods = catalog()
@@ -143,5 +152,8 @@ fn a_method_s_name_starts_its_tool_with_the_method() {
         .flatten()
         .filter(|e| !e.aliases.is_empty())
         .count();
-    assert!(methods >= 10, "Ölçülendirme's ten methods have names: {methods}");
+    assert!(
+        methods >= 10,
+        "Ölçülendirme's ten methods have names: {methods}"
+    );
 }

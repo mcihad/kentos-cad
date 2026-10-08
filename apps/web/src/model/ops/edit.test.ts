@@ -164,7 +164,9 @@ describe('explodeEntity', () => {
     if (!('pieces' in r)) throw new Error('expected pieces');
     expect(r.pieces.map((p) => p.kind)).toEqual(['polyline', 'hatch', 'text']);
     const [line, head, note] = r.pieces;
-    expect(line.kind === 'polyline' && line.pts).toEqual([v(0, 0), v(6, 5), v(11, 5)]);
+    // The line leaves the filled triangle's back, the arrowhead's length (the height) from the tip (docs/adr/0205 §7).
+    const len = Math.hypot(6, 5);
+    expect(line.kind === 'polyline' && line.pts).toEqual([v((6 / len) * 2.5, (5 / len) * 2.5), v(6, 5), v(11, 5)]);
     expect(head.kind === 'hatch' && [head.pattern.type, head.ring.length, head.ring[0]]).toEqual(['solid', 3, v(0, 0)]);
     expect(note.kind === 'text' && [note.text, note.p, note.align, note.mask]).toEqual(['Mevcut bina', v(12.25, 5), 'middleLeft', true]);
     // An open arrowhead: its sides a path through the tip; no note, no text.

@@ -74,6 +74,8 @@ export interface DimensionLayout {
   handle: Vec2;
   /** A look's filled arrowheads and dots (docs/adr/0183 §3), each a ring; none for ticks and open arrows. */
   fills?: Vec2[][];
+  /** Which of `lines` are extension lines (docs/adr/0205 §6): they take the look's extension colour, weight and type. */
+  ext: number[];
 }
 
 export const DIMENSION_STYLE_LABEL: Record<DimensionStyle, string> = {

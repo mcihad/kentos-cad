@@ -33,8 +33,8 @@ use std::sync::Arc;
 use kentos_contracts::{BlockDefinition, Entity, LabelPlacement, LabelStyle, LayerNode, LayerSnap};
 use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length, entity_vertices};
-use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::geom::dimension::dimension_measure;
+use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::holes::HoleAt;
 use kentos_geometry_core::store::labels::{
     DIMENSION_PREFIXES, DIMENSION_UNITS, LABEL_ALONG, LABEL_BESIDE, LABEL_CELL, LABEL_CENTER,
@@ -42,6 +42,8 @@ use kentos_geometry_core::store::labels::{
     LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_LINE, LABEL_PIECE_TEXT, LABEL_STRIDE,
     LABEL_TEXT, LabelRule, Placement,
 };
+use kentos_geometry_core::store::legible::LABEL_SHOWN_STRIDE;
+pub use kentos_geometry_core::store::legible::LabelSize;
 use kentos_geometry_core::store::polygon::PolygonMode;
 use kentos_geometry_core::store::snap::{Extension, SnapExtras, SnapHit};
 use kentos_geometry_core::store::{LayerFlags, Store};
@@ -386,7 +388,43 @@ impl Spatial {
         self.store
             .labels(&view, scale, None)
             .chunks_exact(LABEL_STRIDE)
+            .filter_map(|r| self.spot(r))
+            .collect()
+    }
+
+    /// The labels as the view shows them under `size` (docs/adr/0205 §5):
+    /// each with how it grows (its factor, 1 as it is, and the point it grows
+    /// about); a grown text that would cover another is left out.
+    pub fn labels_shown(
+        &self,
+        min: Vec2,
+        max: Vec2,
+        scale: f64,
+        size: LabelSize,
+    ) -> Vec<(LabelSpot, Grow)> {
+        let view = Bounds {
+            min_x: min.x,
+            min_y: min.y,
+            max_x: max.x,
+            max_y: max.y,
+        };
+        self.store
+            .labels_shown(&view, scale, None, size)
+            .chunks_exact(LABEL_SHOWN_STRIDE)
             .filter_map(|r| {
+                let grow = Grow {
+                    k: r[LABEL_STRIDE],
+                    anchor: Vec2::new(r[LABEL_STRIDE + 1], r[LABEL_STRIDE + 2]),
+                };
+                self.spot(&r[..LABEL_STRIDE]).map(|spot| (spot, grow))
+            })
+            .collect()
+    }
+
+    /// One label record, typed.
+    fn spot(&self, r: &[f64]) -> Option<LabelSpot> {
+        {
+            {
                 let slot = slot(r[0])?;
                 let at = Vec2::new(r[2], r[3]);
                 let what = r[1];
@@ -396,7 +434,10 @@ impl Spatial {
                         at,
                         angle: r[4],
                         value: r[5],
-                        unit: DIMENSION_UNITS.get(r[6] as usize).copied().unwrap_or("length"),
+                        unit: DIMENSION_UNITS
+                            .get(r[6] as usize)
+                            .copied()
+                            .unwrap_or("length"),
                         prefix: DIMENSION_PREFIXES.get(r[7] as usize).copied().unwrap_or(""),
                         mask: r[8] == 1.0,
                     }
@@ -530,8 +571,8 @@ impl Spatial {
                 } else {
                     return None;
                 })
-            })
-            .collect()
+            }
+        }
     }
 
     /// Piece `place` of the insert `id`'s block, as its definition holds it.
@@ -557,6 +598,22 @@ impl Spatial {
     pub fn is_empty(&self) -> bool {
         self.store.is_empty()
     }
+}
+
+/// How a label grows in a view (docs/adr/0205 §5): `k` times its own size
+/// about `anchor` (world), 1 as it is.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Grow {
+    pub k: f64,
+    pub anchor: Vec2,
+}
+
+impl Grow {
+    /// As it is.
+    pub const NONE: Grow = Grow {
+        k: 1.0,
+        anchor: Vec2 { x: 0.0, y: 0.0 },
+    };
 }
 
 /// One thing a view draws as text (the store's label records, typed).

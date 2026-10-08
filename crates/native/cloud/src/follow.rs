@@ -113,7 +113,11 @@ pub fn fetch(
         } else {
             None
         };
-        let blocks = if named || records.iter().any(|r| matches!(r.entity, Entity::Insert(_))) {
+        let blocks = if named
+            || records
+                .iter()
+                .any(|r| matches!(r.entity, Entity::Insert(_)))
+        {
             Some(retrying(|| cloud.blocks(tenant, project)).await?.blocks)
         } else {
             None

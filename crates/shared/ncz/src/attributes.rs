@@ -199,16 +199,23 @@ fn parse_row(chunk: &[u8], table_ref: &str, row_index: usize) -> Row {
             ("coord_3_x", safe_round(r.f64(sep + 66))),
             ("coord_3_y", safe_round(r.f64(sep + 74))),
         ]);
-        return Row { row_index, columns: col };
+        return Row {
+            row_index,
+            columns: col,
+        };
     }
 
     if size >= 119 {
         let c = [17, 25, 45, 53, 87, 95, 103, 111].map(|at| safe_round(r.f64(at)));
-        let plausible =
-            looks_like_xy(&c[0], &c[1]) && looks_like_xy(&c[2], &c[3]) && looks_like_xy(&c[4], &c[5]);
+        let plausible = looks_like_xy(&c[0], &c[1])
+            && looks_like_xy(&c[2], &c[3])
+            && looks_like_xy(&c[4], &c[5]);
         if !plausible {
             col.push(("ascii_values", Cell::Text(ascii_values(chunk, table_ref))));
-            return Row { row_index, columns: col };
+            return Row {
+                row_index,
+                columns: col,
+            };
         }
         let [c0x, c0y, c1x, c1y, c2x, c2y, c3x, c3y] = c;
         col[0].1 = Cell::Text("segment".into());
@@ -228,11 +235,17 @@ fn parse_row(chunk: &[u8], table_ref: &str, row_index: usize) -> Row {
             ("coord_3_x", c3x),
             ("coord_3_y", c3y),
         ]);
-        return Row { row_index, columns: col };
+        return Row {
+            row_index,
+            columns: col,
+        };
     }
 
     col.push(("ascii_values", Cell::Text(ascii_values(chunk, table_ref))));
-    Row { row_index, columns: col }
+    Row {
+        row_index,
+        columns: col,
+    }
 }
 
 /// Every `@TABn` record, sorted by reference; empty when the file has none,
@@ -324,7 +337,10 @@ mod tests {
         data.extend_from_slice(b"\x06@TAB23 more");
         data.extend_from_slice(b"\x05@TAB1 again");
         let t = tables(&data, &mut Quiet, 0, 0).expect("read");
-        let refs: Vec<(&str, usize)> = t.iter().map(|t| (t.table_ref.as_str(), t.rows.len())).collect();
+        let refs: Vec<(&str, usize)> = t
+            .iter()
+            .map(|t| (t.table_ref.as_str(), t.rows.len()))
+            .collect();
         assert_eq!(refs, [("@TAB1", 2), ("@TAB23", 1)]);
     }
 }

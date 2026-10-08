@@ -2081,7 +2081,12 @@ mod tests {
         // A check with an icon too: its ✓ beside the icon, not over it (the snap kinds).
         let ticks = Menu::new().check(LONG, true, 1_u8).icon(Icon::Check);
         assert!(ticks.has_radio_icons());
-        assert!(!Menu::new().item(LONG, 1_u8).icon(Icon::Check).has_radio_icons());
+        assert!(
+            !Menu::new()
+                .item(LONG, 1_u8)
+                .icon(Icon::Check)
+                .has_radio_icons()
+        );
     }
 
     #[test]
@@ -2272,7 +2277,10 @@ mod tests {
                 }
             }
             let found = Arc::new(Mutex::new(None));
-            snapshot.operate(view(state), Box::new(Find(caption.to_owned(), found.clone())));
+            snapshot.operate(
+                view(state),
+                Box::new(Find(caption.to_owned(), found.clone())),
+            );
             let at = found.lock().ok().and_then(|f| *f);
             at.map(|r| r.center())
         }

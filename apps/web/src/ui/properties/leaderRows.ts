@@ -1,5 +1,5 @@
 import type { AppContext } from '../../app/context';
-import type { LeaderArrow, LeaderEntity } from '../../model/entities';
+import { leaderArrowHolds, type LeaderArrow, type LeaderEntity } from '../../model/entities';
 import { LEADER_ARROW_ROWS } from '../../tools/leaderTool';
 import type { MenuItem } from '../widgets/PopupMenu';
 import type { PropRow } from '../widgets/PropertyGrid';
@@ -7,10 +7,11 @@ import { setGeometries } from './write';
 import { fixed } from '../../core/displayNumber';
 
 /**
- * A leader's Not, Yükseklik, Dönüş, Ok and Zemin rows in Öznitelikler (docs/adr/0146 §7), for one leader or the
- * leaders of a selection: their common value, or “Çeşitli”. The leaders are written in one step “Değiştir”, those that
- * already have the value left out; an emptied note takes the note away (the arrow alone), a height not over 0 is not
- * taken. On a locked layer the rows only show. The desktop's `properties::leader_rows` are the same.
+ * A leader's Not, Yükseklik, Dönüş, Ok, Ok boyu and Zemin rows in Öznitelikler (docs/adr/0146 §7, 0205 §7), for one
+ * leader or the leaders of a selection: their common value, or “Çeşitli”. The leaders are written in one step
+ * “Değiştir”, those that already have the value left out; an emptied note takes the note away (the arrow alone), a
+ * height not over 0 is not taken, an arrowhead size outside 0.1 to 10 neither (1 is the field's absence). On a locked
+ * layer the rows only show. The desktop's `properties::leader_rows` are the same.
  */
 
 const MIXED = 'Çeşitli';
@@ -31,6 +32,7 @@ export function leaderRows(ctx: AppContext, leaders: readonly LeaderEntity[], lo
   const height = common(leaders, (l) => l.height);
   const rotation = common(leaders, (l) => l.rotation);
   const arrow = common(leaders, (l) => l.arrow ?? null);
+  const size = common(leaders, (l) => l.arrowSize ?? 1);
   const mask = common(leaders, (l) => l.mask === true);
   const maskText = (on: boolean) => (on ? 'Açık' : 'Kapalı');
   /** Each leader's patch, or none when it already has the value: one step for all. */
@@ -106,6 +108,13 @@ export function leaderRows(ctx: AppContext, leaders: readonly LeaderEntity[], lo
                 run: () => write((l) => ((l.arrow ?? null) === a ? null : { arrow: a ?? undefined })),
               })),
           },
+    },
+    {
+      label: 'Ok boyu',
+      value: size === MIXED ? MIXED : fixed(size, 2),
+      numeric: size !== MIXED,
+      unit: '× yükseklik',
+      editor: number((x) => leaderArrowHolds(x) && write((l) => ((l.arrowSize ?? 1) === x ? null : { arrowSize: x === 1 ? undefined : x }))),
     },
     {
       label: 'Zemin',

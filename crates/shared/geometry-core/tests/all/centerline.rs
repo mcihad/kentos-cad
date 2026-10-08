@@ -23,8 +23,11 @@ fn near(got: &Value, want: &Value, tol: f64, what: &str) {
 fn the_axis_between_two_sides() {
     for c in cases()["cases"].as_array().expect("cases") {
         let name = c["name"].as_str().expect("a name");
-        let out = run_named("centerline", &json!([c["a"], c["b"], c["step"]]).to_string())
-            .unwrap_or_else(|e| panic!("{name}: {e}"));
+        let out = run_named(
+            "centerline",
+            &json!([c["a"], c["b"], c["step"]]).to_string(),
+        )
+        .unwrap_or_else(|e| panic!("{name}: {e}"));
         let got: Value = serde_json::from_str(&out).expect("JSON");
         let want = &c["expect"];
         if let Some(problem) = want.get("problem") {

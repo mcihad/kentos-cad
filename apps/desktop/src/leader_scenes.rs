@@ -91,7 +91,9 @@ fn edit(app: &mut App) {
     run(app, "tool.cancel");
     click(app, [46.0, 25.0]);
     click(app, [46.0, 25.0]);
-    let _ = app.update(Message::TextField(FieldEvent::Input("Yıkılacak bina".into())));
+    let _ = app.update(Message::TextField(FieldEvent::Input(
+        "Yıkılacak bina".into(),
+    )));
 }
 
 pub(crate) fn scenes() -> Vec<Scene> {

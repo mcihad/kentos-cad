@@ -16,7 +16,7 @@ pub mod look;
 mod quick;
 
 pub use kinds::DimensionFault;
-pub use look::{Arrow, Look};
+pub use look::{Arrow, Look, LookLines};
 pub use quick::{QuickDimensions, quick_dimensions};
 
 const SQRT1_2: f64 = std::f64::consts::FRAC_1_SQRT_2;
@@ -66,9 +66,13 @@ pub struct DimensionLayout {
     /// The filled arrowheads and dots (docs/adr/0183 §3), each a ring; none
     /// for ticks, open arrowheads and none.
     pub fills: Option<Vec<Vec<Vec2>>>,
+    /// Which of `lines` are extension lines (docs/adr/0205 §6), in order:
+    /// they take the look's extension colour, weight and type, the others
+    /// the dimension line's.
+    pub ext: Vec<usize>,
 }
 
-crate::json_struct!(out DimensionLayout { lines, d1, d2, text_at => "textAt", rotation, value, unit, prefix, pick, handle, fills });
+crate::json_struct!(out DimensionLayout { lines, d1, d2, text_at => "textAt", rotation, value, unit, prefix, pick, handle, fills, ext });
 
 fn add(p: Vec2, v: Vec2, k: f64) -> Vec2 {
     Vec2::new(p.x + v.x * k, p.y + v.y * k)
@@ -161,13 +165,22 @@ fn fills_of(fills: Vec<Vec<Vec2>>) -> Option<Vec<Vec<Vec2>>> {
     (!fills.is_empty()).then_some(fills)
 }
 
-/// Extension line from a measured point towards (and a little past) the dimension line.
-fn extension(lines: &mut Vec<[Vec2; 2]>, from: Vec2, to: Vec2, gap: f64, ext: f64) {
+/// Extension line from a measured point towards (and a little past) the
+/// dimension line; its place in `lines` goes to `exts`.
+fn extension(
+    lines: &mut Vec<[Vec2; 2]>,
+    exts: &mut Vec<usize>,
+    from: Vec2,
+    to: Vec2,
+    gap: f64,
+    ext: f64,
+) {
     let l = js_hypot(to.x - from.x, to.y - from.y);
     if l <= gap {
         return;
     }
     let v = Vec2::new((to.x - from.x) / l, (to.y - from.y) / l);
+    exts.push(lines.len());
     lines.push([add(from, v, gap), add(to, v, ext)]);
 }
 
@@ -251,8 +264,9 @@ fn straight(d: &DimensionGeom, u: Vec2, offset: f64) -> Option<DimensionLayout> 
     let gap = look.ext_offset() * h;
     let mut lines = Vec::new();
     let mut fills = Vec::new();
-    extension(&mut lines, d.a, d1, gap, look.ext_beyond() * h);
-    extension(&mut lines, d.b, d2, gap, look.ext_beyond() * h);
+    let mut ext = Vec::new();
+    extension(&mut lines, &mut ext, d.a, d1, gap, look.ext_beyond() * h);
+    extension(&mut lines, &mut ext, d.b, d2, gap, look.ext_beyond() * h);
     lines.push([d1, d2]);
     let l = js_hypot(d2.x - d1.x, d2.y - d1.y);
     let along = Vec2::new((d2.x - d1.x) / l, (d2.y - d1.y) / l);
@@ -273,6 +287,7 @@ fn straight(d: &DimensionGeom, u: Vec2, offset: f64) -> Option<DimensionLayout> 
         pick: vec![Edge::Seg { a: d1, b: d2 }],
         handle: mid,
         fills: fills_of(fills),
+        ext,
     })
 }
 
@@ -295,11 +310,13 @@ fn angular(d: &DimensionGeom) -> Option<DimensionLayout> {
     let (h, look) = (d.height, &d.look);
     let mut lines = Vec::new();
     let mut fills = Vec::new();
+    let mut ext = Vec::new();
     let gap = look.ext_offset() * h;
     // Arms are extended to the arc when it lies beyond the measured points.
     for (p, t) in [(d.a, t0), (d.b, t0 + sweep)] {
         let rp = js_hypot(p.x - c.x, p.y - c.y);
         if r > rp + gap {
+            ext.push(lines.len());
             lines.push([at2(c, t, rp + gap), at2(c, t, r + look.ext_beyond() * h)]);
         }
     }
@@ -348,6 +365,7 @@ fn angular(d: &DimensionGeom) -> Option<DimensionLayout> {
         }],
         handle: mid,
         fills: fills_of(fills),
+        ext,
     })
 }
 
@@ -389,6 +407,7 @@ fn radial(d: &DimensionGeom, diameter: bool) -> Option<DimensionLayout> {
         pick: vec![Edge::Seg { a: start, b: end }],
         handle: end,
         fills: fills_of(fills),
+        ext: Vec::new(),
     })
 }
 
@@ -481,7 +500,9 @@ pub(crate) static OPS: &[Op] = &[
     op!("linearAngleFor", |a: Vec2, b: Vec2, p: Vec2| {
         linear_angle_for(a, b, p)
     }),
-    op!("ordinateAxisFor", |a: Vec2, p: Vec2| ordinate_axis_for(a, p)),
+    op!("ordinateAxisFor", |a: Vec2, p: Vec2| ordinate_axis_for(
+        a, p
+    )),
     op!("sectorArms", |c: Vec2, u1: Vec2, u2: Vec2, p: Vec2| {
         sector_arms(c, u1, u2, p)
     }),

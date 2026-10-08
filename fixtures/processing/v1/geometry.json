@@ -11,7 +11,8 @@
     "angleUnit": "grad",
     "plotScale": 1000,
     "drawingFont": "barlow",
-    "activeLayer": "cizim"
+    "activeLayer": "cizim",
+    "measureHeightMm": 2
    },
    "tools": {
     "geometry.buffer": {

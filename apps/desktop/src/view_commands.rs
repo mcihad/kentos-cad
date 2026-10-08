@@ -99,11 +99,10 @@ impl App {
 
     /// `server.check`: asks the KentOS server now (the web's `ServerStatus.check`).
     fn check_server(&mut self) -> Task<Message> {
-        let server = self
-            .cloud
-            .client
-            .as_ref()
-            .map_or_else(|| self.settings.text("cloud.server"), |c| c.server().to_owned());
+        let server = self.cloud.client.as_ref().map_or_else(
+            || self.settings.text("cloud.server"),
+            |c| c.server().to_owned(),
+        );
         match Cloud::new(&server) {
             Ok(client) => {
                 // The last answer stays while the new one is on its way (the cell keeps saying it).
@@ -243,7 +242,10 @@ mod tests {
         let mut app = app_with_drawing();
         // Properties as a tab beside Layers, the area wider.
         let slot = app.docks.slot(Panel::Layers).expect("docked");
-        let _ = app.update(Message::Dock(Event::Moved(Panel::Properties, Target::Tab(slot, 1))));
+        let _ = app.update(Message::Dock(Event::Moved(
+            Panel::Properties,
+            Target::Tab(slot, 1),
+        )));
         let _ = app.update(Message::Dock(Event::Resized(Side::Right, 400.0)));
         let before = app.docks.clone();
         run(&mut app, "view.rightPanel");
@@ -283,7 +285,11 @@ mod tests {
         // KentOS CAD hakkında names it as the web's `serverText`.
         assert_eq!(app.server_text(), "kentosd 0.1.0");
         app.server_checked(Ok(health(CONTRACTS_VERSION + 1)));
-        assert!(last_said(&app).starts_with("Sunucu uyumsuz."), "{}", last_said(&app));
+        assert!(
+            last_said(&app).starts_with("Sunucu uyumsuz."),
+            "{}",
+            last_said(&app)
+        );
         assert_eq!(app.server_text(), "kentosd 0.1.0, uyumsuz");
         app.server_checked(Err("Sunucuya ulaşılamadı.".into()));
         assert!(last_said(&app).ends_with("Çizim sunucusuz çalışmaya devam ediyor."));
@@ -354,7 +360,10 @@ fn screens() {
                             &mut app,
                             App::view,
                             &mut update,
-                            kentos_ui::snapshot::Input::Click(iced::Point::new(width - HELP_X, 19.0)),
+                            kentos_ui::snapshot::Input::Click(iced::Point::new(
+                                width - HELP_X,
+                                19.0,
+                            )),
                         );
                         Task::none()
                     }

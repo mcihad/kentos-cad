@@ -110,7 +110,9 @@ fn every_style_rule_holds_to_the_shared_cases() {
                 let style = c["style"]
                     .as_str()
                     .and_then(|id| styles.iter().find(|s| s.id == id));
-                let (look, height) = apply_dimension_style(style, scale);
+                // Standart's height is the project's (docs/adr/0205 §1): 2.5 mm unless a case names one.
+                let standard = c["standardMm"].as_f64().unwrap_or(2.5);
+                let (look, height) = apply_dimension_style(style, scale, standard);
                 dimension_value(&look, height)
             }
             "followDimension" => {

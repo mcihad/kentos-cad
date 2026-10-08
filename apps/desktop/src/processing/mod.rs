@@ -758,7 +758,13 @@ impl App {
     /// A chosen file read as Tablo ekle reads one, its first sheet's rows
     /// the parameter's value; a file that cannot be read is said and
     /// changes nothing.
-    fn processing_file_read(&mut self, name: String, file: &str, path: &std::path::Path, bytes: &[u8]) {
+    fn processing_file_read(
+        &mut self,
+        name: String,
+        file: &str,
+        path: &std::path::Path,
+        bytes: &[u8],
+    ) {
         match dialog::file_value(file, path, bytes) {
             Ok(value) => {
                 let active = self

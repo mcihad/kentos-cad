@@ -503,11 +503,18 @@ impl App {
 
     /// The server's copies of the conflicts (`info`: the metadata's, when it
     /// conflicted; `blocks`: the block definitions, when one conflicted).
-    fn take_theirs(&mut self, info: Option<ProjectInfo>, blocks: Option<Vec<BlockRecord>>) -> Task<Message> {
+    fn take_theirs(
+        &mut self,
+        info: Option<ProjectInfo>,
+        blocks: Option<Vec<BlockRecord>>,
+    ) -> Task<Message> {
         let (Some(live), Some(doc)) = (self.cloud.live.as_mut(), self.document.as_mut()) else {
             return Task::none();
         };
-        match live.sync.take_theirs(&mut doc.model, info.as_ref(), blocks.as_deref()) {
+        match live
+            .sync
+            .take_theirs(&mut doc.model, info.as_ref(), blocks.as_deref())
+        {
             Err(_) => {
                 live.theirs = Some((info, blocks));
                 Task::none()

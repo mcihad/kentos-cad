@@ -760,6 +760,13 @@
   flex: 1 1 0;
   min-width: 0;
 }
+/* Ölçü stilleri's Çizgiler (docs/adr/0205 §6): a heading over its rows. */
+.dialog--annotation .astyle-section {
+  margin-top: 4px;
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
 
 /* Topoloji kuralları (docs/adr/0202 §6): the tolerance and the rules' table, a value with its unit. */
 .topo-rules__col--layer,

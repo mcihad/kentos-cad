@@ -6,8 +6,9 @@ import { pt, toolHarness } from '../../tools/toolHarness';
 import { dimensionRows } from './dimensionRows';
 
 /**
- * Öznitelikler's Ölçü rows (docs/adr/0147 §7) as data: Zemin; an ordinate's Koordinat; a slope's two elevations; an
- * arc length's radius and angle, shown only. Their common value or “Çeşitli”, and what choosing or typing writes, in
+ * Öznitelikler's Ölçü rows (docs/adr/0147 §7) as data: Zemin; the lines' colours, weights and types and the value's
+ * colour (docs/adr/0205 §6); an ordinate's Koordinat; a slope's two elevations; an arc length's radius and angle,
+ * shown only. Their common value or “Çeşitli”, and what choosing or typing writes, in
  * one step “Değiştir”, without a DOM. The desktop's are apps/desktop/src/properties/tests.rs
  * (`a_dimensions_rows_write_…`). Expected values are worked out by hand.
  */
@@ -19,17 +20,23 @@ const choose = (r: PropRow, label: string) => items(r).find((i) => i.label === l
 const commit = (r: PropRow, text: string) => (r.editor as { commit: (v: string) => void }).commit(text);
 const dimension = (h: Harness, d: Partial<DimensionEntity>) =>
   h.add({ kind: 'dimension', a: pt(0, 0), b: pt(10, 0), offset: 3, height: 2.5, ...d } as DimensionEntity) as DimensionEntity;
+/** Every dimension's rows of its lines (docs/adr/0205 §6), after Zemin, as a styleless one has them. */
+const LINES: [string, string][] = [
+  ['Çizgi rengi', 'Nesnenin rengi'],
+  ['Çizgi kalınlığı', 'Kılcal'],
+  ['Çizgi tipi', 'Sürekli'],
+  ['Uzatma rengi', 'Nesnenin rengi'],
+  ['Uzatma kalınlığı', 'Kılcal'],
+  ['Uzatma tipi', 'Sürekli'],
+  ['Değer rengi', 'Nesnenin rengi'],
+];
 
 describe("Öznitelikler's dimension rows", () => {
   it("an arc length's radius and angle, shown only", () => {
     const h = toolHarness();
     const arc = dimension(h, { style: 'arcLength', a: pt(10, 40), b: pt(0, 50), c: pt(0, 40) });
     const rows = dimensionRows(h.ctx, [arc], false);
-    expect(rows.map((r) => [r.label, r.value])).toEqual([
-      ['Zemin', 'Kapalı'],
-      ['Yarıçap', '10.000'],
-      ['Açı', '100.0000'],
-    ]);
+    expect(rows.map((r) => [r.label, r.value])).toEqual([['Zemin', 'Kapalı'], ...LINES, ['Yarıçap', '10.000'], ['Açı', '100.0000']]);
     expect(row(rows, 'Yarıçap').editor).toBeUndefined();
     expect(row(rows, 'Açı').editor).toBeUndefined();
   });
@@ -66,7 +73,39 @@ describe("Öznitelikler's dimension rows", () => {
     commit(row(dimensionRows(h.ctx, [get(h, s1)], false), 'Birinci kot'), 'kot');
     expect(h.doc.revision).toBe(revision);
     const oy = dimension(h, { style: 'ordinate', angle: 0, a: pt(0, 60), b: pt(5, 70) });
-    expect(dimensionRows(h.ctx, [oy, get(h, s1)], false).map((r) => r.label)).toEqual(['Zemin']);
+    expect(dimensionRows(h.ctx, [oy, get(h, s1)], false).map((r) => r.label)).toEqual(['Zemin', ...LINES.map(([l]) => l)]);
+  });
+
+  it("the lines' rows: common or Çeşitli; a colour, a weight and a type written in one step, none taking it away", () => {
+    const h = toolHarness();
+    const d1 = dimension(h, { dimLineColor: '#E5484D', extWeight: 0.35, extLineType: 'dashed' });
+    const d2 = dimension(h, { a: pt(0, 20), b: pt(10, 20), dimLineColor: '#e5484d', textColor: '#123456' });
+    const rows = dimensionRows(h.ctx, [d1, d2], false);
+    // The same colour whatever its case; another program's by its value.
+    expect(['Çizgi rengi', 'Uzatma kalınlığı', 'Uzatma tipi', 'Değer rengi'].map((l) => row(rows, l).value)).toEqual(['Kırmızı', 'Çeşitli', 'Çeşitli', 'Çeşitli']);
+    expect(row(dimensionRows(h.ctx, [d2], false), 'Değer rengi').value).toBe('#123456');
+    // The colours but ink: the object's is the first.
+    expect(items(row(rows, 'Uzatma rengi')).map((i) => i.label)).toEqual(['Nesnenin rengi', undefined, 'Kırmızı', 'Sarı', 'Yeşil', 'Camgöbeği', 'Mavi', 'Eflatun', 'Gri']);
+    choose(row(rows, 'Uzatma rengi'), 'Mavi');
+    expect([get(h, d1).extColor, get(h, d2).extColor]).toEqual(['#4F8EF7', '#4F8EF7']);
+    expect(h.doc.undo()).toBe('Değiştir');
+    expect([get(h, d1).extColor, get(h, d2).extColor]).toEqual([undefined, undefined]);
+    // A weight: the one that has it left out; Kılcal takes it away.
+    choose(row(dimensionRows(h.ctx, [get(h, d1), get(h, d2)], false), 'Uzatma kalınlığı'), '0.35 mm');
+    expect([get(h, d1).extWeight, get(h, d2).extWeight]).toEqual([0.35, 0.35]);
+    choose(row(dimensionRows(h.ctx, [get(h, d1), get(h, d2)], false), 'Uzatma kalınlığı'), 'Kılcal');
+    expect([get(h, d1).extWeight, get(h, d2).extWeight]).toEqual([undefined, undefined]);
+    // A type: Sürekli takes it away.
+    choose(row(dimensionRows(h.ctx, [get(h, d1), get(h, d2)], false), 'Çizgi tipi'), 'Noktalı kesik');
+    expect([get(h, d1).dimLineType, get(h, d2).dimLineType]).toEqual(['dashdot', 'dashdot']);
+    choose(row(dimensionRows(h.ctx, [get(h, d1), get(h, d2)], false), 'Uzatma tipi'), 'Sürekli');
+    expect([get(h, d1).extLineType, get(h, d2).extLineType]).toEqual([undefined, undefined]);
+    // The value's colour back to the object's.
+    choose(row(dimensionRows(h.ctx, [get(h, d2)], false), 'Değer rengi'), 'Nesnenin rengi');
+    expect(get(h, d2).textColor).toBeUndefined();
+    const revision = h.doc.revision;
+    choose(row(dimensionRows(h.ctx, [get(h, d1), get(h, d2)], false), 'Çizgi rengi'), 'Kırmızı');
+    expect(h.doc.revision, 'both have it already').toBe(revision);
   });
 
   it('on a locked layer the rows only show', () => {

@@ -34,7 +34,7 @@ export class ParagraphTextTool extends PointInputTool {
   private first: Vec2 | null = null;
 
   protected promptFor(): string {
-    const o = TextTool.options();
+    const o = TextTool.options(this.ctx);
     switch (this.stage) {
       case 'height':
         return 'kâğıt üzerindeki yazı yüksekliğini mm olarak yazın';
@@ -87,7 +87,7 @@ export class ParagraphTextTool extends PointInputTool {
         this.stage = 'style';
         break;
       case 'Z':
-        TextTool.setMask(!TextTool.options().mask);
+        TextTool.setMask(!TextTool.options(this.ctx).mask);
         break;
       default:
         return false;
@@ -115,7 +115,7 @@ export class ParagraphTextTool extends PointInputTool {
   private takeStyle(typed: string): boolean {
     const s = takeTextStyle(this.ctx, typed);
     if (s === undefined) return true;
-    TextTool.useStyle(s);
+    TextTool.useStyle(this.ctx, s);
     this.stage = 'first';
     this.refreshPrompt();
     return true;
@@ -130,7 +130,7 @@ export class ParagraphTextTool extends PointInputTool {
       return;
     }
     if (this.stage !== 'second' || !this.first) return;
-    const o = TextTool.options();
+    const o = TextTool.options(this.ctx);
     const { corner, width } = textCornerBox(this.first, p, o.angle);
     const height = paper(this.ctx.doc.settings.plotScale.value, o.heightMm);
     const spacing = ParagraphTextTool.spacing;
@@ -190,7 +190,7 @@ export class ParagraphTextTool extends PointInputTool {
     const n = parseNumber(t);
     if (this.stage === 'height') {
       if (n === null || n <= 0) return false;
-      TextTool.setHeight(n);
+      TextTool.setHeight(this.ctx, n);
       this.stage = 'first';
       this.refreshPrompt();
       return true;
@@ -238,7 +238,7 @@ export class ParagraphTextTool extends PointInputTool {
   override draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
     if (this.stage !== 'second' || !this.first || !this.hover) return;
     const pal = this.ctx.view.palette;
-    const o = TextTool.options();
+    const o = TextTool.options(this.ctx);
     const r = (o.angle * Math.PI) / 180;
     const [c, s] = [Math.cos(r), Math.sin(r)];
     const { corner, width } = textCornerBox(this.first, this.hover, o.angle);

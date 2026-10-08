@@ -618,9 +618,9 @@ impl App {
                     .and_then(|id| catalog.get(id))
                     .map_or(Icon::More, |c| c.icon);
                 let button = sized(*size, icon, *label)
-                .flash(self.ribbon_flash.is_some_and(|id| ids.contains(&id)))
-                .menu_id(crate::ribbon_keys::menu_id(label))
-                .key_tips(self.key_tip(&TipKey::Menu(label)), None);
+                    .flash(self.ribbon_flash.is_some_and(|id| ids.contains(&id)))
+                    .menu_id(crate::ribbon_keys::menu_id(label))
+                    .key_tips(self.key_tip(&TipKey::Menu(label)), None);
                 let members = ids.clone();
                 let checked = self.checks(&members);
                 if *checklist {
@@ -716,6 +716,7 @@ impl App {
                         .or(self.paragraph.as_ref().and_then(|p| p.editing)),
                     self.paragraph_preview(),
                     self.color_mode(),
+                    self.label_size(),
                 );
                 let area = self.viewport.view(
                     doc,
@@ -817,6 +818,7 @@ impl App {
                 .or(self.paragraph.as_ref().and_then(|p| p.editing)),
             self.paragraph_preview(),
             self.color_mode(),
+            self.label_size(),
         );
         stack![
             self.viewport.lens(camera, self.canvas()),
@@ -1500,6 +1502,7 @@ impl App {
             Asking::SvgEditor => self.svgedit_view(),
             Asking::BlockDefine => self.block_define_view(),
             Asking::BlockAttributes => self.block_attributes_view(),
+            Asking::PlotScale => self.plot_scale_view(),
             Asking::AttributeValues => self.attribute_values_view(),
             Asking::FindReplace => self.find_replace_view(),
             Asking::LayerMerge => self.layer_merge_view(),
@@ -1623,7 +1626,8 @@ pub(crate) fn checklist_of(
             let Some(command) = catalog().get(id) else {
                 continue;
             };
-            let run = (command.standing == Standing::Ported).then_some(Message::RunKept(command.id));
+            let run =
+                (command.standing == Standing::Ported).then_some(Message::RunKept(command.id));
             menu = match tick {
                 Some(on) => menu.check(command.short, on, run),
                 None => menu.item(command.short, run),

@@ -7,6 +7,7 @@
 //! with the overlay: it reads them from the object.
 
 use super::Store;
+use super::legible::{TRUE_MAX_PX, TRUE_MIN_PX};
 use crate::api::json::{FromJson, Json};
 use crate::entity::{Shape, TextPlace, dimension_geom};
 use crate::geom::dimension::layout_dimension;
@@ -163,7 +164,9 @@ fn code(of: &[&str], s: &str) -> f64 {
 /// 1 for a dimension with a mask or its value on its line, else 0.
 fn masked(s: &Shape) -> f64 {
     match s {
-        Shape::Dimension { mask: Some(true), .. } => 1.0,
+        Shape::Dimension {
+            mask: Some(true), ..
+        } => 1.0,
         // A value on its line hides the line under it, as a mask does (docs/adr/0183 §3).
         Shape::Dimension { look, .. } if look.centre => 1.0,
         _ => 0.0,
@@ -251,6 +254,19 @@ impl Store {
     ///
     /// `editing` is left out (the inline editor draws it).
     pub fn labels(&self, view: &Bounds, scale: f64, editing: Option<f64>) -> Vec<f64> {
+        self.labels_with(view, scale, editing, TRUE_MIN_PX, TRUE_MAX_PX)
+    }
+
+    /// `labels`, a text, a dimension's value, a leader's note or a table's
+    /// cells drawn when `min_px..=max_px` high on screen.
+    pub(super) fn labels_with(
+        &self,
+        view: &Bounds,
+        scale: f64,
+        editing: Option<f64>,
+        min_px: f64,
+        max_px: f64,
+    ) -> Vec<f64> {
         let mut out = Vec::new();
         for it in self.candidates(&super::padded(*view, 0.0)) {
             let flags = self.flags(it);
@@ -281,7 +297,7 @@ impl Store {
                             ..
                         } => {
                             let px = height * scale;
-                            if px < 5.0 || px > 240.0 || text.is_empty() {
+                            if px < min_px || px > max_px || text.is_empty() {
                                 continue;
                             }
                             // A multi-line piece, line by line (docs/adr/0182 §3); one along a
@@ -317,7 +333,7 @@ impl Store {
                             let Some((o, mask)) = self.note_label(s) else {
                                 continue;
                             };
-                            if px < 5.0 || px > 240.0 {
+                            if px < min_px || px > max_px {
                                 continue;
                             }
                             out.extend([
@@ -338,7 +354,7 @@ impl Store {
                             else {
                                 continue;
                             };
-                            if px < 5.0 || px > 240.0 {
+                            if px < min_px || px > max_px {
                                 continue;
                             }
                             out.extend([
@@ -364,7 +380,7 @@ impl Store {
                     else {
                         continue;
                     };
-                    if px < 5.0 || px > 240.0 {
+                    if px < min_px || px > max_px {
                         continue;
                     }
                     out.extend([
@@ -387,7 +403,7 @@ impl Store {
                     ..
                 } => {
                     let px = height * scale;
-                    if px < 5.0 || px > 240.0 {
+                    if px < min_px || px > max_px {
                         continue;
                     }
                     // A multi-line text, line by line (docs/adr/0182 §3); one along a curve,
@@ -408,7 +424,7 @@ impl Store {
                     height, rotation, ..
                 } => {
                     let px = height * scale;
-                    if (5.0..=240.0).contains(&px)
+                    if (min_px..=max_px).contains(&px)
                         && let Some(t) = crate::geom::table::table_geom(&it.shape)
                     {
                         for c in t.layout(self.font).cells {
@@ -433,7 +449,7 @@ impl Store {
                 } => {
                     let px = height * scale;
                     if let Some((o, mask)) = self.note_label(&it.shape)
-                        && (5.0..=240.0).contains(&px)
+                        && (min_px..=max_px).contains(&px)
                     {
                         out.extend([
                             it.id,

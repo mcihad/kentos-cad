@@ -111,6 +111,7 @@ const MIGRATED: PreferencesData = {
   lineWeights: false,
   // Newer than the old store (docs/adr/0195): the schema's defaults.
   colorMode: 'color',
+  annotationSize: 'legible',
   fills: true,
   areaEdges: true,
   transparency: true,

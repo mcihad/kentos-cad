@@ -58,7 +58,10 @@ pub fn has_any(e: &Entity) -> bool {
             // Every part's too (docs/adr/0143).
             any(&p.zs)
                 || holes(&p.holes)
-                || p.parts.iter().flatten().any(|q| any(&q.zs) || holes(&q.holes))
+                || p.parts
+                    .iter()
+                    .flatten()
+                    .any(|q| any(&q.zs) || holes(&q.holes))
         }
         _ => false,
     }

@@ -82,7 +82,9 @@ pub(super) fn control<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, M
         ParamKind::Features { kinds, scopes, .. } => {
             features(def, kinds.as_deref(), scopes.as_deref(), env)
         }
-        ParamKind::Number { unit, .. } => number(def, unit, env),
+        ParamKind::Number {
+            unit, placeholder, ..
+        } => number(def, unit, placeholder.as_deref(), env),
         ParamKind::Text {
             placeholder,
             max_length,
@@ -279,14 +281,20 @@ fn features<'a>(
     parts.into()
 }
 
-fn number<'a>(def: &'a ParamDef, unit: &'a str, env: &Env<'a, '_>) -> Element<'a, Message> {
+fn number<'a>(
+    def: &'a ParamDef,
+    unit: &'a str,
+    placeholder: Option<&'a str>,
+    env: &Env<'a, '_>,
+) -> Element<'a, Message> {
     let ev = env.send;
     let v = env.value(&def.name);
     let typed = env.window.numbers.get(&def.name).cloned();
     let shown = typed.unwrap_or_else(|| v.as_f64().map(js_number).unwrap_or_default());
-    let invalid = v.as_f64().is_none_or(|n| !n.is_finite());
+    // An optional field left empty is no value, not a wrong one (docs/adr/0205 §2).
+    let invalid = !(def.optional && v.is_null()) && v.as_f64().is_none_or(|n| !n.is_finite());
     let name = def.name.clone();
-    let field = input("", &shown, invalid, ev)
+    let field = input(placeholder.unwrap_or(""), &shown, invalid, ev)
         .on_input(move |t| ev(Event::Number(name.clone(), t)))
         .font(typography::mono())
         .align_x(Alignment::End)

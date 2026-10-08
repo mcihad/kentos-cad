@@ -254,7 +254,11 @@ fn integer(s: &str) -> Option<Result<String, ()>> {
     if rest.len() > 16 || rest.parse::<u64>().map_or(true, |n| n > MAX_INTEGER) {
         return Some(Err(()));
     }
-    Some(Ok(if minus { format!("-{rest}") } else { rest.to_owned() }))
+    Some(Ok(if minus {
+        format!("-{rest}")
+    } else {
+        rest.to_owned()
+    }))
 }
 
 /// A decimal number as read: its canonical text, how many digits it was
@@ -532,10 +536,14 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
         return Some("Alanın adı boş olamaz.".to_owned());
     }
     if js_trim(name) != name {
-        return Some(format!("“{name}” alanının adının başında ya da sonunda boşluk var."));
+        return Some(format!(
+            "“{name}” alanının adının başında ya da sonunda boşluk var."
+        ));
     }
     if name.chars().count() > MAX_NAME {
-        return Some(format!("“{name}” alanının adı en çok {MAX_NAME} karakter olabilir."));
+        return Some(format!(
+            "“{name}” alanının adı en çok {MAX_NAME} karakter olabilir."
+        ));
     }
     if name
         .chars()
@@ -556,7 +564,9 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
     let kind = field.kind;
     if let Some(length) = field.length {
         if kind != LayerFieldKind::Text {
-            return Some(format!("“{name}” alanında uzunluk yalnız metin alanında olur."));
+            return Some(format!(
+                "“{name}” alanında uzunluk yalnız metin alanında olur."
+            ));
         }
         if !(1..=MAX_LENGTH).contains(&length) {
             return Some(format!(
@@ -578,19 +588,25 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
     }
     if field.min.is_some() || field.max.is_some() {
         if !kind.is_number() {
-            return Some(format!("“{name}” alanında aralık yalnız sayı alanlarında olur."));
+            return Some(format!(
+                "“{name}” alanında aralık yalnız sayı alanlarında olur."
+            ));
         }
         for (end, word) in [(&field.min, "en azı"), (&field.max, "en çoğu")] {
             if let Some(v) = end
                 && !canonical_of(field, v)
             {
-                return Some(format!("“{name}” alanının {word} “{v}” alanın türüne uymuyor."));
+                return Some(format!(
+                    "“{name}” alanının {word} “{v}” alanın türüne uymuyor."
+                ));
             }
         }
         if let (Some(lo), Some(hi)) = (&field.min, &field.max)
             && compare_decimals(lo, hi) == Some(Ordering::Greater)
         {
-            return Some(format!("“{name}” alanının en azı en çoğundan büyük olamaz."));
+            return Some(format!(
+                "“{name}” alanının en azı en çoğundan büyük olamaz."
+            ));
         }
     }
     if let Some(values) = &field.values {
@@ -642,7 +658,9 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
         };
         let fits = !js_trim(d).is_empty() && check_value(&optional, d).is_ok_and(|v| v == *d);
         if !fits {
-            return Some(format!("“{name}” alanının varsayılanı “{d}” alanın kurallarına uymuyor."));
+            return Some(format!(
+                "“{name}” alanının varsayılanı “{d}” alanın kurallarına uymuyor."
+            ));
         }
     }
     None

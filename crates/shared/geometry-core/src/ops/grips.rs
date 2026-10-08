@@ -311,6 +311,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             height,
             rotation,
             arrow,
+            arrow_size,
             mask,
         } => {
             let pts = match mid_grip_segment(&e.shape, index) {
@@ -329,6 +330,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                 height: *height,
                 rotation: *rotation,
                 arrow: arrow.clone(),
+                arrow_size: *arrow_size,
                 mask: *mask,
             }
         }
@@ -609,7 +611,9 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             };
             // A new kind's grip may not take it where it cannot be drawn.
             if is_new_kind(style.as_deref())
-                && dimension_geom(&moved).and_then(|g| layout_dimension(&g)).is_none()
+                && dimension_geom(&moved)
+                    .and_then(|g| layout_dimension(&g))
+                    .is_none()
             {
                 return None;
             }

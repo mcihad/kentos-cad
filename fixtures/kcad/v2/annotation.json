@@ -1,0 +1,252 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Yazı yükseklikleri, ölçü çizgileri ve kılavuz okları",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 500.0,
+    "dimensionStyles": [
+      {
+        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2801",
+        "name": "Kırmızı çizgili",
+        "height": 2.5,
+        "arrow": "closed",
+        "dimLineColor": "#1F4E79",
+        "extWeight": 0.18,
+        "extLineType": "dashdot"
+      }
+    ],
+    "annotation": {
+      "text": 3.0,
+      "leader": 3.0,
+      "dimension": 2.0,
+      "table": 2.0,
+      "coordinate": 1.8,
+      "station": 1.8,
+      "measure": 1.5
+    }
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "aciklama",
+      "name": "Açıklama",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3A7BD5",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "aciklama",
+  "entities": [
+    {
+      "kind": "leader",
+      "id": 1,
+      "layerId": "aciklama",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500008.0,
+          "y": 4400006.0
+        }
+      ],
+      "text": "Mevcut bina",
+      "height": 1.5,
+      "rotation": 0.0,
+      "arrow": "closed",
+      "arrowSize": 1.25
+    },
+    {
+      "kind": "leader",
+      "id": 2,
+      "layerId": "aciklama",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 500030.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500034.0,
+          "y": 4400005.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400005.0
+        }
+      ],
+      "text": "Kanal",
+      "height": 1.5,
+      "rotation": 0.0,
+      "arrow": "archTick"
+    },
+    {
+      "kind": "leader",
+      "id": 3,
+      "layerId": "aciklama",
+      "attrs": {
+        "Not": "sınır taşı"
+      },
+      "pts": [
+        {
+          "x": 500060.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500064.0,
+          "y": 4400004.0
+        }
+      ],
+      "text": "ST-12",
+      "height": 1.5,
+      "rotation": 0.0,
+      "arrow": "datumFilled",
+      "mask": true,
+      "arrowSize": 0.75
+    },
+    {
+      "kind": "dimension",
+      "id": 4,
+      "layerId": "aciklama",
+      "attrs": {},
+      "a": {
+        "x": 500000.0,
+        "y": 4399990.0
+      },
+      "b": {
+        "x": 500024.5,
+        "y": 4399990.0
+      },
+      "offset": -2.0,
+      "height": 1.0,
+      "dimLineColor": "#C0392B",
+      "dimLineWeight": 0.35,
+      "dimLineType": "dashed",
+      "extColor": "#7F8C8D",
+      "extWeight": 0.0,
+      "extLineType": "dotted",
+      "textColor": "#1F4E79"
+    },
+    {
+      "kind": "dimension",
+      "id": 5,
+      "layerId": "aciklama",
+      "attrs": {},
+      "a": {
+        "x": 500030.0,
+        "y": 4399990.0
+      },
+      "b": {
+        "x": 500050.0,
+        "y": 4399990.0
+      },
+      "offset": -2.0,
+      "height": 1.25,
+      "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2801",
+      "arrow": "closed",
+      "dimLineColor": "#1F4E79",
+      "extWeight": 0.18,
+      "extLineType": "dashdot"
+    },
+    {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "aciklama",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2811",
+      "p": {
+        "x": 500080.0,
+        "y": 4400000.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+    }
+  ],
+  "uids": [
+    "0192f5a1-2828-7000-8000-000000000101",
+    "0192f5a1-2828-7000-8000-000000000102",
+    "0192f5a1-2828-7000-8000-000000000103",
+    "0192f5a1-2828-7000-8000-000000000104",
+    "0192f5a1-2828-7000-8000-000000000105",
+    "0192f5a1-2828-7000-8000-000000000106"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2811",
+      "name": "Vana",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "c": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "r": 0.5
+        },
+        {
+          "kind": "leader",
+          "id": 2,
+          "layerId": "0",
+          "attrs": {},
+          "pts": [
+            {
+              "x": 0.4,
+              "y": 0.4
+            },
+            {
+              "x": 2.0,
+              "y": 2.0
+            }
+          ],
+          "text": "V",
+          "height": 0.5,
+          "rotation": 0.0,
+          "arrow": "boxBlank",
+          "arrowSize": 2.0
+        }
+      ]
+    }
+  ]
+}

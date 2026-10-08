@@ -67,7 +67,12 @@ pub enum Transform {
     /// the source centre, `to` the target's: x′ = to.x + a·x̄ − b·ȳ,
     /// y′ = to.y + b·x̄ + a·ȳ, x̄ = x − from.x, ȳ = y − from.y. Every kind
     /// moves as the modify tools move it.
-    Similarity { from: Vec2, to: Vec2, a: f64, b: f64 },
+    Similarity {
+        from: Vec2,
+        to: Vec2,
+        a: f64,
+        b: f64,
+    },
     /// Oturt: an affine transform between centred frames, `m` = [a, b, c, d]:
     /// x′ = to.x + a·x̄ + c·ȳ, y′ = to.y + b·x̄ + d·ȳ. Not a similarity: a
     /// circle, an arc or an ellipse becomes the ellipse of its image (an

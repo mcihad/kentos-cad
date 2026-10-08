@@ -30,6 +30,10 @@ pub struct Defaults {
     /// The drawing's typeface ("barlow"): texts a tool places are measured in it.
     pub drawing_font: &'static str,
     pub active_layer: String,
+    /// The project's Kenar ve köşe yazıları height on paper, mm
+    /// (docs/adr/0205 §1): an edge length's or corner number's text height
+    /// left empty is this one.
+    pub measure_height_mm: f64,
 }
 
 impl Defaults {
@@ -43,6 +47,7 @@ impl Defaults {
             plot_scale: s.plot_scale,
             drawing_font: drawing_font(s.drawing_font).id(),
             active_layer: doc.layers().active().to_owned(),
+            measure_height_mm: s.annotation_mm(kentos_contracts::AnnotationKind::Measure),
         }
     }
 
@@ -55,6 +60,7 @@ impl Defaults {
             "plotScale": self.plot_scale,
             "drawingFont": self.drawing_font,
             "activeLayer": self.active_layer,
+            "measureHeightMm": self.measure_height_mm,
         })
     }
 }
@@ -169,6 +175,9 @@ pub enum ParamKind {
         integer: bool,
         /// Shown next to the field: "m", "m²", "mm", "°", "adet" or "".
         unit: String,
+        /// Shown in an optional field left empty: what empty means
+        /// (“Proje”, docs/adr/0205 §2).
+        placeholder: Option<String>,
     },
     /// The web's `string`.
     Text {
@@ -279,6 +288,17 @@ impl ParamDef {
 
     pub fn optional(mut self) -> Self {
         self.optional = true;
+        self
+    }
+
+    /// What an empty number or text field shows (the web's `placeholder`).
+    pub fn placeholder(mut self, text: &str) -> Self {
+        match &mut self.kind {
+            ParamKind::Number { placeholder, .. } | ParamKind::Text { placeholder, .. } => {
+                *placeholder = Some(text.into());
+            }
+            _ => {}
+        }
         self
     }
 

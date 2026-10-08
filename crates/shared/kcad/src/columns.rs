@@ -39,10 +39,10 @@
 //! | spline | n, closed (0 or 1) | pts (2n) | |
 //! | xline, ray | | p, dir | |
 //! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`); k if curved; b if its curve bends | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any, the curve's pts (2k) if curved, its bulges (b) if it bends | text, label's object if linked, each run's colour if it has one, text style if any |
-//! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any | text if any, dimension style if any, prefix if any, suffix if any |
+//! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any |
 //! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer, islands (i) and cutouts (k) ids (UUID text) if tied |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
-//! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation | text if any |
+//! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation, arrow size if any | text if any |
 //! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet |
 //! | image | n if clip | p, width, height, rotation, clip (2n) if clip, opacity if any | asset if any, file if any |
 //! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`) | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any | the look's ramp if any, asset if any, file if any |
@@ -58,9 +58,12 @@
 //! (docs/adr/0183), curve, its bulges (docs/adr/0196); dimension: text, style, angle, c, mask (no value), za, zb
 //! (docs/adr/0147), dimension style, arrow, arrow size, ext offset, ext
 //! beyond, text gap, centred (no value), decimals, unit, prefix, suffix, font
-//! (docs/adr/0183);
+//! (docs/adr/0183), and bit 27 (`LINES`) for its line fields (docs/adr/0205
+//! §6): a line flags int follows (`LINE_*`: 1 dimension line colour, 2 its
+//! weight, 4 its type, 8 extension lines' colour, 16 their weight, 32 their
+//! type, 64 the value's colour);
 //! hatch: holes, name, scale, families, gradient, tie (docs/adr/0186); insert: mirror; leader: text, arrow, mask (no value;
-//! docs/adr/0146); table: merges, aligns, header (no value), grid, text
+//! docs/adr/0146), arrow size (docs/adr/0205 §7); table: merges, aligns, header (no value), grid, text
 //! style, font, bold (no value), italic (no value), oblique, source, frame
 //! (docs/adr/0184); image: mirror (no value), asset, file, clip, opacity
 //! (docs/adr/0192); raster: asset, file, opacity (docs/adr/0204)). A
@@ -93,10 +96,10 @@ use kentos_contracts::{
     DimensionEntity, DimensionLook, DimensionStyle, DimensionTextPlace, DrawingFont, DrawingUnit,
     EllipseEntity, Entity, EntityBase, EntityId, GradientShape, HatchAssoc, HatchEntity,
     HatchGradient, HatchPattern, HatchPatternType, ImageEntity, ImageFields, InsertEntity,
-    LeaderArrow, LeaderEntity, LineEntity, Paragraph, PathEntity, PatternLine, PointEntity,
-    PointPart, RasterEntity, RasterFields, RasterRender, RasterSample, RasterStretch, RingGeometry,
-    SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign, TextEntity, TextFace,
-    TextRun, TextScript, Vec2,
+    LeaderArrow, LeaderEntity, LineEntity, LineType, Paragraph, PathEntity, PatternLine,
+    PointEntity, PointPart, RasterEntity, RasterFields, RasterRender, RasterSample, RasterStretch,
+    RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign,
+    TextEntity, TextFace, TextRun, TextScript, Vec2,
 };
 
 use crate::error::{Code, KcadError};
@@ -193,6 +196,29 @@ const OPT: [u32; 19] = [
 
 /// A dimension's units in the columns, by their place here (docs/adr/0183).
 const UNITS: [DrawingUnit; 3] = [DrawingUnit::Mm, DrawingUnit::Cm, DrawingUnit::M];
+
+/// A dimension's line fields follow in a line flags int (docs/adr/0205 §6):
+/// the kind's optional fields ran out of the flags' bits.
+const LINES: u32 = 1 << 27;
+const LINE_COLOR: u32 = 1;
+const LINE_WEIGHT: u32 = 2;
+const LINE_TYPE: u32 = 4;
+const EXT_COLOR: u32 = 8;
+const EXT_WEIGHT: u32 = 16;
+const EXT_LINE_TYPE: u32 = 32;
+const TEXT_COLOR: u32 = 64;
+/// The line types, numbered as the columns hold them (the contract's order).
+const LINE_TYPES: [LineType; 4] = [
+    LineType::Continuous,
+    LineType::Dashed,
+    LineType::Dashdot,
+    LineType::Dotted,
+];
+
+/// A line type's place in `LINE_TYPES`.
+fn line_type_place(t: LineType) -> u32 {
+    LINE_TYPES.iter().position(|x| *x == t).unwrap_or(0) as u32
+}
 
 /// A multi-line text's run's flags in the columns (docs/adr/0182): its
 /// format, and whether its colour follows.
@@ -736,6 +762,42 @@ impl Packer {
                     flags |= OPT[18];
                     self.int(font_place(f));
                 }
+                if look.has_lines() {
+                    flags |= LINES;
+                    let mut line = 0;
+                    for (bit, on) in [
+                        (LINE_COLOR, look.dim_line_color.is_some()),
+                        (LINE_WEIGHT, look.dim_line_weight.is_some()),
+                        (LINE_TYPE, look.dim_line_type.is_some()),
+                        (EXT_COLOR, look.ext_color.is_some()),
+                        (EXT_WEIGHT, look.ext_weight.is_some()),
+                        (EXT_LINE_TYPE, look.ext_line_type.is_some()),
+                        (TEXT_COLOR, look.text_color.is_some()),
+                    ] {
+                        if on {
+                            line |= bit;
+                        }
+                    }
+                    self.int(line);
+                    for t in [look.dim_line_type, look.ext_line_type]
+                        .into_iter()
+                        .flatten()
+                    {
+                        self.int(line_type_place(t));
+                    }
+                    for w in [look.dim_line_weight, look.ext_weight]
+                        .into_iter()
+                        .flatten()
+                    {
+                        self.float(w);
+                    }
+                    for c in [&look.dim_line_color, &look.ext_color, &look.text_color]
+                        .into_iter()
+                        .flatten()
+                    {
+                        self.text(c);
+                    }
+                }
             }
             Entity::Hatch(HatchEntity {
                 base: _,
@@ -945,6 +1007,7 @@ impl Packer {
                 height,
                 rotation,
                 arrow,
+                arrow_size,
                 mask,
             }) => {
                 self.points(pts);
@@ -960,6 +1023,10 @@ impl Packer {
                 }
                 if *mask {
                     flags |= OPT[2];
+                }
+                if let Some(s) = arrow_size {
+                    flags |= OPT[3];
+                    self.float(*s);
                 }
             }
             Entity::Table(TableEntity {
@@ -1367,11 +1434,12 @@ fn allowed(kind: u8) -> u32 {
         3 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         // A text's alignment, width factor and mask, schema 18's link (docs/adr/0175 §4), schema 20's box,
         // spacing and runs, schema 21's face (docs/adr/0183), schema 25's curve and its bulges
-        // (docs/adr/0196); a leader's three.
+        // (docs/adr/0196); a leader's three and schema 30's arrowhead size (docs/adr/0205 §7).
         10 => OPT[..14].iter().fold(0, |m, b| m | b),
-        14 => OPT[0] | OPT[1] | OPT[2],
-        // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look.
-        11 => OPT.iter().fold(0, |m, b| m | b),
+        14 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
+        // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look,
+        // schema 30's lines (docs/adr/0205 §6).
+        11 => OPT.iter().fold(0, |m, b| m | b) | LINES,
         // A hatch: holes, schema 23's name, scale, families, gradient and tie (docs/adr/0186).
         12 => OPT[..6].iter().fold(0, |m, b| m | b),
         13 => OPT[0],
@@ -1691,6 +1759,46 @@ fn geometry(
             } else {
                 None
             };
+            // Its lines (docs/adr/0205 §6): the line flags, then the types, weights and colours.
+            let line = if flags & LINES != 0 { c.int()? } else { 0 };
+            let on = |bit: u32| line & bit != 0;
+            let mut line_type = |bit: u32| -> Result<Option<LineType>, KcadError> {
+                if !on(bit) {
+                    return Ok(None);
+                }
+                let v = c.usize()?;
+                LINE_TYPES
+                    .get(v)
+                    .copied()
+                    .map(Some)
+                    .ok_or_else(|| broken(&format!("ölçünün çizgi tipi {v}")))
+            };
+            let (dim_line_type, ext_line_type) = (line_type(LINE_TYPE)?, line_type(EXT_LINE_TYPE)?);
+            let dim_line_weight = if on(LINE_WEIGHT) {
+                Some(c.float()?)
+            } else {
+                None
+            };
+            let ext_weight = if on(EXT_WEIGHT) {
+                Some(c.float()?)
+            } else {
+                None
+            };
+            let dim_line_color = if on(LINE_COLOR) {
+                Some(c.text(|| place("dimLineColor"))?)
+            } else {
+                None
+            };
+            let ext_color = if on(EXT_COLOR) {
+                Some(c.text(|| place("extColor"))?)
+            } else {
+                None
+            };
+            let text_color = if on(TEXT_COLOR) {
+                Some(c.text(|| place("textColor"))?)
+            } else {
+                None
+            };
             Entity::Dimension(DimensionEntity {
                 base,
                 a,
@@ -1717,6 +1825,13 @@ fn geometry(
                     prefix,
                     suffix,
                     font,
+                    dim_line_color,
+                    dim_line_weight,
+                    dim_line_type,
+                    ext_color,
+                    ext_weight,
+                    ext_line_type,
+                    text_color,
                 },
             })
         }
@@ -2122,6 +2237,7 @@ fn geometry(
             } else {
                 None
             };
+            let arrow_size = if has(3) { Some(c.float()?) } else { None };
             Entity::Leader(LeaderEntity {
                 base,
                 pts,
@@ -2129,6 +2245,7 @@ fn geometry(
                 height,
                 rotation,
                 arrow,
+                arrow_size,
                 mask: has(2),
             })
         }

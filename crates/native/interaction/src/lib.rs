@@ -97,6 +97,7 @@ pub mod adjoin;
 pub mod align;
 pub mod align_distribute;
 pub mod angle;
+pub mod annotation_scale;
 pub mod arc;
 pub mod area;
 pub mod array;
@@ -120,7 +121,6 @@ pub mod corner;
 pub mod data_search;
 pub mod dimension;
 pub mod dimension_chain;
-pub mod quick_dimension;
 pub mod divide;
 pub mod donut;
 pub mod drawing_extras;
@@ -152,8 +152,8 @@ pub mod lengthen;
 pub mod line;
 mod line_parts;
 pub mod locks;
-pub mod look;
 mod log;
+pub mod look;
 pub mod match_properties;
 pub mod meeting;
 pub mod mirror;
@@ -166,6 +166,7 @@ pub mod object_tracking;
 pub mod offset;
 mod outlines;
 mod overlap;
+pub mod paragraph;
 pub mod parallel;
 pub mod paste;
 pub mod path;
@@ -175,11 +176,12 @@ pub mod pick_objects;
 pub mod plan_road;
 pub mod point;
 pub mod point_calc;
-pub mod polygonize;
 mod points;
 pub mod polar;
+pub mod polygonize;
 mod prompt;
 pub mod properties;
+pub mod quick_dimension;
 pub mod rectangle;
 pub mod regular;
 pub mod reshape;
@@ -203,22 +205,21 @@ pub mod set_elevation;
 pub mod sources;
 pub mod spatial;
 pub mod spline;
-mod standard_layer;
 pub mod split;
+mod standard_layer;
 pub mod station_labels;
 pub mod station_offset;
 pub mod stretch;
-pub mod templates;
-pub mod paragraph;
 pub mod style_tables;
 pub mod styles;
 pub mod table;
 pub mod table_place;
+pub mod templates;
 pub mod text;
 pub mod text_along;
 pub mod text_file;
-pub mod topology;
 mod tool;
+pub mod topology;
 mod trace_work;
 pub mod trim;
 pub mod vertex;
@@ -228,11 +229,11 @@ pub mod view_history;
 pub use clipboard::Clipboard;
 pub use format::{Axes, Format, fixed};
 pub use kentos_geometry_core::Vec2;
-/// The surveying computations the Hesap windows call (docs/adr/0070).
-pub use kentos_geometry_core::survey;
 /// Measures of a vertex list, from the shared core (the coordinate list's).
 pub use kentos_geometry_core::geometry::{angle_deg, bearing_grad, dist, path_length, signed_area};
 pub use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
+/// The surveying computations the Hesap windows call (docs/adr/0070).
+pub use kentos_geometry_core::survey;
 pub use kentos_geometry_core::tools::point_input::Tracking;
 /// JavaScript's `trim()`, as typed input is read (the shared grammar).
 pub use kentos_geometry_core::tools::point_text::{is_js_space, js_trim};
@@ -247,9 +248,9 @@ pub use spatial::{
     GripSet, LabelSpot, Spatial, arc_sweep, dimension_layout, full_ellipse, measures, vertices,
 };
 pub use tool::{Area, CellGhost, ImageFile, Label, TextGhost};
-pub use view_history::{ViewHistory, Viewpoint};
 pub use tool::{
     Context, Corners, Cursor, DimensionMode, Draft, DraftColor, Flow, LengthenMode, Marker,
-    MarkerShape, Memory, Name, OptionChoice, Overlap, ParagraphField, Pointer, Preview, Stroke, Tag, TextField,
-    Tone, Tool, View, ViewChange, default_snap_kinds, screen_scale, snap_kinds,
+    MarkerShape, Memory, Name, OptionChoice, Overlap, ParagraphField, Pointer, Preview, Stroke,
+    Tag, TextField, Tone, Tool, View, ViewChange, default_snap_kinds, screen_scale, snap_kinds,
 };
+pub use view_history::{ViewHistory, Viewpoint};

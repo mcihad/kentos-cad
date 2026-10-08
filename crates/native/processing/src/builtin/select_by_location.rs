@@ -95,6 +95,7 @@ pub fn tool() -> Tool {
                     max: None,
                     integer: false,
                     unit: "m".into(),
+                    placeholder: None,
                 },
             )
             .default_value(json!(10))

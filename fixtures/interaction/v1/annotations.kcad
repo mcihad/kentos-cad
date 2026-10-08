@@ -1,0 +1,492 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Açıklamalar: ok uçları, ölçü çizgileri ve yazılar (ADR 0205)",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 2,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 1000.0,
+    "workspace": "cad",
+    "dimensionStyles": [
+      {
+        "id": "0192f6a0-0000-7000-8000-000000000203",
+        "name": "Renkli çizgiler",
+        "height": 2.5,
+        "arrow": "closed",
+        "dimLineColor": "#E5484D",
+        "dimLineWeight": 0.35,
+        "dimLineType": "dashed",
+        "extColor": "#4F8EF7",
+        "extWeight": 0.18,
+        "extLineType": "dotted",
+        "textColor": "#5FBF77"
+      }
+    ]
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "yazi",
+      "name": "Yazı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "olcu",
+      "name": "Ölçü",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5A50A",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    },
+    {
+      "id": "kilavuz",
+      "name": "Kılavuz",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3A7BD5",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "kilavuz",
+  "entities": [
+    {
+      "id": 1,
+      "attrs": {},
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500060.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500064.0,
+          "y": 4400040.0
+        },
+        {
+          "x": 500002.0,
+          "y": 4400038.0
+        }
+      ],
+      "label": "101/5"
+    },
+    {
+      "id": 2,
+      "attrs": {},
+      "kind": "text",
+      "layerId": "yazi",
+      "p": {
+        "x": 500016.0,
+        "y": 4400010.0
+      },
+      "text": "Ada 101 Parsel 5",
+      "height": 2.5,
+      "rotation": 0
+    },
+    {
+      "id": 3,
+      "attrs": {},
+      "kind": "dimension",
+      "layerId": "olcu",
+      "a": {
+        "x": 500000.0,
+        "y": 4400000.0
+      },
+      "b": {
+        "x": 500060.0,
+        "y": 4400000.0
+      },
+      "offset": -6.0,
+      "height": 2.5
+    },
+    {
+      "id": 4,
+      "attrs": {},
+      "kind": "dimension",
+      "layerId": "olcu",
+      "a": {
+        "x": 500002.0,
+        "y": 4400038.0
+      },
+      "b": {
+        "x": 500000.0,
+        "y": 4400000.0
+      },
+      "offset": -6.0,
+      "height": 2.5,
+      "dimStyle": "0192f6a0-0000-7000-8000-000000000203",
+      "arrow": "closed",
+      "dimLineColor": "#E5484D",
+      "dimLineWeight": 0.35,
+      "dimLineType": "dashed",
+      "extColor": "#4F8EF7",
+      "extWeight": 0.18,
+      "extLineType": "dotted",
+      "textColor": "#5FBF77"
+    },
+    {
+      "id": 5,
+      "attrs": {},
+      "kind": "dimension",
+      "layerId": "olcu",
+      "a": {
+        "x": 500064.0,
+        "y": 4400040.0
+      },
+      "b": {
+        "x": 500002.0,
+        "y": 4400038.0
+      },
+      "offset": -6.0,
+      "height": 2.5,
+      "dimLineColor": "#E5484D",
+      "dimLineType": "dashed",
+      "dimLineWeight": 0.5
+    },
+    {
+      "id": 6,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 499960.0,
+          "y": 4400058.0
+        },
+        {
+          "x": 499964.0,
+          "y": 4400063.0
+        }
+      ],
+      "text": "Dolu üçgen",
+      "height": 2.5,
+      "rotation": 0
+    },
+    {
+      "id": 7,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 499986.0,
+          "y": 4400058.0
+        },
+        {
+          "x": 499990.0,
+          "y": 4400063.0
+        }
+      ],
+      "text": "Boş üçgen",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "closed"
+    },
+    {
+      "id": 8,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 500012.0,
+          "y": 4400058.0
+        },
+        {
+          "x": 500016.0,
+          "y": 4400063.0
+        }
+      ],
+      "text": "Açık ok",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "open"
+    },
+    {
+      "id": 9,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 500038.0,
+          "y": 4400058.0
+        },
+        {
+          "x": 500042.0,
+          "y": 4400063.0
+        }
+      ],
+      "text": "İnce açık ok",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "open30",
+      "arrowSize": 1.5
+    },
+    {
+      "id": 10,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 500064.0,
+          "y": 4400058.0
+        },
+        {
+          "x": 500068.0,
+          "y": 4400063.0
+        }
+      ],
+      "text": "Dik açık ok",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "open90"
+    },
+    {
+      "id": 11,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 500090.0,
+          "y": 4400058.0
+        },
+        {
+          "x": 500094.0,
+          "y": 4400063.0
+        }
+      ],
+      "text": "Dolu nokta",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "dot"
+    },
+    {
+      "id": 12,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 500116.0,
+          "y": 4400058.0
+        },
+        {
+          "x": 500120.0,
+          "y": 4400063.0
+        }
+      ],
+      "text": "Küçük nokta",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "dotSmall"
+    },
+    {
+      "id": 13,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 499960.0,
+          "y": 4400074.0
+        },
+        {
+          "x": 499964.0,
+          "y": 4400079.0
+        }
+      ],
+      "text": "Boş nokta",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "dotBlank"
+    },
+    {
+      "id": 14,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 499986.0,
+          "y": 4400074.0
+        },
+        {
+          "x": 499990.0,
+          "y": 4400079.0
+        }
+      ],
+      "text": "Eğik çizgi",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "oblique"
+    },
+    {
+      "id": 15,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 500012.0,
+          "y": 4400074.0
+        },
+        {
+          "x": 500016.0,
+          "y": 4400079.0
+        }
+      ],
+      "text": "Mimari çentik",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "archTick"
+    },
+    {
+      "id": 16,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 500038.0,
+          "y": 4400074.0
+        },
+        {
+          "x": 500042.0,
+          "y": 4400079.0
+        }
+      ],
+      "text": "Dolu kare",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "boxFilled"
+    },
+    {
+      "id": 17,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 500064.0,
+          "y": 4400074.0
+        },
+        {
+          "x": 500068.0,
+          "y": 4400079.0
+        }
+      ],
+      "text": "Boş kare",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "boxBlank",
+      "arrowSize": 1.5
+    },
+    {
+      "id": 18,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 500090.0,
+          "y": 4400074.0
+        },
+        {
+          "x": 500094.0,
+          "y": 4400079.0
+        }
+      ],
+      "text": "Dayanak üçgeni",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "datumFilled"
+    },
+    {
+      "id": 19,
+      "attrs": {},
+      "kind": "leader",
+      "layerId": "kilavuz",
+      "pts": [
+        {
+          "x": 500116.0,
+          "y": 4400074.0
+        },
+        {
+          "x": 500120.0,
+          "y": 4400079.0
+        }
+      ],
+      "text": "Yok",
+      "height": 2.5,
+      "rotation": 0,
+      "arrow": "none"
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": []
+}

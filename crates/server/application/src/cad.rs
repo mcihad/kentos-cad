@@ -293,9 +293,7 @@ fn dimension_rules(x: &kentos_contracts::DimensionEntity) -> Result<(), String> 
     use kentos_contracts::DimensionStyle::{ArcLength, Jogged, Ordinate, Slope};
     match x.style {
         Some(ArcLength | Jogged) if x.c.is_none() => {
-            return Err(
-                "Yay uzunluğu ve kırıklı yarıçap ölçüsünün merkezi (c) olmalı".into(),
-            );
+            return Err("Yay uzunluğu ve kırıklı yarıçap ölçüsünün merkezi (c) olmalı".into());
         }
         Some(Slope) if x.za.is_none() || x.zb.is_none() => {
             return Err("Eğim ölçüsünün iki kotu (za, zb) olmalı".into());

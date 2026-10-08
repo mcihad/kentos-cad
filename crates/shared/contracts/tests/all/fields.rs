@@ -57,7 +57,11 @@ fn values_show_as_the_cases_say() {
     for c in cases()["display"].as_array().expect("display") {
         let f = field(&c["field"]);
         let v = c["value"].as_str().expect("a value");
-        assert_eq!(display_value(&f, v), c["want"].as_str().expect("a text"), "{v}");
+        assert_eq!(
+            display_value(&f, v),
+            c["want"].as_str().expect("a text"),
+            "{v}"
+        );
     }
 }
 

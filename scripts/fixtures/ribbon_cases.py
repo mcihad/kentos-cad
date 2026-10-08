@@ -268,7 +268,24 @@ DRAW_COLORS = [
 ]
 LINE_TYPES = {'continuous': 'Sürekli', 'dashed': 'Kesikli', 'dashdot': 'Noktalı kesik', 'dotted': 'Noktalı'}
 LINE_WEIGHTS = [0.13, 0.18, 0.25, 0.35, 0.5, 0.7]
-PLOT_SCALES = [500, 1000, 2000, 5000, 25000]
+# The plot scales Ölçek offers (docs/adr/0205 §4): a CAD project's drawing scales, else the map scales (the new project
+# wizard's), with the current one in its place when it is none of them; each written as 1:N with N's digits grouped.
+CAD_SCALES = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000]
+GIS_SCALES = [500, 1000, 2000, 5000, 10000, 25000, 50000]
+
+
+def project_scales(cad, current):
+    out = list(CAD_SCALES if cad else GIS_SCALES)
+    if current not in out:
+        out = sorted(out + [current])
+    return out
+
+
+def scale_text(n):
+    return '1:' + f'{n:,}'.replace(',', '.')
+
+
+SCALE_CASES = [(False, 1000), (True, 1), (True, 75), (False, 100000), (False, 2500), (True, 1000)]
 RADIO_PREFIXES = ('view.renderer.', 'view.symbols.', 'workspace.')
 
 
@@ -316,7 +333,10 @@ file = {
         'colors': DRAW_COLORS,
         'lineTypes': LINE_TYPES,
         'weights': [{'mm': num(w), 'text': f'{w:.2f} mm'} for w in LINE_WEIGHTS],
-        'scales': [{'denominator': s, 'text': f'1:{s}'} for s in PLOT_SCALES],
+        'scales': [
+            {'cad': cad, 'current': cur, 'offered': [{'denominator': s, 'text': scale_text(s)} for s in project_scales(cad, cur)]}
+            for cad, cur in SCALE_CASES
+        ],
     },
     'menuRows': [{'id': i, 'checked': c, 'expect': row_look(i, c)} for i, c in ROWS],
 }

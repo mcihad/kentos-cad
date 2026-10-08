@@ -178,6 +178,7 @@ export const MAIN_MENU: TopMenu[] = [
       // Görünüm kipleri (docs/adr/0195 §3).
       sec('Görünüm kipleri'),
       { label: 'Renk kipi', icon: 'colorModeColor', items: ['view.colorMode.color', 'view.colorMode.mono', 'view.colorMode.gray'] },
+      { label: 'Yazıların boyu', icon: 'annotationLegible', items: ['view.annotationSize.legible', 'view.annotationSize.true', 'view.annotationSize.screen'] },
       'view.fills',
       'view.areaEdges',
       'view.transparency',

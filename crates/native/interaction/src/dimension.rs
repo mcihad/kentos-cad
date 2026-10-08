@@ -65,9 +65,6 @@ pub const ID: &str = "dimension";
 /// The prompt's name (the web's `label`); the catalog's is “Ölçülendirme”.
 pub const LABEL: &str = "Ölçü";
 
-/// The text's height in paper millimetres.
-const HEIGHT_MM: f64 = 2.5;
-
 /// The styles with their keys, in the web's order (`MODE_KEYS`).
 const MODES: [(Mode, &str); 10] = [
     (Mode::Aligned, "H"),
@@ -306,7 +303,7 @@ impl Dimension {
 
     fn see(&mut self, cx: &Context<'_>) {
         let (look, height) =
-            styles::dimension_look(cx, HEIGHT_MM / 1000.0 * cx.doc.settings().plot_scale);
+            styles::dimension_look(cx, styles::standard_dimension_height(cx.doc.settings()));
         self.height = height;
         self.look = look;
         self.styles = styles::Seen::dimension(cx);
@@ -339,9 +336,7 @@ impl Dimension {
             }
             Mode::Radius | Mode::Diameter | Mode::Jogged => self.circle.is_none(),
             Mode::ArcLength => self.arc.is_none(),
-            Mode::Azimuth | Mode::Slope => {
-                self.memory.dimension_by_edge && self.d.pts.is_empty()
-            }
+            Mode::Azimuth | Mode::Slope => self.memory.dimension_by_edge && self.d.pts.is_empty(),
             Mode::Aligned | Mode::Linear | Mode::Ordinate => false,
         }
     }
@@ -455,7 +450,11 @@ impl Dimension {
         }
         self.d.begin(p, cx);
         if !self.placing() {
-            if self.d.last().is_none_or(|last| dist(last, p) > points::SAME) {
+            if self
+                .d
+                .last()
+                .is_none_or(|last| dist(last, p) > points::SAME)
+            {
                 // Kırıklı yarıçap's point on the arc must leave room for a jog from the centre shown.
                 if self.mode() == Mode::Jogged && self.d.pts.len() == 1 {
                     let ok = self.jogged_at(self.d.pts[0], p, 0.0).is_some_and(|g| {
@@ -752,9 +751,7 @@ impl Tool for Dimension {
                 _ => "çizginin ucunu gösterin ya da uzunluğunu yazın",
             },
             Mode::ArcLength if self.arc.is_none() => "yay uzunluğu ölçülecek yaya tıklayın",
-            Mode::ArcLength if self.placing() => {
-                "ölçü yayının yerini gösterin ya da uzaklık yazın"
-            }
+            Mode::ArcLength if self.placing() => "ölçü yayının yerini gösterin ya da uzaklık yazın",
             Mode::ArcLength => match n {
                 0 => "yayın üstünde ölçünün başlangıcını gösterin",
                 _ => "yayın üstünde ölçünün sonunu gösterin",
@@ -1108,7 +1105,11 @@ impl Tool for Dimension {
         let mut strokes = Vec::new();
         // The picked edges and circle in the snap colour, 2 px.
         for e in &self.edges {
-            strokes.push(Stroke::solid(vec![e.a, e.b], false).width(2.0).tone(Tone::Snap));
+            strokes.push(
+                Stroke::solid(vec![e.a, e.b], false)
+                    .width(2.0)
+                    .tone(Tone::Snap),
+            );
         }
         if let Some((c, r)) = self.circle {
             strokes.extend(Outline::of(&Shape::Circle { c, r }, None, 2.0, Tone::Snap).strokes);
@@ -1117,7 +1118,11 @@ impl Tool for Dimension {
         if let Some((c, p1)) = self.angle_circle
             && !self.placing()
         {
-            strokes.push(Stroke::solid(vec![c, p1], false).width(2.0).tone(Tone::Snap));
+            strokes.push(
+                Stroke::solid(vec![c, p1], false)
+                    .width(2.0)
+                    .tone(Tone::Snap),
+            );
             if let Some(hover) = self.d.hover {
                 strokes.push(Stroke::solid(vec![c, hover], false));
             }
@@ -1141,7 +1146,11 @@ impl Tool for Dimension {
             // The dimension as it would be written, and its value by the cursor.
             let mut tag = None;
             if let Some(l) = self.geom_at(hover, None).and_then(|g| layout_dimension(&g)) {
-                strokes.extend(l.lines.iter().map(|&[p, q]| Stroke::solid(vec![p, q], false)));
+                strokes.extend(
+                    l.lines
+                        .iter()
+                        .map(|&[p, q]| Stroke::solid(vec![p, q], false)),
+                );
                 // A style's filled arrowheads and dots, outlined (docs/adr/0183 §3).
                 strokes.extend(
                     l.fills

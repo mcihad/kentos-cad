@@ -3,6 +3,7 @@
 //! pointer events and typed text; the tool changes the drawing only through
 //! the document and says what to draw as [`Preview`] data.
 
+use kentos_contracts::AnnotationKind;
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape as GeomShape;
 use kentos_geometry_core::geometry::Bounds;
@@ -115,7 +116,7 @@ pub enum ViewChange {
     /// (Köşelere koordinat yaz's Çizelge, docs/adr/0185 §1): the host runs
     /// Tablo ekle's placement ([`crate::table_place::TablePlace`]) with it
     /// under this name.
-    PlaceTable(kentos_contracts::EntityGeometry, &'static str),
+    PlaceTable(Box<kentos_contracts::EntityGeometry>, &'static str),
     /// Koordinat oku's point (docs/adr/0204 §8): the host reads the values
     /// of the shown rasters under it and says them once read.
     RasterValues(Vec2),
@@ -531,8 +532,12 @@ pub struct Memory {
     pub divide_parts: u32,
     pub divide_step: f64,
     pub divide_by_step: bool,
-    /// Yazı's height in paper millimetres and angle in degrees (`TextTool.heightMm`, `.angle`).
-    pub text_height_mm: f64,
+    /// The annotation tools' Yükseklik typed in this drawing, paper mm, by
+    /// kind (docs/adr/0205 §2; the web's `tools/annotationHeights.ts`): none
+    /// is the project's height of the kind. Another drawing opened forgets
+    /// them (`Memory::forget_heights`).
+    pub heights: Heights,
+    /// Yazı's angle in degrees (`TextTool.angle`).
     pub text_angle: f64,
     /// Yazı's Hiza (none: the left of the baseline), Genişlik, Zemin and
     /// Artır (`TextTool.align`, `.widthFactor`, `.mask`, `.increment`; docs/adr/0145 §6).
@@ -566,9 +571,11 @@ pub struct Memory {
     pub median_round: bool,
     /// Çok satırlı yazı's line spacing (`ParagraphTextTool.lineSpacing`, docs/adr/0182 §4): 1 none.
     pub paragraph_spacing: f64,
-    /// Kılavuz's arrowhead (none: the filled arrow) and Zemin
-    /// (`LeaderTool.arrow`, `.mask`; docs/adr/0146 §7); its height is Yazı's.
+    /// Kılavuz's arrowhead (none: the filled triangle), its size in the
+    /// note's height (none: 1; docs/adr/0205 §7) and Zemin (`LeaderTool.arrow`,
+    /// `.arrowSize`, `.mask`; docs/adr/0146 §7); its height is its own kind's.
     pub leader_arrow: Option<kentos_contracts::LeaderArrow>,
+    pub leader_arrow_size: Option<f64>,
     pub leader_mask: bool,
     /// Tarama's and Çoklu tara's pattern (an index into the core's
     /// `tools::hatch::choices`), its Ölçek and Açı (degrees), İkinci renk
@@ -691,26 +698,24 @@ pub struct Memory {
     pub labels_mask: bool,
     pub labels_active: bool,
     pub labels_linked: bool,
-    /// Koordinat yaz's Kollu, Yön, Şablon (empty: the project type's),
-    /// Basamak (none: the project's) and Yükseklik on paper, mm, and
-    /// Köşelere koordinat yaz's Çizelge (`coordinateOptions`; docs/adr/0185 §5).
+    /// Koordinat yaz's Kollu, Yön, Şablon (empty: the project type's) and
+    /// Basamak (none: the project's), and Köşelere koordinat yaz's Çizelge
+    /// (`coordinateOptions`; docs/adr/0185 §5); its Yükseklik is `heights`'.
     pub coordinate_leader: bool,
     pub coordinate_direction: kentos_geometry_core::ops::coordinate_labels::Direction,
     pub coordinate_template: Name,
     pub coordinate_decimals: Option<u8>,
-    pub coordinate_height_mm: f64,
     pub coordinate_schedule: bool,
     /// Nokta hesapla's Km ve sapma: the route's first km, metres
     /// (`PointCalcTool.kmStart`; docs/adr/0188 §2).
     pub calc_km_start: f64,
     /// Km yaz's options (`StationLabelTool`'s statics; docs/adr/0189): Aralık
-    /// and Başlangıç (metres of km), Yazı's side (none: no text), Yükseklik
-    /// (paper mm), İşaret, Enkesit's half width and Nokta's offset (metres;
-    /// 0 and none: none), Uçlar.
+    /// and Başlangıç (metres of km), Yazı's side (none: no text), İşaret,
+    /// Enkesit's half width and Nokta's offset (metres; 0 and none: none),
+    /// Uçlar; its Yükseklik is `heights`'.
     pub station_interval: f64,
     pub station_start: f64,
     pub station_text: Option<kentos_geometry_core::ops::stationing::Side>,
-    pub station_height_mm: f64,
     pub station_tick: bool,
     pub station_section: f64,
     pub station_point: Option<f64>,
@@ -816,6 +821,38 @@ impl Default for Values {
     }
 }
 
+/// The annotation tools' heights typed in one drawing, paper mm, by
+/// [`AnnotationKind`] (docs/adr/0205 §2); none: the project's.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Heights([Option<f64>; 7]);
+
+impl Heights {
+    /// What `kind`'s tool was given in this drawing; none while it is the project's.
+    pub fn get(&self, kind: AnnotationKind) -> Option<f64> {
+        self.0[kind as usize]
+    }
+
+    /// `kind`'s tool given `mm` (none: the project's again).
+    pub fn set(&mut self, kind: AnnotationKind, mm: Option<f64>) {
+        self.0[kind as usize] = mm;
+    }
+
+    /// `kind`'s height as a prompt writes it: the one held (a tool's seen
+    /// memory holds them all, `Context::seen_memory`), else its default.
+    pub fn mm(&self, kind: AnnotationKind) -> f64 {
+        self.get(kind).unwrap_or_else(|| kind.default_mm())
+    }
+}
+
+impl Memory {
+    /// Another drawing opened: the heights typed in the last one are
+    /// forgotten, the new one's annotations take its own project's
+    /// (docs/adr/0205 §2).
+    pub fn forget_heights(&mut self) {
+        self.heights = Heights::default();
+    }
+}
+
 impl Default for Memory {
     fn default() -> Self {
         Self {
@@ -855,7 +892,7 @@ impl Default for Memory {
             divide_parts: 4,
             divide_step: 10.0,
             divide_by_step: false,
-            text_height_mm: 2.5,
+            heights: Heights::default(),
             text_angle: 0.0,
             text_align: None,
             text_width_factor: 1.0,
@@ -876,6 +913,7 @@ impl Default for Memory {
             median_round: true,
             paragraph_spacing: 1.0,
             leader_arrow: None,
+            leader_arrow_size: None,
             leader_mask: false,
             hatch_choice: kentos_geometry_core::tools::hatch::DEFAULT_CHOICE,
             hatch_scale: 1.0,
@@ -941,13 +979,11 @@ impl Default for Memory {
             coordinate_direction: kentos_geometry_core::ops::coordinate_labels::Direction::Auto,
             coordinate_template: Name::EMPTY,
             coordinate_decimals: None,
-            coordinate_height_mm: crate::coordinate_labels::FIRST_HEIGHT_MM,
             coordinate_schedule: false,
             calc_km_start: 0.0,
             station_interval: crate::station_labels::FIRST_INTERVAL,
             station_start: 0.0,
             station_text: Some(kentos_geometry_core::ops::stationing::Side::Left),
-            station_height_mm: crate::station_labels::FIRST_HEIGHT_MM,
             station_tick: true,
             station_section: 0.0,
             station_point: None,
@@ -1005,6 +1041,31 @@ pub struct Context<'a> {
 impl Context<'_> {
     pub fn format(&self) -> Format {
         Format::of(self.doc.settings())
+    }
+
+    /// A new annotation's height of `kind` on paper, mm: what its tool was
+    /// given in this drawing, else the project's (docs/adr/0205 §2).
+    pub fn annotation_mm(&self, kind: AnnotationKind) -> f64 {
+        self.memory
+            .heights
+            .get(kind)
+            .unwrap_or_else(|| self.doc.settings().annotation_mm(kind))
+    }
+
+    /// The session's memory as a tool's prompt shows it: every kind's
+    /// height resolved (typed in this drawing, else the project's).
+    pub fn seen_memory(&self) -> Memory {
+        let mut m = *self.memory;
+        for kind in AnnotationKind::ALL {
+            m.heights.set(kind, Some(self.annotation_mm(kind)));
+        }
+        m
+    }
+
+    /// The same in the drawing at the plot scale, metres (`mm / 1000 ×
+    /// scale`, the expression every tool writes with).
+    pub fn annotation_height(&self, kind: AnnotationKind) -> f64 {
+        kentos_contracts::paper_height(self.annotation_mm(kind), self.doc.settings().plot_scale)
     }
 
     /// The symbol a new object takes: its object template's (docs/adr/0176

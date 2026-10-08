@@ -1,4 +1,5 @@
 import type { AppContext } from '../../app/context';
+import { annotationHeightMm, setAnnotationHeightMm } from '../../tools/annotationHeights';
 import {
   blankCells,
   BLANK_MOST,
@@ -193,8 +194,17 @@ export function openTableInsert(ctx: AppContext, picked = false): void {
         'Yazı yüksekliği',
         fixed !== undefined
           ? h('span', { class: 'table-fixed' }, `${fixed} mm (stilin)`)
-          : stepper({ label: 'Yazı yüksekliği', value: s.heightMm, min: 0.5, max: 50, step: 0.5, decimals: 2, unit: 'mm', onChange: (v) => ((s.heightMm = v), build()) }),
-        `Kâğıtta; çizimde ${ctx.format.length(((fixed ?? s.heightMm) / 1000) * scale, false)} ${ctx.format.lengthUnitLabel} (1:${scale.toLocaleString('tr-TR')}).`,
+          : stepper({
+              label: 'Yazı yüksekliği',
+              value: annotationHeightMm(ctx, 'table'),
+              min: 0.5,
+              max: 50,
+              step: 0.5,
+              decimals: 2,
+              unit: 'mm',
+              onChange: (v) => (setAnnotationHeightMm(ctx, 'table', v), build()),
+            }),
+        `Kâğıtta; çizimde ${ctx.format.length(((fixed ?? annotationHeightMm(ctx, 'table')) / 1000) * scale, false)} ${ctx.format.lengthUnitLabel} (1:${scale.toLocaleString('tr-TR')}).`,
       ),
     );
     const gridButtons = h(

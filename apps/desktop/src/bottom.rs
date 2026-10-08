@@ -447,39 +447,38 @@ impl App {
             }
             Listing::Vertices { pts, rings, footer } => {
                 let count = pts.len();
-                let table =
-                    Table::new([
-                        TableColumn::new("Köşe")
-                            .width(Length::FillPortion(1))
-                            .align_right(),
-                        number(east),
-                        number(north),
-                        number(format!("Kenar ({})", format.length_unit_label())),
-                        TableColumn::new(format!(
-                            "{} ({})",
-                            format.direction_name(),
-                            format.angle_unit_label()
-                        ))
-                            .width(Length::FillPortion(2))
-                            .align_right(),
+                let table = Table::new([
+                    TableColumn::new("Köşe")
+                        .width(Length::FillPortion(1))
+                        .align_right(),
+                    number(east),
+                    number(north),
+                    number(format!("Kenar ({})", format.length_unit_label())),
+                    TableColumn::new(format!(
+                        "{} ({})",
+                        format.direction_name(),
+                        format.angle_unit_label()
+                    ))
+                    .width(Length::FillPortion(2))
+                    .align_right(),
+                ])
+                .virtualized(count, move |i| {
+                    let p = pts[i];
+                    let next = next_in(&rings, i).map(|n| pts[n]);
+                    TableRow::new([
+                        label::mono((i + 1).to_string()).into(),
+                        label::mono(format.coord(p.x)).into(),
+                        label::mono(format.coord(p.y)).into(),
+                        label::mono(
+                            next.map_or_else(String::new, |n| format.length_bare(dist(p, n))),
+                        )
+                        .into(),
+                        label::mono(next.map_or_else(String::new, |n| {
+                            format.direction_bare(bearing_grad(p, n))
+                        }))
+                        .into(),
                     ])
-                    .virtualized(count, move |i| {
-                        let p = pts[i];
-                        let next = next_in(&rings, i).map(|n| pts[n]);
-                        TableRow::new([
-                            label::mono((i + 1).to_string()).into(),
-                            label::mono(format.coord(p.x)).into(),
-                            label::mono(format.coord(p.y)).into(),
-                            label::mono(
-                                next.map_or_else(String::new, |n| format.length_bare(dist(p, n))),
-                            )
-                            .into(),
-                            label::mono(next.map_or_else(String::new, |n| {
-                                format.direction_bare(bearing_grad(p, n))
-                            }))
-                            .into(),
-                        ])
-                    });
+                });
                 (table, footer)
             }
         };
@@ -692,7 +691,11 @@ fn screens() {
                     let _ = app.update(Message::CommandRun("L".to_owned()));
                     let _ = app.update(Message::CommandRun("PAN".to_owned()));
                     let _ = app.update(Message::CommandRun("L".to_owned()));
-                    let _ = app.update(Message::BottomResized(if height > 800.0 { 330.0 } else { 240.0 }));
+                    let _ = app.update(Message::BottomResized(if height > 800.0 {
+                        330.0
+                    } else {
+                        240.0
+                    }));
                 }
                 let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
                 let mut update = |app: &mut App, message| {

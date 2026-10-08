@@ -60,6 +60,7 @@ pub fn tool() -> Tool {
                     max,
                     integer,
                     unit: unit.into(),
+                    placeholder: None,
                 },
             )
         };
@@ -156,9 +157,12 @@ pub fn tool() -> Tool {
                 },
             )
             .default_value(json!("points")),
+            // Empty: the project's Kenar ve köşe yazıları height (docs/adr/0205 §2).
             number_param("textHeight", "Yazı yüksekliği", Some(0.1), Some(50.0), false, "mm")
-                .default_value(json!(2))
-                .describe("Kâğıt üzerinde, çizim ölçeğine göre.")
+                .optional()
+                .default_value(Value::Null)
+                .placeholder("Proje")
+                .describe("Kâğıt üzerinde, çizim ölçeğine göre; boş bırakılırsa projenin kenar ve köşe yazıları yüksekliği.")
                 .shown_when(|v| v.get("output").and_then(Value::as_str) != Some("points")),
             ParamDef::new(
                 "layer",
@@ -286,7 +290,10 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
         v.number("step").unwrap_or(1.0),
     );
     let created: Vec<_> = corners.iter().filter(|c| c.created).collect();
-    let height = (v.number("textHeight").unwrap_or(2.0) / 1000.0) * ctx.units.plot_scale;
+    let mm = v
+        .number("textHeight")
+        .unwrap_or(ctx.units.measure_height_mm);
+    let height = (mm / 1000.0) * ctx.units.plot_scale;
     let output = v.text("output");
     // Outside the corner, centred on its bisector (placed by the core from
     // the name's width in the drawing's typeface).

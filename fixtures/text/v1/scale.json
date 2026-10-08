@@ -1,0 +1,2456 @@
+{
+ "format": "kentos.annotation-scale-cases",
+ "version": 1,
+ "title": "Yazı yükseklikleri: projenin yükseklikleri, denetimi ve ölçek ya da yükseklik değişince izleyenler",
+ "note": "ADR 0205 §1, §3. scripts/fixtures/annotation_scale_cases.py kurallardan yazar; sözleşmenin (annotation_scale.rs) ve web'in (model/annotationScale.ts) kuralları bunu geçer. Yükseklikler metrede (kâğıtta mm / 1000 × ölçek), eşitlikle.",
+ "cases": [
+  {
+   "name": "Hiçbiri: varsayılanlar",
+   "op": "problem",
+   "heights": {},
+   "expect": null
+  },
+  {
+   "name": "Yazı 3,5 mm, koordinat 1,8 mm",
+   "op": "problem",
+   "heights": {
+    "text": 3.5,
+    "coordinate": 1.8
+   },
+   "expect": null
+  },
+  {
+   "name": "Kılavuz 0 mm",
+   "op": "problem",
+   "heights": {
+    "leader": 0.0
+   },
+   "expect": [
+    "leader",
+    "Kılavuz yüksekliği kâğıtta sıfırdan büyük, en çok 100 mm olmalı; 0 verildi."
+   ]
+  },
+  {
+   "name": "Ölçü 101 mm",
+   "op": "problem",
+   "heights": {
+    "dimension": 101.0
+   },
+   "expect": [
+    "dimension",
+    "Ölçü yüksekliği kâğıtta sıfırdan büyük, en çok 100 mm olmalı; 101 verildi."
+   ]
+  },
+  {
+   "name": "Tablo 100 mm olabilir",
+   "op": "problem",
+   "heights": {
+    "table": 100.0
+   },
+   "expect": null
+  },
+  {
+   "name": "Varsayılana eşit olan yazılmaz",
+   "op": "sanitize",
+   "heights": {
+    "text": 2.5,
+    "measure": 2.0
+   },
+   "expect": null
+  },
+  {
+   "name": "Kendi yükseklikleri kalır, varsayılanlar gider",
+   "op": "sanitize",
+   "heights": {
+    "text": 3.0,
+    "leader": 2.5,
+    "station": 1.5
+   },
+   "expect": {
+    "text": 3.0,
+    "station": 1.5
+   }
+  },
+  {
+   "name": "Tutmayan değer gider",
+   "op": "sanitize",
+   "heights": {
+    "table": -1.0,
+    "dimension": 3.5
+   },
+   "expect": {
+    "dimension": 3.5
+   }
+  },
+  {
+   "name": "Hiçbir şey değişmedi",
+   "op": "isNone",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 1000.0,
+    "from": {},
+    "to": {
+     "text": 2.5
+    }
+   },
+   "expect": true
+  },
+  {
+   "name": "Ölçek değişti",
+   "op": "isNone",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "expect": false
+  },
+  {
+   "name": "Yükseklik değişti",
+   "op": "isNone",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 1000.0,
+    "from": {},
+    "to": {
+     "leader": 3.0
+    }
+   },
+   "expect": false
+  },
+  {
+   "name": "1:1000'den 1:500'e: yazı",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 10.0,
+     "y": 20.0
+    },
+    "text": "Ada 101",
+    "height": 2.5,
+    "rotation": 0.0
+   },
+   "expect": {
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 10.0,
+     "y": 20.0
+    },
+    "text": "Ada 101",
+    "height": 1.25,
+    "rotation": 0.0
+   }
+  },
+  {
+   "name": "1:1000'den 1:500'e: çok satırlı yazının kutusu da",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Uzun bir not",
+    "height": 2.5,
+    "rotation": 15.0,
+    "boxWidth": 40.0,
+    "lineSpacing": 1.2
+   },
+   "expect": {
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Uzun bir not",
+    "height": 1.25,
+    "rotation": 15.0,
+    "boxWidth": 20.0,
+    "lineSpacing": 1.2
+   }
+  },
+  {
+   "name": "1:1000'den 1:500'e: kenar uzunluğu yazısı",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Kenar ölçüsü",
+     "Uzunluk (m)": "12.345"
+    },
+    "kind": "text",
+    "p": {
+     "x": 5.0,
+     "y": 0.0
+    },
+    "text": "12.35",
+    "height": 2.0,
+    "rotation": 30.0,
+    "align": "baselineCenter"
+   },
+   "expect": {
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Kenar ölçüsü",
+     "Uzunluk (m)": "12.345"
+    },
+    "kind": "text",
+    "p": {
+     "x": 5.0,
+     "y": 0.0
+    },
+    "text": "12.35",
+    "height": 1.0,
+    "rotation": 30.0,
+    "align": "baselineCenter"
+   }
+  },
+  {
+   "name": "1:1000'den 1:500'e: köşe numarası",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Köşe noktası",
+     "Nokta": "1"
+    },
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "1",
+    "height": 2.0,
+    "rotation": 0.0
+   },
+   "expect": {
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Köşe noktası",
+     "Nokta": "1"
+    },
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "1",
+    "height": 1.0,
+    "rotation": 0.0
+   }
+  },
+  {
+   "name": "1:1000'den 1:500'e: koordinat yazısı izlemez",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Y=487000.00",
+    "height": 2.0,
+    "rotation": 0.0
+   },
+   "expect": null
+  },
+  {
+   "name": "1:1000'den 1:500'e: elle değiştirilmiş yazı kalır",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Elle",
+    "height": 1.75,
+    "rotation": 0.0
+   },
+   "expect": null
+  },
+  {
+   "name": "1:1000'den 1:500'e: stilin sabit yüksekliğindeki yazı",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "101",
+    "height": 3.5,
+    "rotation": 0.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+    "font": "arimo"
+   },
+   "expect": {
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "101",
+    "height": 1.75,
+    "rotation": 0.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+    "font": "arimo"
+   }
+  },
+  {
+   "name": "1:1000'den 1:500'e: stilli ama kendi yüksekliğinde: kalır",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 8,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "101",
+    "height": 2.5,
+    "rotation": 0.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+    "font": "arimo"
+   },
+   "expect": null
+  },
+  {
+   "name": "1:1000'den 1:500'e: stilin yüksekliği yok: Yazı'yı izler",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 9,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Not",
+    "height": 2.5,
+    "rotation": 0.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+    "font": "barlow"
+   },
+   "expect": {
+    "id": 9,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Not",
+    "height": 1.25,
+    "rotation": 0.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+    "font": "barlow"
+   }
+  },
+  {
+   "name": "1:1000'den 1:500'e: nesneye bağlı yazı kalır",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 10,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "12",
+    "height": 2.5,
+    "rotation": 0.0,
+    "labelOf": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0999",
+    "labelScale": 1000.0
+   },
+   "expect": null
+  },
+  {
+   "name": "1:1000'den 1:500'e: kılavuz",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "leader",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 4.0,
+      "y": 3.0
+     }
+    ],
+    "text": "Mevcut bina",
+    "height": 2.5,
+    "rotation": 0.0,
+    "arrow": "open",
+    "arrowSize": 1.5
+   },
+   "expect": {
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "leader",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 4.0,
+      "y": 3.0
+     }
+    ],
+    "text": "Mevcut bina",
+    "height": 1.25,
+    "rotation": 0.0,
+    "arrow": "open",
+    "arrowSize": 1.5
+   }
+  },
+  {
+   "name": "1:1000'den 1:500'e: Standart ölçü",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "dimension",
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "offset": 3.0,
+    "height": 2.5
+   },
+   "expect": {
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "dimension",
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "offset": 3.0,
+    "height": 1.25
+   }
+  },
+  {
+   "name": "1:1000'den 1:500'e: stilli ölçü",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 13,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "dimension",
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "offset": -2.0,
+    "height": 3.0,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+    "arrow": "closed"
+   },
+   "expect": {
+    "id": 13,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "dimension",
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "offset": -2.0,
+    "height": 1.5,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+    "arrow": "closed"
+   }
+  },
+  {
+   "name": "1:1000'den 1:500'e: tablo, satırları, sütunları ve çerçevesiyle",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 14,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "table",
+    "p": {
+     "x": 0.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 2.5,
+    "rows": [
+     6.0,
+     5.5,
+     5.5
+    ],
+    "columns": [
+     20.0,
+     12.5
+    ],
+    "cells": [
+     [
+      "Nokta",
+      "Y"
+     ],
+     [
+      "1",
+      "487000.00"
+     ],
+     [
+      "2",
+      "487010.00"
+     ]
+    ],
+    "header": true,
+    "frame": 0.7
+   },
+   "expect": {
+    "id": 14,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "table",
+    "p": {
+     "x": 0.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 1.25,
+    "rows": [
+     3.0,
+     2.75,
+     2.75
+    ],
+    "columns": [
+     10.0,
+     6.25
+    ],
+    "cells": [
+     [
+      "Nokta",
+      "Y"
+     ],
+     [
+      "1",
+      "487000.00"
+     ],
+     [
+      "2",
+      "487010.00"
+     ]
+    ],
+    "header": true,
+    "frame": 0.35
+   }
+  },
+  {
+   "name": "1:1000'den 1:500'e: çoklu çizgi kalır",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 500.0,
+    "from": {},
+    "to": {}
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 15,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 1.0,
+      "y": 1.0
+     }
+    ]
+   },
+   "expect": null
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: yazı",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 10.0,
+     "y": 20.0
+    },
+    "text": "Ada 101",
+    "height": 3.0,
+    "rotation": 0.0
+   },
+   "expect": {
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 10.0,
+     "y": 20.0
+    },
+    "text": "Ada 101",
+    "height": 0.5,
+    "rotation": 0.0
+   }
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: çok satırlı yazının kutusu da",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Uzun bir not",
+    "height": 3.0,
+    "rotation": 15.0,
+    "boxWidth": 40.0,
+    "lineSpacing": 1.2
+   },
+   "expect": {
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Uzun bir not",
+    "height": 0.5,
+    "rotation": 15.0,
+    "boxWidth": 6.666666666666666,
+    "lineSpacing": 1.2
+   }
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: kenar uzunluğu yazısı",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Kenar ölçüsü",
+     "Uzunluk (m)": "12.345"
+    },
+    "kind": "text",
+    "p": {
+     "x": 5.0,
+     "y": 0.0
+    },
+    "text": "12.35",
+    "height": 2.0,
+    "rotation": 30.0,
+    "align": "baselineCenter"
+   },
+   "expect": {
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Kenar ölçüsü",
+     "Uzunluk (m)": "12.345"
+    },
+    "kind": "text",
+    "p": {
+     "x": 5.0,
+     "y": 0.0
+    },
+    "text": "12.35",
+    "height": 0.5,
+    "rotation": 30.0,
+    "align": "baselineCenter"
+   }
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: köşe numarası",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Köşe noktası",
+     "Nokta": "1"
+    },
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "1",
+    "height": 2.0,
+    "rotation": 0.0
+   },
+   "expect": {
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Köşe noktası",
+     "Nokta": "1"
+    },
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "1",
+    "height": 0.5,
+    "rotation": 0.0
+   }
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: koordinat yazısı izlemez",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Y=487000.00",
+    "height": 2.0,
+    "rotation": 0.0
+   },
+   "expect": null
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: elle değiştirilmiş yazı kalır",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Elle",
+    "height": 1.75,
+    "rotation": 0.0
+   },
+   "expect": null
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: stilin sabit yüksekliğindeki yazı",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "101",
+    "height": 3.5,
+    "rotation": 0.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+    "font": "arimo"
+   },
+   "expect": {
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "101",
+    "height": 0.875,
+    "rotation": 0.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+    "font": "arimo"
+   }
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: stilli ama kendi yüksekliğinde: kalır",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 8,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "101",
+    "height": 2.5,
+    "rotation": 0.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+    "font": "arimo"
+   },
+   "expect": null
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: stilin yüksekliği yok: Yazı'yı izler",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 9,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Not",
+    "height": 2.5,
+    "rotation": 0.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+    "font": "barlow"
+   },
+   "expect": null
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: nesneye bağlı yazı kalır",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 10,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "12",
+    "height": 2.5,
+    "rotation": 0.0,
+    "labelOf": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0999",
+    "labelScale": 1000.0
+   },
+   "expect": null
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: kılavuz",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "leader",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 4.0,
+      "y": 3.0
+     }
+    ],
+    "text": "Mevcut bina",
+    "height": 2.5,
+    "rotation": 0.0,
+    "arrow": "open",
+    "arrowSize": 1.5
+   },
+   "expect": {
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "leader",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 4.0,
+      "y": 3.0
+     }
+    ],
+    "text": "Mevcut bina",
+    "height": 0.625,
+    "rotation": 0.0,
+    "arrow": "open",
+    "arrowSize": 1.5
+   }
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: Standart ölçü",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "dimension",
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "offset": 3.0,
+    "height": 2.5
+   },
+   "expect": {
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "dimension",
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "offset": 3.0,
+    "height": 0.5
+   }
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: stilli ölçü",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 13,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "dimension",
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "offset": -2.0,
+    "height": 3.0,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+    "arrow": "closed"
+   },
+   "expect": {
+    "id": 13,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "dimension",
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "offset": -2.0,
+    "height": 0.75,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+    "arrow": "closed"
+   }
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: tablo, satırları, sütunları ve çerçevesiyle",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 14,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "table",
+    "p": {
+     "x": 0.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 2.5,
+    "rows": [
+     6.0,
+     5.5,
+     5.5
+    ],
+    "columns": [
+     20.0,
+     12.5
+    ],
+    "cells": [
+     [
+      "Nokta",
+      "Y"
+     ],
+     [
+      "1",
+      "487000.00"
+     ],
+     [
+      "2",
+      "487010.00"
+     ]
+    ],
+    "header": true,
+    "frame": 0.7
+   },
+   "expect": {
+    "id": 14,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "table",
+    "p": {
+     "x": 0.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 0.625,
+    "rows": [
+     1.5,
+     1.375,
+     1.375
+    ],
+    "columns": [
+     5.0,
+     3.125
+    ],
+    "cells": [
+     [
+      "Nokta",
+      "Y"
+     ],
+     [
+      "1",
+      "487000.00"
+     ],
+     [
+      "2",
+      "487010.00"
+     ]
+    ],
+    "header": true,
+    "frame": 0.175
+   }
+  },
+  {
+   "name": "1:1000'den 1:250'ye, Yazı 3 mm'den 2 mm'ye: çoklu çizgi kalır",
+   "op": "follow",
+   "change": {
+    "fromScale": 1000.0,
+    "toScale": 250.0,
+    "from": {
+     "text": 3.0
+    },
+    "to": {
+     "text": 2.0,
+     "dimension": 2.0
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 15,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 1.0,
+      "y": 1.0
+     }
+    ]
+   },
+   "expect": null
+  },
+  {
+   "name": "Yükseklikler 1:500'de: yazı",
+   "op": "follow",
+   "change": {
+    "fromScale": 500.0,
+    "toScale": 500.0,
+    "from": {
+     "text": 2.5
+    },
+    "to": {
+     "text": 3.5,
+     "leader": 3.0,
+     "dimension": 1.8,
+     "table": 3.0,
+     "measure": 2.5
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 10.0,
+     "y": 20.0
+    },
+    "text": "Ada 101",
+    "height": 1.25,
+    "rotation": 0.0
+   },
+   "expect": {
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 10.0,
+     "y": 20.0
+    },
+    "text": "Ada 101",
+    "height": 1.75,
+    "rotation": 0.0
+   }
+  },
+  {
+   "name": "Yükseklikler 1:500'de: kenar uzunluğu",
+   "op": "follow",
+   "change": {
+    "fromScale": 500.0,
+    "toScale": 500.0,
+    "from": {
+     "text": 2.5
+    },
+    "to": {
+     "text": 3.5,
+     "leader": 3.0,
+     "dimension": 1.8,
+     "table": 3.0,
+     "measure": 2.5
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Kenar ölçüsü",
+     "Uzunluk (m)": "12.345"
+    },
+    "kind": "text",
+    "p": {
+     "x": 5.0,
+     "y": 0.0
+    },
+    "text": "12.35",
+    "height": 1.0,
+    "rotation": 30.0,
+    "align": "baselineCenter"
+   },
+   "expect": {
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Kenar ölçüsü",
+     "Uzunluk (m)": "12.345"
+    },
+    "kind": "text",
+    "p": {
+     "x": 5.0,
+     "y": 0.0
+    },
+    "text": "12.35",
+    "height": 1.25,
+    "rotation": 30.0,
+    "align": "baselineCenter"
+   }
+  },
+  {
+   "name": "Yükseklikler 1:500'de: kılavuz",
+   "op": "follow",
+   "change": {
+    "fromScale": 500.0,
+    "toScale": 500.0,
+    "from": {
+     "text": 2.5
+    },
+    "to": {
+     "text": 3.5,
+     "leader": 3.0,
+     "dimension": 1.8,
+     "table": 3.0,
+     "measure": 2.5
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "leader",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 4.0,
+      "y": 3.0
+     }
+    ],
+    "text": "Mevcut bina",
+    "height": 1.25,
+    "rotation": 0.0,
+    "arrow": "open",
+    "arrowSize": 1.5
+   },
+   "expect": {
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "leader",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 4.0,
+      "y": 3.0
+     }
+    ],
+    "text": "Mevcut bina",
+    "height": 1.5,
+    "rotation": 0.0,
+    "arrow": "open",
+    "arrowSize": 1.5
+   }
+  },
+  {
+   "name": "Yükseklikler 1:500'de: ölçü",
+   "op": "follow",
+   "change": {
+    "fromScale": 500.0,
+    "toScale": 500.0,
+    "from": {
+     "text": 2.5
+    },
+    "to": {
+     "text": 3.5,
+     "leader": 3.0,
+     "dimension": 1.8,
+     "table": 3.0,
+     "measure": 2.5
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "dimension",
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "offset": 3.0,
+    "height": 1.25
+   },
+   "expect": {
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "dimension",
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "offset": 3.0,
+    "height": 0.9
+   }
+  },
+  {
+   "name": "Yükseklikler 1:500'de: tablo",
+   "op": "follow",
+   "change": {
+    "fromScale": 500.0,
+    "toScale": 500.0,
+    "from": {
+     "text": 2.5
+    },
+    "to": {
+     "text": 3.5,
+     "leader": 3.0,
+     "dimension": 1.8,
+     "table": 3.0,
+     "measure": 2.5
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 14,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "table",
+    "p": {
+     "x": 0.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 1.25,
+    "rows": [
+     6.0,
+     5.5,
+     5.5
+    ],
+    "columns": [
+     20.0,
+     12.5
+    ],
+    "cells": [
+     [
+      "Nokta",
+      "Y"
+     ],
+     [
+      "1",
+      "487000.00"
+     ],
+     [
+      "2",
+      "487010.00"
+     ]
+    ],
+    "header": true,
+    "frame": 0.7
+   },
+   "expect": {
+    "id": 14,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "table",
+    "p": {
+     "x": 0.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 1.5,
+    "rows": [
+     7.199999999999999,
+     6.6,
+     6.6
+    ],
+    "columns": [
+     24.0,
+     15.0
+    ],
+    "cells": [
+     [
+      "Nokta",
+      "Y"
+     ],
+     [
+      "1",
+      "487000.00"
+     ],
+     [
+      "2",
+      "487010.00"
+     ]
+    ],
+    "header": true,
+    "frame": 0.84
+   }
+  },
+  {
+   "name": "Yükseklikler 1:500'de: koordinat yazısı izlemez",
+   "op": "follow",
+   "change": {
+    "fromScale": 500.0,
+    "toScale": 500.0,
+    "from": {
+     "text": 2.5
+    },
+    "to": {
+     "text": 3.5,
+     "leader": 3.0,
+     "dimension": 1.8,
+     "table": 3.0,
+     "measure": 2.5
+    }
+   },
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0301",
+     "name": "Ada no",
+     "font": "arimo",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0302",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0401",
+     "name": "Mimari",
+     "height": 3.0,
+     "arrow": "closed"
+    }
+   ],
+   "entity": {
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Y=487000.00",
+    "height": 1.0,
+    "rotation": 0.0
+   },
+   "expect": null
+  }
+ ]
+}

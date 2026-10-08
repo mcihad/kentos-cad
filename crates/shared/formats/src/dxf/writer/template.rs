@@ -346,15 +346,24 @@ pub fn dimstyle_record(
         "AcDbDimStyleTableRecord",
     );
     out.str(2, name);
+    // The handles Standard leaves out (DIMLTYPE 345 … DIMLTEX2 347, docs/adr/0205 §6) go before the
+    // weights, where AutoCAD writes them; the other variables it leaves out (DIMPOST) after the flags.
+    let handle = |code: i32| (340..=349).contains(&code);
     for (i, (code, v)) in STANDARD_VARS.iter().enumerate() {
+        if *code == 371 {
+            for (code, v) in vars {
+                if handle(*code) {
+                    out.str(*code, v);
+                }
+            }
+        }
         match vars.iter().find(|(c, _)| c == code) {
             Some((_, own)) => out.str(*code, own),
             None => out.str(*code, v),
         }
-        // Variables Standard leaves out (DIMPOST) follow the flags, where AutoCAD writes them.
         if i == 0 {
             for (code, v) in vars {
-                if !STANDARD_VARS.iter().any(|(c, _)| c == code) {
+                if !handle(*code) && !STANDARD_VARS.iter().any(|(c, _)| c == code) {
                     out.str(*code, v);
                 }
             }

@@ -295,6 +295,7 @@ pub fn input_from_param(
                 max,
                 integer,
                 unit,
+                ..
             },
             _,
         ) => {

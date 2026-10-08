@@ -120,7 +120,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       icon: 'chip',
       title: 'Çizim motoru',
       lead: 'Çizim alanını ekran kartında çizen arka uç, kenar yumuşatma, çözünürlük, sembol boyutu, çizgi kalınlığı ve görünüm kipleri. Arka uç, kenar yumuşatma ve çözünürlük bu cihaza özgüdür.',
-      keys: ['rendererPreference', 'msaa', 'hiDpi', 'symbolSize', 'lineWeights', 'colorMode', 'fills', 'areaEdges', 'transparency', 'highlightColor', 'highlightWidth'],
+      keys: ['rendererPreference', 'msaa', 'hiDpi', 'symbolSize', 'lineWeights', 'colorMode', 'annotationSize', 'fills', 'areaEdges', 'transparency', 'highlightColor', 'highlightWidth'],
       render: (api) => engine(api, ctx),
     },
     {

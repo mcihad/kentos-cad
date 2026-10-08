@@ -73,8 +73,10 @@ const HATCH_PATTERNS = ['solid', 'lines', 'cross', 'pattern', 'gradient'] as con
 const PATTERN_FIELDS = new Set(['type', 'angle', 'spacing', 'name', 'scale', 'lines', 'gradient']);
 /** A gradient's shapes, numbered as the columns hold them (`columns.rs`'s `GRADIENT_SHAPES`, docs/adr/0186). */
 const GRADIENT_SHAPES = ['linear', 'cylinder', 'spherical'] as const;
-/** A leader's arrowheads, numbered as the columns hold them (the contract's `LeaderArrow::ALL`; the filled arrow is none). */
-const LEADER_ARROWS = ['open', 'dot', 'none'] as const;
+/** A leader's arrowheads, numbered as the columns hold them (the contract's `LeaderArrow::ALL`; the filled triangle is none). */
+const LEADER_ARROWS = ['open', 'dot', 'none', 'closed', 'open30', 'open90', 'dotSmall', 'dotBlank', 'oblique', 'archTick', 'boxFilled', 'boxBlank', 'datumFilled'] as const;
+/** The line types, numbered as the columns hold them (`columns.rs`'s `LINE_TYPES`, docs/adr/0205 §6). */
+const LINE_TYPES = ['continuous', 'dashed', 'dashdot', 'dotted'] as const;
 /** The drawing typefaces, numbered as the columns hold them (the contract's `DrawingFont::ALL`, docs/adr/0183). */
 const FONTS = ['barlow', 'arimo', 'overpass', 'quicksand', 'architects-daughter', 'courier-prime', 'plex-mono'] as const;
 /** A dimension's arrowheads, numbered as the columns hold them (the contract's `DimensionArrow::ALL`; the tick is none). */
@@ -106,6 +108,18 @@ const WEIGHT = 8;
  * not here (docs/adr/0144).
  */
 const OPT = Array.from({ length: 19 }, (_, i) => 1 << (8 + i));
+/**
+ * A dimension's line fields follow in a line flags int (`columns.rs`'s `LINES`, docs/adr/0205 §6): the dimension
+ * line's colour, weight and type, the extension lines', the value's colour.
+ */
+const LINES = 1 << 27;
+const LINE_COLOR = 1;
+const LINE_WEIGHT = 2;
+const LINE_TYPE = 4;
+const EXT_COLOR = 8;
+const EXT_WEIGHT = 16;
+const EXT_LINE_TYPE = 32;
+const TEXT_COLOR = 64;
 /** A multi-line text's run's flags (docs/adr/0182; `columns.rs`'s `RUN_*`): its format, and whether its colour follows. */
 const RUN_BOLD = 1;
 const RUN_ITALIC = 2;
@@ -530,6 +544,28 @@ class Packer {
         if (e.prefix !== undefined) (flags |= OPT[16]), this.text(e.prefix, 'prefix');
         if (e.suffix !== undefined) (flags |= OPT[17]), this.text(e.suffix, 'suffix');
         if (e.font !== undefined) (flags |= OPT[18]), this.int(this.place(FONTS, e.font, 'font', 'yazı tipi'));
+        // Its lines (docs/adr/0205 §6): the line flags, then the types, the weights and the colours.
+        const lineBits: [number, unknown][] = [
+          [LINE_COLOR, e.dimLineColor],
+          [LINE_WEIGHT, e.dimLineWeight],
+          [LINE_TYPE, e.dimLineType],
+          [EXT_COLOR, e.extColor],
+          [EXT_WEIGHT, e.extWeight],
+          [EXT_LINE_TYPE, e.extLineType],
+          [TEXT_COLOR, e.textColor],
+        ];
+        const line = lineBits.reduce((acc, [bit, v]) => (v !== undefined ? acc | bit : acc), 0);
+        if (line) {
+          flags |= LINES;
+          this.int(line);
+          if (e.dimLineType !== undefined) this.int(this.place(LINE_TYPES, e.dimLineType, 'dimLineType', 'çizgi tipi'));
+          if (e.extLineType !== undefined) this.int(this.place(LINE_TYPES, e.extLineType, 'extLineType', 'çizgi tipi'));
+          if (e.dimLineWeight !== undefined) this.float(e.dimLineWeight, 'dimLineWeight');
+          if (e.extWeight !== undefined) this.float(e.extWeight, 'extWeight');
+          if (e.dimLineColor !== undefined) this.text(e.dimLineColor, 'dimLineColor');
+          if (e.extColor !== undefined) this.text(e.extColor, 'extColor');
+          if (e.textColor !== undefined) this.text(e.textColor, 'textColor');
+        }
         break;
       }
       case 'hatch': {
@@ -660,6 +696,8 @@ class Packer {
         }
         if (e.mask === true) flags |= OPT[2];
         else if (e.mask !== undefined) throw unwritable('bad_value', `${this.where}/mask`, 'zemin yalnız true yazılır; zeminsiz kılavuzda alan yoktur');
+        // Its arrowhead's size (docs/adr/0205 §7).
+        if (e.arrowSize !== undefined) (flags |= OPT[3]), this.float(e.arrowSize, 'arrowSize');
         break;
       // docs/adr/0184: p, turn, height; the rows' and columns' lists; every cell row with its length and its words;
       // the ranges, the alignments' places, the heading a flag, the lines' place, its face as a text's, the source
@@ -1027,6 +1065,17 @@ export class ColumnsReader {
         if (has(16)) e.prefix = this.readText();
         if (has(17)) e.suffix = this.readText();
         if (has(18)) e.font = this.at(FONTS, 'yazı tipi');
+        // docs/adr/0205 §6: the line flags, then the types, the weights and the colours.
+        if (flags & LINES) {
+          const line = this.readInt();
+          if (line & LINE_TYPE) e.dimLineType = this.at(LINE_TYPES, 'çizgi tipi');
+          if (line & EXT_LINE_TYPE) e.extLineType = this.at(LINE_TYPES, 'çizgi tipi');
+          if (line & LINE_WEIGHT) e.dimLineWeight = this.num();
+          if (line & EXT_WEIGHT) e.extWeight = this.num();
+          if (line & LINE_COLOR) e.dimLineColor = this.readText();
+          if (line & EXT_COLOR) e.extColor = this.readText();
+          if (line & TEXT_COLOR) e.textColor = this.readText();
+        }
         break;
       case 'hatch': {
         e.ring = this.pts();
@@ -1126,6 +1175,7 @@ export class ColumnsReader {
         if (has(0)) e.text = this.readText();
         if (has(1)) e.arrow = LEADER_ARROWS[this.readInt()];
         if (has(2)) e.mask = true;
+        if (has(3)) e.arrowSize = this.num();
         break;
       case 'table': {
         e.p = this.pt();

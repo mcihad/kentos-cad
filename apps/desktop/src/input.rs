@@ -158,7 +158,7 @@ impl App {
                 // Koordinat oku: the rasters' values under the point, read off the thread (rasters/).
                 ViewChange::RasterValues(p) => self.raster_values_wanted.push(p),
                 // Köşelere koordinat yaz's schedule hangs from the cursor (docs/adr/0185 §1).
-                ViewChange::PlaceTable(table, label) => self.place_table(table, label),
+                ViewChange::PlaceTable(table, label) => self.place_table(*table, label),
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
                 ViewChange::Picked(p) => {
                     if !self.processing_picked(p) && !self.blocks_picked(p) {

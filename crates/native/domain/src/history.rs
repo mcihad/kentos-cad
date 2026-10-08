@@ -483,7 +483,11 @@ impl Document {
     /// `gone` ones: undoing them would revert that change, or put back an
     /// insert of a block the drawing no longer has (the web's
     /// `forgetBlockHistory`, docs/adr/0144 §5).
-    pub(crate) fn forget_block_history(&mut self, changed: &HashSet<BlockId>, gone: &HashSet<BlockId>) {
+    pub(crate) fn forget_block_history(
+        &mut self,
+        changed: &HashSet<BlockId>,
+        gone: &HashSet<BlockId>,
+    ) {
         if changed.is_empty() {
             return;
         }

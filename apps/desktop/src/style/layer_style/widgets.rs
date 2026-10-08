@@ -102,12 +102,8 @@ fn slot<'a>(
     // What Düzenle starts from: the slot's own symbol, a copy of the library
     // symbol, or what the slot shows (the web's started from a default when
     // the slot had none); none when the library symbol is gone.
-    let design = crate::style::designer::slot_symbol(
-        env.look.library,
-        symbol,
-        env.simple.get(class),
-        class,
-    );
+    let design =
+        crate::style::designer::slot_symbol(env.look.library, symbol, env.simple.get(class), class);
     let menu = move || {
         Menu::new()
             .item(

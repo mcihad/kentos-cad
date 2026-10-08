@@ -1074,7 +1074,8 @@
      "colors": [
       "fg"
      ],
-     "assets": {}
+     "assets": {},
+     "hairlines": true
     },
     "objects": [
      2,
@@ -5965,7 +5966,8 @@
      "colors": [
       "fg"
      ],
-     "assets": {}
+     "assets": {},
+     "hairlines": true
     },
     "objects": [
      4,
@@ -7985,7 +7987,8 @@
       "fg",
       "#F28E2B"
      ],
-     "assets": {}
+     "assets": {},
+     "hairlines": true
     },
     "objects": [
      2,

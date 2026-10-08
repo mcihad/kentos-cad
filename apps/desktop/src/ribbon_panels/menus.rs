@@ -10,7 +10,7 @@ use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Menu;
 
-use super::{DRAW_COLORS, Event, LINE_TYPES, LINE_WEIGHTS, PLOT_SCALES, weight_text};
+use super::{DRAW_COLORS, Event, LINE_TYPES, LINE_WEIGHTS, weight_text};
 use crate::app::Message;
 
 /// A line of the layer field's menu.
@@ -117,14 +117,23 @@ pub(super) fn weight_menu(current: Option<f64>) -> Menu<Message> {
     )
 }
 
-pub(super) fn scale_menu(current: f64) -> Menu<Message> {
-    PLOT_SCALES.iter().fold(Menu::new(), |menu, scale| {
-        menu.radio(
-            format!("1:{scale}"),
-            current == *scale,
-            Message::RibbonPanel(Event::Scale(*scale)),
+/// Ölçek (docs/adr/0205 §4): the project's type's scales and the current
+/// one when it is none of them, then Ölçek yaz….
+pub(super) fn scale_menu(current: f64, cad: bool) -> Menu<Message> {
+    kentos_project::wizard::project_scales(cad, current)
+        .into_iter()
+        .fold(Menu::new(), |menu, scale| {
+            menu.radio(
+                kentos_project::wizard::scale_text(scale),
+                current == scale,
+                Message::RibbonPanel(Event::Scale(scale)),
+            )
+        })
+        .separator()
+        .item(
+            "Ölçek yaz…",
+            Message::PlotScale(crate::annotation_scale::Event::Open),
         )
-    })
 }
 
 /// The kinds' column: up to three lines, else two and “n tür daha”, a line

@@ -455,6 +455,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             survey: None,
             dimension_styles: Vec::new(),
             topology: None,
+            annotation: None,
             text_styles: Vec::new(),
         },
         origin: point(rng),

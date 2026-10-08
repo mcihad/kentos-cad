@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-use crate::{DrawingFont, DrawingUnit, width_factor_ok};
+use crate::{DrawingFont, DrawingUnit, LineType, width_factor_ok};
 
 /// The steepest a text's letters may lean, degrees either way (AutoCAD's
 /// bound); never reached.
@@ -284,6 +284,75 @@ pub struct DimensionLook {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub font: Option<DrawingFont>,
+    /// The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:
+    /// the object's (docs/adr/0205 §6).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dim_line_color: Option<String>,
+    /// The dimension line's weight, paper mm as an object's; absent: a hairline.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dim_line_weight: Option<f64>,
+    /// The dimension line's type; absent: continuous.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dim_line_type: Option<LineType>,
+    /// The extension lines' colour; absent: the object's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ext_color: Option<String>,
+    /// The extension lines' weight, paper mm; absent: a hairline.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ext_weight: Option<f64>,
+    /// The extension lines' type; absent: continuous.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ext_line_type: Option<LineType>,
+    /// The value's colour; absent: the object's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text_color: Option<String>,
+}
+
+/// Whether a dimension line's weight may be written: finite, 0 (the thinnest
+/// line) to `MAX_LINE_WEIGHT` mm, as an object's own (docs/adr/0139).
+pub fn line_weight_holds(w: f64) -> bool {
+    w.is_finite() && (0.0..=crate::MAX_LINE_WEIGHT).contains(&w)
+}
+
+/// What is wrong with a dimension's line colours and weights (docs/adr/0205
+/// §6): the field and the refusal's words; none when they hold.
+fn line_problem(
+    colors: [(&'static str, &'static str, &Option<String>); 3],
+    weights: [(&'static str, &'static str, Option<f64>); 2],
+) -> Option<(&'static str, String)> {
+    for (field, what, c) in colors {
+        if let Some(c) = c
+            && !crate::is_hex_colour(c)
+        {
+            return Some((
+                field,
+                format!(
+                    "Ölçünün {what} #RRGGBB biçiminde olmalı; “{c}” verildi. Rengi #RRGGBB olarak verin ya da alanı kaldırın (nesnenin rengi)."
+                ),
+            ));
+        }
+    }
+    for (field, what, w) in weights {
+        if let Some(w) = w
+            && !line_weight_holds(w)
+        {
+            return Some((
+                field,
+                format!(
+                    "Ölçünün {what} kâğıtta 0 ile {} mm arasında olmalı; {w} verildi. Bu aralıkta verin ya da alanı kaldırın (kılcal).",
+                    crate::MAX_LINE_WEIGHT
+                ),
+            ));
+        }
+    }
+    None
 }
 
 /// Why a prefix or a suffix may not be written: empty, too long, or with a
@@ -403,7 +472,40 @@ impl DimensionLook {
                 ));
             }
         }
-        None
+        line_problem(
+            [
+                (
+                    "dimLineColor",
+                    "ölçü çizgisinin rengi",
+                    &self.dim_line_color,
+                ),
+                ("extColor", "uzatma çizgilerinin rengi", &self.ext_color),
+                ("textColor", "değerinin rengi", &self.text_color),
+            ],
+            [
+                (
+                    "dimLineWeight",
+                    "ölçü çizgisinin kalınlığı",
+                    self.dim_line_weight,
+                ),
+                (
+                    "extWeight",
+                    "uzatma çizgilerinin kalınlığı",
+                    self.ext_weight,
+                ),
+            ],
+        )
+    }
+
+    /// Whether it has one of the line fields (`.kcad` schema 30, docs/adr/0205 §6).
+    pub fn has_lines(&self) -> bool {
+        self.dim_line_color.is_some()
+            || self.dim_line_weight.is_some()
+            || self.dim_line_type.is_some()
+            || self.ext_color.is_some()
+            || self.ext_weight.is_some()
+            || self.ext_line_type.is_some()
+            || self.text_color.is_some()
     }
 }
 
@@ -445,7 +547,7 @@ pub struct TextStyleDef {
 }
 
 /// A named dimension style (docs/adr/0183 §3): sizes in paper mm.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -492,6 +594,28 @@ pub struct DimensionStyleDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub font: Option<DrawingFont>,
+    /// The line fields as a dimension's (docs/adr/0205 §6); weights in paper mm.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dim_line_color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dim_line_weight: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dim_line_type: Option<LineType>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ext_color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ext_weight: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ext_line_type: Option<LineType>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text_color: Option<String>,
 }
 
 /// The name rule both tables share: what is wrong with `names` (each its id
@@ -642,7 +766,35 @@ impl DimensionStyleDef {
                 return Some(format!("“{name}” ölçü stilinin {what} yazılamaz: {why}"));
             }
         }
-        None
+        line_problem(
+            [
+                (
+                    "dimLineColor",
+                    "ölçü çizgisinin rengi",
+                    &self.dim_line_color,
+                ),
+                ("extColor", "uzatma çizgilerinin rengi", &self.ext_color),
+                ("textColor", "değerinin rengi", &self.text_color),
+            ],
+            [
+                (
+                    "dimLineWeight",
+                    "ölçü çizgisinin kalınlığı",
+                    self.dim_line_weight,
+                ),
+                (
+                    "extWeight",
+                    "uzatma çizgilerinin kalınlığı",
+                    self.ext_weight,
+                ),
+            ],
+        )
+        .map(|(_, why)| format!("“{name}” ölçü stili: {why}"))
+    }
+
+    /// Whether it has one of the line fields (`.kcad` schema 30).
+    pub fn has_lines(&self) -> bool {
+        self.look().has_lines()
     }
 
     /// The look a dimension in this style has: its sizes as ratios of its height.
@@ -665,6 +817,13 @@ impl DimensionStyleDef {
             prefix: self.prefix.clone(),
             suffix: self.suffix.clone(),
             font: self.font,
+            dim_line_color: self.dim_line_color.clone(),
+            dim_line_weight: self.dim_line_weight,
+            dim_line_type: self.dim_line_type,
+            ext_color: self.ext_color.clone(),
+            ext_weight: self.ext_weight,
+            ext_line_type: self.ext_line_type,
+            text_color: self.text_color.clone(),
         }
     }
 
@@ -799,17 +958,16 @@ pub fn follow_text_style(
 
 /// A dimension after `style` is applied (none: Standart), at `1:plot_scale`
 /// (docs/adr/0183 §3): the style's look and value height. Standart takes the
-/// look away; its height is `STANDARD_DIMENSION_HEIGHT_MM`'s.
+/// look away; its height is the project's dimension height `standard_mm`
+/// (docs/adr/0205 §1; `STANDARD_DIMENSION_HEIGHT_MM` when it names none).
 pub fn apply_dimension_style(
     style: Option<&DimensionStyleDef>,
     plot_scale: f64,
+    standard_mm: f64,
 ) -> (DimensionLook, f64) {
     match style {
         Some(s) => (s.look(), s.height_at(plot_scale)),
-        None => (
-            DimensionLook::default(),
-            STANDARD_DIMENSION_HEIGHT_MM / 1000.0 * plot_scale,
-        ),
+        None => (DimensionLook::default(), standard_mm / 1000.0 * plot_scale),
     }
 }
 
@@ -844,6 +1002,21 @@ pub fn follow_dimension_style(
         prefix: pick(&look.prefix, &was.prefix, &now.prefix),
         suffix: pick(&look.suffix, &was.suffix, &now.suffix),
         font: pick(&look.font, &was.font, &now.font),
+        dim_line_color: pick(
+            &look.dim_line_color,
+            &was.dim_line_color,
+            &now.dim_line_color,
+        ),
+        dim_line_weight: pick(
+            &look.dim_line_weight,
+            &was.dim_line_weight,
+            &now.dim_line_weight,
+        ),
+        dim_line_type: pick(&look.dim_line_type, &was.dim_line_type, &now.dim_line_type),
+        ext_color: pick(&look.ext_color, &was.ext_color, &now.ext_color),
+        ext_weight: pick(&look.ext_weight, &was.ext_weight, &now.ext_weight),
+        ext_line_type: pick(&look.ext_line_type, &was.ext_line_type, &now.ext_line_type),
+        text_color: pick(&look.text_color, &was.text_color, &now.text_color),
     };
     let height = if height == old.height_at(plot_scale) {
         new.height_at(plot_scale)

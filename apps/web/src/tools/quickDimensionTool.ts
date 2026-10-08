@@ -5,10 +5,10 @@ import { layoutDimension, quickDimensions, type QuickDimensions } from '../model
 import type { ViewTransform } from '../viewport/Camera';
 import { parseNumber } from './coordinateInput';
 import { writeObjects } from './createCommand';
-import { dimensionZemin, paper } from './dimensionTool';
+import { dimensionZemin } from './dimensionTool';
 import { MAX_GHOSTS, SelectionFirstTool } from './modifyTools';
 import { drawTag, strokeLayout } from './preview';
-import { dimensionLookNow, dimensionStyleChoices, dimensionStyleName, stylesShown, takeDimensionStyle } from './styleOption';
+import { dimensionLookNow, dimensionStyleChoices, dimensionStyleName, standardDimensionHeight, stylesShown, takeDimensionStyle } from './styleOption';
 import type { OptionChoice } from './Tool';
 
 /** What is said when the selection has nothing to measure. */
@@ -63,7 +63,7 @@ export class QuickDimensionTool extends SelectionFirstTool {
   /** The dimensions with the cursor at `at` and `typed` the distance typed, in the style's look: the selection in the drawing's order. */
   private quick(at: Vec2, typed: number | null): QuickDimensions {
     const objects = this.targets().sort((a, b) => a.id - b.id);
-    const { look, height } = dimensionLookNow(this.ctx, paper(this.ctx, 2.5));
+    const { look, height } = dimensionLookNow(this.ctx, standardDimensionHeight(this.ctx));
     const q = quickDimensions(objects, at, typed, height);
     return { ...q, dimensions: q.dimensions.map((d) => ({ ...d, ...look })) };
   }

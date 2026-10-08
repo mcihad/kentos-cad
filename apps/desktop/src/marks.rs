@@ -204,7 +204,14 @@ impl<Message> canvas::Program<Message> for Marks {
     ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let accent = Tokens::of(theme).accent;
-        grips(&mut frame, &self.grips, self.hot, &self.camera, &self.colors, accent);
+        grips(
+            &mut frame,
+            &self.grips,
+            self.hot,
+            &self.camera,
+            &self.colors,
+            accent,
+        );
         marked(&mut frame, &self.marked, &self.camera, &self.colors, accent);
         if let Some((p, words)) = &self.found {
             found(&mut frame, *p, words, &self.camera, &self.colors, accent);
@@ -256,7 +263,8 @@ fn grips(
     colors: &MarkColors,
     accent: iced::Color,
 ) {
-    let edge = |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
+    let edge =
+        |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
     let view = CameraView(camera);
     for set in sets {
         let mut last: Option<[f64; 2]> = None;
@@ -1015,4 +1023,3 @@ mod crosshair_tests {
         }
     }
 }
-

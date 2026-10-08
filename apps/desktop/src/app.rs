@@ -181,6 +181,8 @@ pub enum Dialog {
     TakeFrom,
     /// Katman listesi (layer_list.rs, docs/adr/0177 §6); the window is `App::layer_list`.
     LayerList,
+    /// Ölçek yaz… (annotation_scale.rs, docs/adr/0205 §4); the field is `App::plot_scale_field`.
+    PlotScale,
     /// Veri karşılaştır (data_compare.rs, docs/adr/0179); the window is `App::data_compare`.
     DataCompare,
     /// Raster ekle (rasters/add.rs, docs/adr/0204 §8); the window is `App::rasters.add`.
@@ -355,6 +357,8 @@ pub enum Message {
     AnnotationStyles(crate::annotation_styles::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
+    /// Ölçek yaz…'s window (annotation_scale.rs, docs/adr/0205 §4).
+    PlotScale(crate::annotation_scale::Event),
     /// Seçilenleri dosyaya kaydet, Başka çizimden al and Dosyadan blok ekle (drawing_exchange.rs).
     DrawingExchange(crate::drawing_exchange::Event),
     /// Veri karşılaştır's window (data_compare.rs).
@@ -706,6 +710,8 @@ pub struct App {
     pub(crate) take_from: Option<crate::drawing_exchange::Window>,
     /// Katman listesi's window (layer_list.rs, docs/adr/0177 §6).
     pub(crate) layer_list: Option<crate::layer_list::Window>,
+    /// Ölçek yaz…'s typed scale while its window is open (annotation_scale.rs, docs/adr/0205 §4).
+    pub(crate) plot_scale_field: Option<String>,
     /// Veri karşılaştır's window (data_compare.rs, docs/adr/0179).
     pub(crate) data_compare: Option<crate::data_compare::Window>,
     /// Kayıtlı ölçüleri denetle's window (cogo.rs, docs/adr/0180).
@@ -959,6 +965,7 @@ impl App {
             layer_purge: None,
             take_from: None,
             layer_list: None,
+            plot_scale_field: None,
             data_compare: None,
             cogo: None,
             table_insert: Default::default(),
@@ -1361,6 +1368,7 @@ impl App {
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
             Message::LayerList(event) => return self.layer_list_event(event),
+            Message::PlotScale(event) => return self.plot_scale_event(event),
             Message::DataCompare(event) => return self.data_compare_event(event),
             Message::Cogo(event) => return self.cogo_event(event),
             Message::TableInsert(event) => return self.table_insert_event(event),
@@ -1574,6 +1582,19 @@ impl App {
         kentos_native_style::color::ColorMode::from_key(&self.settings.text("graphics.colorMode"))
     }
 
+    /// How the drawing's text is sized on the screen (docs/adr/0205 §5): the
+    /// preference, at the open project's plot scale.
+    pub fn label_size(&self) -> kentos_interaction::spatial::LabelSize {
+        let plot = self
+            .document
+            .as_ref()
+            .map_or(1000.0, |d| d.settings().plot_scale);
+        kentos_interaction::spatial::LabelSize::of(
+            &self.settings.text("graphics.annotationSize"),
+            plot,
+        )
+    }
+
     pub fn graphics(&self) -> Graphics {
         Graphics {
             samples: self.settings.number("graphics.msaa").max(1.0) as u32,
@@ -1708,6 +1729,9 @@ impl App {
         // another drawing starts them again (docs/adr/0176 §3b).
         self.release_template();
         self.template_names.clear();
+        // The annotation tools' heights typed in the last drawing: the new one's annotations take
+        // its own project's (docs/adr/0205 §2).
+        self.memory.forget_heights();
         self.isolated_layers.clear();
         self.selected_layer = None;
         self.spatial.reload(&doc.model);
@@ -1861,6 +1885,10 @@ impl App {
             "view.colorMode.color" | "view.colorMode.mono" | "view.colorMode.gray" => {
                 self.choose_color_mode(id);
             }
+            // Yazıların boyu (docs/adr/0205 §5).
+            "view.annotationSize.legible"
+            | "view.annotationSize.true"
+            | "view.annotationSize.screen" => self.choose_annotation_size(id),
             "view.fills" => self.toggle_session("graphics.fills", "Dolgular ve taramalar"),
             "view.areaEdges" => self.toggle_session("graphics.areaEdges", "Alan sınırları"),
             "view.transparency" => self.toggle_session("graphics.transparency", "Saydamlık"),
@@ -2078,6 +2106,13 @@ impl App {
             "view.colorMode.color" => self.settings.text("graphics.colorMode") == "color",
             "view.colorMode.mono" => self.settings.text("graphics.colorMode") == "mono",
             "view.colorMode.gray" => self.settings.text("graphics.colorMode") == "gray",
+            "view.annotationSize.legible" => {
+                self.settings.text("graphics.annotationSize") == "legible"
+            }
+            "view.annotationSize.true" => self.settings.text("graphics.annotationSize") == "true",
+            "view.annotationSize.screen" => {
+                self.settings.text("graphics.annotationSize") == "screen"
+            }
             "view.fills" => self.settings.bool("graphics.fills"),
             "view.areaEdges" => self.settings.bool("graphics.areaEdges"),
             "view.transparency" => self.settings.bool("graphics.transparency"),

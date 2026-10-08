@@ -32,13 +32,20 @@ fn explode_opens_an_insert_one_level() {
     for slot in [13, 14, 15] {
         let e = b.doc.get(Slot(slot)).expect("a piece");
         assert_eq!(e.base().layer_id, "aydinlatma", "piece {slot}");
-        assert_eq!(e.base().color, None, "neither the object nor the insert has a colour");
+        assert_eq!(
+            e.base().color,
+            None,
+            "neither the object nor the insert has a colour"
+        );
     }
     let Some(Entity::Polygon(foundation)) = b.doc.get(Slot(13)) else {
         panic!("the foundation: {:?}", b.doc.get(Slot(13)));
     };
     // A quarter turn is exact: (−0.3, −0.3) goes to (−0.3, 0.3) from the insertion point.
-    assert_eq!((foundation.pts[0].x, foundation.pts[0].y), (487013.7, 4420015.1));
+    assert_eq!(
+        (foundation.pts[0].x, foundation.pts[0].y),
+        (487013.7, 4420015.1)
+    );
     let Some(Entity::Line(arm)) = b.doc.get(Slot(14)) else {
         panic!("the arm");
     };

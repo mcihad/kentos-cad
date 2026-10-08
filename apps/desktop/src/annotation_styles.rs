@@ -67,6 +67,15 @@ const ARROW_CHOICES: [(Option<DimensionArrow>, &str); 5] = [
     (Some(DimensionArrow::Dot), "Nokta"),
     (Some(DimensionArrow::None), "Yok"),
 ];
+/// A dimension's line (docs/adr/0205 §6): the dimension line and its
+/// arrowheads, or the extension lines; the value has a colour alone.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Part {
+    Line,
+    Ext,
+    Value,
+}
+
 const UNIT_CHOICES: [(Option<DrawingUnit>, &str); 4] = [
     (None, "Projenin"),
     (Some(DrawingUnit::M), "m"),
@@ -113,6 +122,11 @@ pub enum Event {
     Unit(Option<DrawingUnit>),
     Prefix(String),
     Suffix(String),
+    /// A line's colour (`#RRGGBB`; none: the object's), weight on paper (mm;
+    /// none: a hairline) and type (none: continuous), docs/adr/0205 §6.
+    LineColor(Part, Option<String>),
+    LineWeight(Part, Option<f64>),
+    LineType(Part, Option<kentos_contracts::LineType>),
     Save,
     Cancel,
 }
@@ -439,6 +453,7 @@ impl App {
                             prefix: None,
                             suffix: None,
                             font: None,
+                            ..Default::default()
                         });
                         s.id = id.clone();
                         s.name = name;
@@ -519,6 +534,34 @@ impl App {
             Event::Suffix(t) => {
                 if let Some(s) = w.dimension_style() {
                     s.suffix = (!t.is_empty()).then_some(t);
+                }
+            }
+            Event::LineColor(part, c) => {
+                if let Some(s) = w.dimension_style() {
+                    match part {
+                        Part::Line => s.dim_line_color = c,
+                        Part::Ext => s.ext_color = c,
+                        Part::Value => s.text_color = c,
+                    }
+                }
+            }
+            // The value has a colour alone.
+            Event::LineWeight(part, v) => {
+                if let Some(s) = w.dimension_style() {
+                    match part {
+                        Part::Line => s.dim_line_weight = v,
+                        Part::Ext => s.ext_weight = v,
+                        Part::Value => {}
+                    }
+                }
+            }
+            Event::LineType(part, t) => {
+                if let Some(s) = w.dimension_style() {
+                    match part {
+                        Part::Line => s.dim_line_type = t,
+                        Part::Ext => s.ext_line_type = t,
+                        Part::Value => {}
+                    }
                 }
             }
             Event::Save | Event::Cancel => {}
@@ -614,6 +657,14 @@ impl App {
                 .cloned(),
             project,
             scale: settings.plot_scale,
+            // Standart's height is the project's Ölçü height (docs/adr/0205 §1).
+            standard_mm: {
+                let kind = kentos_contracts::AnnotationKind::Dimension;
+                settings
+                    .annotation
+                    .as_ref()
+                    .map_or_else(|| kind.default_mm(), |a| a.mm(kind))
+            },
             format: Format::of(settings),
             // The drawing's own ground and ink, as the web's preview reads its canvas palette.
             colors: {
@@ -841,6 +892,70 @@ impl App {
                 .spacing(12)
                 .align_y(iced::Top),
             )
+            // Its lines (docs/adr/0205 §6), as the web's Çizgiler.
+            .push(kentos_ui::label::strong("Çizgiler"))
+            .push(
+                row![
+                    container(words::field(
+                        "Ölçü çizgisi",
+                        color_select(Part::Line, s.dim_line_color.as_deref()),
+                        None
+                    ))
+                    .width(Fill),
+                    container(words::field(
+                        "Kalınlık",
+                        weight_select(Part::Line, s.dim_line_weight),
+                        None
+                    ))
+                    .width(Fill),
+                    container(words::field(
+                        "Tip",
+                        type_select(Part::Line, s.dim_line_type),
+                        None
+                    ))
+                    .width(Fill),
+                ]
+                .spacing(12)
+                .align_y(iced::Top),
+            )
+            .push(
+                row![
+                    container(words::field(
+                        "Uzatma çizgileri",
+                        color_select(Part::Ext, s.ext_color.as_deref()),
+                        None
+                    ))
+                    .width(Fill),
+                    container(words::field(
+                        "Kalınlık",
+                        weight_select(Part::Ext, s.ext_weight),
+                        None
+                    ))
+                    .width(Fill),
+                    container(words::field(
+                        "Tip",
+                        type_select(Part::Ext, s.ext_line_type),
+                        None
+                    ))
+                    .width(Fill),
+                ]
+                .spacing(12)
+                .align_y(iced::Top),
+            )
+            .push(
+                row![
+                    container(words::field(
+                        "Değer",
+                        color_select(Part::Value, s.text_color.as_deref()),
+                        None
+                    ))
+                    .width(Fill),
+                    iced::widget::space::horizontal(),
+                    iced::widget::space::horizontal(),
+                ]
+                .spacing(12)
+                .align_y(iced::Top),
+            )
             .into()
     }
 
@@ -912,6 +1027,8 @@ struct Sample {
     dimension: Option<DimensionStyleDef>,
     project: DrawingFont,
     scale: f64,
+    /// Standart's value height on paper, mm (the project's Ölçü height).
+    standard_mm: f64,
     format: Format,
     colors: crate::labels::Colors,
 }
@@ -959,7 +1076,7 @@ impl canvas::Program<Message> for Sample {
                 use kentos_geometry_core::geom::dimension::{DimensionGeom, layout_dimension};
                 let s = self.dimension.as_ref();
                 let look = s.map(DimensionStyleDef::look).unwrap_or_default();
-                let height = s.map_or(2.5, |s| s.height) / 1000.0 * self.scale;
+                let height = s.map_or(self.standard_mm, |s| s.height) / 1000.0 * self.scale;
                 let len = 60.0 / 1000.0 * self.scale;
                 let g = DimensionGeom {
                     a: kentos_geometry_core::vec2::Vec2::new(0.0, 0.0),
@@ -1000,8 +1117,41 @@ impl canvas::Program<Message> for Sample {
                         (f64::from(h) - 12.0 - (p.y - min_y) * k) as f32,
                     )
                 };
-                let stroke = Stroke::default().with_width(1.2).with_color(colors.label);
-                for [p, q] in &l.lines {
+                // Its lines as its look names them (docs/adr/0205 §6): colour, weight at the
+                // preview's paper size and type, as the web's preview draws them.
+                let paper = |mm: f64| ((mm / 1000.0 * self.scale * k) as f32).max(1.0);
+                let pen = |color: &Option<String>,
+                           weight: Option<f64>,
+                           kind: Option<kentos_contracts::LineType>| {
+                    let dash: &'static [f64] = match kind {
+                        Some(kentos_contracts::LineType::Dashed) => &[3.0, 1.5],
+                        Some(kentos_contracts::LineType::Dashdot) => &[5.0, 1.2, 0.6, 1.2],
+                        Some(kentos_contracts::LineType::Dotted) => &[0.6, 1.2],
+                        _ => &[],
+                    };
+                    (
+                        color
+                            .as_deref()
+                            .map_or(colors.label, crate::view::hex_color),
+                        weight.map_or(1.2, paper),
+                        dash.iter().map(|mm| paper(*mm)).collect::<Vec<f32>>(),
+                    )
+                };
+                let line = pen(
+                    &look.dim_line_color,
+                    look.dim_line_weight,
+                    look.dim_line_type,
+                );
+                let ext = pen(&look.ext_color, look.ext_weight, look.ext_line_type);
+                for (i, [p, q]) in l.lines.iter().enumerate() {
+                    let (color, width, dash) = if l.ext.contains(&i) { &ext } else { &line };
+                    let stroke = Stroke {
+                        line_dash: canvas::LineDash {
+                            segments: dash,
+                            offset: 0,
+                        },
+                        ..Stroke::default().with_width(*width).with_color(*color)
+                    };
                     frame.stroke(&Path::line(at(*p), at(*q)), stroke);
                 }
                 for ring in l.fills.iter().flatten() {
@@ -1015,7 +1165,7 @@ impl canvas::Program<Message> for Sample {
                         }
                         b.close();
                     });
-                    frame.fill(&path, colors.label);
+                    frame.fill(&path, line.0);
                 }
                 let text = self.format.dimension_in(l.prefix, l.unit, l.value, &look);
                 crate::labels::sample_value(
@@ -1026,10 +1176,91 @@ impl canvas::Program<Message> for Sample {
                     (height * k) as f32,
                     look.font.unwrap_or(self.project),
                     look.text_place.is_some(),
-                    (colors.label, colors.halo),
+                    (
+                        look.text_color
+                            .as_deref()
+                            .map_or(colors.label, crate::view::hex_color),
+                        colors.halo,
+                    ),
                 );
             }
         }
         vec![frame.into_geometry()]
     }
+}
+
+/// A colour of a dimension's line: none (the object's), a drawing colour
+/// but ink, or the one it has (the web's `colorSelect`).
+fn color_select<'a>(part: Part, value: Option<&str>) -> Element<'a, Message> {
+    let colors = crate::ribbon_panels::line_colors();
+    let mut values: Vec<Option<String>> = vec![None];
+    let mut labels: Vec<String> = vec!["Nesnenin rengi".to_owned()];
+    for (name, v) in colors {
+        values.push(Some(v.to_owned()));
+        labels.push(name.to_owned());
+    }
+    if let Some(v) = value
+        && !values.iter().flatten().any(|c| c.eq_ignore_ascii_case(v))
+    {
+        values.push(Some(v.to_owned()));
+        labels.push(v.to_uppercase());
+    }
+    let chosen = values.iter().position(|c| match (c, value) {
+        (None, None) => true,
+        (Some(c), Some(v)) => c.eq_ignore_ascii_case(v),
+        _ => false,
+    });
+    Select::new(labels.into_iter().map(Choice::new), chosen, move |i| {
+        msg(Event::LineColor(part, values.get(i).cloned().flatten()))
+    })
+    .searchable(false)
+    .into()
+}
+
+/// A weight of a dimension's line on paper: none (a hairline) or one of the
+/// drawing's weights (the web's `weightSelect`).
+fn weight_select<'a>(part: Part, value: Option<f64>) -> Element<'a, Message> {
+    let weights = crate::ribbon_panels::LINE_WEIGHTS;
+    let mut values: Vec<Option<f64>> = std::iter::once(None)
+        .chain(weights.iter().map(|w| Some(*w)))
+        .collect();
+    if let Some(v) = value
+        && !weights.contains(&v)
+    {
+        values.push(Some(v));
+    }
+    let labels = values.iter().map(|w| match w {
+        None => "Kılcal".to_owned(),
+        Some(w) => crate::ribbon_panels::weight_text(*w),
+    });
+    let chosen = values.iter().position(|w| *w == value);
+    Select::new(
+        labels.map(Choice::new).collect::<Vec<_>>(),
+        chosen,
+        move |i| msg(Event::LineWeight(part, values.get(i).copied().flatten())),
+    )
+    .searchable(false)
+    .into()
+}
+
+/// A type of a dimension's line: none (continuous) or another (the web's `typeSelect`).
+fn type_select<'a>(part: Part, value: Option<kentos_contracts::LineType>) -> Element<'a, Message> {
+    use crate::ribbon_panels::LINE_TYPES;
+    use kentos_contracts::LineType;
+    let chosen = LINE_TYPES
+        .iter()
+        .position(|(t, _)| *t == value.unwrap_or(LineType::Continuous));
+    Select::new(
+        LINE_TYPES.iter().map(|(_, label)| Choice::new(*label)),
+        chosen,
+        move |i| {
+            let t = LINE_TYPES
+                .get(i)
+                .map(|(t, _)| *t)
+                .filter(|t| *t != LineType::Continuous);
+            msg(Event::LineType(part, t))
+        },
+    )
+    .searchable(false)
+    .into()
 }

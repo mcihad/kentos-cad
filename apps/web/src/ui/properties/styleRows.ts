@@ -76,7 +76,8 @@ export function dimensionStyleRows(ctx: AppContext, dims: readonly DimensionEnti
   const settings = ctx.doc.settings;
   return [
     row<DimensionStyleDef>('Ölçü stili', settings.dimensionStyles.value, dims.map((d) => d.dimStyle), locked, (style) => {
-      const { look, height } = applyDimensionStyle(style, settings.plotScale.value);
+      // Standart's height is the project's Ölçü height (docs/adr/0205 §1).
+      const { look, height } = applyDimensionStyle(style, settings.plotScale.value, settings.annotationMm('dimension'));
       setGeometries(
         ctx,
         dims

@@ -98,7 +98,7 @@ export class TextAlongTool implements Tool {
 
   private refresh(): void {
     const [share, side] = alongSplit(TextAlongTool.align);
-    const options = `[${stylesShown(this.ctx) ? `Stil (S): ${textStyleName(this.ctx)} / ` : ''}Yükseklik (Y): ${TextTool.options().heightMm} mm / Hiza (H): ${ALONG_SHARES.find(([s]) => s === share)?.[1] ?? 'Ortası'} / Konum (K): ${ALONG_SIDES.find(([s]) => s === side)?.[1] ?? 'Üstünde'}]`;
+    const options = `[${stylesShown(this.ctx) ? `Stil (S): ${textStyleName(this.ctx)} / ` : ''}Yükseklik (Y): ${TextTool.options(this.ctx).heightMm} mm / Hiza (H): ${ALONG_SHARES.find(([s]) => s === share)?.[1] ?? 'Ortası'} / Konum (K): ${ALONG_SIDES.find(([s]) => s === side)?.[1] ?? 'Üstünde'}]`;
     const step = {
       curve: `yazının izleyeceği çizgiye, yaya, daireye, alana ya da eğriye tıklayın ${options}`,
       place: `yazının yerine tıklayın; Esc başka eğri seçtirir ${options}`,
@@ -113,7 +113,7 @@ export class TextAlongTool implements Tool {
   /** The text `words` where the click puts it on the curve; null off any piece. */
   private placed(words: string, at: Vec2): TextEntity | null {
     if (!this.curve) return null;
-    const height = paper(this.ctx, TextTool.options().heightMm);
+    const height = paper(this.ctx, TextTool.options(this.ctx).heightMm);
     const face = textFaceNow(this.ctx);
     const length = lettersLength(this.ctx, { text: words, height, ...face });
     const [share] = alongSplit(TextAlongTool.align);
@@ -210,7 +210,7 @@ export class TextAlongTool implements Tool {
     if (this.stage === 'height') {
       const n = parseNumber(t);
       if (n === null || n <= 0) return false;
-      TextTool.setHeight(n);
+      TextTool.setHeight(this.ctx, n);
       this.stage = this.curve ? 'place' : 'curve';
       return this.refresh(), true;
     }
@@ -220,7 +220,7 @@ export class TextAlongTool implements Tool {
   private takeStyle(typed: string): boolean {
     const s = takeTextStyle(this.ctx, typed);
     if (s === undefined) return true;
-    TextTool.useStyle(s);
+    TextTool.useStyle(this.ctx, s);
     if (this.stage === 'style') this.stage = this.curve ? 'place' : 'curve';
     this.refresh();
     return true;

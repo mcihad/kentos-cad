@@ -39,8 +39,55 @@ export const DIMENSION_ARROWS: readonly DimensionArrow[] = ['closed', 'open', 'd
 
 /** The face's fields, in the contract's order. */
 export const FACE_FIELDS = ['textStyle', 'font', 'bold', 'italic', 'oblique'] as const;
-/** The look's fields, in the contract's order. */
-export const LOOK_FIELDS = ['dimStyle', 'arrow', 'arrowSize', 'extOffset', 'extBeyond', 'textGap', 'textPlace', 'decimals', 'unit', 'prefix', 'suffix', 'font'] as const;
+/** The look's fields, in the contract's order; its lines last (docs/adr/0205 §6). */
+export const LOOK_FIELDS = [
+  'dimStyle',
+  'arrow',
+  'arrowSize',
+  'extOffset',
+  'extBeyond',
+  'textGap',
+  'textPlace',
+  'decimals',
+  'unit',
+  'prefix',
+  'suffix',
+  'font',
+  'dimLineColor',
+  'dimLineWeight',
+  'dimLineType',
+  'extColor',
+  'extWeight',
+  'extLineType',
+  'textColor',
+] as const;
+/** The look's line fields (docs/adr/0205 §6): `.kcad` schema 30. */
+export const LINE_FIELDS = ['dimLineColor', 'dimLineWeight', 'dimLineType', 'extColor', 'extWeight', 'extLineType', 'textColor'] as const;
+/** The heaviest an object's (and a dimension line's) weight may be, mm (the contract's `MAX_LINE_WEIGHT`). */
+const MAX_LINE_WEIGHT = 100;
+const HEX = /^#[0-9A-Fa-f]{6}$/;
+
+/** Whether a dimension line's weight may be written (the contract's `line_weight_holds`). */
+export const lineWeightHolds = (w: number): boolean => Number.isFinite(w) && w >= 0 && w <= MAX_LINE_WEIGHT;
+
+/** Whether a look or a dimension style has a line field (`.kcad` schema 30). */
+export const hasLines = (l: DimensionLook | DimensionStyleDef): boolean => LINE_FIELDS.some((k) => l[k] !== undefined);
+
+/** What is wrong with the line colours and weights (the contract's `line_problem`): the field and the refusal's words. */
+function lineProblem(l: DimensionLook | DimensionStyleDef): [string, string] | null {
+  for (const [field, what, c] of [
+    ['dimLineColor', 'ölçü çizgisinin rengi', l.dimLineColor],
+    ['extColor', 'uzatma çizgilerinin rengi', l.extColor],
+    ['textColor', 'değerinin rengi', l.textColor],
+  ] as const)
+    if (c !== undefined && !HEX.test(c)) return [field, `Ölçünün ${what} #RRGGBB biçiminde olmalı; “${c}” verildi. Rengi #RRGGBB olarak verin ya da alanı kaldırın (nesnenin rengi).`];
+  for (const [field, what, w] of [
+    ['dimLineWeight', 'ölçü çizgisinin kalınlığı', l.dimLineWeight],
+    ['extWeight', 'uzatma çizgilerinin kalınlığı', l.extWeight],
+  ] as const)
+    if (w !== undefined && !lineWeightHolds(w)) return [field, `Ölçünün ${what} kâğıtta 0 ile ${MAX_LINE_WEIGHT} mm arasında olmalı; ${w} verildi. Bu aralıkta verin ya da alanı kaldırın (kılcal).`];
+  return null;
+}
 
 const control = (s: string): boolean => [...s].some((c) => c.charCodeAt(0) < 32 || (c.charCodeAt(0) >= 0x7f && c.charCodeAt(0) <= 0x9f));
 
@@ -95,7 +142,7 @@ export function lookProblem(l: DimensionLook): [string, string] | null {
     const why = v === undefined ? null : affixProblem(v);
     if (why) return [field, `Ölçünün ${what} yazılamaz: ${why}. Tek satır, en çok ${MAX_AFFIX} harf verin ya da alanı kaldırın.`];
   }
-  return null;
+  return lineProblem(l);
 }
 
 /** The tables' name rule, in the words of `kind` (“yazı stili”); null when the names hold. */
@@ -154,7 +201,8 @@ export function dimensionStyleProblem(s: DimensionStyleDef): string | null {
     const why = v === undefined ? null : affixProblem(v);
     if (why) return `“${name}” ölçü stilinin ${what} yazılamaz: ${why}`;
   }
-  return null;
+  const line = lineProblem(s);
+  return line ? `“${name}” ölçü stili: ${line[1]}` : null;
 }
 
 export const textStylesProblem = (styles: readonly TextStyleDef[]): string | null =>
@@ -258,12 +306,16 @@ export function lookOf(s: DimensionStyleDef): DimensionLook {
   if (s.prefix !== undefined) out.prefix = s.prefix;
   if (s.suffix !== undefined) out.suffix = s.suffix;
   if (s.font !== undefined) out.font = s.font;
+  for (const k of LINE_FIELDS) if (s[k] !== undefined) (out as Record<string, unknown>)[k] = s[k];
   return out;
 }
 
-/** A dimension after `style` is applied (null: Standart), at 1:plotScale (docs/adr/0183 §3): its look and height. */
-export function applyDimensionStyle(style: DimensionStyleDef | null, plotScale: number): { look: DimensionLook; height: number } {
-  return style ? { look: lookOf(style), height: heightAt(style.height, plotScale) } : { look: {}, height: heightAt(STANDARD_DIMENSION_HEIGHT_MM, plotScale) };
+/**
+ * A dimension after `style` is applied (null: Standart), at 1:plotScale (docs/adr/0183 §3): its look and height.
+ * Standart's height is the project's dimension height `standardMm` (docs/adr/0205 §1).
+ */
+export function applyDimensionStyle(style: DimensionStyleDef | null, plotScale: number, standardMm: number = STANDARD_DIMENSION_HEIGHT_MM): { look: DimensionLook; height: number } {
+  return style ? { look: lookOf(style), height: heightAt(style.height, plotScale) } : { look: {}, height: heightAt(standardMm, plotScale) };
 }
 
 /** A dimension of `old` after the style became `next`, as followTextStyle: its look's fields and its height. */

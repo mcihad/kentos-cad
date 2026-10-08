@@ -118,9 +118,17 @@ fn the_status_cell_turns_the_control_and_its_menu_chooses_mode_and_layers() {
     // the menu is still open, the next layer one key away; Esc closes the
     // list, then the menu (a click outside would only close it).
     keys(&mut snapshot, &mut app, &[ArrowDown, Enter]);
-    assert_eq!(app.overlap_layers.len(), 2, "a second layer from the same opening");
+    assert_eq!(
+        app.overlap_layers.len(),
+        2,
+        "a second layer from the same opening"
+    );
     keys(&mut snapshot, &mut app, &[Enter]);
-    assert_eq!(app.overlap_layers, ["parsel"], "and off again, the row still lit");
+    assert_eq!(
+        app.overlap_layers,
+        ["parsel"],
+        "and off again, the row still lit"
+    );
     keys(&mut snapshot, &mut app, &[Escape, Escape]);
     press(&mut snapshot, &mut app, cell.center(), mouse::Button::Left);
     assert_eq!(

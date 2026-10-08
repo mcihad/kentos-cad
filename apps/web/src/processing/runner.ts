@@ -131,6 +131,7 @@ export class ProcessingRunner {
       plotScale: s.plotScale.value,
       drawingFont: s.drawingFont.value,
       activeLayer: this.host.doc.layers.active.value,
+      measureHeightMm: s.annotationMm('measure'),
     };
   }
 

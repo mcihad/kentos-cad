@@ -22,7 +22,7 @@ use kentos_ui::{label, style};
 use kentos_project::survey_form;
 
 use super::custom_crs::{self, Outcome, Target};
-use super::{Event as ProjectEvent, Window, group, message, modes, scales, setting};
+use super::{Event as ProjectEvent, Window, group, message, modes, setting};
 use crate::app::{App, Message};
 use crate::crs;
 use crate::document::Document;
@@ -32,6 +32,8 @@ use crate::exchange::words;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Section {
     General,
+    /// Ölçek ve yazılar: the plot scale and the annotation heights (docs/adr/0205 §1; scale.rs).
+    Scale,
     Crs,
     Units,
     /// Ölçme: the survey settings (docs/adr/0169 §3; survey.rs).
@@ -39,8 +41,9 @@ pub enum Section {
 }
 
 impl Section {
-    const ALL: [Section; 4] = [
+    const ALL: [Section; 5] = [
         Section::General,
+        Section::Scale,
         Section::Crs,
         Section::Units,
         Section::Survey,
@@ -49,6 +52,7 @@ impl Section {
     fn label(self) -> &'static str {
         match self {
             Section::General => "Genel",
+            Section::Scale => "Ölçek ve yazılar",
             Section::Crs => "Koordinat sistemi",
             Section::Units => "Birimler ve hassasiyet",
             Section::Survey => "Ölçme",
@@ -60,6 +64,7 @@ impl Section {
         use kentos_ui::icon::Icon;
         match self {
             Section::General => Icon::Properties,
+            Section::Scale => crate::icons::from_web(Some("plotScale")),
             Section::Crs => Icon::Globe,
             Section::Units => Icon::Ruler,
             Section::Survey => crate::icons::from_web(Some("surveyPolar")),
@@ -68,8 +73,9 @@ impl Section {
 
     fn lead(self) -> &'static str {
         match self {
-            Section::General => {
-                "Projenin adı, türü, çizim ölçeği ve çizimdeki yazıların yazı tipi."
+            Section::General => "Projenin adı, türü ve çizimdeki yazıların yazı tipi.",
+            Section::Scale => {
+                "Çizim ölçeği ve açıklamaların kâğıttaki yükseklikleri. Yeni yazılar, ölçüler, kılavuzlar ve tablolar ölçeğe göre bu boyda yazılır; değiştirince genel boydaki nesneler de yeni boyuna gelir, elle değiştirilenler kalır."
             }
             Section::Crs => {
                 "Bu projenin konum referansı. Koordinatlar bu sistemde saklanır, ölçülür ve dışa aktarılır."
@@ -157,6 +163,8 @@ pub struct State {
     /// §4): beside the texts, so a height typed wrong for a while does not
     /// lose it.
     reduce: bool,
+    /// Ölçek ve yazılar' scale denominator as typed (docs/adr/0205 §4).
+    scale_typed: String,
 }
 
 #[derive(Debug, Clone)]
@@ -164,6 +172,12 @@ pub enum Event {
     Section(Section),
     Name(String),
     Scale(f64),
+    /// The scale's denominator typed; one that holds is the draft's.
+    ScaleTyped(String),
+    /// A kind's height on paper, mm (docs/adr/0205 §1).
+    Height(kentos_contracts::AnnotationKind, f64),
+    /// Varsayılanlara dön: every kind its default.
+    ResetHeights,
     Mode(Workspace),
     Font(DrawingFont),
     Crs(u32),
@@ -229,6 +243,7 @@ impl State {
             second_defined: doc.settings().second_custom_crs.clone(),
             survey: survey_form::texts(doc.settings().survey.as_ref(), doc.settings().angle_unit),
             reduce: doc.settings().reduces_to_grid(),
+            scale_typed: kentos_processing::text::js_number(doc.settings().plot_scale),
         }
     }
 
@@ -290,7 +305,25 @@ impl App {
         match e {
             Event::Section(section) => s.section = section,
             Event::Name(name) => s.name = name,
-            Event::Scale(v) => d.plot_scale = v,
+            Event::Scale(v) => {
+                d.plot_scale = v;
+                s.scale_typed = kentos_processing::text::js_number(v);
+            }
+            Event::ScaleTyped(t) => {
+                if let Some(n) = crate::annotation_scale::typed_plot_scale(&t) {
+                    d.plot_scale = n;
+                }
+                s.scale_typed = t;
+            }
+            Event::Height(kind, mm) => {
+                d.annotation = d
+                    .annotation
+                    .clone()
+                    .unwrap_or_default()
+                    .with(kind, Some(mm))
+                    .sanitized();
+            }
+            Event::ResetHeights => d.annotation = None,
             Event::Mode(w) => d.workspace = Some(w),
             Event::Font(f) => d.drawing_font = Some(f),
             // A system of the registry takes the definition's place (docs/adr/0168 §1).
@@ -476,6 +509,13 @@ impl App {
             }
             .sanitized();
         }
+        // What the annotations' heights hung on before, for them to follow (docs/adr/0205 §3).
+        let change = kentos_contracts::ScaleChange {
+            from_scale: s.initial.plot_scale,
+            to_scale: settings.plot_scale,
+            from: s.initial.annotation.clone().unwrap_or_default(),
+            to: settings.annotation.clone().unwrap_or_default(),
+        };
         doc.model.set_settings(settings);
         // The project's system, a definition's too (docs/adr/0168 §1).
         let assigned = (s.settings.srid, s.settings.custom_crs.as_ref())
@@ -514,6 +554,8 @@ impl App {
             Level::Success,
             "Proje ayarları kaydedildi. Proje dosyasıyla birlikte saklanacak.",
         );
+        // The annotations at the old general height take the new one, in one step.
+        self.follow_annotations(change);
     }
 
     pub(super) fn project_settings_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
@@ -544,6 +586,17 @@ impl App {
             });
         let page: Element<'a, Message> = match s.section {
             Section::General => self.general(s, doc),
+            Section::Scale => super::scale::view(
+                s.settings.plot_scale,
+                s.settings.annotation.as_ref(),
+                crate::catalog::effective_mode(s.settings.workspace).id == Workspace::Cad,
+                &s.scale_typed,
+                kentos_interaction::Format::of(&s.settings),
+                |v| event(Event::Scale(v)),
+                |t| event(Event::ScaleTyped(t)),
+                |kind, mm| event(Event::Height(kind, mm)),
+                event(Event::ResetHeights),
+            ),
             Section::Crs => self.crs_section(s),
             Section::Units => units(s),
             Section::Survey => super::survey::view(
@@ -628,12 +681,7 @@ impl App {
                 "Proje",
                 Column::new()
                     .spacing(10)
-                    .push(setting("Proje adı", Some("Dosya adı olarak da kullanılır."), name))
-                    .push(setting(
-                        "Çizim ölçeği",
-                        Some("Yazı yükseklikleri ve pafta çıktıları bu ölçeğe göre hesaplanır."),
-                        scales(s.settings.plot_scale, |v| event(Event::Scale(v))),
-                    )),
+                    .push(setting("Proje adı", Some("Dosya adı olarak da kullanılır."), name)),
             ))
             .push(group(
                 "Proje türü",
@@ -1038,11 +1086,14 @@ fn reset_section(section: Section, d: &mut ProjectSettings) {
     }
     match section {
         Section::General => {
+            d.workspace = read("project.workspace");
+            d.drawing_font = read("project.drawingFont");
+        }
+        Section::Scale => {
             d.plot_scale = default("project.plotScale")
                 .and_then(|v| v.as_f64())
                 .unwrap_or(1000.0);
-            d.workspace = read("project.workspace");
-            d.drawing_font = read("project.drawingFont");
+            d.annotation = None;
         }
         Section::Units => {
             d.drawing_unit = None;

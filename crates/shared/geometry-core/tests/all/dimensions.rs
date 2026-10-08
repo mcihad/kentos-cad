@@ -69,7 +69,18 @@ fn every_shared_layout_case_is_laid_out_as_the_reference_lays_it_out() {
                 .iter()
                 .zip(lines)
                 .all(|([p, q], e)| at(*p, &e[0]) && at(*q, &e[1]));
+        // Which lines are extension lines (docs/adr/0205 §6).
+        let ext: Vec<usize> = want["ext"]
+            .as_array()
+            .map(|e| {
+                e.iter()
+                    .filter_map(|i| i.as_u64())
+                    .map(|i| i as usize)
+                    .collect()
+            })
+            .unwrap_or_default();
         if !(lines_ok
+            && got.ext == ext
             && at(got.text_at, &want["textAt"])
             && near(got.rotation, &want["rotation"])
             && near(got.value, &want["value"])
@@ -88,33 +99,89 @@ fn every_shared_layout_case_is_laid_out_as_the_reference_lays_it_out() {
 #[test]
 fn every_style_measures_what_its_layout_says() {
     for (fields, style, angle) in [
-        (r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":2,"height":1"#, None, None),
-        (r#""a":{"x":0,"y":0},"b":{"x":10,"y":3},"offset":2,"height":1,"style":"linear","angle":0"#, Some("linear"), Some(0.0)),
-        (r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":5,"height":1,"style":"angular""#, Some("angular"), None),
-        (r#""a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":1,"height":1,"style":"radius""#, Some("radius"), None),
-        (r#""a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":1,"height":1,"style":"diameter""#, Some("diameter"), None),
-        (r#""a":{"x":0,"y":0},"b":{"x":0,"y":10},"offset":0,"height":1,"style":"ordinate","angle":0"#, Some("ordinate"), Some(0.0)),
-        (r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":0,"height":1,"style":"ordinate","angle":90"#, Some("ordinate"), Some(90.0)),
-        (r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#, Some("arcLength"), None),
-        (r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"c":{"x":280,"y":4},"offset":5,"height":1,"style":"jogged""#, Some("jogged"), None),
-        (r#""a":{"x":0,"y":0},"b":{"x":10,"y":10},"offset":1,"height":1,"style":"azimuth""#, Some("azimuth"), None),
-        (r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":1,"height":1,"style":"slope","za":10,"zb":9"#, Some("slope"), None),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":2,"height":1"#,
+            None,
+            None,
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":10,"y":3},"offset":2,"height":1,"style":"linear","angle":0"#,
+            Some("linear"),
+            Some(0.0),
+        ),
+        (
+            r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":5,"height":1,"style":"angular""#,
+            Some("angular"),
+            None,
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":1,"height":1,"style":"radius""#,
+            Some("radius"),
+            None,
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":1,"height":1,"style":"diameter""#,
+            Some("diameter"),
+            None,
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":0,"y":10},"offset":0,"height":1,"style":"ordinate","angle":0"#,
+            Some("ordinate"),
+            Some(0.0),
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":0,"height":1,"style":"ordinate","angle":90"#,
+            Some("ordinate"),
+            Some(90.0),
+        ),
+        (
+            r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#,
+            Some("arcLength"),
+            None,
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"c":{"x":280,"y":4},"offset":5,"height":1,"style":"jogged""#,
+            Some("jogged"),
+            None,
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":10,"y":10},"offset":1,"height":1,"style":"azimuth""#,
+            Some("azimuth"),
+            None,
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":1,"height":1,"style":"slope","za":10,"zb":9"#,
+            Some("slope"),
+            None,
+        ),
     ] {
         let l = layout(&dim(fields));
-        assert_eq!((l.unit, l.prefix), dimension_measure(style, angle), "{fields}");
+        assert_eq!(
+            (l.unit, l.prefix),
+            dimension_measure(style, angle),
+            "{fields}"
+        );
     }
 }
 
 #[test]
 fn an_ordinate_or_a_slope_has_no_length_an_arc_length_and_a_jogged_radius_do() {
-    let ordinate = dim(r#""a":{"x":452345.5,"y":4412000},"b":{"x":452345.5,"y":4412010},"offset":0,"height":1,"style":"ordinate""#);
+    let ordinate = dim(
+        r#""a":{"x":452345.5,"y":4412000},"b":{"x":452345.5,"y":4412010},"offset":0,"height":1,"style":"ordinate""#,
+    );
     assert_eq!(layout(&ordinate).value, 452345.5);
     assert_eq!(entity_length(&ordinate), None, "a coordinate is no length");
-    let slope = dim(r#""a":{"x":0,"y":0},"b":{"x":40,"y":0},"offset":1,"height":1,"style":"slope","za":105.25,"zb":104.75"#);
+    let slope = dim(
+        r#""a":{"x":0,"y":0},"b":{"x":40,"y":0},"offset":1,"height":1,"style":"slope","za":105.25,"zb":104.75"#,
+    );
     assert_eq!(entity_length(&slope), None);
-    let arc = dim(r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#);
+    let arc = dim(
+        r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#,
+    );
     assert!((entity_length(&arc).expect("a length") - 5.0 * std::f64::consts::PI).abs() < 1e-12);
-    let jogged = dim(r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"c":{"x":280,"y":4},"offset":5,"height":1,"style":"jogged""#);
+    let jogged = dim(
+        r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"c":{"x":280,"y":4},"offset":5,"height":1,"style":"jogged""#,
+    );
     assert_eq!(entity_length(&jogged), Some(300.0));
 }
 
@@ -125,9 +192,12 @@ fn an_ordinate_or_a_slope_has_no_length_an_arc_length_and_a_jogged_radius_do() {
 #[test]
 fn each_kind_has_its_own_grips() {
     use kentos_geometry_core::ops::grips::{entity_grips, move_grip};
-    let moved = |s: &Shape, i: usize, p: Vec2| move_grip(&Entity::new(s.clone()), i, p).map(|e| e.shape);
+    let moved =
+        |s: &Shape, i: usize, p: Vec2| move_grip(&Entity::new(s.clone()), i, p).map(|e| e.shape);
 
-    let ordinate = dim(r#""a":{"x":10,"y":20},"b":{"x":16,"y":40},"offset":0,"height":2.5,"style":"ordinate""#);
+    let ordinate = dim(
+        r#""a":{"x":10,"y":20},"b":{"x":16,"y":40},"offset":0,"height":2.5,"style":"ordinate""#,
+    );
     assert_eq!(entity_grips(&ordinate), vec![v(16.0, 40.0)]);
     let Some(Shape::Dimension { a, b, .. }) = moved(&ordinate, 0, v(30.0, 45.0)) else {
         panic!("its end moves")
@@ -136,7 +206,9 @@ fn each_kind_has_its_own_grips() {
     // Not where the line has no room (closer than h/2 across the axis).
     assert_eq!(moved(&ordinate, 0, v(30.0, 21.0)), None);
 
-    let arc = dim(r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#);
+    let arc = dim(
+        r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#,
+    );
     let g = entity_grips(&arc);
     assert_eq!(g.len(), 3);
     assert_eq!((g[0], g[1]), (v(10.0, 0.0), v(0.0, 10.0)));
@@ -144,14 +216,19 @@ fn each_kind_has_its_own_grips() {
         panic!("an end moves")
     };
     let r = std::f64::consts::FRAC_1_SQRT_2 * 10.0;
-    assert!((a.x - r).abs() < 1e-12 && (a.y - r).abs() < 1e-12, "on the arc: {a:?}");
+    assert!(
+        (a.x - r).abs() < 1e-12 && (a.y - r).abs() < 1e-12,
+        "on the arc: {a:?}"
+    );
     let Some(Shape::Dimension { offset, .. }) = moved(&arc, 2, v(0.0, 15.0)) else {
         panic!("the dimension arc moves")
     };
     assert!((offset - 5.0).abs() < 1e-12);
     assert_eq!(moved(&arc, 1, v(0.0, 0.0)), None, "not onto the centre");
 
-    let jogged = dim(r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"c":{"x":280,"y":4},"offset":5,"height":1,"style":"jogged""#);
+    let jogged = dim(
+        r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"c":{"x":280,"y":4},"offset":5,"height":1,"style":"jogged""#,
+    );
     let g = entity_grips(&jogged);
     assert_eq!(g, vec![v(300.0, 0.0), v(285.0, 4.0), v(280.0, 4.0)]);
     let Some(Shape::Dimension { b, c, .. }) = moved(&jogged, 0, v(0.0, 600.0)) else {
@@ -175,10 +252,12 @@ fn each_kind_has_its_own_grips() {
     };
     assert_eq!(c, Some(v(250.0, -6.0)));
 
-    let azimuth = dim(r#""a":{"x":0,"y":0},"b":{"x":30,"y":40},"offset":2,"height":1,"style":"azimuth""#);
+    let azimuth =
+        dim(r#""a":{"x":0,"y":0},"b":{"x":30,"y":40},"offset":2,"height":1,"style":"azimuth""#);
     let g = entity_grips(&azimuth);
     assert_eq!(g.len(), 3);
-    let Some(Shape::Dimension { offset, .. }) = moved(&azimuth, 2, v(15.0 - 4.0, 20.0 + 3.0)) else {
+    let Some(Shape::Dimension { offset, .. }) = moved(&azimuth, 2, v(15.0 - 4.0, 20.0 + 3.0))
+    else {
         panic!("the arrow moves")
     };
     assert!((offset - 5.0).abs() < 1e-12);
@@ -219,11 +298,17 @@ fn each_kind_snaps_where_its_rules_say() {
 /// the true centre.
 #[test]
 fn the_extent_is_what_is_drawn_and_gripped() {
-    let azimuth = dim(r#""a":{"x":0,"y":0},"b":{"x":100,"y":0},"offset":5,"height":1,"style":"azimuth""#);
+    let azimuth =
+        dim(r#""a":{"x":0,"y":0},"b":{"x":100,"y":0},"offset":5,"height":1,"style":"azimuth""#);
     let b = entity_bounds(&azimuth);
     assert!(b.min_x <= 0.0 && b.max_x >= 100.0, "{b:?}");
-    assert!(b.min_y <= 0.0 && b.max_y > 5.35 + 1.0, "its value too: {b:?}");
-    let jogged = dim(r#""a":{"x":200,"y":-300},"b":{"x":200,"y":0},"c":{"x":204,"y":-20},"offset":3,"height":1,"style":"jogged""#);
+    assert!(
+        b.min_y <= 0.0 && b.max_y > 5.35 + 1.0,
+        "its value too: {b:?}"
+    );
+    let jogged = dim(
+        r#""a":{"x":200,"y":-300},"b":{"x":200,"y":0},"c":{"x":204,"y":-20},"offset":3,"height":1,"style":"jogged""#,
+    );
     let b = entity_bounds(&jogged);
     assert!(b.max_x < 210.0 && b.min_y > -30.0, "{b:?}");
 }
@@ -236,7 +321,9 @@ fn the_transforms_keep_what_each_measures() {
     use kentos_geometry_core::geom::affine::{mirror, rotation, scaling};
     use kentos_geometry_core::ops::transform::transform_shape;
     let o = v(0.0, 0.0);
-    let ordinate = dim(r#""a":{"x":10,"y":0},"b":{"x":16,"y":20},"offset":0,"height":1,"style":"ordinate","angle":0"#);
+    let ordinate = dim(
+        r#""a":{"x":10,"y":0},"b":{"x":16,"y":20},"offset":0,"height":1,"style":"ordinate","angle":0"#,
+    );
     let turned = transform_shape(&ordinate, &rotation(std::f64::consts::FRAC_PI_2, o));
     let Shape::Dimension { angle, .. } = &turned else {
         panic!()
@@ -247,10 +334,15 @@ fn the_transforms_keep_what_each_measures() {
     // Its line across the axis again: up from the point, jogged over to (−20, 16).
     assert!((l.rotation - 90.0).abs() < 1e-9, "{}", l.rotation);
 
-    let arc = dim(r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#);
+    let arc = dim(
+        r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#,
+    );
     let mirrored = transform_shape(&arc, &mirror(o, v(0.0, 1.0)));
     let (before, after) = (layout(&arc), layout(&mirrored));
-    assert!((before.value - after.value).abs() < 1e-12, "the same arc's length");
+    assert!(
+        (before.value - after.value).abs() < 1e-12,
+        "the same arc's length"
+    );
     let Shape::Dimension { offset, .. } = &mirrored else {
         panic!()
     };
@@ -258,13 +350,17 @@ fn the_transforms_keep_what_each_measures() {
     let doubled = transform_shape(&arc, &scaling(2.0, o));
     assert!((layout(&doubled).value - 2.0 * before.value).abs() < 1e-12);
 
-    let jogged = dim(r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"c":{"x":280,"y":4},"offset":5,"height":1,"style":"jogged""#);
+    let jogged = dim(
+        r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"c":{"x":280,"y":4},"offset":5,"height":1,"style":"jogged""#,
+    );
     let Shape::Dimension { offset, .. } = transform_shape(&jogged, &mirror(o, v(1.0, 0.0))) else {
         panic!()
     };
     assert_eq!(offset, 5.0, "the jog is along the radius");
 
-    let slope = dim(r#""a":{"x":0,"y":0},"b":{"x":40,"y":0},"offset":1,"height":1,"style":"slope","za":105.25,"zb":104.75"#);
+    let slope = dim(
+        r#""a":{"x":0,"y":0},"b":{"x":40,"y":0},"offset":1,"height":1,"style":"slope","za":105.25,"zb":104.75"#,
+    );
     let Shape::Dimension { za, zb, .. } = transform_shape(&slope, &rotation(1.0, o)) else {
         panic!()
     };
@@ -282,10 +378,18 @@ fn each_kind_explodes_into_lines_and_its_value() {
         Cut::Pieces(p) => p.into_iter().map(|e| e.shape).collect::<Vec<_>>(),
         _ => panic!("{s:?} explodes"),
     };
-    let arc = dim(r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#);
+    let arc = dim(
+        r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#,
+    );
     let out = pieces(&arc, "15.708");
-    let arcs = out.iter().filter(|s| matches!(s, Shape::Arc { .. })).count();
-    let lines = out.iter().filter(|s| matches!(s, Shape::Line { .. })).count();
+    let arcs = out
+        .iter()
+        .filter(|s| matches!(s, Shape::Arc { .. }))
+        .count();
+    let lines = out
+        .iter()
+        .filter(|s| matches!(s, Shape::Line { .. }))
+        .count();
     let texts: Vec<&str> = out
         .iter()
         .filter_map(|s| match s {
@@ -295,9 +399,15 @@ fn each_kind_explodes_into_lines_and_its_value() {
         .collect();
     // Two extension lines, two ticks and the symbol's twelve chords; the dimension arc whole.
     assert_eq!((arcs, lines, texts), (1, 16, vec!["15.708"]));
-    let slope = dim(r#""a":{"x":0,"y":0},"b":{"x":40,"y":0},"offset":1,"height":1,"style":"slope","za":105.25,"zb":104.75"#);
+    let slope = dim(
+        r#""a":{"x":0,"y":0},"b":{"x":40,"y":0},"offset":1,"height":1,"style":"slope","za":105.25,"zb":104.75"#,
+    );
     let out = pieces(&slope, "%1.25");
-    assert_eq!(out.len(), 4, "the arrow, its head's two sides and the value");
+    assert_eq!(
+        out.len(),
+        4,
+        "the arrow, its head's two sides and the value"
+    );
     // docs/adr/0183 §3: filled arrowheads come out as solid hatches, the value in the dimension's typeface.
     let styled = dim(
         r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":2,"height":1,"arrow":"closed","font":"arimo""#,
@@ -379,22 +489,63 @@ fn a_fault_says_why_exactly_when_there_is_no_layout() {
         let s = Entity::from_json(&Json::parse(&d.to_string()).expect("JSON"))
             .expect("a dimension")
             .shape;
-        assert_eq!(fault(&s).is_some(), case["want"].is_null(), "{}", case["name"]);
+        assert_eq!(
+            fault(&s).is_some(),
+            case["want"].is_null(),
+            "{}",
+            case["name"]
+        );
     }
     use DimensionFault::*;
     for (fields, want) in [
-        (r#""a":{"x":0,"y":0},"b":{"x":5,"y":1},"offset":0,"height":2.5,"style":"ordinate""#, Some(OrdinateTooShort)),
-        (r#""a":{"x":0,"y":0},"b":{"x":5,"y":1},"offset":0,"height":2.5,"style":"ordinate","angle":90"#, None),
-        (r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"offset":2,"height":1,"style":"arcLength""#, Some(ArcNoCentre)),
-        (r#""a":{"x":0,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#, Some(ArcNoRadius)),
-        (r#""a":{"x":10,"y":0},"b":{"x":20,"y":0},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#, Some(ArcNoSweep)),
-        (r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":-10,"height":1,"style":"arcLength""#, Some(ArcInside)),
-        (r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"offset":5,"height":1,"style":"jogged""#, Some(JoggedNoCentre)),
-        (r#""a":{"x":0,"y":0},"b":{"x":0,"y":0},"c":{"x":280,"y":4},"offset":5,"height":1,"style":"jogged""#, Some(JoggedNoRadius)),
-        (r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"c":{"x":296,"y":5},"offset":5,"height":1,"style":"jogged""#, Some(JoggedCentre)),
-        (r#""a":{"x":3,"y":3},"b":{"x":3,"y":3},"offset":1,"height":1,"style":"azimuth""#, Some(EdgeTooShort)),
-        (r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":1,"height":1,"style":"slope","za":10"#, Some(SlopeNoElevations)),
-        (r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":1,"height":1,"style":"linear","angle":0"#, None),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":5,"y":1},"offset":0,"height":2.5,"style":"ordinate""#,
+            Some(OrdinateTooShort),
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":5,"y":1},"offset":0,"height":2.5,"style":"ordinate","angle":90"#,
+            None,
+        ),
+        (
+            r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"offset":2,"height":1,"style":"arcLength""#,
+            Some(ArcNoCentre),
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#,
+            Some(ArcNoRadius),
+        ),
+        (
+            r#""a":{"x":10,"y":0},"b":{"x":20,"y":0},"c":{"x":0,"y":0},"offset":2,"height":1,"style":"arcLength""#,
+            Some(ArcNoSweep),
+        ),
+        (
+            r#""a":{"x":10,"y":0},"b":{"x":0,"y":10},"c":{"x":0,"y":0},"offset":-10,"height":1,"style":"arcLength""#,
+            Some(ArcInside),
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"offset":5,"height":1,"style":"jogged""#,
+            Some(JoggedNoCentre),
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":0,"y":0},"c":{"x":280,"y":4},"offset":5,"height":1,"style":"jogged""#,
+            Some(JoggedNoRadius),
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":300,"y":0},"c":{"x":296,"y":5},"offset":5,"height":1,"style":"jogged""#,
+            Some(JoggedCentre),
+        ),
+        (
+            r#""a":{"x":3,"y":3},"b":{"x":3,"y":3},"offset":1,"height":1,"style":"azimuth""#,
+            Some(EdgeTooShort),
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":1,"height":1,"style":"slope","za":10"#,
+            Some(SlopeNoElevations),
+        ),
+        (
+            r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":1,"height":1,"style":"linear","angle":0"#,
+            None,
+        ),
     ] {
         assert_eq!(fault(&dim(fields)), want, "{fields}");
     }
@@ -456,7 +607,10 @@ fn the_tools_take_an_ordinate_s_axis_and_an_arc_s_ends_as_the_rules_say() {
         sweep: std::f64::consts::FRAC_PI_2,
     };
     let whole = arc_length_ends(&quarter, None).expect("an arc");
-    assert!(close(whole.a, 10.0, 0.0) && close(whole.b, 0.0, 10.0), "{whole:?}");
+    assert!(
+        close(whole.a, 10.0, 0.0) && close(whole.b, 0.0, 10.0),
+        "{whole:?}"
+    );
     // A clockwise edge (a path's arc drawn the other way): the same arc, its ends counter-clockwise.
     let clockwise = Edge::Arc {
         c: v(0.0, 0.0),
@@ -465,7 +619,10 @@ fn the_tools_take_an_ordinate_s_axis_and_an_arc_s_ends_as_the_rules_say() {
         sweep: -std::f64::consts::FRAC_PI_2,
     };
     let back = arc_length_ends(&clockwise, None).expect("an arc");
-    assert!(close(back.a, 10.0, 0.0) && close(back.b, 0.0, 10.0), "{back:?}");
+    assert!(
+        close(back.a, 10.0, 0.0) && close(back.b, 0.0, 10.0),
+        "{back:?}"
+    );
     // Kısmi: two points, in either order, put on the circle.
     let part = arc_length_ends(&quarter, Some((v(0.0, 20.0), v(5.0, 5.0)))).expect("a part");
     let h = 10.0 * std::f64::consts::FRAC_1_SQRT_2;
@@ -474,8 +631,14 @@ fn the_tools_take_an_ordinate_s_axis_and_an_arc_s_ends_as_the_rules_say() {
     let off = arc_length_ends(&quarter, Some((v(10.0, -1.0), v(5.0, 5.0)))).expect("a part");
     assert!(close(off.a, 10.0, 0.0) && close(off.b, h, h), "{off:?}");
     // Nothing for one place twice, a point at the centre, a full turn or a straight edge.
-    assert_eq!(arc_length_ends(&quarter, Some((v(5.0, 5.0), v(7.0, 7.0)))), None);
-    assert_eq!(arc_length_ends(&quarter, Some((v(0.0, 0.0), v(7.0, 7.0)))), None);
+    assert_eq!(
+        arc_length_ends(&quarter, Some((v(5.0, 5.0), v(7.0, 7.0)))),
+        None
+    );
+    assert_eq!(
+        arc_length_ends(&quarter, Some((v(0.0, 0.0), v(7.0, 7.0)))),
+        None
+    );
     let turn = Edge::Arc {
         c: v(0.0, 0.0),
         r: 10.0,
@@ -484,7 +647,13 @@ fn the_tools_take_an_ordinate_s_axis_and_an_arc_s_ends_as_the_rules_say() {
     };
     assert_eq!(arc_length_ends(&turn, None), None);
     assert_eq!(
-        arc_length_ends(&Edge::Seg { a: v(0.0, 0.0), b: v(1.0, 0.0) }, None),
+        arc_length_ends(
+            &Edge::Seg {
+                a: v(0.0, 0.0),
+                b: v(1.0, 0.0)
+            },
+            None
+        ),
         None
     );
 }
@@ -547,4 +716,33 @@ fn quick_dimensions_are_the_references() {
         }
     }
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+}
+
+/// Which lines are extension lines (docs/adr/0205 §6): an aligned or linear
+/// dimension's two, when its line is past the gap; an angle's arms extended to
+/// its arc; none of a radius's.
+#[test]
+fn the_layout_says_which_lines_are_extension_lines() {
+    let aligned = layout(&dim(
+        r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":2,"height":1"#,
+    ));
+    assert_eq!(aligned.ext, [0, 1]);
+    assert_eq!(
+        aligned.lines[2],
+        [aligned.d1, aligned.d2],
+        "the dimension line after them"
+    );
+    // Its line within the gap of the points: no extension lines.
+    let close = layout(&dim(
+        r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":0.2,"height":1"#,
+    ));
+    assert!(close.ext.is_empty());
+    let angle = layout(&dim(
+        r#""a":{"x":2,"y":0},"b":{"x":0,"y":2},"c":{"x":0,"y":0},"offset":5,"height":1,"style":"angular""#,
+    ));
+    assert_eq!(angle.ext, [0, 1]);
+    let radius = layout(&dim(
+        r#""a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":1,"height":1,"style":"radius""#,
+    ));
+    assert!(radius.ext.is_empty());
 }

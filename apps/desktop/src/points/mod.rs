@@ -88,7 +88,8 @@ pub mod texts {
     pub const LAYER: &str = "Katmana taşı…";
     pub const LAYER_HINT: &str = "Noktaları seçilen katmana taşır";
     pub const DEDUPE: &str = "Çift noktaları ayıkla…";
-    pub const DEDUPE_HINT: &str = "Aynı adlı ya da aynı yerdeki noktalardan birini tutar, ötekileri siler";
+    pub const DEDUPE_HINT: &str =
+        "Aynı adlı ya da aynı yerdeki noktalardan birini tutar, ötekileri siler";
     pub const EXPORT: &str = "Dışa aktar…";
     pub const EXPORT_HINT: &str =
         "Noktaları tablonun sırasıyla koordinat listesi olarak yazar (NCN, TXT, CSV)";

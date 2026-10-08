@@ -52,9 +52,16 @@ fn an_edge_moves_parallel_and_its_neighbours_follow() {
                     ring(&h["pts"], w, name);
                 }
             }
-            None => assert!(e.get("holes").is_none_or(Value::is_null), "{name}: no holes"),
+            None => assert!(
+                e.get("holes").is_none_or(Value::is_null),
+                "{name}: no holes"
+            ),
         }
-        assert_eq!(e["bulges"], want.get("bulges").cloned().unwrap_or(Value::Null), "{name}: bulges kept");
+        assert_eq!(
+            e["bulges"],
+            want.get("bulges").cloned().unwrap_or(Value::Null),
+            "{name}: bulges kept"
+        );
         assert_eq!(e["id"], c["shape"]["id"], "{name}: its other fields kept");
         match want.get("area") {
             Some(area) => near(&got["area"], area, 1e-9, name),
@@ -99,5 +106,10 @@ fn the_edge_under_a_click() {
     let got = pick(json!({"x": 5, "y": 6.1}));
     assert_eq!(got["picked"]["ring"], 1);
     assert_eq!(got["picked"]["edge"], 2);
-    near(&got["picked"]["normal"]["y"], &json!(-1.0), 1e-15, "into the hole");
+    near(
+        &got["picked"]["normal"]["y"],
+        &json!(-1.0),
+        1e-15,
+        "into the hole",
+    );
 }

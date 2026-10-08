@@ -190,6 +190,11 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub topology: Option<crate::TopologySettings>,
+    /// The project's annotation heights on paper (docs/adr/0205 §1); absent:
+    /// every kind's default.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotation: Option<crate::AnnotationHeights>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names
@@ -513,6 +518,24 @@ impl ProjectSettings {
             .is_some_and(SurveySettings::reduces_to_grid)
     }
 
+    /// The project's annotation heights (docs/adr/0205 §1): its own, every
+    /// kind not given at its default.
+    pub fn annotation_heights(&self) -> crate::AnnotationHeights {
+        self.annotation.clone().unwrap_or_default()
+    }
+
+    /// A kind of annotation's height on paper, mm (docs/adr/0205 §1).
+    pub fn annotation_mm(&self, kind: crate::AnnotationKind) -> f64 {
+        self.annotation
+            .as_ref()
+            .map_or_else(|| kind.default_mm(), |a| a.mm(kind))
+    }
+
+    /// A kind of annotation's height in the drawing at the plot scale, metres.
+    pub fn annotation_height(&self, kind: crate::AnnotationKind) -> f64 {
+        crate::paper_height(self.annotation_mm(kind), self.plot_scale)
+    }
+
     /// Whether the project has a coordinate system: the registry's, or its
     /// own definition (docs/adr/0168 §1).
     pub fn has_system(&self) -> bool {
@@ -542,7 +565,8 @@ impl ProjectSettings {
     /// definition), a unit only without a system, the datum choices only
     /// when they all hold, the survey settings that hold (docs/adr/0169 §3),
     /// the layer states that hold (docs/adr/0177 §4), the topology rules
-    /// and exceptions that hold (docs/adr/0202 §1).
+    /// and exceptions that hold (docs/adr/0202 §1), the annotation heights
+    /// that hold and are not their kind's default (docs/adr/0205 §1).
     pub fn sanitized(mut self) -> Self {
         if self.srid != 0
             || self
@@ -574,6 +598,9 @@ impl ProjectSettings {
         self.dimension_styles =
             crate::sanitized_dimension_styles(std::mem::take(&mut self.dimension_styles));
         self.topology = self.topology.and_then(crate::TopologySettings::sanitized);
+        self.annotation = self
+            .annotation
+            .and_then(crate::AnnotationHeights::sanitized);
         self
     }
 }

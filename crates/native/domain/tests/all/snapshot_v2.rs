@@ -146,5 +146,8 @@ fn vertex_elevations_come_through_the_document_as_they_are() {
     let text = std::fs::read_to_string(ELEVATIONS).expect("the sample");
     let snapshot: DocumentSnapshotV2 = serde_json::from_str(&text).expect("reads");
     let doc = Document::from_snapshot_v2(snapshot.clone()).expect("opens");
-    assert_eq!(without_slots(&doc.to_snapshot_v2()), without_slots(&snapshot));
+    assert_eq!(
+        without_slots(&doc.to_snapshot_v2()),
+        without_slots(&snapshot)
+    );
 }

@@ -1051,11 +1051,17 @@ mod tests {
         let applied = apply_import(&mut doc, vec![insert("0", 2), line("0")], blocks, &plan)
             .expect("applied");
         assert_eq!(applied.blocks, 2);
-        assert_eq!(applied.renamed, [("Kapı".to_owned(), "Kapı (2)".to_owned())]);
+        assert_eq!(
+            applied.renamed,
+            [("Kapı".to_owned(), "Kapı (2)".to_owned())]
+        );
         let names: Vec<&str> = doc.blocks().iter().map(|b| b.name.as_str()).collect();
         assert_eq!(names, ["KAPI", "No", "Kapı (2)"]);
         let (no, kapi) = (doc.blocks()[1].id, doc.blocks()[2].id);
-        assert!(![no, kapi].contains(&BlockId((1u128).to_be_bytes())), "new ids");
+        assert!(
+            ![no, kapi].contains(&BlockId((1u128).to_be_bytes())),
+            "new ids"
+        );
         let Some(Entity::Insert(placed)) = doc.get(applied.slots[0]) else {
             panic!("an insert")
         };
@@ -1098,8 +1104,14 @@ mod tests {
         assert_eq!(work.blocks, 1);
         let id = doc.blocks()[0].id;
         work.feed(vec![insert("0", 1); 3]);
-        while !work.step(&mut doc, std::time::Duration::from_secs(1)).expect("steps") {}
-        assert!(doc.entities().all(|e| matches!(e, Entity::Insert(i) if i.block == id)));
+        while !work
+            .step(&mut doc, std::time::Duration::from_secs(1))
+            .expect("steps")
+        {}
+        assert!(
+            doc.entities()
+                .all(|e| matches!(e, Entity::Insert(i) if i.block == id))
+        );
         assert_eq!(doc.len(), 3);
         assert_eq!(doc.undo().as_deref(), Some("DXF: büyük.dxf"));
         assert!(doc.blocks().is_empty());
@@ -1153,7 +1165,9 @@ mod tests {
         work.feed(vec![insert("0", 1), insert("0", 7)]);
         let stopped = work.step(&mut doc, std::time::Duration::from_secs(1));
         assert!(
-            stopped.expect_err("refused").contains("(İçe aktarılan nesne 2 (insert)"),
+            stopped
+                .expect_err("refused")
+                .contains("(İçe aktarılan nesne 2 (insert)"),
         );
         assert!(doc.blocks().is_empty());
         assert_eq!(doc.len(), 0);

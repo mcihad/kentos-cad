@@ -20,10 +20,11 @@ mod objects;
 mod styles;
 
 use kentos_contracts::{
-    DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DimensionStyle, DocumentSnapshotV2,
-    Entity, LabelStyle, LayerField, LayerNode, LayerNodeType, LayerSnap, LayerState,
-    LayerStateNode, LayerStyle, MigrationSource, ProjectSettings, SurveySettings, TopologySettings,
-    Vec2, layer_fields_problem, layer_states_problem,
+    AnnotationHeights, AnnotationKind, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
+    DimensionStyle, DimensionStyleDef, DocumentSnapshotV2, Entity, LabelStyle, LayerField,
+    LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, MigrationSource,
+    ProjectSettings, SurveySettings, TopologySettings, Vec2, layer_fields_problem,
+    layer_states_problem,
 };
 use serde_json::Value;
 
@@ -31,14 +32,14 @@ use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, rend
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
-    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
-    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES,
-    SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
-    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
-    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_RASTERS,
-    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS,
-    SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
-    SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS,
+    SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND,
+    SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LAYER_FIELDS,
+    SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
+    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
+    SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
+    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS,
+    SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -288,7 +289,8 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.layer_states.is_empty())
             + usize::from(!s.text_styles.is_empty())
             + usize::from(!s.dimension_styles.is_empty())
-            + usize::from(s.topology.is_some());
+            + usize::from(s.topology.is_some())
+            + usize::from(has_heights(s));
         self.open(n, true)?;
         self.key("srid");
         self.w.uint(u64::from(s.srid));
@@ -321,6 +323,10 @@ impl<'d> Encoder<'d> {
         if let Some(w) = s.workspace {
             self.key("workspace");
             self.w.text(workspace(w));
+        }
+        if let Some(a) = s.annotation.as_ref().filter(|_| has_heights(s)) {
+            self.key("annotation");
+            self.at(Seg::Name("annotation"), |e| e.annotation(a))?;
         }
         if let Some(second) = s.second_srid {
             self.key("secondSrid");
@@ -519,6 +525,34 @@ impl<'d> Encoder<'d> {
     }
 
     /// The survey settings (docs/adr/0169 §3), checked whole as a reader checks them.
+    /// The annotation heights (docs/adr/0205 §1), each kind given, in the
+    /// canonical order of their keys; checked as a reader checks them.
+    fn annotation(&mut self, a: &AnnotationHeights) -> Result<(), KcadError> {
+        if let Some((key, problem)) = a.problem() {
+            return self.at(Seg::Name(key), |e| Err(e.fail(Code::BadValue, &problem)));
+        }
+        let order = [
+            AnnotationKind::Text,
+            AnnotationKind::Table,
+            AnnotationKind::Leader,
+            AnnotationKind::Measure,
+            AnnotationKind::Station,
+            AnnotationKind::Dimension,
+            AnnotationKind::Coordinate,
+        ];
+        let given: Vec<(AnnotationKind, f64)> = order
+            .into_iter()
+            .filter_map(|k| a.given(k).map(|mm| (k, mm)))
+            .collect();
+        self.open(given.len(), true)?;
+        for (kind, mm) in given {
+            self.key(kind.key());
+            self.at(Seg::Name(kind.key()), |e| e.float(mm))?;
+        }
+        self.close();
+        Ok(())
+    }
+
     fn survey(&mut self, v: &SurveySettings) -> Result<(), KcadError> {
         if let Some(problem) = v.problem() {
             return Err(self.fail(Code::BadValue, &problem));
@@ -593,7 +627,10 @@ impl<'d> Encoder<'d> {
 
     fn layer(&mut self, n: &'d LayerNode) -> Result<(), KcadError> {
         let fields = !n.fields.is_empty();
-        self.open(8 + usize::from(n.snap.is_some()) + usize::from(fields), true)?;
+        self.open(
+            8 + usize::from(n.snap.is_some()) + usize::from(fields),
+            true,
+        )?;
         // id (2), name snap type (4), style (5), fields locked (6), visible (7),
         // children expanded (8).
         self.key("id");
@@ -899,7 +936,18 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 29 when it has a raster
+/// Whether the settings give an annotation height (docs/adr/0205 §1): a
+/// field with none is not written.
+fn has_heights(s: &ProjectSettings) -> bool {
+    s.annotation
+        .as_ref()
+        .is_some_and(|a| *a != AnnotationHeights::default())
+}
+
+/// The oldest schema that holds the drawing: 30 when the project has
+/// annotation heights or a dimension style lines, or a dimension of it or of
+/// a block definition has lines or a leader an arrowhead size or one of
+/// AutoCAD's arrowheads (docs/adr/0205), 29 when it has a raster
 /// (docs/adr/0204 §2), 28 when its survey settings
 /// name an a priori standard deviation (docs/adr/0203 §1), 27 when the
 /// project has topology settings (docs/adr/0202 §7), 26 when a layer has fields
@@ -927,6 +975,26 @@ impl<'d> Encoder<'d> {
 fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     fn snaps(nodes: &[LayerNode]) -> bool {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
+    }
+    // Schema 30 (docs/adr/0205): annotation heights, a dimension's lines, a
+    // leader's arrowhead size or one of AutoCAD's arrowheads.
+    let annotated = |list: &[Entity]| {
+        list.iter().any(|e| match e {
+            Entity::Dimension(d) => d.look.has_lines(),
+            Entity::Leader(l) => l.arrow_size.is_some() || l.arrow.is_some_and(|a| a.is_added()),
+            _ => false,
+        })
+    };
+    if has_heights(&doc.settings)
+        || doc
+            .settings
+            .dimension_styles
+            .iter()
+            .any(DimensionStyleDef::has_lines)
+        || annotated(&doc.entities)
+        || doc.blocks.iter().any(|b| annotated(&b.entities))
+    {
+        return SCHEMA_WITH_ANNOTATION;
     }
     fn schemas(nodes: &[LayerNode]) -> bool {
         nodes

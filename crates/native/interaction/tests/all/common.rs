@@ -295,7 +295,12 @@ impl Bench {
     }
 
     /// An open polyline through `pts` with a bulge on each segment (docs/adr/0147: Hızlı ölçü's arcs).
-    pub fn add_bulged(&mut self, layer: &str, pts: &[[f64; 2]], bulges: &[f64]) -> kentos_domain::Slot {
+    pub fn add_bulged(
+        &mut self,
+        layer: &str,
+        pts: &[[f64; 2]],
+        bulges: &[f64],
+    ) -> kentos_domain::Slot {
         let path = kentos_contracts::PathEntity {
             base: base(layer),
             pts: pts.iter().map(|p| wire(*p)).collect(),
@@ -329,7 +334,14 @@ impl Bench {
     }
 
     /// An arc about `c` from `a0` counter-clockwise to `a1` (radians) on `layer`.
-    pub fn add_arc(&mut self, layer: &str, c: [f64; 2], r: f64, a0: f64, a1: f64) -> kentos_domain::Slot {
+    pub fn add_arc(
+        &mut self,
+        layer: &str,
+        c: [f64; 2],
+        r: f64,
+        a0: f64,
+        a1: f64,
+    ) -> kentos_domain::Slot {
         let arc = Entity::Arc(kentos_contracts::ArcEntity {
             base: base(layer),
             c: wire(c),

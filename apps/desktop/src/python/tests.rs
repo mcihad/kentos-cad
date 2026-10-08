@@ -543,7 +543,10 @@ fn real_python_completes_and_shows_signatures() {
     let _ = app.update(Message::Python(Event::Repl(ReplEvent::Complete(
         CompletionEvent::Accept,
     ))));
-    assert_eq!(app.python.repl.input.content.text().trim_end(), "doc.measure");
+    assert_eq!(
+        app.python.repl.input.content.text().trim_end(),
+        "doc.measure"
+    );
     let _ = app.update(Message::Python(Event::Stop));
 }
 

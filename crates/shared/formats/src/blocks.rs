@@ -19,7 +19,7 @@ use kentos_geometry_core::entity::{
     Attrs, Entity as CoreEntity, HatchPattern as CorePattern, Part, PointPart as CorePoint, Shape,
 };
 use kentos_geometry_core::geom::arrangement::Ring;
-use kentos_geometry_core::geom::dimension::{Arrow, Look};
+use kentos_geometry_core::geom::dimension::{Arrow, Look, LookLines};
 use kentos_geometry_core::text::Font;
 use kentos_geometry_core::text::face::Face;
 use kentos_geometry_core::text::paragraph::{Run, Script};
@@ -156,7 +156,9 @@ impl Placing {
 }
 
 /// A text's alignment as the geometry core names it (docs/adr/0145).
-pub(crate) fn core_align(a: kentos_contracts::TextAlign) -> Option<kentos_geometry_core::text::TextAlign> {
+pub(crate) fn core_align(
+    a: kentos_contracts::TextAlign,
+) -> Option<kentos_geometry_core::text::TextAlign> {
     kentos_geometry_core::text::TextAlign::from_name(a.name())
 }
 
@@ -286,12 +288,23 @@ pub(crate) fn core_look(l: &kentos_contracts::DimensionLook) -> Look {
         prefix: l.prefix.clone(),
         suffix: l.suffix.clone(),
         font: l.font.map(|d| Font::from_id(d.id())),
+        lines: LookLines {
+            dim_line_color: l.dim_line_color.clone(),
+            dim_line_weight: l.dim_line_weight,
+            dim_line_type: l.dim_line_type.map(|t| t.name().to_owned()),
+            ext_color: l.ext_color.clone(),
+            ext_weight: l.ext_weight,
+            ext_line_type: l.ext_line_type.map(|t| t.name().to_owned()),
+            text_color: l.text_color.clone(),
+        }
+        .boxed(),
     }
 }
 
 /// The core's look as the contract writes it.
 pub(crate) fn contract_look(l: &Look) -> kentos_contracts::DimensionLook {
     use kentos_contracts::DrawingUnit;
+    let lines = l.lines.as_deref().cloned().unwrap_or_default();
     kentos_contracts::DimensionLook {
         dim_style: l.style.clone(),
         arrow: l
@@ -316,6 +329,19 @@ pub(crate) fn contract_look(l: &Look) -> kentos_contracts::DimensionLook {
         font: l
             .font
             .and_then(|c| kentos_contracts::DrawingFont::from_id(c.id())),
+        dim_line_color: lines.dim_line_color.clone(),
+        dim_line_weight: lines.dim_line_weight,
+        dim_line_type: lines
+            .dim_line_type
+            .as_deref()
+            .and_then(kentos_contracts::LineType::from_name),
+        ext_color: lines.ext_color.clone(),
+        ext_weight: lines.ext_weight,
+        ext_line_type: lines
+            .ext_line_type
+            .as_deref()
+            .and_then(kentos_contracts::LineType::from_name),
+        text_color: lines.text_color.clone(),
     }
 }
 
@@ -501,6 +527,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             height: l.height,
             rotation: l.rotation,
             arrow: l.arrow.map(|a| a.name().to_owned()),
+            arrow_size: l.arrow_size,
             mask: l.mask.then_some(true),
         },
         Entity::Arc(a) => Shape::Arc {
@@ -739,6 +766,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             height,
             rotation,
             arrow,
+            arrow_size,
             mask,
         } => Entity::Leader(LeaderEntity {
             base,
@@ -747,6 +775,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             height: *height,
             rotation: *rotation,
             arrow: arrow.as_deref().and_then(LeaderArrow::from_name),
+            arrow_size: *arrow_size,
             mask: *mask == Some(true),
         }),
         Shape::Text {

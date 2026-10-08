@@ -111,7 +111,10 @@ pub(crate) fn card(
             .map(String::as_str)
     };
     let kind = kind_title(e.kind());
-    let title = match (attr("Parsel"), base.label.as_deref().filter(|l| !l.is_empty())) {
+    let title = match (
+        attr("Parsel"),
+        base.label.as_deref().filter(|l| !l.is_empty()),
+    ) {
         (Some(number), _) => format!("Parsel {number}"),
         (None, Some(label)) => format!("{kind} {label}"),
         (None, None) => kind.to_owned(),
@@ -134,11 +137,7 @@ pub(crate) fn card(
     }
     let (area, length) = measures(e);
     if let Some(area) = area {
-        let name = if has_deed {
-            "Hesaplanan alan"
-        } else {
-            "Alan"
-        };
+        let name = if has_deed { "Hesaplanan alan" } else { "Alan" };
         rows.push((name, format.area(area), true));
     }
     if let Entity::Polygon(p) = e {
@@ -327,12 +326,7 @@ mod tests {
             .attrs
             .insert("Tapu alanı (m²)".into(), " 118,5 ".into());
         let c = card(&deed, &doc.model, &format, black);
-        let rows: Vec<(&str, &str)> = c
-            .rows
-            .iter()
-            .map(|r| (r.0, r.1.as_str()))
-            .take(3)
-            .collect();
+        let rows: Vec<(&str, &str)> = c.rows.iter().map(|r| (r.0, r.1.as_str())).take(3).collect();
         assert_eq!(rows[1], ("Tapu alanı", "118,5 m²"));
         assert_eq!(rows[2].0, "Hesaplanan alan");
         // Text that is not a plain number is shown as it is.
@@ -340,8 +334,14 @@ mod tests {
             super::deed_area_text(Some("tapuda yok")),
             Some(("tapuda yok".to_owned(), false))
         );
-        assert_eq!(super::deed_area_text(Some("723.525")), Some(("723.525 m²".to_owned(), true)));
-        assert_eq!(super::deed_area_text(Some("723abc")), Some(("723abc".to_owned(), false)));
+        assert_eq!(
+            super::deed_area_text(Some("723.525")),
+            Some(("723.525 m²".to_owned(), true))
+        );
+        assert_eq!(
+            super::deed_area_text(Some("723abc")),
+            Some(("723abc".to_owned(), false))
+        );
         assert_eq!(super::deed_area_text(Some("  ")), None);
         // A multi-part area: its parts, and every part's holes (docs/adr/0143).
         let Entity::Polygon(mut two) = parcel.clone() else {

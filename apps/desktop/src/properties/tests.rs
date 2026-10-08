@@ -11,7 +11,7 @@ use kentos_contracts::{
 };
 use kentos_domain::Slot;
 
-use super::{Choice, Editor, Event, Field, Row, Spot, Summary, web_number};
+use super::{Choice, Editor, Event, Field, Part, Row, Spot, Summary, web_number};
 use crate::app::{App, Message};
 use crate::selecting::tests::{click, objects};
 
@@ -1792,6 +1792,7 @@ fn two_leaders(app: &mut App) -> (u32, u32) {
         height: 2.0,
         rotation: 0.0,
         arrow,
+        arrow_size: None,
         mask,
     };
     let a = add(app, Entity::Leader(leader(0.0, "Mevcut bina", None, false)));
@@ -1826,7 +1827,8 @@ fn a_leaders_rows_write_its_note_height_turn_arrowhead_and_mask() {
     assert_eq!(value(&app, "Geometri", "Not"), "Mevcut bina");
     assert_eq!(value(&app, "Geometri", "Yükseklik"), "2.000 m");
     assert_eq!(value(&app, "Geometri", "Dönüş"), "0.00 °");
-    assert_eq!(value(&app, "Geometri", "Ok"), "Dolu");
+    assert_eq!(value(&app, "Geometri", "Ok"), "Dolu üçgen");
+    assert_eq!(value(&app, "Geometri", "Ok boyu"), "1.00 × yükseklik");
     assert_eq!(value(&app, "Geometri", "Zemin"), "Kapalı");
     assert_eq!(value(&app, "Geometri", "Köşe sayısı"), "2");
     assert_eq!(value(&app, "Geometri", "Uzunluk"), "5.000 m");
@@ -1847,11 +1849,39 @@ fn a_leaders_rows_write_its_note_height_turn_arrowhead_and_mask() {
             Some(kentos_contracts::LeaderArrow::Dot)
         )
     );
-    assert_eq!(value(&app, "Kılavuz", "Ok"), "Nokta");
+    assert_eq!(value(&app, "Kılavuz", "Ok"), "Dolu nokta");
     assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
+    // Ok boyu (docs/adr/0205 §7): outside 0.1 to 10 not taken; written to both in one step; 1 is no field.
+    let size_before = app.document.as_ref().map_or(0, |d| d.model.revision());
+    event(
+        &mut app,
+        Event::Commit(Field::LeaderArrowSize(vec![sa, sb]), "12".to_owned()),
+    );
+    assert_eq!(
+        app.document.as_ref().map_or(0, |d| d.model.revision()),
+        size_before
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::LeaderArrowSize(vec![sa, sb]), "1,5".to_owned()),
+    );
+    assert_eq!(
+        (leader_of(&app, a).arrow_size, leader_of(&app, b).arrow_size),
+        (Some(1.5), Some(1.5))
+    );
+    assert_eq!(value(&app, "Kılavuz", "Ok boyu"), "1.50 × yükseklik");
+    event(
+        &mut app,
+        Event::Commit(Field::LeaderArrowSize(vec![sa]), "1".to_owned()),
+    );
+    assert_eq!(leader_of(&app, a).arrow_size, None);
+    assert_eq!(value(&app, "Kılavuz", "Ok boyu"), "Çeşitli");
     // Zemin on: b has it already, a alone is written.
     event(&mut app, Event::LeaderMask(vec![sa, sb], true));
-    assert_eq!((leader_of(&app, a).mask, leader_of(&app, b).mask), (true, true));
+    assert_eq!(
+        (leader_of(&app, a).mask, leader_of(&app, b).mask),
+        (true, true)
+    );
     event(
         &mut app,
         Event::Commit(Field::LeaderTurn(vec![sa, sb]), "370".to_owned()),
@@ -1887,8 +1917,14 @@ fn a_leaders_rows_write_its_note_height_turn_arrowhead_and_mask() {
 fn dimension(style: kentos_contracts::DimensionStyle, a: [f64; 2], b: [f64; 2]) -> DimensionEntity {
     DimensionEntity {
         base: base("cizim"),
-        a: Wire { x: E + a[0], y: N + a[1] },
-        b: Wire { x: E + b[0], y: N + b[1] },
+        a: Wire {
+            x: E + a[0],
+            y: N + a[1],
+        },
+        b: Wire {
+            x: E + b[0],
+            y: N + b[1],
+        },
         offset: 3.0,
         height: 2.5,
         text: None,
@@ -1950,17 +1986,26 @@ fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
     assert_eq!(value(&app, "Ölçü", "Zemin"), "Çeşitli");
     assert_eq!(value(&app, "Ölçü", "Koordinat"), "Çeşitli");
     let revision = |app: &App| app.document.as_ref().map_or(0, |d| d.model.revision());
-    event(&mut app, Event::DimensionAxis(vec![Slot(oy), Slot(ox)], 90.0));
+    event(
+        &mut app,
+        Event::DimensionAxis(vec![Slot(oy), Slot(ox)], 90.0),
+    );
     assert_eq!(
         (dimension_of(&app, oy).angle, dimension_of(&app, ox).angle),
         (Some(90.0), Some(90.0))
     );
     assert_eq!(value(&app, "Ölçü", "Koordinat"), "X");
     let before = revision(&app);
-    event(&mut app, Event::DimensionAxis(vec![Slot(oy), Slot(ox)], 90.0));
+    event(
+        &mut app,
+        Event::DimensionAxis(vec![Slot(oy), Slot(ox)], 90.0),
+    );
     assert_eq!(revision(&app), before, "nothing written when both have it");
     // Zemin on: the X's has it already, the Y's alone is written.
-    event(&mut app, Event::DimensionMask(vec![Slot(oy), Slot(ox)], true));
+    event(
+        &mut app,
+        Event::DimensionMask(vec![Slot(oy), Slot(ox)], true),
+    );
     assert!(dimension_of(&app, oy).mask && dimension_of(&app, ox).mask);
     assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
     assert!(!dimension_of(&app, oy).mask);
@@ -1986,7 +2031,10 @@ fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
     assert_eq!(value(&app, "Ölçü", "İkinci kot"), "Çeşitli");
     event(
         &mut app,
-        Event::Commit(Field::DimensionZb(vec![Slot(s1), Slot(s2)]), "97,5".to_owned()),
+        Event::Commit(
+            Field::DimensionZb(vec![Slot(s1), Slot(s2)]),
+            "97,5".to_owned(),
+        ),
     );
     assert_eq!(
         (dimension_of(&app, s1).zb, dimension_of(&app, s2).zb),
@@ -2003,9 +2051,138 @@ fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
     select(&mut app, &[oy, s1]);
     let titles: Vec<String> = rows(&app).into_iter().map(|(t, _)| t).collect();
     assert!(titles.contains(&"Ölçü".to_owned()), "{titles:?}");
-    let section = rows(&app).into_iter().find(|(t, _)| t == "Ölçü").expect("Ölçü");
+    let section = rows(&app)
+        .into_iter()
+        .find(|(t, _)| t == "Ölçü")
+        .expect("Ölçü");
     let labels: Vec<String> = section.1.iter().map(|r| r.label.to_string()).collect();
-    assert_eq!(labels, ["Zemin"]);
+    assert_eq!(
+        labels,
+        [
+            "Zemin",
+            "Çizgi rengi",
+            "Çizgi kalınlığı",
+            "Çizgi tipi",
+            "Uzatma rengi",
+            "Uzatma kalınlığı",
+            "Uzatma tipi",
+            "Değer rengi"
+        ]
+    );
     select(&mut app, &[oy, 1]);
     assert_eq!(value(&app, "Ölçüler (1)", "Zemin"), "Kapalı");
+}
+
+/// A dimension's lines' rows (docs/adr/0205 §6): common or “Çeşitli”, a colour
+/// whatever its case and another program's by its value; a colour, a weight
+/// and a type written in one step “Değiştir”, those that have it left out,
+/// none taking it away. The web's `dimensionRows.test.ts`.
+#[test]
+fn a_dimensions_line_rows_write_its_colours_weights_and_types() {
+    use kentos_contracts::DimensionStyle::Aligned;
+    use kentos_contracts::LineType;
+    let mut app = objects();
+    let d1 = add(
+        &mut app,
+        Entity::Dimension(DimensionEntity {
+            look: kentos_contracts::DimensionLook {
+                dim_line_color: Some("#E5484D".into()),
+                ext_weight: Some(0.35),
+                ext_line_type: Some(LineType::Dashed),
+                ..Default::default()
+            },
+            ..dimension(Aligned, [0.0, 0.0], [10.0, 0.0])
+        }),
+    );
+    let d2 = add(
+        &mut app,
+        Entity::Dimension(DimensionEntity {
+            look: kentos_contracts::DimensionLook {
+                dim_line_color: Some("#e5484d".into()),
+                text_color: Some("#123456".into()),
+                ..Default::default()
+            },
+            ..dimension(Aligned, [0.0, 20.0], [10.0, 20.0])
+        }),
+    );
+    select(&mut app, &[d1, d2]);
+    let shown = |app: &App| {
+        [
+            "Çizgi rengi",
+            "Uzatma kalınlığı",
+            "Uzatma tipi",
+            "Değer rengi",
+        ]
+        .map(|l| value(app, "Ölçü", l))
+    };
+    assert_eq!(shown(&app), ["Kırmızı", "Çeşitli", "Çeşitli", "Çeşitli"]);
+    select(&mut app, &[d2]);
+    assert_eq!(value(&app, "Geometri", "Değer rengi"), "#123456");
+    assert_eq!(value(&app, "Geometri", "Çizgi tipi"), "Sürekli");
+    let slots = vec![Slot(d1), Slot(d2)];
+    let look = |app: &App, id| dimension_of(app, id).look.clone();
+    event(
+        &mut app,
+        Event::DimensionLineColor(slots.clone(), Part::Ext, Some("#4F8EF7".into())),
+    );
+    assert_eq!(
+        (look(&app, d1).ext_color, look(&app, d2).ext_color),
+        (Some("#4F8EF7".into()), Some("#4F8EF7".into()))
+    );
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
+    assert_eq!(
+        (look(&app, d1).ext_color, look(&app, d2).ext_color),
+        (None, None)
+    );
+    // A weight: the one that has it left out; Kılcal takes it away.
+    event(
+        &mut app,
+        Event::DimensionLineWeight(slots.clone(), Part::Ext, Some(0.35)),
+    );
+    assert_eq!(
+        (look(&app, d1).ext_weight, look(&app, d2).ext_weight),
+        (Some(0.35), Some(0.35))
+    );
+    event(
+        &mut app,
+        Event::DimensionLineWeight(slots.clone(), Part::Ext, None),
+    );
+    assert_eq!(
+        (look(&app, d1).ext_weight, look(&app, d2).ext_weight),
+        (None, None)
+    );
+    // A type: Sürekli (none) takes it away.
+    event(
+        &mut app,
+        Event::DimensionLineType(slots.clone(), Part::Line, Some(LineType::Dashdot)),
+    );
+    assert_eq!(
+        (look(&app, d1).dim_line_type, look(&app, d2).dim_line_type),
+        (Some(LineType::Dashdot), Some(LineType::Dashdot))
+    );
+    event(
+        &mut app,
+        Event::DimensionLineType(slots.clone(), Part::Ext, None),
+    );
+    assert_eq!(
+        (look(&app, d1).ext_line_type, look(&app, d2).ext_line_type),
+        (None, None)
+    );
+    // The value's colour back to the object's.
+    event(
+        &mut app,
+        Event::DimensionLineColor(vec![Slot(d2)], Part::Value, None),
+    );
+    assert_eq!(look(&app, d2).text_color, None);
+    let revision = |app: &App| app.document.as_ref().map_or(0, |d| d.model.revision());
+    let before = revision(&app);
+    event(
+        &mut app,
+        Event::DimensionLineColor(slots, Part::Line, Some("#E5484D".into())),
+    );
+    assert_eq!(
+        revision(&app),
+        before,
+        "both have it already, whatever its case"
+    );
 }

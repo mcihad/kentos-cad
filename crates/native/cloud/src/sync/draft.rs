@@ -116,7 +116,10 @@ fn now_ms() -> u64 {
 }
 
 /// A definition change a command was planned from, read back from its envelope.
-fn planned_block_of(change: &BlockChange, expected: &BTreeMap<String, String>) -> Option<PlannedBlock> {
+fn planned_block_of(
+    change: &BlockChange,
+    expected: &BTreeMap<String, String>,
+) -> Option<PlannedBlock> {
     Some(match change {
         BlockChange::Create { block } => PlannedBlock::Create {
             block: std::sync::Arc::new(block.clone()),
@@ -184,7 +187,9 @@ impl ProjectSync {
         let mut removals: Vec<BlockId> = Vec::new();
         for (key, c) in changes {
             let Some(id) = Uuid::parse_str(key).ok().map(|u| BlockId(u.into_bytes())) else {
-                restored.held.push(format!("{key}: bir blok kimliği değil; değişiklik atlandı"));
+                restored
+                    .held
+                    .push(format!("{key}: bir blok kimliği değil; değişiklik atlandı"));
                 continue;
             };
             // Changed in this opening already: the newer change wins.
@@ -228,21 +233,38 @@ impl ProjectSync {
                     }
                 }
             }
-            let index: HashMap<BlockId, usize> = all.iter().enumerate().map(|(i, b)| (b.id, i)).collect();
+            let index: HashMap<BlockId, usize> =
+                all.iter().enumerate().map(|(i, b)| (b.id, i)).collect();
             let depth = kentos_contracts::blocks::nesting(&all, &index).unwrap_or_default();
-            move |id: BlockId| index.get(&id).and_then(|&i| depth.get(i)).copied().unwrap_or(0)
+            move |id: BlockId| {
+                index
+                    .get(&id)
+                    .and_then(|&i| depth.get(i))
+                    .copied()
+                    .unwrap_or(0)
+            }
         };
         upserts.sort_by_key(|(id, _)| depth(*id));
         for (id, c) in upserts {
             let Some(mut block) = c.block.clone() else {
                 continue;
             };
-            let others: Vec<&str> = list.iter().filter(|b| b.id != id).map(|b| b.name.as_str()).collect();
-            if others.iter().any(|n| kentos_contracts::blocks::name_key(n) == kentos_contracts::blocks::name_key(&block.name)) {
-                let name = kentos_contracts::blocks::import_names(others.iter().copied(), [block.name.as_str()])
-                    .into_iter()
-                    .next()
-                    .unwrap_or_else(|| block.name.clone());
+            let others: Vec<&str> = list
+                .iter()
+                .filter(|b| b.id != id)
+                .map(|b| b.name.as_str())
+                .collect();
+            if others.iter().any(|n| {
+                kentos_contracts::blocks::name_key(n)
+                    == kentos_contracts::blocks::name_key(&block.name)
+            }) {
+                let name = kentos_contracts::blocks::import_names(
+                    others.iter().copied(),
+                    [block.name.as_str()],
+                )
+                .into_iter()
+                .next()
+                .unwrap_or_else(|| block.name.clone());
                 restored.notes.push(renamed_block_text(&block.name, &name));
                 block.name = name;
             }
@@ -282,7 +304,11 @@ impl ProjectSync {
                 placed.insert(i.block);
             }
         }
-        let mut gone: HashSet<BlockId> = removals.iter().copied().filter(|id| list.iter().any(|b| b.id == *id)).collect();
+        let mut gone: HashSet<BlockId> = removals
+            .iter()
+            .copied()
+            .filter(|id| list.iter().any(|b| b.id == *id))
+            .collect();
         loop {
             let inside: HashSet<BlockId> = list
                 .iter()
@@ -304,14 +330,18 @@ impl ProjectSync {
             for id in stays {
                 gone.remove(&id);
                 conflicts.retain(|k| k.id != block_key(id));
-                let name = list.iter().find(|b| b.id == id).map_or_else(String::new, |b| b.name.clone());
+                let name = list
+                    .iter()
+                    .find(|b| b.id == id)
+                    .map_or_else(String::new, |b| b.name.clone());
                 restored
                     .notes
                     .push(format!("“{name}” bloğu başka birinin yerleştirmesinde kullanılıyor; taslaktaki silinmesi uygulanmadı."));
             }
         }
         list.retain(|b| !gone.contains(&b.id));
-        let same = list.len() == doc.blocks().len() && list.iter().zip(doc.blocks()).all(|(a, b)| *a == **b);
+        let same = list.len() == doc.blocks().len()
+            && list.iter().zip(doc.blocks()).all(|(a, b)| *a == **b);
         (!same).then_some(list)
     }
 
@@ -562,14 +592,22 @@ impl ProjectSync {
         }
         // The block definitions: made and changed ones into the list before the objects
         // that may place them, removals once those objects are counted.
-        let blocks_back = self.restore_blocks(doc, &draft.blocks, &carried_blocks, &change, &mut conflicts, &mut restored);
+        let blocks_back = self.restore_blocks(
+            doc,
+            &draft.blocks,
+            &carried_blocks,
+            &change,
+            &mut conflicts,
+            &mut restored,
+        );
         if let Some(list) = &blocks_back {
             change.blocks = Some(list.clone());
         }
         let meta_back = change.meta.is_some();
         self.apply(doc, change)?;
         // It is this user's work, not sent yet.
-        restored.changed = touched.len() + usize::from(meta_back) + usize::from(blocks_back.is_some());
+        restored.changed =
+            touched.len() + usize::from(meta_back) + usize::from(blocks_back.is_some());
         self.pending_blocks = self.plan_blocks(doc).len();
         self.dirty.extend(touched);
         if meta_back {

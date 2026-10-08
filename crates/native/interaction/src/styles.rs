@@ -6,8 +6,8 @@
 //! they always did (§4). The web's twin is `apps/web/src/tools/styleOption.ts`.
 
 use kentos_contracts::{
-    DimensionLook, DimensionStyleDef, ProjectSettings, STANDARD_DIMENSION_HEIGHT_MM,
-    STANDARD_STYLE, TextFace, TextStyleDef, Workspace,
+    DimensionLook, DimensionStyleDef, ProjectSettings, STANDARD_STYLE, TextFace, TextStyleDef,
+    Workspace,
 };
 use kentos_domain::Uuid;
 
@@ -148,7 +148,9 @@ pub fn take_text(typed: &str, cx: &mut Context<'_>) -> bool {
         Some((Some(id), height, factor)) => {
             cx.memory.text_style = Some(id);
             if let Some(mm) = height {
-                cx.memory.text_height_mm = mm;
+                cx.memory
+                    .heights
+                    .set(kentos_contracts::AnnotationKind::Text, Some(mm));
             }
             cx.memory.text_width_factor = factor.unwrap_or(1.0);
             true
@@ -225,7 +227,8 @@ pub fn dimension_look(cx: &Context<'_>, standard: f64) -> (DimensionLook, f64) {
     }
 }
 
-/// Standart's value height at the project's scale, metres (the tools' 2.5 mm).
+/// Standart's value height at the project's scale, metres: the project's
+/// Ölçü height (docs/adr/0205 §1).
 pub fn standard_dimension_height(settings: &ProjectSettings) -> f64 {
-    STANDARD_DIMENSION_HEIGHT_MM / 1000.0 * settings.plot_scale
+    settings.annotation_height(kentos_contracts::AnnotationKind::Dimension)
 }

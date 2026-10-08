@@ -569,7 +569,10 @@ mod tests {
             let m = scale_turn(east, north, rotation);
             let size = js_max(1.0, js_max(east.abs(), north.abs()));
             for (got, want) in m.iter().zip(expected) {
-                assert!((got - want).abs() <= tolerance * size, "{name}: {m:?} ≠ {expected:?}");
+                assert!(
+                    (got - want).abs() <= tolerance * size,
+                    "{name}: {m:?} ≠ {expected:?}"
+                );
             }
             if east == north {
                 let [a, b, c, d] = m;

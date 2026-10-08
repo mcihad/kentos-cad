@@ -16,8 +16,8 @@ use kentos_geometry_core::ops::spatial_query::Relation;
 use kentos_geometry_core::processing::numbering::{CornerWalk, StartCorner};
 use kentos_geometry_core::store::labels::LabelWanted;
 use kentos_geometry_core::store::overview::OverviewRequest;
-use kentos_geometry_core::store::{Store, array_packed_objects, transform_packed_objects};
 use kentos_geometry_core::store::snap::{Extension, SnapExtras};
+use kentos_geometry_core::store::{Store, array_packed_objects, transform_packed_objects};
 use kentos_geometry_core::text::Font;
 use kentos_geometry_core::tools::editing::array_transforms;
 use kentos_style_core::style::build::{LayerObjects, Program, View, build_layer_with};
@@ -656,6 +656,32 @@ impl GeometryStore {
             &rect(min_x, min_y, max_x, max_y),
             scale,
             has_editing.then_some(editing),
+        )
+    }
+
+    /// The same as the view shows them (docs/adr/0205 §5): each record and
+    /// its factor and anchor, `LABEL_SHOWN_STRIDE` numbers (see
+    /// `Store::labels_shown`); `size` is `graphics.annotationSize`'s value
+    /// (`legible`, `true`, `screen`), `plot_scale` the project's.
+    #[allow(clippy::too_many_arguments)]
+    #[wasm_bindgen(js_name = labelsShown)]
+    pub fn labels_shown(
+        &self,
+        min_x: f64,
+        min_y: f64,
+        max_x: f64,
+        max_y: f64,
+        scale: f64,
+        has_editing: bool,
+        editing: f64,
+        size: &str,
+        plot_scale: f64,
+    ) -> Vec<f64> {
+        self.inner.labels_shown(
+            &rect(min_x, min_y, max_x, max_y),
+            scale,
+            has_editing.then_some(editing),
+            kentos_geometry_core::store::legible::LabelSize::of(size, plot_scale),
         )
     }
 

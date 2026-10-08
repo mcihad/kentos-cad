@@ -5,8 +5,8 @@
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::entity::{
-    Entity, MULTI_PART_REFUSED, Part, PointPart, Shape, area_parts, entity_anchor,
-    entity_bounds, entity_length, entity_vertices, is_multi_part,
+    Entity, MULTI_PART_REFUSED, Part, PointPart, Shape, area_parts, entity_anchor, entity_bounds,
+    entity_length, entity_vertices, is_multi_part,
 };
 use kentos_geometry_core::geom::affine::translation;
 use kentos_geometry_core::geom::centroid::shape_centroid;
@@ -77,7 +77,9 @@ fn a_multi_part_object_is_measured_part_by_part() {
     let m = marks();
     let parts = area_parts(&m);
     assert_eq!(parts.len(), 3);
-    assert!(matches!(parts[2], Shape::Point { p, z: Some(z), parts: None } if p == v(0.0, 9.0) && z == 102.0));
+    assert!(
+        matches!(parts[2], Shape::Point { p, z: Some(z), parts: None } if p == v(0.0, 9.0) && z == 102.0)
+    );
     // A multi-point object's centre is its points' mean; it has no length.
     assert_eq!(shape_centroid(&marks()), Some(v(2.0, 3.0)));
     assert_eq!(entity_length(&marks()), None);
@@ -124,8 +126,14 @@ fn the_store_draws_picks_snaps_selects_and_packs_every_part() {
     assert_eq!(store.in_rect(&r(-1.0, 37.0, 10.0), false), vec![1.0, 2.0]);
     assert_eq!(store.in_rect(&r(-1.0, 1.0, 10.0), true), vec![1.0, 2.0]);
     // A fence over the second strip alone; one past the third mark alone.
-    assert_eq!(store.in_fence(&[v(33.0, -1.0), v(33.0, 1.0)], 0.1), vec![1.0]);
-    assert_eq!(store.in_fence(&[v(-1.0, 9.05), v(1.0, 9.05)], 0.1), vec![2.0]);
+    assert_eq!(
+        store.in_fence(&[v(33.0, -1.0), v(33.0, 1.0)], 0.1),
+        vec![1.0]
+    );
+    assert_eq!(
+        store.in_fence(&[v(-1.0, 9.05), v(1.0, 9.05)], 0.1),
+        vec![2.0]
+    );
     // Packed and read back as they were (kinds 16 and 17).
     let mut out = Packer::default();
     out.object(1.0, "a", false, &road());
@@ -157,9 +165,14 @@ fn grips_and_moves_take_every_part() {
     let bent = move_grip(&Entity::new(road()), 7, v(33.0, 2.0)).expect("bends");
     assert_eq!(entity_vertices(&bent.shape).len(), 6);
     // Each mark is a grip of its own; the third moves with its elevation.
-    assert_eq!(entity_grips(&marks()), vec![v(0.0, 0.0), v(6.0, 0.0), v(0.0, 9.0)]);
+    assert_eq!(
+        entity_grips(&marks()),
+        vec![v(0.0, 0.0), v(6.0, 0.0), v(0.0, 9.0)]
+    );
     let moved = move_grip(&Entity::new(marks()), 2, v(1.0, 9.0)).expect("moves");
-    assert!(matches!(&area_parts(&moved.shape)[2], Shape::Point { p, z: Some(z), .. } if *p == v(1.0, 9.0) && *z == 102.0));
+    assert!(
+        matches!(&area_parts(&moved.shape)[2], Shape::Point { p, z: Some(z), .. } if *p == v(1.0, 9.0) && *z == 102.0)
+    );
     // A move takes every part and every mark.
     let moved = transform_entity(&Entity::new(road()), &translation(100.0, 0.0));
     assert_eq!(entity_bounds(&moved.shape).max_x, 136.0);
@@ -181,14 +194,20 @@ fn an_offset_an_explosion_and_a_reversal_take_every_part() {
     };
     let parts = area_parts(&out.shape);
     assert_eq!(parts.len(), 2);
-    assert!(matches!(&parts[1], Shape::Polyline { pts, .. } if pts == &vec![v(30.0, -1.0), v(36.0, -1.0)]));
-    assert!(matches!(&parts[0], Shape::Polyline { pts, .. } if pts[0] == v(0.0, -1.0) && pts[1] == v(11.0, -1.0)));
+    assert!(
+        matches!(&parts[1], Shape::Polyline { pts, .. } if pts == &vec![v(30.0, -1.0), v(36.0, -1.0)])
+    );
+    assert!(
+        matches!(&parts[0], Shape::Polyline { pts, .. } if pts[0] == v(0.0, -1.0) && pts[1] == v(11.0, -1.0))
+    );
     // Every strip's edges; every mark a point.
     let Cut::Pieces(pieces) = explode_entity(&road(), "", Font::DEFAULT) else {
         panic!("explodes")
     };
     assert_eq!(pieces.len(), 3);
-    assert!(matches!(pieces[2].shape, Shape::Line { a, b } if a == v(30.0, 0.0) && b == v(36.0, 0.0)));
+    assert!(
+        matches!(pieces[2].shape, Shape::Line { a, b } if a == v(30.0, 0.0) && b == v(36.0, 0.0))
+    );
     let Cut::Pieces(points) = explode_entity(&marks(), "", Font::DEFAULT) else {
         panic!("comes apart")
     };
@@ -215,8 +234,12 @@ fn edits_that_run_along_one_path_refuse_a_multi_part_polyline() {
     let refused = |c: Cut| matches!(c, Cut::Error(m) if m == MULTI_PART_REFUSED);
     assert!(refused(break_entity(&e, v(31.0, 0.0), v(32.0, 0.0))));
     assert!(refused(trim_entity(&e, v(31.0, 0.0), &[])));
-    assert!(matches!(extend_entity(&e, v(35.0, 0.0), &[]), Geometry::Error(m) if m == MULTI_PART_REFUSED));
-    assert!(matches!(lengthen_entity(&e, true, 30.0), Geometry::Error(m) if m == MULTI_PART_REFUSED));
+    assert!(
+        matches!(extend_entity(&e, v(35.0, 0.0), &[]), Geometry::Error(m) if m == MULTI_PART_REFUSED)
+    );
+    assert!(
+        matches!(lengthen_entity(&e, true, 30.0), Geometry::Error(m) if m == MULTI_PART_REFUSED)
+    );
     assert!(split_equal(&e, 2.0).is_none());
     assert!(path_ends(&road()).is_none());
     assert_eq!(
@@ -226,14 +249,19 @@ fn edits_that_run_along_one_path_refuse_a_multi_part_polyline() {
     // Birleştir leaves it out, and joins the others.
     let line = |a: Vec2, b: Vec2, id: f64| {
         let mut e = Entity::new(Shape::Line { a, b });
-        e.rest.push(("id".into(), kentos_geometry_core::api::json::Json::Num(id)));
+        e.rest
+            .push(("id".into(), kentos_geometry_core::api::json::Json::Num(id)));
         e
     };
     let mut road = Entity::new(road());
     road.rest
         .push(("id".into(), kentos_geometry_core::api::json::Json::Num(1.0)));
     let joined = join_entities(
-        &[road, line(v(36.0, 0.0), v(40.0, 0.0), 2.0), line(v(40.0, 0.0), v(40.0, 3.0), 3.0)],
+        &[
+            road,
+            line(v(36.0, 0.0), v(40.0, 0.0), 2.0),
+            line(v(40.0, 0.0), v(40.0, 3.0), 3.0),
+        ],
         1e-6,
     )
     .expect("joins");

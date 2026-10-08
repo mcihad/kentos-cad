@@ -19,7 +19,9 @@
 //!   (`textTurn`); Düzleştir (Z) makes the selected curved texts straight at
 //!   once (`textStraighten`). Through `cad.entities.edit`, one step each.
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit, TextAlign, TextEntity, TextPath};
+use kentos_contracts::{
+    AnnotationKind, EditOperation, Entity, EntityEdit, TextAlign, TextEntity, TextPath,
+};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::{Shape, TextPlace};
 use kentos_geometry_core::text::Font;
@@ -197,11 +199,6 @@ fn active_locked(cx: &Context<'_>) -> Option<String> {
     })
 }
 
-/// Paper millimetres as metres at the project's plot scale.
-fn paper(mm: f64, cx: &Context<'_>) -> f64 {
-    mm / 1000.0 * cx.doc.settings().plot_scale
-}
-
 // ── Eğri boyunca yazı ───────────────────────────────────────────────────
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -244,7 +241,7 @@ impl TextAlong {
     }
 
     fn see(&mut self, cx: &Context<'_>) {
-        self.seen = Some((*cx.memory, cx.format()));
+        self.seen = Some((cx.seen_memory(), cx.format()));
         self.styles = styles::Seen::text(cx);
         self.font = drawing_font(cx.doc.settings().drawing_font);
     }
@@ -258,7 +255,7 @@ impl TextAlong {
     fn placed(&self, words: &str, at: Vec2, cx: &Context<'_>) -> Option<TextEntity> {
         let (_, curve) = self.curve.as_ref()?;
         let m = *cx.memory;
-        let height = paper(m.text_height_mm, cx);
+        let height = cx.annotation_height(AnnotationKind::Text);
         let face = styles::text_face(cx);
         let length = letters_length(words, height, 1.0, &face, self.font);
         let (share, _) = split(m.along_align);
@@ -353,7 +350,7 @@ impl Tool for TextAlong {
                 .option_with(
                     "Yükseklik",
                     "Y",
-                    format!("{} mm", js_number(m.text_height_mm)),
+                    format!("{} mm", js_number(m.heights.mm(AnnotationKind::Text))),
                 )
                 .option_with("Hiza", "H", share_word(share))
                 .option_with("Konum", "K", side_word(side))
@@ -478,7 +475,7 @@ impl Tool for TextAlong {
         } else if self.stage == Stage::Height {
             match parse_number(t) {
                 Some(n) if n > 0.0 => {
-                    cx.memory.text_height_mm = n;
+                    cx.memory.heights.set(AnnotationKind::Text, Some(n));
                     self.stage = if self.curve.is_some() {
                         Stage::Place
                     } else {

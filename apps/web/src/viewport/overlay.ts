@@ -12,7 +12,8 @@ import type { ProblemMark } from '../model/selection';
 import { resolveColor, type CanvasPalette } from '../render/color';
 import { faceFont, leanOf, valueFont, type Face } from '../render/drawingFaces';
 import type { ToolCursor } from '../tools/Tool';
-import type { Camera } from './Camera';
+import type { Camera, ViewTransform } from './Camera';
+import { leaderLayout } from '../model/geom/leader';
 import type { TrackHit } from './objectTracking';
 import { SNAP_LABEL, type SnapHit } from './picking';
 import { DEFAULT_LABELS, DIMENSION_PREFIX, DIMENSION_UNIT, LABEL, LABEL_STRIDE, type GripSet } from './storeRecords';
@@ -255,33 +256,89 @@ export function paragraphRecords(
  * zoomed-out map stays readable and draws fewer letters. Text objects and
  * dimension values are part of the drawing and are always drawn.
  */
+/**
+ * A view zoomed `k` times about the world point `a`, `a` staying where it is on screen (docs/adr/0205 §5): a grown
+ * text is drawn through it, its positions and sizes `k` times its own about its anchor.
+ */
+function grownView(view: ViewTransform, a: Vec2, k: number): ViewTransform {
+  const as = view.worldToScreen(a);
+  return {
+    scale: view.scale * k,
+    width: view.width,
+    height: view.height,
+    worldToScreen: (p) => {
+      const s = view.worldToScreen(p);
+      return { x: as.x + (s.x - as.x) * k, y: as.y + (s.y - as.y) * k };
+    },
+    screenToWorld: (p) => view.screenToWorld({ x: as.x + (p.x - as.x) / k, y: as.y + (p.y - as.y) / k }),
+  };
+}
+
+/**
+ * A grown leader's arrowhead (docs/adr/0205 §5, §7): its areas solid and its lines, `k` times its own about its tip,
+ * in its colour, over the one the scene draws as it is.
+ */
+function grownArrowhead(g: CanvasRenderingContext2D, view: ViewTransform, e: Extract<ReturnType<CadDocument['get']>, { kind: 'leader' }>, k: number, color: string): void {
+  const l = leaderLayout(e);
+  if (!l) return;
+  const tip = e.pts[0];
+  const at = (p: Vec2) => view.worldToScreen({ x: tip.x + (p.x - tip.x) * k, y: tip.y + (p.y - tip.y) * k });
+  g.save();
+  g.fillStyle = color;
+  g.strokeStyle = color;
+  g.lineWidth = 1.2;
+  for (const ring of l.head.fills) {
+    g.beginPath();
+    ring.forEach((p, j) => (j ? g.lineTo(at(p).x, at(p).y) : g.moveTo(at(p).x, at(p).y)));
+    g.closePath();
+    g.fill();
+  }
+  for (const line of l.head.lines) {
+    g.beginPath();
+    line.pts.forEach((p, j) => (j ? g.lineTo(at(p).x, at(p).y) : g.moveTo(at(p).x, at(p).y)));
+    if (line.closed) g.closePath();
+    g.stroke();
+  }
+  g.restore();
+}
+
+/**
+ * The drawing's text in the view. `stride` is the records' length: `LABEL_STRIDE`, or `LABEL_SHOWN_STRIDE` for the
+ * store's `labelsShown` (docs/adr/0205 §5), whose records carry their factor and anchor: a grown one is drawn through a
+ * view zoomed about its anchor.
+ */
 export function drawLabels(
   g: CanvasRenderingContext2D,
   doc: CadDocument,
-  cam: Camera,
+  view: ViewTransform,
   pal: CanvasPalette,
   spots: Float64Array,
   dimensionText: (l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>, look: DimensionLook) => string,
   pieces: (block: string) => readonly BlockPiece[] | null = () => null,
+  stride: number = LABEL_STRIDE,
 ): void {
   const layers = doc.layers;
   const ink = { fg: pal.fg, 'fg-dim': pal.fgDim, label: pal.label } as const;
-  const room = new LabelRoom(cam.width, cam.height);
+  const room = new LabelRoom(view.width, view.height);
   g.save();
   g.textAlign = 'center';
   g.textBaseline = 'middle';
-  for (let i = 0; i < spots.length; i += LABEL_STRIDE) {
+  for (let i = 0; i < spots.length; i += stride) {
     const e = doc.get(spots[i]);
     if (!e) continue;
     const what = spots[i + 1];
     const x = spots[i + 2];
     const y = spots[i + 3];
+    // A grown record: its factor and anchor after the record (docs/adr/0205 §5).
+    const k = stride > LABEL_STRIDE ? spots[i + LABEL_STRIDE] : 1;
+    const cam = k === 1 ? view : grownView(view, { x: spots[i + LABEL_STRIDE + 1], y: spots[i + LABEL_STRIDE + 2] }, k);
     if (what === LABEL.dimension && e.kind === 'dimension') {
       const s = cam.worldToScreen({ x, y });
       g.save();
       g.translate(s.x, s.y);
       g.rotate((-spots[i + 4] * Math.PI) / 180);
-      const color = e.color ?? layers.get(e.layerId)?.style.color;
+      // Its value's own colour when its look names one (docs/adr/0205 §6), else the object's.
+      const color = e.textColor ?? e.color ?? layers.get(e.layerId)?.style.color;
       const measured = { value: spots[i + 5], unit: DIMENSION_UNIT[spots[i + 6]] ?? 'length', prefix: DIMENSION_PREFIX[spots[i + 7]] ?? '' };
       dimensionValue(g, pal, e.height * cam.scale, e.text || dimensionText(measured, e), !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal), spots[i + 8] === 1, e.font);
       g.restore();
@@ -317,8 +374,12 @@ export function drawLabels(
       }
       continue;
     }
-    // A leader's note, as a text (docs/adr/0146 §5).
+    // A leader's note, as a text (docs/adr/0146 §5); grown, its arrowhead with it (docs/adr/0205 §5).
     if (what === LABEL.leader && e.kind === 'leader') {
+      if (k > 1) {
+        const color = e.color ?? layers.get(e.layerId)?.style.color;
+        grownArrowhead(g, view, e, k, !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal));
+      }
       if (e.text) baselineText(g, pal, cam.worldToScreen({ x, y }), spots[i + 4], e.height * cam.scale, 1, spots[i + 6] * cam.scale, e.text);
       continue;
     }
@@ -338,7 +399,7 @@ export function drawLabels(
         g.save();
         g.translate(s.x, s.y);
         g.rotate((-spots[i + 4] * Math.PI) / 180);
-        const color = e.color ?? layers.get(e.layerId)?.style.color;
+        const color = piece.textColor ?? e.color ?? layers.get(e.layerId)?.style.color;
         const measured = { value: spots[i + 5], ...dimensionMeasure(piece.style, piece.angle) };
         dimensionValue(g, pal, spots[i + 7] * cam.scale, piece.text || dimensionText(measured, piece), !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal), spots[i + 8] === 1, piece.font);
         g.restore();

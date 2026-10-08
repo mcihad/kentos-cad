@@ -4,15 +4,15 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 408 | 396 | 0 | 12 |
+| Komutlar | 411 | 399 | 0 | 12 |
 | Araçlar | 121 | 119 | 0 | 2 |
 | İşlem araçları | 20 | 20 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
-| Ayarlar | 92 | 92 | 0 | 0 |
+| Ayarlar | 93 | 93 | 0 | 0 |
 | Tarayıcı depoları | 12 | 12 | 0 | 0 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 536 | 536 | 0 | 0 |
-| Pencereler ve paneller | 121 | 121 | 0 | 0 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 559 | 559 | 0 | 0 |
+| Pencereler ve paneller | 122 | 122 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -49,15 +49,15 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 336 | 0 | 58 | 12 | 2 | 408 |
+| Komutlar | 339 | 0 | 58 | 12 | 2 | 411 |
 | Araçlar | 119 | 0 | 0 | 2 | 0 | 121 |
 | İşlem araçları | 20 | 0 | 0 | 0 | 0 | 20 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
-| Ayarlar | 88 | 0 | 3 | 0 | 1 | 92 |
+| Ayarlar | 89 | 0 | 3 | 0 | 1 | 93 |
 | Tarayıcı depoları | 10 | 0 | 0 | 0 | 2 | 12 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 536 | 0 | 0 | 0 | 0 | 536 |
-| Pencereler ve paneller | 101 | 2 | 17 | 0 | 1 | 121 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 559 | 0 | 0 | 0 | 0 | 559 |
+| Pencereler ve paneller | 102 | 2 | 17 | 0 | 1 | 122 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -76,7 +76,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 408; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 411; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -167,7 +167,7 @@ Yok.
 - `disaster` Afet ve risk analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `plan3d` İmar planından 3D kent tasarımı (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (3 / 92)
+#### Ayarlar (3 / 93)
 
 - `session.overlapLast`
 - `session.overlapLayers`
@@ -177,11 +177,11 @@ Yok.
 
 Yok.
 
-#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 536)
+#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 559)
 
 Yok.
 
-#### Pencereler ve paneller (19 / 121)
+#### Pencereler ve paneller (19 / 122)
 
 - `apps/web/src/ui/io/TakeFromDialog.ts#openTakeFrom` openTakeFrom
 - `apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog` openProjectTypeDialog
@@ -205,4 +205,4 @@ Yok.
 
 ## Test başvurusu
 
-146 / 408 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+149 / 411 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

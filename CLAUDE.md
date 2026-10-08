@@ -111,6 +111,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çizim hattında raster atlası (stilli çizimin 6. sürümü); Raster ekle (sistemin kuralı, oturtulmamış yer), Raster stili (canlı önizleme),
   Raster oturt (Helmert, afin, projektif, polinom 2 ve 3, ince plaka; artıklar ve m0; afin dönüşümü değiştirir, ötekiler GeoTIFF'e yeniden
   örnekler), Koordinat oku'da rasterin değerleri; CBS'de Veri › Raster, CAD'de Ekle › Raster (ADR 0204);
+  açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
+  projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
+  tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
+  (`graphics.annotationSize`), ölçünün çizgilerinin rengi, kalınlığı ve tipi (Ölçü stilleri'nin Çizgiler'i, Öznitelikler, DXF), kılavuzun
+  AutoCAD gibi 14 ucu ve Ok boyu, DXF'te AutoCAD'in ok blokları (ADR 0205);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -361,6 +366,11 @@ KENTOS_SHOTS_ONLY=paralel-kaydir,paralel-kaydir-alan,paralel-kaydir-yazildi carg
 python3 scripts/ui/hatch_icons.py --check   # desenlerin ikonlarını ve Desen menülerinin geniş örneklerini (apps/web/src/ui/hatchIcons.ts) desenlerin tanımından yeniden üretip karşılaştır; değişince --check'siz yazar (ADR 0186 §11)
 KENTOS_SHOTS_ONLY=tarama-araci,tarama-desenler,tarama-coklu,tarama-iliskili,tarama-oznitelikler,tarama-desen-menusu,tarama-oznitelikler-desen cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # tarama eklerinin resimleri, .run/shots/arac-tarama-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hatches); ADR 0186)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
+python3 scripts/fixtures/annotation_scale_cases.py --check   # açıklamaların yüksekliklerini ve ölçek ya da genel yükseklik değişince izlemeyi bağımsız başvurudan denetle; durumlar fixtures/text/v1/scale.json (ADR 0205)
+python3 scripts/fixtures/dimension_ext_calls.py --check   # TypeScript'ten kaydedilmiş ölçü çağrılarının uzatma çizgilerini (ext) kayıtlı çizgilerinden denetle (ADR 0205 §6)
+python3 scripts/ui/arrow_icons.py --check   # kılavuzun ok uçlarının simgelerini (apps/web/src/ui/arrowIcons.ts) uçların tanımından yeniden üretip karşılaştır (ADR 0205 §7)
+python3 scripts/fixtures/annotation_scene.py --check   # ADR 0205 resimlerinin sahnesini (fixtures/interaction/v1/annotations.kcad) denetle
+cargo test -p kentos-desktop labels::annotation_screens -- --ignored --nocapture   # açıklamaların resimleri, .run/shots/aciklama-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs annotations); ADR 0205)
 python3 scripts/fixtures/dimension_cases.py --check   # yeni ölçü türlerinin yerleşimini kurallardan denetle (ADR 0147)
 python3 scripts/fixtures/quick_dimension_cases.py --check   # Hızlı ölçü'nün ölçülerini (taraf, uzaklık, ortak kenar) kurallardan denetle (ADR 0147 §7)
 python3 scripts/fixtures/numeric_display.py --check   # gösterim kuralının durumlarını (yarımlar, gürültü, işaret, taşma) kuraldan denetle (ADR 0149)

@@ -77,7 +77,10 @@ pub fn execute(
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
-    let slots = match cx.doc.add_many(entities(&input, &attrs), label(input.operation)) {
+    let slots = match cx
+        .doc
+        .add_many(entities(&input, &attrs), label(input.operation))
+    {
         Ok(slots) => slots,
         Err(full) => {
             return CommandResult::Failed {

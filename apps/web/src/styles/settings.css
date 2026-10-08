@@ -1232,3 +1232,60 @@
   color: var(--c-text-3);
   font-size: var(--fs-sm);
 }
+
+/* Proje ayarları › Ölçek ve yazılar (docs/adr/0205 §1, §4): the scale's list and its typed denominator; each kind's
+   height with its size in the drawing beside it. */
+.scale-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.scale-pick__prefix {
+  color: var(--c-text-3);
+}
+.scale-pick__field {
+  width: 96px;
+  text-align: right;
+}
+.scale-pick__field[data-invalid] {
+  border-color: var(--c-danger);
+}
+.annotation-height {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.annotation-height__drawn {
+  min-width: 112px;
+  color: var(--c-text-3);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.sgroup__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+/* Ölçek yaz… (docs/adr/0205 §4): 1: and the denominator, what it will do under them. */
+.plotscale__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.plotscale__prefix {
+  color: var(--c-text-2);
+}
+.plotscale__field {
+  flex: 1;
+  text-align: right;
+}
+.plotscale__field[data-invalid] {
+  border-color: var(--c-danger);
+}
+.plotscale__status {
+  margin-top: 8px;
+  min-height: 2.6em;
+  color: var(--c-text-3);
+  font-size: var(--fs-sm);
+}

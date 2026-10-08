@@ -43,7 +43,7 @@ type ListedScope = Exclude<FeaturesValue['scope'], 'ids'>;
 /** How a parameter is asked for; fixed by its definition. */
 export type ControlForm =
   | { type: 'features'; scopes: { value: ListedScope; label: string }[] }
-  | { type: 'number'; unit?: ParamUnit }
+  | { type: 'number'; unit?: ParamUnit; placeholder?: string }
   | { type: 'string'; short: boolean; maxLength?: number; placeholder?: string }
   | { type: 'boolean' }
   /** picks: one option is a point picked on the drawing, beside the choice (Sahneden seç, docs/adr/0088). */
@@ -76,7 +76,7 @@ export function controlForm(def: ParamDef): ControlForm {
     case 'features':
       return { type: 'features', scopes: scopesOf(def).map((s) => ({ value: s, label: SCOPE_SHORT[s] })) };
     case 'number':
-      return def.unit ? { type: 'number', unit: def.unit } : { type: 'number' };
+      return { type: 'number', ...(def.unit ? { unit: def.unit } : {}), ...(def.placeholder ? { placeholder: def.placeholder } : {}) };
     case 'string':
       return { type: 'string', short: !!def.maxLength && def.maxLength <= 2, ...(def.maxLength ? { maxLength: def.maxLength } : {}), ...(def.placeholder ? { placeholder: def.placeholder } : {}) };
     case 'boolean':

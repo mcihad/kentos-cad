@@ -16,6 +16,20 @@ struct Items {
 }
 
 impl Items {
+    /// Another report's line: its count and its lines.
+    fn absorb(&mut self, item: ReportItem) {
+        let mut lines = item.lines.into_iter();
+        self.add(
+            &item.what,
+            &item.reason,
+            lines.next().unwrap_or(0),
+            item.count,
+        );
+        for line in lines {
+            self.add(&item.what, &item.reason, line, 0);
+        }
+    }
+
     fn add(&mut self, what: &str, reason: &str, line: u32, n: u32) {
         let key = (what.to_string(), reason.to_string());
         let i = *self.index.entry(key).or_insert_with(|| {
@@ -94,6 +108,21 @@ impl Report {
             label: label.to_string(),
             value: value.into(),
         });
+    }
+
+    /// `other`'s counts, left-outs and notes added to these (what a block
+    /// said, once it is known to be kept).
+    pub fn absorb(&mut self, other: Report) {
+        for (kind, n) in other.counts {
+            *self.counts.entry(kind).or_insert(0) += n;
+        }
+        for item in other.skipped.list {
+            self.skipped.absorb(item);
+        }
+        for item in other.notes.list {
+            self.notes.absorb(item);
+        }
+        self.source.extend(other.source);
     }
 
     pub fn total(&self) -> u32 {

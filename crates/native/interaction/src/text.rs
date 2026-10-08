@@ -21,7 +21,9 @@
 //! The text is written through `cad.entities.create` (docs/adr/0057): the
 //! active layer, one undo step (“Ekle”), “Yazı eklendi: “…”” said.
 
-use kentos_contracts::{EntityGeometry, MAX_WIDTH_FACTOR, TextAlign, width_factor_ok};
+use kentos_contracts::{
+    AnnotationKind, EntityGeometry, MAX_WIDTH_FACTOR, TextAlign, width_factor_ok,
+};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::text::edit::increment;
 use kentos_geometry_core::tools::drawing::text_angle;
@@ -237,11 +239,6 @@ fn active_locked(cx: &Context<'_>) -> Option<String> {
     })
 }
 
-/// Paper millimetres as metres at the project's plot scale (the web's `paper`).
-fn paper(mm: f64, cx: &Context<'_>) -> f64 {
-    mm / 1000.0 * cx.doc.settings().plot_scale
-}
-
 /// A number as the web writes it in the prompt: `+n.toFixed(places)`.
 fn trimmed(n: f64, places: usize) -> String {
     js_number(fixed(n, places).parse::<f64>().unwrap_or(n))
@@ -253,7 +250,7 @@ impl Text {
     }
 
     fn see(&mut self, cx: &Context<'_>) {
-        self.seen = Some((*cx.memory, cx.format()));
+        self.seen = Some((cx.seen_memory(), cx.format()));
         self.styles = styles::Seen::text(cx);
     }
 
@@ -337,7 +334,7 @@ impl Text {
                     .map(|t| increment(t).unwrap_or_else(|| t.to_owned()));
                 cx.view_changes.push(ViewChange::Text(TextField {
                     at: p,
-                    height: paper(m.text_height_mm, cx),
+                    height: cx.annotation_height(AnnotationKind::Text),
                     rotation: m.text_angle,
                     align: m.text_align,
                     width_factor: m.text_width_factor,
@@ -413,7 +410,7 @@ impl Tool for Text {
                 .option_with(
                     "Yükseklik",
                     "Y",
-                    format!("{} mm", js_number(memory.text_height_mm)),
+                    format!("{} mm", js_number(memory.heights.mm(AnnotationKind::Text))),
                 )
                 .option_with("Açı", "A", format!("{}°", trimmed(memory.text_angle, 4)))
                 .option_with("Hiza", "H", align_name(memory.text_align))
@@ -440,8 +437,9 @@ impl Tool for Text {
         let (point, tracking) = points::constrain(self.last(), p, cx);
         self.d.tracking = tracking;
         self.d.hover = Some(point);
-        self.box_height =
-            paper(cx.memory.text_height_mm, cx).max(cx.view.world_length(LEAST_BOX_PX));
+        self.box_height = cx
+            .annotation_height(AnnotationKind::Text)
+            .max(cx.view.world_length(LEAST_BOX_PX));
         self.see(cx);
     }
 
@@ -466,7 +464,7 @@ impl Tool for Text {
         } else {
             match (self.stage, parse_number(t)) {
                 (Stage::Height, Some(n)) if n > 0.0 => {
-                    cx.memory.text_height_mm = n;
+                    cx.memory.heights.set(AnnotationKind::Text, Some(n));
                     self.stage = Stage::Pos;
                     true
                 }
@@ -566,7 +564,7 @@ impl Tool for Text {
             let geometry = EntityGeometry::Text {
                 p: points::wire(p),
                 text: text.to_owned(),
-                height: paper(m.text_height_mm, cx),
+                height: cx.annotation_height(AnnotationKind::Text),
                 rotation: m.text_angle,
                 align: m.text_align,
                 width_factor: (m.text_width_factor != 1.0).then_some(m.text_width_factor),

@@ -391,12 +391,13 @@
     {
      "name": "textHeight",
      "label": "Yazı yüksekliği",
-     "description": "Kâğıt üzerinde, çizim ölçeğine göre.",
-     "optional": false,
+     "description": "Kâğıt üzerinde, çizim ölçeğine göre; boş bırakılırsa projenin kenar ve köşe yazıları yüksekliği.",
+     "optional": true,
      "stacked": false,
      "control": {
       "type": "number",
-      "unit": "mm"
+      "unit": "mm",
+      "placeholder": "Proje"
      }
     },
     {
@@ -497,12 +498,13 @@
     {
      "name": "textHeight",
      "label": "Yazı yüksekliği",
-     "description": "Kâğıt üzerinde, çizim ölçeğine göre.",
-     "optional": false,
+     "description": "Kâğıt üzerinde, çizim ölçeğine göre; boş bırakılırsa projenin kenar ve köşe yazıları yüksekliği.",
+     "optional": true,
      "stacked": false,
      "control": {
       "type": "number",
-      "unit": "mm"
+      "unit": "mm",
+      "placeholder": "Proje"
      }
     },
     {
@@ -3255,7 +3257,7 @@
      "shared": true,
      "tolerance": 0.001,
      "output": "points",
-     "textHeight": 2,
+     "textHeight": null,
      "layer": {
       "newName": "Köşe noktaları"
      }
@@ -4037,7 +4039,7 @@
      "shared": true,
      "tolerance": 0.001,
      "output": "points",
-     "textHeight": 2,
+     "textHeight": null,
      "layer": {
       "newName": "Köşe noktaları"
      }
@@ -4815,7 +4817,7 @@
      "shared": true,
      "tolerance": 0.001,
      "output": "points",
-     "textHeight": 2,
+     "textHeight": null,
      "layer": {
       "newName": "Köşe noktaları"
      }
@@ -5203,7 +5205,7 @@
      "shared": true,
      "tolerance": 0.001,
      "output": "points",
-     "textHeight": 2,
+     "textHeight": null,
      "layer": {
       "layerId": "kilitli"
      }
@@ -5492,7 +5494,7 @@
      "shared": true,
      "tolerance": 0.001,
      "output": "points",
-     "textHeight": 2,
+     "textHeight": null,
      "layer": {
       "layerId": "yok"
      }
@@ -5766,7 +5768,7 @@
      "shared": true,
      "tolerance": 0.01,
      "output": "points",
-     "textHeight": 2,
+     "textHeight": null,
      "layer": {
       "newName": "Köşe noktaları"
      }
@@ -7390,7 +7392,7 @@
      },
      "decimals": 3,
      "side": "outside",
-     "textHeight": 2,
+     "textHeight": null,
      "prefix": "",
      "suffix": "",
      "minLength": 0,
@@ -8489,7 +8491,7 @@
      "shared": true,
      "tolerance": 0.001,
      "output": "points",
-     "textHeight": 2,
+     "textHeight": null,
      "layer": {
       "newName": "Köşe noktaları"
      }
@@ -10982,7 +10984,7 @@
      "shared": true,
      "tolerance": 0.001,
      "output": "points",
-     "textHeight": 2,
+     "textHeight": null,
      "layer": {
       "newName": "Köşe noktaları"
      }
@@ -11077,7 +11079,7 @@
      },
      "decimals": 3,
      "side": "outside",
-     "textHeight": 2,
+     "textHeight": null,
      "prefix": "",
      "suffix": " m",
      "minLength": 0.5,
@@ -11111,7 +11113,7 @@
      },
      "decimals": 3,
      "side": "outside",
-     "textHeight": 2,
+     "textHeight": null,
      "prefix": "",
      "suffix": "",
      "minLength": 0,
@@ -11139,7 +11141,7 @@
      },
      "decimals": 3,
      "side": "outside",
-     "textHeight": 2,
+     "textHeight": null,
      "prefix": "",
      "suffix": "",
      "minLength": 0,

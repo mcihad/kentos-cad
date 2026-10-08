@@ -318,6 +318,10 @@ fn timing() {
             r["iterations"],
             start.elapsed().as_secs_f64()
         );
-        assert!(r["iterations"].as_u64().is_some_and(|k| k >= 2), "{}", r["iterations"]);
+        assert!(
+            r["iterations"].as_u64().is_some_and(|k| k >= 2),
+            "{}",
+            r["iterations"]
+        );
     }
 }

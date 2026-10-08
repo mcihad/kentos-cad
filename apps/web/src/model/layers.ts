@@ -4,6 +4,8 @@ import { Signal } from '../core/signal';
 import type { LayerRenderer } from './style';
 
 export type LineType = 'continuous' | 'dashed' | 'dashdot' | 'dotted';
+/** Every line type, in the contract's order (`LineType::ALL`). */
+export const LINE_TYPES: readonly LineType[] = ['continuous', 'dashed', 'dashdot', 'dotted'];
 
 export type PointSymbol = 'ring' | 'cross' | 'triangle';
 

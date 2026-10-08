@@ -134,7 +134,10 @@ pub fn shape_centroid(s: &Shape) -> Option<Vec2> {
 pub fn areas_centroid(areas: &[Area]) -> Option<Vec2> {
     let (mut total, mut sx, mut sy) = (0.0, 0.0, 0.0);
     for a in areas {
-        let holes = a.holes.iter().map(|h| (h.pts.as_slice(), h.bulges.as_deref()));
+        let holes = a
+            .holes
+            .iter()
+            .map(|h| (h.pts.as_slice(), h.bulges.as_deref()));
         let Some(c) = area_centroid((&a.outer.pts, a.outer.bulges.as_deref()), holes) else {
             continue;
         };

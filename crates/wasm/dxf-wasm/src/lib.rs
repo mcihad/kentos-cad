@@ -175,6 +175,7 @@ pub fn write_dxf(input: &str) -> Result<Written, JsError> {
         ))
     })?;
     let (bytes, report) = kentos_formats::dxf::write(&input.0);
-    let report = serde_json::to_string(&report).map_err(|e| JsError::new(&format!("Rapor yazılamadı: {e}")))?;
+    let report = serde_json::to_string(&report)
+        .map_err(|e| JsError::new(&format!("Rapor yazılamadı: {e}")))?;
     Ok(Written { bytes, report })
 }

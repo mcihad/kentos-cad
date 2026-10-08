@@ -29,10 +29,19 @@ struct Ellipsoid {
     rf: f64,
 }
 
-const WGS84: Ellipsoid = Ellipsoid { a: 6_378_137.0, rf: 298.257_223_563 };
-const GRS80: Ellipsoid = Ellipsoid { a: 6_378_137.0, rf: 298.257_222_101 };
+const WGS84: Ellipsoid = Ellipsoid {
+    a: 6_378_137.0,
+    rf: 298.257_223_563,
+};
+const GRS80: Ellipsoid = Ellipsoid {
+    a: 6_378_137.0,
+    rf: 298.257_222_101,
+};
 /// International 1924 (Hayford), ED50's.
-const INTERNATIONAL: Ellipsoid = Ellipsoid { a: 6_378_388.0, rf: 297.0 };
+const INTERNATIONAL: Ellipsoid = Ellipsoid {
+    a: 6_378_388.0,
+    rf: 297.0,
+};
 
 /// Both kinds of zone: 500 000 m false easting, no false northing.
 const FALSE_EASTING: f64 = 500_000.0;
@@ -68,33 +77,58 @@ impl Tm {
             a: ellipsoid.a,
             qn: k0 / (1.0 + n) * (1.0 + n2 * (1.0 / 4.0 + n2 * (1.0 / 64.0 + n2 / 256.0))),
             cgb: [
-                n * (2.0 + n * (-2.0 / 3.0 + n * (-2.0 + n * (116.0 / 45.0 + n * (26.0 / 45.0 + n * (-2854.0 / 675.0)))))),
-                n2 * (7.0 / 3.0 + n * (-8.0 / 5.0 + n * (-227.0 / 45.0 + n * (2704.0 / 315.0 + n * (2323.0 / 945.0))))),
-                n3 * (56.0 / 15.0 + n * (-136.0 / 35.0 + n * (-1262.0 / 105.0 + n * (73814.0 / 2835.0)))),
+                n * (2.0
+                    + n * (-2.0 / 3.0
+                        + n * (-2.0
+                            + n * (116.0 / 45.0 + n * (26.0 / 45.0 + n * (-2854.0 / 675.0)))))),
+                n2 * (7.0 / 3.0
+                    + n * (-8.0 / 5.0
+                        + n * (-227.0 / 45.0 + n * (2704.0 / 315.0 + n * (2323.0 / 945.0))))),
+                n3 * (56.0 / 15.0
+                    + n * (-136.0 / 35.0 + n * (-1262.0 / 105.0 + n * (73814.0 / 2835.0)))),
                 n4 * (4279.0 / 630.0 + n * (-332.0 / 35.0 + n * (-399572.0 / 14175.0))),
                 n5 * (4174.0 / 315.0 + n * (-144838.0 / 6237.0)),
                 n6 * (601676.0 / 22275.0),
             ],
             cbg: [
-                n * (-2.0 + n * (2.0 / 3.0 + n * (4.0 / 3.0 + n * (-82.0 / 45.0 + n * (32.0 / 45.0 + n * (4642.0 / 4725.0)))))),
-                n2 * (5.0 / 3.0 + n * (-16.0 / 15.0 + n * (-13.0 / 9.0 + n * (904.0 / 315.0 + n * (-1522.0 / 945.0))))),
+                n * (-2.0
+                    + n * (2.0 / 3.0
+                        + n * (4.0 / 3.0
+                            + n * (-82.0 / 45.0 + n * (32.0 / 45.0 + n * (4642.0 / 4725.0)))))),
+                n2 * (5.0 / 3.0
+                    + n * (-16.0 / 15.0
+                        + n * (-13.0 / 9.0 + n * (904.0 / 315.0 + n * (-1522.0 / 945.0))))),
                 n3 * (-26.0 / 15.0 + n * (34.0 / 21.0 + n * (8.0 / 5.0 + n * (-12686.0 / 2835.0)))),
                 n4 * (1237.0 / 630.0 + n * (-12.0 / 5.0 + n * (-24832.0 / 14175.0))),
                 n5 * (-734.0 / 315.0 + n * (109598.0 / 31185.0)),
                 n6 * (444337.0 / 155925.0),
             ],
             utg: [
-                n * (-0.5 + n * (2.0 / 3.0 + n * (-37.0 / 96.0 + n * (1.0 / 360.0 + n * (81.0 / 512.0 + n * (-96199.0 / 604800.0)))))),
-                n2 * (-1.0 / 48.0 + n * (-1.0 / 15.0 + n * (437.0 / 1440.0 + n * (-46.0 / 105.0 + n * (1118711.0 / 3870720.0))))),
-                n3 * (-17.0 / 480.0 + n * (37.0 / 840.0 + n * (209.0 / 4480.0 + n * (-5569.0 / 90720.0)))),
+                n * (-0.5
+                    + n * (2.0 / 3.0
+                        + n * (-37.0 / 96.0
+                            + n * (1.0 / 360.0 + n * (81.0 / 512.0 + n * (-96199.0 / 604800.0)))))),
+                n2 * (-1.0 / 48.0
+                    + n * (-1.0 / 15.0
+                        + n * (437.0 / 1440.0
+                            + n * (-46.0 / 105.0 + n * (1118711.0 / 3870720.0))))),
+                n3 * (-17.0 / 480.0
+                    + n * (37.0 / 840.0 + n * (209.0 / 4480.0 + n * (-5569.0 / 90720.0)))),
                 n4 * (-4397.0 / 161280.0 + n * (11.0 / 504.0 + n * (830251.0 / 7257600.0))),
                 n5 * (-4583.0 / 161280.0 + n * (108847.0 / 3991680.0)),
                 n6 * (-20648693.0 / 638668800.0),
             ],
             gtu: [
-                n * (0.5 + n * (-2.0 / 3.0 + n * (5.0 / 16.0 + n * (41.0 / 180.0 + n * (-127.0 / 288.0 + n * (7891.0 / 37800.0)))))),
-                n2 * (13.0 / 48.0 + n * (-3.0 / 5.0 + n * (557.0 / 1440.0 + n * (281.0 / 630.0 + n * (-1983433.0 / 1935360.0))))),
-                n3 * (61.0 / 240.0 + n * (-103.0 / 140.0 + n * (15061.0 / 26880.0 + n * (167603.0 / 181440.0)))),
+                n * (0.5
+                    + n * (-2.0 / 3.0
+                        + n * (5.0 / 16.0
+                            + n * (41.0 / 180.0 + n * (-127.0 / 288.0 + n * (7891.0 / 37800.0)))))),
+                n2 * (13.0 / 48.0
+                    + n * (-3.0 / 5.0
+                        + n * (557.0 / 1440.0
+                            + n * (281.0 / 630.0 + n * (-1983433.0 / 1935360.0))))),
+                n3 * (61.0 / 240.0
+                    + n * (-103.0 / 140.0 + n * (15061.0 / 26880.0 + n * (167603.0 / 181440.0)))),
                 n4 * (49561.0 / 161280.0 + n * (-179.0 / 168.0 + n * (6601661.0 / 7257600.0))),
                 n5 * (34729.0 / 80640.0 + n * (-3418889.0 / 1995840.0)),
                 n6 * (212378941.0 / 319334400.0),
@@ -125,7 +159,10 @@ impl Tm {
         let cosh_arg_i = two_inv_denom_tan_ce_square - 1.0;
         let (dcn, dce) = clens(&self.gtu, sin_arg_r, cos_arg_r, sinh_arg_i, cosh_arg_i);
         let (cn, ce) = (cn + dcn, ce + dce);
-        [self.a * (self.qn * ce) + FALSE_EASTING, self.a * (self.qn * cn)]
+        [
+            self.a * (self.qn * ce) + FALSE_EASTING,
+            self.a * (self.qn * cn),
+        ]
     }
 
     /// Easting and northing, metres, to latitude and longitude, degrees.
@@ -149,16 +186,35 @@ impl Tm {
         let sin_2_cn = sin_cn * tmp;
         let cos_2_cn = tmp * modulus_ce - 1.0;
         let phi = gatg(&self.cgb, cn, cos_2_cn, sin_2_cn);
-        [phi.to_degrees(), (lam + self.lon0.to_radians()).to_degrees()]
+        [
+            phi.to_degrees(),
+            (lam + self.lon0.to_radians()).to_degrees(),
+        ]
     }
 
     /// The box of a cell's projection, [least easting, least northing, greatest easting,
     /// greatest northing]: its corners' and, when it spans the central meridian, its
     /// parallels' points on it (a parallel's northing is smallest there).
     fn extent(&self, [south, north, west, east]: Cell) -> [f64; 4] {
-        let points = [(south, west), (south, east), (north, east), (north, west), (south, self.lon0), (north, self.lon0)];
-        let count = if west < self.lon0 && self.lon0 < east { 6 } else { 4 };
-        let mut out = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        let points = [
+            (south, west),
+            (south, east),
+            (north, east),
+            (north, west),
+            (south, self.lon0),
+            (north, self.lon0),
+        ];
+        let count = if west < self.lon0 && self.lon0 < east {
+            6
+        } else {
+            4
+        };
+        let mut out = [
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        ];
         for &(lat, lon) in &points[..count] {
             let [x, y] = self.forward(lat, lon);
             out = [out[0].min(x), out[1].min(y), out[2].max(x), out[3].max(y)];
@@ -285,7 +341,12 @@ pub(crate) fn frame(tm: &Tm, target: [f64; 4]) -> Option<[[f64; 2]; 4]> {
     }
     // To the millimetre once, so a corner that neighbouring sheets share is one point.
     let corner = |lat: f64, lon: f64| tm.forward(lat, lon).map(|v| (v * 1000.0).round() / 1000.0);
-    Some([corner(south, west), corner(south, east), corner(north, east), corner(north, west)])
+    Some([
+        corner(south, west),
+        corner(south, east),
+        corner(north, east),
+        corner(north, west),
+    ])
 }
 
 /// The cell whose projection spans `target`, by Newton's method from the box's corners taken
@@ -320,7 +381,9 @@ fn cell(tm: &Tm, target: [f64; 4]) -> Option<Cell> {
         }
     }
     let at = tm.extent(cell);
-    (0..4).all(|i| (at[i] - target[i]).abs() <= RESIDUAL).then_some(cell)
+    (0..4)
+        .all(|i| (at[i] - target[i]).abs() <= RESIDUAL)
+        .then_some(cell)
 }
 
 /// `x` with `m·x = b`, by Gaussian elimination with partial pivoting; none when `m` is singular.
@@ -361,23 +424,83 @@ mod tests {
     fn the_projection_gives_projs_numbers() {
         // PROJ 9.7: +proj=tmerc +lon_0=39 +k=1 +x_0=500000 +ellps=GRS80, and the others as named.
         let cases: [(Tm, f64, f64, f64, f64); 9] = [
-            (tm39(), 40.1875, 38.08125, 421_758.833_548_900_55, 4_450_753.176_219_376),
-            (tm39(), 40.1875, 38.0875, 422_291.094_032_371_3, 4_450_747.686_980_942),
-            (tm39(), 40.19375, 38.0875, 422_298.227_374_088_9, 4_451_441.691_247_378_5),
-            (tm39(), 40.19375, 38.08125, 421_766.015_759_647_8, 4_451_447.180_690_602),
+            (
+                tm39(),
+                40.1875,
+                38.08125,
+                421_758.833_548_900_55,
+                4_450_753.176_219_376,
+            ),
+            (
+                tm39(),
+                40.1875,
+                38.0875,
+                422_291.094_032_371_3,
+                4_450_747.686_980_942,
+            ),
+            (
+                tm39(),
+                40.19375,
+                38.0875,
+                422_298.227_374_088_9,
+                4_451_441.691_247_378_5,
+            ),
+            (
+                tm39(),
+                40.19375,
+                38.08125,
+                421_766.015_759_647_8,
+                4_451_447.180_690_602,
+            ),
             // Three degrees and more from the central meridian.
-            (tm39(), 40.5, 36.0, 245_678.311_379_306_37, 4_489_375.005_375_772),
-            (tm39(), 37.25, 42.0, 766_191.009_870_417_4, 4_128_476.387_678_815_5),
+            (
+                tm39(),
+                40.5,
+                36.0,
+                245_678.311_379_306_37,
+                4_489_375.005_375_772,
+            ),
+            (
+                tm39(),
+                37.25,
+                42.0,
+                766_191.009_870_417_4,
+                4_128_476.387_678_815_5,
+            ),
             // +proj=utm +zone=37 +ellps=intl; +proj=utm +zone=36 +ellps=WGS84; TM30 on intl.
-            (Tm::new(39.0, 0.9996, INTERNATIONAL), 39.7, 38.2, 431_410.829_302_363_8, 4_394_841.851_857_114),
-            (Tm::new(33.0, 0.9996, WGS84), 41.1, 30.9, 323_648.549_192_303_9, 4_551_983.130_188_179),
-            (Tm::new(30.0, 1.0, INTERNATIONAL), 36.7, 28.4, 357_012.053_552_146, 4_064_477.800_635_579_5),
+            (
+                Tm::new(39.0, 0.9996, INTERNATIONAL),
+                39.7,
+                38.2,
+                431_410.829_302_363_8,
+                4_394_841.851_857_114,
+            ),
+            (
+                Tm::new(33.0, 0.9996, WGS84),
+                41.1,
+                30.9,
+                323_648.549_192_303_9,
+                4_551_983.130_188_179,
+            ),
+            (
+                Tm::new(30.0, 1.0, INTERNATIONAL),
+                36.7,
+                28.4,
+                357_012.053_552_146,
+                4_064_477.800_635_579_5,
+            ),
         ];
         for (tm, lat, lon, x, y) in cases {
             let [ex, ny] = tm.forward(lat, lon);
-            assert!((ex - x).abs() < 1e-6 && (ny - y).abs() < 1e-6, "({lat}, {lon}): {ex} {ny}, PROJ {x} {y}");
+            assert!(
+                (ex - x).abs() < 1e-6 && (ny - y).abs() < 1e-6,
+                "({lat}, {lon}): {ex} {ny}, PROJ {x} {y}"
+            );
             let [la, lo] = tm.inverse(x, y);
-            assert!((la - lat).abs() < 1e-11 && (lo - lon).abs() < 1e-11, "({x}, {y}): {la} {lo}");
+            assert!(
+                (la - lat).abs() < 1e-11 && (lo - lon).abs() < 1e-11,
+                "({x}, {y}): {la} {lo}"
+            );
         }
     }
 
@@ -388,28 +511,71 @@ mod tests {
     const BLOCK: [Sheet; 4] = [
         (
             "GB",
-            [4_450_747.686_980_942, 421_758.833_548_900_6, 4_451_447.180_690_602, 422_298.227_374_088_9],
-            [(421_758_834, 4_450_753_176), (422_291_094, 4_450_747_687), (422_298_227, 4_451_441_691), (421_766_016, 4_451_447_181)],
+            [
+                4_450_747.686_980_942,
+                421_758.833_548_900_6,
+                4_451_447.180_690_602,
+                422_298.227_374_088_9,
+            ],
+            [
+                (421_758_834, 4_450_753_176),
+                (422_291_094, 4_450_747_687),
+                (422_298_227, 4_451_441_691),
+                (421_766_016, 4_451_447_181),
+            ],
         ),
         (
             "GD",
-            [4_450_742.235_219_674, 422_291.094_032_371_3, 4_451_441.691_247_378_5, 422_830.438_832_118_9],
-            [(422_291_094, 4_450_747_687), (422_823_354, 4_450_742_235), (422_830_439, 4_451_436_239), (422_298_227, 4_451_441_691)],
+            [
+                4_450_742.235_219_674,
+                422_291.094_032_371_3,
+                4_451_441.691_247_378_5,
+                422_830.438_832_118_9,
+            ],
+            [
+                (422_291_094, 4_450_747_687),
+                (422_823_354, 4_450_742_235),
+                (422_830_439, 4_451_436_239),
+                (422_298_227, 4_451_441_691),
+            ],
         ),
         (
             "KB",
-            [4_451_441.691_247_378_5, 421_766.015_759_647_8, 4_452_141.185_894_171, 422_305.361_644_388_1],
-            [(421_766_016, 4_451_447_181), (422_298_227, 4_451_441_691), (422_305_362, 4_452_135_696), (421_773_199, 4_452_141_186)],
+            [
+                4_451_441.691_247_378_5,
+                421_766.015_759_647_8,
+                4_452_141.185_894_171,
+                422_305.361_644_388_1,
+            ],
+            [
+                (421_766_016, 4_451_447_181),
+                (422_298_227, 4_451_441_691),
+                (422_305_362, 4_452_135_696),
+                (421_773_199, 4_452_141_186),
+            ],
         ),
         (
             "KD",
-            [4_451_436.239_282_718, 422_298.227_374_088_9, 4_452_135.696_246_419, 422_837.524_227_243_6],
-            [(422_298_227, 4_451_441_691), (422_830_439, 4_451_436_239), (422_837_524, 4_452_130_244), (422_305_362, 4_452_135_696)],
+            [
+                4_451_436.239_282_718,
+                422_298.227_374_088_9,
+                4_452_135.696_246_419,
+                422_837.524_227_243_6,
+            ],
+            [
+                (422_298_227, 4_451_441_691),
+                (422_830_439, 4_451_436_239),
+                (422_837_524, 4_452_130_244),
+                (422_305_362, 4_452_135_696),
+            ],
         ),
     ];
 
     fn millimetres(frame: [[f64; 2]; 4]) -> Vec<(i64, i64)> {
-        frame.iter().map(|&[x, y]| ((x * 1000.0).round() as i64, (y * 1000.0).round() as i64)).collect()
+        frame
+            .iter()
+            .map(|&[x, y]| ((x * 1000.0).round() as i64, (y * 1000.0).round() as i64))
+            .collect()
     }
 
     #[test]
@@ -427,7 +593,10 @@ mod tests {
         }
         // The block's middle corner is one point of all four sheets.
         let middle = [422_298.227, 4_451_441.691];
-        assert_eq!([frames[0][2], frames[1][3], frames[2][1], frames[3][0]], [middle; 4]);
+        assert_eq!(
+            [frames[0][2], frames[1][3], frames[2][1], frames[3][0]],
+            [middle; 4]
+        );
     }
 
     #[test]
@@ -444,7 +613,8 @@ mod tests {
             (&utm, 36.0, 36.0),
         ] {
             let want = [south, south + 0.006_25, west, west + 0.006_25];
-            let got = cell(tm, tm.extent(want)).unwrap_or_else(|| panic!("({south}, {west}): no cell"));
+            let got =
+                cell(tm, tm.extent(want)).unwrap_or_else(|| panic!("({south}, {west}): no cell"));
             for (g, w) in got.iter().zip(want) {
                 assert!((g - w).abs() < 1e-10, "({south}, {west}): {got:?}");
             }
@@ -455,20 +625,47 @@ mod tests {
     fn a_local_sheet_keeps_its_box() {
         // A box of round local coordinates is some cell's, but not a grid's.
         let tm = tm39();
-        assert_eq!(frame(&tm, [421_400.0, 4_448_400.0, 421_940.0, 4_449_100.0]), None);
+        assert_eq!(
+            frame(&tm, [421_400.0, 4_448_400.0, 421_940.0, 4_449_100.0]),
+            None
+        );
         // No size, and no number.
-        assert_eq!(frame(&tm, [421_400.0, 4_448_400.0, 421_400.0, 4_449_100.0]), None);
-        assert_eq!(frame(&tm, [f64::NAN, 4_448_400.0, 421_940.0, 4_449_100.0]), None);
+        assert_eq!(
+            frame(&tm, [421_400.0, 4_448_400.0, 421_400.0, 4_449_100.0]),
+            None
+        );
+        assert_eq!(
+            frame(&tm, [f64::NAN, 4_448_400.0, 421_940.0, 4_449_100.0]),
+            None
+        );
     }
 
     #[test]
     fn the_zone_is_the_files_mproj() {
-        let h = |mproj: bool, projection: u8, datum: u8, zone: u8| Header { mproj, projection, datum, zone, ..Header::default() };
+        let h = |mproj: bool, projection: u8, datum: u8, zone: u8| Header {
+            mproj,
+            projection,
+            datum,
+            zone,
+            ..Header::default()
+        };
         let name = |z: Result<Zone, Kept>| z.map(|z| (z.name, z.tm.lon0));
-        assert_eq!(name(super::zone(&h(true, 3, 1, 39))), Ok(("ITRF TM39".to_owned(), 39.0)));
-        assert_eq!(name(super::zone(&h(true, 2, 4, 37))), Ok(("ED50 UTM 37".to_owned(), 39.0)));
-        assert_eq!(name(super::zone(&h(true, 3, 254, 36))), Ok(("ED50 (HGK) TM36".to_owned(), 36.0)));
-        assert_eq!(name(super::zone(&h(true, 2, 0, 36))), Ok(("WGS-84 UTM 36".to_owned(), 33.0)));
+        assert_eq!(
+            name(super::zone(&h(true, 3, 1, 39))),
+            Ok(("ITRF TM39".to_owned(), 39.0))
+        );
+        assert_eq!(
+            name(super::zone(&h(true, 2, 4, 37))),
+            Ok(("ED50 UTM 37".to_owned(), 39.0))
+        );
+        assert_eq!(
+            name(super::zone(&h(true, 3, 254, 36))),
+            Ok(("ED50 (HGK) TM36".to_owned(), 36.0))
+        );
+        assert_eq!(
+            name(super::zone(&h(true, 2, 0, 36))),
+            Ok(("WGS-84 UTM 36".to_owned(), 33.0))
+        );
         assert_eq!(name(super::zone(&h(false, 3, 1, 39))), Err(Kept::Unsaid));
         assert_eq!(name(super::zone(&h(true, 1, 1, 39))), Err(Kept::NotTm));
         assert_eq!(name(super::zone(&h(true, 2, 1, 0))), Err(Kept::NotTm));

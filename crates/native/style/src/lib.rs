@@ -41,7 +41,6 @@ pub mod file;
 pub mod legend;
 pub mod library;
 pub mod object_template;
-pub mod template_form;
 pub mod preview;
 pub mod program;
 pub mod renderer;
@@ -49,6 +48,7 @@ pub mod simple;
 pub mod system;
 pub mod table;
 pub mod tally;
+pub mod template_form;
 
 pub use batches::{
     AtlasImage, Cap, FillPaintBatch, MarkerLook, StyledBatch, StyledLayer, TileMark, Unit,

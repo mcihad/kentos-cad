@@ -22,7 +22,8 @@ fn bench() -> Bench {
 }
 
 fn select(b: &mut Bench, slots: &[u32]) {
-    b.selection.set(slots.iter().map(|s| Slot(*s)).collect::<Vec<_>>());
+    b.selection
+        .set(slots.iter().map(|s| Slot(*s)).collect::<Vec<_>>());
 }
 
 fn area(b: &Bench, slot: u32) -> f64 {
@@ -92,7 +93,10 @@ fn intersect_adds_the_common_part_and_can_erase_the_sources() {
     let made = b.selected();
     let e = b.doc.get(Slot(made[0])).expect("the part");
     assert_eq!(e.base().label.as_deref(), Some("1"));
-    assert_eq!(b.last_text(), Some("Ortak alan: 24.00 m²; kaynaklar silindi."));
+    assert_eq!(
+        b.last_text(),
+        Some("Ortak alan: 24.00 m²; kaynaklar silindi.")
+    );
 }
 
 #[test]
@@ -159,10 +163,15 @@ fn split_by_clicked_points_keeps_the_area_as_its_first_piece() {
     assert_eq!(made[0], 1, "the first piece keeps the slot");
     assert!(near(area(&b, 1), 50.0) && near(area(&b, made[1]), 50.0));
     let other = b.doc.get(Slot(made[1])).expect("the second piece");
-    assert_eq!(other.base().attrs.get("Parsel").map(String::as_str), Some("1"));
+    assert_eq!(
+        other.base().attrs.get("Parsel").map(String::as_str),
+        Some("1")
+    );
     assert_eq!(
         b.last_text(),
-        Some("1 alan 2 parçaya bölündü: 50.00 m², 50.00 m². Parçalar özgün alanın özniteliklerini taşır; parsel numaralarını güncelleyin.")
+        Some(
+            "1 alan 2 parçaya bölündü: 50.00 m², 50.00 m². Parçalar özgün alanın özniteliklerini taşır; parsel numaralarını güncelleyin."
+        )
     );
     assert_eq!(undo(&mut b).as_deref(), Some("Alan böl"));
 }
@@ -229,7 +238,10 @@ fn to_polyline_gives_a_ring_each_the_outer_one_keeping_the_data() {
     };
     assert_eq!(outer.pts.len(), 5, "closed: the first point again");
     assert_eq!(rel(outer.pts[0]), [18.0, -15.0]);
-    assert_eq!(outer.base.attrs.get("Parsel").map(String::as_str), Some("3"));
+    assert_eq!(
+        outer.base.attrs.get("Parsel").map(String::as_str),
+        Some("3")
+    );
     assert_eq!(
         b.last_text(),
         Some("1 alan kapalı çoklu çizgiye çevrildi (2 çizgi).")
@@ -246,7 +258,9 @@ fn objects_on_a_locked_layer_are_left_out() {
     assert!(said.contains(&(Level::Warn, "1 nesne kilitli katmanda olduğu için atlandı.")));
     assert_eq!(
         b.last_text(),
-        Some("Birleştirmek için en az iki alan seçin (kapalı alan, daire, elips ya da kapalı eğri).")
+        Some(
+            "Birleştirmek için en az iki alan seçin (kapalı alan, daire, elips ya da kapalı eğri)."
+        )
     );
 }
 
@@ -271,7 +285,9 @@ fn a_click_inside_line_work_makes_an_area_on_the_active_layer() {
     b.click(-23.0, 18.0);
     assert_eq!(
         b.last_text(),
-        Some("Tıklanan yer kapalı bir bölgenin içinde değil. Bölgeyi saran çizgiler birleşmeli ya da kesişmeli; görünüm dışındaki çizgiler sayılmaz.")
+        Some(
+            "Tıklanan yer kapalı bir bölgenin içinde değil. Bölgeyi saran çizgiler birleşmeli ya da kesişmeli; görünüm dışındaki çizgiler sayılmaz."
+        )
     );
     assert_eq!(undo(&mut b).as_deref(), Some("Alan oluştur"));
     // The boundary layer is picked by an object of it; K again, every layer.
@@ -281,9 +297,19 @@ fn a_click_inside_line_work_makes_an_area_on_the_active_layer() {
         "İçine tıklayarak alan: sınır olacak katmandan bir nesneye tıklayın [Tüm katmanlar (K)]"
     );
     b.click(1.0, 5.0);
-    assert!(b.session.prompt().text().ends_with("Sınır katmanı (K): Parseller]"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .ends_with("Sınır katmanı (K): Parseller]")
+    );
     assert!(b.type_text("a"));
-    assert!(b.session.prompt().text().contains("Adalar (A): yok sayılır"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .contains("Adalar (A): yok sayılır")
+    );
 }
 
 // ── Çok parçalı alan (docs/adr/0143) ────────────────────────────────────────

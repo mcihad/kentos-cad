@@ -100,7 +100,13 @@ fn a_mid_grip_adds_a_corner_and_a_short_segment_hides_it() {
     b.drag([-18.0, 4.0], [-18.0, 0.0]);
     assert_eq!(
         ends(&b, 4),
-        [[-24.0, 4.0], [-18.0, 0.0], [-12.0, 4.0], [-12.0, 14.0], [-24.0, 14.0]]
+        [
+            [-24.0, 4.0],
+            [-18.0, 0.0],
+            [-12.0, 4.0],
+            [-12.0, 14.0],
+            [-24.0, 14.0]
+        ]
     );
     b.spatial.sync(&b.doc);
     let sets = b.spatial.grips(&[Slot(4)]);
@@ -342,7 +348,10 @@ fn the_grip_menu_edits_the_part_its_grip_is_on() {
     let Some(Entity::Polygon(mut area)) = b.doc.get(Slot(4)).cloned() else {
         panic!("the area");
     };
-    let at = |de: f64, dn: f64| Wire { x: E + de, y: N + dn };
+    let at = |de: f64, dn: f64| Wire {
+        x: E + de,
+        y: N + dn,
+    };
     area.parts = Some(vec![AreaPart {
         pts: vec![at(0.0, 20.0), at(6.0, 20.0), at(6.0, 26.0), at(0.0, 26.0)],
         bulges: None,
@@ -353,9 +362,16 @@ fn the_grip_menu_edits_the_part_its_grip_is_on() {
     assert!(b.doc.update(Slot(4), Entity::Polygon(area)));
     let part = |b: &Bench| match b.doc.get(Slot(4)) {
         Some(Entity::Polygon(p)) => {
-            assert_eq!((p.pts.clone(), p.bulges.clone()), first, "the first part stays");
+            assert_eq!(
+                (p.pts.clone(), p.bulges.clone()),
+                first,
+                "the first part stays"
+            );
             let q = &p.parts.as_ref().expect("the second part")[0];
-            (q.pts.iter().map(|&w| rel(w)).collect::<Vec<_>>(), q.bulges.clone())
+            (
+                q.pts.iter().map(|&w| rel(w)).collect::<Vec<_>>(),
+                q.bulges.clone(),
+            )
         }
         _ => panic!("the area"),
     };

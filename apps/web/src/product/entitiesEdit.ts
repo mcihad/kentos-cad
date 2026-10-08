@@ -10,7 +10,7 @@ import type { EntityGeometry } from '../contracts/generated/EntityGeometry';
 import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
 import { FACE_FIELDS, faceProblem, LOOK_FIELDS, lookProblem } from '../model/annotationStyles';
-import { MAX_WIDTH_FACTOR, paragraphProblem, textPathProblem, widthFactorOk, type Entity, type NewEntity, type RasterStyle } from '../model/entities';
+import { leaderArrowHolds, MAX_LEADER_ARROW, MAX_WIDTH_FACTOR, MIN_LEADER_ARROW, paragraphProblem, textPathProblem, widthFactorOk, type Entity, type NewEntity, type RasterStyle } from '../model/entities';
 import { assocProblem, patternProblem } from '../model/hatchRules';
 import { imageProblem } from '../model/imageRules';
 import { cleanRasterStyle, rasterProblem } from '../model/rasterRules';
@@ -112,6 +112,8 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   // Raster stili and Raster oturt (docs/adr/0204 §9).
   rasterStyle: 'Raster stili',
   rasterGeoref: 'Raster oturt',
+  // Ölçek ya da genel yükseklik değişince izleyenler (docs/adr/0205 §3).
+  annotationScale: 'Yazı yüksekliklerini uydur',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
@@ -131,7 +133,7 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c', 'mask', 'za', 'zb', ...LOOK_FIELDS],
   hatch: ['ring', 'holes', 'pattern', 'assoc'],
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
-  leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
+  leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'arrowSize', 'mask'],
   table: ['p', 'rotation', 'height', 'rows', 'columns', 'cells', 'merges', 'aligns', 'header', 'grid', 'frame', ...FACE_FIELDS, 'source'],
   image: ['p', 'width', 'height', 'rotation', 'mirror', 'asset', 'file', 'clip', 'opacity'],
   raster: ['affine', 'width', 'height', 'bands', 'sample', 'asset', 'file', 'srid', 'style', 'opacity'],
@@ -359,6 +361,15 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
   // A leader's height measures its note, arrowhead and landing (docs/adr/0146 §1).
   if (g.kind === 'leader' && !(g.height > 0))
     return failed(error('invalid_height', `Kılavuzun yüksekliği sıfırdan büyük olmalı; ${g.height} verildi. Notun yüksekliğini metre olarak, pozitif verin.`, at('.height')));
+  // A leader's arrowhead size, times its note's height (docs/adr/0205 §7).
+  if (g.kind === 'leader' && g.arrowSize !== undefined && !leaderArrowHolds(g.arrowSize))
+    return failed(
+      error(
+        'invalid_arrow_size',
+        `Kılavuzun ok boyu notun yüksekliğinin ${MIN_LEADER_ARROW} ile ${MAX_LEADER_ARROW} katı olmalı; ${g.arrowSize} verildi. Bu aralıkta verin ya da alanı kaldırın (notun yüksekliği kadar).`,
+        at('.arrowSize'),
+      ),
+    );
   // A text's width factor (docs/adr/0145).
   if (g.kind === 'text' && g.widthFactor != null && !widthFactorOk(g.widthFactor))
     return failed(

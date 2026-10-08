@@ -31,6 +31,8 @@ interface Case {
   name: string;
   op: string;
   plotScale?: number;
+  /** Standart's height when a case names the project's (docs/adr/0205 §1). */
+  standardMm?: number;
   styles?: (TextStyleDef | DimensionStyleDef)[];
   style?: string | null;
   face?: TextFace;
@@ -65,7 +67,8 @@ function run(c: Case): unknown {
       return followTextStyle(c.old as TextStyleDef, c.new as TextStyleDef, c.text!, scale);
     case 'applyDimension': {
       const style = (c.styles as DimensionStyleDef[]).find((s) => s.id === c.style) ?? null;
-      const { look, height } = applyDimensionStyle(style, scale);
+      // Standart's height is the project's (docs/adr/0205 §1): 2.5 mm unless a case names one.
+      const { look, height } = applyDimensionStyle(style, scale, c.standardMm ?? 2.5);
       return { ...look, height };
     }
     case 'followDimension': {

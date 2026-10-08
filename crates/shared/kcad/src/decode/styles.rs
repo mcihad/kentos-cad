@@ -73,7 +73,12 @@ pub(super) fn text_styles(r: &mut Reader<'_>) -> Result<Vec<TextStyleDef>, KcadE
     }
 }
 
-pub(super) fn dimension_styles(r: &mut Reader<'_>) -> Result<Vec<DimensionStyleDef>, KcadError> {
+/// The dimension styles; `lines` says whether the schema has their line
+/// fields (30 and up, docs/adr/0205 §6).
+pub(super) fn dimension_styles(
+    r: &mut Reader<'_>,
+    lines: bool,
+) -> Result<Vec<DimensionStyleDef>, KcadError> {
     let at = r.position();
     let all = list(r, |r, _| {
         let (mut id, mut name, mut height) = (None, None, None);
@@ -92,6 +97,13 @@ pub(super) fn dimension_styles(r: &mut Reader<'_>) -> Result<Vec<DimensionStyleD
             prefix: None,
             suffix: None,
             font: None,
+            dim_line_color: None,
+            dim_line_weight: None,
+            dim_line_type: None,
+            ext_color: None,
+            ext_weight: None,
+            ext_line_type: None,
+            text_color: None,
         };
         map(r, |r, key| {
             match key {
@@ -124,6 +136,13 @@ pub(super) fn dimension_styles(r: &mut Reader<'_>) -> Result<Vec<DimensionStyleD
                 "prefix" => style.prefix = Some(text(r)?),
                 "suffix" => style.suffix = Some(text(r)?),
                 "font" => style.font = Some(font(r)?),
+                "dimLineColor" if lines => style.dim_line_color = Some(text(r)?),
+                "extColor" if lines => style.ext_color = Some(text(r)?),
+                "textColor" if lines => style.text_color = Some(text(r)?),
+                "dimLineWeight" if lines => style.dim_line_weight = Some(r.float()?),
+                "extWeight" if lines => style.ext_weight = Some(r.float()?),
+                "dimLineType" if lines => style.dim_line_type = Some(super::line_type_named(r)?),
+                "extLineType" if lines => style.ext_line_type = Some(super::line_type_named(r)?),
                 _ => return Err(unknown(r)),
             }
             Ok(())

@@ -22,7 +22,8 @@
 //! 1002 {  1000 z                                 1002 }   the object's elevations are data, even when all 0 (a point's, a line's, a path's)
 //! 1002 {  1000 noz      <hex string>             1002 }   the vertices with no elevation, while the others have one: a bit each (docs/adr/0142)
 //! 1002 {  1000 mask                              1002 }   the text is drawn over a mask of the drawing's background (docs/adr/0145; DXF's TEXT has none)
-//! 1002 {  1000 arrow    <string>                 1002 }   a LEADER's arrowhead DXF cannot name ("open", "dot"; docs/adr/0146 §8)
+//! 1002 {  1000 arrow    <string>                 1002 }   a LEADER's arrowhead DXF cannot name (its AutoCAD block's name taken; docs/adr/0146 §8, 0205 §7)
+//! 1002 {  1000 arrowsize 1040 <times>            1002 }   a LEADER's arrowhead's length over its height, exactly (DIMASZ over 40 rounds it; docs/adr/0205 §7)
 //! 1002 {  1000 note     <string>                 1002 }   a LEADER's note, exactly (when its MTEXT's notation cannot say it)
 //! 1002 {  1000 noteturn 1040 <degrees>           1002 }   a LEADER's note's turn, exactly (its MTEXT's direction rounds it)
 //! 1002 {  1000 face     <json>                   1002 }   a TEXT's or an MTEXT's style and face as KentOS writes them (docs/adr/0183 §7)
@@ -90,6 +91,9 @@ pub struct Meta {
     /// A LEADER's arrowhead by the app's name, when DXF cannot say it
     /// (docs/adr/0146 §8), its note and the note's turn (degrees), exactly.
     pub arrow: Option<String>,
+    /// A LEADER's arrowhead's length over its height (docs/adr/0205 §7),
+    /// when DIMASZ over its height does not give it back exactly.
+    pub arrow_size: Option<f64>,
     pub note: Option<String>,
     pub note_turn: Option<f64>,
     /// A text's style and face, a dimension's style and look, as the
@@ -272,6 +276,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if let Some(a) = &meta.arrow {
         item("arrow", &mut out, |o| string(a, o));
+    }
+    if let Some(k) = meta.arrow_size {
+        item("arrowsize", &mut out, |o| o.push((1040, dxf_real(k))));
     }
     if let Some(n) = &meta.note {
         item("note", &mut out, |o| string(n, o));
@@ -510,6 +517,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "along" => m.along = text(a).or(m.along),
             "hatch" => m.hatch = text(a).or(m.hatch),
             "noteturn" => m.note_turn = real(a).or(m.note_turn),
+            "arrowsize" => m.arrow_size = real(a).or(m.arrow_size),
             "dimension" => m.dimension = dimension(&values).or(m.dimension),
             _ => {}
         }
@@ -581,6 +589,7 @@ mod tests {
             }),
             mask: true,
             arrow: Some("dot".into()),
+            arrow_size: Some(0.1 + 0.2),
             note: Some("Ø150 \\ {PVC}".into()),
             note_turn: Some(29.999_999_999_999_996),
             face: Some(r#"{"textStyle":"a","font":"arimo","bold":true}"#.into()),

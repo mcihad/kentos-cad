@@ -632,6 +632,14 @@ export class CoreStore {
     return typed(() => this.raw.labels(minX, minY, maxX, maxY, scale, editing !== null, editing ?? 0));
   }
 
+  /**
+   * The same as the view shows them under `size` (`graphics.annotationSize`, docs/adr/0205 §5): each record, its factor
+   * and the point it grows about (store/legible.rs, `LABEL_SHOWN_STRIDE` numbers a record).
+   */
+  labelsShown(minX: number, minY: number, maxX: number, maxY: number, scale: number, editing: number | null, size: string, plotScale: number): Float64Array {
+    return typed(() => this.raw.labelsShown(minX, minY, maxX, maxY, scale, editing !== null, editing ?? 0, size, plotScale));
+  }
+
   /** Etiketleri yazıya çevir (docs/adr/0175 §1): `[{ id, label, style }]` as JSON → `{ texts, outOfScale, small, overlapping }`. */
   labelTexts(wantedJson: string, scale: number, thin: boolean): string {
     return typed(() => this.raw.labelTexts(wantedJson, scale, thin));

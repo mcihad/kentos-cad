@@ -20,7 +20,7 @@ use kentos_geometry_core::entity::{
     Attrs, HatchAssoc as CoreAssoc, HatchPattern, Part, PointPart as CorePoint, Shape,
 };
 use kentos_geometry_core::geom::arrangement::Ring;
-use kentos_geometry_core::geom::dimension::{Arrow, Look};
+use kentos_geometry_core::geom::dimension::{Arrow, Look, LookLines};
 use kentos_geometry_core::geom::hatch_pattern::{
     Gradient as CoreGradient, PatternLine as CoreLine,
 };
@@ -211,12 +211,23 @@ pub fn core_look(l: &kentos_contracts::DimensionLook) -> Look {
         prefix: l.prefix.clone(),
         suffix: l.suffix.clone(),
         font: l.font.map(|d| Font::from_id(d.id())),
+        lines: LookLines {
+            dim_line_color: l.dim_line_color.clone(),
+            dim_line_weight: l.dim_line_weight,
+            dim_line_type: l.dim_line_type.map(|t| t.name().to_owned()),
+            ext_color: l.ext_color.clone(),
+            ext_weight: l.ext_weight,
+            ext_line_type: l.ext_line_type.map(|t| t.name().to_owned()),
+            text_color: l.text_color.clone(),
+        }
+        .boxed(),
     }
 }
 
 /// The core's look as the contract writes it.
 pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
     use kentos_contracts::DrawingUnit;
+    let lines = l.lines.map(|b| *b).unwrap_or_default();
     kentos_contracts::DimensionLook {
         dim_style: l.style,
         arrow: l
@@ -239,6 +250,19 @@ pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
         prefix: l.prefix,
         suffix: l.suffix,
         font: l.font.and_then(|c| DrawingFont::from_id(c.id())),
+        dim_line_color: lines.dim_line_color,
+        dim_line_weight: lines.dim_line_weight,
+        dim_line_type: lines
+            .dim_line_type
+            .as_deref()
+            .and_then(kentos_contracts::LineType::from_name),
+        ext_color: lines.ext_color,
+        ext_weight: lines.ext_weight,
+        ext_line_type: lines
+            .ext_line_type
+            .as_deref()
+            .and_then(kentos_contracts::LineType::from_name),
+        text_color: lines.text_color,
     }
 }
 
@@ -564,6 +588,7 @@ pub fn shape(entity: &Entity) -> Shape {
             height: l.height,
             rotation: l.rotation,
             arrow: l.arrow.map(|a| a.name().to_owned()),
+            arrow_size: l.arrow_size,
             mask: l.mask.then_some(true),
         },
         Entity::Table(t) => core_table(t),
@@ -942,10 +967,11 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 height,
                 rotation,
                 arrow: _,
+                arrow_size: _,
                 mask,
             },
         ) => {
-            // The arrowhead is the object's own: the core carries its name through unchanged.
+            // The arrowhead is the object's own: the core carries its name and size through unchanged.
             e.pts = back(pts);
             e.text = text;
             e.height = height;
@@ -1204,6 +1230,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             height,
             rotation,
             arrow,
+            arrow_size,
             mask,
         } => Entity::Leader(LeaderEntity {
             base,
@@ -1212,6 +1239,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             height,
             rotation,
             arrow,
+            arrow_size,
             mask,
         }),
         EntityGeometry::Table {
@@ -1397,6 +1425,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             height,
             rotation,
             arrow,
+            arrow_size,
             mask,
         } => EntityGeometry::Leader {
             pts: back(pts),
@@ -1407,6 +1436,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
                 Some(name) => Some(LeaderArrow::from_name(&name)?),
                 None => None,
             },
+            arrow_size,
             mask: mask == Some(true),
         },
         // A block's id the contract does not read is none of the drawing's.

@@ -218,17 +218,21 @@ mod tests {
         let mut selection = Selection::new();
         let ids: Vec<Slot> = doc.model.entities().map(|e| Slot(e.base().id)).collect();
         selection.set(ids.iter().copied().take(ids.len() - 1));
-        let (sel, hover) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+        let (sel, hover) =
+            viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
         assert!(!sel.segments.is_empty() && hover.segments.is_empty());
         selection.set_hover(ids.last().copied());
-        let (sel2, hover2) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+        let (sel2, hover2) =
+            viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
         assert_eq!(sel2.id, sel.id, "the selection's part is kept");
         assert_ne!(hover2.id, hover.id);
-        let (sel3, hover3) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+        let (sel3, hover3) =
+            viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
         assert_eq!((sel3.id, hover3.id), (sel.id, hover2.id), "nothing changed");
         // A selected object is not hovered over its own highlight.
         selection.set_hover(ids.first().copied());
-        let (_, hover4) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+        let (_, hover4) =
+            viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
         assert!(hover4.segments.is_empty() && hover4.fills.is_empty());
         // Its colour and layer: after every layer of the scene.
         assert!(sel.segments.iter().all(|s| s.color == accent.0));
@@ -336,7 +340,8 @@ mod tests {
             selection.set(doc.model.entities().map(|e| Slot(e.base().id)));
             let accent = Rgba8::rgb(0x4c, 0x9b, 0xe8);
             let t = Instant::now();
-            let (part, _) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+            let (part, _) =
+                viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
             let part_time = t.elapsed();
             let t = Instant::now();
             let _ = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);

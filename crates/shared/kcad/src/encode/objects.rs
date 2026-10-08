@@ -411,7 +411,8 @@ impl<'d> Encoder<'d> {
                     && a != 0.0
                     && a != 90.0
                 {
-                    let words = format!("koordinat ölçüsünün ekseni {a}; 0 (Y) ya da 90 (X) olmalı");
+                    let words =
+                        format!("koordinat ölçüsünün ekseni {a}; 0 (Y) ya da 90 (X) olmalı");
                     return refuse(self, Code::BadValue, "angle", &words);
                 }
                 f.push(("a", Val::Point(&e.a)));
@@ -447,6 +448,8 @@ impl<'d> Encoder<'d> {
                         "extOffset" => look.ext_offset.is_none_or(f64::is_finite),
                         "extBeyond" => look.ext_beyond.is_none_or(f64::is_finite),
                         "textGap" => look.text_gap.is_none_or(f64::is_finite),
+                        "dimLineWeight" => look.dim_line_weight.is_none_or(f64::is_finite),
+                        "extWeight" => look.ext_weight.is_none_or(f64::is_finite),
                         _ => true,
                     };
                     if finite {
@@ -486,6 +489,32 @@ impl<'d> Encoder<'d> {
                 }
                 if let Some(font) = look.font {
                     f.push(("font", Val::Name(font.id())));
+                }
+                // Its lines (docs/adr/0205 §6).
+                for (key, c) in [
+                    ("dimLineColor", &look.dim_line_color),
+                    ("extColor", &look.ext_color),
+                    ("textColor", &look.text_color),
+                ] {
+                    if let Some(c) = c {
+                        f.push((key, Val::Text(c)));
+                    }
+                }
+                for (key, w) in [
+                    ("dimLineWeight", look.dim_line_weight),
+                    ("extWeight", look.ext_weight),
+                ] {
+                    if let Some(w) = w {
+                        f.push((key, Val::Float(w)));
+                    }
+                }
+                for (key, t) in [
+                    ("dimLineType", look.dim_line_type),
+                    ("extLineType", look.ext_line_type),
+                ] {
+                    if let Some(t) = t {
+                        f.push((key, Val::Name(super::names::line_type(t))));
+                    }
                 }
             }
             Entity::Hatch(e) => {
@@ -747,6 +776,18 @@ impl<'d> Encoder<'d> {
                 }
                 if let Some(a) = e.arrow {
                     f.push(("arrow", Val::Name(a.name())));
+                }
+                // Its arrowhead's size (docs/adr/0205 §7); not finite meets the float's own refusal.
+                if let Some(size) = e.arrow_size {
+                    if size.is_finite() && !kentos_contracts::leader_arrow_holds(size) {
+                        let words = format!(
+                            "kılavuzun ok boyu {size}; notun yüksekliğinin {} ile {} katı olmalı",
+                            kentos_contracts::MIN_LEADER_ARROW,
+                            kentos_contracts::MAX_LEADER_ARROW
+                        );
+                        return refuse(self, "arrowSize", &words);
+                    }
+                    f.push(("arrowSize", Val::Float(size)));
                 }
                 if e.mask {
                     f.push(("mask", Val::Bool(true)));

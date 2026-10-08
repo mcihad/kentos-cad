@@ -178,6 +178,11 @@ pub enum EditOperation {
     /// Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster
     /// put in place of its resampled file, updated in place.
     RasterGeoref,
+    /// Yazı yüksekliklerini uydur (docs/adr/0205 §3): after the plot scale or
+    /// an annotation height changed, the texts, leaders, dimensions and
+    /// tables still at the old height given the new one
+    /// (`follow_annotation_scale`).
+    AnnotationScale,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
@@ -300,7 +305,11 @@ pub enum EntityGeometry {
         #[cfg_attr(feature = "ts", ts(optional))]
         align: Option<TextAlign>,
         /// The letters' width times this, the height kept; absent: 1. Over 0, at most 100.
-        #[serde(default, rename = "widthFactor", skip_serializing_if = "Option::is_none")]
+        #[serde(
+            default,
+            rename = "widthFactor",
+            skip_serializing_if = "Option::is_none"
+        )]
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
         width_factor: Option<f64>,
@@ -417,6 +426,11 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         arrow: Option<LeaderArrow>,
+        /// The arrowhead's length, times the note's height (docs/adr/0205
+        /// §7); absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
+        #[serde(default, rename = "arrowSize", skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        arrow_size: Option<f64>,
         /// The note's box filled with the drawing area's colour before it is drawn.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]

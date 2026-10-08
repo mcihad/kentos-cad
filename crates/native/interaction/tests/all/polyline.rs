@@ -34,7 +34,11 @@ fn prompts_are_the_web_s_text_and_options() {
         "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A) / Geri (G)]"
     );
     b.click(10.0, 0.0);
-    assert_eq!(b.options(), ["Y", "U", "İ", "A", "G", "Enter"], "two points finish");
+    assert_eq!(
+        b.options(),
+        ["Y", "U", "İ", "A", "G", "Enter"],
+        "two points finish"
+    );
     assert!(b.type_text("Y"));
     assert_eq!(
         b.session.prompt().text(),

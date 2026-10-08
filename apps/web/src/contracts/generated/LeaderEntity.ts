@@ -32,6 +32,11 @@ rotation: number,
  */
 arrow?: LeaderArrow, 
 /**
+ * The arrowhead's length, times the note's height (docs/adr/0205 §7);
+ * absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
+ */
+arrowSize?: number, 
+/**
  * The note's box is filled with the drawing area's colour before the
  * note is drawn, as a text's mask (docs/adr/0145).
  */

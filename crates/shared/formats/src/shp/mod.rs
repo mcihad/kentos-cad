@@ -241,7 +241,12 @@ pub fn read(files: &Files, opts: &ShapefileReadOptions) -> Result<ImportResult, 
         0,
         found.z_missing,
     );
-    r.note_n(crate::gis::CLOSING_Z.0, crate::gis::CLOSING_Z.1, 0, found.closing_z);
+    r.note_n(
+        crate::gis::CLOSING_Z.0,
+        crate::gis::CLOSING_Z.1,
+        0,
+        found.closing_z,
+    );
     r.note_n(
         "M (ölçü) değerleri",
         "KentOS nesneleri M taşımaz; alınmadı",

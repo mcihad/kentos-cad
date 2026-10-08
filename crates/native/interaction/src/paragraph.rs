@@ -14,7 +14,8 @@
 //! - a locked active layer is said at the first corner and nothing opens.
 
 use kentos_contracts::{
-    EntityGeometry, MAX_LINE_SPACING, MIN_LINE_SPACING, TextAlign, TextRun, TextScript,
+    AnnotationKind, EntityGeometry, MAX_LINE_SPACING, MIN_LINE_SPACING, TextAlign, TextRun,
+    TextScript,
 };
 use kentos_geometry_core::text::paragraph::{Run, Script, corner_box, retext};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
@@ -61,11 +62,6 @@ pub struct ParagraphText {
     seen: Option<(Memory, Format)>,
     /// The text styles as of the last call: a CAD project's Stil (docs/adr/0183 §4).
     styles: styles::Seen,
-}
-
-/// Paper millimetres as metres at the project's plot scale (Yazı's).
-fn paper(mm: f64, cx: &Context<'_>) -> f64 {
-    mm / 1000.0 * cx.doc.settings().plot_scale
 }
 
 /// The active layer's lock sentence, when it is locked (Yazı's words).
@@ -142,7 +138,7 @@ impl ParagraphText {
     }
 
     fn see(&mut self, cx: &Context<'_>) {
-        self.seen = Some((*cx.memory, cx.format()));
+        self.seen = Some((cx.seen_memory(), cx.format()));
         self.styles = styles::Seen::text(cx);
     }
 
@@ -182,7 +178,7 @@ impl ParagraphText {
                 self.stage = Stage::Typing;
                 cx.view_changes.push(ViewChange::Paragraph(ParagraphField {
                     at,
-                    height: paper(m.text_height_mm, cx),
+                    height: cx.annotation_height(AnnotationKind::Text),
                     rotation: m.text_angle,
                     box_width: width,
                     line_spacing: (m.paragraph_spacing != 1.0).then_some(m.paragraph_spacing),
@@ -248,7 +244,7 @@ impl Tool for ParagraphText {
                 .option_with(
                     "Yükseklik",
                     "Y",
-                    format!("{} mm", js_number(memory.text_height_mm)),
+                    format!("{} mm", js_number(memory.heights.mm(AnnotationKind::Text))),
                 )
                 .option_with("Açı", "A", format!("{}°", trimmed(memory.text_angle, 4)))
                 .option_with("Satır aralığı", "R", trimmed(memory.paragraph_spacing, 4))
@@ -296,7 +292,7 @@ impl Tool for ParagraphText {
         } else {
             match (self.stage, parse_number(t)) {
                 (Stage::Height, Some(n)) if n > 0.0 => {
-                    cx.memory.text_height_mm = n;
+                    cx.memory.heights.set(AnnotationKind::Text, Some(n));
                     self.stage = Stage::First;
                     true
                 }
@@ -371,7 +367,7 @@ impl Tool for ParagraphText {
                 let geometry = EntityGeometry::Text {
                     p: points::wire(at),
                     text: text.clone(),
-                    height: paper(m.text_height_mm, cx),
+                    height: cx.annotation_height(AnnotationKind::Text),
                     rotation: m.text_angle,
                     align: Some(TextAlign::TopLeft),
                     width_factor: styles::text_width_factor(cx),

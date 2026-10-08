@@ -8,7 +8,10 @@ import { secondChoices, secondTitle } from '../../model/secondCrs';
 import { h, replaceChildren, type Child } from '../dom';
 import { Dropdown } from '../widgets/Dropdown';
 import type { MenuItem } from '../widgets/PopupMenu';
-import { PLOT_SCALES } from '../ribbon/fields';
+import { followAnnotationChange, scaleText } from '../../app/annotationScale';
+import { ANNOTATION_DEFAULT_MM, ANNOTATION_KINDS, ANNOTATION_LABEL, ANNOTATION_NOTE, annotationMm, paperHeight, sanitizedAnnotationHeights, type AnnotationKind } from '../../model/annotationScale';
+import { projectScales } from '../../model/newProjectWizard';
+import { MAX_PLOT_SCALE, typedPlotScale } from './PlotScaleDialog';
 import { note, segmented, settingRow, stepper, textField, toggleSwitch } from '../widgets/controls';
 import { askRemove } from '../widgets/confirm';
 import { gridLine } from '../../app/gridLibrary';
@@ -32,7 +35,7 @@ interface ProjectDraft extends ProjectSettingsData {
   name: string;
 }
 
-export type ProjectSettingsSection = 'general' | 'crs' | 'units' | 'survey';
+export type ProjectSettingsSection = 'general' | 'scale' | 'crs' | 'units' | 'survey';
 
 export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSection): void {
   const doc = ctx.doc;
@@ -57,22 +60,9 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
       icon: 'folder',
       title: 'Genel',
       lead: 'Projenin adı, türü, çizim ölçeği ve çizimdeki yazıların yazı tipi.',
-      keys: ['plotScale', 'workspace', 'drawingFont'],
+      keys: ['workspace', 'drawingFont'],
       render: (api) => [
-        group(
-          'Proje',
-          settingRow('Proje adı', 'Dosya adı olarak da kullanılır.', textField({ label: 'Proje adı', value: api.draft.name, onChange: (v) => api.set('name', v, false) })),
-          settingRow(
-            'Çizim ölçeği',
-            'Yazı yükseklikleri ve pafta çıktıları bu ölçeğe göre hesaplanır.',
-            segmented({
-              label: 'Çizim ölçeği',
-              value: String(api.draft.plotScale),
-              options: PLOT_SCALES.map((s) => ({ value: String(s), label: `1:${s.toLocaleString('tr-TR')}` })),
-              onChange: (v) => api.set('plotScale', Number(v)),
-            }),
-          ),
-        ),
+        group('Proje', settingRow('Proje adı', 'Dosya adı olarak da kullanılır.', textField({ label: 'Proje adı', value: api.draft.name, onChange: (v) => api.set('name', v, false) }))),
         group(
           'Proje türü',
           h('p', { class: 'sgroup__note' }, 'CAD ya da CBS: sahnesi, eksen ve açı düzeni ve şeridi türe göredir; veri değişmez. Şeritte olmayan komutlar komut satırından yine çalışır.'),
@@ -95,6 +85,15 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
           ),
         ),
       ],
+    },
+    {
+      id: 'scale',
+      label: 'Ölçek ve yazılar',
+      icon: 'plotScale',
+      title: 'Ölçek ve yazılar',
+      lead: 'Çizim ölçeği ve açıklamaların kâğıttaki yükseklikleri. Yeni yazılar, ölçüler, kılavuzlar ve tablolar ölçeğe göre bu boyda yazılır; değiştirince genel boydaki nesneler de yeni boyuna gelir, elle değiştirilenler kalır.',
+      keys: ['plotScale', 'annotation'],
+      render: (api) => scaleSection(ctx, api),
     },
     {
       id: 'crs',
@@ -171,6 +170,8 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
         secondSrid: settings.secondSrid ?? null,
         secondCustomCrs: settings.secondCustomCrs ?? null,
         datumTransforms: settings.datumTransforms ?? [],
+        // The defaults are no heights (docs/adr/0205 §1): a draft without any takes the project's away.
+        annotation: settings.annotation ?? null,
         // A reduction to the grid the project cannot take is not kept (docs/adr/0171 §4).
         survey: whyNotGrid({ ...settings, customCrs: ownOf(settings) }, settings.survey?.groundHeight)
           ? sanitizeSurvey(settings.survey ? { ...settings.survey, reduceToGrid: undefined } : null)
@@ -191,8 +192,71 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
               : 'İkinci koordinat sistemi kaldırıldı.',
         );
       ctx.log.success('Proje ayarları kaydedildi. Proje dosyasıyla birlikte saklanacak.');
+      // The annotations at the old general height take the new one, in one step (docs/adr/0205 §3).
+      followAnnotationChange(ctx, { fromScale: init.plotScale, toScale: doc.settings.plotScale.value, from: init.annotation, to: doc.settings.annotation.value ?? undefined });
     },
   });
+}
+
+/**
+ * Ölçek ve yazılar (docs/adr/0205 §1, §4): the plot scale, chosen from the project's type's scales or typed, and the
+ * seven kinds' heights on paper, each with its size in the drawing at the draft's scale; Varsayılanlara dön gives every
+ * kind its default (no heights written). The desktop's is `project/scale.rs`.
+ */
+function scaleSection(ctx: AppContext, api: DraftApi<ProjectDraft>): Child[] {
+  const scale = api.draft.plotScale;
+  const heights = api.draft.annotation;
+  const cad = (api.draft.workspace ?? ctx.doc.settings.workspace.value) === 'cad';
+  const typed = h('input', { class: 'field num scale-pick__field', value: String(scale), inputmode: 'numeric', spellcheck: 'false', 'aria-label': 'Çizim ölçeği paydası' });
+  typed.addEventListener('change', () => {
+    const n = typedPlotScale(typed.value);
+    typed.toggleAttribute('data-invalid', n === null);
+    if (n !== null) api.set('plotScale', n);
+  });
+  const list = new Dropdown({
+    ariaLabel: 'Çizim ölçekleri',
+    className: 'scale-pick__list',
+    width: 132,
+    items: (): MenuItem[] => projectScales(cad, scale).map((v) => ({ label: scaleText(v), radio: true, checked: v === scale, run: () => api.set('plotScale', v) })),
+  });
+  list.set(h('span', { class: 'dropdown__text num' }, scaleText(scale)));
+  const f = ctx.format;
+  const row = (kind: AnnotationKind) => {
+    const mm = annotationMm(heights, kind);
+    const set = (v: number) => api.set('annotation', sanitizedAnnotationHeights({ ...heights, [kind]: v }));
+    return settingRow(
+      ANNOTATION_LABEL[kind],
+      ANNOTATION_NOTE[kind],
+      h(
+        'div',
+        { class: 'annotation-height' },
+        stepper({ label: `${ANNOTATION_LABEL[kind]} yüksekliği`, value: mm, min: 0.1, max: 100, step: 0.5, decimals: 2, unit: 'mm', onChange: set }),
+        h('span', { class: 'annotation-height__drawn num' }, `çizimde ${f.length(paperHeight(mm, scale), false)} ${f.lengthUnitLabel}`),
+      ),
+    );
+  };
+  const reset = h('button', { class: 'btn btn--small', type: 'button', disabled: !heights }, 'Varsayılanlara dön');
+  reset.addEventListener('click', () => api.set('annotation', undefined));
+  return [
+    group(
+      'Çizim ölçeği',
+      settingRow(
+        'Ölçek',
+        `Projenin türünün ölçeklerinden biri ya da yazılan bir ölçek (1:1 – 1:${MAX_PLOT_SCALE.toLocaleString('tr-TR')}). Semboller, kalemler ve yeni açıklamalar bu ölçeğe göre çizilir.`,
+        h('div', { class: 'scale-pick' }, list.el, h('span', { class: 'scale-pick__prefix num' }, '1:'), typed),
+      ),
+    ),
+    group(
+      'Yazı yükseklikleri',
+      h(
+        'p',
+        { class: 'sgroup__note' },
+        `Kâğıttaki yükseklikler, mm; çizimdeki boyu ölçekle çarpılır (${scaleText(scale)}). Varsayılanlar: yazı, kılavuz, ölçü ve tablo ${fixed(ANNOTATION_DEFAULT_MM.text, 1)} mm; koordinat, km ve kenar yazıları ${fixed(ANNOTATION_DEFAULT_MM.coordinate, 1)} mm.`,
+      ),
+      ...ANNOTATION_KINDS.map(row),
+      h('div', { class: 'sgroup__actions' }, reset),
+    ),
+  ];
 }
 
 /** The project's own definition and its second's as the window knows them. */

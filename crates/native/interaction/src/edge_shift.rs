@@ -159,7 +159,10 @@ impl Tool for EdgeShift {
             );
         }
         match &self.edge {
-            None => Prompt::new(LABEL, "kaydırılacak kenara tıklayın (alan ya da çoklu çizgi)"),
+            None => Prompt::new(
+                LABEL,
+                "kaydırılacak kenara tıklayın (alan ya da çoklu çizgi)",
+            ),
             Some(picking) => {
                 let step = if picking.area.is_some() {
                     "uzaklığı yazın ya da yerine tıklayın (dışarı artı)"
@@ -227,7 +230,12 @@ impl Tool for EdgeShift {
         let t = js_trim(text);
         let Some((shape, ring, index, has_area)) = self.edge.as_ref().map(|picking| {
             let k = &picking.picked;
-            (picking.shape.clone(), k.ring, k.edge, picking.area.is_some())
+            (
+                picking.shape.clone(),
+                k.ring,
+                k.edge,
+                picking.area.is_some(),
+            )
         }) else {
             return false;
         };
@@ -299,8 +307,11 @@ impl Tool for EdgeShift {
         };
         let k = &picking.picked;
         // The edge as it is, then the shape moved to the cursor.
-        out.strokes
-            .push(Stroke::solid(vec![k.a, k.b], false).width(2.0).tone(Tone::Snap));
+        out.strokes.push(
+            Stroke::solid(vec![k.a, k.b], false)
+                .width(2.0)
+                .tone(Tone::Snap),
+        );
         let Some((at, d, moved)) = &self.at else {
             return out;
         };

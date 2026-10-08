@@ -323,6 +323,10 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     // the tables' (docs/adr/0184 §7) too: *U1, *U2 ….
     let mut dimensions = 0usize;
     let mut anonymous = 0usize;
+    // The line types dimensions' lines take, their LTYPE records' handles given as they are met (docs/adr/0205 §6).
+    let mut ltypes: Vec<(kentos_contracts::LineType, u64)> = Vec::new();
+    // AutoCAD's arrow blocks leaders' arrowheads need, written as they are met (docs/adr/0205 §7).
+    let mut arrows: Vec<(kentos_contracts::LeaderArrow, u64)> = Vec::new();
     // What an insert's attribute texts show, where (docs/adr/0144 §7): the shared core's.
     let placing = crate::blocks::Placing::with_attributes(&input.blocks);
     // The STYLE and DIMSTYLE records' names: the project's styles, the styleless faces' (docs/adr/0183 §7).
@@ -361,7 +365,10 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
                 defined: &defined,
                 placing: &placing,
                 styles: &style_names,
-            per_metre: unit.per_metre(),
+                per_metre: unit.per_metre(),
+                ltypes: &mut ltypes,
+                arrows: &mut arrows,
+                pen: entities::Pen::default(),
             };
             for e in &def.entities {
                 w.entity(e);
@@ -411,6 +418,9 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             placing: &placing,
             styles: &style_names,
             per_metre: unit.per_metre(),
+            ltypes: &mut ltypes,
+            arrows: &mut arrows,
+            pen: entities::Pen::default(),
         };
         for e in &input.entities {
             w.entity(e);
@@ -424,11 +434,23 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     template::vport_table(&mut tables, centre, height);
     // Sizes on paper (line type patterns, point marks) in drawing units: metres at the plot scale, in the unit.
     let paper = scale * unit.per_metre();
-    layers.ltype_table(&mut tables, &mut handles, paper);
+    // The dimension styles' line types too (docs/adr/0205 §6).
+    for s in &input.dimension_styles {
+        for t in [s.dim_line_type, s.ext_line_type].into_iter().flatten() {
+            entities::ltype_handle(&mut ltypes, &mut handles, t);
+        }
+    }
+    layers.ltype_table(&mut tables, &mut handles, paper, &ltypes);
     layers.layer_table(&mut tables, &mut handles);
     // A style's paper mm in drawing units (docs/adr/0183 §7).
     let length = |mm: f64| mm / 1000.0 * paper;
-    styles::style_table(&mut tables, &mut handles, &style_names, &input.text_styles, &length);
+    styles::style_table(
+        &mut tables,
+        &mut handles,
+        &style_names,
+        &input.text_styles,
+        &length,
+    );
     template::view_ucs(&mut tables);
     template::appid_table(&mut tables);
     styles::dimstyle_table(
@@ -438,6 +460,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
         &input.dimension_styles,
         &length,
         unit.per_metre(),
+        &ltypes,
     );
     template::block_record_table(&mut tables, &records);
     tables.str(0, "ENDSEC");

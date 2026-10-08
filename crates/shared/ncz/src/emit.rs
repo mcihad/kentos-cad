@@ -152,7 +152,10 @@ impl Place {
 /// number is none. Only a record whose vertices the file gave (a line, a
 /// polyline, an area drawn point by point) says what its heights are.
 fn heights(coords: &[format::Coord]) -> Option<Vec<Option<f64>>> {
-    let zs: Vec<Option<f64>> = coords.iter().map(|c| c.z.is_finite().then_some(c.z)).collect();
+    let zs: Vec<Option<f64>> = coords
+        .iter()
+        .map(|c| c.z.is_finite().then_some(c.z))
+        .collect();
     zs.iter().flatten().any(|&z| z != 0.0).then_some(zs)
 }
 
@@ -220,7 +223,11 @@ impl format::Sink for Emitter {
                     let mm = e.line_width / 10.0;
                     self.widths += 1;
                     self.widest = self.widest.max(mm);
-                    self.thinnest = if self.widths == 1 { mm } else { self.thinnest.min(mm) };
+                    self.thinnest = if self.widths == 1 {
+                        mm
+                    } else {
+                        self.thinnest.min(mm)
+                    };
                     // Every object the record made: a smart object's symbol is drawn in its pen.
                     for made in &mut self.out[first..] {
                         made.base_mut().line_weight = Some(mm);
@@ -334,7 +341,9 @@ impl Emitter {
 
     fn place(&mut self, e: &format::Entity, layer: usize) -> Result<(), &'static str> {
         const BAD: &str = "koordinatı sayı değil ya da ±100 000 km dışında";
-        let finite = |c: &format::Coord| c.x.is_finite() && c.y.is_finite() && c.x.abs() <= WORLD && c.y.abs() <= WORLD;
+        let finite = |c: &format::Coord| {
+            c.x.is_finite() && c.y.is_finite() && c.x.abs() <= WORLD && c.y.abs() <= WORLD
+        };
         let v = |c: &format::Coord| Vec2 { x: c.x, y: c.y };
         let mut b = self.base(e, layer);
         let note = |b: &mut EntityBase, key: &str, value: &str| {
@@ -380,7 +389,16 @@ impl Emitter {
                     Some([za, zb]) => (*za, *zb),
                     _ => (None, None),
                 };
-                self.push(layer, Entity::Line(LineEntity { base: b, a: v(a), b: v(z), za, zb }));
+                self.push(
+                    layer,
+                    Entity::Line(LineEntity {
+                        base: b,
+                        a: v(a),
+                        b: v(z),
+                        za,
+                        zb,
+                    }),
+                );
             }
             Kind::Polyline => {
                 if !e.coords.iter().all(finite) {
@@ -395,7 +413,17 @@ impl Emitter {
                     self.grow(*p);
                 }
                 let zs = heights(&e.coords);
-                self.push(layer, Entity::Polyline(PathEntity { base: b, pts, bulges: None, holes: None, zs, parts: None }));
+                self.push(
+                    layer,
+                    Entity::Polyline(PathEntity {
+                        base: b,
+                        pts,
+                        bulges: None,
+                        holes: None,
+                        zs,
+                        parts: None,
+                    }),
+                );
             }
             Kind::MapSheet => {
                 note(&mut b, "Pafta", &e.label);
@@ -413,7 +441,15 @@ impl Emitter {
                 if e.coords.len() == 1 {
                     let c = e.coords.first().filter(|c| finite(c)).ok_or(BAD)?;
                     self.grow(v(c));
-                    self.push_smart(layer, Entity::Point(PointEntity { base: b, p: v(c), z: None, parts: None }));
+                    self.push_smart(
+                        layer,
+                        Entity::Point(PointEntity {
+                            base: b,
+                            p: v(c),
+                            z: None,
+                            parts: None,
+                        }),
+                    );
                 } else {
                     self.area(e, layer, b)?;
                     self.layers[layer].smart += 1;
@@ -425,7 +461,14 @@ impl Emitter {
                     return Err("yarıçapı sayı değil ya da sıfır");
                 }
                 self.grow(v(c));
-                self.push(layer, Entity::Circle(CircleEntity { base: b, c: v(c), r: e.radius }));
+                self.push(
+                    layer,
+                    Entity::Circle(CircleEntity {
+                        base: b,
+                        c: v(c),
+                        r: e.radius,
+                    }),
+                );
             }
             Kind::Arc => self.arc(e, layer, b)?,
             Kind::Text => {
@@ -463,9 +506,19 @@ impl Emitter {
     /// A pafta: the file keeps the box of its cell in the file's zone, and the cell is a turned
     /// quadrilateral there; its four corners when the file names the zone and the box is a
     /// grid cell's, the box otherwise (`sheet`).
-    fn sheet(&mut self, e: &format::Entity, layer: usize, b: EntityBase) -> Result<(), &'static str> {
+    fn sheet(
+        &mut self,
+        e: &format::Entity,
+        layer: usize,
+        b: EntityBase,
+    ) -> Result<(), &'static str> {
         let (xs, ys) = (e.coords.iter().map(|c| c.x), e.coords.iter().map(|c| c.y));
-        let target = [xs.clone().fold(f64::INFINITY, f64::min), ys.clone().fold(f64::INFINITY, f64::min), xs.fold(f64::NEG_INFINITY, f64::max), ys.fold(f64::NEG_INFINITY, f64::max)];
+        let target = [
+            xs.clone().fold(f64::INFINITY, f64::min),
+            ys.clone().fold(f64::INFINITY, f64::min),
+            xs.fold(f64::NEG_INFINITY, f64::max),
+            ys.fold(f64::NEG_INFINITY, f64::max),
+        ];
         let frame = match &self.zone {
             Ok(zone) => sheet::frame(&zone.tm, target).ok_or(Kept::NoCell),
             Err(why) => Err(*why),
@@ -476,7 +529,17 @@ impl Emitter {
                 for p in &pts {
                     self.grow(*p);
                 }
-                self.push(layer, Entity::Polygon(PathEntity { base: b, pts, bulges: None, holes: None, zs: None, parts: None }));
+                self.push(
+                    layer,
+                    Entity::Polygon(PathEntity {
+                        base: b,
+                        pts,
+                        bulges: None,
+                        holes: None,
+                        zs: None,
+                        parts: None,
+                    }),
+                );
                 self.framed += 1;
             }
             Err(why) => {
@@ -488,14 +551,25 @@ impl Emitter {
     }
 
     /// A closed run as an area: the repeated first vertex left out.
-    fn area(&mut self, e: &format::Entity, layer: usize, b: EntityBase) -> Result<(), &'static str> {
-        let finite = |c: &format::Coord| c.x.is_finite() && c.y.is_finite() && c.x.abs() <= WORLD && c.y.abs() <= WORLD;
+    fn area(
+        &mut self,
+        e: &format::Entity,
+        layer: usize,
+        b: EntityBase,
+    ) -> Result<(), &'static str> {
+        let finite = |c: &format::Coord| {
+            c.x.is_finite() && c.y.is_finite() && c.x.abs() <= WORLD && c.y.abs() <= WORLD
+        };
         if !e.coords.iter().all(finite) {
             return Err("koordinatı sayı değil ya da ±100 000 km dışında");
         }
         let mut pts: Vec<Vec2> = e.coords.iter().map(|c| Vec2 { x: c.x, y: c.y }).collect();
         // Only a ring the file drew point by point has heights; a rectangle's and a sheet's corners are made up here.
-        let mut zs = if e.kind == Kind::Polygon { heights(&e.coords) } else { None };
+        let mut zs = if e.kind == Kind::Polygon {
+            heights(&e.coords)
+        } else {
+            None
+        };
         while pts.len() >= 2 && pts.last() == pts.first() {
             pts.pop();
             if let Some(z) = zs.as_mut() {
@@ -509,7 +583,17 @@ impl Emitter {
             self.grow(*p);
         }
         let zs = zs.filter(|z| z.iter().any(Option::is_some));
-        self.push(layer, Entity::Polygon(PathEntity { base: b, pts, bulges: None, holes: None, zs, parts: None }));
+        self.push(
+            layer,
+            Entity::Polygon(PathEntity {
+                base: b,
+                pts,
+                bulges: None,
+                holes: None,
+                zs,
+                parts: None,
+            }),
+        );
         Ok(())
     }
 
@@ -522,7 +606,9 @@ impl Emitter {
         let c = e
             .coords
             .first()
-            .filter(|c| c.x.is_finite() && c.y.is_finite() && c.x.abs() <= WORLD && c.y.abs() <= WORLD)
+            .filter(|c| {
+                c.x.is_finite() && c.y.is_finite() && c.x.abs() <= WORLD && c.y.abs() <= WORLD
+            })
             .ok_or("koordinatı sayı değil ya da ±100 000 km dışında")?;
         let (r, start, end) = (e.radius, e.start_angle, e.end_angle);
         if !(r.is_finite() && r > 0.0 && r <= WORLD && start.is_finite() && end.is_finite()) {
@@ -558,14 +644,27 @@ impl Emitter {
         }
         let centre = Vec2 { x: c.x, y: c.y };
         for p in [
-            Vec2 { x: c.x - r, y: c.y - r },
-            Vec2 { x: c.x + r, y: c.y + r },
+            Vec2 {
+                x: c.x - r,
+                y: c.y - r,
+            },
+            Vec2 {
+                x: c.x + r,
+                y: c.y + r,
+            },
         ] {
             self.grow(p);
         }
         if sweep >= 360.0 {
             self.full_turns += 1;
-            self.push(layer, Entity::Circle(CircleEntity { base: b, c: centre, r }));
+            self.push(
+                layer,
+                Entity::Circle(CircleEntity {
+                    base: b,
+                    c: centre,
+                    r,
+                }),
+            );
             return Ok(());
         }
         // The ends as the file holds them: radians unconverted, else the degrees'.
@@ -574,18 +673,34 @@ impl Emitter {
         } else {
             (norm_angle(rad(start)), norm_angle(rad(end)))
         };
-        self.push(layer, Entity::Arc(ArcEntity { base: b, c: centre, r, a0, a1 }));
+        self.push(
+            layer,
+            Entity::Arc(ArcEntity {
+                base: b,
+                c: centre,
+                r,
+                a0,
+                a1,
+            }),
+        );
         Ok(())
     }
 
     /// A Netcad 8 smart object as the symbol it is: its strokes turned,
     /// scaled and placed as the object; its values as attributes of the
     /// symbol's first object. A class this reader does not draw is a point.
-    fn planet(&mut self, e: &format::Entity, layer: usize, mut b: EntityBase) -> Result<(), &'static str> {
+    fn planet(
+        &mut self,
+        e: &format::Entity,
+        layer: usize,
+        mut b: EntityBase,
+    ) -> Result<(), &'static str> {
         let c = e
             .coords
             .first()
-            .filter(|c| c.x.is_finite() && c.y.is_finite() && c.x.abs() <= WORLD && c.y.abs() <= WORLD)
+            .filter(|c| {
+                c.x.is_finite() && c.y.is_finite() && c.x.abs() <= WORLD && c.y.abs() <= WORLD
+            })
             .ok_or("koordinatı sayı değil ya da ±100 000 km dışında")?;
         let at = Vec2 { x: c.x, y: c.y };
         b.attrs = properties(e);
@@ -594,7 +709,15 @@ impl Emitter {
         let Some(symbol) = symbols::planet_symbol(e, &measure) else {
             *self.undrawn.entry(e.smart).or_default() += 1;
             self.grow(at);
-            self.push_smart(layer, Entity::Point(PointEntity { base: b, p: at, z: None, parts: None }));
+            self.push_smart(
+                layer,
+                Entity::Point(PointEntity {
+                    base: b,
+                    p: at,
+                    z: None,
+                    parts: None,
+                }),
+            );
             return Ok(());
         };
         let mut size = e.scale;
@@ -602,7 +725,11 @@ impl Emitter {
             size = 1.0; // Netcad's own default object size
             self.unsized_objects += 1;
         }
-        let rotation = if e.rotation.is_finite() { upright(e.rotation) } else { 0.0 };
+        let rotation = if e.rotation.is_finite() {
+            upright(e.rotation)
+        } else {
+            0.0
+        };
         let place = Place::new(at, size, rotation);
         *self.drawn.entry(e.smart).or_default() += 1;
         // The first object carries the values; the rest only draw.
@@ -615,8 +742,14 @@ impl Emitter {
                 Stroke::Circle { centre, radius } => {
                     let c = place.apply(*centre);
                     let r = radius * size;
-                    self.grow(Vec2 { x: c.x - r, y: c.y - r });
-                    self.grow(Vec2 { x: c.x + r, y: c.y + r });
+                    self.grow(Vec2 {
+                        x: c.x - r,
+                        y: c.y - r,
+                    });
+                    self.grow(Vec2 {
+                        x: c.x + r,
+                        y: c.y + r,
+                    });
                     let base = next_base();
                     self.push_smart(layer, Entity::Circle(CircleEntity { base, c, r }));
                 }
@@ -627,9 +760,29 @@ impl Emitter {
                     }
                     let base = next_base();
                     let entity = match (pts.as_slice(), closed) {
-                        ([a, z], false) => Entity::Line(LineEntity { base, a: *a, b: *z, za: None, zb: None }),
-                        (_, true) => Entity::Polygon(PathEntity { base, pts, bulges: None, holes: None, zs: None, parts: None }),
-                        _ => Entity::Polyline(PathEntity { base, pts, bulges: None, holes: None, zs: None, parts: None }),
+                        ([a, z], false) => Entity::Line(LineEntity {
+                            base,
+                            a: *a,
+                            b: *z,
+                            za: None,
+                            zb: None,
+                        }),
+                        (_, true) => Entity::Polygon(PathEntity {
+                            base,
+                            pts,
+                            bulges: None,
+                            holes: None,
+                            zs: None,
+                            parts: None,
+                        }),
+                        _ => Entity::Polyline(PathEntity {
+                            base,
+                            pts,
+                            bulges: None,
+                            holes: None,
+                            zs: None,
+                            parts: None,
+                        }),
                     };
                     self.push_smart(layer, entity);
                 }
@@ -690,8 +843,12 @@ impl Emitter {
             );
         }
         for (t, &n) in header.unsupported.iter().enumerate() {
-            self.report
-                .skip_n(&format!("NCZ türü {t}"), "bu okuyucunun tanımadığı geometri türü; okunmadı", 0, n as u32);
+            self.report.skip_n(
+                &format!("NCZ türü {t}"),
+                "bu okuyucunun tanımadığı geometri türü; okunmadı",
+                0,
+                n as u32,
+            );
         }
         if header.swept_entities > 0 {
             self.report.note_n(
@@ -706,14 +863,23 @@ impl Emitter {
         }
         for (class, &n) in &self.drawn {
             let how = match class {
-                SmartClass::Settlement => "sembolü çizildi: dairesi, nizamı, kat sayısı ve bahçe mesafeleri; değerleri dairenin öznitelikleri",
-                SmartClass::Construction => "sembolü çizildi: TAKS ve KAKS dairesi ya da Emsal, Hmax, Yençok satırları; değerleri ilk nesnesinin öznitelikleri",
-                SmartClass::Road => "sembolü çizildi: dairesi ve genişliği; değeri dairenin özniteliği",
-                SmartClass::PlanNote => "kutusu ve metni çizildi (RTF biçimlendirmesi kaldırıldı, metin kutuya sarıldı)",
+                SmartClass::Settlement => {
+                    "sembolü çizildi: dairesi, nizamı, kat sayısı ve bahçe mesafeleri; değerleri dairenin öznitelikleri"
+                }
+                SmartClass::Construction => {
+                    "sembolü çizildi: TAKS ve KAKS dairesi ya da Emsal, Hmax, Yençok satırları; değerleri ilk nesnesinin öznitelikleri"
+                }
+                SmartClass::Road => {
+                    "sembolü çizildi: dairesi ve genişliği; değeri dairenin özniteliği"
+                }
+                SmartClass::PlanNote => {
+                    "kutusu ve metni çizildi (RTF biçimlendirmesi kaldırıldı, metin kutuya sarıldı)"
+                }
                 SmartClass::FunctionName => "adı yazı olarak çizildi; değeri yazının özniteliği",
                 SmartClass::None | SmartClass::Other => "sembolü çizildi",
             };
-            self.report.note_n(&format!("Akıllı nesne ({})", class.name()), how, 0, n);
+            self.report
+                .note_n(&format!("Akıllı nesne ({})", class.name()), how, 0, n);
         }
         for (class, &n) in &self.undrawn {
             self.report.note_n(
@@ -723,8 +889,12 @@ impl Emitter {
                 n,
             );
         }
-        self.report
-            .note_n("Akıllı nesne boyutu", "okunamadı; Netcad'in varsayılanı olan 1 ile çizildi", 0, self.unsized_objects);
+        self.report.note_n(
+            "Akıllı nesne boyutu",
+            "okunamadı; Netcad'in varsayılanı olan 1 ile çizildi",
+            0,
+            self.unsized_objects,
+        );
         self.report.note_n(
             "Akıllı nesne (nokta)",
             "okunabilir bir dikdörtgeni yok; yerinde nokta olarak alındı, adı öznitelik",
@@ -759,15 +929,26 @@ impl Emitter {
         for (why, &n) in &self.boxed {
             self.report.skip_n(
                 "Pafta çerçevesinin gerçek biçimi",
-                &format!("bulunamadı, pafta dosyanın sakladığı sınırlayıcı kutu olarak çizildi: {}", why.reason()),
+                &format!(
+                    "bulunamadı, pafta dosyanın sakladığı sınırlayıcı kutu olarak çizildi: {}",
+                    why.reason()
+                ),
                 0,
                 n,
             );
         }
-        self.report
-            .note_n("Yay", "tam turdan geniş olduğu için daire olarak alındı", 0, self.full_turns);
-        self.report
-            .note_n("Yazı", "dönüklüğü sayı değildi; yatay alındı", 0, self.flat_rotation);
+        self.report.note_n(
+            "Yay",
+            "tam turdan geniş olduğu için daire olarak alındı",
+            0,
+            self.full_turns,
+        );
+        self.report.note_n(
+            "Yazı",
+            "dönüklüğü sayı değildi; yatay alındı",
+            0,
+            self.flat_rotation,
+        );
         if !self.renamed.is_empty() {
             self.report.note_n(
                 "Katman adı",
@@ -778,7 +959,11 @@ impl Emitter {
         }
         if !tables.is_empty() {
             let rows: usize = tables.iter().map(|t| t.rows.len()).sum();
-            let mut listed: Vec<String> = tables.iter().take(6).map(|t| format!("{}: {} satır", t.table_ref, t.rows.len())).collect();
+            let mut listed: Vec<String> = tables
+                .iter()
+                .take(6)
+                .map(|t| format!("{}: {} satır", t.table_ref, t.rows.len()))
+                .collect();
             if tables.len() > 6 {
                 listed.push("…".into());
             }
@@ -809,7 +994,9 @@ impl Emitter {
     /// one when most of its objects draw one), then the rest; each in the
     /// file's table order, then by name.
     fn layers(&self) -> Vec<ImportLayer> {
-        let mut order: Vec<usize> = (0..self.layers.len()).filter(|&i| self.layers[i].count > 0).collect();
+        let mut order: Vec<usize> = (0..self.layers.len())
+            .filter(|&i| self.layers[i].count > 0)
+            .collect();
         let symbols = |l: &Layer| 2 * l.smart >= l.count;
         let table: HashMap<&str, usize> = self
             .fin
@@ -868,7 +1055,9 @@ fn properties(e: &format::Entity) -> BTreeMap<String, String> {
         } else {
             p.display.trim().to_owned()
         };
-        if e.smart == SmartClass::Settlement && matches!(p.name.as_str(), "txtOn" | "txtArka" | "txtYan") {
+        if e.smart == SmartClass::Settlement
+            && matches!(p.name.as_str(), "txtOn" | "txtArka" | "txtYan")
+        {
             key.push_str(" bahçe");
         }
         attrs.insert(key, value.to_owned());
@@ -915,7 +1104,11 @@ fn wrapped(text: &str, width: f64, height: f64, font: Font) -> Vec<String> {
 /// thousandths (`PROGRESS_TOTAL`), and may stop it (`Err(STOPPED)`). A file
 /// that holds no NCZ blocks at all is refused with the reason; one whose
 /// blocks hold no geometry reads as empty, and the report says why.
-pub fn read(bytes: &[u8], opts: &NczReadOptions, watch: &mut dyn Watch) -> Result<ImportResult, String> {
+pub fn read(
+    bytes: &[u8],
+    opts: &NczReadOptions,
+    watch: &mut dyn Watch,
+) -> Result<ImportResult, String> {
     if bytes.starts_with(b"KCAD") {
         return Err("Bu bir KentOS çizimi (.kcad); içe aktarılmaz, Dosya → Aç ile açılır.".into());
     }
@@ -1005,7 +1198,10 @@ mod tests {
         format::Entity {
             kind,
             layer_name: "KOT".into(),
-            coords: coords.iter().map(|&(x, y, z)| format::Coord { x, y, z }).collect(),
+            coords: coords
+                .iter()
+                .map(|&(x, y, z)| format::Coord { x, y, z })
+                .collect(),
             ..format::Entity::default()
         }
     }
@@ -1014,22 +1210,39 @@ mod tests {
     fn heights_come_from_the_vertices_the_file_gave_and_from_nothing_else() {
         use crate::format::Sink;
         let mut em = Emitter::new(&NczReadOptions::default());
-        let ring = |z: [f64; 4]| [(0.0, 0.0, z[0]), (10.0, 0.0, z[1]), (10.0, 10.0, z[2]), (0.0, 10.0, z[3]), (0.0, 0.0, z[0])];
+        let ring = |z: [f64; 4]| {
+            [
+                (0.0, 0.0, z[0]),
+                (10.0, 0.0, z[1]),
+                (10.0, 10.0, z[2]),
+                (0.0, 10.0, z[3]),
+                (0.0, 0.0, z[0]),
+            ]
+        };
         for e in [
             // 0-2: lines: both ends, a 2D one (Z 0 is no elevation), one end at 0 with the other above it
             record(Kind::Line, &[(1.0, 2.0, 105.5), (3.0, 4.0, 107.25)]),
             record(Kind::Line, &[(1.0, 2.0, 0.0), (3.0, 4.0, 0.0)]),
             record(Kind::Line, &[(1.0, 2.0, 0.0), (3.0, 4.0, 12.5)]),
             // 3-5: polylines: a 0 among the heights is a height; all 0; a Z that is not a number leaves its vertex without
-            record(Kind::Polyline, &[(0.0, 0.0, 10.0), (10.0, 0.0, 0.0), (10.0, 10.0, 12.5)]),
+            record(
+                Kind::Polyline,
+                &[(0.0, 0.0, 10.0), (10.0, 0.0, 0.0), (10.0, 10.0, 12.5)],
+            ),
             record(Kind::Polyline, &[(0.0, 0.0, 0.0), (10.0, 0.0, 0.0)]),
-            record(Kind::Polyline, &[(0.0, 0.0, 10.0), (10.0, 0.0, f64::NAN), (10.0, 10.0, -2.5)]),
+            record(
+                Kind::Polyline,
+                &[(0.0, 0.0, 10.0), (10.0, 0.0, f64::NAN), (10.0, 10.0, -2.5)],
+            ),
             // 6-7: areas drawn point by point: the closing vertex goes with its height; all 0
             record(Kind::Polygon, &ring([1.0, 2.0, 3.0, 4.0])),
             record(Kind::Polygon, &ring([0.0; 4])),
             // 8-10: corners the reader made up (a sheet's, a rectangle's) or knows one of (a triangle's) have no height to give
             record(Kind::MapSheet, &ring([5.0, 5.0, 5.0, 5.0])),
-            record(Kind::Triangle, &[(0.0, 0.0, 5.0), (10.0, 0.0, 0.0), (0.0, 10.0, 0.0)]),
+            record(
+                Kind::Triangle,
+                &[(0.0, 0.0, 5.0), (10.0, 0.0, 0.0), (0.0, 10.0, 0.0)],
+            ),
             record(Kind::SmartObject, &ring([7.0, 7.0, 7.0, 7.0])),
         ] {
             assert!(em.entity(&e));
@@ -1037,11 +1250,22 @@ mod tests {
         let report = std::mem::take(&mut em.report).import();
         assert!(report.skipped.is_empty());
         let out = &em.out;
-        let Entity::Line(l) = &out[0] else { panic!("{:?}", out[0]) };
+        let Entity::Line(l) = &out[0] else {
+            panic!("{:?}", out[0])
+        };
         assert_eq!((l.za, l.zb), (Some(105.5), Some(107.25)));
         for i in [1, 2] {
-            let Entity::Line(l) = &out[i] else { panic!("{:?}", out[i]) };
-            assert_eq!((l.za, l.zb), if i == 1 { (None, None) } else { (Some(0.0), Some(12.5)) });
+            let Entity::Line(l) = &out[i] else {
+                panic!("{:?}", out[i])
+            };
+            assert_eq!(
+                (l.za, l.zb),
+                if i == 1 {
+                    (None, None)
+                } else {
+                    (Some(0.0), Some(12.5))
+                }
+            );
         }
         let zs = |i: usize| match &out[i] {
             Entity::Polyline(p) | Entity::Polygon(p) => p.zs.clone(),
@@ -1051,7 +1275,10 @@ mod tests {
         assert_eq!(zs(4), None);
         assert_eq!(zs(5), Some(vec![Some(10.0), None, Some(-2.5)]));
         assert!(matches!(out[6], Entity::Polygon(_)));
-        assert_eq!(zs(6), Some(vec![Some(1.0), Some(2.0), Some(3.0), Some(4.0)]));
+        assert_eq!(
+            zs(6),
+            Some(vec![Some(1.0), Some(2.0), Some(3.0), Some(4.0)])
+        );
         assert_eq!(zs(7), None);
         assert_eq!((zs(8), zs(9), zs(10)), (None, None, None));
         // The heights are counted where every import says it: as a fact of the file.
@@ -1067,7 +1294,15 @@ mod tests {
             dimension_styles: Vec::new(),
         };
         kentos_formats::import::summarise(&mut result);
-        assert!(result.report.source.iter().any(|f| (f.label.as_str(), f.value.as_str()) == ("Kotlu nesne", "5")), "{:?}", result.report.source);
+        assert!(
+            result
+                .report
+                .source
+                .iter()
+                .any(|f| (f.label.as_str(), f.value.as_str()) == ("Kotlu nesne", "5")),
+            "{:?}",
+            result.report.source
+        );
     }
 
     #[test]

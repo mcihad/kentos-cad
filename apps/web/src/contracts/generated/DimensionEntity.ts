@@ -4,6 +4,7 @@ import type { DimensionStyle } from "./DimensionStyle";
 import type { DimensionTextPlace } from "./DimensionTextPlace";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { LineType } from "./LineType";
 import type { Vec2 } from "./Vec2";
 
 export type DimensionEntity = { a: Vec2, b: Vec2, offset: number, height: number, text?: string, style?: DimensionStyle, 
@@ -93,4 +94,33 @@ suffix?: string,
 /**
  * The value's typeface; absent: the project's.
  */
-font?: DrawingFont, };
+font?: DrawingFont, 
+/**
+ * The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:
+ * the object's (docs/adr/0205 §6).
+ */
+dimLineColor?: string, 
+/**
+ * The dimension line's weight, paper mm as an object's; absent: a hairline.
+ */
+dimLineWeight?: number, 
+/**
+ * The dimension line's type; absent: continuous.
+ */
+dimLineType?: LineType, 
+/**
+ * The extension lines' colour; absent: the object's.
+ */
+extColor?: string, 
+/**
+ * The extension lines' weight, paper mm; absent: a hairline.
+ */
+extWeight?: number, 
+/**
+ * The extension lines' type; absent: continuous.
+ */
+extLineType?: LineType, 
+/**
+ * The value's colour; absent: the object's.
+ */
+textColor?: string, };

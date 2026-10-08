@@ -292,6 +292,10 @@ pub const PORTED: &[&str] = &[
     "view.colorMode.color",
     "view.colorMode.mono",
     "view.colorMode.gray",
+    // docs/adr/0205 §5: Yazıların boyu.
+    "view.annotationSize.legible",
+    "view.annotationSize.true",
+    "view.annotationSize.screen",
     "view.fills",
     "view.areaEdges",
     "view.transparency",
@@ -1065,7 +1069,11 @@ fn item(raw: RawItem) -> Item {
             id: leak(command),
             size: size(&s),
         },
-        RawItem::Split { split, key, size: s } => Item::Split {
+        RawItem::Split {
+            split,
+            key,
+            size: s,
+        } => Item::Split {
             entries: split
                 .into_iter()
                 .map(|s| {
@@ -1096,7 +1104,10 @@ fn item(raw: RawItem) -> Item {
                 .collect();
             Item::Menu {
                 label: leak(menu),
-                ids: blocks.iter().flat_map(|(_, ids)| ids.iter().copied()).collect(),
+                ids: blocks
+                    .iter()
+                    .flat_map(|(_, ids)| ids.iter().copied())
+                    .collect(),
                 blocks,
                 checklist,
                 size: size(&s),

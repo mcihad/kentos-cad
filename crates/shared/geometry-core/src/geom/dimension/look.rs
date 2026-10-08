@@ -57,6 +57,43 @@ pub struct Look {
     pub prefix: Option<String>,
     pub suffix: Option<String>,
     pub font: Option<Font>,
+    /// Its lines (docs/adr/0205 §6); none: the object's colour, hairlines,
+    /// continuous.
+    pub lines: Option<Box<LookLines>>,
+}
+
+/// A dimension's lines (docs/adr/0205 §6), as the contract names them: the
+/// dimension line's and arrowheads' colour (`#RRGGBB`), weight (paper mm)
+/// and type (`continuous`, `dashed`, `dashdot`, `dotted`); the extension
+/// lines'; the value's colour. Boxed in its look: few dimensions have them,
+/// and every shape is as large as its largest kind.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct LookLines {
+    pub dim_line_color: Option<String>,
+    pub dim_line_weight: Option<f64>,
+    pub dim_line_type: Option<String>,
+    pub ext_color: Option<String>,
+    pub ext_weight: Option<f64>,
+    pub ext_line_type: Option<String>,
+    pub text_color: Option<String>,
+}
+
+impl LookLines {
+    /// Naming nothing (a look without lines of its own).
+    pub const NONE: LookLines = LookLines {
+        dim_line_color: None,
+        dim_line_weight: None,
+        dim_line_type: None,
+        ext_color: None,
+        ext_weight: None,
+        ext_line_type: None,
+        text_color: None,
+    };
+
+    /// Its box, or none when it names nothing.
+    pub fn boxed(self) -> Option<Box<LookLines>> {
+        (self != LookLines::default()).then(|| Box::new(self))
+    }
 }
 
 impl Look {
@@ -96,6 +133,13 @@ impl Flat for Look {
         "prefix",
         "suffix",
         "font",
+        "dimLineColor",
+        "dimLineWeight",
+        "dimLineType",
+        "extColor",
+        "extWeight",
+        "extLineType",
+        "textColor",
     ];
 
     fn read_flat(v: &Json) -> Result<Look, String> {
@@ -134,6 +178,16 @@ impl Flat for Look {
             prefix: text("prefix")?,
             suffix: text("suffix")?,
             font: text("font")?.map(|f| Font::from_id(&f)),
+            lines: LookLines {
+                dim_line_color: text("dimLineColor")?,
+                dim_line_weight: number("dimLineWeight")?,
+                dim_line_type: text("dimLineType")?,
+                ext_color: text("extColor")?,
+                ext_weight: number("extWeight")?,
+                ext_line_type: text("extLineType")?,
+                text_color: text("textColor")?,
+            }
+            .boxed(),
         })
     }
 
@@ -164,6 +218,15 @@ impl Flat for Look {
         field(out, first, "suffix", &self.suffix);
         if let Some(f) = self.font {
             name(out, first, "font", f.id());
+        }
+        if let Some(l) = &self.lines {
+            field(out, first, "dimLineColor", &l.dim_line_color);
+            field(out, first, "dimLineWeight", &l.dim_line_weight);
+            field(out, first, "dimLineType", &l.dim_line_type);
+            field(out, first, "extColor", &l.ext_color);
+            field(out, first, "extWeight", &l.ext_weight);
+            field(out, first, "extLineType", &l.ext_line_type);
+            field(out, first, "textColor", &l.text_color);
         }
     }
 }

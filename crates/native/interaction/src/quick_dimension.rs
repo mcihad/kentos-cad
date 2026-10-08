@@ -29,8 +29,6 @@ use crate::tool::{Context, Flow, OptionChoice, Pointer, Preview, Stroke, Tag};
 
 pub const ID: &str = "quickDimension";
 const LABEL: &str = "Hızlı ölçü";
-/// The value's height on paper, mm (Ölçülendirme's).
-const HEIGHT_MM: f64 = 2.5;
 /// What is said when the selection has nothing to measure.
 const NOTHING: &str = "Seçimde ölçülecek çizgi, çoklu çizgi ya da alan yok.";
 
@@ -119,7 +117,7 @@ impl Stages for QuickDimension {
 
     fn see(&mut self, cx: &Context<'_>) {
         let (look, height) =
-            styles::dimension_look(cx, HEIGHT_MM / 1000.0 * cx.doc.settings().plot_scale);
+            styles::dimension_look(cx, styles::standard_dimension_height(cx.doc.settings()));
         self.height = height;
         self.look = look;
         self.styles = styles::Seen::dimension(cx);

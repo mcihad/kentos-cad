@@ -23,7 +23,13 @@ fn a_click_asks_for_the_field_and_enter_adds_the_text() {
     let Some(ViewChange::Text(field)) = b.views.last().cloned() else {
         panic!("a text field asked for: {:?}", b.views);
     };
-    assert_eq!(rel(kentos_contracts::Vec2 { x: field.at.x, y: field.at.y }), [4.0, 2.0]);
+    assert_eq!(
+        rel(kentos_contracts::Vec2 {
+            x: field.at.x,
+            y: field.at.y
+        }),
+        [4.0, 2.0]
+    );
     assert_eq!((field.height, field.rotation), (2.5, 0.0));
     assert_eq!(
         b.session.prompt().text(),
@@ -34,10 +40,18 @@ fn a_click_asks_for_the_field_and_enter_adds_the_text() {
     let Entity::Text(t) = b.newest() else {
         panic!("a text");
     };
-    assert_eq!((t.text.as_str(), t.height, t.rotation), ("Ada 101", 2.5, 0.0));
+    assert_eq!(
+        (t.text.as_str(), t.height, t.rotation),
+        ("Ada 101", 2.5, 0.0)
+    );
     assert_eq!(rel(t.p), [4.0, 2.0]);
     // Back to where the next text starts; Ctrl+Z takes this one back.
-    assert!(b.session.prompt().text().starts_with("Yazı: yazının başlangıcına"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .starts_with("Yazı: yazının başlangıcına")
+    );
     assert!(b.undo_step());
     assert!(!b.doc.entities().any(|e| matches!(e, Entity::Text(_))));
 }
@@ -52,7 +66,12 @@ fn esc_or_nothing_typed_writes_nothing_and_the_tool_waits() {
     b.run(|s, cx| s.text_typed(Some("   "), cx));
     assert_eq!(b.doc.entities().count(), count);
     assert!(b.session.is_running());
-    assert!(b.session.prompt().text().starts_with("Yazı: yazının başlangıcına"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .starts_with("Yazı: yazının başlangıcına")
+    );
 }
 
 #[test]
@@ -86,7 +105,12 @@ fn height_and_angle_are_typed_or_shown_and_kept() {
     b.confirm();
     assert!(!b.session.is_running());
     b.start("text");
-    assert!(b.session.prompt().text().contains("[Yükseklik (Y): 3.5 mm / Açı (A): 45° / Hiza"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .contains("[Yükseklik (Y): 3.5 mm / Açı (A): 45° / Hiza")
+    );
 }
 
 #[test]
@@ -100,9 +124,16 @@ fn a_locked_active_layer_is_said_at_the_click_and_no_field_opens() {
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert_eq!(
         b.last_text(),
-        Some("“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.")
+        Some(
+            "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin."
+        )
     );
-    assert!(b.session.prompt().text().starts_with("Yazı: yazının başlangıcına"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .starts_with("Yazı: yazının başlangıcına")
+    );
 }
 
 #[test]
@@ -111,7 +142,12 @@ fn enter_leaves_where_the_text_starts_and_steps_back_from_a_question() {
     assert!(b.type_text("Y"));
     b.confirm();
     assert!(b.session.is_running());
-    assert!(b.session.prompt().text().starts_with("Yazı: yazının başlangıcına"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .starts_with("Yazı: yazının başlangıcına")
+    );
     b.confirm();
     assert!(!b.session.is_running());
 }
@@ -198,7 +234,10 @@ fn hiza_genişlik_zemin_and_artır_are_kept_and_written() {
     // A word that names none is said, and the step stays.
     assert!(b.type_text("H"));
     assert!(b.type_text("yukarı"));
-    assert!(b.last_text().is_some_and(|t| t.starts_with("“yukarı” bir hiza adı değil")));
+    assert!(
+        b.last_text()
+            .is_some_and(|t| t.starts_with("“yukarı” bir hiza adı değil"))
+    );
     assert!(b.session.prompt().text().contains("hizayı seçin"));
     assert!(b.type_text("ORTA"));
     assert!(b.session.prompt().text().contains("Hiza (H): orta /"));
@@ -208,8 +247,18 @@ fn hiza_genişlik_zemin_and_artır_are_kept_and_written() {
     assert_eq!(
         labels,
         [
-            "Sol üst", "Orta üst", "Sağ üst", "Sol orta", "Orta", "Sağ orta", "Sol alt",
-            "Orta alt", "Sağ alt", "Sol taban", "Orta taban", "Sağ taban"
+            "Sol üst",
+            "Orta üst",
+            "Sağ üst",
+            "Sol orta",
+            "Orta",
+            "Sağ orta",
+            "Sol alt",
+            "Orta alt",
+            "Sağ alt",
+            "Sol taban",
+            "Orta taban",
+            "Sağ taban"
         ]
     );
     let checked: Vec<&str> = choices
@@ -235,14 +284,18 @@ fn hiza_genişlik_zemin_and_artır_are_kept_and_written() {
     assert!(b.type_text("0"));
     assert_eq!(
         b.last_text(),
-        Some("Genişlik çarpanı 0'dan büyük, en çok 100 olmalı; 0 verildi. Harflerin kendi eni için 1 yazın.")
+        Some(
+            "Genişlik çarpanı 0'dan büyük, en çok 100 olmalı; 0 verildi. Harflerin kendi eni için 1 yazın."
+        )
     );
     assert!(b.type_text("0.8"));
     assert!(b.type_text("Z"));
     assert!(b.type_text("R"));
-    assert!(b.session.prompt().text().ends_with(
-        "Hiza (H): sağ taban / Genişlik (G): 0.8 / Zemin (Z): açık / Artır (R): açık]"
-    ));
+    assert!(
+        b.session.prompt().text().ends_with(
+            "Hiza (H): sağ taban / Genişlik (G): 0.8 / Zemin (Z): açık / Artır (R): açık]"
+        )
+    );
 
     // The field stands as the text will, and the text is written with its extras.
     let write = |b: &mut Bench, at: [f64; 2], text: &str| {
@@ -263,13 +316,28 @@ fn hiza_genişlik_zemin_and_artır_are_kept_and_written() {
     };
     assert_eq!(
         (t.text.as_str(), rel(t.p), t.align, t.width_factor, t.mask),
-        ("Ada 101", [10.0, 20.0], Some(kentos_contracts::TextAlign::BaselineRight), Some(0.8), true)
+        (
+            "Ada 101",
+            [10.0, 20.0],
+            Some(kentos_contracts::TextAlign::BaselineRight),
+            Some(0.8),
+            true
+        )
     );
     assert_eq!(b.last_text(), Some("Yazı eklendi: “Ada 101”"));
     // Artır: the last text's number one more; a text with no number comes back as it is.
-    assert_eq!(write(&mut b, [10.0, 16.0], "Ada 102").initial.as_deref(), Some("Ada 102"));
-    assert_eq!(write(&mut b, [10.0, 12.0], "Yol").initial.as_deref(), Some("Ada 103"));
-    assert_eq!(write(&mut b, [10.0, 8.0], "Yol").initial.as_deref(), Some("Yol"));
+    assert_eq!(
+        write(&mut b, [10.0, 16.0], "Ada 102").initial.as_deref(),
+        Some("Ada 102")
+    );
+    assert_eq!(
+        write(&mut b, [10.0, 12.0], "Yol").initial.as_deref(),
+        Some("Ada 103")
+    );
+    assert_eq!(
+        write(&mut b, [10.0, 8.0], "Yol").initial.as_deref(),
+        Some("Yol")
+    );
     assert!(b.type_text("R"));
     assert_eq!(write(&mut b, [10.0, 4.0], "Son").initial, None);
     // Back to the defaults: none of the extras is written.
@@ -307,7 +375,11 @@ fn hiza_names_are_read_together_or_apart_with_or_without_marks() {
         assert_eq!(align_from_name(typed), want, "{typed}");
     }
     assert_eq!(
-        (align_name(None), align_name(Some(MiddleCenter)), align_name(Some(TopRight))),
+        (
+            align_name(None),
+            align_name(Some(MiddleCenter)),
+            align_name(Some(TopRight))
+        ),
         ("sol taban", "orta", "sağ üst")
     );
 }
@@ -337,7 +409,12 @@ fn okunur_yap_turns_what_reads_upside_down_and_leaves_the_rest() {
     assert!(!b.session.is_running(), "it acts at once and leaves");
     let near = |t: &kentos_contracts::TextEntity, [x, y]: [f64; 2]| {
         let [dx, dy] = rel(t.p);
-        assert!((dx - x).hypot(dy - y) < 1e-9, "{:?} ≠ {:?}", [dx, dy], [x, y]);
+        assert!(
+            (dx - x).hypot(dy - y) < 1e-9,
+            "{:?} ≠ {:?}",
+            [dx, dy],
+            [x, y]
+        );
     };
     // Ada: middle centre at 180°, its point 0.08 of its height up; Yol: baseline
     // centre at 200°, 0.92 heights along its old up.
@@ -371,13 +448,18 @@ fn okunur_yap_says_when_there_is_nothing_to_turn() {
     let revision = b.doc.revision();
     b.selection.set(vec![kentos_domain::Slot(3)]);
     b.start("readable");
-    assert_eq!(b.last_text(), Some("Ters okunan yazı yok: 1 yazının hepsi okunuyor."));
+    assert_eq!(
+        b.last_text(),
+        Some("Ters okunan yazı yok: 1 yazının hepsi okunuyor.")
+    );
     assert_eq!(b.doc.revision(), revision);
     let line = b.add_line("cizim", [0.0, 0.0], [5.0, 0.0]);
     b.selection.set(vec![line]);
     b.start("readable");
     assert_eq!(
         b.last_text(),
-        Some("Seçimde yazı yok. Okunur yap yazı nesnelerini çevirir; yazıları seçip yeniden deneyin.")
+        Some(
+            "Seçimde yazı yok. Okunur yap yazı nesnelerini çevirir; yazıları seçip yeniden deneyin."
+        )
     );
 }

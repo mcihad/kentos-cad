@@ -7,6 +7,7 @@ import { textIncrement, textReadable } from '../model/textEdit';
 import { textAlongReadable } from '../model/textAlong';
 import { geometryOf } from '../product/entitiesEdit';
 import type { ViewTransform } from '../viewport/Camera';
+import { annotationHeight, annotationHeightMm, setAnnotationHeightMm, typedAnnotationHeightMm } from './annotationHeights';
 import { textAngle } from './constructions';
 import { parseNumber } from './coordinateInput';
 import { PointInputTool } from './drawTools';
@@ -17,9 +18,6 @@ import type { OptionChoice } from './Tool';
 import { stylesShown, takeTextStyle, textFaceNow, textStyleChoices, textStyleName } from './styleOption';
 import type { TextStyleDef } from '../model/annotationStyles';
 import { fixed } from '../core/displayNumber';
-
-/** Paper sizes (mm) converted to world metres at the project's plot scale. */
-const paper = (ctx: AppContext, mm: number) => (mm / 1000) * ctx.doc.settings.plotScale.value;
 
 /** “sol üst” → “Sol üst”: a name at the head of a menu row. */
 const capital = (s: string) => s.charAt(0).toLocaleUpperCase('tr-TR') + s.slice(1);
@@ -46,7 +44,6 @@ const alignIcon = (a: TextAlign | null) => {
 export class TextTool extends PointInputTool {
   readonly id = 'text';
   protected readonly label = 'Yazı';
-  private static heightMm = 2.5;
   private static angle = 0;
   private static align: TextAlign | null = null;
   private static widthFactor = 1;
@@ -59,9 +56,12 @@ export class TextTool extends PointInputTool {
   /** The last text this run wrote: Artır's next field starts from it. */
   private lastText: string | null = null;
 
-  /** Yükseklik, shared with Kılavuz (docs/adr/0146 §7): the paper height of both tools' texts. */
-  static setHeight(mm: number): void {
-    TextTool.heightMm = mm;
+  /**
+   * Yükseklik, shared with Çok satırlı yazı, Eğri boyunca yazı and Metin dosyası yerleştir: typed in this drawing,
+   * else the project's Yazı height (docs/adr/0205 §2).
+   */
+  static setHeight(ctx: AppContext, mm: number): void {
+    setAnnotationHeightMm(ctx, 'text', mm);
   }
 
   /** Açı and Zemin, shared with Çok satırlı yazı (docs/adr/0182 §4). */
@@ -74,19 +74,23 @@ export class TextTool extends PointInputTool {
   }
 
   /** Yazı's options as they are now: Metin dosyası yerleştir writes its lines with them (docs/adr/0145 §6). */
-  static options(): { heightMm: number; angle: number; align: TextAlign | null; widthFactor: number; mask: boolean } {
+  static options(ctx: AppContext): { heightMm: number; angle: number; align: TextAlign | null; widthFactor: number; mask: boolean } {
     const S = TextTool;
-    return { heightMm: S.heightMm, angle: S.angle, align: S.align, widthFactor: S.widthFactor, mask: S.mask };
+    return { heightMm: annotationHeightMm(ctx, 'text'), angle: S.angle, align: S.align, widthFactor: S.widthFactor, mask: S.mask };
   }
 
   /**
    * A text template's height on paper, alignment and mask for its run (docs/adr/0176 §3b, tools/templateSeeds.ts);
    * gives back the ones it replaced, which the run's end puts back.
    */
-  static useOptions(o: { readonly heightMm: number; readonly align: TextAlign | null; readonly mask: boolean }): { heightMm: number; align: TextAlign | null; mask: boolean } {
+  static useOptions(
+    ctx: AppContext,
+    o: { readonly heightMm: number | undefined; readonly align: TextAlign | null; readonly mask: boolean },
+  ): { heightMm: number | undefined; align: TextAlign | null; mask: boolean } {
     const S = TextTool;
-    const before = { heightMm: S.heightMm, align: S.align, mask: S.mask };
-    S.heightMm = o.heightMm;
+    // The height typed in this drawing (none: the project's) comes back as it was.
+    const before = { heightMm: typedAnnotationHeightMm(ctx, 'text'), align: S.align, mask: S.mask };
+    setAnnotationHeightMm(ctx, 'text', o.heightMm ?? null);
     S.align = o.align;
     S.mask = o.mask;
     return before;
@@ -109,7 +113,7 @@ export class TextTool extends PointInputTool {
         return 'yazıyı tıkladığınız yere yazın; Enter ekler, Esc vazgeçer';
       default:
         return (
-          `yazının başlangıcına tıklayın [${stylesShown(this.ctx) ? `Stil (S): ${textStyleName(this.ctx)} / ` : ''}Yükseklik (Y): ${S.heightMm} mm / Açı (A): ${+fixed(S.angle, 4)}° / ` +
+          `yazının başlangıcına tıklayın [${stylesShown(this.ctx) ? `Stil (S): ${textStyleName(this.ctx)} / ` : ''}Yükseklik (Y): ${annotationHeightMm(this.ctx, 'text')} mm / Açı (A): ${+fixed(S.angle, 4)}° / ` +
           `Hiza (H): ${textAlignName(S.align)} / Genişlik (G): ${+fixed(S.widthFactor, 4)} / ` +
           `Zemin (Z): ${S.mask ? 'açık' : 'kapalı'} / Artır (R): ${S.increment ? 'açık' : 'kapalı'}]`
         );
@@ -162,8 +166,8 @@ export class TextTool extends PointInputTool {
    * A text style chosen (docs/adr/0183 §4), Yazı's or Çok satırlı yazı's: Yükseklik its when it fixes one, Genişlik
    * its; Standart's width factor 1.
    */
-  static useStyle(s: TextStyleDef | null): void {
-    if (s?.height !== undefined) TextTool.heightMm = s.height;
+  static useStyle(ctx: AppContext, s: TextStyleDef | null): void {
+    if (s?.height !== undefined) setAnnotationHeightMm(ctx, 'text', s.height);
     TextTool.widthFactor = s?.widthFactor ?? 1;
   }
 
@@ -171,7 +175,7 @@ export class TextTool extends PointInputTool {
   private takeStyle(typed: string): boolean {
     const s = takeTextStyle(this.ctx, typed);
     if (s === undefined) return true;
-    TextTool.useStyle(s);
+    TextTool.useStyle(this.ctx, s);
     this.stage = 'pos';
     this.refreshPrompt();
     return true;
@@ -226,7 +230,7 @@ export class TextTool extends PointInputTool {
     if (layers.isLocked(layers.active.value)) return void this.targetLayer();
     this.at = p;
     this.stage = 'typing';
-    const height = paper(this.ctx, S.heightMm);
+    const height = annotationHeight(this.ctx, 'text');
     const { align, widthFactor, mask } = S;
     // The style's face (docs/adr/0183 §2), a CAD project's.
     const face = textFaceNow(this.ctx);
@@ -273,7 +277,7 @@ export class TextTool extends PointInputTool {
     const n = parseNumber(t);
     if (this.stage === 'height') {
       if (n === null || n <= 0) return false;
-      S.heightMm = n;
+      setAnnotationHeightMm(this.ctx, 'text', n);
       this.stage = 'pos';
       this.refreshPrompt();
       return true;
@@ -325,7 +329,7 @@ export class TextTool extends PointInputTool {
     const at = this.stage === 'pos' ? this.hover : null;
     if (!at) return;
     const s = view.worldToScreen(at);
-    const px = Math.max(8, paper(this.ctx, S.heightMm) * view.scale);
+    const px = Math.max(8, annotationHeight(this.ctx, 'text') * view.scale);
     const w = px * 4 * S.widthFactor;
     const [along, up] = textAlignShares(S.align);
     g.save();

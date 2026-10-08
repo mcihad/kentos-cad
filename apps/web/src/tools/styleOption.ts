@@ -5,7 +5,7 @@
  * ölçü write in their base's style. The desktop's twin is `kentos_interaction::styles`.
  */
 import type { AppContext } from '../app/context';
-import { faceOf, lookOf, STANDARD_DIMENSION_HEIGHT_MM, STANDARD_STYLE, type DimensionLook, type DimensionStyleDef, type TextFace, type TextStyleDef } from '../model/annotationStyles';
+import { faceOf, lookOf, STANDARD_STYLE, type DimensionLook, type DimensionStyleDef, type TextFace, type TextStyleDef } from '../model/annotationStyles';
 import type { OptionChoice } from './Tool';
 
 /** The styles the session chose, by their ids; null: Standart. A style the project no longer has is Standart. */
@@ -98,5 +98,5 @@ export function dimensionLookNow(ctx: AppContext, standard: number): { look: Dim
   return s ? { look: lookOf(s), height: (s.height / 1000) * ctx.doc.settings.plotScale.value } : { look: {}, height: standard };
 }
 
-/** Standart's value height at the project's scale, metres (the tools' 2.5 mm). */
-export const standardDimensionHeight = (ctx: AppContext): number => (STANDARD_DIMENSION_HEIGHT_MM / 1000) * ctx.doc.settings.plotScale.value;
+/** Standart's value height at the project's scale, metres: the project's Ölçü height (docs/adr/0205 §1). */
+export const standardDimensionHeight = (ctx: AppContext): number => ctx.doc.settings.annotationHeight('dimension');

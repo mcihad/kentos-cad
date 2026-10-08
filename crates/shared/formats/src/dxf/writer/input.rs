@@ -124,6 +124,14 @@ struct Fields {
     unit: Option<DrawingUnit>,
     prefix: Option<String>,
     suffix: Option<String>,
+    /// A dimension's lines (docs/adr/0205 §6).
+    dim_line_color: Option<String>,
+    dim_line_weight: Option<f64>,
+    dim_line_type: Option<kentos_contracts::LineType>,
+    ext_color: Option<String>,
+    ext_weight: Option<f64>,
+    ext_line_type: Option<kentos_contracts::LineType>,
+    text_color: Option<String>,
     offset: Option<f64>,
     style: Option<DimensionStyle>,
     angle: Option<f64>,
@@ -356,6 +364,13 @@ impl Fields {
                     prefix: self.prefix,
                     suffix: self.suffix,
                     font: self.font,
+                    dim_line_color: self.dim_line_color,
+                    dim_line_weight: self.dim_line_weight,
+                    dim_line_type: self.dim_line_type,
+                    ext_color: self.ext_color,
+                    ext_weight: self.ext_weight,
+                    ext_line_type: self.ext_line_type,
+                    text_color: self.text_color,
                 },
             }),
             "hatch" => Entity::Hatch(HatchEntity {
@@ -389,6 +404,7 @@ impl Fields {
                     ),
                     None => None,
                 },
+                arrow_size: self.arrow_size,
                 mask: self.mask.unwrap_or(false),
             }),
             "table" => Entity::Table(TableEntity {
@@ -507,6 +523,13 @@ impl<'de> Deserialize<'de> for Wire {
                         "unit" => f.unit = map.next_value()?,
                         "prefix" => f.prefix = map.next_value()?,
                         "suffix" => f.suffix = map.next_value()?,
+                        "dimLineColor" => f.dim_line_color = map.next_value()?,
+                        "dimLineWeight" => f.dim_line_weight = map.next_value()?,
+                        "dimLineType" => f.dim_line_type = map.next_value()?,
+                        "extColor" => f.ext_color = map.next_value()?,
+                        "extWeight" => f.ext_weight = map.next_value()?,
+                        "extLineType" => f.ext_line_type = map.next_value()?,
+                        "textColor" => f.text_color = map.next_value()?,
                         "offset" => f.offset = Some(map.next_value()?),
                         "style" => f.style = map.next_value()?,
                         "angle" => f.angle = map.next_value()?,
@@ -706,7 +729,11 @@ mod tests {
         };
         assert_eq!(
             (l.text.as_deref(), l.arrow, l.mask),
-            (Some("Mevcut bina"), Some(kentos_contracts::LeaderArrow::Dot), true)
+            (
+                Some("Mevcut bina"),
+                Some(kentos_contracts::LeaderArrow::Dot),
+                true
+            )
         );
         // Inserts and the definitions they place, nested ones in them (docs/adr/0144 §5).
         let Entity::Insert(i) = &ours.entities[19] else {

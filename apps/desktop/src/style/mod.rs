@@ -196,4 +196,19 @@ impl crate::app::App {
         self.apply_settings();
         self.output(format!("Renk kipi: {words}"));
     }
+
+    /// Yazıların boyu (docs/adr/0205 §5): how the drawing's text is sized on
+    /// the screen, a preference kept.
+    pub(crate) fn choose_annotation_size(&mut self, id: &str) {
+        let (value, words) = match id {
+            "view.annotationSize.true" => ("true", "Gerçek boy"),
+            "view.annotationSize.screen" => ("screen", "Ekranda sabit"),
+            _ => ("legible", "Kaybolmasın"),
+        };
+        let _ = self
+            .settings
+            .choose(&[("graphics.annotationSize", serde_json::Value::from(value))]);
+        self.apply_settings();
+        self.output(format!("Yazıların boyu: {words}"));
+    }
 }

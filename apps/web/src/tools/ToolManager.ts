@@ -115,7 +115,7 @@ export class ToolManager {
       this.ctx.settings.template.set(template);
       this.ctx.settings.color.set(template.color);
       this.ctx.settings.lineWeight.set(template.lineWeight);
-      this.templateBack = seedTool(template, this.templateNames);
+      this.templateBack = seedTool(this.ctx, template, this.templateNames);
       this.recentTemplates.set([template.id, ...this.recentTemplates.value.filter((id) => id !== template.id)].slice(0, 5));
     }
     this.current = d.create(this.ctx);

@@ -177,7 +177,10 @@ pub fn view_bounds(boxes: &[Bounds]) -> Option<Bounds> {
 /// their extent inside the import's view, so a stray on a chosen layer is
 /// left out as it is from the whole; their whole extent when the chosen
 /// layers hold only what lies beyond it.
-pub fn view_of<'a>(view: Option<&Bounds>, chosen: impl Iterator<Item = &'a Bounds>) -> Option<Bounds> {
+pub fn view_of<'a>(
+    view: Option<&Bounds>,
+    chosen: impl Iterator<Item = &'a Bounds>,
+) -> Option<Bounds> {
     let all = union(chosen)?;
     let Some(v) = view else { return Some(all) };
     let inside = Bounds {
@@ -186,11 +189,13 @@ pub fn view_of<'a>(view: Option<&Bounds>, chosen: impl Iterator<Item = &'a Bound
         max_x: all.max_x.min(v.max_x),
         max_y: all.max_y.min(v.max_y),
     };
-    Some(if inside.min_x <= inside.max_x && inside.min_y <= inside.max_y {
-        inside
-    } else {
-        all
-    })
+    Some(
+        if inside.min_x <= inside.max_x && inside.min_y <= inside.max_y {
+            inside
+        } else {
+            all
+        },
+    )
 }
 
 /// Fills in each layer's objects by kind and their box, and where the view
@@ -220,7 +225,11 @@ pub fn summarise(result: &mut ImportResult) {
     let mut per: HashMap<String, Layer> = per.into_iter().map(|(l, v)| (l.to_owned(), v)).collect();
     for layer in &mut result.layers {
         if let Some(l) = per.remove(&layer.name) {
-            layer.kinds = l.kinds.into_iter().map(|(k, n)| (k.to_owned(), n)).collect();
+            layer.kinds = l
+                .kinds
+                .into_iter()
+                .map(|(k, n)| (k.to_owned(), n))
+                .collect();
             layer.bounds = l.bounds;
         }
     }
@@ -243,7 +252,11 @@ fn stray_note(boxes: &[Bounds], on: &[&str], far: &[usize]) -> Option<ReportItem
     for &i in far {
         *per.entry(on[i]).or_default() += 1;
     }
-    let mut layers: Vec<String> = per.iter().take(3).map(|(n, k)| format!("{n} {k}")).collect();
+    let mut layers: Vec<String> = per
+        .iter()
+        .take(3)
+        .map(|(n, k)| format!("{n} {k}"))
+        .collect();
     if per.len() > 3 {
         layers.push("…".into());
     }
@@ -302,8 +315,17 @@ mod tests {
         assert_eq!(far, [500]);
         let note = stray_note(&boxes, &on, &far).expect("a note");
         assert_eq!((note.what.as_str(), note.count), ("Uzaktaki nesne", 1));
-        assert!(note.reason.starts_with("çizimin geri kalanından çok uzakta (TRAFO 1; ilki Y 0, X 0 yakınında)"), "{}", note.reason);
-        assert!(!note.reason.ends_with('.'), "the report line puts the full stop");
+        assert!(
+            note.reason.starts_with(
+                "çizimin geri kalanından çok uzakta (TRAFO 1; ilki Y 0, X 0 yakınında)"
+            ),
+            "{}",
+            note.reason
+        );
+        assert!(
+            !note.reason.ends_with('.'),
+            "the report line puts the full stop"
+        );
         assert!(stray_note(&boxes[..500], &on[..500], &strays(&boxes[..500])).is_none());
     }
 
@@ -323,7 +345,10 @@ mod tests {
             max_y: 150.0,
         };
         let v = view_of(Some(&view), [&spread].into_iter()).expect("a view");
-        assert_eq!((v.min_x, v.min_y, v.max_x, v.max_y), (100.0, 100.0, 150.0, 150.0));
+        assert_eq!(
+            (v.min_x, v.min_y, v.max_x, v.max_y),
+            (100.0, 100.0, 150.0, 150.0)
+        );
         // A layer that is only the stray: shown where it is.
         let v = view_of(Some(&view), [&at(0.0, 0.0)].into_iter()).expect("a view");
         assert_eq!((v.min_x, v.max_x), (0.0, 1.0));

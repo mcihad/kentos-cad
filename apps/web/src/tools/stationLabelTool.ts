@@ -6,6 +6,7 @@ import { kmText, kmValue, stationing, type Stationing, type StationLook, type St
 import { writeObjectsEach } from './createCommand';
 import { MAX_GHOSTS } from './modifyTools';
 import { NO_ROUTE, pickRoute } from './pointCalcRoute';
+import { annotationHeightMm, setAnnotationHeightMm } from './annotationHeights';
 import { drawTextGhost, strokePath } from './preview';
 import { stylesShown, takeTextStyle, textFaceNow, textStyleChoices, textStyleName, textStyleNow, textWidthFactorNow } from './styleOption';
 import type { OptionChoice, Tool, ToolPointer } from './Tool';
@@ -28,7 +29,6 @@ export const stationOptions = {
   interval: 20,
   start: 0,
   text: 'left' as 'left' | 'right' | null,
-  heightMm: 2,
   tick: true,
   section: 0,
   point: null as number | null,
@@ -60,8 +60,11 @@ function parseNumberText(t: string): number | null {
   return Number(t.replace(',', '.'));
 }
 
-/** The paper height, mm: a CAD project's chosen style's when it fixes one, else Yükseklik's. */
-const heightMm = (ctx: AppContext): number => (stylesShown(ctx) ? textStyleNow(ctx)?.height : undefined) ?? stationOptions.heightMm;
+/**
+ * The paper height, mm: a CAD project's chosen style's when it fixes one, else Yükseklik's (typed in this drawing, else
+ * the project's Km yazısı height, docs/adr/0205 §2).
+ */
+const heightMm = (ctx: AppContext): number => (stylesShown(ctx) ? textStyleNow(ctx)?.height : undefined) ?? annotationHeightMm(ctx, 'station');
 
 export class StationLabelTool implements Tool {
   readonly id = 'stationLabels';
@@ -131,7 +134,7 @@ export class StationLabelTool implements Tool {
       `Başlangıç (B): ${kmText(O.start, f.lengthDecimals)}`,
       this.reverse ? 'Ters (T): açık' : 'Ters (T)',
       `Yazı (Y): ${sideName(O.text)}`,
-      `Yükseklik (H): ${O.heightMm} mm`,
+      `Yükseklik (H): ${annotationHeightMm(this.ctx, 'station')} mm`,
       ...(stylesShown(this.ctx) ? [`Stil (S): ${textStyleName(this.ctx)}`] : []),
       `İşaret (İ): ${on(O.tick)}`,
       `Enkesit (E): ${O.section > 0 ? f.length(O.section) : 'yok'}`,
@@ -230,7 +233,7 @@ export class StationLabelTool implements Tool {
       }
       case 'height':
         if (n !== null && n > 0 && Number.isFinite(n)) {
-          O.heightMm = n;
+          setAnnotationHeightMm(this.ctx, 'station', n);
           this.asking = null;
         } else refused('Yükseklik sıfırdan büyük bir sayı olmalı (kâğıtta mm)');
         return;

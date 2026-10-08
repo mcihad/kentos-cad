@@ -306,7 +306,10 @@ impl Select {
 
     pub fn prompt(&self) -> Prompt {
         if self.grip.is_some() {
-            Prompt::new("Tutamaç", "yeni konumu belirtin ya da koordinat yazın (Esc: vazgeç)")
+            Prompt::new(
+                "Tutamaç",
+                "yeni konumu belirtin ya da koordinat yazın (Esc: vazgeç)",
+            )
         } else {
             Prompt::idle()
         }

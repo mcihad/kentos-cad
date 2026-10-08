@@ -150,6 +150,7 @@ impl Section {
                 "graphics.symbolSize",
                 "graphics.lineWeights",
                 "graphics.colorMode",
+                "graphics.annotationSize",
                 "graphics.fills",
                 "graphics.areaEdges",
                 "graphics.transparency",
@@ -513,7 +514,16 @@ impl App {
                 Fields::title("graphics.colorMode"),
                 choices("graphics.colorMode", &f.value("graphics.colorMode")),
             )
-            .help(Fields::help("graphics.colorMode"));
+            .help(Fields::help("graphics.colorMode"))
+            // Yazıların boyu (docs/adr/0205 §5).
+            .field(
+                Fields::title("graphics.annotationSize"),
+                choices(
+                    "graphics.annotationSize",
+                    &f.value("graphics.annotationSize"),
+                ),
+            )
+            .help(Fields::help("graphics.annotationSize"));
         let form = f.switch_field(form, "graphics.fills", None);
         let form = f.switch_field(form, "graphics.areaEdges", None);
         f.switch_field(form, "graphics.transparency", None)

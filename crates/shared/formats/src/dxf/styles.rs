@@ -14,7 +14,11 @@
 //! (DIMASZ), the extension lines' offset and reach (DIMEXO, DIMEXE), the
 //! value's gap (DIMGAP) and place (DIMTAD 0: centred), decimals (DIMDEC),
 //! prefix and suffix (DIMPOST around “<>”), unit (DIMLFAC 100: cm, 1000:
-//! mm), the typeface of its text style (DIMTXSTY), all times DIMSCALE.
+//! mm), the typeface of its text style (DIMTXSTY), all times DIMSCALE; its
+//! lines' colours (DIMCLRD, DIMCLRE, DIMCLRT: an ACI number; BYBLOCK,
+//! BYLAYER and 7 the object's own), weights (DIMLWD, DIMLWE: hundredths of
+//! a mm) and types (DIMLTYPE, DIMLTEX1 else DIMLTEX2: an LTYPE's handle),
+//! docs/adr/0205 §6.
 //!
 //! Only the styles the read objects follow are kept, numbered as the reader
 //! meets them; their sizes are paper mm at the project's scale.
@@ -22,7 +26,8 @@
 use std::collections::HashMap;
 
 use kentos_contracts::{
-    DimensionArrow, DimensionStyleDef, DimensionTextPlace, DrawingFont, DrawingUnit, TextStyleDef,
+    DimensionArrow, DimensionStyleDef, DimensionTextPlace, DrawingFont, DrawingUnit, LineType,
+    TextStyleDef,
 };
 
 use super::lexer::Pair;
@@ -240,6 +245,17 @@ pub struct DimVars {
     pub dimblk_handle: Option<u64>,
     /// DIMTXSTY: the text style's record's handle (340).
     pub dimtxsty: Option<u64>,
+    /// The lines' colours (DIMCLRD 176, DIMCLRE 177, DIMCLRT 178: ACI
+    /// numbers), weights (DIMLWD 371, DIMLWE 372: hundredths of a mm) and
+    /// types (DIMLTYPE 345, DIMLTEX1 346, DIMLTEX2 347: LTYPE handles).
+    pub dimclrd: Option<i64>,
+    pub dimclre: Option<i64>,
+    pub dimclrt: Option<i64>,
+    pub dimlwd: Option<i64>,
+    pub dimlwe: Option<i64>,
+    pub dimltype: Option<u64>,
+    pub dimltex1: Option<u64>,
+    pub dimltex2: Option<u64>,
     /// The style as KentOS wrote it (its KENTOS data).
     pub kentos: Option<DimensionStyleDef>,
 }
@@ -262,6 +278,14 @@ impl DimVars {
             dimblk: self.dimblk.or_else(|| under.dimblk.clone()),
             dimblk_handle: self.dimblk_handle.or(under.dimblk_handle),
             dimtxsty: self.dimtxsty.or(under.dimtxsty),
+            dimclrd: self.dimclrd.or(under.dimclrd),
+            dimclre: self.dimclre.or(under.dimclre),
+            dimclrt: self.dimclrt.or(under.dimclrt),
+            dimlwd: self.dimlwd.or(under.dimlwd),
+            dimlwe: self.dimlwe.or(under.dimlwe),
+            dimltype: self.dimltype.or(under.dimltype),
+            dimltex1: self.dimltex1.or(under.dimltex1),
+            dimltex2: self.dimltex2.or(under.dimltex2),
             kentos: self.kentos.or_else(|| under.kentos.clone()),
         }
     }
@@ -287,9 +311,43 @@ impl DimVars {
             5 => self.dimblk = Some(value.to_owned()),
             342 => self.dimblk_handle = handle(),
             340 => self.dimtxsty = handle(),
+            176 => self.dimclrd = int(),
+            177 => self.dimclre = int(),
+            178 => self.dimclrt = int(),
+            371 => self.dimlwd = int(),
+            372 => self.dimlwe = int(),
+            345 => self.dimltype = handle(),
+            346 => self.dimltex1 = handle(),
+            347 => self.dimltex2 = handle(),
             _ => {}
         }
     }
+}
+
+/// A dimension line's colour from its ACI number (docs/adr/0205 §6): its
+/// `#RRGGBB`; none (the object's) for BYBLOCK (0), BYLAYER (256) and 7
+/// (black on paper, white on a dark screen: the object's own ink).
+pub fn line_colour(aci: Option<i64>) -> Option<String> {
+    let a = u8::try_from(aci?).ok().filter(|a| *a >= 1 && *a != 7)?;
+    let [r, g, b] = super::aci::rgb(a);
+    Some(format!("#{r:02X}{g:02X}{b:02X}"))
+}
+
+/// A dimension line's weight from DXF's hundredths of a mm: mm; none (a
+/// hairline) for BYLAYER (−1), BYBLOCK (−2), the default (−3), 0 and what
+/// DXF has no weight for.
+pub fn line_weight_mm(w: Option<i64>) -> Option<f64> {
+    w.filter(|w| (1..=211).contains(w))
+        .map(|w| w as f64 / 100.0)
+}
+
+/// A dimension line's type from its LTYPE's handle: none for a continuous
+/// one (and for ByLayer and ByBlock).
+pub fn line_type_of(handle: Option<u64>, ltypes: &HashMap<u64, LineType>) -> Option<LineType> {
+    handle
+        .and_then(|h| ltypes.get(&h))
+        .copied()
+        .filter(|t| *t != LineType::Continuous)
 }
 
 /// A DIMSTYLE record's variables, with its KENTOS data.
@@ -302,7 +360,27 @@ pub fn dim_record(groups: &[Pair<'_>], dec: super::strings::Decoder) -> DimVars 
     for p in &groups[..end] {
         if matches!(
             p.code,
-            140 | 41 | 142 | 42 | 44 | 147 | 40 | 144 | 77 | 271 | 3 | 5 | 342 | 340
+            140 | 41
+                | 142
+                | 42
+                | 44
+                | 147
+                | 40
+                | 144
+                | 77
+                | 271
+                | 3
+                | 5
+                | 342
+                | 340
+                | 176
+                | 177
+                | 178
+                | 371
+                | 372
+                | 345
+                | 346
+                | 347
         ) {
             v.set(i64::from(p.code), &dec.string(p.value));
         }
@@ -376,13 +454,15 @@ pub struct DimSaid {
 
 /// The dimension style `v` is, its id `id`: sizes in paper mm (DIMSCALE
 /// times them, drawing units turned into metres by `metres`, the project's
-/// scale), its typeface the text style's (`font`).
+/// scale), its typeface the text style's (`font`), its line types the
+/// LTYPE records' (`ltypes`, by handle).
 #[allow(clippy::too_many_arguments)]
 pub fn dimension_style(
     v: &DimVars,
     id: String,
     name: &str,
     blocks: &HashMap<u64, String>,
+    ltypes: &HashMap<u64, LineType>,
     font: Option<DrawingFont>,
     metres: &dyn Fn(f64) -> f64,
     scale: f64,
@@ -483,6 +563,98 @@ pub fn dimension_style(
         prefix: affix(prefix),
         suffix: affix(suffix),
         font,
+        // Its lines (docs/adr/0205 §6): one type for both extension lines, the first's.
+        dim_line_color: line_colour(v.dimclrd),
+        dim_line_weight: line_weight_mm(v.dimlwd),
+        dim_line_type: line_type_of(v.dimltype, ltypes),
+        ext_color: line_colour(v.dimclre),
+        ext_weight: line_weight_mm(v.dimlwe),
+        ext_line_type: line_type_of(v.dimltex1, ltypes)
+            .or_else(|| line_type_of(v.dimltex2, ltypes)),
+        text_color: line_colour(v.dimclrt),
     };
     (style, said)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A dimension style's lines from its DIMSTYLE (docs/adr/0205 §6):
+    /// DIMCLRD's ACI 1 is red, DIMCLRE's BYLAYER and DIMCLRT's 7 the object's
+    /// own; DIMLWD's 35 hundredths are 0.35 mm, DIMLWE's BYBLOCK none;
+    /// DIMLTYPE names a dashed LTYPE, DIMLTEX1 a continuous one, so the
+    /// extension lines take DIMLTEX2's dotted one.
+    #[test]
+    fn a_style_s_lines_come_from_its_variables() {
+        let v = DimVars {
+            dimtxt: Some(2.5),
+            dimclrd: Some(1),
+            dimclre: Some(256),
+            dimclrt: Some(7),
+            dimlwd: Some(35),
+            dimlwe: Some(-2),
+            dimltype: Some(0x86),
+            dimltex1: Some(0x26),
+            dimltex2: Some(0x87),
+            ..DimVars::default()
+        };
+        let ltypes = HashMap::from([
+            (0x26, LineType::Continuous),
+            (0x86, LineType::Dashed),
+            (0x87, LineType::Dotted),
+        ]);
+        let (s, _) = dimension_style(
+            &v,
+            "dxf-dim-1".into(),
+            "Renkli",
+            &HashMap::new(),
+            &ltypes,
+            None,
+            &|x| x,
+            1000.0,
+        );
+        assert_eq!(
+            (
+                s.dim_line_color.as_deref(),
+                s.ext_color.as_deref(),
+                s.text_color.as_deref()
+            ),
+            (Some("#FF0000"), None, None)
+        );
+        assert_eq!((s.dim_line_weight, s.ext_weight), (Some(0.35), None));
+        assert_eq!(
+            (s.dim_line_type, s.ext_line_type),
+            (Some(LineType::Dashed), Some(LineType::Dotted))
+        );
+        // DXF's weights only: 0, a negative one and one over 2.11 mm are none.
+        assert_eq!(
+            [Some(0), Some(-3), Some(212), Some(211), None].map(line_weight_mm),
+            [None, None, None, Some(2.11), None]
+        );
+        assert_eq!(
+            [Some(0), Some(256), Some(5)].map(line_colour),
+            [None, None, Some("#0000FF".into())]
+        );
+    }
+
+    /// An entity's own changes (ACAD's DSTYLE data) give its lines too: an
+    /// ACI as a 1070, a weight as a 1070, a type's LTYPE as a 1005 handle.
+    #[test]
+    fn an_entity_s_own_changes_give_its_lines() {
+        let text = "1001\nACAD\n1000\nDSTYLE\n1002\n{\n1070\n176\n1070\n3\n1070\n371\n1070\n50\n1070\n345\n1005\n86\n1070\n346\n1005\n87\n1002\n}\n";
+        let mut lex = super::super::lexer::Lexer::new(text.as_bytes());
+        let mut groups = Vec::new();
+        while let Ok(Some(p)) = lex.next() {
+            groups.push(p);
+        }
+        let dec = super::super::strings::Decoder {
+            enc: crate::text::Encoding::Utf8,
+        };
+        let v = dim_overrides(&groups, dec);
+        assert_eq!(
+            (v.dimclrd, v.dimlwd, v.dimltype, v.dimltex1),
+            (Some(3), Some(50), Some(0x86), Some(0x87))
+        );
+    }
 }

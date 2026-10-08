@@ -112,7 +112,10 @@ fn only_a_drawing_with_parts_is_schema_5_and_the_others_keep_their_bytes() {
     let empty = drawing(vec![area(Some(vec![]))]);
     let bytes = kentos_kcad::encode_verified(&empty).expect("writes");
     assert_eq!(schema(&bytes), 5);
-    assert_eq!(json(&kentos_kcad::decode(&bytes).expect("reads")), json(&empty));
+    assert_eq!(
+        json(&kentos_kcad::decode(&bytes).expect("reads")),
+        json(&empty)
+    );
     // Schema 5 holds what 3 and 4 hold: a line weight and elevations before the area.
     let mut all = drawing(vec![area(Some(vec![part(5.0)]))]);
     all.entities[0].base_mut().line_weight = Some(0.35);
@@ -121,7 +124,10 @@ fn only_a_drawing_with_parts_is_schema_5_and_the_others_keep_their_bytes() {
     }
     let bytes = kentos_kcad::encode_verified(&all).expect("writes");
     assert_eq!(schema(&bytes), 5);
-    assert_eq!(json(&kentos_kcad::decode(&bytes).expect("reads")), json(&all));
+    assert_eq!(
+        json(&kentos_kcad::decode(&bytes).expect("reads")),
+        json(&all)
+    );
 }
 
 #[test]
@@ -136,7 +142,10 @@ fn parts_come_back_in_order_with_their_arcs_holes_and_elevations() {
     assert_eq!(parts[0].bulges.as_deref(), Some(&[0.0, 0.5, 0.0, 0.0][..]));
     let zs = parts[0].zs.as_ref().expect("elevations");
     assert_eq!(zs[1], None, "a vertex without an elevation stays without");
-    assert!(zs[3].is_some_and(|z| z == 0.0 && z.is_sign_negative()), "-0 stays -0");
+    assert!(
+        zs[3].is_some_and(|z| z == 0.0 && z.is_sign_negative()),
+        "-0 stays -0"
+    );
     let hole = &parts[1].holes.as_ref().expect("a hole")[0];
     assert_eq!(hole.bulges.as_deref(), Some(&[0.25][..]));
     assert_eq!(hole.zs, Some(vec![Some(99.0), Some(99.5), None]));
@@ -148,25 +157,35 @@ fn the_readers_errors_name_their_places() {
     // Parts are schema 5's: in schema 4 an unknown field, and never a polyline's.
     let e = refused("broken/parts-in-schema-4.kcad");
     assert_eq!(e.code, Code::UnknownField);
-    assert!(e.message.contains("document/entities/0/polygon/parts"), "{e}");
+    assert!(
+        e.message.contains("document/entities/0/polygon/parts"),
+        "{e}"
+    );
     let e = refused("broken/parts-on-polyline.kcad");
     assert_eq!(e.code, Code::UnknownField);
-    assert!(e.message.contains("document/entities/0/polyline/parts"), "{e}");
+    assert!(
+        e.message.contains("document/entities/0/polyline/parts"),
+        "{e}"
+    );
     // A part's elevations are one per vertex, as the area's own.
     let e = refused("broken/part-elevation-wrong-length.kcad");
     assert_eq!(e.code, Code::BadValue);
-    assert!(e.message.contains("document/entities/0/polygon/parts/0/zs"), "{e}");
+    assert!(
+        e.message.contains("document/entities/0/polygon/parts/0/zs"),
+        "{e}"
+    );
     assert!(e.message.contains("2 kot var ama 4 köşe var"), "{e}");
     let e = refused("broken/part-without-points.kcad");
     assert_eq!(e.code, Code::MissingField);
-    assert!(e.message.contains("document/entities/0/polygon/parts/0"), "{e}");
+    assert!(
+        e.message.contains("document/entities/0/polygon/parts/0"),
+        "{e}"
+    );
 }
 
 #[test]
 fn the_writer_refuses_what_the_reader_would() {
-    let refused = |e: Entity| {
-        kentos_kcad::encode(&drawing(vec![e])).expect_err("refused")
-    };
+    let refused = |e: Entity| kentos_kcad::encode(&drawing(vec![e])).expect_err("refused");
     // A polyline's part has no holes (docs/adr/0174).
     let mut holed_line = part(5.0);
     holed_line.holes = Some(vec![RingGeometry {

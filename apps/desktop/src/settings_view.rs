@@ -24,7 +24,7 @@ use crate::settings::schema;
 use crate::settings_sections::Section;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 51] = [
+pub const KEYS: [&str; 52] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -56,6 +56,7 @@ pub const KEYS: [&str; 51] = [
     "graphics.symbolSize",
     "graphics.lineWeights",
     "graphics.colorMode",
+    "graphics.annotationSize",
     "graphics.fills",
     "graphics.areaEdges",
     "graphics.transparency",

@@ -46,12 +46,12 @@ use kentos_contracts::{
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2;
+use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::entity::Shape;
-use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::affine::{Affine, similarity};
+use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::{js_hypot, js_max};
-use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::ops::arrange::{self, Mode};
 use kentos_geometry_core::ops::rubber::{Link, RubberError, Sheet};
 use kentos_geometry_core::ops::transform::transform_shape;

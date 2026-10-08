@@ -871,6 +871,7 @@ export class CadDocument {
           textStyles: m.settings.textStyles ?? [],
           dimensionStyles: m.settings.dimensionStyles ?? [],
           topology: m.settings.topology ?? null,
+          annotation: m.settings.annotation ?? null,
         });
       if (m?.name !== undefined) this.name.set(m.name);
       if (m?.styles) this.styles.set(m.styles);

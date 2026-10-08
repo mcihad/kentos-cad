@@ -527,7 +527,9 @@ fn kaucuk_levha_takes_the_used_pairs_as_links() {
         "6 bağ (0 sabit nokta); levha her bağdan tam geçer."
     );
     assert!(
-        lines[1].1.starts_with("Yerel düzeltme (Helmert'e göre) en çok ")
+        lines[1]
+            .1
+            .starts_with("Yerel düzeltme (Helmert'e göre) en çok ")
             && lines[1].1.contains(" mm: P5; ortalama ")
             && lines[1].1.contains(", Helmert m0 = ±"),
         "{}",
@@ -543,7 +545,11 @@ fn kaucuk_levha_takes_the_used_pairs_as_links() {
     calc(&mut app, Calc::Cell(4, USE, "0".into()));
     let doc = app.document.as_ref().expect("open");
     let lines = app.calc.fit.summary_lines(&doc.model, &Format::default());
-    assert!(lines[0].1.starts_with("5 bağ (0 sabit nokta)"), "{}", lines[0].1);
+    assert!(
+        lines[0].1.starts_with("5 bağ (0 sabit nokta)"),
+        "{}",
+        lines[0].1
+    );
 }
 
 /// Sabit writes the row's source into its target; a row without its
@@ -559,9 +565,16 @@ fn sabit_makes_a_row_a_fixed_point() {
     assert_eq!(form.status, None);
     let doc = app.document.as_ref().expect("open");
     let lines = form.summary_lines(&doc.model, &Format::default());
-    assert!(lines[0].1.starts_with("6 bağ (1 sabit nokta)"), "{}", lines[0].1);
+    assert!(
+        lines[0].1.starts_with("6 bağ (1 sabit nokta)"),
+        "{}",
+        lines[0].1
+    );
     // A new row has no source: its target stays.
-    app.calc.fit.rows.push(row(["1", "Q", "", "", "487100", "4420200"]));
+    app.calc
+        .fit
+        .rows
+        .push(row(["1", "Q", "", "", "487100", "4420200"]));
     fit(&mut app, Event::Fix(6));
     let form = &app.calc.fit;
     assert_eq!(form.rows[6][TARGET_Y], "487100");
@@ -633,7 +646,10 @@ fn kaucuk_levha_meets_every_link_in_one_step() {
     assert!((held.x - p3.x).hypot(held.y - p3.y) < 1e-6, "P3 stays");
     assert!(gap(&app, "P5") > 0.1, "the blunder is no link");
     assert!(
-        logged(&app, "Vektör oturtma: 10 nesne kauçuk levhayla oturtuldu. Ctrl+Z geri alır."),
+        logged(
+            &app,
+            "Vektör oturtma: 10 nesne kauçuk levhayla oturtuldu. Ctrl+Z geri alır."
+        ),
         "{:?}",
         app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>()
     );

@@ -19,10 +19,10 @@ use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 use kentos_contracts::{
-    ApiError, AuthConfig, BlockList, CatalogSort, CatalogView, CommandEnvelope, EventPage, FeaturePage,
-    FileRevisions, FileUpload, FileUploadBegin, Health, LoginRequest, Me, ProjectAccessList,
-    ProjectCheckpoints, ProjectCreate, ProjectDetails, ProjectInfo, ProjectInvitations,
-    ProjectPage, ProjectType, ShareCandidates,
+    ApiError, AuthConfig, BlockList, CatalogSort, CatalogView, CommandEnvelope, EventPage,
+    FeaturePage, FileRevisions, FileUpload, FileUploadBegin, Health, LoginRequest, Me,
+    ProjectAccessList, ProjectCheckpoints, ProjectCreate, ProjectDetails, ProjectInfo,
+    ProjectInvitations, ProjectPage, ProjectType, ShareCandidates,
 };
 use reqwest::header::{self, HeaderMap};
 use reqwest::{Method, RequestBuilder, Response, Url};

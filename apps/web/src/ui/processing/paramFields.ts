@@ -66,7 +66,7 @@ export function paramControl(def: ParamDef, value: unknown, set: Setter, env: Fi
     case 'features':
       return featuresField(def, value as FeaturesValue, set, env);
     case 'number':
-      return numberField(def, value as number, set);
+      return numberField(def, value as number | null, set);
     case 'string': {
       const input = textField({ label: def.label, value: String(value ?? ''), placeholder: def.placeholder, onChange: (v) => set(v, false) });
       if (def.maxLength) input.maxLength = def.maxLength;
@@ -134,9 +134,21 @@ function pickButton(caption: string | null, title: string, tip: string, run: () 
   return b;
 }
 
-function numberField(def: Extract<ParamDef, { type: 'number' }>, value: number, set: Setter): HTMLElement {
-  const input = h('input', { class: 'field pfield__num num', value: Number.isFinite(value) ? String(value) : '', inputmode: 'decimal', 'aria-label': def.label, spellcheck: 'false' });
+function numberField(def: Extract<ParamDef, { type: 'number' }>, value: number | null, set: Setter): HTMLElement {
+  const input = h('input', {
+    class: 'field pfield__num num',
+    value: value !== null && Number.isFinite(value) ? String(value) : '',
+    inputmode: 'decimal',
+    'aria-label': def.label,
+    spellcheck: 'false',
+    ...(def.placeholder && { placeholder: def.placeholder }),
+  });
   input.addEventListener('input', () => {
+    // An optional field left empty is no value (docs/adr/0205 §2: the project's height).
+    if (def.optional && !input.value.trim()) {
+      input.removeAttribute('data-invalid');
+      return set(null, false);
+    }
     const n = numberOfText(input.value);
     input.toggleAttribute('data-invalid', Number.isNaN(n));
     set(n, false);

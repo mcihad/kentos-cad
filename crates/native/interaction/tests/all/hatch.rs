@@ -11,9 +11,7 @@ use crate::common;
 use std::collections::BTreeMap;
 
 use common::{Bench, E, N, rel};
-use kentos_contracts::{
-    Entity, EntityBase, HatchPatternType, PathEntity, Vec2 as Wire,
-};
+use kentos_contracts::{Entity, EntityBase, HatchPatternType, PathEntity, Vec2 as Wire};
 use kentos_interaction::Level;
 
 const HATCH: &str = include_str!("../../../../../fixtures/interaction/v1/hatch.kcad");
@@ -97,7 +95,12 @@ fn inside_the_building_only_the_building() {
 fn islands_off_fill_the_whole_parcel() {
     let mut b = bench();
     assert!(b.type_text("a"));
-    assert!(b.session.prompt().text().contains("/ Adalar (A): taranır /"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .contains("/ Adalar (A): taranır /")
+    );
     b.click(-12.0, 8.0);
     let (_, holes, _, area) = newest(&b);
     assert_eq!(holes, 0);
@@ -115,7 +118,9 @@ fn no_closed_object_around_the_click_is_said() {
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert_eq!(
         b.last_text(),
-        Some("Tıklanan noktayı çevreleyen kapalı bir alan, daire ya da kapalı eğri yok. Çizgilerle çevrili yerler için “Sınır: çizgiler” seçin.")
+        Some(
+            "Tıklanan noktayı çevreleyen kapalı bir alan, daire ya da kapalı eğri yok. Çizgilerle çevrili yerler için “Sınır: çizgiler” seçin."
+        )
     );
 }
 
@@ -144,7 +149,9 @@ fn by_lines_the_face_around_the_click_with_its_island() {
     b.click(0.0, 18.0);
     assert_eq!(
         b.last_text(),
-        Some("Tıklanan yer çizgilerle kapalı bir bölgenin içinde değil; görünüm dışındaki çizgiler sayılmaz.")
+        Some(
+            "Tıklanan yer çizgilerle kapalı bir bölgenin içinde değil; görünüm dışındaki çizgiler sayılmaz."
+        )
     );
 }
 
@@ -169,7 +176,12 @@ fn the_boundary_layer_is_picked_by_one_of_its_objects() {
     assert_eq!(b.selection.hover().map(|s| s.0), Some(6));
     b.click(2.0, 1.0);
     assert_eq!(b.selection.hover(), None);
-    assert!(b.session.prompt().text().ends_with("/ Sınır katmanı (K): Çizim]"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .ends_with("/ Sınır katmanı (K): Çizim]")
+    );
     // The closed polyline is on Yapılar: no island now.
     let count = b.doc.entities().count();
     b.click(8.0, -3.0);
@@ -179,11 +191,21 @@ fn the_boundary_layer_is_picked_by_one_of_its_objects() {
     assert!(near(area, 192.0), "{area}");
     // K again: every visible layer.
     assert!(b.type_text("K"));
-    assert!(b.session.prompt().text().ends_with("/ Sınır katmanı (K): tümü]"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .ends_with("/ Sınır katmanı (K): tümü]")
+    );
     // Esc leaves the picking first, then the tool.
     assert!(b.type_text("K"));
     assert!(b.run(|s, cx| s.cancel(cx)));
-    assert!(b.session.prompt().text().ends_with("/ Sınır katmanı (K): tümü]"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .ends_with("/ Sınır katmanı (K): tümü]")
+    );
     assert!(!b.run(|s, cx| s.cancel(cx)));
     assert!(!b.session.is_running());
 }
@@ -240,7 +262,9 @@ fn a_locked_active_layer_writes_nothing() {
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert_eq!(
         b.last_text(),
-        Some("“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.")
+        Some(
+            "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin."
+        )
     );
 }
 
@@ -276,7 +300,9 @@ fn too_dense_a_pattern_is_refused() {
     assert_eq!(b.doc.entities().count(), count);
     assert_eq!(
         b.last_text(),
-        Some("Desen bu alan için çok sık; ölçeği ya da çizim ölçeğini büyütün ya da başka bir desen seçin.")
+        Some(
+            "Desen bu alan için çok sık; ölçeği ya da çizim ölçeğini büyütün ya da başka bir desen seçin."
+        )
     );
     // Solid has no lines.
     assert!(b.type_text("dolu"));

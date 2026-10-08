@@ -269,8 +269,18 @@ pub const SCHEMA_WITH_SURVEY_SIGMAS: u32 = 28;
 /// byte for byte; a reader of those refuses a raster rather than lose it.
 pub const SCHEMA_WITH_RASTERS: u32 = 29;
 
+/// Document schema 30 (docs/specs/kcad-v2.md §6.1): schema 29 and the
+/// project's annotation heights, the settings' `annotation`; a dimension's
+/// and a dimension style's line fields (`dimLineColor`, `lineWeight`,
+/// `lineType`, `extColor`, `extWeight`, `extLineType`, `textColor`); a
+/// leader's `arrowSize` and the arrowheads AutoCAD has beside the first three
+/// (docs/adr/0205). A writer writes it only when a drawing has one of these:
+/// any other drawing stays 29 or older, byte for byte; a reader of those
+/// refuses them rather than draw another look.
+pub const SCHEMA_WITH_ANNOTATION: u32 = 30;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 28] = [
+pub const SCHEMAS: [u32; 29] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -299,6 +309,7 @@ pub const SCHEMAS: [u32; 28] = [
     SCHEMA_WITH_TOPOLOGY,
     SCHEMA_WITH_SURVEY_SIGMAS,
     SCHEMA_WITH_RASTERS,
+    SCHEMA_WITH_ANNOTATION,
 ];
 
 /// The file a drawing is saved as.

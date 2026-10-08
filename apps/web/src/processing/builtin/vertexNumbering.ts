@@ -69,7 +69,19 @@ export const vertexNumbering = defineTool({
       ],
       default: 'points',
     },
-    { name: 'textHeight', label: 'Yazı yüksekliği', type: 'number', min: 0.1, max: 50, default: 2, unit: 'mm', description: 'Kâğıt üzerinde, çizim ölçeğine göre.', visibleWhen: (v: Shown) => v.output !== 'points' },
+    {
+      name: 'textHeight',
+      label: 'Yazı yüksekliği',
+      type: 'number',
+      optional: true,
+      min: 0.1,
+      max: 50,
+      default: null,
+      unit: 'mm',
+      placeholder: 'Proje',
+      description: 'Kâğıt üzerinde, çizim ölçeğine göre; boş bırakılırsa projenin kenar ve köşe yazıları yüksekliği.',
+      visibleWhen: (v: Shown) => v.output !== 'points',
+    },
     {
       name: 'layer',
       label: 'Hedef katman',
@@ -106,7 +118,8 @@ export const vertexNumbering = defineTool({
     );
     const corners = nameCorners(found, named, { format, first: v.first, step: v.step });
     const created = corners.filter((c) => c.created);
-    const height = ((v.textHeight ?? 2) / 1000) * ctx.units.plotScale;
+    // Empty: the project's Kenar ve köşe yazıları height (docs/adr/0205 §2).
+    const height = ((v.textHeight ?? ctx.units.measureHeightMm ?? 2) / 1000) * ctx.units.plotScale;
     // Outside the corner, centred on its bisector (placed by the core from the name's width in the drawing's typeface).
     const texts = v.output !== 'points' ? ctx.geometry.cornerTexts(created, created.map((c) => c.name), height, ctx.units.drawingFont) : [];
     const add: NewEntity[] = [];

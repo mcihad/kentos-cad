@@ -385,7 +385,7 @@ impl<'a, Message> Prompt<'a, Message> {
         self
     }
 
-        /// Options that do not fit a command line `width` wide go, from the
+    /// Options that do not fit a command line `width` wide go, from the
     /// last one back, into a “Diğer” chip's menu at the head of the menu
     /// chips: the step's words keep at least their first letters, the field
     /// its least width, and every option stays a click away (one that
@@ -414,7 +414,11 @@ impl<'a, Message> Prompt<'a, Message> {
         }
         let more = {
             let frame = 2.0 * 7.0 + 2.0;
-            ASK_SPACING + frame + 14.0 + 5.0 + typography::measured_width(MORE, typography::body(), false)
+            ASK_SPACING
+                + frame
+                + 14.0
+                + 5.0
+                + typography::measured_width(MORE, typography::body(), false)
         };
         while chips_width(&self.options, &self.menus) + more > room {
             let Some(last) = self.options.iter().rposition(|o| !o.pinned) else {
@@ -457,7 +461,7 @@ impl<'a, Message> Prompt<'a, Message> {
         self
     }
 
-/// Son eklenen seçeneğin klavye karşılığı (ör. "Enter"); yalnızca
+    /// Son eklenen seçeneğin klavye karşılığı (ör. "Enter"); yalnızca
     /// gösterilir.
     pub fn key(mut self, key: impl IntoFragment<'a>) -> Self {
         if let Some(option) = self.options.last_mut() {
@@ -1140,9 +1144,10 @@ fn chips_width<Message>(options: &[Keyword<'_, Message>], menus: &[MenuChip<'_, 
             6.0 + typography::mono_width(key, typography::caption())
         });
         // A chooser's picture and its ▾, each with the gap before it.
-        let choices = option.choices.as_ref().map_or(0.0, |c| {
-            c.icon.map_or(0.0, |_| 14.0 + 6.0) + 12.0 + 6.0
-        });
+        let choices = option
+            .choices
+            .as_ref()
+            .map_or(0.0, |c| c.icon.map_or(0.0, |_| 14.0 + 6.0) + 12.0 + 6.0);
         ASK_SPACING + frame + typography::measured_width(&option.label, body, false) + key + choices
     });
     let menus = menus.iter().map(|chip| {
@@ -2264,14 +2269,12 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
             });
 
         let highlighted = self.highlighted(state);
-        let panel = self
-            .panel
-            .insert(panel(
-                &self.suggestions,
-                highlighted,
-                state.scroll,
-                self.name_width,
-            ));
+        let panel = self.panel.insert(panel(
+            &self.suggestions,
+            highlighted,
+            state.scroll,
+            self.name_width,
+        ));
         let panel_tree = &mut children[3];
 
         panel_tree.diff(&*panel);
@@ -2556,7 +2559,10 @@ mod tests {
         let narrow = six().fit(760.0);
         let shown: Vec<String> = narrow.options.iter().map(|o| o.label.to_string()).collect();
         let hidden: Vec<String> = narrow.hidden.iter().map(|o| o.label.to_string()).collect();
-        assert!(!shown.is_empty() && !hidden.is_empty(), "{shown:?} {hidden:?}");
+        assert!(
+            !shown.is_empty() && !hidden.is_empty(),
+            "{shown:?} {hidden:?}"
+        );
         assert_eq!(shown.len() + hidden.len(), 6);
         assert_eq!(hidden.last().map(String::as_str), Some("Artır: kapalı"));
         assert_eq!(narrow.menus[0].label.to_string(), "Diğer");

@@ -197,7 +197,10 @@ mod tests {
         assert!(menu.contains("Header(\"Seçilebilir türler\")"), "{menu}");
         for kind in KINDS {
             let name = kind_title(kind);
-            assert!(menu.contains(&format!("label: \"{name}\"")), "{name}: {menu}");
+            assert!(
+                menu.contains(&format!("label: \"{name}\"")),
+                "{name}: {menu}"
+            );
         }
         assert!(menu.contains("label: \"Resim\""), "the seventeenth kind");
         // No long titles: the short names under the header, as the web's.
@@ -206,7 +209,11 @@ mod tests {
             assert!(menu.contains(&format!("label: \"{row}\"")), "{row}");
         }
         // Every row leaves the menu open and keeps a ribbon opened over the drawing.
-        assert_eq!(menu.matches("stay: true").count(), KINDS.len() + 2, "{menu}");
+        assert_eq!(
+            menu.matches("stay: true").count(),
+            KINDS.len() + 2,
+            "{menu}"
+        );
         assert!(menu.contains("RunKept(\"edit.selectFilter.image\")"));
         assert!(menu.contains("RunKept(\"edit.selectFilterNone\")"));
         assert!(!menu.contains("Run(\""), "{menu}");
@@ -222,7 +229,10 @@ mod tests {
         // The cell's list, row for row.
         assert_eq!(blocks[1..], select_filter_blocks()[..]);
         let app = app();
-        let ids: Vec<&str> = blocks.iter().flat_map(|(_, ids)| ids.iter().copied()).collect();
+        let ids: Vec<&str> = blocks
+            .iter()
+            .flat_map(|(_, ids)| ids.iter().copied())
+            .collect();
         let checked: Vec<Option<bool>> = ids.iter().map(|id| app.checked(id)).collect();
         let menu = format!("{:?}", crate::view::checklist_of(&blocks, &checked));
         // The on/off row says the cell's word, with its icon and its tick.
@@ -236,8 +246,14 @@ mod tests {
         let mut app = app();
         app.ribbon_peek = true;
         let _ = app.update(Message::RunKept("edit.selectFilterNone"));
-        assert!(app.ribbon_peek, "a row that stays leaves the ribbon over the drawing");
-        assert!(app.settings.bool("drafting.selectFilter"), "the filter is on");
+        assert!(
+            app.ribbon_peek,
+            "a row that stays leaves the ribbon over the drawing"
+        );
+        assert!(
+            app.settings.bool("drafting.selectFilter"),
+            "the filter is on"
+        );
         assert_eq!(app.select_kinds, 0);
         let _ = app.update(Message::RunKept("edit.selectFilter.text"));
         let _ = app.update(Message::RunKept("edit.selectFilter.image"));

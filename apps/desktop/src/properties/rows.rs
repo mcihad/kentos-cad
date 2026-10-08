@@ -8,11 +8,11 @@ use std::borrow::Cow;
 use kentos_contracts::{DimensionStyle, Entity, GradientShape, HatchPatternType};
 use kentos_domain::{LayerTree, Slot};
 use kentos_interaction::elevation::{self, Summary as Elevations};
-use kentos_interaction::{leader, text};
 use kentos_interaction::{
     Format, Vec2, angle_deg, arc_sweep, bearing_grad, dimension_layout, dist, fixed, full_ellipse,
     measures,
 };
+use kentos_interaction::{leader, text};
 use kentos_ui::icon::Icon;
 
 use super::{Event, Field, Spot};
@@ -20,10 +20,10 @@ use super::{Event, Field, Spot};
 mod dimension;
 pub(crate) mod raster;
 
-pub(super) use dimension::is_y_axis;
 use crate::app::Message;
 use crate::document::Document;
 use crate::selecting::kind_title;
+pub(super) use dimension::is_y_axis;
 
 /// The colours the panel offers (the web's `DRAW_COLORS`, fields.ts).
 use crate::ribbon_panels::{DRAW_COLORS, LINE_WEIGHTS, weight_text as weight_label};
@@ -1084,8 +1084,8 @@ fn field_rows(
             Err(_) => (raw.clone(), raw.clone()),
         };
         let field = Field::Attribute(slot, f.name.clone());
-        let listed = f.kind == LayerFieldKind::Boolean
-            || f.values.as_ref().is_some_and(|v| !v.is_empty());
+        let listed =
+            f.kind == LayerFieldKind::Boolean || f.values.as_ref().is_some_and(|v| !v.is_empty());
         let editor = if locked {
             None
         } else if listed {
@@ -1541,6 +1541,8 @@ fn leader_rows(
     let height = same(&|l| l.height == first.height).then_some(first.height);
     let turn = same(&|l| l.rotation == first.rotation).then_some(first.rotation);
     let arrow = same(&|l| l.arrow == first.arrow).then_some(first.arrow);
+    let size = |l: &kentos_contracts::LeaderEntity| l.arrow_size.unwrap_or(1.0);
+    let arrow_size = same(&|l| size(l) == size(first)).then_some(size(first));
     let mask = same(&|l| l.mask == first.mask).then_some(first.mask);
     let on_off = |on: bool| if on { "Açık" } else { "Kapalı" };
     let edit = |editor: Editor| (!locked).then_some(editor);
@@ -1588,12 +1590,18 @@ fn leader_rows(
         Some(t) => Row::figure("Dönüş", fixed(t, 2)).unit("°"),
         None => Row::text("Dönüş", MIXED),
     };
+    // The arrowhead's length in the note's height (docs/adr/0205 §7).
+    let size_row = match arrow_size {
+        Some(s) => Row::figure("Ok boyu", fixed(s, 2)).unit("× yükseklik"),
+        None => Row::text("Ok boyu", MIXED),
+    };
     vec![
         Row::text("Not", note.unwrap_or_else(|| MIXED.to_owned()))
             .editor(edit(Editor::Text(Field::LeaderNote(slots.to_vec())))),
         height_row.editor(edit(Editor::Number(Field::LeaderHeight(slots.to_vec())))),
         turn_row.editor(edit(Editor::Number(Field::LeaderTurn(slots.to_vec())))),
         Row::text("Ok", arrow_text).editor(edit(arrows)),
+        size_row.editor(edit(Editor::Number(Field::LeaderArrowSize(slots.to_vec())))),
         Row::text("Zemin", mask_text).editor(edit(masks)),
     ]
 }

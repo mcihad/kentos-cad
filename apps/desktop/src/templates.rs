@@ -15,7 +15,7 @@
 
 use iced::Task;
 use kentos_contracts::{
-    BlockId, CommandResult, EntitiesSetProperties, PropertiesOperation, TextAlign,
+    AnnotationKind, BlockId, CommandResult, EntitiesSetProperties, PropertiesOperation, TextAlign,
 };
 use kentos_interaction::templates::{
     LayerAnswer, Stamp, TemplateLayer, find_layer, locked_text, open_layer,
@@ -58,7 +58,9 @@ struct ToolBack {
     point_name: Option<Name>,
     point_code: Option<Name>,
     /// Yazı's height on paper, alignment and mask.
-    text: Option<(f64, Option<TextAlign>, bool)>,
+    /// Yazı's height typed in this drawing (none: the project's,
+    /// docs/adr/0205 §2), alignment and mask, as they were.
+    text: Option<(Option<f64>, Option<TextAlign>, bool)>,
     /// Blok ekle's block.
     block: Option<Option<BlockId>>,
 }
@@ -439,8 +441,12 @@ impl App {
             }
             "text" => {
                 if let Some(height_mm) = recipe.text_height {
-                    back.text = Some((m.text_height_mm, m.text_align, m.text_mask));
-                    m.text_height_mm = height_mm;
+                    back.text = Some((
+                        m.heights.get(AnnotationKind::Text),
+                        m.text_align,
+                        m.text_mask,
+                    ));
+                    m.heights.set(AnnotationKind::Text, Some(height_mm));
                     m.text_align = recipe.text_align.as_deref().and_then(TextAlign::from_name);
                     m.text_mask = recipe.text_mask;
                 }
@@ -469,7 +475,7 @@ impl App {
             self.memory.point_code = code;
         }
         if let Some((height_mm, align, mask)) = back.text {
-            self.memory.text_height_mm = height_mm;
+            self.memory.heights.set(AnnotationKind::Text, height_mm);
             self.memory.text_align = align;
             self.memory.text_mask = mask;
         }

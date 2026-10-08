@@ -233,7 +233,10 @@ impl Window {
     }
 
     fn changed(&self) -> bool {
-        self.rows.iter().map(field_of).ne(self.saved.iter().map(field_of))
+        self.rows
+            .iter()
+            .map(field_of)
+            .ne(self.saved.iter().map(field_of))
             || !renames_of(&self.rows).is_empty()
     }
 }
@@ -430,7 +433,10 @@ impl App {
         }
         let fields: Vec<LayerField> = w.rows.iter().map(field_of).collect();
         let renames = renames_of(&w.rows);
-        if let Err(refused) = doc.model.set_layer_fields(&w.layer, fields.clone(), &renames) {
+        if let Err(refused) = doc
+            .model
+            .set_layer_fields(&w.layer, fields.clone(), &renames)
+        {
             w.said = Some((Kind::Error, refused.0));
             return Task::none();
         }
@@ -453,7 +459,9 @@ impl App {
         self.layer_fields = None;
         self.dialog = None;
         let tail = if bad > 0 {
-            format!(" {bad} değer alanların kurallarına uymuyor; Tablo'da uyarı rengiyle gösterilir.")
+            format!(
+                " {bad} değer alanların kurallarına uymuyor; Tablo'da uyarı rengiyle gösterilir."
+            )
         } else {
             String::new()
         };
@@ -469,9 +477,12 @@ impl App {
             return text("").into();
         };
         let cell_width = |j: usize| Length::Fixed(typography::scaled(HEADS[j].1));
-        let head = HEADS.iter().enumerate().fold(row![].spacing(6), |r, (j, (h, _))| {
-            r.push(container(label::caption(*h)).width(cell_width(j)))
-        });
+        let head = HEADS
+            .iter()
+            .enumerate()
+            .fold(row![].spacing(6), |r, (j, (h, _))| {
+                r.push(container(label::caption(*h)).width(cell_width(j)))
+            });
         let input = |i: usize, cell: Cell, value: &str, label_words: &'static str, on: bool| {
             let field = text_input(label_words, value)
                 .size(typography::body())
@@ -546,7 +557,9 @@ impl App {
             Column::new()
                 .push(container(head).padding([4, 8]))
                 .push(kentos_ui::widget::horizontal_divider())
-                .push(iced::widget::scrollable(rows).height(Length::Fixed(typography::scaled(300.0)))),
+                .push(
+                    iced::widget::scrollable(rows).height(Length::Fixed(typography::scaled(300.0))),
+                ),
         )
         .style(style::container::field_box)
         .width(Fill);
@@ -565,7 +578,11 @@ impl App {
         let actions = row![
             tool("plus", ADD, Some(msg(Event::Add))),
             tool("erase", REMOVE, chosen.map(|_| msg(Event::Remove))),
-            tool("chevronUp", UP, chosen.filter(|&i| i > 0).map(|_| msg(Event::Up))),
+            tool(
+                "chevronUp",
+                UP,
+                chosen.filter(|&i| i > 0).map(|_| msg(Event::Up))
+            ),
             tool(
                 "chevronDown",
                 DOWN,
@@ -616,7 +633,11 @@ impl App {
         let Some(c) = &w.choices else {
             return main;
         };
-        let name = w.rows.get(c.row).map(|r| r.name.clone()).unwrap_or_default();
+        let name = w
+            .rows
+            .get(c.row)
+            .map(|r| r.name.clone())
+            .unwrap_or_default();
         let mut list = Column::new().spacing(4).push(
             row![
                 container(label::caption("Kod")).width(Length::Fixed(140.0)),
@@ -690,7 +711,9 @@ impl App {
                     "Varsayılan" => Cell::Default,
                     "En az" => Cell::Min,
                     "En çok" => Cell::Max,
-                    other => return Err(format!("“{FIELDS_TITLE}” penceresinde “{other}” alanı yok")),
+                    other => {
+                        return Err(format!("“{FIELDS_TITLE}” penceresinde “{other}” alanı yok"));
+                    }
                 };
                 Some(msg(Event::Type(chosen()?, cell, t.to_owned())))
             }
@@ -699,7 +722,9 @@ impl App {
                 (w.rows[i].required != on).then(|| msg(Event::Required(i, on)))
             }
             Control::Row(n) if n >= 1 && n <= w.rows.len() => Some(msg(Event::Choose(n - 1))),
-            Control::Press(SAVE) => (problem_of(&w.rows).is_none() && w.changed()).then(|| msg(Event::Save)),
+            Control::Press(SAVE) => {
+                (problem_of(&w.rows).is_none() && w.changed()).then(|| msg(Event::Save))
+            }
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(ADD) => Some(msg(Event::Add)),
             Control::Press(REMOVE) => w.chosen.map(|_| msg(Event::Remove)),
@@ -728,9 +753,16 @@ mod tests {
         r.size = "5".into();
         r.name = "Katlar".into();
         let f = field_of(&r);
-        assert_eq!((f.length, f.scale), (None, None), "an integer takes no size");
+        assert_eq!(
+            (f.length, f.scale),
+            (None, None),
+            "an integer takes no size"
+        );
         assert_eq!(f.min.as_deref(), Some("1"));
-        assert_eq!(renames_of(&[r.clone()]), [("Kat".to_owned(), "Katlar".to_owned())]);
+        assert_eq!(
+            renames_of(&[r.clone()]),
+            [("Kat".to_owned(), "Katlar".to_owned())]
+        );
         r.kind = LayerFieldKind::Text;
         r.size = "x".into();
         assert!(problem_of(&[r]).is_some_and(|p| p.contains("uzunluğu bir tam sayı")));

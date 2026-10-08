@@ -43,7 +43,7 @@ use kentos_geometry_core::geom::bulge::has_bulges;
 use kentos_geometry_core::geom::dimension::layout_dimension;
 use kentos_geometry_core::geom::hatch::hatch_lines;
 use kentos_geometry_core::geom::hatch_pattern::pattern_pieces;
-use kentos_geometry_core::geom::leader::{self, Head};
+use kentos_geometry_core::geom::leader;
 use kentos_geometry_core::store::draw::clip_line;
 use kentos_geometry_core::tessellate::{
     arc_points, bulge_path, catmull_rom, circle_ring, ellipse_points,
@@ -193,7 +193,7 @@ pub fn build_fixed<D: Drawing + ?Sized>(doc: &D, palette: &Palette, origin: Vec2
                     }
                 }
                 // Its arrowhead solid in its colour (docs/adr/0146 §5).
-                Entity::Leader(_) => leader_parts(&mut b, entity, color, Some(color)),
+                Entity::Leader(_) => leader_parts(&mut b, entity, color),
                 // Its lines; its words over the scene, as text (docs/adr/0184 §2).
                 Entity::Table(_) => table_lines(&mut b, entity, color),
                 // Text over the scene (the host's); curves and bulged paths in the
@@ -223,18 +223,18 @@ fn dimension_lines(b: &mut Builder, entity: &Entity, color: Rgba8, fill: Option<
 }
 
 /// A leader's line on to its landing's end and its arrowhead (docs/adr/0146
-/// §5): an open one's sides; a filled one's or a dot's outline, filled with
-/// `fill` when given.
-fn leader_parts(b: &mut Builder, entity: &Entity, color: Rgba8, fill: Option<Rgba8>) {
+/// §5, 0205 §7): its lines, and its areas filled solid in its colour.
+fn leader_parts(b: &mut Builder, entity: &Entity, color: Rgba8) {
     let s = shape(entity);
     let (Shape::Leader { pts, .. }, Some(l)) = (&s, leader::layout_of(&s)) else {
         return;
     };
     b.path(&leader::drawn_path(pts, &l), false, color);
-    if let Head::Open { lines } = &l.head {
-        b.path(lines, false, color);
-    } else if let Some(ring) = leader::head_ring(&l.head) {
-        b.polygon(&[ring], color, fill);
+    for line in &l.head.lines {
+        b.path(&line.pts, line.closed, color);
+    }
+    for ring in &l.head.fills {
+        b.polygon(std::slice::from_ref(ring), color, Some(color));
     }
 }
 
@@ -632,7 +632,7 @@ fn highlight_one(b: &mut Builder, entity: &Entity, style: &Highlight, tol: f64, 
         Entity::Dimension(_) => {
             dimension_lines(b, entity, color, style.fill);
         }
-        Entity::Leader(_) => leader_parts(b, entity, color, style.fill),
+        Entity::Leader(_) => leader_parts(b, entity, color),
         Entity::Table(_) => table_lines(b, entity, color),
         Entity::Xline(_) | Entity::Ray(_) => construction_line(b, entity, clip, color),
         _ => {}
@@ -1118,7 +1118,7 @@ fn text_face(f: &kentos_contracts::TextFace) -> kentos_geometry_core::text::face
 fn dimension_look(
     l: &kentos_contracts::DimensionLook,
 ) -> kentos_geometry_core::geom::dimension::Look {
-    use kentos_geometry_core::geom::dimension::{Arrow, Look};
+    use kentos_geometry_core::geom::dimension::{Arrow, Look, LookLines};
     Look {
         arrow: l.arrow.and_then(|a| Arrow::from_name(a.name())),
         arrow_size: l.arrow_size,
@@ -1127,6 +1127,16 @@ fn dimension_look(
         text_gap: l.text_gap,
         centre: l.text_place.is_some(),
         font: l.font.map(|d| Font::from_id(d.id())),
+        lines: LookLines {
+            dim_line_color: l.dim_line_color.clone(),
+            dim_line_weight: l.dim_line_weight,
+            dim_line_type: l.dim_line_type.map(|t| t.name().to_owned()),
+            ext_color: l.ext_color.clone(),
+            ext_weight: l.ext_weight,
+            ext_line_type: l.ext_line_type.map(|t| t.name().to_owned()),
+            text_color: l.text_color.clone(),
+        }
+        .boxed(),
         ..Look::default()
     }
 }
@@ -1263,6 +1273,7 @@ fn shape(entity: &Entity) -> Shape {
             height: l.height,
             rotation: l.rotation,
             arrow: l.arrow.map(|a| a.name().to_owned()),
+            arrow_size: l.arrow_size,
             mask: l.mask.then_some(true),
         },
         Entity::Arc(a) => Shape::Arc {

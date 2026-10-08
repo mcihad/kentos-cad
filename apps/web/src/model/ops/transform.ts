@@ -47,8 +47,8 @@ export const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
   hatch: ['ring', 'holes', 'pattern', 'assoc'],
   // A block's placement (docs/adr/0144); `mirror` only when true.
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
-  // Its vertices, note, height, turn, arrowhead and mask (docs/adr/0146).
-  leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
+  // Its vertices, note, height, turn, arrowhead and mask (docs/adr/0146), its arrowhead's size (docs/adr/0205 §7).
+  leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask', 'arrowSize'],
   // Its corner, turn, sizes, cells, ranges, alignments, heading, lines, frame, source and face (docs/adr/0184): an
   // edit without a source detaches it; the store does not carry it, so a transform keeps the object's (`withGeometry`).
   table: ['p', 'rotation', 'height', 'rows', 'columns', 'cells', 'merges', 'aligns', 'header', 'grid', 'frame', 'source', ...FACE_FIELDS],
