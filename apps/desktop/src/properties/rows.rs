@@ -18,6 +18,7 @@ use kentos_ui::icon::Icon;
 use super::{Event, Field, Spot};
 
 mod dimension;
+pub(crate) mod raster;
 
 pub(super) use dimension::is_y_axis;
 use crate::app::Message;
@@ -962,6 +963,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 Row::text("Aynalı", yes_no(i.mirror)),
             ]);
         }
+        // Its file, size, bands, pixel, system, nodata and opacity (docs/adr/0204 §8).
+        Entity::Raster(r) => geo.extend(raster::rows(doc, slot, r, locked, &f)),
         // Its note, height, turn, arrowhead and mask, its corners and length (docs/adr/0146 §7).
         Entity::Leader(l) => {
             geo.extend(leader_rows(&[l], &ids, locked, &f));

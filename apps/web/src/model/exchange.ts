@@ -165,7 +165,7 @@ export function selectionDrawing(doc: Json, uids: readonly string[], name: strin
   const layerStyles = walk(tree).map(([n]) => n.style);
   for (const st of layerStyles) stringsAt(st, 'ref', symbols);
   const assets = new Set<string>();
-  for (const e of out) if (e.kind === 'image' && typeof e.asset === 'string') assets.add(e.asset);
+  for (const e of out) if ((e.kind === 'image' || e.kind === 'raster') && typeof e.asset === 'string') assets.add(e.asset);
   for (const it of items) if (it.kind === 'symbol' && symbols.has(it.id)) stringsAt(it, 'asset', assets);
   for (const st of layerStyles) stringsAt(st, 'asset', assets);
   const keptItems = items.filter((it) => (it.kind === 'symbol' && symbols.has(it.id)) || (it.kind === 'asset' && assets.has(it.id))).map(clone);
@@ -391,7 +391,8 @@ export function extentCorner(entities: readonly Json[]): [number, number] | null
 export function fileBlock(oursIn: Json, theirs: Json, file: string): { drawing: Json; images: number; tables: number } | null {
   const ours = clone(oursIn);
   const all = list(theirs, 'entities');
-  const kept = all.filter((e) => e.kind !== 'image' && e.kind !== 'table');
+  // A block holds no picture, raster (docs/adr/0204 §9) or table: they are left out and counted with the pictures.
+  const kept = all.filter((e) => e.kind !== 'image' && e.kind !== 'raster' && e.kind !== 'table');
   const corner = extentCorner(kept);
   if (!corner) return null;
   const theirPaths = pathOf(list(theirs, 'layers'));
@@ -449,7 +450,7 @@ export function fileBlock(oursIn: Json, theirs: Json, file: string): { drawing: 
     base: { x: corner[0], y: corner[1] },
     entities: kept.map((e, i) => ({ ...mapObject(e, layerOf, blockOf, styles), id: i + 1 })),
   });
-  return { drawing: ours, images: all.filter((e) => e.kind === 'image').length, tables: all.filter((e) => e.kind === 'table').length };
+  return { drawing: ours, images: all.filter((e) => e.kind === 'image' || e.kind === 'raster').length, tables: all.filter((e) => e.kind === 'table').length };
 }
 
 // ── 4. A layer with its objects ───────────────────────────────────────
@@ -503,7 +504,7 @@ export function layerTake(oursIn: Json, theirs: Json, path: string): { drawing: 
   const items: string[] = [];
   for (const e of objects) {
     if (typeof e.symbol === 'string') items.push(e.symbol);
-    if (e.kind === 'image' && typeof e.asset === 'string') items.push(e.asset);
+    if ((e.kind === 'image' || e.kind === 'raster') && typeof e.asset === 'string') items.push(e.asset);
   }
   for (const st of madeStyles) items.push(...[...stringsAt(st, 'ref', new Set())].sort(), ...[...stringsAt(st, 'asset', new Set())].sort());
   takeItems(

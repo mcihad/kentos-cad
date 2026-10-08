@@ -64,6 +64,8 @@ const OWN = 3;
 const RENDERER = 4;
 /** A picture: its own pixels over its frame, its frame a hairline (docs/adr/0192 §3); never a symbol. */
 const IMAGE = 5;
+/** A raster: its tiles over its frame, drawn by the raster pass, its frame a hairline (docs/adr/0204 §5); never a symbol. */
+const RASTER = 6;
 
 /** The library symbols a renderer's sets refer to. */
 function rendererRefs(r: LayerRenderer, out: Set<string>): void {
@@ -165,6 +167,7 @@ export function buildStyledLayer(id: string, entities: readonly Entity[], style:
     let a = 0;
     if (e.kind === 'text') mode = SKIP;
     else if (e.kind === 'image') mode = IMAGE;
+    else if (e.kind === 'raster') mode = RASTER;
     else if (e.kind === 'dimension') mode = DIMENSION;
     else if (e.kind === 'hatch') {
       mode = SET;

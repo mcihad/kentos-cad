@@ -91,6 +91,13 @@ export type FillPaintBatch =
    */
   | { kind: 'image'; image: string; url: string | null; corner: readonly [number, number]; size: readonly [number, number]; angle: number; mirror: boolean; opacity: number }
   /**
+   * A raster over its frame (docs/adr/0204 §5): `raster` its key (`asset:<id>`, `file:<name>`), `url` an embedded
+   * raster's bytes (its data address; null for a linked file, which the session's file gives), `look` its style's
+   * JSON; its affine `[x₀, a, b, y₀, c, d]` from the batch's tile once folded, its size in pixels. The raster pass
+   * draws the tiles in view each frame.
+   */
+  | { kind: 'raster'; raster: string; url: string | null; look: string; affine: readonly number[]; size: readonly [number, number]; nearest: boolean; opacity: number }
+  /**
    * One shape on a grid computed per pixel (sizes in `unit`): `size` is the
    * cell, `mark` the shape in it; `jitter` and `coverage` scatter it at
    * random per cell; `tint` is the share of a cell the shape inks, used
@@ -271,6 +278,13 @@ export interface AtlasSource {
    * it cannot be (no url: a linked file the browser cannot read); the view redraws when one arrives.
    */
   picture(key: string, url: string | null): HTMLImageElement | null;
+  /**
+   * A raster's tile (docs/adr/0204 §5): its colours, 258 × 258 premultiplied RGBA (the tile and a pixel round it),
+   * when made; otherwise it is asked for (render/rasterService.ts) and the view redraws when it arrives.
+   */
+  rasterTile(raster: string, url: string | null, look: string, affine: readonly number[], level: number, tx: number, ty: number): Uint8Array | null;
+  /** A frame begins: raster tiles not asked for again by its end may be dropped. */
+  rasterFrame(): void;
 }
 
 /** The atlas image a styled batch draws with. */

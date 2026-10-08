@@ -2,6 +2,7 @@ import type { LayerField } from '../contracts/generated/LayerField';
 import { layerFieldsProblem } from './layerFields';
 import { tableProblem, type TableShape } from './tables';
 import { imageProblem, type ImageShape } from './imageRules';
+import { rasterProblem, type RasterShape } from './rasterRules';
 import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
 import type { DimensionStyleDef } from '../contracts/generated/DimensionStyleDef';
@@ -338,7 +339,7 @@ const numbersAt = (v: unknown, w: string, f: string): number => {
   return v.length;
 };
 
-const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table', 'image'] as const;
+const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table', 'image', 'raster'] as const;
 /** The dimension's kinds; KCAD schema 9 added the last five (docs/adr/0147). */
 const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter', 'ordinate', 'arcLength', 'jogged', 'azimuth', 'slope'] as const;
 const LINE_TYPES = ['continuous', 'dashed', 'dashdot', 'dotted'] as const;
@@ -486,6 +487,9 @@ function definitions(v: unknown): BlockDefinition[] {
     if (!Array.isArray(d.entities)) fail(`${w} › nesneler`, 'liste olmalı');
     const ids = new Set<number>();
     const entities = (d.entities as unknown[]).map((e, k) => entity(e, `${w} › nesne ${k + 1}`, null, ids));
+    // A raster stays on its own layer, never in a block (docs/adr/0204 §9).
+    const raster = entities.findIndex((e) => e.kind === 'raster');
+    if (raster >= 0) fail(`${w} › nesne ${raster + 1}`, 'raster bloğa konamaz; raster kendi katmanında durur');
     const block: BlockDefinition = { id: d.id as string, name, base, entities };
     if (d.attributes !== undefined) {
       if (!Array.isArray(d.attributes)) fail(`${w} › öznitelikler`, 'liste olmalı');
@@ -895,6 +899,29 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
       if (v.opacity !== undefined) numAt(v.opacity, w, 'donukluk');
       const problem = imageProblem(v as unknown as ImageShape);
       if (problem) fail(at(w, 'resim'), problem);
+      break;
+    }
+    // A raster (docs/adr/0204 §2): its fields' types here, its affine, size, bands, one source, look and opacity by the contract's rule.
+    case 'raster': {
+      numbersAt(v.affine, w, 'dönüşüm');
+      numAt(v.width, w, 'genişlik');
+      numAt(v.height, w, 'yükseklik');
+      numAt(v.bands, w, 'bant sayısı');
+      oneOf(v.sample, ['u8', 'i8', 'u16', 'i16', 'u32', 'i32', 'f32', 'f64'] as const, at(w, 'örnek türü'));
+      if (v.asset !== undefined) strAt(v.asset, w, 'varlık');
+      if (v.file !== undefined) strAt(v.file, w, 'dosya');
+      numAt(v.srid, w, 'sistem');
+      const st = isObj(v.style) ? v.style : fail(at(w, 'görünüş'), 'nesne olmalı');
+      oneOf(st.render, ['rgb', 'gray', 'palette', 'ramp', 'hillshade', 'rampShade'] as const, at(w, 'görünüş türü'));
+      numbersAt(st.bands, w, 'görünüşün bantları');
+      if (st.stretch !== undefined) oneOf(st.stretch, ['none', 'minMax', 'percent', 'manual'] as const, at(w, 'gerdirme'));
+      for (const k of ['min', 'max', 'azimuth', 'altitude', 'zFactor', 'nodata'] as const) if (st[k] !== undefined) numAt(st[k], w, k);
+      if (st.ramp !== undefined) strAt(st.ramp, w, 'rampa');
+      if (st.invert !== undefined && typeof st.invert !== 'boolean') fail(at(w, 'ters'), 'true ya da false olmalı');
+      if (st.resampling !== undefined) oneOf(st.resampling, ['bilinear', 'nearest'] as const, at(w, 'örnekleme'));
+      if (v.opacity !== undefined) numAt(v.opacity, w, 'donukluk');
+      const problem = rasterProblem(v as unknown as RasterShape);
+      if (problem) fail(at(w, 'raster'), problem);
       break;
     }
   }

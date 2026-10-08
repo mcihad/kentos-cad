@@ -30,6 +30,8 @@ struct Gpu {
     /// What the frames ask of the view: keep the picture, and how many last parts are overlays.
     keep: bool,
     overlays: usize,
+    /// Styled layers drawn over the parts, their tiles from a source of red ones.
+    styled: Option<kentos_render_wgpu::styled::StyledScene>,
 }
 
 impl Gpu {
@@ -70,6 +72,7 @@ impl Gpu {
             renderer,
             keep: false,
             overlays: 0,
+            styled: None,
         }
     }
 
@@ -131,6 +134,11 @@ impl Gpu {
                 },
             )
             .expect("the parts upload");
+        if let Some(scene) = &self.styled {
+            let _ = self
+                .renderer
+                .prepare_styled(&self.device, &self.queue, 1, scene, &RedTiles);
+        }
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
@@ -269,6 +277,126 @@ fn line_centre(rgba: &[u8], width: u32, y: u32) -> f64 {
     sum / weight
 }
 
+/// A host whose rasters' tiles are all opaque red (docs/adr/0204 §5).
+struct RedTiles;
+
+impl kentos_render_wgpu::styled::ImageSource for RedTiles {
+    fn picture(
+        &self,
+        _: &kentos_native_style::batches::AtlasImage,
+    ) -> Option<std::sync::Arc<kentos_render_wgpu::styled::Picture>> {
+        None
+    }
+
+    fn text(
+        &self,
+        _: &str,
+        _: Option<&str>,
+        _: f64,
+        _: bool,
+    ) -> Option<std::sync::Arc<kentos_render_wgpu::styled::TextOutline>> {
+        None
+    }
+
+    fn raster_tile(
+        &self,
+        _: &str,
+        _: &str,
+        _: &[f64; 6],
+        _: u32,
+        _: u32,
+        _: u32,
+    ) -> Option<std::sync::Arc<Vec<u8>>> {
+        Some(std::sync::Arc::new([255u8, 0, 0, 255].repeat(258 * 258)))
+    }
+}
+
+/// A raster batch (docs/adr/0204 §5): its tiles in view drawn from the raster
+/// atlas over the frame, a 512 × 512 raster of 0.1 m pixels in the middle of
+/// the view: red where it is, the background round it.
+fn a_raster_draws_its_tiles(gpu: &mut Gpu) {
+    use kentos_native_style::batches::{BatchKind, FillPaintBatch, StyledBatch, StyledLayer, Unit};
+    use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
+    let (width, height) = (128, 128);
+    // The frame's two triangles (the batch's own numbers, which the raster pass does not draw).
+    let ring = [
+        [-25.6f32, -25.6],
+        [25.6, -25.6],
+        [25.6, 25.6],
+        [-25.6, 25.6],
+    ];
+    let data: Vec<f32> = [0, 1, 2, 0, 2, 3].iter().flat_map(|&k| ring[k]).collect();
+    let layer = StyledLayer {
+        data,
+        batches: vec![StyledBatch {
+            range: 0..12,
+            kind: BatchKind::Fill {
+                paint: FillPaintBatch::Raster {
+                    raster: "file:red.tif".into(),
+                    look: "{}".into(),
+                    affine: [-25.6, 0.1, 0.0, 25.6, 0.0, -0.1],
+                    size: [512.0, 512.0],
+                    nearest: false,
+                    opacity: 1.0,
+                },
+            },
+            level: 0.0,
+            key: 1,
+            bounds: [-25.6, -25.6, 25.6, 25.6],
+            origin: [0.0, 0.0],
+            reach: 0.0,
+            reach_unit: Unit::Px,
+            min_scale: None,
+            max_scale: None,
+        }],
+    };
+    gpu.styled = Some(StyledScene {
+        layers: vec![std::sync::Arc::new(StyledLayerPart { id: 7, layer })],
+        under: 0,
+        order: None,
+    });
+    let mut camera = Camera {
+        width: f64::from(width),
+        height: f64::from(height),
+        ..Camera::default()
+    };
+    camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: -51.2,
+            min_y: -51.2,
+            max_x: 51.2,
+            max_y: 51.2,
+        },
+        0.0,
+    );
+    let mut settings = RenderSettings::new(Rgba8::rgb(0x14, 0x1a, 0x21));
+    // Single-sampled in the host's pass, and with 4× multisampling in the view's own targets, the picture kept.
+    for (samples, keep) in [(1, false), (4, false), (4, true)] {
+        settings.samples = samples;
+        gpu.keep = keep;
+        let mut red = 0;
+        // The first frame asks for the tiles and places them; the second draws them whole.
+        for _ in 0..3 {
+            let rgba = gpu.draw(&[], &camera, &settings, width, height);
+            red = rgba
+                .chunks(4)
+                .filter(|p| p[0] > 0xe0 && p[1] < 0x20 && p[2] < 0x20)
+                .count();
+        }
+        // The raster is half the view's side: a quarter of its pixels.
+        let quarter = (width * height / 4) as usize;
+        assert!(
+            red.abs_diff(quarter) < quarter / 10,
+            "{samples}×, kept {keep}: {red} red pixels of {quarter}"
+        );
+    }
+    // The view's styled layers go with an empty scene, so the tests after it draw no raster.
+    gpu.keep = false;
+    gpu.styled = Some(StyledScene::default());
+    let _ = gpu.draw(&[], &camera, &settings, width, height);
+    gpu.styled = None;
+}
+
 #[test]
 fn on_a_real_gpu() {
     if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
@@ -278,6 +406,7 @@ fn on_a_real_gpu() {
         return;
     }
     let mut gpu = Gpu::open();
+    a_raster_draws_its_tiles(&mut gpu);
     sub_pixel_pans_at_tm_coordinates_move_the_line_by_exactly_the_pan(&mut gpu);
     the_sample_draws_with_every_pipeline_and_the_cache_uploads_once(&mut gpu);
     multisampling_changes_live_and_smooths_fill_edges(&mut gpu);

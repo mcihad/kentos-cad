@@ -162,6 +162,9 @@ class Looks {
         return { kind: 'gradient', color: this.fillRgba(p.color, p.opacity), color2: this.fillRgba(p.color2, p.opacity), shape: p.shape, inverted: p.inverted, dir: p.dir, from: p.from, to: p.to, centre: [p.centre[0], p.centre[1]], radius: p.radius };
       case 'image':
         return { kind: 'image', image: p.image, url: this.pictureUrl(p.image), corner: [p.corner[0], p.corner[1]], size: [p.size[0], p.size[1]], angle: p.angle, mirror: p.mirror, opacity: this.fillOpacity(p.opacity) };
+      // A raster (docs/adr/0204 §5): an embedded one's bytes from the library.
+      case 'raster':
+        return { kind: 'raster', raster: p.raster, url: this.pictureUrl(p.raster), look: p.look, affine: [...p.affine], size: [p.size[0], p.size[1]], nearest: p.nearest, opacity: this.fillOpacity(p.opacity) };
       case 'pattern': {
         const m = p.mark;
         const size: [number, number] = [p.size[0], p.size[1]];
@@ -243,6 +246,11 @@ function fold(paint: FillPaintBatch, o: readonly [number, number] | undefined): 
   if (!o || (o[0] === 0 && o[1] === 0) || paint.kind === 'solid') return paint;
   // A picture's frame from the tile (docs/adr/0192 §3).
   if (paint.kind === 'image') return { ...paint, corner: [paint.corner[0] - o[0], paint.corner[1] - o[1]] };
+  // A raster's first pixel from the tile (docs/adr/0204 §5).
+  if (paint.kind === 'raster') {
+    const [x0, a, b, y0, c, d] = paint.affine;
+    return { ...paint, affine: [x0 - o[0], a, b, y0 - o[1], c, d] };
+  }
   // A gradient's frame from the tile: along its direction, and its middle (docs/adr/0186 §3).
   if (paint.kind === 'gradient') {
     const shift = Math.cos(paint.dir) * o[0] + Math.sin(paint.dir) * o[1];

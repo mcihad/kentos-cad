@@ -374,7 +374,7 @@ pub fn selection_json(doc: &Value, uids: &[Value], name: &str) -> Value {
     }
     let mut assets = BTreeSet::new();
     for e in &out {
-        if str_of(e, "kind") == "image"
+        if matches!(str_of(e, "kind"), "image" | "raster")
             && let Some(a) = e.get("asset").and_then(Value::as_str)
         {
             assets.insert(a.to_owned());
@@ -916,13 +916,16 @@ pub fn file_block_json(
 ) -> Option<(Value, (usize, usize))> {
     let mut ours = ours.clone();
     let all = arr(theirs, "entities");
+    // A block holds no picture, raster (docs/adr/0204 §9) or table: they are left out and counted with the pictures.
     let kept: Vec<Value> = all
         .iter()
-        .filter(|e| !matches!(str_of(e, "kind"), "image" | "table"))
+        .filter(|e| !matches!(str_of(e, "kind"), "image" | "raster" | "table"))
         .cloned()
         .collect();
     let left = (
-        all.iter().filter(|e| str_of(e, "kind") == "image").count(),
+        all.iter()
+            .filter(|e| matches!(str_of(e, "kind"), "image" | "raster"))
+            .count(),
         all.iter().filter(|e| str_of(e, "kind") == "table").count(),
     );
     let (bx, by) = extent_corner(&kept)?;
@@ -1176,7 +1179,7 @@ pub fn layer_take_json(ours: &Value, theirs: &Value, path: &str) -> Option<(Valu
         if let Some(s) = e.get("symbol").and_then(Value::as_str) {
             items.push(s.to_owned());
         }
-        if str_of(e, "kind") == "image"
+        if matches!(str_of(e, "kind"), "image" | "raster")
             && let Some(a) = e.get("asset").and_then(Value::as_str)
         {
             items.push(a.to_owned());

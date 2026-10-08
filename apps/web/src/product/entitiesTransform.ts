@@ -35,8 +35,9 @@ import { assignElevations, elevatedPaths } from './elevation';
  * their order, a scale factor above zero, a mirror axis with a direction,
  * an alignment's second pair whole and apart from the first; the expected
  * revision (checks.ts); each id names an object; not every object on a
- * locked layer; no coordinate carried past the largest float64. A repeated
- * id counts once.
+ * locked layer; no raster under a projective transform or a rubber sheet
+ * (`raster_not_warped`, docs/adr/0204 §7); no coordinate carried past the
+ * largest float64. A repeated id counts once.
  *
  * Objects on a locked layer are neither changed nor copied. The tools used
  * to copy them onto their locked layer; ADR 0037 records the change.
@@ -301,6 +302,18 @@ function check(doc: CadDocument, input: EntitiesTransform): Stop | Checked {
   }
   if (!sources.length) return failed(error('layer_locked', lockedMessage(locked.length), 'uids'));
   const t = input.transform;
+  // A raster under a projective transform or a rubber sheet: only resampling its pixels could follow (docs/adr/0204 §7).
+  if (t.kind === 'projective' || t.kind === 'rubbersheet') {
+    const raster = sources.find((s) => s.entity.kind === 'raster');
+    if (raster)
+      return failed(
+        error(
+          'raster_not_warped',
+          'Raster projektif dönüşümle ya da kauçuk levhayla taşınmaz: pikselleri yeniden örneklenmeli. Rasteri seçimden çıkarın; Raster oturt ile oturtun.',
+          `uids[${input.uids.indexOf(raster.uid)}]`,
+        ),
+      );
+  }
   const warp = t.kind === 'similarity' || t.kind === 'affine' || t.kind === 'projective' ? warped(sources.map((s) => s.entity), t) : null;
   if (warp && 'status' in warp) return warp;
   const sheet = t.kind === 'rubbersheet' ? onSheet(sources.map((s) => s.entity), t.links) : null;

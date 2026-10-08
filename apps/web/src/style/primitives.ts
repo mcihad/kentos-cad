@@ -105,6 +105,21 @@ export type FillPaint =
       readonly level: number;
     }
   | {
+      /**
+       * A raster over its frame (docs/adr/0204 §5): `raster` names its file (`asset:<id>`, `file:<path>`), `look` its
+       * style (the contract's JSON); its affine `[x₀, a, b, y₀, c, d]` (x₀ and y₀ from the anchor in a batch), its size
+       * in pixels, whether it is sampled nearest. The raster pass draws its tiles in view.
+       */
+      readonly kind: 'raster';
+      readonly raster: string;
+      readonly look: string;
+      readonly affine: readonly number[];
+      readonly size: readonly [number, number];
+      readonly nearest: boolean;
+      readonly opacity: number;
+      readonly level: number;
+    }
+  | {
       /** A tile repeated over the area: a marker pattern or an image asset. */
       readonly kind: 'tile';
       readonly tile: TileSource;

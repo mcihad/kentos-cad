@@ -100,6 +100,9 @@ mod processing;
 mod project;
 mod properties;
 mod python;
+#[cfg(test)]
+mod raster_scenes;
+mod rasters;
 mod recent;
 mod recovery;
 mod ribbon_bar;

@@ -325,6 +325,23 @@ impl Images {
 }
 
 impl ImageSource for Images {
+    /// The raster pass's tiles from the app's raster service (docs/adr/0204 §5).
+    fn raster_tile(
+        &self,
+        raster: &str,
+        look: &str,
+        affine: &[f64; 6],
+        level: u32,
+        tx: u32,
+        ty: u32,
+    ) -> Option<Arc<Vec<u8>>> {
+        crate::rasters::tiles::service().tile(raster, look, affine, level, tx, ty)
+    }
+
+    fn raster_frame(&self) {
+        crate::rasters::tiles::service().frame();
+    }
+
     fn bitmap(&self, key: &str) -> Option<Arc<kentos_render_wgpu::styled::Bitmap>> {
         self.bitmaps
             .lock()

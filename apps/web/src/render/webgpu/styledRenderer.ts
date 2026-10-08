@@ -1,5 +1,6 @@
 import { batchImage, batchImagePx, batchInView, batchLegible, MARKER_STRIDE, STROKE_STRIDE, type AtlasHit, type AtlasSource, type StyledBatch } from '../types';
 import { fitted, GREY, levelCanvas, levelCount } from '../pictures';
+import { RasterQuads, RasterSlots, SLOT, UPLOADS_PER_FRAME, rasterAtlasSize, rasterQuads } from '../rasterPass';
 import { dashValues, inScale, patternReach, type StyledFrame } from '../webgl2/styledRenderer';
 import { SHAPE_IDS } from '../webgl2/styledShaders';
 import { STYLED_WGSL } from './styledShaders';
@@ -32,13 +33,24 @@ interface GpuStyled {
   /** Set by prepare: drawn this frame; the atlas rectangle last written into the style. */
   visible: boolean;
   hit: AtlasHit | null;
+  /** A raster's quads this frame (docs/adr/0204 §5): written into `vertex` by prepare, grown as needed. */
+  quads?: RasterQuads;
+  vertexBytes?: number;
 }
 
 export interface GpuStyledLayer {
   list: GpuStyled[];
 }
 
-type StyledPipes = Record<'stroke' | 'solid' | 'hatch' | 'pattern' | 'tile' | 'marker' | 'gradient' | 'image', GPURenderPipeline>;
+type StyledPipes = Record<'stroke' | 'solid' | 'hatch' | 'pattern' | 'tile' | 'marker' | 'gradient' | 'image' | 'raster', GPURenderPipeline>;
+
+/** The raster atlas page (docs/adr/0204 §5): its texture, slots and group 0 by frame uniform and sampling. */
+interface RasterPage {
+  texture: GPUTexture;
+  slots: RasterSlots;
+  frame: { linear: GPUBindGroup; nearest: GPUBindGroup };
+  lens: { linear: GPUBindGroup; nearest: GPUBindGroup };
+}
 
 /** A picture's texture with its group 0 for the frame and for the magnifier (docs/adr/0192 §3; contract version 5). */
 interface GpuPicture {
@@ -68,6 +80,7 @@ export class WebGPUStyledRenderer {
   /** Pipelines by sample count (the backend's multisampled passes need their own). */
   private readonly pipes = new Map<number, StyledPipes>();
   private atlas: AtlasSource | null = null;
+  private rasterPage: RasterPage | null = null;
 
   /** `frame`: the backend's frame uniform, which the styled pipelines read beside their atlas; `lens`: the magnifier's. */
   constructor(device: GPUDevice, format: GPUTextureFormat, frame: GPUBuffer, lens: GPUBuffer) {
@@ -142,6 +155,8 @@ export class WebGPUStyledRenderer {
       tile: pipe('areaVs', 'tileFs', [area], premul),
       // docs/adr/0192 §3: the contract's version 5.
       image: pipe('areaVs', 'imageFs', [area], premul),
+      // docs/adr/0204 §5: the contract's version 6.
+      raster: pipe('rasterVs', 'rasterFs', [{ arrayStride: 16, attributes: [{ shaderLocation: 0, offset: 0, format: 'float32x4' }] }], premul),
       marker: pipe(
         'markerVs',
         'markerFs',
@@ -179,6 +194,16 @@ export class WebGPUStyledRenderer {
   upload(batches: readonly StyledBatch[]): GpuStyledLayer {
     const list: GpuStyled[] = [];
     for (const b of batches) {
+      if (b.kind === 'fill' && b.paint.kind === 'raster') {
+        // A raster's quads change every frame (docs/adr/0204 §5): written by prepare.
+        const vertex = this.device.createBuffer({ size: 1024, usage: BUFFER.VERTEX | BUFFER.COPY_DST });
+        const data = this.styleData(b);
+        const style = this.device.createBuffer({ size: STYLE_BYTES, usage: BUFFER.UNIFORM | BUFFER.COPY_DST });
+        this.device.queue.writeBuffer(style, 0, data);
+        const bind = this.device.createBindGroup({ layout: this.styleLayout, entries: [{ binding: 0, resource: { buffer: style } }] });
+        list.push({ batch: b, vertex, count: 0, style, bind, data, visible: false, hit: null, quads: new RasterQuads(), vertexBytes: 1024 });
+        continue;
+      }
       const src = b.kind === 'stroke' ? b.segments : b.kind === 'marker' ? b.instances : b.positions;
       const vertex = this.device.createBuffer({ size: Math.max(4, src.byteLength), usage: BUFFER.VERTEX | BUFFER.COPY_DST });
       this.device.queue.writeBuffer(vertex, 0, src.buffer, src.byteOffset, src.byteLength);
@@ -237,6 +262,9 @@ export class WebGPUStyledRenderer {
       } else if (p.kind === 'image') {
         f.set([p.corner[0], p.corner[1], p.size[0], p.size[1]], 20);
         f.set([Math.cos(p.angle), Math.sin(p.angle), p.opacity, p.mirror ? 1 : 0], 24);
+      } else if (p.kind === 'raster') {
+        // b.z: the raster's opacity (docs/adr/0204 §5).
+        f.set([0, 0, p.opacity, 0], 24);
       } else if (p.kind === 'pattern') {
         const r = patternReach(p);
         f.set(p.fill ?? [0, 0, 0, 0], 0);
@@ -323,11 +351,13 @@ export class WebGPUStyledRenderer {
     const view = [f.cam[0] - hw, f.cam[1] - hh, f.cam[0] + hw, f.cam[1] + hh] as const;
     const atlas = this.atlas;
     atlas?.beginFrame();
+    this.prepareRasters(layers, f, view);
     for (let pass = 0; pass < 2; pass++) {
       const generation = atlas?.generation ?? 0;
       for (const layer of layers)
         for (const s of layer.list) {
           const b = s.batch;
+          if (s.quads) continue;
           s.visible = inScale(b, f.scaleDenominator) && batchInView(b, view, f.pxPerM, f.dpr) && batchLegible(b, f.pxPerM, f.dpr);
           if (!s.visible) continue;
           const image = batchImage(b);
@@ -346,6 +376,71 @@ export class WebGPUStyledRenderer {
         }
       if ((atlas?.generation ?? 0) === generation) break;
     }
+  }
+
+  /** The raster atlas page, its samplers and groups, made the first time a raster draws. */
+  private rasters(): RasterPage {
+    if (this.rasterPage) return this.rasterPage;
+    const { device } = this;
+    const [w, h] = rasterAtlasSize(device.limits.maxTextureDimension2D);
+    const texture = device.createTexture({ size: [w, h], format: 'rgba8unorm', usage: TEXTURE.COPY_DST | TEXTURE.TEXTURE_BINDING });
+    const sampler = (filter: GPUFilterMode) => device.createSampler({ magFilter: filter, minFilter: filter, addressModeU: 'clamp-to-edge', addressModeV: 'clamp-to-edge' });
+    const [linear, nearest] = [sampler('linear'), sampler('nearest')];
+    const group = (buffer: GPUBuffer, s: GPUSampler) =>
+      device.createBindGroup({
+        layout: this.frameLayout,
+        entries: [
+          { binding: 0, resource: { buffer } },
+          { binding: 1, resource: texture.createView() },
+          { binding: 2, resource: s },
+        ],
+      });
+    return (this.rasterPage = {
+      texture,
+      slots: new RasterSlots(w, h),
+      frame: { linear: group(this.frameBuffer, linear), nearest: group(this.frameBuffer, nearest) },
+      lens: { linear: group(this.lensBuffer, linear), nearest: group(this.lensBuffer, nearest) },
+    });
+  }
+
+  /**
+   * Rasters' tiles this frame (docs/adr/0204 §5): each raster in view picks its tiles, new ones go into the atlas
+   * page (at most `UPLOADS_PER_FRAME`), its quads into its vertex buffer, before the pass is encoded.
+   */
+  private prepareRasters(layers: readonly GpuStyledLayer[], f: StyledFrame, view: readonly [number, number, number, number]): void {
+    const atlas = this.atlas;
+    let started = false;
+    const budget = { left: UPLOADS_PER_FRAME };
+    for (const layer of layers)
+      for (const s of layer.list) {
+        if (!s.quads) continue;
+        const b = s.batch;
+        s.visible = false;
+        if (!atlas || b.kind !== 'fill' || b.paint.kind !== 'raster' || !inScale(b, f.scaleDenominator) || !batchInView(b, view, f.pxPerM, f.dpr)) continue;
+        const page = this.rasters();
+        if (!started) {
+          started = true;
+          page.slots.beginFrame();
+          atlas.rasterFrame();
+        }
+        const put = (slot: number, rgba: Uint8Array) => {
+          const [x, y] = page.slots.origin(slot);
+          this.device.queue.writeTexture({ texture: page.texture, origin: { x, y } }, rgba as Uint8Array<ArrayBuffer>, { bytesPerRow: SLOT * 4, rowsPerImage: SLOT }, [SLOT, SLOT]);
+        };
+        rasterQuads(b.paint, b.origin ?? [0, 0], view, f.pxPerM, page.slots, atlas, put, budget, s.quads);
+        s.count = s.quads.count;
+        s.visible = s.count > 0;
+        if (!s.visible) continue;
+        const bytes = s.count * 16;
+        if (bytes > (s.vertexBytes ?? 0)) {
+          s.vertex.destroy();
+          let size = s.vertexBytes ?? 1024;
+          while (size < bytes) size *= 2;
+          s.vertex = this.device.createBuffer({ size, usage: BUFFER.VERTEX | BUFFER.COPY_DST });
+          s.vertexBytes = size;
+        }
+        this.device.queue.writeBuffer(s.vertex, 0, s.quads.data.buffer, s.quads.data.byteOffset, bytes);
+      }
   }
 
   /**
@@ -369,7 +464,14 @@ export class WebGPUStyledRenderer {
       }
       pass.setBindGroup(1, s.bind);
       pass.setVertexBuffer(0, s.vertex);
-      if (b.kind === 'fill' && b.paint.kind === 'image') {
+      if (b.kind === 'fill' && b.paint.kind === 'raster') {
+        // The raster atlas in group 0, sampled as its look says; then the atlas again.
+        const page = this.rasters();
+        const groups = lens ? page.lens : page.frame;
+        pass.setBindGroup(0, b.paint.nearest ? groups.nearest : groups.linear);
+        pass.draw(s.count);
+        pass.setBindGroup(0, lens ? this.lensBind : this.frameBind);
+      } else if (b.kind === 'fill' && b.paint.kind === 'image') {
         // Its own texture in group 0, then the atlas again for the batches after it.
         const picture = this.picture(b.paint.image, b.paint.url);
         pass.setBindGroup(0, lens ? picture.lens : picture.frame);
@@ -383,6 +485,7 @@ export class WebGPUStyledRenderer {
 
   dispose(): void {
     this.texture.destroy();
+    this.rasterPage?.texture.destroy();
     for (const p of this.pictures.values()) p.texture.destroy();
     this.pictures.clear();
   }

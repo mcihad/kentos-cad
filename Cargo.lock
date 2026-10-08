@@ -2637,6 +2637,7 @@ dependencies = [
  "roxmltree",
  "serde",
  "serde_json",
+ "zune-jpeg 0.5.15",
 ]
 
 [[package]]
@@ -2645,6 +2646,7 @@ version = "0.1.0"
 dependencies = [
  "kentos-contracts",
  "kentos-formats",
+ "kentos-geometry-core",
  "kentos-kcad",
  "serde",
  "serde_json",

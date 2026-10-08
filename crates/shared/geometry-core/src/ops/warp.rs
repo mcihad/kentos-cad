@@ -365,6 +365,24 @@ pub fn warp_shape(shape: &Shape, zs: &[Vec<Option<f64>>], warp: &Warp) -> Result
     {
         return Err(Beyond);
     }
+    // A raster under an affine: its affine composed exactly, to + J·(corner − from) (docs/adr/0204 §7).
+    if let (Shape::Raster { affine, .. }, Some(j)) = (shape, warp.linear()) {
+        let (from, to) = warp.ends();
+        let [x0, a, b, y0, c, d] = *affine;
+        let lin = |vx: f64, vy: f64| (j[0] * vx + j[2] * vy, j[1] * vx + j[3] * vy);
+        let o = lin(x0 - from.x, y0 - from.y);
+        let (col, row) = (lin(a, c), lin(b, d));
+        let mut out = shape.clone();
+        if let Shape::Raster { affine: next, .. } = &mut out {
+            *next = [to.x + o.0, col.0, row.0, to.y + o.1, col.1, row.1];
+        }
+        return Ok(Warped {
+            shape: out,
+            zs: zs.to_vec(),
+            curves: false,
+            kept: false,
+        });
+    }
     if let Some(done) = common(shape, zs, warp)? {
         return Ok(done);
     }
@@ -642,6 +660,27 @@ fn common<M: Map + ?Sized>(
                 *p = at;
             }
             kept(out)
+        }
+        // A raster's affine composed with the map's tangent at its frame's middle (a similarity
+        // and an affine compose exactly above); a projective map and a rubber sheet are
+        // refused by the command before (docs/adr/0204 §7).
+        Shape::Raster { .. } => {
+            let c = crate::entity::entity_anchor(shape).unwrap_or(Vec2::new(0.0, 0.0));
+            let (at, j) = (m.at(c)?, m.jac(c)?);
+            let t = [
+                j[0],
+                j[1],
+                j[2],
+                j[3],
+                at.x - (j[0] * c.x + j[2] * c.y),
+                at.y - (j[1] * c.x + j[3] * c.y),
+            ];
+            Warped {
+                shape: transform_shape(shape, &t),
+                zs: zs.to_vec(),
+                curves: false,
+                kept: false,
+            }
         }
         // A picture keeps its shape under the similarity at its lower left corner, which
         // goes where the point goes; mirrored, its frame's new corner moves with it

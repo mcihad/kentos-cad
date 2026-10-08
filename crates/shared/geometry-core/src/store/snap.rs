@@ -817,9 +817,14 @@ fn shape_snaps(
         }
         // Its boundary is snapped through the outline object itself.
         Shape::Hatch { .. } => return,
-        // The part shown's corners and its sides' middles (docs/adr/0192 §4).
-        Shape::Image { .. } => {
-            let ring = crate::geom::image::shown(e);
+        // The part shown's corners and its sides' middles (docs/adr/0192 §4); a raster's frame's
+        // (docs/adr/0204 §7).
+        Shape::Image { .. } | Shape::Raster { .. } => {
+            let ring = if matches!(e, Shape::Raster { .. }) {
+                entity_vertices(e)
+            } else {
+                crate::geom::image::shown(e)
+            };
             for (i, &a) in ring.iter().enumerate() {
                 let b = ring[(i + 1) % ring.len()];
                 ch.consider(SnapKind::Endpoint, a, id);

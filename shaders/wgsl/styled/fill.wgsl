@@ -63,6 +63,21 @@ struct AreaOut {
   if (st.b.w > 0.5) { t = 1.0 - t; }
   return textureSample(atlasTex, atlasSmp, vec2f(s, 1.0 - t)) * st.b.z;
 }
+// Raster (docs/adr/0204 §5): its tiles, quads of q = (position from the batch's tile, metres; u, v in the raster atlas
+// group 0 holds for it, premultiplied, one level, sampled linearly or nearest); b.z = opacity. Premultiplied out.
+struct RasterOut {
+  @builtin(position) pos: vec4f,
+  @location(0) uv: vec2f,
+};
+@vertex fn rasterVs(@location(0) q: vec4f) -> RasterOut {
+  var o: RasterOut;
+  o.pos = pxToClip(toPx(q.xy));
+  o.uv = q.zw;
+  return o;
+}
+@fragment fn rasterFs(i: RasterOut) -> @location(0) vec4f {
+  return textureSampleLevel(atlasTex, atlasSmp, i.uv, 0.0) * st.b.z;
+}
 // Tile: rect, a = (tile.x, tile.y, cos, sin), b = (shift.x, shift.y, opacity, 0), flags.x = unit. Premultiplied out.
 @fragment fn tileFs(i: AreaOut) -> @location(0) vec4f {
   var p = i.world;

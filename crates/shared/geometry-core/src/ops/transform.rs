@@ -464,6 +464,14 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                 face: face.clone(),
             }
         }
+        // Its affine composed: every pixel's corner goes where the drawing goes (docs/adr/0204 §7).
+        Shape::Raster { affine, .. } => {
+            let mut out = shape.clone();
+            if let Shape::Raster { affine: a, .. } = &mut out {
+                *a = crate::geom::raster::transformed(*affine, m);
+            }
+            out
+        }
         // Its frame's corners map; mirrored, the picture turns over in its new frame
         // (docs/adr/0192 §4). A shear keeps the frame square: its width along the bottom's
         // image, its height the left side's length.

@@ -1,0 +1,309 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Vadi",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 2,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "gis"
+ },
+ "origin": {
+  "x": 487580.0,
+  "y": 4420340.0
+ },
+ "layers": [
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E8B04A",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "orto",
+   "name": "Ortofoto",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#5B6B7F",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "dem",
+   "name": "Yükseklik modeli",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#7A6B5B",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "tarama",
+   "name": "Taranmış pafta",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#6B5B7F",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "parsel",
+ "entities": [
+  {
+   "kind": "raster",
+   "id": 1,
+   "layerId": "dem",
+   "attrs": {},
+   "affine": [
+    487200.0,
+    1.6,
+    0.0,
+    4420600.0,
+    0.0,
+    -1.6
+   ],
+   "width": 480,
+   "height": 324,
+   "bands": 1,
+   "sample": "f32",
+   "file": "rasters/dem.tif",
+   "srid": 5256,
+   "style": {
+    "render": "rampShade",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   }
+  },
+  {
+   "kind": "raster",
+   "id": 2,
+   "layerId": "orto",
+   "attrs": {},
+   "affine": [
+    487200.0,
+    0.6,
+    0.0,
+    4420600.0,
+    0.0,
+    -0.6
+   ],
+   "width": 1280,
+   "height": 864,
+   "bands": 3,
+   "sample": "u8",
+   "file": "rasters/orto.tif",
+   "srid": 5256,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     1,
+     2,
+     3
+    ]
+   }
+  },
+  {
+   "kind": "raster",
+   "id": 3,
+   "layerId": "tarama",
+   "attrs": {},
+   "affine": [
+    486870.0,
+    1.0,
+    0.0,
+    4420560.0,
+    0.0,
+    -1.0
+   ],
+   "width": 300,
+   "height": 260,
+   "bands": 1,
+   "sample": "u8",
+   "file": "rasters/tarama.png",
+   "srid": 0,
+   "style": {
+    "render": "gray",
+    "bands": [
+     1
+    ]
+   }
+  },
+  {
+   "kind": "polygon",
+   "id": 4,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "104"
+   },
+   "pts": [
+    {
+     "x": 487320.0,
+     "y": 4420450.0
+    },
+    {
+     "x": 487378.0,
+     "y": 4420450.0
+    },
+    {
+     "x": 487384.0,
+     "y": 4420372.0
+    },
+    {
+     "x": 487326.0,
+     "y": 4420372.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 5,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "105"
+   },
+   "pts": [
+    {
+     "x": 487382.0,
+     "y": 4420450.0
+    },
+    {
+     "x": 487440.0,
+     "y": 4420450.0
+    },
+    {
+     "x": 487446.0,
+     "y": 4420372.0
+    },
+    {
+     "x": 487388.0,
+     "y": 4420372.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 6,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "106"
+   },
+   "pts": [
+    {
+     "x": 487444.0,
+     "y": 4420450.0
+    },
+    {
+     "x": 487502.0,
+     "y": 4420450.0
+    },
+    {
+     "x": 487508.0,
+     "y": 4420372.0
+    },
+    {
+     "x": 487450.0,
+     "y": 4420372.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 7,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "107"
+   },
+   "pts": [
+    {
+     "x": 487506.0,
+     "y": 4420450.0
+    },
+    {
+     "x": 487564.0,
+     "y": 4420450.0
+    },
+    {
+     "x": 487570.0,
+     "y": 4420372.0
+    },
+    {
+     "x": 487512.0,
+     "y": 4420372.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 8,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "108"
+   },
+   "pts": [
+    {
+     "x": 487568.0,
+     "y": 4420450.0
+    },
+    {
+     "x": 487626.0,
+     "y": 4420450.0
+    },
+    {
+     "x": 487632.0,
+     "y": 4420372.0
+    },
+    {
+     "x": 487574.0,
+     "y": 4420372.0
+    }
+   ]
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

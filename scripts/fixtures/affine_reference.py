@@ -196,6 +196,14 @@ def moved(e, m, new_id=None):
             e["mirror"] = True
         else:
             e.pop("mirror", None)
+    elif k == "raster":
+        # docs/adr/0204 §7: the affine composed: the first pixel's corner goes where the drawing goes, the columns' and
+        # rows' steps by the linear part.
+        x0, a, b, y0, c, d = e["affine"]
+        o = apply(m, (x0, y0))
+        col = linear(m, (a, c))
+        row = linear(m, (b, d))
+        e["affine"] = [o[0], col[0], row[0], o[1], col[1], row[1]]
     elif k == "hatch":
         # The pattern's lines keep their direction on the object, modulo a half turn; their spacing scales.
         rad = (e["pattern"]["angle"] * math.pi) / 180.0

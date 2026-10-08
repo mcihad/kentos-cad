@@ -177,6 +177,16 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
             }
             None => out.push(NONE),
         },
+        // Its frame as a line, then as an area the raster pass paints (docs/adr/0204 §5).
+        Shape::Raster { .. } => match crate::geom::raster::corners(s) {
+            Some(c) => {
+                out.extend([MIXED, 1.0]);
+                path(out, true, &c);
+                out.push(1.0);
+                ring(out, &c, false, oriented.then_some(true));
+            }
+            None => out.push(NONE),
+        },
         // The part shown: its outline as a line, then as an area the style engine paints with
         // the picture (docs/adr/0192 §3).
         Shape::Image { .. } => {

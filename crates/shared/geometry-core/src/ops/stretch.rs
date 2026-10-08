@@ -45,6 +45,17 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             }
             moved
         })?,
+        // A raster moves whole when its first pixel's corner is in the window (docs/adr/0204 §7).
+        Shape::Raster { affine, .. } => {
+            let o = Vec2::new(affine[0], affine[3]);
+            inside(o, r).then(|| {
+                let to = mv(o);
+                crate::ops::transform::transform_shape(
+                    &geom.shape,
+                    &crate::geom::affine::translation(to.x - o.x, to.y - o.y),
+                )
+            })?
+        }
         // A table moves whole when its top left corner is in the window (docs/adr/0184 §2).
         Shape::Table { p, .. } | Shape::Image { p, .. } => inside(*p, r).then(|| {
             let mut moved = geom.shape.clone();

@@ -391,7 +391,8 @@ impl Sink for BatchSink {
 
     fn fill(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
         if rings.first().is_none_or(|r| r.len() < 3)
-            || (self.hide_fills && !matches!(paint, FillPaint::Image { .. }))
+            || (self.hide_fills
+                && !matches!(paint, FillPaint::Image { .. } | FillPaint::Raster { .. }))
         {
             return;
         }
@@ -444,6 +445,28 @@ impl Sink for BatchSink {
                     size: *size,
                     angle: *angle,
                     mirror: *mirror,
+                    opacity: *opacity,
+                    level: *level,
+                };
+                &anchored
+            }
+            // A raster's affine likewise: its first pixel's corner from the anchor (docs/adr/0204 §5).
+            FillPaint::Raster {
+                raster,
+                look,
+                affine,
+                size,
+                nearest,
+                opacity,
+                level,
+            } => {
+                let [x0, a, b, y0, c, d] = *affine;
+                anchored = FillPaint::Raster {
+                    raster: raster.clone(),
+                    look: look.clone(),
+                    affine: [x0 - self.origin.x, a, b, y0 - self.origin.y, c, d],
+                    size: *size,
+                    nearest: *nearest,
                     opacity: *opacity,
                     level: *level,
                 };

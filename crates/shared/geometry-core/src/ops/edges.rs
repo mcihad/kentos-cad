@@ -50,6 +50,8 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
         Shape::Leader { .. } => path_edges(&entity_outline(e, 72.0), false),
         // The part shown's sides (docs/adr/0192 §4).
         Shape::Image { .. } => path_edges(&crate::geom::image::shown(e), true),
+        // Its frame's sides: a raster is picked by its edge (docs/adr/0204 §7).
+        Shape::Raster { .. } => path_edges(&crate::entity::entity_vertices(e), true),
         // The lines it draws (docs/adr/0184 §2).
         Shape::Table { .. } => crate::geom::table::lines_of(e)
             .into_iter()

@@ -16,6 +16,8 @@ use kentos_contracts::{
 };
 use wasm_bindgen::prelude::*;
 
+pub mod raster;
+
 fn bad_input(what: &str, e: &serde_json::Error) -> JsError {
     JsError::new(&format!(
         "{what} okunamadı ({e}); uygulama ile dosya biçimi paketi uyuşmuyor olabilir (pnpm wasm)."

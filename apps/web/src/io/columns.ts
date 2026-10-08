@@ -45,7 +45,24 @@ export type DrawingHead = Omit<DocumentSnapshotV2, 'entities' | 'uids'>;
 export type PageEntity = ContractEntity & { uid?: string };
 
 /** The kinds, numbered as `kinds` holds them. */
-export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table', 'image'] as const;
+export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table', 'image', 'raster'] as const;
+/** A raster's samples, numbered as the columns hold them (the Rust side's `RASTER_SAMPLES`). */
+const RASTER_SAMPLES = ['u8', 'i8', 'u16', 'i16', 'u32', 'i32', 'f32', 'f64'] as const;
+/** A raster look's kinds and stretches, numbered as the columns hold them (`RASTER_RENDERS`, `RASTER_STRETCHES`). */
+const RASTER_RENDERS = ['rgb', 'gray', 'palette', 'ramp', 'hillshade', 'rampShade'] as const;
+const RASTER_STRETCHES = ['none', 'minMax', 'percent', 'manual'] as const;
+/** A raster look's optional fields, as its flags in the columns (the Rust side's `LOOK_*`), its numbers in this order. */
+const LOOK_NUMBERS = [
+  ['min', 1],
+  ['max', 2],
+  ['azimuth', 16],
+  ['altitude', 32],
+  ['zFactor', 64],
+  ['nodata', 128],
+] as const;
+const LOOK_RAMP = 4;
+const LOOK_INVERT = 8;
+const LOOK_NEAREST = 256;
 const KIND = new Map<string, number>(KINDS.map((k, i) => [k, i]));
 /** The dimension's kinds in the contract's order (`DimensionStyle::ALL`); KCAD schema 9 added the last five (docs/adr/0147). */
 const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter', 'ordinate', 'arcLength', 'jogged', 'azimuth', 'slope'] as const;
@@ -599,6 +616,36 @@ class Packer {
         if (e.clip !== undefined) (flags |= OPT[3]), this.points(e.clip, 'clip', kind);
         if (e.opacity !== undefined) (flags |= OPT[4]), this.float(e.opacity, 'opacity');
         break;
+      // docs/adr/0204: the size, bands, samples (their place in RASTER_SAMPLES) and system as integers; the look field by
+      // field (its kind, bands, stretch, flags; its numbers and ramp); the affine and opacity; the asset and file texts.
+      case 'raster': {
+        this.int(e.width);
+        this.int(e.height);
+        this.int(e.bands);
+        this.int(this.place(RASTER_SAMPLES, e.sample, 'sample', 'rasterin örnek türü'));
+        this.int(e.srid);
+        const st = (e.style ?? {}) as unknown as Record<string, unknown>;
+        this.int(this.place(RASTER_RENDERS, st.render as string, 'style.render', 'rasterin görünüş türü'));
+        const bands = Array.isArray(st.bands) ? (st.bands as number[]) : [];
+        this.int(bands.length);
+        for (const b of bands) this.int(b);
+        this.int(this.place(RASTER_STRETCHES, (st.stretch as string | undefined) ?? 'none', 'style.stretch', 'rasterin gerdirmesi'));
+        let look = 0;
+        for (const [k, bit] of LOOK_NUMBERS) if (st[k] !== undefined) look |= bit;
+        if (st.ramp !== undefined) look |= LOOK_RAMP;
+        if (st.invert === true) look |= LOOK_INVERT;
+        if (st.resampling === 'nearest') look |= LOOK_NEAREST;
+        this.int(look);
+        const affine = Array.isArray(e.affine) ? e.affine : [];
+        if (affine.length !== 6) throw unwritable('bad_value', `${this.where}/affine`, `rasterin dönüşümü 6 sayı olmalı, ${affine.length} var`);
+        for (const v of affine) this.float(v, 'affine');
+        if (e.opacity !== undefined) (flags |= OPT[2]), this.float(e.opacity, 'opacity');
+        for (const [k] of LOOK_NUMBERS) if (st[k] !== undefined) this.float(st[k] as number, `style/${k}`);
+        if (st.ramp !== undefined) this.text(st.ramp as string, 'style/ramp');
+        if (e.asset !== undefined) (flags |= OPT[0]), this.text(e.asset, 'asset');
+        if (e.file !== undefined) (flags |= OPT[1]), this.text(e.file, 'file');
+        break;
+      }
       // docs/adr/0146: the vertices, height and turn; the note a text, the arrowhead its place in LEADER_ARROWS, the mask a flag.
       case 'leader':
         this.points(e.pts, 'pts', kind);
@@ -1044,6 +1091,34 @@ export class ColumnsReader {
         if (has(3)) e.clip = this.pts();
         if (has(4)) e.opacity = this.num();
         break;
+      case 'raster': {
+        e.width = this.readInt();
+        e.height = this.readInt();
+        e.bands = this.readInt();
+        e.sample = RASTER_SAMPLES[this.readInt()] ?? 'u8';
+        e.srid = this.readInt();
+        // The look in the contract's field order, its defaults left out.
+        const st: Record<string, unknown> = { render: RASTER_RENDERS[this.readInt()] ?? 'gray' };
+        const n = this.readInt();
+        st.bands = Array.from({ length: n }, () => this.readInt());
+        const stretch = RASTER_STRETCHES[this.readInt()] ?? 'none';
+        const look = this.readInt();
+        e.affine = [this.num(), this.num(), this.num(), this.num(), this.num(), this.num()];
+        if (has(2)) e.opacity = this.num();
+        const numbers: Record<string, number> = {};
+        for (const [k, bit] of LOOK_NUMBERS) if (look & bit) numbers[k] = this.num();
+        if (stretch !== 'none') st.stretch = stretch;
+        if (numbers.min !== undefined) st.min = numbers.min;
+        if (numbers.max !== undefined) st.max = numbers.max;
+        if (look & LOOK_RAMP) st.ramp = this.readText();
+        if (look & LOOK_INVERT) st.invert = true;
+        for (const k of ['azimuth', 'altitude', 'zFactor', 'nodata'] as const) if (numbers[k] !== undefined) st[k] = numbers[k];
+        if (look & LOOK_NEAREST) st.resampling = 'nearest';
+        e.style = st;
+        if (has(0)) e.asset = this.readText();
+        if (has(1)) e.file = this.readText();
+        break;
+      }
       case 'leader':
         e.pts = this.pts();
         e.height = this.num();

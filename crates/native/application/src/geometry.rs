@@ -10,8 +10,9 @@ use kentos_contracts::{
     DimensionStyle, DrawingFont, EllipseEntity, Entity, EntityBase, EntityGeometry, EntityId,
     GradientShape, HatchAssoc, HatchEntity, HatchGradient, HatchPattern as ContractPattern,
     HatchPatternType, ImageEntity, ImageFields, InsertEntity, LeaderArrow, LeaderEntity,
-    LineEntity, PathEntity, PatternLine, PointEntity, RingGeometry, SplineEntity, TableAlign,
-    TableEntity, TableGrid, TableSource, TextEntity, Vec2 as Point,
+    LineEntity, PathEntity, PatternLine, PointEntity, RasterEntity, RasterFields, RasterSample,
+    RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextEntity,
+    Vec2 as Point,
 };
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
@@ -477,6 +478,59 @@ pub fn contract_image(shape: Shape) -> Option<ImageFields> {
     }
 }
 
+/// A raster's fields as the geometry core takes them (docs/adr/0204 §2): its
+/// look as the contract's JSON, which the core carries.
+pub fn core_raster(r: &RasterFields) -> Shape {
+    Shape::Raster {
+        affine: r.affine,
+        width: f64::from(r.width),
+        height: f64::from(r.height),
+        bands: f64::from(r.bands),
+        sample: r.sample.name().to_owned(),
+        asset: r.asset.clone(),
+        file: r.file.clone(),
+        srid: f64::from(r.srid),
+        style: Json::parse(&r.style.to_json_text()).unwrap_or(Json::Null),
+        opacity: r.opacity,
+    }
+}
+
+/// A raster the core computed as the contract holds it; none for another
+/// shape, or numbers and a look the contract cannot hold.
+pub fn contract_raster(shape: Shape) -> Option<RasterFields> {
+    let Shape::Raster {
+        affine,
+        width,
+        height,
+        bands,
+        sample,
+        asset,
+        file,
+        srid,
+        style,
+        opacity,
+    } = shape
+    else {
+        return None;
+    };
+    let whole =
+        |v: f64| (v >= 0.0 && v.fract() == 0.0 && v <= f64::from(u32::MAX)).then_some(v as u32);
+    Some(RasterFields {
+        affine,
+        width: whole(width)?,
+        height: whole(height)?,
+        bands: whole(bands)?,
+        sample: RasterSample::from_name(&sample)?,
+        asset,
+        file,
+        srid: whole(srid)?,
+        style: kentos_contracts::RasterStyle::from_json_text(
+            &kentos_geometry_core::api::json::to_string(&style),
+        )?,
+        opacity,
+    })
+}
+
 /// An object's geometry as the geometry core takes it.
 pub fn shape(entity: &Entity) -> Shape {
     match entity {
@@ -514,6 +568,7 @@ pub fn shape(entity: &Entity) -> Shape {
         },
         Entity::Table(t) => core_table(t),
         Entity::Image(i) => core_image(&i.image),
+        Entity::Raster(r) => core_raster(&r.raster),
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,
@@ -933,6 +988,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.frame = frame;
         }
         (Entity::Image(e), s @ Shape::Image { .. }) => e.image = contract_image(s)?,
+        (Entity::Raster(e), s @ Shape::Raster { .. }) => e.raster = contract_raster(s)?,
         _ => return None,
     }
     Some(out)
@@ -1189,6 +1245,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             source,
         }),
         EntityGeometry::Image(image) => Entity::Image(ImageEntity { base, image }),
+        EntityGeometry::Raster(raster) => Entity::Raster(RasterEntity { base, raster }),
     }
 }
 
@@ -1412,6 +1469,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             source: contract_source(source),
         },
         s @ Shape::Image { .. } => EntityGeometry::Image(contract_image(s)?),
+        s @ Shape::Raster { .. } => EntityGeometry::Raster(contract_raster(s)?),
     })
 }
 

@@ -27,3 +27,8 @@ miniz_oxide = { workspace = true }
 roxmltree = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+# JPEG-compressed TIFF blocks in the raster tests (docs/adr/0204 §1): the host decodes
+# them; in the tests that host is the desktop's decoder. Not in the WASM module.
+zune-jpeg = { workspace = true }

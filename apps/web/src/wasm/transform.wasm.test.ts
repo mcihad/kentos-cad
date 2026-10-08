@@ -24,7 +24,7 @@ import { packEntities, unpackEntities } from './pack';
 
 const env = (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env ?? {};
 const ROUNDS = Number(env.TRANSFORM_ROUNDS ?? 200);
-const KINDS: Exclude<EntityKind, 'image'>[] = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch', 'insert'];
+const KINDS: Exclude<EntityKind, 'image' | 'raster'>[] = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch', 'insert'];
 
 /** The first difference: keys in order, numbers bit for bit (NaN equals NaN, −0 is not 0). */
 function difference(a: unknown, b: unknown, path = ''): string | null {
@@ -192,8 +192,8 @@ describe('move, copy and paste through the geometry store, packed', () => {
     expect([Object.is((point.p as { x: number }).x, -0), Number.isNaN((point.p as { y: number }).y), Object.is(point.z, -0)]).toEqual([true, true, true]);
     // 13 is the multi-part area (docs/adr/0143), 14 a block's insert (docs/adr/0144), 15 a leader (docs/adr/0146), 16 a
     // multi-part polyline and 17 a multi-point object (docs/adr/0174), 18 a table (docs/adr/0184), 19 a picture
-    // (docs/adr/0192); the first number that is no kind is 20.
-    expect(() => unpackEntities({ nums: Float64Array.of(1, 0, 0, 20), strings: '["a"]' })).toThrow(/bilinmeyen bir nesne türü/);
+    // (docs/adr/0192), 20 a raster (docs/adr/0204); the first number that is no kind is 21.
+    expect(() => unpackEntities({ nums: Float64Array.of(1, 0, 0, 21), strings: '["a"]' })).toThrow(/bilinmeyen bir nesne türü/);
   });
 
   it('gives what the JSON call gives, bit for bit, on random objects and affines', () => {

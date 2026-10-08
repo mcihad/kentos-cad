@@ -173,6 +173,11 @@ pub enum EditOperation {
     NetworkAdjust,
     /// Kot ağı dengelemesi (docs/adr/0203 §8): points given their adjusted heights, vertices on them too.
     LevelAdjust,
+    /// Raster stili (docs/adr/0204 §4): rasters' looks and opacities written in place.
+    RasterStyle,
+    /// Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster
+    /// put in place of its resampled file, updated in place.
+    RasterGeoref,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
@@ -465,6 +470,10 @@ pub enum EntityGeometry {
     /// `file`, exactly one; clipped to `clip` in its own fractions; drawn at
     /// `opacity`.
     Image(crate::ImageFields),
+    /// A raster (docs/adr/0204 §2): its pixels placed by `affine`, its size,
+    /// bands and samples, its file (`asset` embedded or `file` linked,
+    /// exactly one), the file's system, its look and opacity.
+    Raster(crate::RasterFields),
 }
 
 impl EntityGeometry {
@@ -480,6 +489,7 @@ impl EntityGeometry {
                 | EntityGeometry::Hatch { .. }
                 | EntityGeometry::Insert { .. }
                 | EntityGeometry::Image(_)
+                | EntityGeometry::Raster(_)
         )
     }
 }

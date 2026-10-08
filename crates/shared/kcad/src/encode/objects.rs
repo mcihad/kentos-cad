@@ -11,8 +11,9 @@ use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
     AreaPart, BlockId, CellRange, DimensionStyle, DocumentSnapshotV2, Entity, EntityId, HatchAssoc,
-    HatchPattern, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PatternLine, PointPart, RingGeometry,
-    TableAlign, TableSource, TextRun, TextScript, Vec2, label_scale_ok, width_factor_ok,
+    HatchPattern, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PatternLine, PointPart, RasterResampling,
+    RasterStretch, RasterStyle, RingGeometry, TableAlign, TableSource, TextRun, TextScript, Vec2,
+    label_scale_ok, width_factor_ok,
 };
 
 use super::Encoder;
@@ -63,6 +64,8 @@ pub(super) enum Val<'d> {
     Aligns(&'d [TableAlign]),
     /// Where a table's rows came from.
     Source(&'d TableSource),
+    /// A raster's look (§6.6, docs/adr/0204 §4).
+    RasterStyle(&'d RasterStyle),
 }
 
 impl<'d> Encoder<'d> {
@@ -657,6 +660,63 @@ impl<'d> Encoder<'d> {
                     f.push(("opacity", Val::Float(o)));
                 }
             }
+            Entity::Raster(e) => {
+                let refuse = |this: &mut Self, field: &'static str, words: &str| {
+                    this.path.push(Seg::Name(kind));
+                    this.path.push(Seg::Name(field));
+                    Err(this.fail(Code::BadValue, words))
+                };
+                // Only the drawing's: a block definition holds no raster (docs/adr/0204 §2).
+                if uid.is_none() {
+                    return refuse(self, "affine", "blok tanımında raster olamaz");
+                }
+                let r = &e.raster;
+                let st = &r.style;
+                // A number that is not finite meets the float's own refusal (`non_finite`), with its place.
+                let finite = r
+                    .affine
+                    .iter()
+                    .chain(&r.opacity)
+                    .chain(&st.min)
+                    .chain(&st.max)
+                    .chain(&st.azimuth)
+                    .chain(&st.altitude)
+                    .chain(&st.z_factor)
+                    .chain(&st.nodata)
+                    .all(|v| v.is_finite());
+                if finite && let Some(words) = r.problem() {
+                    let field = if words.contains("dönüşüm") {
+                        "affine"
+                    } else if words.contains("donukluğu") {
+                        "opacity"
+                    } else if words.contains("kaynağı") || words.contains("yolu") {
+                        "asset"
+                    } else if words.contains("genişliği") {
+                        "width"
+                    } else if words.contains("bandı") && !words.contains("gösterilemez") {
+                        "bands"
+                    } else {
+                        "style"
+                    };
+                    return refuse(self, field, &words);
+                }
+                f.push(("affine", Val::Floats(&r.affine)));
+                f.push(("width", Val::Uint(u64::from(r.width))));
+                f.push(("height", Val::Uint(u64::from(r.height))));
+                f.push(("bands", Val::Uint(u64::from(r.bands))));
+                f.push(("sample", Val::Name(r.sample.name())));
+                if let Some(a) = &r.asset {
+                    f.push(("asset", Val::Text(a)));
+                }
+                if let Some(file) = &r.file {
+                    f.push(("file", Val::Text(file)));
+                }
+                f.push(("srid", Val::Uint(u64::from(r.srid))));
+                f.push(("style", Val::RasterStyle(st)));
+                if let Some(o) = r.opacity {
+                    f.push(("opacity", Val::Float(o)));
+                }
+            }
             Entity::Leader(e) => {
                 let refuse = |this: &mut Self, field: &'static str, words: &str| {
                     this.path.push(Seg::Name(kind));
@@ -986,6 +1046,62 @@ impl<'d> Encoder<'d> {
                             Ok(())
                         })?;
                     }
+                }
+                self.close();
+                Ok(())
+            }
+            Val::RasterStyle(st) => {
+                let n = 2
+                    + usize::from(st.stretch != RasterStretch::None)
+                    + usize::from(st.min.is_some())
+                    + usize::from(st.max.is_some())
+                    + usize::from(st.ramp.is_some())
+                    + usize::from(st.invert)
+                    + usize::from(st.azimuth.is_some())
+                    + usize::from(st.altitude.is_some())
+                    + usize::from(st.z_factor.is_some())
+                    + usize::from(st.nodata.is_some())
+                    + usize::from(st.resampling != RasterResampling::Bilinear);
+                self.open(n, true)?;
+                // max (3), min (3), ramp (4), bands (5), invert (6), nodata (6), render (6),
+                // azimuth (7), stretch (7), zFactor (7), altitude (8), resampling (10).
+                let float =
+                    |e: &mut Self, key: &'static str, v: Option<f64>| -> Result<(), KcadError> {
+                        if let Some(x) = v {
+                            e.key(key);
+                            e.at(Seg::Name(key), |e| e.float(x))?;
+                        }
+                        Ok(())
+                    };
+                float(self, "max", st.max)?;
+                float(self, "min", st.min)?;
+                if let Some(r) = &st.ramp {
+                    self.key("ramp");
+                    self.at(Seg::Name("ramp"), |e| e.text(r))?;
+                }
+                self.key("bands");
+                self.open(st.bands.len(), false)?;
+                for &b in &st.bands {
+                    self.w.uint(u64::from(b));
+                }
+                self.close();
+                if st.invert {
+                    self.key("invert");
+                    self.w.bool(true);
+                }
+                float(self, "nodata", st.nodata)?;
+                self.key("render");
+                self.w.text(st.render.name());
+                float(self, "azimuth", st.azimuth)?;
+                if st.stretch != RasterStretch::None {
+                    self.key("stretch");
+                    self.w.text(st.stretch.name());
+                }
+                float(self, "zFactor", st.z_factor)?;
+                float(self, "altitude", st.altitude)?;
+                if st.resampling != RasterResampling::Bilinear {
+                    self.key("resampling");
+                    self.w.text(st.resampling.name());
                 }
                 self.close();
                 Ok(())

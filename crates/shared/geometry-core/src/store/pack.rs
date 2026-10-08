@@ -27,6 +27,7 @@
 //! | 16 multi-part polyline | path, holes, part count, then per part: path, holes |
 //! | 17 multi-point object | x, y, hasZ, z, point count, then per point: x, y, hasZ, z |
 //! | 19 image | p.x, p.y, width, height, rotation, mirror, asset?, file?, clip (count, −1 none, then x, y each), opacity (NaN none) |
+//! | 20 raster | affine (6), width, height, bands, sample, asset?, file?, srid, style (its JSON text), opacity (NaN none) |
 //!
 //! `layer`, `text` and `style` are indices into the strings (−1: none);
 //! `label` is 1 for a non-empty label. `points` is a count n and 2n
@@ -197,7 +198,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 19.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 20.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -556,6 +557,34 @@ impl Reader<'_> {
                 arrow: self.string()?,
                 mask: self.flag()?.then_some(true),
             },
+            // docs/adr/0204: the affine, the size, bands and samples, the source, the system, the
+            // look (its JSON text) and the opacity (NaN none).
+            20 => {
+                let mut affine = [0.0; 6];
+                for v in &mut affine {
+                    *v = self.num()?;
+                }
+                let (width, height, bands) = (self.num()?, self.num()?, self.num()?);
+                let sample = self.string()?.unwrap_or_default();
+                let asset = self.string()?;
+                let file = self.string()?;
+                let srid = self.num()?;
+                let style = Json::parse(&self.string()?.unwrap_or_default())
+                    .map_err(|e| format!("rasterin görünüşü okunamadı: {e}"))?;
+                let opacity = self.num()?;
+                Shape::Raster {
+                    affine,
+                    width,
+                    height,
+                    bands,
+                    sample,
+                    asset,
+                    file,
+                    srid,
+                    style,
+                    opacity: (!opacity.is_nan()).then_some(opacity),
+                }
+            }
             // docs/adr/0192: the frame, the mirror, the source, the clip (−1 none) and the
             // opacity (NaN none).
             19 => {
@@ -1056,6 +1085,37 @@ impl Packer {
                 let t = self.maybe_string(text.as_deref());
                 let a = self.maybe_string(arrow.as_deref());
                 self.put(&[*height, *rotation, t, a, flag(*mask == Some(true))]);
+            }
+            // docs/adr/0204, as the reader's kind 20 says.
+            Shape::Raster {
+                affine,
+                width,
+                height,
+                bands,
+                sample,
+                asset,
+                file,
+                srid,
+                style,
+                opacity,
+            } => {
+                let sm = self.string(sample);
+                let a = self.maybe_string(asset.as_deref());
+                let f = self.maybe_string(file.as_deref());
+                let st = self.string(&crate::api::json::to_string(style));
+                self.put(&[20.0]);
+                self.put(affine);
+                self.put(&[
+                    *width,
+                    *height,
+                    *bands,
+                    sm,
+                    a,
+                    f,
+                    *srid,
+                    st,
+                    opacity.unwrap_or(f64::NAN),
+                ]);
             }
             // docs/adr/0192, as the reader's kind 19 says.
             Shape::Image {

@@ -103,6 +103,8 @@ pub enum CreateOperation {
     PlanRoad,
     /// Yatay ağ dengelemesi (docs/adr/0203 §8): the network's new points the drawing has not.
     NetworkAdjust,
+    /// Raster ekle (docs/adr/0204 §8): a raster placed.
+    Raster,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

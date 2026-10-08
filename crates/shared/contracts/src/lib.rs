@@ -56,6 +56,7 @@ pub mod layer;
 pub mod numeric;
 pub mod project_catalog;
 pub mod project_files;
+pub mod raster;
 pub mod settings;
 pub mod style;
 pub mod table;
@@ -82,17 +83,18 @@ pub use fields::*;
 pub use formats::*;
 pub use hatch::*;
 pub use identity::*;
+pub use image::*;
 pub use invitations::*;
 pub use job::*;
 pub use layer::*;
 pub use numeric::*;
 pub use project_catalog::*;
 pub use project_files::*;
+pub use raster::*;
 pub use settings::*;
 pub use style::*;
 pub use table::*;
 pub use topology::*;
-pub use image::*;
 
 /// Version of this set of contracts, reported by the API's health endpoint.
 pub const CONTRACTS_VERSION: u32 = 1;

@@ -644,6 +644,47 @@ def image_shape(e):
     assert 0.1 <= e.get("opacity", 1.0) <= 1.0, "donukluk 0,1 ile 1 arasında"
 
 
+# A raster's samples, looks, stretches and resamplings (schema 29, docs/adr/0204): no stretch and the bilinear are the
+# fields' absence, no value.
+RASTER_SAMPLES = ("u8", "i8", "u16", "i16", "u32", "i32", "f32", "f64")
+RASTER_RENDERS = ("rgb", "gray", "palette", "ramp", "hillshade", "rampShade")
+RASTER_STRETCHES = ("minMax", "percent", "manual")
+RASTER_RAMPS = ("Gri", "Arazi", "Spektral", "Viridis", "Mavi-kırmızı", "Sıcaklık")
+
+
+def raster_style(st):
+    """A raster's look (schema 29, docs/adr/0204 §4): `render` and `bands`, the rest only when not their default."""
+    table = {
+        "render": (enum(RASTER_RENDERS), True),
+        "bands": (lambda bs: array([uint(b) for b in bs]), True),
+        "stretch": (enum(RASTER_STRETCHES), False),
+        "min": (f64, False),
+        "max": (f64, False),
+        "ramp": (enum(RASTER_RAMPS), False),
+        "invert": (lambda b: boolean(b) if b is True else None, False),
+        "azimuth": (f64, False),
+        "altitude": (f64, False),
+        "zFactor": (f64, False),
+        "nodata": (f64, False),
+        "resampling": (enum(("nearest",)), False),
+    }
+    out = fields(st, table, "rasterin görünüşü")
+    assert out.get("invert", True) is not None, "invert yalnız true yazılır"
+    return cmap(out)
+
+
+def raster_shape(e):
+    """The contract's raster rule, as far as an example needs it held (docs/adr/0204 §2)."""
+    _, a, b, _, c, d = e["affine"]
+    assert a * d - b * c != 0.0, "rasterin dönüşümü tersinmeli"
+    assert 1 <= e["width"] <= 4_000_000 and 1 <= e["height"] <= 4_000_000 and 1 <= e["bands"] <= 255, "rasterin boyu ve bantları"
+    assert ("asset" in e) != ("file" in e), "rasterin tek kaynağı olmalı"
+    st = e["style"]
+    assert len(st["bands"]) in ((3, 4) if st["render"] == "rgb" else (1,)) and all(1 <= x <= e["bands"] for x in st["bands"]), "görünüşün bantları"
+    assert st.get("stretch") != "manual" or st["min"] < st["max"], "elle gerdirmenin aralığı"
+    assert 0.1 <= e.get("opacity", 1.0) <= 1.0, "donukluk 0,1 ile 1 arasında"
+
+
 KINDS = {
     # Schema 17 (docs/adr/0174): a multi-point object's points past its first.
     "point": {"p": (point, True), "z": (f64, False), "parts": (lambda ps: array([point_part(pp) for pp in ps]), False)},
@@ -753,6 +794,20 @@ KINDS = {
         "clip": (points, False),
         "opacity": (f64, False),
     },
+    # Schema 29 (docs/adr/0204 §2): a raster's affine, size, bands and samples, one source, its file's system, its look
+    # and opacity; only in the drawing.
+    "raster": {
+        "affine": (floats, True),
+        "width": (uint, True),
+        "height": (uint, True),
+        "bands": (uint, True),
+        "sample": (enum(RASTER_SAMPLES), True),
+        "asset": (text, False),
+        "file": (text, False),
+        "srid": (uint, True),
+        "style": (raster_style, True),
+        "opacity": (f64, False),
+    },
     # Schema 8 (docs/adr/0146): two vertices or more, a note only when there is one, an arrowhead by name, `mask` only when true.
     "leader": {
         "pts": (points, True),
@@ -821,6 +876,9 @@ def entity(e, uid, index):
     if kind == "image":
         assert uid is not None, "blok tanımında resim olamaz"
         image_shape(e)
+    if kind == "raster":
+        assert uid is not None, "blok tanımında raster olamaz"
+        raster_shape(e)
     # A block definition's objects have no persistent ids to name (docs/adr/0186 §6).
     assert "assoc" not in e or uid is not None, "blok tanımının taraması nesnelere bağlı olamaz"
     body = fields({k: v for k, v in e.items() if k not in ("kind", "id")}, table, f"nesne {index} ({kind})")
@@ -882,8 +940,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 28 with the survey settings' a priori standard deviations (docs/adr/0203
-    §1), 27 with the project's topology settings (docs/adr/0202 §7), 26 with a
+    """The oldest schema that holds the drawing: 29 with a raster, only in the drawing (docs/adr/0204 §2), 28 with the
+    survey settings' a priori standard deviations (docs/adr/0203 §1), 27 with the project's topology settings (docs/adr/0202 §7), 26 with a
     layer's fields (docs/adr/0199 §1), 25 with a text along a
     curve, in the drawing or a block definition
     (docs/adr/0196), 24 with a picture, only in the drawing (docs/adr/0192), 23 with a hatch's pattern of families or gradient (a field of theirs) or
@@ -929,6 +987,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def schemas(nodes):
         return any("fields" in n or schemas(n["children"]) for n in nodes)
 
+    if any(e["kind"] == "raster" for e in entities):
+        return 29
     if settings and any(k in settings.get("survey", {}) for k in SIGMA_KEYS):
         return 28
     if settings and "topology" in settings:
@@ -1176,7 +1236,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-29.kcad"] = container(root(cmap(parts), version=uint(29)))
+    files["schema-version-30.kcad"] = container(root(cmap(parts), version=uint(30)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1434,6 +1494,34 @@ def broken(minimal_content, minimal_file):
     files["image-opacity-low.kcad"] = in_schema(24, image_of(opacity=f64(0.05)))
     files["image-mirror-false.kcad"] = in_schema(24, image_of(mirror=boolean(False)))
     files["image-file-line-break.kcad"] = in_schema(24, image_of(asset=None, file=text("foto/\nsaha.jpg")))
+    # A raster is schema 29's (docs/adr/0204 §2): in schema 28 an unknown kind; only in the drawing; an affine that
+    # inverts, a size and bands within their bounds, one source, a look that suits its bands with its fields' defaults
+    # left out, an opacity from 0.1 to 1.
+    raster_affine = floats([487100.0, 0.5, 0.0, 4420800.0, 0.0, -0.5])
+
+    def raster_of(style=None, **extra):
+        look = style if style is not None else cmap({"render": text("rgb"), "bands": array([uint(1), uint(2), uint(3)])})
+        body = {**common, "affine": raster_affine, "width": uint(2000), "height": uint(1500), "bands": uint(3), "sample": text("u8"), "file": text("pafta-12.tif"), "srid": uint(5256), "style": look, **extra}
+        return cmap({"raster": cmap({k: v for k, v in body.items() if v is not None})})
+
+    gray = lambda **extra: cmap({"render": text("gray"), "bands": array([uint(1)]), **extra})  # noqa: E731
+    files["raster-in-schema-28.kcad"] = in_schema(28, raster_of())
+    files["raster-in-block.kcad"] = with_blocks([block(1, "Orto", [cmap({"raster": cmap({"attrs": cmap({}), "layerId": text("0"), "affine": raster_affine, "width": uint(2000), "height": uint(1500), "bands": uint(3), "sample": text("u8"), "file": text("pafta-12.tif"), "srid": uint(5256), "style": cmap({"render": text("rgb"), "bands": array([uint(1), uint(2), uint(3)])})})})])], version=29)
+    files["raster-affine-flat.kcad"] = in_schema(29, raster_of(affine=floats([487100.0, 0.5, 0.5, 4420800.0, 0.5, 0.5])))
+    files["raster-affine-five.kcad"] = in_schema(29, raster_of(affine=floats([487100.0, 0.5, 0.0, 4420800.0, 0.0])))
+    files["raster-width-zero.kcad"] = in_schema(29, raster_of(width=uint(0)))
+    files["raster-two-sources.kcad"] = in_schema(29, raster_of(asset=text("raster-0011223344556677")))
+    files["raster-no-source.kcad"] = in_schema(29, raster_of(file=None))
+    files["raster-sample-unknown.kcad"] = in_schema(29, raster_of(sample=text("u12")))
+    files["raster-rgb-two-bands.kcad"] = in_schema(29, raster_of(style=cmap({"render": text("rgb"), "bands": array([uint(1), uint(2)])})))
+    files["raster-band-missing.kcad"] = in_schema(29, raster_of(style=gray(bands=array([uint(4)]))))
+    files["raster-stretch-none.kcad"] = in_schema(29, raster_of(style=gray(stretch=text("none"))))
+    files["raster-manual-upside-down.kcad"] = in_schema(29, raster_of(style=gray(stretch=text("manual"), min=f64(10.0), max=f64(2.0))))
+    files["raster-ramp-unknown.kcad"] = in_schema(29, raster_of(style=gray(render=text("ramp"), ramp=text("Gökkuşağı"))))
+    files["raster-light-below.kcad"] = in_schema(29, raster_of(style=gray(render=text("hillshade"), altitude=f64(-5.0))))
+    files["raster-invert-false.kcad"] = in_schema(29, raster_of(style=gray(invert=boolean(False))))
+    files["raster-bilinear-written.kcad"] = in_schema(29, raster_of(style=gray(resampling=text("bilinear"))))
+    files["raster-opacity-low.kcad"] = in_schema(29, raster_of(opacity=f64(0.05)))
     # A text's curve is schema 25's (docs/adr/0196 §1): in schema 24 an unknown field; a vertex at least, as many
     # bulges as vertices, some length, a text of one line, not linked; only `pts` and `bulges` in it.
     def curve(pts, bulges=None, **extra):
@@ -1725,6 +1813,7 @@ def build():
     out["text-paths.kcad"] = container(document(load("text-paths.json")))
     out["layer-fields.kcad"] = container(document(load("layer-fields.json")))
     out["topology.kcad"] = container(document(load("topology.json")))
+    out["rasters.kcad"] = container(document(load("rasters.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

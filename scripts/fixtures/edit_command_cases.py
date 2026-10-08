@@ -85,6 +85,7 @@ GEOMETRY = {
     "table": ["p", "rotation", "height", "rows", "columns", "cells", "merges", "aligns", "header", "grid", "frame", "textStyle", "font", "bold",
               "italic", "oblique", "source"],
     "image": ["p", "width", "height", "rotation", "mirror", "asset", "file", "clip", "opacity"],
+    "raster": ["affine", "width", "height", "bands", "sample", "asset", "file", "srid", "style", "opacity"],
 }
 
 
@@ -1294,6 +1295,78 @@ cases.append({
          "expect": I_NOTHING},
         {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": uid(2), "geometry": {**IMAGE, "clip": CLIP}}]},
          "result": failed("layer_locked", locked_message("Kilitli katman"), "changes[0].uid"), "expect": I_NOTHING},
+    ],
+})
+
+# Raster stili and Raster oturt (docs/adr/0204 §9): the raster updated in place, its id and its own fields kept; a look's
+# defaults are no fields; Raster oturt's affine, or the raster put in place of its resampled file (another file, size and
+# samples); the rules of its fields, its embedded file in the library, a locked layer.
+RASTER_ID = "raster-0011223344556677"
+RASTER_ITEM = {"kind": "asset", "id": RASTER_ID, "name": "dem", "path": ["Rasterler"], "format": "tiff", "data": "data:image/tiff;base64,SUkqAA==",
+               "width": 50, "height": 40}
+RASTER = {"kind": "raster", "affine": [487000, 0.5, 0, 4420800, 0, -0.5], "width": 2000, "height": 1500, "bands": 3, "sample": "u8",
+          "file": "tarama/pafta-12.tif", "srid": 0, "style": {"render": "rgb", "bands": [1, 2, 3]}}
+R_ENTITIES = [{**RASTER, "id": 1, "layerId": "yapi", "attrs": {"Pafta": "12"}}, {**RASTER, "id": 2, "layerId": "kilitli", "attrs": {}}]
+R_SETUP = {**SETUP, "entities": R_ENTITIES, "styles": {"items": [RASTER_ITEM], "categories": []}}
+R_NOTHING = {"ids": [1, 2], "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
+SHADED = {**RASTER, "bands": 1, "sample": "f32", "style": {"render": "rampShade", "bands": [1], "stretch": "percent", "ramp": "Viridis",
+                                                             "invert": True, "azimuth": 270, "altitude": 30, "zFactor": 3, "nodata": -9999,
+                                                             "resampling": "nearest"}, "opacity": 0.6}
+PLACED = {**RASTER, "affine": [487100.25, 0.4998, 0.0123, 4420750.5, 0.0123, -0.4998]}
+RESAMPLED = {**RASTER, "affine": [487095, 0.5, 0, 4420760, 0, -0.5], "width": 2100, "height": 1620, "bands": 4, "file": "tarama/pafta-12-oturtulmus.tif",
+             "style": {"render": "rgb", "bands": [1, 2, 3, 4]}}
+
+
+def raster(geometry):
+    out = {**{k: v for k, v in R_ENTITIES[0].items() if k not in GEOMETRY["raster"]}, **json.loads(json.dumps(geometry))}
+    st = out["style"]
+    for k, default in (("stretch", "none"), ("invert", False), ("resampling", "bilinear")):
+        if st.get(k) == default:
+            st.pop(k)
+    return out
+
+
+cases.append({
+    "name": "Raster stili ve Raster oturt: raster yerinde yazılır, kimliği ve öznitelikleri kalır; görünüşün varsayılanları alan değildir; oturtulan raster yeniden örneklenmiş dosyasını gösterir; adları Raster stili, Raster oturt (ADR 0204 §9)",
+    "setup": R_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "pafta"},
+        {"op": "execute", "input": {"operation": "rasterStyle", "changes": [{"kind": "update", "uid": uid(1), "geometry": SHADED}]},
+         "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": raster(SHADED)}, "uids": {"1": "pafta"}, "canUndo": True, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "rasterStyle", "changes": [{"kind": "update", "uid": uid(1),
+                                                                            "geometry": {**RASTER, "style": {"render": "gray", "bands": [3], "stretch": "none",
+                                                                                                             "invert": False, "resampling": "bilinear"}}}]},
+         "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": raster({**RASTER, "style": {"render": "gray", "bands": [3]}})}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "rasterGeoref", "changes": [{"kind": "update", "uid": uid(1), "geometry": PLACED}]},
+         "result": done(changed=[uid(1)]), "expect": {"entities": {"1": raster(PLACED)}, "uids": {"1": "pafta"}}},
+        {"op": "execute", "input": {"operation": "rasterGeoref", "changes": [{"kind": "update", "uid": uid(1), "geometry": RESAMPLED}]},
+         "result": done(changed=[uid(1)]), "expect": {"entities": {"1": raster(RESAMPLED)}}},
+        {"op": "undo", "returns": "Raster oturt", "expect": {"entities": {"1": raster(PLACED)}}},
+        {"op": "undo", "returns": "Raster oturt", "expect": {"entities": {"1": raster({**RASTER, "style": {"render": "gray", "bands": [3]}})}}},
+        {"op": "undo", "returns": "Raster stili", "expect": {"entities": {"1": raster(SHADED)}}},
+        {"op": "undo", "returns": "Raster stili", "expect": {"entities": {"1": R_ENTITIES[0]}, "canUndo": False}},
+    ],
+})
+cases.append({
+    "name": "Raster stili ve oturt, ret: rasterin kuralları (dönüşüm, görünüşün bantları, donukluk), gömülü dosya kitaplıkta, kilitli katmandaki raster; hiçbir şey yazılmaz (ADR 0204 §9)",
+    "setup": R_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "rasterGeoref", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**RASTER, "affine": [487000, 0, 0, 4420800, 0, 0]}}]},
+         "result": failed("invalid_raster", "Rasterin dönüşümü tersinmiyor: pikselin iki kenarı aynı doğrultuda ya da sıfır.", "changes[0].geometry"), "expect": R_NOTHING},
+        {"op": "execute", "input": {"operation": "rasterStyle", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**RASTER, "style": {"render": "ramp", "bands": [4]}}}]},
+         "result": failed("invalid_raster", "Rasterin 3 bandı var; 4. bant gösterilemez.", "changes[0].geometry"), "expect": R_NOTHING},
+        {"op": "execute", "input": {"operation": "rasterStyle", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**RASTER, "opacity": 0}}]},
+         "result": failed("invalid_raster", "Rasterin donukluğu 0.1 ile 1 arasında olmalı; 0 verildi.", "changes[0].geometry"), "expect": R_NOTHING},
+        {"op": "execute", "input": {"operation": "rasterGeoref", "changes": [{"kind": "update", "uid": uid(1),
+                                                                             "geometry": {**{k: v for k, v in RASTER.items() if k != "file"}, "asset": "raster-ffffffffffffffff"}}]},
+         "result": failed("unknown_asset", "“raster-ffffffffffffffff” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG ya da JPEG'in kimliğini verin.",
+                          "changes[0].geometry.asset"), "expect": R_NOTHING},
+        {"op": "execute", "input": {"operation": "rasterGeoref", "changes": [{"kind": "update", "uid": uid(1), "geometry": PLACED}]},
+         "nonFinite": {"changes[0].geometry.affine[2]": "NaN"}, "result": failed("not_finite", not_finite_message(1), "changes[0].geometry"), "expect": R_NOTHING},
+        {"op": "execute", "input": {"operation": "rasterStyle", "changes": [{"kind": "update", "uid": uid(2), "geometry": SHADED}]},
+         "result": failed("layer_locked", locked_message("Kilitli katman"), "changes[0].uid"), "expect": R_NOTHING},
     ],
 })
 

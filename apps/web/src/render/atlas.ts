@@ -1,4 +1,5 @@
 import { cssColor, drawShape } from './canvasShapes';
+import { rasterService } from './rasterService';
 import type { AtlasHit, AtlasImage, AtlasSource, AtlasUpload, TileMark } from './types';
 import { TEXT_BOX } from './types';
 
@@ -86,6 +87,8 @@ export class Atlas implements AtlasSource {
   private lastOverflow = -Infinity;
 
   constructor() {
+    // A raster's tiles arrive from its workers (docs/adr/0204 §5): the view redraws.
+    rasterService().listen(() => this.onChange?.());
     this.scratch = document.createElement('canvas');
     this.measure = document.createElement('canvas').getContext('2d')!;
     // Text drawn before the UI font arrived used a fallback: draw everything again.
@@ -262,6 +265,14 @@ export class Atlas implements AtlasSource {
       })
       .catch(() => this.decoded.set(`picture|${key}`, 'failed'));
     return null;
+  }
+
+  rasterTile(raster: string, url: string | null, look: string, affine: readonly number[], level: number, tx: number, ty: number): Uint8Array | null {
+    return rasterService().tile(raster, url, look, affine, level, tx, ty);
+  }
+
+  rasterFrame(): void {
+    rasterService().frame();
   }
 
   /** The decoded picture of an SVG or raster image, or null while it loads (the view redraws when it arrives). */

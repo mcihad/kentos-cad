@@ -35,9 +35,9 @@ use crate::{
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES,
     SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
-    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
-    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
+    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_RASTERS,
+    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS,
+    SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
     SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
@@ -899,7 +899,8 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 28 when its survey settings
+/// The oldest schema that holds the drawing: 29 when it has a raster
+/// (docs/adr/0204 §2), 28 when its survey settings
 /// name an a priori standard deviation (docs/adr/0203 §1), 27 when the
 /// project has topology settings (docs/adr/0202 §7), 26 when a layer has fields
 /// (docs/adr/0199 §1), 25 when a text of it or of a block definition has a
@@ -931,6 +932,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| !n.fields.is_empty() || schemas(&n.children))
+    }
+    // A raster is the drawing's only (docs/adr/0204 §2).
+    if doc.entities.iter().any(|e| matches!(e, Entity::Raster(_))) {
+        return SCHEMA_WITH_RASTERS;
     }
     if doc
         .settings

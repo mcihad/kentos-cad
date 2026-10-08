@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 402,
-      "implemented": 390,
+      "total": 405,
+      "implemented": 393,
       "partial": 0,
       "pending": 12
     },
@@ -61,14 +61,14 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 503,
-      "implemented": 503,
+      "total": 536,
+      "implemented": 536,
       "partial": 0,
       "pending": 0
     },
     "screens": {
-      "total": 118,
-      "implemented": 118,
+      "total": 121,
+      "implemented": 121,
       "partial": 0,
       "pending": 0
     },
@@ -101,12 +101,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 144,
-    "commandsOnDesktop": 330,
+    "commandsWithoutTests": 147,
+    "commandsOnDesktop": 333,
     "desktop": {
       "commands": {
-        "total": 402,
-        "implemented": 330,
+        "total": 405,
+        "implemented": 333,
         "partial": 0,
         "pending": 12,
         "none": 58,
@@ -161,16 +161,16 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 503,
-        "implemented": 503,
+        "total": 536,
+        "implemented": 536,
         "partial": 0,
         "pending": 0,
         "none": 0,
         "n/a": 0
       },
       "screens": {
-        "total": 118,
-        "implemented": 98,
+        "total": 121,
+        "implemented": 101,
         "partial": 2,
         "pending": 0,
         "none": 17,
@@ -5183,6 +5183,103 @@
       "tests": [
         "apps/web/src/app/workspaces.test.ts"
       ]
+    },
+    {
+      "id": "raster.add",
+      "title": "Raster ekle…",
+      "short": "Raster ekle",
+      "category": "Raster",
+      "icon": "rasterAdd",
+      "description": "GeoTIFF, TIFF ya da dünya dosyalı PNG ve JPEG ekler: boyu, bantları, türü, konumu, sistemi ve nodata değeri gösterilir; sistemi projeninkinden başkaysa eklenmez, söylemiyorsa projenin sisteminde olduğu onaylanır, konumu yoksa görünümün ortasına oturtulmamış eklenir. Dosyanın adıyla yeni katmana tek adımda yazılır; büyük raster karolarla ve önizleme piramidiyle çizilir.",
+      "aliases": [
+        "RASTER",
+        "RASTEREKLE",
+        "GEOTIFF",
+        "ORTOFOTO",
+        "RASTERYUKLE",
+        "RASTERYÜKLE"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CAD › Ekle › Raster",
+        "CBS › Veri › Raster"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.georef",
+      "title": "Raster oturt…",
+      "short": "Raster oturt",
+      "category": "Raster",
+      "icon": "rasterGeoref",
+      "description": "Rasteri kontrol noktalarıyla yerine oturtur: noktanın pikseli rasterin üstünde, hedefi çizimde gösterilir ya da yazılır. Helmert, afin, projektif, polinom 2 ve 3, ince plaka; artıklar ve m0 her değişiklikte. Helmert ve afin rasterin dönüşümünü değiştirir; ötekiler rasteri yeniden örnekleyip GeoTIFF olarak indirir ve gösterir.",
+      "aliases": [
+        "RASTEROTURT",
+        "OTOREG",
+        "GEOREF",
+        "GEOREFERANS",
+        "GEOREFERENCE"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CAD › Ekle › Raster",
+        "CBS › Veri › Raster"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.style",
+      "title": "Raster stili…",
+      "short": "Raster stili",
+      "category": "Raster",
+      "icon": "rasterStyle",
+      "description": "Seçili rasterin görünüşünü değiştirir: renkli, gri, paletli, renk rampası, gölgeli kabartma ya da rampa ve gölge; bantlar, gerdirme (bantların istatistikleriyle), rampa, ışığın doğrultusu ve yüksekliği, nodata, saydamlık ve örnekleme. Çizim değişiklikleri hemen gösterir; Uygula tek adımda yazar.",
+      "aliases": [
+        "RASTERSTILI",
+        "RASTERSTİLİ",
+        "HILLSHADE",
+        "GOLGELIKABARTMA",
+        "GÖLGELİKABARTMA",
+        "RAMPA"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CAD › Ekle › Raster",
+        "CBS › Veri › Raster"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/properties/rasterRows.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
     },
     {
       "id": "server.check",
@@ -21453,6 +21550,10 @@
         {
           "kind": "image",
           "type": "ImageEntity"
+        },
+        {
+          "kind": "raster",
+          "type": "RasterEntity"
         }
       ],
       "status": "implemented",
@@ -24120,6 +24221,451 @@
       }
     },
     {
+      "id": "RasterEntity.affine",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "affine",
+      "type": "[number, number, number, number, number, number]",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.asset",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "asset",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.attrs",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "attrs",
+      "type": "{ [key in string]: string }",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.bands",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "bands",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.color",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "color",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.file",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "file",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.height",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "height",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.id",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "id",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.label",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "label",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.layerId",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "layerId",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.lineWeight",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "lineWeight",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.opacity",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "opacity",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.sample",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "sample",
+      "type": "RasterSample",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.srid",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "srid",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.style",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "style",
+      "type": "RasterStyle",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.symbol",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "symbol",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.width",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "width",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterRender",
+      "contract": "RasterRender",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "values": [
+        "rgb",
+        "gray",
+        "palette",
+        "ramp",
+        "hillshade",
+        "rampShade"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterResampling",
+      "contract": "RasterResampling",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "values": [
+        "bilinear",
+        "nearest"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterSample",
+      "contract": "RasterSample",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "values": [
+        "u8",
+        "i8",
+        "u16",
+        "i16",
+        "u32",
+        "i32",
+        "f32",
+        "f64"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStretch",
+      "contract": "RasterStretch",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "values": [
+        "none",
+        "minMax",
+        "percent",
+        "manual"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStyle.altitude",
+      "contract": "RasterStyle",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "altitude",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStyle.azimuth",
+      "contract": "RasterStyle",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "azimuth",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStyle.bands",
+      "contract": "RasterStyle",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "bands",
+      "type": "Array<number>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStyle.invert",
+      "contract": "RasterStyle",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "invert",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStyle.max",
+      "contract": "RasterStyle",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "max",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStyle.min",
+      "contract": "RasterStyle",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "min",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStyle.nodata",
+      "contract": "RasterStyle",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "nodata",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStyle.ramp",
+      "contract": "RasterStyle",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "ramp",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStyle.render",
+      "contract": "RasterStyle",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "render",
+      "type": "RasterRender",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStyle.resampling",
+      "contract": "RasterStyle",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "resampling",
+      "type": "RasterResampling",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStyle.stretch",
+      "contract": "RasterStyle",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "stretch",
+      "type": "RasterStretch",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterStyle.zFactor",
+      "contract": "RasterStyle",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "zFactor",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "RegistryDatum",
       "contract": "RegistryDatum",
       "rust": "crates/shared/contracts/src/crs.rs",
@@ -26682,6 +27228,42 @@
       "note": "Öznitelikler v1'de metindir; tipli öznitelik şeması henüz yok (CLAUDE.md §24.1, TODOS.md DOM-09..11)."
     },
     {
+      "id": "apps/web/src/ui/raster/RasterAddDialog.ts#openRasterAdd",
+      "name": "openRasterAdd",
+      "role": "window",
+      "source": "apps/web/src/ui/raster/RasterAddDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/rasters/add.rs (ADR 0204 §8)"
+    },
+    {
+      "id": "apps/web/src/ui/raster/RasterGeorefDialog.ts#openRasterGeoref",
+      "name": "openRasterGeoref",
+      "role": "window",
+      "source": "apps/web/src/ui/raster/RasterGeorefDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/calc/raster_fit.rs (ADR 0204 §6)"
+    },
+    {
+      "id": "apps/web/src/ui/raster/RasterStyleDialog.ts#openRasterStyle",
+      "name": "openRasterStyle",
+      "role": "window",
+      "source": "apps/web/src/ui/raster/RasterStyleDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/rasters/look.rs (ADR 0204 §8)"
+    },
+    {
       "id": "apps/web/src/ui/ribbon/Ribbon.ts#Ribbon",
       "name": "Ribbon",
       "role": "panel",
@@ -29012,6 +29594,26 @@
               {
                 "command": "tool.imageClip",
                 "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Raster",
+            "icon": "rasterAdd",
+            "items": [
+              {
+                "command": "raster.add",
+                "size": "small"
+              },
+              {
+                "command": "raster.style",
+                "size": "small"
+              },
+              {
+                "command": "raster.georef",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -31369,6 +31971,26 @@
                 {
                   "command": "tool.imageClip",
                   "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Raster",
+              "icon": "rasterAdd",
+              "items": [
+                {
+                  "command": "raster.add",
+                  "size": "small"
+                },
+                {
+                  "command": "raster.style",
+                  "size": "small"
+                },
+                {
+                  "command": "raster.georef",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -33865,6 +34487,26 @@
               ],
               "overflow": [],
               "keep": false
+            },
+            {
+              "label": "Raster",
+              "icon": "rasterAdd",
+              "items": [
+                {
+                  "command": "raster.add",
+                  "size": "small"
+                },
+                {
+                  "command": "raster.style",
+                  "size": "small"
+                },
+                {
+                  "command": "raster.georef",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
             }
           ]
         },
@@ -35391,6 +36033,9 @@
     "takeFrom": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"m12.6 8.6 3 1.6-3 1.6-3-1.6z\" stroke-width=\"1\"/><path d=\"m9.6 12.6 3 1.6 3-1.6\" stroke-width=\"1\"/>",
     "blockInsertFile": "<path d=\"M8.5 2.5h5.5l2.5 2.5v7.5h-8z\"/><path d=\"M14 2.5V5h2.5\"/><circle cx=\"12.5\" cy=\"8.6\" r=\"1.8\"/><path d=\"M3.5 16.5 8.5 11.5\"/><rect x=\"2\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "imageInsert": "<rect x=\"3\" y=\"4\" width=\"14\" height=\"11\" rx=\".8\"/><path d=\"m5.6 12.6 3-3.4 2.3 2.2 1.6-1.6 2.1 2.8\" stroke-width=\"1.2\"/><circle cx=\"13.2\" cy=\"7.2\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"1.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "rasterAdd": "<rect x=\"2.5\" y=\"3\" width=\"11.5\" height=\"11.5\" rx=\"1\"/><path d=\"M6.33 3v11.5M10.17 3v11.5M2.5 6.83h11.5M2.5 10.67h11.5\" stroke-width=\"1\"/><rect x=\"2.5\" y=\"3\" width=\"3.83\" height=\"3.83\" fill=\"currentColor\" fill-opacity=\".55\" stroke=\"none\"/><rect x=\"6.33\" y=\"6.83\" width=\"3.84\" height=\"3.84\" fill=\"currentColor\" fill-opacity=\".55\" stroke=\"none\"/><rect x=\"10.17\" y=\"10.67\" width=\"3.83\" height=\"3.83\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><rect x=\"6.33\" y=\"3\" width=\"3.84\" height=\"3.83\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><path d=\"M16 12.5v6M13 15.5h6\" stroke-width=\"1.6\"/>",
+    "rasterStyle": "<path d=\"M2.5 12 6.5 6l3 3.5L12.5 5l5 7\" stroke-width=\"1.3\"/><path d=\"M2.5 12 6.5 6l3 3.5L12.5 5l5 7z\" fill=\"currentColor\" fill-opacity=\".22\" stroke=\"none\"/><rect x=\"2.5\" y=\"14.5\" width=\"15\" height=\"3\" rx=\".6\" stroke-width=\"1.1\"/><rect x=\"6.25\" y=\"14.5\" width=\"3.75\" height=\"3\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><rect x=\"10\" y=\"14.5\" width=\"3.75\" height=\"3\" fill=\"currentColor\" fill-opacity=\".6\" stroke=\"none\"/><rect x=\"13.75\" y=\"14.5\" width=\"3.75\" height=\"3\" fill=\"currentColor\" fill-opacity=\".9\" stroke=\"none\"/>",
+    "rasterGeoref": "<path d=\"M2.5 7 11 4.5l1.5 9-8.5 2.5z\" stroke-width=\"1.3\"/><path d=\"M6.8 5.8l1.4 8.6M3.2 11.4l8.6-2.4\" stroke-width=\".9\"/><path d=\"M11 4.5l3.6-1.1\" stroke-width=\"1\" stroke-dasharray=\"1.4 1.2\"/><circle cx=\"16.5\" cy=\"3\" r=\"1.6\" stroke-width=\"1.1\"/><path d=\"M16.5 .6v1.2M16.5 4.2v1.2M14.1 3h1.2M17.7 3h1.2\" stroke-width=\"1\"/><path d=\"M4 16l-1.6 1.6\" stroke-width=\"1\" stroke-dasharray=\"1.4 1.2\"/><circle cx=\"2\" cy=\"18\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/>",
     "imageClip": "<path d=\"M5.5 2.5v12h12\"/><path d=\"M2.5 5.5h12v12\"/><path d=\"m7.4 12 2.1-2.5 1.5 1.5 1.1-1.1 1.4 2.1\" stroke-width=\"1.1\"/>",
     "labelsToText": "<path d=\"M2.5 3.5h6.4l2.6 2.7-2.6 2.7H2.5z\"/><circle cx=\"4.7\" cy=\"6.2\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M6 10.5v4h4.3m-1.8-1.8 1.8 1.8-1.8 1.8\"/><path d=\"M12.3 10.8h5.2M14.9 10.8v6.7\"/>",
     "coordinateLabel": "<rect x=\"2\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M3.5 16.5 8.5 11.2H18.8\"/><path d=\"M10.2 4.9l1.35 1.7 1.35-1.7M11.55 6.6v2\" stroke-width=\"1.2\"/><path d=\"M14.4 7.9h4\" stroke-width=\"1.5\"/><path d=\"M10.3 12.9l2.5 3M12.8 12.9l-2.5 3\" stroke-width=\"1.2\"/><path d=\"M14.4 14.6h3.4\" stroke-width=\"1.5\"/>",

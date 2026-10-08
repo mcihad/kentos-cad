@@ -183,6 +183,10 @@ pub enum Dialog {
     LayerList,
     /// Veri karşılaştır (data_compare.rs, docs/adr/0179); the window is `App::data_compare`.
     DataCompare,
+    /// Raster ekle (rasters/add.rs, docs/adr/0204 §8); the window is `App::rasters.add`.
+    RasterAdd,
+    /// Raster stili (rasters/look.rs, docs/adr/0204 §8); the window is `App::rasters.look`.
+    RasterStyle,
     /// Kayıtlı ölçüleri denetle (cogo.rs, docs/adr/0180); the window is `App::cogo`.
     Cogo,
     /// Tablo ekle (tables/insert.rs, docs/adr/0184); the window is `App::table_insert`.
@@ -258,6 +262,11 @@ pub enum Message {
     /// A pointer event taken so nothing under it reacts (a right click on
     /// Komut ara keeps the ribbon's menu away).
     Swallowed,
+    /// The raster service made tiles, or a pyramid moved on: the drawing
+    /// draws again with them (docs/adr/0204 §5).
+    RastersReady,
+    /// The raster windows (Raster ekle, Raster stili) and the rasters' panel (rasters/).
+    Rasters(crate::rasters::Event),
     /// A mouse press anywhere or the window losing the focus while the key
     /// tips show: they go (ribbon_keys.rs, docs/adr/0118).
     KeyTipsAway,
@@ -539,6 +548,10 @@ pub struct App {
     pub(crate) find_replace: Option<crate::find_replace::Window>,
     /// Metin dosyası yerleştir asked for its file: the dialog opens after the update (text_file.rs).
     pub(crate) text_file_wanted: bool,
+    /// Koordinat oku's points whose rasters' values are to be read (docs/adr/0204 §8).
+    pub(crate) raster_values_wanted: Vec<kentos_interaction::Vec2>,
+    /// Raster ekle and Raster stili (rasters/, docs/adr/0204 §8).
+    pub(crate) rasters: crate::rasters::Windows,
     /// Resim ekle asked for a picture file (docs/adr/0192 §5).
     pub(crate) image_file_wanted: bool,
     pub(crate) text_field_select: bool,
@@ -857,6 +870,8 @@ impl App {
             attribute_values: None,
             find_replace: None,
             text_file_wanted: false,
+            raster_values_wanted: Vec::new(),
+            rasters: crate::rasters::Windows::default(),
             image_file_wanted: false,
             text_field_select: false,
             text_field_release: false,
@@ -1086,6 +1101,12 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // The rasters' tiles as they are made (rasters/tiles.rs, docs/adr/0204 §5).
+            if crate::rasters::tiles::in_use() {
+                Subscription::run(crate::rasters::tiles::ready)
+            } else {
+                Subscription::none()
+            },
             // The status bar's message: when it goes, and its fades (message_log.rs).
             self.log_subscription(Instant::now()),
             // The kept layout, written after its last change; the window's size.
@@ -1145,6 +1166,7 @@ impl App {
             self.find_replace_tasks(),
             self.text_file_tasks(),
             self.image_file_tasks(),
+            self.raster_values_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
             // The grids the project's datum choices name, read into the core (grids.rs).
@@ -1278,6 +1300,9 @@ impl App {
             Message::LayoutSave => self.layout.write(Instant::now(), false),
             Message::GridsLooked(looked) => self.grids_looked(looked),
             Message::WindowResized(size) => self.window_resized(size),
+            // The next frame draws them; the bottom panel shows the pyramids' progress.
+            Message::RastersReady => {}
+            Message::Rasters(event) => return self.rasters_event(event),
             Message::CommandCancelled => {
                 self.line_focused = false;
                 return self.run("tool.cancel");
@@ -1951,6 +1976,9 @@ impl App {
             "layer.list" => self.open_layer_list(),
             // Veri karşılaştır (docs/adr/0179).
             "data.compare" => self.open_data_compare(),
+            // Raster ekle and Raster stili (rasters/, docs/adr/0204 §8); Raster oturt is a Hesap window.
+            "raster.add" => return self.raster_add_command(),
+            "raster.style" => return self.raster_look_command(),
             // Kayıtlı ölçüler (docs/adr/0180): the check's window, and the selection's recorded values from the drawing.
             "cogo.check" => self.open_cogo_check(),
             "cogo.update" => {

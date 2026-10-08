@@ -1,6 +1,7 @@
 import { batchImage, batchImagePx, batchInView, batchLegible, MARKER_STRIDE, STROKE_STRIDE, type AtlasHit, type AtlasSource, type RGBA, type ScaleRange, type StyledBatch } from '../types';
 import { fitted, GREY } from '../pictures';
-import { AREA_VS, GRADIENT_FS, HATCH_FS, IMAGE_FS, MARKER_FS, MARKER_VS, PATTERN_FS, SHAPE_IDS, STROKE_FS, STROKE_VS, TILE_FS } from './styledShaders';
+import { RasterQuads, RasterSlots, SLOT, UPLOADS_PER_FRAME, rasterAtlasSize, rasterQuads } from '../rasterPass';
+import { AREA_VS, GRADIENT_FS, HATCH_FS, IMAGE_FS, MARKER_FS, MARKER_VS, PATTERN_FS, RASTER_FS, RASTER_VS, SHAPE_IDS, STROKE_FS, STROKE_VS, TILE_FS } from './styledShaders';
 
 /**
  * WebGL2 side of the styled batches (docs/STYLE.md §6): creates the vertex
@@ -34,6 +35,8 @@ export interface GpuStyled {
   /** Set by prepare: drawn this frame, and where its image is. */
   visible: boolean;
   hit: AtlasHit | null;
+  /** A raster's quads this frame (docs/adr/0204 §5): written into its buffer by prepare. */
+  quads?: RasterQuads;
 }
 
 export interface StyledFrame {
@@ -84,6 +87,11 @@ export class StyledRenderer {
   private readonly pattern: Program;
   private readonly marker: Program;
   private readonly image: Program;
+  /** Rasters' tiles (docs/adr/0204 §5): their program, atlas page, its slots and two samplers. */
+  private readonly raster: Program;
+  private rasterTexture: WebGLTexture | null = null;
+  private rasterSlots: RasterSlots | null = null;
+  private samplers: { linear: WebGLSampler; nearest: WebGLSampler } | null = null;
   /** The pictures' own textures by key (docs/adr/0192 §3); the grey stand-in under `''`. */
   private readonly pictures = new Map<string, WebGLTexture>();
   private atlas: AtlasSource | null = null;
@@ -112,6 +120,28 @@ void main() { outColor = u_color; }`;
     this.pattern = make(AREA_VS, PATTERN_FS, ['a_pos'], [...FRAME_UNIFORMS, ...PATTERN_UNIFORMS]);
     this.marker = make(MARKER_VS, MARKER_FS, ['a_i0', 'a_i1'], [...FRAME_UNIFORMS, 'u_unit', 'u_offset', 'u_anchor', 'u_fit', 'u_aspect', 'u_strokeW', 'u_kind', 'u_shape', 'u_sp', 'u_fill', 'u_stroke', 'u_atlas', 'u_rect', 'u_opacity']);
     this.image = make(AREA_VS, IMAGE_FS, ['a_pos'], [...FRAME_UNIFORMS, 'u_picture', 'u_frame', 'u_rot', 'u_opacity', 'u_mirror']);
+    this.raster = make(RASTER_VS, RASTER_FS, ['a_q'], [...FRAME_UNIFORMS, 'u_atlas', 'u_opacity']);
+  }
+
+  /** The raster atlas page and its samplers, made the first time a raster draws. */
+  private rasterPage(): RasterSlots {
+    if (this.rasterSlots) return this.rasterSlots;
+    const gl = this.gl;
+    const [w, h] = rasterAtlasSize(gl.getParameter(gl.MAX_TEXTURE_SIZE) as number);
+    this.rasterTexture = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.rasterTexture);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, w, h);
+    const sampler = (filter: number) => {
+      const s = gl.createSampler()!;
+      gl.samplerParameteri(s, gl.TEXTURE_MIN_FILTER, filter);
+      gl.samplerParameteri(s, gl.TEXTURE_MAG_FILTER, filter);
+      gl.samplerParameteri(s, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.samplerParameteri(s, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      return s;
+    };
+    this.samplers = { linear: sampler(gl.LINEAR), nearest: sampler(gl.NEAREST) };
+    return (this.rasterSlots = new RasterSlots(w, h));
   }
 
   /**
@@ -194,6 +224,11 @@ void main() { outColor = u_color; }`;
         this.attrib(this.marker.a.a_i0, 4, stride, 0, 1);
         this.attrib(this.marker.a.a_i1, 1, stride, 16, 1);
         out.push({ ...common, count: b.instances.length / MARKER_STRIDE });
+      } else if (b.paint.kind === 'raster') {
+        // A raster's quads change every frame (docs/adr/0204 §5): written by prepare.
+        gl.bufferData(gl.ARRAY_BUFFER, 16, gl.DYNAMIC_DRAW);
+        this.attrib(this.raster.a.a_q, 4, 16, 0, 0);
+        out.push({ ...common, count: 0, quads: new RasterQuads() });
       } else {
         gl.bufferData(gl.ARRAY_BUFFER, b.positions, gl.STATIC_DRAW);
         // Every area program reads a_pos at the same location (compiled from one vertex shader).
@@ -237,11 +272,13 @@ void main() { outColor = u_color; }`;
     const view = [f.cam[0] - hw, f.cam[1] - hh, f.cam[0] + hw, f.cam[1] + hh] as const;
     const atlas = this.atlas;
     atlas?.beginFrame();
+    this.prepareRasters(layers, f, view);
     for (let pass = 0; pass < 2; pass++) {
       const generation = atlas?.generation ?? 0;
       for (const list of layers)
         for (const s of list) {
           const b = s.batch;
+          if (s.quads) continue;
           s.visible = inScale(b, f.scaleDenominator) && batchInView(b, view, f.pxPerM, f.dpr) && batchLegible(b, f.pxPerM, f.dpr);
           s.hit = null;
           if (!s.visible) continue;
@@ -253,6 +290,42 @@ void main() { outColor = u_color; }`;
         }
       if ((atlas?.generation ?? 0) === generation) break;
     }
+  }
+
+  /**
+   * Rasters' tiles this frame (docs/adr/0204 §5): each raster in view picks its tiles, new ones go into the atlas
+   * page (at most `UPLOADS_PER_FRAME`), its quads into its buffer.
+   */
+  private prepareRasters(layers: readonly (readonly GpuStyled[])[], f: StyledFrame, view: readonly [number, number, number, number]): void {
+    const atlas = this.atlas;
+    let started = false;
+    const budget = { left: UPLOADS_PER_FRAME };
+    const gl = this.gl;
+    for (const list of layers)
+      for (const s of list) {
+        if (!s.quads) continue;
+        const b = s.batch;
+        s.visible = false;
+        if (!atlas || b.kind !== 'fill' || b.paint.kind !== 'raster' || !inScale(b, f.scaleDenominator) || !batchInView(b, view, f.pxPerM, f.dpr)) continue;
+        const slots = this.rasterPage();
+        if (!started) {
+          started = true;
+          slots.beginFrame();
+          atlas.rasterFrame();
+        }
+        const put = (slot: number, rgba: Uint8Array) => {
+          const [x, y] = slots.origin(slot);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, this.rasterTexture);
+          gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, SLOT, SLOT, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+        };
+        rasterQuads(b.paint, b.origin ?? [0, 0], view, f.pxPerM, slots, atlas, put, budget, s.quads);
+        s.count = s.quads.count;
+        s.visible = s.count > 0;
+        if (!s.visible) continue;
+        gl.bindBuffer(gl.ARRAY_BUFFER, s.buffers[0]);
+        gl.bufferData(gl.ARRAY_BUFFER, s.quads.data.subarray(0, s.count * 4), gl.DYNAMIC_DRAW);
+      }
   }
 
   /**
@@ -361,6 +434,21 @@ void main() { outColor = u_color; }`;
           gl.uniform3f(p.u.u_round, paint.centre[0], paint.centre[1], paint.radius);
           gl.uniform1i(p.u.u_shape, paint.shape);
           gl.uniform1i(p.u.u_inverted, paint.inverted ? 1 : 0);
+        } else if (paint.kind === 'raster') {
+          // Its tiles from the raster atlas, sampled as its look says (docs/adr/0204 §5).
+          const p = this.raster;
+          this.use(p, f, b);
+          this.premultiplied(true);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, this.rasterTexture);
+          if (this.samplers) gl.bindSampler(0, paint.nearest ? this.samplers.nearest : this.samplers.linear);
+          gl.uniform1i(p.u.u_atlas, 0);
+          gl.uniform1f(p.u.u_opacity, paint.opacity);
+          gl.drawArrays(gl.TRIANGLES, 0, s.count);
+          gl.bindSampler(0, null);
+          // The atlas again for the batches after it.
+          gl.bindTexture(gl.TEXTURE_2D, this.texture);
+          continue;
         } else if (paint.kind === 'image') {
           const p = this.image;
           this.use(p, f, b);
@@ -453,7 +541,12 @@ void main() { outColor = u_color; }`;
   dispose(): void {
     const gl = this.gl;
     // The atlas is not detached: after a backend switch it already feeds the new backend.
-    for (const p of [this.stroke, this.hatch, this.gradient, this.tile, this.solid, this.pattern, this.marker, this.image]) gl.deleteProgram(p.program);
+    for (const p of [this.stroke, this.hatch, this.gradient, this.tile, this.solid, this.pattern, this.marker, this.image, this.raster]) gl.deleteProgram(p.program);
+    if (this.rasterTexture) gl.deleteTexture(this.rasterTexture);
+    if (this.samplers) {
+      gl.deleteSampler(this.samplers.linear);
+      gl.deleteSampler(this.samplers.nearest);
+    }
     if (this.texture) gl.deleteTexture(this.texture);
     for (const t of this.pictures.values()) gl.deleteTexture(t);
     this.pictures.clear();

@@ -33,7 +33,8 @@
 //! 4. every id names an object of the document (in order);
 //! 5. not every object on a locked layer (with others, a warning); a
 //!    spread with at least three objects off locked layers;
-//! 6. no point of an object beyond a projective transform's horizon;
+//! 6. no raster under a projective transform or a rubber sheet (docs/adr/0204 §7);
+//!    no point of an object beyond a projective transform's horizon;
 //! 7. no coordinate carried past the largest float64 by the transform.
 //!
 //! Objects on a locked layer are neither changed nor copied. The web's tools
@@ -585,6 +586,16 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
             continue;
         }
         let before = shape(entity);
+        // Only resampling its pixels could follow a projective map or a rubber sheet (docs/adr/0204 §7).
+        let bends = matches!(&how, How::Sheet(_) | How::Warp(Warp::Projective { .. }));
+        if bends && matches!(entity, Entity::Raster(_)) {
+            let i = input.uids.iter().position(|u| u == uid).unwrap_or(0);
+            return Err(Stop::Failed(checks::error(
+                codes::RASTER_NOT_WARPED,
+                "Raster projektif dönüşümle ya da kauçuk levhayla taşınmaz: pikselleri yeniden örneklenmeli. Rasteri seçimden çıkarın; Raster oturt ile oturtun.".into(),
+                Some(format!("uids[{i}]")),
+            )));
+        }
         let e = match &how {
             How::Arrange(..) => {
                 arranged.push((slot, entity, uid, before));
@@ -785,6 +796,18 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
                 && height.is_finite()
                 && rotation.is_finite()
                 && clip.as_deref().is_none_or(pts)
+                && opacity.is_none_or(f64::is_finite)
+        }
+        Shape::Raster {
+            affine,
+            width,
+            height,
+            opacity,
+            ..
+        } => {
+            affine.iter().all(|v| v.is_finite())
+                && width.is_finite()
+                && height.is_finite()
                 && opacity.is_none_or(f64::is_finite)
         }
         Shape::Line { a, b } => pt(a) && pt(b),

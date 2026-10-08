@@ -349,6 +349,11 @@ fn geometry(e: &Entity, blocks: &Placing, rep: &mut Report) -> Option<Geometry> 
             rep.skip("Resim", "GeoJSON'da resim nesnesi yok; yazılmadı", 0);
             return None;
         }
+        // GeoJSON holds no raster (docs/adr/0204 §10).
+        Entity::Raster(_) => {
+            rep.skip("Raster", "GeoJSON'da raster yok; yazılmadı", 0);
+            return None;
+        }
         // Its line, as the server projects it (docs/adr/0146 §8).
         Entity::Leader(l) => {
             rep.note(

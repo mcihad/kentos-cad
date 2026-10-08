@@ -160,6 +160,14 @@ pub const INVALID_IMAGE: &str = "invalid_image";
 pub const UNKNOWN_ASSET: &str = "unknown_asset";
 /// A picture among the objects a block is defined from (docs/adr/0192 §1).
 pub const IMAGE_IN_BLOCK: &str = "image_in_block";
+/// A raster's affine, size, bands, samples, source, look or opacity out of
+/// their rules (docs/adr/0204 §9).
+pub const INVALID_RASTER: &str = "invalid_raster";
+/// A raster among the objects a block is defined from (docs/adr/0204 §2).
+pub const RASTER_IN_BLOCK: &str = "raster_in_block";
+/// A raster under a projective transform or a rubber sheet, which only
+/// resampling its pixels could follow (docs/adr/0204 §7).
+pub const RASTER_NOT_WARPED: &str = "raster_not_warped";
 /// Tablo's edit (`table`, `tableUpdate`) changing an object that is not a
 /// table, or into one that is not (docs/adr/0184 §6).
 pub const NOT_A_TABLE: &str = "not_a_table";

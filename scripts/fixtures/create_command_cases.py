@@ -85,6 +85,15 @@ def made(obj, slot, layer_id="yapi"):
     # A picture's (docs/adr/0192 §1): not mirrored is no field.
     if out["kind"] == "image" and out.get("mirror") is not True:
         out.pop("mirror", None)
+    # A raster's look (docs/adr/0204 §2): no stretch, not inverted and bilinear are no fields.
+    if out["kind"] == "raster":
+        st = out["style"]
+        if st.get("stretch") == "none":
+            st.pop("stretch")
+        if st.get("invert") is not True:
+            st.pop("invert", None)
+        if st.get("resampling") == "bilinear":
+            st.pop("resampling")
     # A table's (docs/adr/0184 §1): no ranges, no heading row.
     if out["kind"] == "table":
         if out.get("merges") == []:
@@ -1197,6 +1206,104 @@ cases.append({
          "result": failed("unknown_asset", unknown_asset("resim-ffffffffffffffff"), "objects[1].geometry.asset"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**IMAGE, "asset": "cizim-1"})]},
          "result": failed("unknown_asset", unknown_asset("cizim-1"), "objects[0].geometry.asset"), "expect": NOTHING},
+    ],
+})
+
+
+# ── Raster ekle (docs/adr/0204 §9) ──────────────────────────────────────
+
+RASTER_ID = "raster-0011223344556677"
+RASTER_ITEM = {"kind": "asset", "id": RASTER_ID, "name": "dem", "path": ["Rasterler"], "format": "tiff", "data": "data:image/tiff;base64,SUkqAA==", "width": 50, "height": 40}
+R_SETUP = {**SETUP, "styles": {"items": [RASTER_ITEM, PICTURE, {**PICTURE, "id": "cizim-1", "format": "svg", "data": "<svg/>"}], "categories": []}}
+RGB = {"render": "rgb", "bands": [1, 2, 3]}
+RASTER = {"kind": "raster", "affine": [487000, 0.5, 0, 4420800, 0, -0.5], "width": 2000, "height": 1500, "bands": 3, "sample": "u8",
+          "file": "orto/pafta-12.tif", "srid": 5256, "style": RGB}
+rasters = [
+    O(RASTER),
+    O({"kind": "raster", "affine": [487000, 0.25, 0, 4420100, 0, -0.25], "width": 50, "height": 40, "bands": 1, "sample": "i8", "asset": RASTER_ID,
+       "srid": 5256, "style": {"render": "rampShade", "bands": [1], "stretch": "manual", "min": -20, "max": 90, "ramp": "Arazi", "invert": True,
+                               "azimuth": 300, "altitude": 40, "zFactor": 2.5, "nodata": -128, "resampling": "nearest"}, "opacity": 0.7},
+      attrs={"Kaynak": "HGM"}),
+    # The defaults written out: no stretch, not inverted, bilinear; a band of three in grey; the project's system.
+    O({**RASTER, "srid": 0, "style": {"render": "gray", "bands": [2], "stretch": "none", "invert": False, "resampling": "bilinear"}}),
+]
+
+
+def raster_message(kind, *given):
+    return {
+        "affine": "Rasterin dönüşümü tersinmiyor: pikselin iki kenarı aynı doğrultuda ya da sıfır.",
+        "size": "Rasterin genişliği ve yüksekliği 1 ile 4000000 piksel arasında olmalı.",
+        "bands": "Rasterin 1 ile 255 arasında bandı olmalı.",
+        "both": "Rasterin kaynağı ya gömülü varlık (asset) ya bağlı dosya (file) olmalı, ikisi birden değil.",
+        "none": "Rasterin kaynağı yok: gömülü varlığın kimliğini (asset) ya da bağlı dosyanın yolunu (file) verin.",
+        "path": "Bağlı dosyanın yolu en çok 4096 harf olmalı ve denetim karakteri içermemeli.",
+        "rgb": "RGB görünüş üç bant ister (dördüncüsü alfa olabilir).",
+        "one": "Bu görünüş tek bant ister.",
+        "band": f"Rasterin {given[0] if given else 0} bandı var; {given[1] if len(given) > 1 else 0}. bant gösterilemez.",
+        "manual": "Elle gerdirmenin en küçüğü ve en büyüğü sonlu sayılar olmalı, en küçük en büyükten küçük.",
+        "ramp": f"“{given[0] if given else ''}” diye bir renk rampası yok; Gri, Arazi, Spektral, Viridis, Mavi-kırmızı, Sıcaklık rampalarından biri seçilmeli.",
+        "light": "Gölgeli kabartmanın ışığı 0–360° doğrultudan, 0–90° yükseklikten gelmeli; yükseklik çarpanı sıfırdan büyük olmalı.",
+        "opacity": f"Rasterin donukluğu 0.1 ile 1 arasında olmalı; {given[0] if given else 0} verildi.",
+    }[kind]
+
+
+def unknown_raster(asset):
+    return f"“{asset}” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG ya da JPEG'in kimliğini verin."
+
+
+def raster_with(**style):
+    return {**RASTER, "style": {**RGB, **style}}
+
+
+cases.append({
+    "name": "Raster ekle: bağlı ve gömülü raster, görünüşü, donukluğu ve sistemiyle tek adımda yazılır, adı “Raster ekle”; görünüşün varsayılanları alan değildir (ADR 0204 §9)",
+    "setup": R_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "raster", "objects": rasters}, "result": done([3, 4, 5]),
+         "expect": {"ids": IDS + [3, 4, 5], "entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(rasters)},
+                    "uids": {"3": "new", "4": "new", "5": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Raster ekle", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Raster ekle", "expect": {"ids": IDS + [3, 4, 5]}},
+    ],
+})
+cases.append({
+    "name": "rasterin kuralları sırayla: invalid_raster, yolu nesnenin geometrisi; sonlu olmayan önce not_finite; gömülü rasterin dosyası projenin kitaplığında GeoTIFF, PNG ya da JPEG olmalı: unknown_asset (ADR 0204 §9)",
+    "setup": R_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(RASTER), O({**RASTER, "affine": [487000, 0.5, 0.5, 4420800, 0.5, 0.5]})]},
+         "result": failed("invalid_raster", raster_message("affine"), "objects[1].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**RASTER, "width": 0})]},
+         "result": failed("invalid_raster", raster_message("size"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**RASTER, "bands": 0})]},
+         "result": failed("invalid_raster", raster_message("bands"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**RASTER, "asset": RASTER_ID})]},
+         "result": failed("invalid_raster", raster_message("both"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**{k: v for k, v in RASTER.items() if k != "file"}})]},
+         "result": failed("invalid_raster", raster_message("none"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**RASTER, "file": "orto/\npafta.tif"})]},
+         "result": failed("invalid_raster", raster_message("path"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(raster_with(bands=[1, 2]))]},
+         "result": failed("invalid_raster", raster_message("rgb"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**RASTER, "style": {"render": "hillshade", "bands": [1, 2]}})]},
+         "result": failed("invalid_raster", raster_message("one"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(raster_with(bands=[1, 2, 4]))]},
+         "result": failed("invalid_raster", raster_message("band", 3, 4), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(raster_with(stretch="manual", min=90, max=-20))]},
+         "result": failed("invalid_raster", raster_message("manual"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**RASTER, "style": {"render": "ramp", "bands": [1], "ramp": "Gökkuşağı"}})]},
+         "result": failed("invalid_raster", raster_message("ramp", "Gökkuşağı"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**RASTER, "style": {"render": "hillshade", "bands": [1], "altitude": 95}})]},
+         "result": failed("invalid_raster", raster_message("light"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**RASTER, "opacity": 0.05})]},
+         "result": failed("invalid_raster", raster_message("opacity", 0.05), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(RASTER)]}, "nonFinite": {"objects[0].geometry.affine[3]": "NaN"},
+         "result": not_finite(1), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(raster_with(stretch="manual", min=0, max=255))]},
+         "nonFinite": {"objects[0].geometry.style.min": "Infinity"}, "result": not_finite(1), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(RASTER), O({**{k: v for k, v in RASTER.items() if k != "file"}, "asset": "raster-ffffffffffffffff"})]},
+         "result": failed("unknown_asset", unknown_raster("raster-ffffffffffffffff"), "objects[1].geometry.asset"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**{k: v for k, v in RASTER.items() if k != "file"}, "asset": "cizim-1"})]},
+         "result": failed("unknown_asset", unknown_raster("cizim-1"), "objects[0].geometry.asset"), "expect": NOTHING},
     ],
 })
 

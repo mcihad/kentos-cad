@@ -54,6 +54,8 @@ export const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
   table: ['p', 'rotation', 'height', 'rows', 'columns', 'cells', 'merges', 'aligns', 'header', 'grid', 'frame', 'source', ...FACE_FIELDS],
   // A picture's frame, source, clip and opacity (docs/adr/0192 §1).
   image: ['p', 'width', 'height', 'rotation', 'mirror', 'asset', 'file', 'clip', 'opacity'],
+  // A raster's affine, size, bands, samples, source, system, look and opacity (docs/adr/0204 §2).
+  raster: ['affine', 'width', 'height', 'bands', 'sample', 'asset', 'file', 'srid', 'style', 'opacity'],
 };
 
 /**

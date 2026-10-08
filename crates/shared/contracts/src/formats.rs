@@ -88,7 +88,9 @@ use crate::layer::LineType;
 /// 37: topology rules (docs/adr/0202): `.kcad` document schema 27 and the settings' `topology`.
 /// 38: network adjustment (docs/adr/0203): `.kcad` document schema 28, the survey settings' a
 ///    priori standard deviations.
-pub const FORMATS_VERSION: u32 = 38;
+/// 39: raster layers (docs/adr/0204): `.kcad` document schema 29 and the typed columns' `raster`
+///    kind; DXF and GeoJSON leave rasters out and say so.
+pub const FORMATS_VERSION: u32 = 39;
 
 // ── Every import ────────────────────────────────────────────────────────
 

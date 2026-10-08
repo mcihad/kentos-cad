@@ -22,4 +22,5 @@ export const ENTITY_KIND_ICON: Record<EntityKind, string> = {
   leader: 'leader',
   table: 'table',
   image: 'imageInsert',
+  raster: 'rasterAdd',
 };

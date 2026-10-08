@@ -287,7 +287,8 @@ def selection(doc, uids):
     layer_styles = [n["style"] for n, _ in walk(tree)]
     for st in layer_styles:
         strings_at(st, "ref", symbols)
-    assets = {e["asset"] for e in out if e["kind"] == "image" and "asset" in e}
+    # A picture's image and a raster's embedded file (docs/adr/0204 §2).
+    assets = {e["asset"] for e in out if e["kind"] in ("image", "raster") and "asset" in e}
     for it in items:
         if it["kind"] == "symbol" and it["id"] in symbols:
             strings_at(it, "asset", assets)
@@ -545,8 +546,9 @@ def anchor_points(e):
 
 def file_block(ours, theirs, file_name):
     ours = copy.deepcopy(ours)
-    kept = [e for e in theirs["entities"] if e["kind"] not in ("image", "table")]
-    left = {"images": sum(e["kind"] == "image" for e in theirs["entities"]), "tables": sum(e["kind"] == "table" for e in theirs["entities"])}
+    # A block holds no picture, raster (docs/adr/0204 §9) or table: counted with the pictures.
+    kept = [e for e in theirs["entities"] if e["kind"] not in ("image", "raster", "table")]
+    left = {"images": sum(e["kind"] in ("image", "raster") for e in theirs["entities"]), "tables": sum(e["kind"] == "table" for e in theirs["entities"])}
     corners = [b for b in (plain_bounds(e) for e in kept) if b is not None]
     base = {"x": min(c[0] for c in corners), "y": min(c[1] for c in corners)}
     for e in kept:
@@ -649,7 +651,7 @@ def layer_take(ours, theirs, path):
     for e in objects:
         if "symbol" in e:
             items.append(e["symbol"])
-        if e["kind"] == "image" and "asset" in e:
+        if e["kind"] in ("image", "raster") and "asset" in e:
             items.append(e["asset"])
     for st in made_styles:
         items += sorted(strings_at(st, "ref", set())) + sorted(strings_at(st, "asset", set()))

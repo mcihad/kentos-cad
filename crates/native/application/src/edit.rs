@@ -183,6 +183,9 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::TableUpdate => "Tabloyu güncelle",
         EditOperation::EdgeShift => "Paralel kaydır",
         EditOperation::ImageClip => "Resmi kırp",
+        // Raster stili and Raster oturt (docs/adr/0204 §9).
+        EditOperation::RasterStyle => "Raster stili",
+        EditOperation::RasterGeoref => "Raster oturt",
         // Eğri boyunca yazı (docs/adr/0196 §4).
         EditOperation::TextPath => "Eğriye oturt",
         EditOperation::TextTurn => "Doğrultuya döndür",
@@ -847,6 +850,13 @@ pub(crate) fn check_geometry(
     {
         return Err(Stop::Failed(error(codes::INVALID_IMAGE, words, at(""))));
     }
+    // A raster's affine, size, bands, samples, source, look and opacity (docs/adr/0204 §9).
+    if let EntityGeometry::Raster(raster) = g
+        && raster_finite(raster)
+        && let Some(words) = raster.problem()
+    {
+        return Err(Stop::Failed(error(codes::INVALID_RASTER, words, at(""))));
+    }
     // A text's face and a dimension's look (docs/adr/0183 §9).
     let style = match g {
         EntityGeometry::Text { face, .. } | EntityGeometry::Table { face, .. } => face.problem(),
@@ -921,6 +931,33 @@ fn image_finite(i: &kentos_contracts::ImageFields) -> bool {
             .all(|q| q.x.is_finite() && q.y.is_finite())
 }
 
+/// Whether every number of a raster is finite: its affine, its opacity and its look's.
+pub fn raster_finite(r: &kentos_contracts::RasterFields) -> bool {
+    let s = &r.style;
+    r.affine
+        .iter()
+        .chain(&r.opacity)
+        .chain(&s.min)
+        .chain(&s.max)
+        .chain(&s.azimuth)
+        .chain(&s.altitude)
+        .chain(&s.z_factor)
+        .chain(&s.nodata)
+        .all(|v| v.is_finite())
+}
+
+/// Whether the project's library has the GeoTIFF, PNG or JPEG raster `id` (docs/adr/0204 §2).
+pub fn has_raster(doc: &Document, id: &str) -> bool {
+    doc.styles().items.iter().any(|it| {
+        it.get("kind").and_then(|k| k.as_str()) == Some("asset")
+            && it.get("id").and_then(|k| k.as_str()) == Some(id)
+            && matches!(
+                it.get("format").and_then(|k| k.as_str()),
+                Some("tiff" | "png" | "jpeg")
+            )
+    })
+}
+
 /// Whether the project's library has the PNG or JPEG image `id` (docs/adr/0192 §2).
 pub fn has_picture(doc: &Document, id: &str) -> bool {
     doc.styles().items.iter().any(|it| {
@@ -943,6 +980,18 @@ pub(crate) fn check_blocks<'a>(
     list: &str,
 ) -> Result<(), Stop> {
     for (i, g) in geometries {
+        if let EntityGeometry::Raster(raster) = g
+            && let Some(asset) = &raster.asset
+            && !has_raster(doc, asset)
+        {
+            return Err(Stop::Failed(error(
+                codes::UNKNOWN_ASSET,
+                format!(
+                    "“{asset}” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG ya da JPEG'in kimliğini verin."
+                ),
+                Some(format!("{list}[{i}].geometry.asset")),
+            )));
+        }
         if let EntityGeometry::Image(image) = g
             && let Some(asset) = &image.asset
             && !has_picture(doc, asset)
@@ -1204,5 +1253,6 @@ fn finite(g: &EntityGeometry) -> bool {
             ..
         } => pts(p) && height.is_finite() && rotation.is_finite(),
         EntityGeometry::Image(image) => image_finite(image),
+        EntityGeometry::Raster(raster) => raster_finite(raster),
     }
 }

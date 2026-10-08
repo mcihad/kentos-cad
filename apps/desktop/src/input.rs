@@ -155,6 +155,8 @@ impl App {
                 // Metin dosyası yerleştir's file: the dialog opens after the update (text_file.rs).
                 ViewChange::OpenTextFile => self.text_file_wanted = true,
                 ViewChange::OpenImageFile => self.image_file_wanted = true,
+                // Koordinat oku: the rasters' values under the point, read off the thread (rasters/).
+                ViewChange::RasterValues(p) => self.raster_values_wanted.push(p),
                 // Köşelere koordinat yaz's schedule hangs from the cursor (docs/adr/0185 §1).
                 ViewChange::PlaceTable(table, label) => self.place_table(table, label),
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).

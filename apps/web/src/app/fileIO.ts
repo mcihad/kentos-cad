@@ -350,6 +350,33 @@ export class DocumentFiles {
   }
 
   /**
+   * Asks for one or several files and gives them as they are, unread (Raster ekle's raster and its world file,
+   * docs/adr/0204 §8: a large raster is read in slices); null when the user cancels.
+   */
+  async pickFilesForImport(kind: FileKind): Promise<File[] | null> {
+    let handles: DrawingFileHandle[] | null | undefined;
+    try {
+      handles = this.picker.openMany ? await this.picker.openMany(kind) : undefined;
+    } catch (e) {
+      this.ctx.log.error(`Açma penceresi açılamadı: ${message(e)}. Tarayıcının dosya iznini denetleyin.`);
+      return null;
+    }
+    if (handles === undefined) handles = await pickManyWithInput(Object.values(kind.accept).flat().join(','));
+    if (!handles?.length) return null;
+    const out: File[] = [];
+    for (const handle of handles) {
+      try {
+        const blob = await handle.getFile();
+        out.push(blob instanceof File ? blob : new File([blob], handle.name));
+      } catch (e) {
+        this.ctx.log.error(`“${handle.name}” okunamadı: ${message(e)}.`);
+        return null;
+      }
+    }
+    return out;
+  }
+
+  /**
    * Reads a drawing (a file's bytes, or v1 text) into the app; `handle`
    * becomes the file Save writes to unless `readOnly` or the file is v1.
    */

@@ -235,6 +235,12 @@ pub fn entity(e: &mut Entity, s: Scale) {
             i.image.width = s.apply(i.image.width);
             i.image.height = s.apply(i.image.height);
         }
+        // Its corner and its pixels' steps: every number of its affine is a length (docs/adr/0204 §2).
+        Entity::Raster(r) => {
+            for v in &mut r.raster.affine {
+                *v = s.apply(*v);
+            }
+        }
     }
 }
 

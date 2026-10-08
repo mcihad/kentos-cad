@@ -1215,6 +1215,20 @@ fn shape(entity: &Entity) -> Shape {
             clip: i.image.clip.as_deref().map(points),
             opacity: i.image.opacity,
         },
+        // A raster (docs/adr/0204): its frame, the raster pass's paint.
+        Entity::Raster(r) => Shape::Raster {
+            affine: r.raster.affine,
+            width: f64::from(r.raster.width),
+            height: f64::from(r.raster.height),
+            bands: f64::from(r.raster.bands),
+            sample: r.raster.sample.name().to_owned(),
+            asset: r.raster.asset.clone(),
+            file: r.raster.file.clone(),
+            srid: f64::from(r.raster.srid),
+            style: kentos_geometry_core::api::json::Json::parse(&r.raster.style.to_json_text())
+                .unwrap_or(kentos_geometry_core::api::json::Json::Null),
+            opacity: r.raster.opacity,
+        },
         Entity::Table(t) => Shape::Table {
             p: v(&t.p),
             rotation: t.rotation,

@@ -38,6 +38,7 @@ fn the_typescript_snapshot_round_trips_through_the_contracts() {
             Entity::Leader(_) => "leader",
             Entity::Table(_) => "table",
             Entity::Image(_) => "image",
+            Entity::Raster(_) => "raster",
         })
         .collect();
     assert_eq!(

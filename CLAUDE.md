@@ -103,6 +103,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   testi) ve Kot ağı dengelemesi (geometrik nivelman ya da trigonometrik); önsel doğruluklar Proje ayarları › Ölçme'de (`.kcad` şema 28);
   Çizime yaz aynı adlı noktaları taşır ya da kotlarını yazar, yenileri ekler, tek adımda; Karne editöründen aktarma; çekirdek
   `survey::adjust` (ADR 0203);
+  raster katmanları: GeoTIFF ve TIFF (klasik ve BigTIFF; LZW, Deflate, PackBits, JPEG; 8–64 bit, palet, iç önizlemeler), dünya dosyalı PNG
+  ve JPEG, kendi okuyucumuzla dosyanın gereken parçalarından; raster nesnesi (`.kcad` şema 29: dönüşüm, boy, bantlar, bağlı ya da gömülü
+  kaynak, sistem, görünüş, saydamlık); 256'lık karolar, iç önizlemeler ya da bir kez hazırlanan önizleme piramidi (cihazın önbelleği,
+  Durdur'lu panel); görünüş: renkli, gri, paletli, renk rampası, gölgeli kabartma (Horn), rampa ve gölge, gerdirme, nodata, örnekleme;
+  çizim hattında raster atlası (stilli çizimin 6. sürümü); Raster ekle (sistemin kuralı, oturtulmamış yer), Raster stili (canlı önizleme),
+  Raster oturt (Helmert, afin, projektif, polinom 2 ve 3, ince plaka; artıklar ve m0; afin dönüşümü değiştirir, ötekiler GeoTIFF'e yeniden
+  örnekler), Koordinat oku'da rasterin değerleri; CBS'de Veri › Raster, CAD'de Ekle › Raster (ADR 0204);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -340,6 +347,11 @@ cargo test --release -p kentos-geometry-core --test all topology_rules::timing -
 python3 scripts/fixtures/network_adjust_cases.py --check   # ağ dengelemesini (yatay ağlar ve kot ağları: koordinatlar ve kotlar, doğrulukları ve hata elipsleri, yöneltmeler, artıklar, katkı, w, m₀, model testi, retler) ADR'den, KentOS kodu olmadan mpmath ile 50 basamakta bağımsız başvurudan denetle; durumlar fixtures/network-adjust/v1/cases.json (ADR 0203)
 KENTOS_SHOTS_ONLY=yatay,uyusumsuz,kot cargo test -p kentos-desktop calc::network::tests::screens -- --ignored --nocapture   # Yatay ağ ve Kot ağı dengelemesi pencereleri, .run/shots/ag-* (değişken yoksa bütün durumlar; web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs network); ADR 0203)
 cargo test --release -p kentos-geometry-core --test all network_adjust::timing -- --ignored --nocapture   # 144 ve 400 noktalı ızgara ağların dengeleme süreleri (ADR 0203)
+python3 scripts/fixtures/raster_cases.py --check   # raster okuyucusunun dosyalarını (GDAL ve PIL'in yazdığı 21 GeoTIFF, TIFF ve PNG), katlarını, istatistiklerini ve karoların renklerini KentOS kodu olmadan GDAL'la denetle; gölgeli kabartma ve rampa gdaldem'le; durumlar fixtures/raster/v1/cases.json (ADR 0204)
+python3 scripts/fixtures/raster_georef_cases.py --check   # Raster oturt'un dönüşümlerini (GDAL'ın GCP dönüştürücüsü, Helmert ve projektif numpy'la, tersler Newton'la) ve ince plakayla yeniden örneklemeyi gdalwarp'la çapraz denetle; durumlar fixtures/raster/v1/georef.json (ADR 0204 §6)
+python3 scripts/fixtures/raster_scene.py --check   # rasterlerin ortak sahnesini (fixtures/interaction/v1/rasters.kcad ve rasters/: DEM, ortofoto, taranmış pafta) KentOS kodu olmadan GDAL'la yeniden üretip karşılaştır (ADR 0204)
+KENTOS_SHOTS_ONLY=raster-vadi,raster-orto,raster-dem,raster-ekle,raster-ekle-tarama,raster-stili,raster-oturt cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # rasterlerin masaüstü resimleri, .run/shots/arac-raster-* (web'inkiler ve işçinin piramit ve yeniden örnekleme sahneleri: (cd apps/web && node scripts/e2e/shots.mjs rasters), WebGPU'yla --renderer webgpu; ADR 0204)
+cargo test --release -p kentos-formats --test all raster_timing -- --ignored --nocapture   # raster karolarının, ilk görüntünün, piramit geçişinin ve ince plakalı yeniden örneklemenin süreleri (ADR 0204 §11)
 python3 scripts/fixtures/exchange_cases.py --check   # Çizimler arası alışverişin kurallarını (seçimin çizimi: budanan ağaç, iç içe bloklar, kitaplığın kullanılanları, düşen bağlar; Başka çizimden al: yollar, katlanan adlar, Atla ve Değiştir, kimliklerin ekleri, katman durumlarının yolları; Dosyadan blok ekle: ad sayısı, sol alt köşe, resim ve tablo; Kaynaklar'ın Katman olarak ekle'si: katman nesneleriyle, aynı adlı blok ve stil, açılan katmanın görünüşünün simgesi) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/exchange/v1/cases.json (ADR 0193, 0199 §7)
 python3 scripts/fixtures/image_cases.py --check   # Resim ekle'nin çerçevesini (genişlik, yükseklik, dönüş) ve Resmi kırp'ın sınırını resmin kendi kesirleriyle (taşan, saran, saat yönünde, aynalı, dönük, dışarıda) kesirlerle bağımsız başvurudan denetle; durumlar fixtures/image/v1/cases.json (ADR 0192)
 KENTOS_SHOTS_ONLY=resim-ekle,resim-ekle-yazildi,resim-kirp,resim-kirpildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # resim nesnesinin resimleri, .run/shots/arac-resim-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs images), WebGPU'yla --renderer webgpu; ADR 0192)
@@ -1158,7 +1170,15 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   (`FORMATS_VERSION` 38), çekirdek `survey::adjust` (`horizontal`, `levelling`, `linalg`, `chi2`; bağımsız başvuru `network_adjust_cases.py`,
   ortak `fixtures/network-adjust/v1`), Karne editörünün satırları `survey::fieldbook`'un `network_rows`, `level_rows`'u;
   `cad.entities.edit`'in `networkAdjust`, `levelAdjust`'ı, `cad.entities.create`'in `networkAdjust`'ı; pencereler web'de
-  `ui/calc/NetworkDialog.ts`, masaüstünde `calc/network/`; sahne `fixtures/interaction/v1/network-adjust.kcad`. Sıradaki `GIS-08`.
+  `ui/calc/NetworkDialog.ts`, masaüstünde `calc/network/`; sahne `fixtures/interaction/v1/network-adjust.kcad`. `GIS-08` raster
+  katmanları ([ADR 0204](docs/adr/0204-raster-layers.md); kapsam sahibin kararları: GeoTIFF ile dünya dosyalı PNG ve JPEG kendi okuyucumuzla,
+  bütün dönüşümleriyle oturtma, bantlar, rampa ve gölgeli kabartma, bağlı dosya ve küçüklerin gömülmesi; ilke “Performance First”; simgeler
+  sahibin seçtikleri) tek parçada bitti (8 Ekim): sözleşmenin `raster`'ı, `.kcad` şema 29 (`FORMATS_VERSION` 39), biçim çekirdeği
+  `formats::raster` (`tiff`, `geotiff`, `codec`, `png`, `source`, `style`, `pyramid`, `write`, `warp`, `place`; bağımsız başvurular
+  `raster_cases.py`, `raster_georef_cases.py`, ortak `fixtures/raster/v1`), geometri çekirdeğinin `geom::raster` ve `ops::georef`'i, stilli
+  çizimin 6. sürümü; masaüstünde `rasters/` ve `calc/raster_fit.rs`, çizim hattı `styled/raster_tiles.rs`; web'de `io/rasterWorker.ts`,
+  `render/rasterService.ts`, `render/rasterPass.ts`, `ui/raster/`; sahne `fixtures/interaction/v1/rasters.kcad`. Sıradaki `GIS-09`; sahibin
+  isteğiyle (8 Ekim: “bu madde bittikten sonra sonrakine geçme, başka bir işimiz var”) bu maddeden sonra durulur, sahibin işi beklenir.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

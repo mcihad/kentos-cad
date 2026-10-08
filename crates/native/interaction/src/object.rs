@@ -190,6 +190,7 @@ impl ObjectAction {
             Shape::Leader { .. } => "kılavuz",
             Shape::Table { .. } => "tablo",
             Shape::Image { .. } => "resim",
+            Shape::Raster { .. } => "raster",
         }
     }
 

@@ -21,7 +21,7 @@
 //!
 //! The rows are data (`rows`), drawn by KentOS UI's `PropertySheet`.
 
-mod rows;
+pub(crate) mod rows;
 
 pub(crate) use rows::layer_path;
 #[cfg(test)]
@@ -75,6 +75,8 @@ pub enum Event {
     /// Kaynak ▾'s Göm of a linked picture: its file read and kept in the
     /// project's library, the picture embedded (docs/adr/0192 §2).
     EmbedImage(Slot),
+    /// Kaynak ▾'s Göm of a linked raster (docs/adr/0204 §8).
+    EmbedRaster(Slot),
     /// Hiza ▾ of texts: each keeps where it is (docs/adr/0145 §6); none, the left of the baseline.
     TextAlign(Vec<Slot>, Option<kentos_contracts::TextAlign>),
     /// Zemin ▾ of texts.
@@ -139,6 +141,8 @@ pub enum Field {
     ImageHeight(Slot),
     ImageTurn(Slot),
     ImageClear(Slot),
+    /// A raster's see-through share (0 to 90 %; docs/adr/0204 §8).
+    RasterClear(Slot),
     /// Leaders' note (trimmed; emptied, the arrow alone), height (above zero)
     /// and turn (degrees) (docs/adr/0146 §7).
     LeaderNote(Vec<Slot>),
@@ -484,6 +488,7 @@ impl App {
                 _ => Vec::new(),
             },
             Event::EmbedImage(slot) => crate::pictures::embed(model, slot, folder.as_deref()),
+            Event::EmbedRaster(slot) => crate::rasters::embed(model, slot, folder.as_deref()),
             Event::InsertMirror(slot, mirror) => match model.get(slot) {
                 Some(Entity::Insert(i)) => {
                     let mut i = i.clone();
@@ -697,6 +702,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::ImageHeight(s)
         | Field::ImageTurn(s)
         | Field::ImageClear(s)
+        | Field::RasterClear(s)
         | Field::Attribute(s, _) => *s,
         // Taken above.
         Field::Elevation(..)
@@ -821,6 +827,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         }
         (Field::ImageClear(_), Entity::Image(i)) if finite && (0.0..=90.0).contains(&n) => {
             i.image.opacity = (n > 0.0).then(|| 1.0 - n / 100.0);
+            true
+        }
+        (Field::RasterClear(_), Entity::Raster(r)) if finite && (0.0..=90.0).contains(&n) => {
+            r.raster.opacity = (n > 0.0).then(|| 1.0 - n / 100.0);
             true
         }
         _ => false,

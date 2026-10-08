@@ -523,6 +523,9 @@ fn fill(
                 FillPaintBatch::Image { .. } => {
                     picture_at(st, picture.as_ref().and_then(|b| b.as_deref()), p)
                 }
+                // A raster is the raster pass's on the screen; a sheet's picture shows none
+                // (docs/adr/0204, Kapsam dışı: the raster in a sheet's output, §16.4).
+                FillPaintBatch::Raster { .. } => continue,
             };
             let cov = f64::from(m) / 255.0;
             over(

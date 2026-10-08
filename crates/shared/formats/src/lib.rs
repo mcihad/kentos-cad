@@ -37,6 +37,7 @@ pub mod json;
 pub mod math;
 pub mod num;
 pub mod nurbs;
+pub mod raster;
 pub mod report;
 pub mod shp;
 pub mod table_file;

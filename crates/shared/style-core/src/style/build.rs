@@ -223,6 +223,9 @@ pub const MODE_RENDERER: i32 = 4;
 /// A picture: its own bytes over its frame and its frame as a hairline
 /// (docs/adr/0192 §3); never a symbol.
 pub const MODE_IMAGE: i32 = 5;
+/// A raster: its tiles over its frame, drawn by the raster pass, and its
+/// frame as a hairline (docs/adr/0204 §5); never a symbol.
+pub const MODE_RASTER: i32 = 6;
 
 /// Everything one layer build draws with: the renderer, the symbol sets
 /// (the layer's simple look for each colour, hatches' own patterns), the
@@ -549,6 +552,10 @@ fn draw_object(
         draw_image(shape, &parts, color, program, sink);
         return;
     }
+    if mode == MODE_RASTER {
+        draw_raster(shape, &parts, color, program, sink);
+        return;
+    }
     if mode == MODE_DIMENSION {
         // Dimensions keep their own hairline look: their layout lines. Drawn at every scale
         // (the TypeScript kept the previous object's rule range here).
@@ -633,6 +640,73 @@ fn draw_image(shape: &Shape, parts: &[Geom], color: i32, program: &Program, sink
                     size: [*width, *height],
                     angle: *rotation,
                     mirror: *mirror == Some(true),
+                    opacity: opacity.unwrap_or(1.0),
+                    level: LEVEL_FILL,
+                },
+                rings,
+            ),
+            Geom::Line(paths) => {
+                let ink = usize::try_from(color)
+                    .ok()
+                    .and_then(|c| program.colors.get(c))
+                    .cloned()
+                    .unwrap_or_default();
+                let hair = StrokeStyle {
+                    color: ink,
+                    opacity: 1.0,
+                    width: 0.0,
+                    unit: PrimUnit::Px,
+                    dash: None,
+                    dash_offset: 0.0,
+                    cap: "butt".into(),
+                    join: "miter".into(),
+                    blur: 0.0,
+                    level: LEVEL_LINE,
+                };
+                for (pts, closed) in paths {
+                    sink.stroke(&hair, pts, *closed);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+/// A raster (docs/adr/0204 §5): its frame filled with the raster paint,
+/// which the raster pass draws as the tiles in view, in the order of the
+/// drawing; its frame as a hairline in the object's colour. The paint names
+/// its file (`asset:` or `file:`) and look; equal ones share their tiles.
+fn draw_raster(shape: &Shape, parts: &[Geom], color: i32, program: &Program, sink: &mut BatchSink) {
+    let Shape::Raster {
+        affine,
+        width,
+        height,
+        asset,
+        file,
+        style,
+        opacity,
+        ..
+    } = shape
+    else {
+        return;
+    };
+    let raster = match (asset, file) {
+        (Some(a), _) => format!("asset:{a}"),
+        (None, Some(f)) => format!("file:{f}"),
+        (None, None) => return,
+    };
+    let look = kentos_geometry_core::api::json::to_string(style);
+    let nearest = matches!(style.get("resampling"), Json::Str(r) if r == "nearest");
+    sink.set_scale(Scale::default());
+    for part in parts {
+        match part {
+            Geom::Fill(rings) => sink.fill(
+                &FillPaint::Raster {
+                    raster: raster.clone(),
+                    look: look.clone(),
+                    affine: *affine,
+                    size: [*width, *height],
+                    nearest,
                     opacity: opacity.unwrap_or(1.0),
                     level: LEVEL_FILL,
                 },

@@ -295,7 +295,7 @@ export function randomLayerStyle(g: Gen, refs: readonly string[]): LayerStyle {
 // ── Objects ────────────────────────────────────────────────────────────
 
 /** An object of any kind with the attributes the expressions read, sometimes its own colour or symbol. */
-export function randomObject(g: Gen, id: number, layerId: string, refs: readonly string[], kind?: Exclude<Entity['kind'], 'image'>): Entity {
+export function randomObject(g: Gen, id: number, layerId: string, refs: readonly string[], kind?: Exclude<Entity['kind'], 'image' | 'raster'>): Entity {
   const e = entity(g, kind);
   const attrs: Record<string, string> = {
     ...opt(g, 0.7, 'Kat', () => g.pick(['1', '3', '4', '12', '', 'x'])),

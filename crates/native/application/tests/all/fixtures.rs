@@ -654,6 +654,24 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             "opacity" => i.opacity.as_mut(),
             _ => coordinate(&mut i.p, "p", rest),
         },
+        // A raster's affine, its look's numbers and its opacity (docs/adr/0204): `affine[3]`, `style.min` ….
+        EntityGeometry::Raster(r) => match rest {
+            "opacity" => r.opacity.as_mut(),
+            "style.min" => r.style.min.as_mut(),
+            "style.max" => r.style.max.as_mut(),
+            "style.azimuth" => r.style.azimuth.as_mut(),
+            "style.altitude" => r.style.altitude.as_mut(),
+            "style.zFactor" => r.style.z_factor.as_mut(),
+            "style.nodata" => r.style.nodata.as_mut(),
+            _ => {
+                let i: usize = rest
+                    .strip_prefix("affine[")?
+                    .strip_suffix(']')?
+                    .parse()
+                    .ok()?;
+                r.affine.get_mut(i)
+            }
+        },
         EntityGeometry::Table {
             p,
             rotation,

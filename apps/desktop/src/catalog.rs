@@ -500,6 +500,10 @@ pub const PORTED: &[&str] = &[
     // docs/adr/0181: Genel bakış and Büyüteç (navigation_cards.rs).
     "view.overview",
     "view.magnifier",
+    // docs/adr/0204: Raster ekle, Raster stili (rasters/) and Raster oturt (calc/raster_fit.rs).
+    "raster.add",
+    "raster.style",
+    "raster.georef",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

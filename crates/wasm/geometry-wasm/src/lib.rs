@@ -245,6 +245,97 @@ pub fn scratch_point_in_polygon(n: usize, px: f64, py: f64) -> bool {
     with_scratch(n, |pts, _| point_in_polygon(Vec2::new(px, py), pts))
 }
 
+// The raster pass's tiles a frame (docs/adr/0204 §5): written into a buffer
+// of the core's memory the page reads, so a frame allocates nothing.
+#[derive(Default)]
+struct RasterTiles {
+    tiles: Vec<kentos_geometry_core::geom::raster::DrawTile>,
+    numbers: Vec<f64>,
+    sizes: Vec<(u32, u32)>,
+}
+
+thread_local! {
+    static RASTER_TILES: std::cell::RefCell<RasterTiles> = std::cell::RefCell::new(RasterTiles::default());
+}
+
+/// Numbers a tile takes in [`raster_tiles_at`]'s buffer.
+pub const RASTER_TILE_NUMBERS: usize = 13;
+
+/// The tiles a view draws of a raster of `width` × `height` placed by the
+/// affine (`x0`, `a`, `b`, `y0`, `c`, `d`), at `px_per_m` device pixels a
+/// metre (docs/adr/0204 §5; `geom::raster::level_for` and `visible`):
+/// how many, nearest the view's centre first, their numbers in
+/// [`raster_tiles_at`]'s buffer, 13 a tile: level, column, row, the share
+/// of the texture's width and height that is the raster's, the corners' xs
+/// and ys (pixel corners (x₀, y₀), (x₁, y₀), (x₁, y₁), (x₀, y₁)).
+#[allow(clippy::too_many_arguments)]
+#[wasm_bindgen(js_name = rasterTiles)]
+pub fn raster_tiles(
+    x0: f64,
+    a: f64,
+    b: f64,
+    y0: f64,
+    c: f64,
+    d: f64,
+    width: u32,
+    height: u32,
+    min_x: f64,
+    min_y: f64,
+    max_x: f64,
+    max_y: f64,
+    px_per_m: f64,
+) -> u32 {
+    use kentos_geometry_core::geom::raster::{level_for, level_sizes, visible};
+    RASTER_TILES.with(|t| {
+        let RasterTiles {
+            tiles,
+            numbers,
+            sizes,
+        } = &mut *t.borrow_mut();
+        let fresh = level_sizes(width.max(1), height.max(1));
+        sizes.clear();
+        sizes.extend_from_slice(&fresh);
+        let affine = [x0, a, b, y0, c, d];
+        let s = (a * d - b * c).abs().sqrt();
+        let level = level_for(s, px_per_m, sizes.len());
+        visible(
+            &affine,
+            width.max(1),
+            height.max(1),
+            sizes,
+            level,
+            [min_x, min_y, max_x, max_y],
+            tiles,
+        );
+        numbers.clear();
+        for t in tiles.iter() {
+            let [xs, ys] = t.corners;
+            numbers.extend_from_slice(&[
+                f64::from(t.level),
+                f64::from(t.tx),
+                f64::from(t.ty),
+                t.uv[0],
+                t.uv[1],
+            ]);
+            numbers.extend_from_slice(&xs);
+            numbers.extend_from_slice(&ys);
+        }
+        tiles.len() as u32
+    })
+}
+
+/// Where [`raster_tiles`]'s numbers are (valid until its next call).
+#[wasm_bindgen(js_name = rasterTilesAt)]
+pub fn raster_tiles_at() -> *const f64 {
+    RASTER_TILES.with(|t| t.borrow().numbers.as_ptr())
+}
+
+/// How many levels a raster of `width` × `height` has (docs/adr/0204 §3).
+#[wasm_bindgen(js_name = rasterLevelCount)]
+pub fn raster_level_count(width: u32, height: u32) -> u32 {
+    kentos_geometry_core::geom::raster::level_sizes(width.max(1), height.max(1)).len() as u32
+}
+
 /// Point ranges of rings laid one after another (`sizes`: vertex counts),
 /// clamped to the `points` there are.
 fn ranges(points: usize, sizes: &[u32]) -> Vec<(usize, usize)> {

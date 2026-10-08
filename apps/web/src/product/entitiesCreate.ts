@@ -65,6 +65,7 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   centerline: 'Orta hat',
   // Resim ekle (docs/adr/0192 §6).
   image: 'Resim ekle',
+  raster: 'Raster ekle',
   // Eğri boyunca yazı (docs/adr/0196 §4).
   textAlong: 'Eğri boyunca yazı',
   tangentLine: 'İki daireye teğet',

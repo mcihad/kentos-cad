@@ -155,6 +155,8 @@ impl App {
         layers.extend(self.saving_view());
         // A large import's panel: the objects as they go in, and Durdur (exchange/drawing_import.rs).
         layers.extend(self.importing_view());
+        // The rasters' pyramids and Raster oturt's resampling, with Durdur (rasters/jobs.rs).
+        layers.extend(self.rasters_jobs_view());
         layers.extend(self.opening_view());
         layers.extend(self.cloud_opening_view());
         if layers.len() == 1 {
@@ -1495,6 +1497,8 @@ impl App {
             Asking::TakeFrom => self.take_from_view(),
             Asking::LayerList => self.layer_list_view(),
             Asking::DataCompare => self.data_compare_view(),
+            Asking::RasterAdd => self.raster_add_view(),
+            Asking::RasterStyle => self.raster_look_view(),
             Asking::Cogo => self.cogo_view(),
             Asking::TableInsert => self.table_insert_view(),
             Asking::TableEditor => self.table_editor_view(),

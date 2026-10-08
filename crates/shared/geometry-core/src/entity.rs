@@ -337,6 +337,23 @@ pub enum Shape {
         clip: Option<Vec<Vec2>>,
         opacity: Option<f64>,
     },
+    /// A raster (docs/adr/0204 §2): its pixels placed by `affine`
+    /// (`[x₀, a, b, y₀, c, d]`, GDAL's order: pixel corner (i, j) at
+    /// x₀ + a·i + b·j, y₀ + c·i + d·j), `width` × `height` pixels; its bands,
+    /// samples, source, system, look (the contract's JSON) and opacity, which
+    /// the core carries through and the raster pass draws with (`geom::raster`).
+    Raster {
+        affine: [f64; 6],
+        width: f64,
+        height: f64,
+        bands: f64,
+        sample: String,
+        asset: Option<String>,
+        file: Option<String>,
+        srid: f64,
+        style: crate::api::json::Json,
+        opacity: Option<f64>,
+    },
 }
 
 crate::json_tagged!(Shape, "kind",
@@ -357,6 +374,7 @@ crate::json_tagged!(Shape, "kind",
     Leader => "leader" { pts, text, height, rotation, arrow, mask },
     Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
+    Raster => "raster" { affine, width, height, bands, sample, asset, file, srid, style, opacity },
 );
 
 /// An entity: its geometry and every other field, untouched and in order.
@@ -539,6 +557,10 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         Shape::Spline { pts, .. } => pts.clone(),
         // The corners of the part shown (docs/adr/0192 §4).
         Shape::Image { .. } => crate::geom::image::shown(e),
+        // Its frame's corners (docs/adr/0204 §7).
+        Shape::Raster { .. } => crate::geom::raster::corners(e)
+            .map(|c| c.to_vec())
+            .unwrap_or_default(),
         // Its corners, its top left first (docs/adr/0184 §2).
         Shape::Table { .. } => crate::geom::table::table_geom(e)
             .map(|t| t.outline().to_vec())
@@ -618,8 +640,8 @@ pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
             Some(l) => leader::drawn_path(pts, &l),
             None => pts.clone(),
         },
-        // Its outline, closed (docs/adr/0184 §2); a picture's, the part shown (docs/adr/0192 §4).
-        Shape::Table { .. } | Shape::Image { .. } => {
+        // Its outline, closed (docs/adr/0184 §2); a picture's, the part shown (docs/adr/0192 §4); a raster's frame.
+        Shape::Table { .. } | Shape::Image { .. } | Shape::Raster { .. } => {
             let mut ring = entity_vertices(e);
             if let Some(&first) = ring.first() {
                 ring.push(first);
@@ -1399,6 +1421,8 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
         | Shape::Table { p, .. } => *p,
         // The middle of the part shown (docs/adr/0192).
         Shape::Image { .. } => centroid(&crate::geom::image::shown(e)),
+        // The middle of its frame (docs/adr/0204).
+        Shape::Raster { .. } => centroid(&entity_vertices(e)),
     })
 }
 

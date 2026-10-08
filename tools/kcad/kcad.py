@@ -114,6 +114,8 @@ SCHEMA_WITH_TOPOLOGY = 27
 # Schema 28: schema 27 and the survey settings' a priori standard deviations, `sigmaDirection`, `sigmaDistance`,
 # `sigmaPpm`, `sigmaCentering`, `sigmaZenith`, `sigmaLevelling` (docs/adr/0203 §1).
 SCHEMA_WITH_SURVEY_SIGMAS = 28
+# Schema 29: schema 28 and the `raster` kind, only in the drawing (docs/adr/0204 §2).
+SCHEMA_WITH_RASTERS = 29
 # The topology rules' kinds (docs/adr/0202 §1): whether each is between two layers and what value it takes.
 TOPOLOGY_KINDS = {
     "mustNotOverlap": (False, None),
@@ -136,6 +138,18 @@ MAX_IMAGE_OPACITY = 1.0
 MAX_CLIP_CORNERS = 10_000
 MAX_IMAGE_SIZE = 1e7
 MAX_IMAGE_PATH = 4096
+# A raster's bounds (kentos_contracts::raster): a side (pixels), its bands, a linked file's letters, its opacity; its
+# samples, looks, stretches (none is the field's absence), resamplings (bilinear is the field's absence) and ramps.
+MAX_RASTER_SIDE = 4_000_000
+MAX_RASTER_BANDS = 255
+MAX_RASTER_PATH = 4096
+MIN_RASTER_OPACITY = 0.1
+MAX_RASTER_OPACITY = 1.0
+RASTER_SAMPLES = ("u8", "i8", "u16", "i16", "u32", "i32", "f32", "f64")
+RASTER_RENDERS = ("rgb", "gray", "palette", "ramp", "hillshade", "rampShade")
+RASTER_STRETCHES = ("minMax", "percent", "manual")
+RASTER_RESAMPLINGS = ("nearest",)
+RASTER_RAMPS = ("Gri", "Arazi", "Spektral", "Viridis", "Mavi-kırmızı", "Sıcaklık")
 HATCH_TYPES = ("solid", "lines", "cross", "pattern", "gradient")
 GRADIENT_SHAPES = ("linear", "cylinder", "spherical")
 # A pattern's bounds (kentos_contracts::hatch): families, dashes a family, its name's letters, a number; a tie's objects.
@@ -177,7 +191,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -786,6 +800,7 @@ class _Schema:
         self.tables = version >= SCHEMA_WITH_TABLES
         self.hatches = version >= SCHEMA_WITH_HATCH_PATTERNS
         self.images = version >= SCHEMA_WITH_IMAGES
+        self.rasters = version >= SCHEMA_WITH_RASTERS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -1365,7 +1380,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -1376,6 +1391,10 @@ class _Schema:
         if kind == "image" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında resim olamaz")
+        # Nor a raster (docs/adr/0204 §2).
+        if kind == "raster" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında raster olamaz")
         table = dict(self.common())
         table.update(ENTITY_KINDS[kind](self))
         self.path.append(kind)
@@ -1400,6 +1419,8 @@ class _Schema:
                 self.table_rules(fields)
             if kind == "image":
                 self.image_rules(fields)
+            if kind == "raster":
+                self.raster_rules(fields)
             # Bold, italic and a slant need a typeface (docs/adr/0183 §2); a table's face is a text's.
             if kind in ("text", "table") and "font" not in fields and any(k in fields for k in ("bold", "italic", "oblique")):
                 self.path.append(next(k for k in ("textStyle", "bold", "italic", "oblique") if k in fields))
@@ -1632,6 +1653,93 @@ class _Schema:
         o = i.get("opacity")
         if o is not None and not (MIN_IMAGE_OPACITY <= o <= MAX_IMAGE_OPACITY):
             self.fail("bad_value", f"Resmin donukluğu {MIN_IMAGE_OPACITY} ile {MAX_IMAGE_OPACITY} arasında olmalı; {o} verildi.")
+
+    def raster_side(self, most):
+        def check(v):
+            n = self.uint(32)(v)
+            if n > most:
+                self.fail("bad_value", f"{n} aralık dışında (0…{most})")
+            return n
+
+        return check
+
+    def raster_affine(self, v):
+        a = self.array(self.float)(v)
+        if len(a) != 6:
+            self.fail("bad_value", f"rasterin dönüşümü 6 sayı olmalı, {len(a)} var")
+        return a
+
+    def raster_style(self, v):
+        """A raster's look (§6.6, docs/adr/0204 §4): `render` and `bands`; the rest only when not their default."""
+        def flag(v):
+            if self.bool(v) is not True:
+                self.fail("bad_value", "ters çevirme false yazılmaz; çevrilmemiş rampada alan yoktur")
+            return True
+
+        def stretch(v):
+            if self.text(v) == "none":
+                self.fail("bad_value", "gerdirme “none” yazılmaz; gerdirmesiz görünüşte alan yoktur")
+            return self.enum(RASTER_STRETCHES)(v)
+
+        def resampling(v):
+            if self.text(v) == "bilinear":
+                self.fail("bad_value", "örnekleme “bilinear” yazılmaz; çift doğrusal görünüşte alan yoktur")
+            return self.enum(RASTER_RESAMPLINGS)(v)
+
+        return self.fields(
+            {
+                "render": (self.enum(RASTER_RENDERS), True),
+                "bands": (self.array(self.raster_side(MAX_RASTER_BANDS)), True),
+                "stretch": (stretch, False),
+                "min": (self.float, False),
+                "max": (self.float, False),
+                "ramp": (self.text, False),
+                "invert": (flag, False),
+                "azimuth": (self.float, False),
+                "altitude": (self.float, False),
+                "zFactor": (self.float, False),
+                "nodata": (self.float, False),
+                "resampling": (resampling, False),
+            }
+        )(v)
+
+    def raster_rules(self, r):
+        """The contract's `RasterFields::problem` and `RasterStyle::problem` (kentos_contracts::raster), in their order;
+        the numbers are finite already."""
+        x0, a, b, y0, c, d = r["affine"]
+        det = a * d - b * c
+        if not (math.isfinite(det) and det != 0.0):
+            self.fail("bad_value", "Rasterin dönüşümü tersinmiyor: pikselin iki kenarı aynı doğrultuda ya da sıfır.")
+        if not (1 <= r["width"] <= MAX_RASTER_SIDE and 1 <= r["height"] <= MAX_RASTER_SIDE):
+            self.fail("bad_value", f"Rasterin genişliği ve yüksekliği 1 ile {MAX_RASTER_SIDE} piksel arasında olmalı.")
+        if not 1 <= r["bands"] <= MAX_RASTER_BANDS:
+            self.fail("bad_value", f"Rasterin 1 ile {MAX_RASTER_BANDS} arasında bandı olmalı.")
+        asset = r.get("asset", "").strip() or None
+        file = r.get("file", "").strip() or None
+        if asset and file:
+            self.fail("bad_value", "Rasterin kaynağı ya gömülü varlık (asset) ya bağlı dosya (file) olmalı, ikisi birden değil.")
+        if not ((asset and "file" not in r) or (file and "asset" not in r)):
+            self.fail("bad_value", "Rasterin kaynağı yok: gömülü varlığın kimliğini (asset) ya da bağlı dosyanın yolunu (file) verin.")
+        if file and (len(file) > MAX_RASTER_PATH or any(ord(ch) < 32 or 0x7F <= ord(ch) <= 0x9F for ch in file)):
+            self.fail("bad_value", f"Bağlı dosyanın yolu en çok {MAX_RASTER_PATH} harf olmalı ve denetim karakteri içermemeli.")
+        st = r["style"]
+        need, alpha = (3, True) if st["render"] == "rgb" else (1, False)
+        n = len(st["bands"])
+        if not (n == need or (alpha and n == need + 1)):
+            self.fail("bad_value", "RGB görünüş üç bant ister (dördüncüsü alfa olabilir)." if st["render"] == "rgb" else "Bu görünüş tek bant ister.")
+        wrong = [x for x in st["bands"] if x == 0 or x > r["bands"]]
+        if wrong:
+            self.fail("bad_value", f"Rasterin {r['bands']} bandı var; {wrong[0]}. bant gösterilemez.")
+        if st.get("stretch") == "manual" and not ("min" in st and "max" in st and st["min"] < st["max"]):
+            self.fail("bad_value", "Elle gerdirmenin en küçüğü ve en büyüğü sonlu sayılar olmalı, en küçük en büyükten küçük.")
+        if "ramp" in st and st["ramp"] not in RASTER_RAMPS:
+            self.fail("bad_value", f"“{st['ramp']}” diye bir renk rampası yok; {', '.join(RASTER_RAMPS)} rampalarından biri seçilmeli.")
+        az, alt, z = st.get("azimuth", 315.0), st.get("altitude", 45.0), st.get("zFactor", 1.0)
+        if not (0.0 <= az <= 360.0 and 0.0 <= alt <= 90.0 and z > 0.0):
+            self.fail("bad_value", "Gölgeli kabartmanın ışığı 0–360° doğrultudan, 0–90° yükseklikten gelmeli; yükseklik çarpanı sıfırdan büyük olmalı.")
+        o = r.get("opacity")
+        if o is not None and not (MIN_RASTER_OPACITY <= o <= MAX_RASTER_OPACITY):
+            self.fail("bad_value", f"Rasterin donukluğu {MIN_RASTER_OPACITY} ile {MAX_RASTER_OPACITY} arasında olmalı; {o} verildi.")
 
     def table_rules(self, t):
         """The contract's `TableShape::problem` (kentos_contracts::table), in its order: what it names is refused at its field."""
@@ -2058,6 +2166,20 @@ ENTITY_KINDS = {
         "asset": (s.text, False),
         "file": (s.text, False),
         "clip": (s.array(s.point), False),
+        "opacity": (s.float, False),
+    },
+    # Schema 29 (docs/adr/0204 §2): a raster's affine, size, bands and samples, its one source, its file's system, its
+    # look and opacity; only in the drawing.
+    "raster": lambda s: {
+        "affine": (s.raster_affine, True),
+        "width": (s.raster_side(MAX_RASTER_SIDE), True),
+        "height": (s.raster_side(MAX_RASTER_SIDE), True),
+        "bands": (s.raster_side(MAX_RASTER_BANDS), True),
+        "sample": (s.enum(RASTER_SAMPLES), True),
+        "asset": (s.text, False),
+        "file": (s.text, False),
+        "srid": (s.uint(32), True),
+        "style": (s.raster_style, True),
         "opacity": (s.float, False),
     },
     # Schema 8 (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, `mask` only when true.

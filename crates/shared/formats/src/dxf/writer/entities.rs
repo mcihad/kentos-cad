@@ -78,6 +78,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Leader(_) => "Kılavuz",
         Entity::Table(_) => "Tablo",
         Entity::Image(_) => "Resim",
+        Entity::Raster(_) => "Raster",
     }
 }
 
@@ -171,8 +172,8 @@ fn finite(e: &Entity) -> bool {
         }
         Entity::Insert(i) => ok(i.p) && nums_ok(&[i.scale, i.rotation]),
         Entity::Leader(l) => all_ok(&l.pts) && nums_ok(&[l.height, l.rotation]),
-        // Never written (docs/adr/0192, Kapsam dışı): said in the report.
-        Entity::Image(_) => true,
+        // Never written (docs/adr/0192, 0204, Kapsam dışı): said in the report.
+        Entity::Image(_) | Entity::Raster(_) => true,
         Entity::Table(t) => {
             ok(t.p)
                 && nums_ok(&[t.height, t.rotation])
@@ -532,6 +533,15 @@ impl Writer<'_> {
             Entity::Insert(i) => self.insert(i),
             Entity::Leader(l) => self.leader(l),
             Entity::Table(t) => self.table(t),
+            // Nor a raster (docs/adr/0204 §10).
+            Entity::Raster(_) => {
+                self.report.skip(
+                    "Raster",
+                    "DXF'e raster yazılmaz: DXF rasteri ayrı bir dosyadan okur (IMAGE, IMAGEDEF); rasteri ayrıca verin",
+                    0,
+                );
+                false
+            }
             // DXF's IMAGE needs its file beside the drawing (docs/adr/0192, Kapsam dışı).
             Entity::Image(_) => {
                 self.report.skip(

@@ -132,6 +132,9 @@ impl Tool for CrsQuery {
                 ),
             }
         }
+        // The rasters' values under the point, said once read (docs/adr/0204 §8).
+        cx.view_changes
+            .push(crate::tool::ViewChange::RasterValues(p.world));
         self.last = Some(p.world);
     }
 

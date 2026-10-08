@@ -31,6 +31,7 @@ pub mod intersection;
 pub mod network;
 mod parts;
 pub mod polar;
+pub mod raster_fit;
 pub mod read;
 pub mod stakeout;
 pub mod traverse;
@@ -63,6 +64,8 @@ pub const COMMANDS: &[&str] = &[
     "calc.fieldbook",
     "calc.network",
     "calc.levelNetwork",
+    // docs/adr/0204 §6: Raster oturt (raster_fit.rs).
+    "raster.georef",
 ];
 
 /// The windows' greatest height: the web's body of at most 760 px with the
@@ -83,6 +86,8 @@ pub enum Window {
     /// Yatay ağ dengelemesi and Kot ağı dengelemesi (docs/adr/0203).
     Network,
     Level,
+    /// Raster oturt (docs/adr/0204 §6).
+    RasterFit,
 }
 
 /// A known point field of the window it is in.
@@ -151,6 +156,8 @@ pub enum Event {
     FieldBook(fieldbook::Event),
     /// Yatay ağ dengelemesi's and Kot ağı dengelemesi's own controls.
     Network(network::Event),
+    /// Raster oturt's own controls.
+    RasterFit(raster_fit::Event),
 }
 
 /// The windows' state while the app runs (the web's module state).
@@ -167,6 +174,7 @@ pub struct Calc {
     pub fieldbook: fieldbook::Form,
     pub network: network::NetworkForm,
     pub level: network::LevelForm,
+    pub raster_fit: raster_fit::Form,
     /// The field Çizimden picks for, while its window is closed.
     picking: Option<(Window, Field)>,
 }
@@ -182,6 +190,7 @@ impl Calc {
             Window::Edgematch => Some(&mut self.edgematch),
             Window::Convert => Some(&mut self.convert),
             Window::FieldBook => Some(&mut self.fieldbook),
+            Window::RasterFit => Some(&mut self.raster_fit),
             Window::Intersection | Window::Network | Window::Level => None,
         }
     }
@@ -198,6 +207,7 @@ impl Calc {
             | Window::Edgematch
             | Window::Convert
             | Window::FieldBook
+            | Window::RasterFit
             | Window::Level => None,
         }
     }
@@ -249,6 +259,7 @@ impl App {
             "calc.fieldbook" => self.calc_show(Window::FieldBook),
             "calc.network" => self.calc_show(Window::Network),
             "calc.levelNetwork" => self.calc_show(Window::Level),
+            "raster.georef" => self.calc_show(Window::RasterFit),
             _ => {}
         }
         Task::none()
@@ -283,6 +294,9 @@ impl App {
         if window == Window::Fit {
             self.calc.fit.sync(&doc.model, self.selection.len());
         }
+        if window == Window::RasterFit {
+            self.calc.raster_fit.sync(&doc.model, self.selection.ids());
+        }
         if window == Window::Edgematch {
             self.calc.edgematch.sync(&doc.model, self.selection.len());
             self.calc.edgematch.solve(&doc.model, self.selection.ids());
@@ -298,6 +312,10 @@ impl App {
     }
 
     pub(crate) fn calc_event(&mut self, e: Event) -> Task<Message> {
+        // Raster oturt's resampling ends after its window closed (rasters/jobs.rs).
+        if let Event::RasterFit(e @ raster_fit::Event::Warped(_)) = e {
+            return self.raster_fit_event(e);
+        }
         let Some(window) = self.calc.open else {
             return Task::none();
         };
@@ -330,6 +348,7 @@ impl App {
             Event::Convert(e) => self.convert_event(e),
             Event::FieldBook(e) => self.fieldbook_event(e),
             Event::Network(e) => self.network_event(e),
+            Event::RasterFit(e) => self.raster_fit_event(e),
             Event::CopyReport => self.calc_copy_report(window),
             Event::SendToDevice => self.calc_send_stakeout(),
             Event::AddPoints => {
@@ -443,6 +462,9 @@ impl App {
         if window == Window::Fit {
             self.calc.fit.solve();
         }
+        if window == Window::RasterFit {
+            self.calc.raster_fit.solve();
+        }
         // Karne editörü reduces the station again (Kullan, a name).
         if window == Window::FieldBook
             && let Some(doc) = &self.document
@@ -482,6 +504,7 @@ impl App {
             Window::FieldBook => fieldbook::TITLE,
             Window::Network => network::NETWORK_TITLE,
             Window::Level => network::LEVEL_TITLE,
+            Window::RasterFit => raster_fit::TITLE,
         }
     }
 
@@ -504,7 +527,9 @@ impl App {
             (Window::Fit, _) => return None,
             (Window::Edgematch, _) => return None,
             (Window::Convert, _) => return None,
-            (Window::FieldBook | Window::Network | Window::Level, _) => return None,
+            (Window::FieldBook | Window::Network | Window::Level | Window::RasterFit, _) => {
+                return None;
+            }
         })
     }
 
@@ -519,6 +544,11 @@ impl App {
         if self.calc.convert.picking {
             self.convert_picked(p);
             self.calc_show(Window::Convert);
+            return;
+        }
+        // Raster oturt's raster or row: the window opens again with it.
+        if self.raster_fit_picked(p) {
+            self.calc_show(Window::RasterFit);
             return;
         }
         // Vektör oturtma's row: its source or target, and the name it snapped to.
@@ -596,6 +626,7 @@ impl App {
             Window::FieldBook => self.calc.fieldbook.report(),
             Window::Network => self.calc.network.report(model, &format),
             Window::Level => self.calc.level.report(model, &format),
+            Window::RasterFit => None,
         };
         let Some(lines) = lines else {
             return Task::none();
@@ -662,7 +693,8 @@ impl App {
             | Window::Convert
             | Window::FieldBook
             | Window::Network
-            | Window::Level => return,
+            | Window::Level
+            | Window::RasterFit => return,
         };
         let (Some(layer), false) = (layer.clone(), points.is_empty()) else {
             return;
@@ -791,6 +823,7 @@ impl App {
             Window::FieldBook => self.calc.fieldbook.view(model, &format),
             Window::Network => self.calc.network.view(model, &format),
             Window::Level => self.calc.level.view(model, &format),
+            Window::RasterFit => self.calc.raster_fit.view(model),
         };
         kentos_ui::widget::overlay::modal(dialog, event(Event::Close))
     }
@@ -820,6 +853,7 @@ fn field_label(window: Window, field: Field) -> &'static str {
         (Window::Edgematch, _) => "Sınır",
         (Window::Convert, _) => "Nokta",
         (Window::FieldBook | Window::Network | Window::Level, _) => "Nokta",
+        (Window::RasterFit, _) => "Nokta",
     }
 }
 

@@ -284,6 +284,30 @@ cases.append({
     ],
 })
 
+# A raster (docs/adr/0204 §7): its affine composed with the transform: the first pixel's corner goes where the drawing
+# goes, the columns' and rows' steps by the linear part; moved, turned, mirrored and scaled as copies alike. A scanned
+# sheet's pixels lean a little: no step is a zero that a mirror would make −0.
+RASTER = {"kind": "raster", "id": 22, "layerId": "yapi", "attrs": {"Pafta": "12"}, "affine": [487000, 0.5, 0.0125, 4420800, 0.0125, -0.5], "width": 2000,
+          "height": 1500, "bands": 3, "sample": "u8", "file": "orto/pafta-12.tif", "srid": 5256, "style": {"render": "rgb", "bands": [1, 2, 3]}}
+R_SETUP = {**SETUP, "entities": ENTITIES + [RASTER]}
+R_IDS = IDS + [22]
+cases.append({
+    "name": "raster: dönüşümü taşı, döndür, aynala ve ölçekle ile birleşir; ilk pikselin köşesi çizimle gider, sütun ve satır adımları doğrusal kısımla (ADR 0204 §7)",
+    "setup": R_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(22)], "transform": move(12.5, -7.25)}, "result": done(changed=[U(22)]),
+         "expect": {"ids": R_IDS, "entities": entities((22, moved(RASTER, M_MOVE))), "revision": "changed"}},
+        {"op": "undo", "returns": "Taşı", "expect": {"entities": entities((22, RASTER))}},
+        {"op": "execute", "input": {"uids": [U(22)], "transform": rotate(*O10, HALF_PI)}, "result": done(changed=[U(22)]),
+         "expect": {"entities": entities((22, moved(RASTER, M_ROT))), "revision": "changed"}},
+        {"op": "undo", "returns": "Döndür", "expect": {"entities": entities((22, RASTER))}},
+        {"op": "execute", "input": {"uids": [U(22)], "transform": mirror_t(*AX)}, "result": done(changed=[U(22)]),
+         "expect": {"entities": entities((22, moved(RASTER, M_MIRROR))), "revision": "changed"}},
+        {"op": "execute", "input": {"uids": [U(22)], "transform": scale(487000, 4420040, 2), "copy": True}, "result": done(created=[U(23)]),
+         "expect": {"ids": R_IDS + [23], "entities": entities((23, moved(moved(RASTER, M_MIRROR), scaling(2, (487000, 4420040)), 23))), "revision": "changed"}},
+    ],
+})
+
 cases.append({
     "name": "birden çok nesne ve tekrarlanan kimlik: her nesne bir kez, girdinin sırasıyla; yayın açıları ve noktanın kotu, yazısı, öznitelikleri kalır",
     "steps": [
@@ -719,11 +743,19 @@ def warp_point(p, t):
 
 
 def warped(e, t, new_id=None):
-    """A point, a line or a straight path under a non-similar warp: its vertices by f, its elevations kept."""
+    """A point, a line or a straight path under a non-similar warp: its vertices by f, its elevations kept; a raster under an
+    affine: its affine composed, to + J·(corner − from) (docs/adr/0204 §7)."""
     out = json.loads(json.dumps(e))
     if new_id is not None:
         out["id"] = new_id
-    if e["kind"] == "point":
+    if e["kind"] == "raster":
+        a, b, c, d = t["m"]
+        x0, ra, rb, y0, rc, rd = e["affine"]
+        o = warp_point(P(x0, y0), t)
+        col = (a * ra + c * rc, b * ra + d * rc)
+        row = (a * rb + c * rd, b * rb + d * rd)
+        out["affine"] = [o["x"], col[0], row[0], o["y"], col[1], row[1]]
+    elif e["kind"] == "point":
         out["p"] = warp_point(e["p"], t)
     elif e["kind"] == "line":
         out["a"], out["b"] = warp_point(e["a"], t), warp_point(e["b"], t)
@@ -1061,6 +1093,33 @@ cases.append({
         {"op": "validate", "input": {"uids": [U(10)], "transform": arrange_t("vertical", 4420000.0)}, "result": failed("invalid_transform", AT_GIVEN, "transform.at"), "expect": untouched},
         {"op": "execute", "input": {"uids": [U(10), U(13), U(12)], "transform": arrange_t("horizontal")}, "result": failed("too_few_objects", TOO_FEW_OBJECTS, "uids"), "expect": untouched},
         {"op": "execute", "input": {"uids": [U(12)], "transform": arrange_t("horizontal")}, "result": failed("layer_locked", LOCKED(1), "uids"), "expect": untouched},
+    ],
+})
+
+
+# Oturt and Kauçuk levha with a raster (docs/adr/0204 §7): a similarity and an affine compose its affine (the similarity
+# in its three passes, the affine as to + J·(corner − from)); a projective transform and a rubber sheet would have to
+# resample its pixels: raster_not_warped at the raster's id, nothing written.
+O_RASTER = {"kind": "raster", "id": 9, "layerId": "yapi", "attrs": {}, "affine": [487000.5, 0.25, 0.003, 4420060.75, 0.003, -0.25], "width": 400,
+            "height": 240, "bands": 1, "sample": "f32", "file": "dem.tif", "srid": 5256, "style": {"render": "hillshade", "bands": [1]}}
+OR_SETUP = {**SETUP, "entities": OTURT + [O_RASTER]}
+OR_IDS = OTURT_IDS + [9]
+RASTER_NOT_WARPED = "Raster projektif dönüşümle ya da kauçuk levhayla taşınmaz: pikselleri yeniden örneklenmeli. Rasteri seçimden çıkarın; Raster oturt ile oturtun."
+OR_UNTOUCHED = {"ids": OR_IDS, "canUndo": False, "revision": "same"}
+cases.append({
+    "name": "Oturt ve raster: benzerlik ve afin rasterin dönüşümünü birleştirir; projektif dönüşüm ve kauçuk levha rasteri almaz, raster_not_warped rasterin yeriyle (ADR 0204 §7)",
+    "setup": OR_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(1), U(9)], "transform": similarity_t(SIM_A, SIM_B)}, "result": done(changed=[U(1), U(9)]),
+         "expect": {"ids": OR_IDS, "entities": entities((1, similar(O(1), SIM_A, SIM_B)), (9, similar(O_RASTER, SIM_A, SIM_B))), "revision": "changed"}},
+        {"op": "undo", "returns": "Oturt", "expect": {"entities": entities((1, O(1)), (9, O_RASTER)), "canUndo": False}},
+        {"op": "execute", "input": {"uids": [U(9)], "transform": affine_t(AFFINE)}, "result": done(changed=[U(9)]),
+         "expect": {"entities": entities((9, warped(O_RASTER, affine_t(AFFINE)))), "revision": "changed"}},
+        {"op": "undo", "returns": "Oturt", "expect": {"entities": entities((9, O_RASTER)), "canUndo": False}},
+        {"op": "execute", "input": {"uids": [U(1), U(9)], "transform": projective_t(PROJECTIVE)},
+         "result": failed("raster_not_warped", RASTER_NOT_WARPED, "uids[1]"), "expect": OR_UNTOUCHED},
+        {"op": "execute", "input": {"uids": [U(9), U(1)], "transform": rubber_t()},
+         "result": failed("raster_not_warped", RASTER_NOT_WARPED, "uids[0]"), "expect": OR_UNTOUCHED},
     ],
 })
 

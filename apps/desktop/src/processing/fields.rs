@@ -493,7 +493,7 @@ fn pick_button<'a>(caption: Option<&'a str>, on_press: Message, on: bool) -> Ele
 
 /// Every object kind in the web's order (`ENTITY_KIND_LABEL`): what a
 /// features field's note names as left out.
-const KINDS: [&str; 17] = [
+const KINDS: [&str; 18] = [
     "point",
     "line",
     "polyline",
@@ -511,6 +511,7 @@ const KINDS: [&str; 17] = [
     "leader",
     "table",
     "image",
+    "raster",
 ];
 
 /// An attribute name: typed (a new one too, with `allow_new`) or picked

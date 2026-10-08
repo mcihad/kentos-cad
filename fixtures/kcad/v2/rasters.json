@@ -1,0 +1,197 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Rasterler",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis"
+  },
+  "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "orto",
+      "name": "Ortofoto",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#5B6B7F",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    },
+    {
+      "id": "dem",
+      "name": "Yükseklik modeli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#7A6B5B",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    },
+    {
+      "id": "pafta",
+      "name": "Taranmış pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#6B5B7F",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "orto",
+  "entities": [
+    {
+      "kind": "raster",
+      "id": 1,
+      "layerId": "orto",
+      "attrs": {},
+      "affine": [
+        487100.0,
+        0.1,
+        0.0,
+        4421000.0,
+        0.0,
+        -0.1
+      ],
+      "width": 20000,
+      "height": 15000,
+      "bands": 3,
+      "sample": "u8",
+      "file": "orto/pafta-12.tif",
+      "srid": 5256,
+      "style": {
+        "render": "rgb",
+        "bands": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "kind": "raster",
+      "id": 2,
+      "layerId": "dem",
+      "attrs": {
+        "Kaynak": "HGM"
+      },
+      "affine": [
+        487000.0,
+        0.25,
+        0.0,
+        4420100.0,
+        0.0,
+        -0.25
+      ],
+      "width": 50,
+      "height": 40,
+      "bands": 1,
+      "sample": "i8",
+      "asset": "raster-1be365b685ba77d1",
+      "srid": 5256,
+      "style": {
+        "render": "rampShade",
+        "bands": [
+          1
+        ],
+        "stretch": "manual",
+        "min": -20.0,
+        "max": 90.0,
+        "ramp": "Arazi",
+        "invert": true,
+        "azimuth": 300.0,
+        "altitude": 40.0,
+        "zFactor": 2.5,
+        "nodata": -128.0,
+        "resampling": "nearest"
+      },
+      "opacity": 0.7
+    },
+    {
+      "kind": "raster",
+      "id": 3,
+      "layerId": "pafta",
+      "attrs": {
+        "Not": "taranmış pafta"
+      },
+      "affine": [
+        486950.0,
+        0.4330127018922193,
+        0.25,
+        4420300.0,
+        0.25,
+        -0.4330127018922193
+      ],
+      "width": 2480,
+      "height": 1754,
+      "bands": 1,
+      "sample": "u8",
+      "file": "tarama/pafta.png",
+      "srid": 0,
+      "style": {
+        "render": "gray",
+        "bands": [
+          1
+        ],
+        "stretch": "percent"
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2501",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2502",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2503"
+  ],
+  "styles": {
+    "items": [
+      {
+        "kind": "asset",
+        "id": "raster-1be365b685ba77d1",
+        "name": "dem-ornek",
+        "path": [
+          "Rasterler"
+        ],
+        "format": "tiff",
+        "data": "data:image/tiff;base64,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",
+        "width": 50,
+        "height": 40
+      }
+    ],
+    "categories": []
+  }
+}

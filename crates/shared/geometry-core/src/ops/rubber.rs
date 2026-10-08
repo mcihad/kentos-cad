@@ -205,6 +205,39 @@ impl Sheet {
         let s = self.size;
         [1.0 + gx[0] / s, gx[1] / s, gy[0] / s, 1.0 + gy[1] / s]
     }
+
+    /// `map` and `jacobian` at once, one logarithm a source (Raster oturt's
+    /// inverse takes both every round of Newton's method).
+    pub fn map_and_jacobian(&self, p: Vec2) -> (Vec2, [f64; 4]) {
+        let q = self.frame(p);
+        let [a0, a1, a2] = self.affine;
+        let mut d = [
+            a0[0] + a1[0] * q.x + a2[0] * q.y,
+            a0[1] + a1[1] * q.x + a2[1] * q.y,
+        ];
+        let mut gx = [a1[0], a1[1]];
+        let mut gy = [a2[0], a2[1]];
+        for (s, w) in self.sources.iter().zip(&self.weights) {
+            let (dx, dy) = (q.x - s.x, q.y - s.y);
+            let r2 = dx * dx + dy * dy;
+            if r2 > 0.0 {
+                let l = log(r2);
+                let f = 0.5 * r2 * l;
+                d[0] += w[0] * f;
+                d[1] += w[1] * f;
+                let k = l + 1.0;
+                gx[0] += w[0] * dx * k;
+                gx[1] += w[1] * dx * k;
+                gy[0] += w[0] * dy * k;
+                gy[1] += w[1] * dy * k;
+            }
+        }
+        let s = self.size;
+        (
+            Vec2::new(p.x + d[0], p.y + d[1]),
+            [1.0 + gx[0] / s, gx[1] / s, gy[0] / s, 1.0 + gy[1] / s],
+        )
+    }
 }
 
 /// Gaussian elimination with partial pivoting of `a` against two

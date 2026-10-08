@@ -67,6 +67,7 @@ enum Pipe {
     Marker,
     Gradient,
     Image,
+    Raster,
 }
 
 struct Pipelines {
@@ -78,6 +79,7 @@ struct Pipelines {
     marker: wgpu::RenderPipeline,
     gradient: wgpu::RenderPipeline,
     image: wgpu::RenderPipeline,
+    raster: wgpu::RenderPipeline,
 }
 
 impl Pipelines {
@@ -91,6 +93,7 @@ impl Pipelines {
             Pipe::Marker => &self.marker,
             Pipe::Gradient => &self.gradient,
             Pipe::Image => &self.image,
+            Pipe::Raster => &self.raster,
         }
     }
 }
@@ -126,11 +129,14 @@ const STROKE_ATTRIBUTES: [wgpu::VertexAttribute; 2] =
 const AREA_ATTRIBUTES: [wgpu::VertexAttribute; 1] = wgpu::vertex_attr_array![0 => Float32x2];
 const MARKER_ATTRIBUTES: [wgpu::VertexAttribute; 2] =
     wgpu::vertex_attr_array![0 => Float32x4, 1 => Float32];
+const RASTER_ATTRIBUTES: [wgpu::VertexAttribute; 1] = wgpu::vertex_attr_array![0 => Float32x4];
 
 /// Floats per stroke segment, fill vertex and marker (the contract's strides).
 pub const STROKE_FLOATS: usize = 6;
 pub const AREA_FLOATS: usize = 2;
 pub const MARKER_FLOATS: usize = 5;
+/// Floats per raster quad vertex: x, y from the batch's tile, u, v (docs/adr/0204 §5).
+pub const RASTER_FLOATS: usize = 4;
 
 const STROKE_BUFFER: wgpu::VertexBufferLayout<'static> = wgpu::VertexBufferLayout {
     array_stride: (STROKE_FLOATS * 4) as u64,
@@ -147,6 +153,11 @@ const MARKER_BUFFER: wgpu::VertexBufferLayout<'static> = wgpu::VertexBufferLayou
     step_mode: wgpu::VertexStepMode::Instance,
     attributes: &MARKER_ATTRIBUTES,
 };
+const RASTER_BUFFER: wgpu::VertexBufferLayout<'static> = wgpu::VertexBufferLayout {
+    array_stride: (RASTER_FLOATS * 4) as u64,
+    step_mode: wgpu::VertexStepMode::Vertex,
+    attributes: &RASTER_ATTRIBUTES,
+};
 
 /// A styled pipeline as the contract describes it (`styled.layout.json` → `pipelines`).
 #[derive(Clone, Debug)]
@@ -160,8 +171,8 @@ pub struct StyledPipelineSpec {
     pub buffer: wgpu::VertexBufferLayout<'static>,
 }
 
-/// The contract's pipelines, in its order: stroke, solid, hatch, pattern, tile, marker, gradient, image.
-pub const STYLED_PIPELINES: [StyledPipelineSpec; 8] = [
+/// The contract's pipelines, in its order: stroke, solid, hatch, pattern, tile, marker, gradient, image, raster.
+pub const STYLED_PIPELINES: [StyledPipelineSpec; 9] = [
     StyledPipelineSpec {
         name: "stroke",
         vertex: "strokeVs",
@@ -226,6 +237,14 @@ pub const STYLED_PIPELINES: [StyledPipelineSpec; 8] = [
         blend: PREMULTIPLIED,
         buffer: AREA_BUFFER,
     },
+    StyledPipelineSpec {
+        name: "raster",
+        vertex: "rasterVs",
+        fragment: "rasterFs",
+        vertex_count: None,
+        blend: PREMULTIPLIED,
+        buffer: RASTER_BUFFER,
+    },
 ];
 
 /// The styled pipelines, layouts and atlas of one device.
@@ -242,6 +261,8 @@ pub struct StyledGpu {
     pub(crate) atlas: Atlas,
     /// The drawing's pictures (docs/adr/0192 §3).
     pictures: super::pictures::PictureTextures,
+    /// The rasters' tiles (docs/adr/0204 §5).
+    rasters: super::raster_tiles::RasterAtlas,
     /// The device's alignment of dynamic uniform offsets.
     align: u64,
     /// Colours are sRGB-encoded as written; an sRGB target would encode them twice.
@@ -334,6 +355,7 @@ impl StyledGpu {
         let align = (STYLE_BYTES as u64).next_multiple_of(min_align);
         StyledGpu {
             pictures: super::pictures::PictureTextures::new(device),
+            rasters: super::raster_tiles::RasterAtlas::new(device),
             format,
             module,
             frame_layout,
@@ -387,7 +409,17 @@ impl StyledGpu {
                     cache: None,
                 })
             };
-            let [stroke, solid, hatch, pattern, tile, marker, gradient, image] = &STYLED_PIPELINES;
+            let [
+                stroke,
+                solid,
+                hatch,
+                pattern,
+                tile,
+                marker,
+                gradient,
+                image,
+                raster,
+            ] = &STYLED_PIPELINES;
             Pipelines {
                 stroke: pipe(stroke),
                 solid: pipe(solid),
@@ -397,6 +429,7 @@ impl StyledGpu {
                 marker: pipe(marker),
                 gradient: pipe(gradient),
                 image: pipe(image),
+                raster: pipe(raster),
             }
         })
     }
@@ -437,6 +470,7 @@ impl StyledGpu {
                         FillPaintBatch::Pattern { .. } => Pipe::Pattern,
                         FillPaintBatch::Tile { .. } => Pipe::Tile,
                         FillPaintBatch::Image { .. } => Pipe::Image,
+                        FillPaintBatch::Raster { .. } => Pipe::Raster,
                     },
                     AREA_FLOATS,
                     false,
@@ -453,7 +487,26 @@ impl StyledGpu {
                 } => Some(image.clone()),
                 _ => None,
             };
+            // A raster draws its tiles in view, not its frame's triangles (docs/adr/0204 §5).
+            let raster = match &b.kind {
+                BatchKind::Fill {
+                    paint:
+                        FillPaintBatch::Raster {
+                            raster,
+                            look,
+                            affine,
+                            size,
+                            nearest,
+                            ..
+                        },
+                } => Some(super::raster_tiles::RasterPaint::new(
+                    raster, look, *affine, *size, *nearest,
+                )),
+                _ => None,
+            };
             batches.push(GpuBatch {
+                raster,
+                quads: 0..0,
                 picture,
                 pipe,
                 bytes: (range.start as u64 * 4)..(range.end as u64 * 4),
@@ -605,6 +658,8 @@ impl StyledGpu {
             }
         }
         view.pictures.retain(|k, _| drawn.contains(k));
+        // The rasters' tiles in view (docs/adr/0204 §5): their quads in one buffer, the atlas filled.
+        let raster_waits = self.prepare_rasters(device, queue, view, box_, px_per_m, images);
         for up in self.atlas.take_uploads() {
             queue.write_texture(
                 wgpu::TexelCopyTextureInfo {
@@ -630,7 +685,80 @@ impl StyledGpu {
                 },
             );
         }
-        self.atlas.pending
+        self.atlas.pending || raster_waits
+    }
+
+    /// The rasters' quads of a frame and their bindings; whether a tile waits for another frame.
+    fn prepare_rasters(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        view: &mut ViewStyled,
+        box_: [f64; 4],
+        px_per_m: f64,
+        images: &dyn ImageSource,
+    ) -> bool {
+        view.quads.clear();
+        let any = view
+            .layers
+            .iter()
+            .any(|l| l.batches.iter().any(|g| g.visible && g.raster.is_some()));
+        if !any {
+            return false;
+        }
+        self.rasters.begin_frame();
+        images.raster_frame();
+        let mut uploads = 0;
+        for layer in &mut view.layers {
+            let batches = &layer.source.layer.batches;
+            for (g, b) in layer.batches.iter_mut().zip(batches) {
+                let Some(paint) = &g.raster else {
+                    continue;
+                };
+                g.quads = if g.visible {
+                    view.quads.add(
+                        paint,
+                        b.origin,
+                        box_,
+                        px_per_m,
+                        &mut self.rasters,
+                        queue,
+                        images,
+                        &mut uploads,
+                    )
+                } else {
+                    0..0
+                };
+            }
+        }
+        // The quads into the view's buffer, grown when they outgrow it.
+        let bytes: &[u8] = bytemuck::cast_slice(&view.quads.data);
+        if !bytes.is_empty() {
+            let fits = view
+                .quad_buffer
+                .as_ref()
+                .is_some_and(|b| b.size() >= bytes.len() as u64);
+            if !fits {
+                view.quad_buffer = Some(device.create_buffer(&wgpu::BufferDescriptor {
+                    label: Some("kentos.raster.quads"),
+                    size: (bytes.len() as u64).next_power_of_two(),
+                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                }));
+            }
+            if let Some(buffer) = &view.quad_buffer {
+                queue.write_buffer(buffer, 0, bytes);
+            }
+        }
+        if view.raster_binds.is_none() {
+            view.raster_binds = Some(super::raster_tiles::bindings(
+                device,
+                &self.frame_layout,
+                &view.frame,
+                &self.rasters,
+            ));
+        }
+        view.quads.waiting
     }
 
     /// Büyüteç (docs/adr/0181 §5): after [`StyledGpu::prepare`] of the same
@@ -670,6 +798,17 @@ impl StyledGpu {
         }
         lens_pictures.retain(|k, _| view.pictures.contains_key(k));
         view.lens_pictures = lens_pictures;
+        // The rasters' atlas with the lens's frame too (docs/adr/0204 §5).
+        if view.lens_raster_binds.is_none()
+            && let Some((buffer, _)) = &view.lens
+        {
+            view.lens_raster_binds = Some(super::raster_tiles::bindings(
+                device,
+                &self.frame_layout,
+                buffer,
+                &self.rasters,
+            ));
+        }
         let px_per_m = frame.scale * frame.dpr;
         let hw = f64::from(frame.size_px[0]) / 2.0 / px_per_m;
         let hh = f64::from(frame.size_px[1]) / 2.0 / px_per_m;
@@ -687,17 +826,34 @@ impl StyledGpu {
 
     /// Draws a view's visible batches, layer by layer in their order.
     pub fn draw(&self, pass: &mut wgpu::RenderPass<'_>, view: &ViewStyled, samples: u32) {
-        self.draw_through(pass, view, samples, &view.frame_bind, &view.pictures, None);
+        self.draw_through(
+            pass,
+            view,
+            samples,
+            &view.frame_bind,
+            &view.pictures,
+            view.raster_binds.as_ref(),
+            None,
+        );
     }
 
     /// The same through the lens [`StyledGpu::prepare_lens`] set: only the
     /// batches that reach its box.
     pub fn draw_lens(&self, pass: &mut wgpu::RenderPass<'_>, view: &ViewStyled) {
         if let (Some((_, bind)), Some(seen)) = (&view.lens, view.lens_view) {
-            self.draw_through(pass, view, 1, bind, &view.lens_pictures, Some(seen));
+            self.draw_through(
+                pass,
+                view,
+                1,
+                bind,
+                &view.lens_pictures,
+                view.lens_raster_binds.as_ref(),
+                Some(seen),
+            );
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn draw_through(
         &self,
         pass: &mut wgpu::RenderPass<'_>,
@@ -705,6 +861,7 @@ impl StyledGpu {
         samples: u32,
         frame_bind: &wgpu::BindGroup,
         pictures: &HashMap<String, (Arc<wgpu::TextureView>, wgpu::BindGroup)>,
+        rasters: Option<&super::raster_tiles::RasterBinds>,
         seen: Option<([f64; 4], f64, f64)>,
     ) {
         let Some(pipes) = self.pipelines.get(&samples) else {
@@ -723,6 +880,33 @@ impl StyledGpu {
                 return;
             };
             if !b.visible || b.count == 0 {
+                return;
+            }
+            // A raster: its tiles' quads with the raster atlas in group 0 (docs/adr/0204 §5).
+            if let Some(paint) = &b.raster {
+                let (Some(binds), Some(quads)) = (rasters, &view.quad_buffer) else {
+                    return;
+                };
+                if b.quads.is_empty() {
+                    return;
+                }
+                if current != Some(Pipe::Raster) {
+                    pass.set_pipeline(pipes.get(Pipe::Raster));
+                    current = Some(Pipe::Raster);
+                }
+                pass.set_bind_group(
+                    0,
+                    if paint.nearest {
+                        &binds.nearest
+                    } else {
+                        &binds.linear
+                    },
+                    &[],
+                );
+                pass.set_bind_group(1, &layer.bind, &[b.offset]);
+                pass.set_vertex_buffer(0, quads.slice(..));
+                pass.draw(b.quads.clone(), 0..1);
+                pass.set_bind_group(0, frame_bind, &[]);
                 return;
             }
             if let Some((box_, px_per_m, dpr)) = seen
@@ -842,6 +1026,10 @@ fn srgb_to_linear(c: f32) -> f32 {
 }
 
 struct GpuBatch {
+    /// A raster's paint (docs/adr/0204 §5): its tiles in view are drawn instead of its frame.
+    raster: Option<super::raster_tiles::RasterPaint>,
+    /// The vertices of the view's raster quads this frame's tiles take.
+    quads: Range<u32>,
     /// A picture's key (docs/adr/0192 §3): its texture is bound in group 0 for it.
     picture: Option<String>,
     pipe: Pipe,
@@ -887,6 +1075,12 @@ pub struct ViewStyled {
     /// Each drawn picture bound with the frame uniform, and with the lens's.
     pictures: HashMap<String, (Arc<wgpu::TextureView>, wgpu::BindGroup)>,
     lens_pictures: HashMap<String, (Arc<wgpu::TextureView>, wgpu::BindGroup)>,
+    /// The rasters' quads this frame and their buffer; the raster atlas bound
+    /// with the frame uniform and with the lens's (docs/adr/0204 §5).
+    quads: super::raster_tiles::RasterQuads,
+    quad_buffer: Option<wgpu::Buffer>,
+    raster_binds: Option<super::raster_tiles::RasterBinds>,
+    lens_raster_binds: Option<super::raster_tiles::RasterBinds>,
 }
 
 impl ViewStyled {
@@ -903,6 +1097,10 @@ impl ViewStyled {
             lens_view: None,
             pictures: HashMap::new(),
             lens_pictures: HashMap::new(),
+            quads: Default::default(),
+            quad_buffer: None,
+            raster_binds: None,
+            lens_raster_binds: None,
         }
     }
 
@@ -913,6 +1111,10 @@ impl ViewStyled {
         self.under.hash(hasher);
         self.order.as_deref().hash(hasher);
         bytemuck::bytes_of(&self.uniform).hash(hasher);
+        // The rasters' tiles drawn and where they sit in the atlas (docs/adr/0204 §5).
+        for f in &self.quads.data {
+            f.to_bits().hash(hasher);
+        }
         for layer in &self.layers {
             layer.id.hash(hasher);
             for b in &layer.batches {

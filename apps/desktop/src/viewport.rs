@@ -550,19 +550,33 @@ impl Viewport {
             // Over the grid, under the highlights.
             1,
         );
-        // The pictures the scene draws, decoded once each (docs/adr/0192 §3).
+        // The pictures the scene draws, decoded once each (docs/adr/0192 §3); its rasters'
+        // files for the raster service (docs/adr/0204 §5).
         let folder = doc.path.as_deref().and_then(std::path::Path::parent);
+        let mut rasters = std::collections::HashSet::new();
         for part in &scene.layers {
             for b in &part.layer.batches {
-                if let kentos_native_style::batches::BatchKind::Fill {
-                    paint: kentos_native_style::batches::FillPaintBatch::Image { image, .. },
-                } = &b.kind
-                    && !s.styles.images.has_bitmap(image)
-                {
-                    let bitmap = crate::pictures::fetch(image, &doc.model, folder);
-                    s.styles.images.put_bitmap(image.clone(), bitmap);
+                use kentos_native_style::batches::{BatchKind, FillPaintBatch};
+                match &b.kind {
+                    BatchKind::Fill {
+                        paint: FillPaintBatch::Image { image, .. },
+                    } if !s.styles.images.has_bitmap(image) => {
+                        let bitmap = crate::pictures::fetch(image, &doc.model, folder);
+                        s.styles.images.put_bitmap(image.clone(), bitmap);
+                    }
+                    BatchKind::Fill {
+                        paint: FillPaintBatch::Raster { raster, .. },
+                    } if rasters.insert(raster.clone()) => {
+                        crate::rasters::tiles::service().register(raster, || {
+                            crate::rasters::origin_of(raster, &doc.model, folder)
+                        });
+                    }
+                    _ => {}
                 }
             }
+        }
+        if crate::rasters::tiles::in_use() {
+            crate::rasters::tiles::service().keep_only(&rasters);
         }
         scene
     }
@@ -757,6 +771,7 @@ impl Viewport {
             | ViewChange::AttributeValues(_)
             | ViewChange::OpenTextFile
             | ViewChange::OpenImageFile
+            | ViewChange::RasterValues(_)
             | ViewChange::PlaceTable(..) => {}
         }
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));

@@ -981,6 +981,8 @@ pub enum Entity {
     Table(crate::TableEntity),
     /// A picture (docs/adr/0192).
     Image(crate::ImageEntity),
+    /// An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).
+    Raster(crate::RasterEntity),
 }
 
 impl Entity {
@@ -996,6 +998,7 @@ impl Entity {
                 | Entity::Hatch(_)
                 | Entity::Insert(_)
                 | Entity::Image(_)
+                | Entity::Raster(_)
         )
     }
 
@@ -1017,6 +1020,7 @@ impl Entity {
             Entity::Leader(e) => &e.base,
             Entity::Table(e) => &e.base,
             Entity::Image(e) => &e.base,
+            Entity::Raster(e) => &e.base,
         }
     }
 
@@ -1039,6 +1043,7 @@ impl Entity {
             Entity::Leader(e) => &mut e.base,
             Entity::Table(e) => &mut e.base,
             Entity::Image(e) => &mut e.base,
+            Entity::Raster(e) => &mut e.base,
         }
     }
 
@@ -1062,6 +1067,7 @@ impl Entity {
             Entity::Leader(_) => "leader",
             Entity::Table(_) => "table",
             Entity::Image(_) => "image",
+            Entity::Raster(_) => "raster",
         }
     }
 }

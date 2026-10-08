@@ -273,6 +273,16 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
+        // The file's rules (docs/adr/0204 §2): its affine, size, bands, one source, look and opacity;
+        // the drawing's only.
+        Raster(x) => {
+            if in_block {
+                return Err("Blok tanımında raster olamaz".into());
+            }
+            if let Some(why) = x.raster.problem() {
+                return Err(why);
+            }
+        }
     }
     Ok(())
 }
@@ -462,6 +472,17 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
             let mut ring: Vec<_> = kentos_geometry_core::geom::image::shown(&shape)
                 .into_iter()
                 .map(|q| p(kentos_contracts::Vec2 { x: q.x, y: q.y }))
+                .collect();
+            ring.extend(ring.first().copied());
+            Geometry::Polygon(vec![ring])
+        }
+        // Its frame (docs/adr/0204 §10): its pixels are the project's asset or its file.
+        Entity::Raster(x) => {
+            let mut ring: Vec<_> = x
+                .raster
+                .corners()
+                .into_iter()
+                .map(|(x, y)| p(kentos_contracts::Vec2 { x, y }))
                 .collect();
             ring.extend(ring.first().copied());
             Geometry::Polygon(vec![ring])

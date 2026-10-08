@@ -17,6 +17,9 @@ import {
   initSync,
   offsetPathXY as wasmOffsetPathXY,
   opId,
+  rasterLevelCount as wasmRasterLevelCount,
+  rasterTiles as wasmRasterTiles,
+  rasterTilesAt as wasmRasterTilesAt,
   scratch as wasmScratch,
   scratchCentroid as wasmScratchCentroid,
   scratchPathLength as wasmScratchPathLength,
@@ -250,6 +253,35 @@ export function ringCentroid(pts: readonly { x: number; y: number }[]): { x: num
     const out = new Float64Array(memory!.buffer, at, 2);
     return { x: out[0], y: out[1] };
   });
+}
+
+/**
+ * The tiles a view draws of a raster (docs/adr/0204 §5; the core's `level_for` and `visible`): how many, and their
+ * numbers in the core's memory, 13 a tile (level, column, row, the texture's used share across and down, the corners'
+ * xs and ys), nearest the view's centre first. The view of the numbers holds until the next call into the core.
+ */
+export function rasterTiles(
+  x0: number,
+  a: number,
+  b: number,
+  y0: number,
+  c: number,
+  d: number,
+  width: number,
+  height: number,
+  view: readonly [number, number, number, number],
+  pxPerM: number,
+): { count: number; numbers: Float64Array } {
+  return typed(() => {
+    const count = wasmRasterTiles(x0, a, b, y0, c, d, width, height, view[0], view[1], view[2], view[3], pxPerM);
+    const at = wasmRasterTilesAt();
+    return { count, numbers: new Float64Array(memory!.buffer, at, count * 13) };
+  });
+}
+
+/** How many levels a raster of `width` × `height` has (docs/adr/0204 §3). */
+export function rasterLevelCount(width: number, height: number): number {
+  return typed(() => wasmRasterLevelCount(width, height));
 }
 
 export function ringPointInPolygon(px: number, py: number, pts: readonly { x: number; y: number }[]): boolean {

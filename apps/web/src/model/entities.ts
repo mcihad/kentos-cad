@@ -3,7 +3,7 @@ import type { Bounds, Vec2 } from './geometry';
 import type { DimensionStyle } from './geom/dimension';
 import type { DimensionLook, TextFace } from './annotationStyles';
 
-export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch' | 'insert' | 'leader' | 'table' | 'image';
+export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch' | 'insert' | 'leader' | 'table' | 'image' | 'raster';
 
 /**
  * Half-length (1000 km) used when an infinite line meets finite geometry on
@@ -529,6 +529,53 @@ export interface ImageEntity extends EntityBase {
   opacity?: number;
 }
 
+/** A band's samples (docs/adr/0204 §2). */
+export type RasterSample = 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'f32' | 'f64';
+/** How a raster's bands are drawn (docs/adr/0204 §4). */
+export type RasterRender = 'rgb' | 'gray' | 'palette' | 'ramp' | 'hillshade' | 'rampShade';
+/** How values are brought to colours; none is no field. */
+export type RasterStretch = 'none' | 'minMax' | 'percent' | 'manual';
+
+/** A raster's look (docs/adr/0204 §4): its fields' defaults are no fields. */
+export interface RasterStyle {
+  render: RasterRender;
+  /** The bands drawn, from 1: three or four for `rgb`, one otherwise. */
+  bands: number[];
+  stretch?: RasterStretch;
+  min?: number;
+  max?: number;
+  /** One of `RASTER_RAMPS`; absent: Gri. */
+  ramp?: string;
+  invert?: boolean;
+  /** Gölgeli kabartma's light: degrees from north, clockwise; its height, degrees; heights multiplied. */
+  azimuth?: number;
+  altitude?: number;
+  zFactor?: number;
+  /** The value shown as nothing, in place of the file's. */
+  nodata?: number;
+  resampling?: 'bilinear' | 'nearest';
+}
+
+/**
+ * A raster (docs/adr/0204 §2): an orthophoto, a scanned sheet or an elevation model whose pixels lie where `affine`
+ * (`[x₀, a, b, y₀, c, d]`, GDAL's order: pixel corner (i, j) at x₀ + a·i + b·j, y₀ + c·i + d·j) puts them; its size,
+ * bands and samples; its file the project library's `asset` (embedded) or `file` (linked), exactly one; the file's
+ * system (0: the project's, taken by the user); its look and opacity (0.1–1). Its pixels are never in the drawing.
+ */
+export interface RasterEntity extends EntityBase {
+  kind: 'raster';
+  affine: [number, number, number, number, number, number];
+  width: number;
+  height: number;
+  bands: number;
+  sample: RasterSample;
+  asset?: string;
+  file?: string;
+  srid: number;
+  style: RasterStyle;
+  opacity?: number;
+}
+
 export type Entity =
   | PointEntity
   | LineEntity
@@ -544,7 +591,8 @@ export type Entity =
   | InsertEntity
   | LeaderEntity
   | TableEntity
-  | ImageEntity;
+  | ImageEntity
+  | RasterEntity;
 
 /** An object of a drawing, as `CadDocument` gives it out: always with its persistent id. */
 export type DrawingEntity = Entity & { uid: string };
@@ -570,6 +618,7 @@ export const ENTITY_KIND_LABEL: Record<EntityKind, string> = {
   leader: 'Kılavuz',
   table: 'Tablo',
   image: 'Resim',
+  raster: 'Raster',
 };
 
 export const HATCH_PATTERN_LABEL: Record<HatchPatternType, string> = {
@@ -645,8 +694,16 @@ export type EntityGeometry = DistributiveOmit<Entity, 'id' | 'uid' | 'layerId' |
  * hatch or a block (docs/adr/0139; the desktop's `Entity::draws_lines`).
  */
 export function drawsLines(e: { kind: Entity['kind'] }): boolean {
-  // A picture draws its frame as a hairline (docs/adr/0192 §3).
-  return e.kind !== 'point' && e.kind !== 'text' && e.kind !== 'dimension' && e.kind !== 'hatch' && e.kind !== 'insert' && e.kind !== 'image';
+  // A picture and a raster draw their frames as hairlines (docs/adr/0192 §3, 0204 §5).
+  return (
+    e.kind !== 'point' &&
+    e.kind !== 'text' &&
+    e.kind !== 'dimension' &&
+    e.kind !== 'hatch' &&
+    e.kind !== 'insert' &&
+    e.kind !== 'image' &&
+    e.kind !== 'raster'
+  );
 }
 
 /** Geometry-only view of an entity (drops ids, layer, colour, attributes, label, symbol and line weight). */

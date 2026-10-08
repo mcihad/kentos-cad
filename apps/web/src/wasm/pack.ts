@@ -9,7 +9,7 @@
  * This only packs and reads: no coordinate is computed here.
  */
 
-const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12, insert: 14, leader: 15, table: 18, image: 19 };
+const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12, insert: 14, leader: 15, table: 18, image: 19, raster: 20 };
 /** A text's alignments, numbered as the store numbers them (`TextAlign::ALL`, docs/adr/0145). */
 const TEXT_ALIGNS = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'] as const;
 /** The drawing typefaces, numbered as the core's tables number them (`FONTS`, the contract's `DrawingFont` order; docs/adr/0183). */
@@ -70,6 +70,11 @@ const TABLE = 18;
  * none, else a count and the corners); its opacity (NaN none).
  */
 const IMAGE = 19;
+/**
+ * A raster (docs/adr/0204): its affine (six numbers), width, height and bands; its samples, asset and file; its system;
+ * its look (the contract's JSON text); its opacity (NaN none).
+ */
+const RASTER = 20;
 /** A table's alignments and lines, numbered as the store numbers them (`TABLE_ALIGNS`, `TABLE_GRIDS`). */
 const TABLE_ALIGNS = ['left', 'center', 'right'] as const;
 const TABLE_GRIDS = ['outer', 'rows', 'none'] as const;
@@ -322,6 +327,18 @@ export function packEntities(list: Iterable<object>): Packed {
         num(e.rotation);
         out.push(str(e.text), str(e.arrow), e.mask === true ? 1 : 0);
         break;
+      case RASTER: {
+        const affine = Array.isArray(e.affine) ? (e.affine as unknown[]) : [];
+        for (let k = 0; k < 6; k++) num(affine[k]);
+        num(e.width);
+        num(e.height);
+        num(e.bands);
+        out.push(str(e.sample), str(e.asset), str(e.file));
+        num(e.srid);
+        out.push(str(JSON.stringify(e.style ?? {})));
+        num(e.opacity);
+        break;
+      }
       case IMAGE:
         pt(e.p);
         num(e.width);
@@ -456,7 +473,9 @@ export function unpackEntities(p: Packed): Unpacked[] {
                   ? 'table'
                   : code === IMAGE
                     ? 'image'
-                    : KINDS[code];
+                    : code === RASTER
+                      ? 'raster'
+                      : KINDS[code];
     let g: Geometry;
     switch (kind) {
       case 'point': {
@@ -681,6 +700,23 @@ export function unpackEntities(p: Packed): Unpacked[] {
         g.rotation = rotation;
         if (arrow !== undefined) g.arrow = arrow;
         if (mask) g.mask = true;
+        break;
+      }
+      case 'raster': {
+        const affine = [num(), num(), num(), num(), num(), num()];
+        const width = num();
+        const height = num();
+        const bands = num();
+        const sample = str() ?? 'u8';
+        const asset = str();
+        const file = str();
+        const srid = num();
+        const style = JSON.parse(str() ?? '{}') as unknown;
+        const opacity = num();
+        g = { kind, affine, width, height, bands, sample, srid, style };
+        if (asset !== undefined) g.asset = asset;
+        if (file !== undefined) g.file = file;
+        if (!Number.isNaN(opacity)) g.opacity = opacity;
         break;
       }
       case 'image': {

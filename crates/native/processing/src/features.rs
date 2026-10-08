@@ -70,6 +70,9 @@ pub fn kind_label(kind: &str) -> &'static str {
         "hatch" => "Tarama",
         "insert" => "Blok",
         "leader" => "Kılavuz",
+        "table" => "Tablo",
+        "image" => "Resim",
+        "raster" => "Raster",
         _ => "Nesne",
     }
 }

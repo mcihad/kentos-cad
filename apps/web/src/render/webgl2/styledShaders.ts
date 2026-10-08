@@ -245,6 +245,27 @@ void main() {
   outColor = texture(u_picture, vec2(s, 1.0 - t)) * u_opacity;
 }`;
 
+/**
+ * A raster's tiles (docs/adr/0204 §5), twin of the WGSL `rasterVs` and `rasterFs`: quads of (position from the batch's
+ * tile, u, v in the raster atlas), premultiplied, times the raster's opacity.
+ */
+export const RASTER_VS = /* glsl */ `#version 300 es
+layout(location = 0) in vec4 a_q;
+${FRAME}
+out vec2 v_uv;
+void main() {
+  gl_Position = pxToClip(toPx(a_q.xy));
+  v_uv = a_q.zw;
+}`;
+
+export const RASTER_FS = /* glsl */ `#version 300 es
+precision highp float;
+in vec2 v_uv;
+uniform sampler2D u_atlas;
+uniform float u_opacity;
+out vec4 outColor;
+void main() { outColor = texture(u_atlas, v_uv) * u_opacity; }`;
+
 /** An atlas tile repeated over the area (premultiplied output). */
 export const TILE_FS = /* glsl */ `#version 300 es
 precision highp float;

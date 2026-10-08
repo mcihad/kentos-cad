@@ -70,6 +70,7 @@ impl Owner for Window {
     fn add_label(self) -> &'static str {
         match self {
             Window::Fit => "Çift ekle",
+            Window::RasterFit => "Nokta ekle",
             _ => "Satır ekle",
         }
     }

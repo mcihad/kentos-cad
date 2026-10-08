@@ -301,6 +301,18 @@ pub enum FillPaintBatch {
         mirror: bool,
         opacity: f64,
     },
+    /// A raster over its frame (docs/adr/0204 §5): `raster` names its file
+    /// (`asset:<id>`, `file:<path>`), `look` its style's JSON; its affine
+    /// (x₀ and y₀ from the batch's tile once folded), its size in pixels,
+    /// nearest or bilinear. The raster pass draws its tiles.
+    Raster {
+        raster: String,
+        look: String,
+        affine: [f64; 6],
+        size: [f64; 2],
+        nearest: bool,
+        opacity: f64,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -718,6 +730,22 @@ impl Looks<'_> {
                     tint: pattern_tint(m, size[0] * size[1]) * coverage,
                     opacity: self.fill_opacity(n(p, "opacity") * n(common, "opacity")),
                     unit: Unit::read(p.get("unit")),
+                }
+            }
+            "raster" => {
+                let a = p.get("affine").and_then(Value::as_array);
+                let at = |k: usize| {
+                    a.and_then(|a| a.get(k))
+                        .and_then(Value::as_f64)
+                        .unwrap_or(0.0)
+                };
+                FillPaintBatch::Raster {
+                    raster: s(p, "raster").to_owned(),
+                    look: s(p, "look").to_owned(),
+                    affine: [at(0), at(1), at(2), at(3), at(4), at(5)],
+                    size: pair(p, "size"),
+                    nearest: p.get("nearest").and_then(Value::as_bool) == Some(true),
+                    opacity: self.fill_opacity(n(p, "opacity")),
                 }
             }
             "image" => FillPaintBatch::Image {
@@ -1234,6 +1262,22 @@ fn fold(paint: FillPaintBatch, o: [f64; 2]) -> FillPaintBatch {
                 radius,
             }
         }
+        // A raster's first pixel's corner from the tile (docs/adr/0204 §5).
+        FillPaintBatch::Raster {
+            raster,
+            look,
+            affine: [x0, a, b, y0, c, d],
+            size,
+            nearest,
+            opacity,
+        } => FillPaintBatch::Raster {
+            raster,
+            look,
+            affine: [x0 - o[0], a, b, y0 - o[1], c, d],
+            size,
+            nearest,
+            opacity,
+        },
         // A picture's frame from the tile (docs/adr/0192 §3).
         FillPaintBatch::Image {
             image,
@@ -1588,6 +1632,22 @@ fn paint_json(p: &FillPaintBatch) -> Value {
             "to": to,
             "centre": centre,
             "radius": radius,
+        }),
+        FillPaintBatch::Raster {
+            raster,
+            look,
+            affine,
+            size,
+            nearest,
+            opacity,
+        } => json!({
+            "kind": "raster",
+            "raster": raster,
+            "look": look,
+            "affine": affine,
+            "size": size,
+            "nearest": nearest,
+            "opacity": opacity,
         }),
         FillPaintBatch::Image {
             image,

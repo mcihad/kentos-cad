@@ -79,9 +79,10 @@ fn object_of(e: &Entity) -> PurgeObject {
             Entity::Insert(i) => Some(i.block.to_text()),
             _ => None,
         },
-        // A picture's image (docs/adr/0192 §2).
+        // A picture's image (docs/adr/0192 §2) and a raster's file (docs/adr/0204 §2).
         asset: match e {
             Entity::Image(i) => i.image.asset.clone(),
+            Entity::Raster(r) => r.raster.asset.clone(),
             _ => None,
         },
     }

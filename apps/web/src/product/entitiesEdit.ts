@@ -10,9 +10,10 @@ import type { EntityGeometry } from '../contracts/generated/EntityGeometry';
 import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
 import { FACE_FIELDS, faceProblem, LOOK_FIELDS, lookProblem } from '../model/annotationStyles';
-import { MAX_WIDTH_FACTOR, paragraphProblem, textPathProblem, widthFactorOk, type Entity, type NewEntity } from '../model/entities';
+import { MAX_WIDTH_FACTOR, paragraphProblem, textPathProblem, widthFactorOk, type Entity, type NewEntity, type RasterStyle } from '../model/entities';
 import { assocProblem, patternProblem } from '../model/hatchRules';
 import { imageProblem } from '../model/imageRules';
+import { cleanRasterStyle, rasterProblem } from '../model/rasterRules';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
 import { checkLayer, checkLineWeight, checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
 import { checkDimension } from './dimension';
@@ -108,6 +109,9 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   // Ağ dengelemelerinin Çizime yaz'ı (docs/adr/0203 §8).
   networkAdjust: 'Yatay ağ dengelemesi',
   levelAdjust: 'Kot ağı dengelemesi',
+  // Raster stili and Raster oturt (docs/adr/0204 §9).
+  rasterStyle: 'Raster stili',
+  rasterGeoref: 'Raster oturt',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
@@ -130,6 +134,7 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
   table: ['p', 'rotation', 'height', 'rows', 'columns', 'cells', 'merges', 'aligns', 'header', 'grid', 'frame', ...FACE_FIELDS, 'source'],
   image: ['p', 'width', 'height', 'rotation', 'mirror', 'asset', 'file', 'clip', 'opacity'],
+  raster: ['affine', 'width', 'height', 'bands', 'sample', 'asset', 'file', 'srid', 'style', 'opacity'],
 };
 
 interface Checked {
@@ -155,6 +160,11 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
   // whose other optional fields are no value when null, as serde reads them.
   if ((g.kind === 'insert' || g.kind === 'image') && out.mirror !== true) delete out.mirror;
   if (g.kind === 'image') for (const key of ['asset', 'file', 'clip', 'opacity']) if (out[key] === null) delete out[key];
+  // A raster's (docs/adr/0204 §2): no value when null; its look's defaults are no fields.
+  if (g.kind === 'raster') {
+    for (const key of ['asset', 'file', 'opacity']) if (out[key] === null) delete out[key];
+    out.style = cleanRasterStyle(out.style as RasterStyle);
+  }
   // A text's defaults are no fields (docs/adr/0145): no mask, a width factor of 1.
   if (g.kind === 'text') {
     if (out.mask !== true) delete out.mask;
@@ -377,6 +387,11 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
     const problem = imageProblem(g);
     if (problem) return failed(error('invalid_image', problem, at('')));
   }
+  // A raster's affine, size, bands, samples, source, look and opacity (docs/adr/0204 §9).
+  if (g.kind === 'raster') {
+    const problem = rasterProblem(g);
+    if (problem) return failed(error('invalid_raster', problem, at('')));
+  }
   // A text's face and a dimension's look (docs/adr/0183 §9); a table's face as a text's.
   const style = g.kind === 'text' || g.kind === 'table' ? faceProblem(g) : g.kind === 'dimension' ? lookProblem(g) : null;
   if (style) return failed(error('invalid_style', style[1], at(`.${style[0]}`)));
@@ -408,6 +423,11 @@ export function checkStyles(doc: CadDocument, geometries: readonly (EntityGeomet
   return null;
 }
 
+/** Whether the project's library has the GeoTIFF, PNG or JPEG raster `id` (docs/adr/0204 §2). */
+export function hasRaster(doc: CadDocument, id: string): boolean {
+  return doc.styles.value.items.some((it) => it.kind === 'asset' && it.id === id && (it.format === 'tiff' || it.format === 'png' || it.format === 'jpeg'));
+}
+
 /** Whether the project's library has the PNG or JPEG image `id` (docs/adr/0192 §2). */
 export function hasPicture(doc: CadDocument, id: string): boolean {
   return doc.styles.value.items.some((it) => it.kind === 'asset' && it.id === id && (it.format === 'png' || it.format === 'jpeg'));
@@ -421,6 +441,14 @@ export function hasPicture(doc: CadDocument, id: string): boolean {
 export function checkBlocks(doc: CadDocument, geometries: readonly (EntityGeometry | null)[], list: string): Stop | null {
   const known = new Set(doc.blocks.value.map((b) => b.id));
   for (const [i, g] of geometries.entries()) {
+    if (g?.kind === 'raster' && g.asset != null && !hasRaster(doc, g.asset))
+      return failed(
+        error(
+          'unknown_asset',
+          `“${g.asset}” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG ya da JPEG'in kimliğini verin.`,
+          `${list}[${i}].geometry.asset`,
+        ),
+      );
     if (g?.kind === 'image' && g.asset !== undefined && !hasPicture(doc, g.asset))
       return failed(
         error(

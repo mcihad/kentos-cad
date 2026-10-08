@@ -183,6 +183,9 @@ const EXPORTS = ['file.export.dxf', 'file.export.pdf', 'file.export.geojson', 'f
 const SHEET_LAYOUTS = ['sheet.new', 'sheet.fromTemplate'];
 const SELECTION_TAB: RibbonTabSpec = RIBBON_TABS.find((t) => t.contextual === 'selection')!;
 
+/** Raster katmanları (docs/adr/0204 §8): CAD's Ekle › Raster and CBS's Veri › Raster. */
+const RASTERS = ['raster.add', 'raster.style', 'raster.georef'];
+
 /**
  * A CAD project's ribbon (docs/adr/0165 §6), AutoCAD's 2D drafting tabs: Giriş with drawing, modifying, annotation,
  * layers, blocks, properties and measuring (the other drawing tools and the survey computations under their panels'
@@ -216,6 +219,8 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { menu: 'draw', sections: ['Blok'] },
       // Resim (docs/adr/0192 §5): AutoCAD's Insert › Reference.
       { menu: 'draw', sections: ['Resim'] },
+      // Raster (docs/adr/0204 §8): Netcad's Raster Yükle, AutoCAD Map's Insert › Image.
+      { pick: 'Raster', icon: 'rasterAdd', commands: RASTERS },
       { pick: 'İçe aktar', icon: 'import', commands: IMPORTS },
       // Çizimler arası alışveriş (docs/adr/0193): AutoCAD's DesignCenter and WBLOCK.
       { pick: 'Alışveriş', icon: 'takeFrom', commands: ['file.takeFrom', 'file.saveSelection'] },
@@ -332,6 +337,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Öznitelik', icon: 'fieldCalc', commands: [processingCommandId('attributes.calculate'), processingCommandId('selection.byExpression')] },
       // The drawing's block definitions are its library, as its layers and attributes are; its pictures beside them (docs/adr/0192 §5).
       { menu: 'draw', sections: ['Blok', 'Resim'] },
+      // Raster katmanları (docs/adr/0204 §8): QGIS's Add Raster Layer and Georeferencer.
+      { pick: 'Raster', icon: 'rasterAdd', commands: RASTERS },
     ],
     lead: ['tool.blockInsert'],
   },

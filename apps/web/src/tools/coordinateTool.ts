@@ -3,6 +3,7 @@ import { pointUnreached, SecondCrs } from '../model/secondCrs';
 import { Signal } from '../core/signal';
 import type { Vec2 } from '../model/geometry';
 import { elevationAt } from '../product/elevationValues';
+import { rasterService } from '../render/rasterService';
 import type { ViewTransform } from '../viewport/Camera';
 import { ringMark } from './constructPreview';
 import { drawTag } from './preview';
@@ -69,6 +70,28 @@ export class CoordinateReadTool implements Tool {
     log.info(text);
     this.read = { at, lines: [`${e} ${format.coord(at.x)}`, `${n} ${format.coord(at.y)}`, ...(z !== undefined ? [`Z ${format.length(z, false)}`] : []), ...this.second(at)] };
     this.ctx.view.requestOverlay();
+    this.rasterValues(at);
+  }
+
+  /** The values of the shown rasters under the point, said once read (docs/adr/0204 §8): `Raster ‹katman›: 852.31`. */
+  private rasterValues(at: Vec2): void {
+    const { doc, log } = this.ctx;
+    for (const r of doc.all()) {
+      if (r.kind !== 'raster' || !doc.layers.isVisible(r.layerId)) continue;
+      const [x0, a, b, y0, c, d] = r.affine;
+      const det = a * d - b * c;
+      if (!(Number.isFinite(det) && det !== 0)) continue;
+      const [dx, dy] = [at.x - x0, at.y - y0];
+      const [i, j] = [(d * dx - b * dy) / det, (a * dy - c * dx) / det];
+      if (!(i >= 0 && j >= 0 && i < r.width && j < r.height)) continue;
+      const layer = doc.layers.get(r.layerId)?.name ?? '';
+      const key = r.asset ? `asset:${r.asset}` : `file:${r.file ?? ''}`;
+      const url = r.asset ? ((doc.styles.value.items.find((it) => it.id === r.asset) as { data?: string } | undefined)?.data ?? null) : null;
+      void rasterService()
+        .values(key, url, i, j)
+        .then((v) => v && log.info(`Raster ${layer}: ${v.map((x) => String(x)).join('; ')}`))
+        .catch(() => undefined);
+    }
   }
 
   /** The point in the second coordinate system, said in the log; the tag's lines of it: its name, then its two values. */

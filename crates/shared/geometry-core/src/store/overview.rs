@@ -380,6 +380,8 @@ impl Canvas {
             Shape::Insert { p, .. } => self.dot_at(*p, c),
             // A picture's part shown, filled (docs/adr/0192 §3).
             Shape::Image { .. } => self.area(&[crate::geom::image::shown(s)], c),
+            // A raster's frame, filled (docs/adr/0204 §5).
+            Shape::Raster { .. } => self.area(&[crate::entity::entity_vertices(s)], c),
             // A table's outline (docs/adr/0184 §2).
             Shape::Table { .. } => {
                 if let Some(t) = crate::geom::table::table_geom(s) {

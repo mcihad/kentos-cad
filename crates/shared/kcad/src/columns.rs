@@ -45,6 +45,7 @@
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation | text if any |
 //! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet |
 //! | image | n if clip | p, width, height, rotation, clip (2n) if clip, opacity if any | asset if any, file if any |
+//! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`) | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any | the look's ramp if any, asset if any, file if any |
 //!
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
 //! line weight (docs/adr/0139); a
@@ -62,7 +63,7 @@
 //! docs/adr/0146); table: merges, aligns, header (no value), grid, text
 //! style, font, bold (no value), italic (no value), oblique, source, frame
 //! (docs/adr/0184); image: mirror (no value), asset, file, clip, opacity
-//! (docs/adr/0192)). A
+//! (docs/adr/0192); raster: asset, file, opacity (docs/adr/0204)). A
 //! hole's flags: 1 bulges, 2 elevations; a part's: 1 bulges, 2 elevations, 4
 //! holes. Dimension styles and hatch pattern types are numbered in the
 //! contract's order.
@@ -93,14 +94,56 @@ use kentos_contracts::{
     EllipseEntity, Entity, EntityBase, EntityId, GradientShape, HatchAssoc, HatchEntity,
     HatchGradient, HatchPattern, HatchPatternType, ImageEntity, ImageFields, InsertEntity,
     LeaderArrow, LeaderEntity, LineEntity, Paragraph, PathEntity, PatternLine, PointEntity,
-    PointPart, RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource,
-    TextAlign, TextEntity, TextFace, TextRun, TextScript, Vec2,
+    PointPart, RasterEntity, RasterFields, RasterRender, RasterSample, RasterStretch, RingGeometry,
+    SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign, TextEntity, TextFace,
+    TextRun, TextScript, Vec2,
 };
 
 use crate::error::{Code, KcadError};
 
+/// A raster's samples, numbered as the columns hold them.
+pub const RASTER_SAMPLES: [RasterSample; 8] = [
+    RasterSample::U8,
+    RasterSample::I8,
+    RasterSample::U16,
+    RasterSample::I16,
+    RasterSample::U32,
+    RasterSample::I32,
+    RasterSample::F32,
+    RasterSample::F64,
+];
+
 /// The kinds, numbered as `kinds` holds them.
-pub const KINDS: [&str; 17] = [
+/// A raster look's kinds, numbered as the columns hold them.
+pub const RASTER_RENDERS: [RasterRender; 6] = [
+    RasterRender::Rgb,
+    RasterRender::Gray,
+    RasterRender::Palette,
+    RasterRender::Ramp,
+    RasterRender::Hillshade,
+    RasterRender::RampShade,
+];
+
+/// A raster look's stretches, numbered as the columns hold them.
+pub const RASTER_STRETCHES: [RasterStretch; 4] = [
+    RasterStretch::None,
+    RasterStretch::MinMax,
+    RasterStretch::Percent,
+    RasterStretch::Manual,
+];
+
+/// A raster look's optional fields, as its flags in the columns.
+const LOOK_MIN: u32 = 1;
+const LOOK_MAX: u32 = 2;
+const LOOK_RAMP: u32 = 4;
+const LOOK_INVERT: u32 = 8;
+const LOOK_AZIMUTH: u32 = 16;
+const LOOK_ALTITUDE: u32 = 32;
+const LOOK_Z_FACTOR: u32 = 64;
+const LOOK_NODATA: u32 = 128;
+const LOOK_NEAREST: u32 = 256;
+
+pub const KINDS: [&str; 18] = [
     "point",
     "line",
     "polyline",
@@ -118,6 +161,7 @@ pub const KINDS: [&str; 17] = [
     "leader",
     "table",
     "image",
+    "raster",
 ];
 
 const COLOR: u32 = 1;
@@ -251,6 +295,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Leader(_) => 14,
         Entity::Table(_) => 15,
         Entity::Image(_) => 16,
+        Entity::Raster(_) => 17,
     }
 }
 
@@ -816,6 +861,83 @@ impl Packer {
                     self.float(*o);
                 }
             }
+            Entity::Raster(RasterEntity {
+                base: _,
+                raster:
+                    RasterFields {
+                        affine,
+                        width,
+                        height,
+                        bands,
+                        sample,
+                        asset,
+                        file,
+                        srid,
+                        style,
+                        opacity,
+                    },
+            }) => {
+                let place = RASTER_SAMPLES.iter().position(|s| s == sample).unwrap_or(0);
+                self.out
+                    .ints
+                    .extend([*width, *height, *bands, count(place), *srid]);
+                // The look field by field: its kind, bands, stretch and what it has of the rest.
+                let render = RASTER_RENDERS
+                    .iter()
+                    .position(|r| *r == style.render)
+                    .unwrap_or(0);
+                self.out
+                    .ints
+                    .extend([count(render), count(style.bands.len())]);
+                self.out.ints.extend(&style.bands);
+                let stretch = RASTER_STRETCHES
+                    .iter()
+                    .position(|r| *r == style.stretch)
+                    .unwrap_or(0);
+                let numbers = [
+                    (LOOK_MIN, style.min),
+                    (LOOK_MAX, style.max),
+                    (LOOK_AZIMUTH, style.azimuth),
+                    (LOOK_ALTITUDE, style.altitude),
+                    (LOOK_Z_FACTOR, style.z_factor),
+                    (LOOK_NODATA, style.nodata),
+                ];
+                let mut look = numbers
+                    .iter()
+                    .filter(|(_, v)| v.is_some())
+                    .fold(0, |m, (b, _)| m | b);
+                if style.ramp.is_some() {
+                    look |= LOOK_RAMP;
+                }
+                if style.invert {
+                    look |= LOOK_INVERT;
+                }
+                if style.resampling == kentos_contracts::RasterResampling::Nearest {
+                    look |= LOOK_NEAREST;
+                }
+                self.out.ints.extend([count(stretch), look]);
+                self.out.floats.extend(affine);
+                if let Some(o) = opacity {
+                    flags |= OPT[2];
+                    self.float(*o);
+                }
+                for (_, v) in numbers {
+                    if let Some(v) = v {
+                        self.float(v);
+                    }
+                }
+                if let Some(r) = &style.ramp {
+                    self.text(r);
+                }
+                if let Some(a) = asset {
+                    flags |= OPT[0];
+                    self.text(a);
+                }
+                if let Some(f) = file {
+                    flags |= OPT[1];
+                    self.text(f);
+                }
+            }
             Entity::Leader(LeaderEntity {
                 base: _,
                 pts,
@@ -1257,6 +1379,8 @@ fn allowed(kind: u8) -> u32 {
         15 => OPT[..11].iter().fold(0, |m, b| m | b),
         // A picture: mirror, asset, file, clip, opacity (docs/adr/0192).
         16 => OPT[..5].iter().fold(0, |m, b| m | b),
+        // A raster: asset, file, opacity (docs/adr/0204).
+        17 => OPT[..3].iter().fold(0, |m, b| m | b),
         _ => 0,
     }
 }
@@ -1876,6 +2000,91 @@ fn geometry(
                     asset,
                     file,
                     clip,
+                    opacity,
+                },
+            })
+        }
+        17 => {
+            let (width, height, bands) = (c.int()?, c.int()?, c.int()?);
+            let sample = *RASTER_SAMPLES
+                .get(c.usize()?)
+                .ok_or_else(|| broken("rasterin örnek türü"))?;
+            let srid = c.int()?;
+            let render = *RASTER_RENDERS
+                .get(c.usize()?)
+                .ok_or_else(|| broken("rasterin görünüş türü"))?;
+            let n = c.usize()?;
+            if n > 4 {
+                return Err(broken("rasterin görünüşünün bantları"));
+            }
+            let mut look_bands = Vec::with_capacity(n);
+            for _ in 0..n {
+                look_bands.push(c.int()?);
+            }
+            let stretch = *RASTER_STRETCHES
+                .get(c.usize()?)
+                .ok_or_else(|| broken("rasterin gerdirmesi"))?;
+            let look = c.int()?;
+            let mut affine = [0.0; 6];
+            for v in &mut affine {
+                *v = c.float()?;
+            }
+            let opacity = if has(2) { Some(c.float()?) } else { None };
+            let mut number = |bit: u32| -> Result<Option<f64>, KcadError> {
+                if look & bit != 0 {
+                    Ok(Some(c.float()?))
+                } else {
+                    Ok(None)
+                }
+            };
+            let (min, max) = (number(LOOK_MIN)?, number(LOOK_MAX)?);
+            let (azimuth, altitude) = (number(LOOK_AZIMUTH)?, number(LOOK_ALTITUDE)?);
+            let (z_factor, nodata) = (number(LOOK_Z_FACTOR)?, number(LOOK_NODATA)?);
+            let ramp = if look & LOOK_RAMP != 0 {
+                Some(c.text(|| place("style.ramp"))?)
+            } else {
+                None
+            };
+            let style = kentos_contracts::RasterStyle {
+                render,
+                bands: look_bands,
+                stretch,
+                min,
+                max,
+                ramp,
+                invert: look & LOOK_INVERT != 0,
+                azimuth,
+                altitude,
+                z_factor,
+                nodata,
+                resampling: if look & LOOK_NEAREST != 0 {
+                    kentos_contracts::RasterResampling::Nearest
+                } else {
+                    kentos_contracts::RasterResampling::Bilinear
+                },
+            };
+            let asset = if has(0) {
+                Some(c.text(|| place("asset"))?)
+            } else {
+                None
+            };
+            let file = if has(1) {
+                Some(c.text(|| place("file"))?)
+            } else {
+                None
+            };
+            Entity::Raster(RasterEntity {
+                base,
+                raster: RasterFields {
+                    affine,
+                    width,
+                    height,
+                    bands,
+                    sample,
+                    asset,
+                    file,
+                    srid,
+                    style,
                     opacity,
                 },
             })

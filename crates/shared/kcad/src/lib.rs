@@ -263,8 +263,14 @@ pub const SCHEMA_WITH_TOPOLOGY: u32 = 27;
 /// than drop them on its next save.
 pub const SCHEMA_WITH_SURVEY_SIGMAS: u32 = 28;
 
+/// Document schema 29 (docs/specs/kcad-v2.md §6.1): schema 28 and the
+/// `raster` kind (docs/adr/0204 §2), in the drawing only. A writer writes it
+/// only when the drawing has a raster: any other drawing stays 28 or older,
+/// byte for byte; a reader of those refuses a raster rather than lose it.
+pub const SCHEMA_WITH_RASTERS: u32 = 29;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 27] = [
+pub const SCHEMAS: [u32; 28] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -292,6 +298,7 @@ pub const SCHEMAS: [u32; 27] = [
     SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_TOPOLOGY,
     SCHEMA_WITH_SURVEY_SIGMAS,
+    SCHEMA_WITH_RASTERS,
 ];
 
 /// The file a drawing is saved as.

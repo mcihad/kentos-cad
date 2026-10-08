@@ -1500,6 +1500,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -3225,6 +3239,297 @@
             "required": [
               "items",
               "categories"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -8044,6 +8349,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -9793,6 +10112,297 @@
             "required": [
               "items",
               "categories"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -17470,6 +18080,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -18359,6 +18983,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -20259,6 +21174,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -21148,6 +22077,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -23009,6 +24229,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -23898,6 +25132,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -25894,6 +27419,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -26783,6 +28322,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -28629,6 +30459,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -29518,6 +31362,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -31374,6 +33509,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -32263,6 +34412,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -34393,6 +36833,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -35282,6 +37736,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -36586,6 +39331,16 @@
                 "const": "levelAdjust",
                 "description": "Kot ağı dengelemesi (docs/adr/0203 §8): points given their adjusted heights, vertices on them too.",
                 "type": "string"
+              },
+              {
+                "const": "rasterStyle",
+                "description": "Raster stili (docs/adr/0204 §4): rasters' looks and opacities written in place.",
+                "type": "string"
+              },
+              {
+                "const": "rasterGeoref",
+                "description": "Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster\nput in place of its resampled file, updated in place.",
+                "type": "string"
               }
             ]
           },
@@ -37675,6 +40430,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterFields",
+                "description": "A raster (docs/adr/0204 §2): its pixels placed by `affine`, its size,\nbands and samples, its file (`asset` embedded or `file` linked,\nexactly one), the file's system, its look and opacity.",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -37983,6 +40752,249 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterFields": {
+            "description": "What places and shows a raster: the raster object's own fields, and its\ngeometry in the commands (`EntityGeometry::Raster`).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -39260,6 +42272,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -40149,6 +43175,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -42127,6 +45444,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -43016,6 +46347,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -44087,6 +47709,11 @@
                 "const": "networkAdjust",
                 "description": "Yatay ağ dengelemesi (docs/adr/0203 §8): the network's new points the drawing has not.",
                 "type": "string"
+              },
+              {
+                "const": "raster",
+                "description": "Raster ekle (docs/adr/0204 §8): a raster placed.",
+                "type": "string"
               }
             ]
           },
@@ -45129,6 +48756,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterFields",
+                "description": "A raster (docs/adr/0204 §2): its pixels placed by `affine`, its size,\nbands and samples, its file (`asset` embedded or `file` linked,\nexactly one), the file's system, its look and opacity.",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -45507,6 +49148,249 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterFields": {
+            "description": "What places and shows a raster: the raster object's own fields, and its\ngeometry in the commands (`EntityGeometry::Raster`).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -46789,6 +50673,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -47678,6 +51576,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -49666,6 +53855,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -50555,6 +54758,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -52530,6 +57024,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -53419,6 +57927,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },
@@ -55558,6 +60357,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/RasterEntity",
+                "description": "An orthophoto, a scanned sheet or an elevation model (docs/adr/0204).",
+                "properties": {
+                  "kind": {
+                    "const": "raster",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -56447,6 +61260,297 @@
             },
             "required": [
               "p"
+            ],
+            "type": "object"
+          },
+          "RasterEntity": {
+            "description": "A raster (docs/adr/0204 §2).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the\nupper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's\ngeotransform order). Invertible.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "asset": {
+                "description": "The project library's asset its file is (embedded); exactly one of\n`asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bands": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "srid": {
+                "description": "The file's coordinate system; 0: the file named none and the user took the project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "style": {
+                "$ref": "#/$defs/RasterStyle"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Its size in pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "affine",
+              "width",
+              "height",
+              "bands",
+              "sample",
+              "srid",
+              "style"
+            ],
+            "type": "object"
+          },
+          "RasterRender": {
+            "description": "How the bands are drawn (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "rgb",
+                "description": "Three bands as red, green and blue, a fourth as alpha.",
+                "type": "string"
+              },
+              {
+                "const": "gray",
+                "description": "One band in grey.",
+                "type": "string"
+              },
+              {
+                "const": "palette",
+                "description": "One band through the file's palette.",
+                "type": "string"
+              },
+              {
+                "const": "ramp",
+                "description": "One band through a colour ramp.",
+                "type": "string"
+              },
+              {
+                "const": "hillshade",
+                "description": "One band (heights) as a shaded relief.",
+                "type": "string"
+              },
+              {
+                "const": "rampShade",
+                "description": "The ramp darkened by the shaded relief.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterResampling": {
+            "description": "How a pixel between samples is shown.",
+            "enum": [
+              "bilinear",
+              "nearest"
+            ],
+            "type": "string"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "RasterStretch": {
+            "description": "How values are brought to colours (docs/adr/0204 §4).",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "As they are (8 bit).",
+                "type": "string"
+              },
+              {
+                "const": "minMax",
+                "description": "The band's least to its most.",
+                "type": "string"
+              },
+              {
+                "const": "percent",
+                "description": "Its 2nd to its 98th percentile.",
+                "type": "string"
+              },
+              {
+                "const": "manual",
+                "description": "The style's `min` to `max`.",
+                "type": "string"
+              }
+            ]
+          },
+          "RasterStyle": {
+            "description": "A raster's look (docs/adr/0204 §4).",
+            "properties": {
+              "altitude": {
+                "description": "Its height above the horizon, degrees (0–90).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "azimuth": {
+                "description": "Gölgeli kabartma's light: degrees from north, clockwise (0–360).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "bands": {
+                "description": "The bands drawn, from 1: three or four for `rgb`, one otherwise.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "invert": {
+                "description": "The ramp turned round.",
+                "type": "boolean"
+              },
+              "max": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "`manual`'s least and most value.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "description": "The value shown as nothing, in place of the file's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ramp": {
+                "description": "One of `RASTER_RAMPS`; absent: Gri.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "render": {
+                "$ref": "#/$defs/RasterRender"
+              },
+              "resampling": {
+                "$ref": "#/$defs/RasterResampling"
+              },
+              "stretch": {
+                "$ref": "#/$defs/RasterStretch"
+              },
+              "zFactor": {
+                "description": "Heights multiplied by it (over 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "render",
+              "bands"
             ],
             "type": "object"
           },

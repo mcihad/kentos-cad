@@ -456,6 +456,30 @@ fn defs(shape: &Shape) -> Defs {
             others.extend(aligns.iter().flatten().map(|a| Other::Text(a.clone())));
             others.extend([Other::Flag(*header == Some(true)), text(grid.as_deref())]);
         }
+        // Its frame's corners, its file and what it shows of it (docs/adr/0204).
+        Shape::Raster {
+            bands,
+            sample,
+            asset,
+            file,
+            srid,
+            style,
+            opacity,
+            ..
+        } => {
+            if let Some(c) = crate::geom::raster::corners(shape) {
+                comps.push(Comp::Fixed(c.to_vec()));
+            }
+            others.extend([
+                Other::Num(*bands),
+                Other::Text(sample.clone()),
+                text(asset.as_deref()),
+                text(file.as_deref()),
+                Other::Num(*srid),
+                Other::Text(crate::api::json::to_string(style)),
+                Other::Num(opacity.unwrap_or(1.0)),
+            ]);
+        }
         // Its frame's corners, its source, clip and opacity (docs/adr/0192).
         Shape::Image {
             mirror,

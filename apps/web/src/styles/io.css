@@ -788,3 +788,84 @@
 .topo-rules__tolerance {
   width: calc(110px * var(--ui-scale));
 }
+
+/* Raster katmanları (docs/adr/0204 §8): Raster ekle's facts, Raster stili's ramps and numbers, the rasters' panel. */
+.raster-facts__list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 0;
+}
+.raster-facts__list dt {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.raster-facts__list dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+}
+.raster-style {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.raster-style__num {
+  width: 110px;
+}
+.raster-ramps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.raster-ramps__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.raster-ramps__row:hover {
+  background: var(--c-hover);
+}
+.raster-ramps__row[aria-selected='true'] {
+  background: var(--c-accent-soft);
+}
+.raster-ramps__row:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 1px;
+}
+.raster-ramps__bar {
+  flex: none;
+  width: 224px;
+  height: 14px;
+  border: 1px solid var(--c-line);
+  border-radius: 2px;
+}
+.raster-jobs {
+  gap: 12px;
+}
+.raster-jobs__line {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.raster-pick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.raster-pick > select {
+  flex: 1;
+  min-width: 0;
+}

@@ -142,6 +142,7 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::Stations) => "Km yaz",
         Some(CreateOperation::Centerline) => "Orta hat",
         Some(CreateOperation::Image) => "Resim ekle",
+        Some(CreateOperation::Raster) => "Raster ekle",
         Some(CreateOperation::TextAlong) => "Eğri boyunca yazı",
         Some(CreateOperation::TangentLine) => "İki daireye teğet",
         Some(CreateOperation::FourthCorner) => "Dördüncü köşe",

@@ -116,6 +116,9 @@ pub enum ViewChange {
     /// Tablo ekle's placement ([`crate::table_place::TablePlace`]) with it
     /// under this name.
     PlaceTable(kentos_contracts::EntityGeometry, &'static str),
+    /// Koordinat oku's point (docs/adr/0204 §8): the host reads the values
+    /// of the shown rasters under it and says them once read.
+    RasterValues(Vec2),
 }
 
 /// Where a text field opens and how its text will look: its start, height in

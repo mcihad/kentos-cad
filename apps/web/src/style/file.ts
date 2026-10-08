@@ -196,10 +196,11 @@ function validateItem(it: unknown, i: number): string[] {
   if (!Array.isArray(it.path) || it.path.some((p) => typeof p !== 'string')) issues.push(`${w}: kategori yolu metin listesi olmalı`);
   if (it.kind === 'symbol') issues.push(...validateSymbol(it.symbol, `${w} (${String(it.name)})`));
   else if (it.kind === 'asset') {
-    if (!['svg', 'png', 'jpeg'].includes(String(it.format))) issues.push(`${w}: bilinmeyen varlık biçimi`);
+    // A raster's file may be a GeoTIFF too (docs/adr/0204 §2).
+    if (!['svg', 'png', 'jpeg', 'tiff'].includes(String(it.format))) issues.push(`${w}: bilinmeyen varlık biçimi`);
     if (typeof it.data !== 'string') issues.push(`${w}: varlık verisi yok`);
     else if (it.format === 'svg' && !/<svg[\s>]/i.test(it.data)) issues.push(`${w}: SVG çizimi değil`);
-    else if (it.format !== 'svg' && !/^data:image\/(png|jpeg);base64,/.test(it.data)) issues.push(`${w}: görüntü verisi data: adresi olmalı`);
+    else if (it.format !== 'svg' && !/^data:image\/(png|jpeg|tiff);base64,/.test(it.data)) issues.push(`${w}: görüntü verisi data: adresi olmalı`);
     if (typeof it.width !== 'number' || typeof it.height !== 'number' || !(it.width > 0) || !(it.height > 0)) issues.push(`${w}: boyut yok`);
   } else if (it.kind === 'template') issues.push(...templateIssues(it.template, `${w} (${String(it.name)})`));
   else issues.push(`${w}: bilinmeyen öğe türü “${String(it.kind)}”`);

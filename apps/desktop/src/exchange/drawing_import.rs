@@ -994,7 +994,7 @@ impl App {
             .map_or_else(|| 5256.into(), |d| crate::crs::Project::of(d.settings()))
     }
 
-    pub(super) fn layer_name(&self, id: &str) -> String {
+    pub(crate) fn layer_name(&self, id: &str) -> String {
         self.document
             .as_ref()
             .and_then(|d| d.model.layers().get(id))

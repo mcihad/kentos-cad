@@ -15,7 +15,8 @@ const objectOf = (e: { layerId: string; symbol?: string; kind?: string; block?: 
   ...(e.symbol && { symbol: e.symbol }),
   ...(e.kind === 'insert' && e.block && { block: e.block }),
   // A picture's image (docs/adr/0192 §2).
-  ...(e.kind === 'image' && e.asset && { asset: e.asset }),
+  // A picture's image (docs/adr/0192 §2) and a raster's file (docs/adr/0204 §2).
+  ...((e.kind === 'image' || e.kind === 'raster') && e.asset && { asset: e.asset }),
 });
 
 /** What the rule reads of the open drawing and the library. */

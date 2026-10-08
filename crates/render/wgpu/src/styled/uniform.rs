@@ -179,6 +179,8 @@ pub fn style_block(b: &StyledBatch) -> StyleBlock {
                 s.set(24, &[*offset, total, on, *dash_offset]);
                 s.u[0] = unit(*u);
             }
+            // A raster (docs/adr/0204 §5): b.z = opacity; its quads carry the rest.
+            FillPaintBatch::Raster { opacity, .. } => s.set(24, &[0.0, 0.0, *opacity, 0.0]),
             // A picture (docs/adr/0192 §3): a = (corner, width, height), b = (cos, sin, opacity, mirror).
             FillPaintBatch::Image {
                 corner,

@@ -5519,6 +5519,226 @@ function edgeShiftScenes() {
   ];
 }
 
+// Raster katmanları (docs/adr/0204) on the shared drawing (fixtures/interaction/v1/rasters.kcad, a GIS project at
+// 1:1000): a valley's elevation model lit by its relief, its orthophoto over it with parcels, a scanned sheet beside;
+// the photograph close up; the elevation model alone; Raster ekle with the elevation model (the project's system) and
+// with the scanned sheet (its world file names no system); Raster stili over the elevation model; Raster oturt over the
+// scanned sheet with four points. The linked files are given to the session as Raster ekle gives them. The desktop's
+// are `tools_screens`' raster-* (apps/desktop/src/raster_scenes.rs).
+const RASTERS = readFileSync(new URL('../../../../fixtures/interaction/v1/rasters.kcad', import.meta.url), 'utf8');
+const RASTER_FILES = Object.fromEntries(
+  ['dem.tif', 'orto.tif', 'tarama.png', 'tarama.pgw'].map((n) => [n, readFileSync(new URL(`../../../../fixtures/interaction/v1/rasters/${n}`, import.meta.url)).toString('base64')]),
+);
+SCENES.rasters = rasterScenes();
+
+/** An uncompressed 8-bit grey baseline TIFF of `w` × `h` without overviews or place, its rows in 64-row strips (a raster
+ * over 4096 pixels wide gets its pyramid file; docs/adr/0204 §3). */
+function bigTiff(w, h) {
+  const rows = 64;
+  const strips = Math.ceil(h / rows);
+  const tags = 10;
+  const ifdAt = 8;
+  const ifdBytes = 2 + tags * 12 + 4;
+  const offsetsAt = ifdAt + ifdBytes;
+  const countsAt = offsetsAt + 4 * strips;
+  const dataAt = countsAt + 4 * strips;
+  const buf = Buffer.alloc(dataAt + w * h);
+  buf.write('II', 0, 'latin1');
+  buf.writeUInt16LE(42, 2);
+  buf.writeUInt32LE(ifdAt, 4);
+  buf.writeUInt16LE(tags, ifdAt);
+  let at = ifdAt + 2;
+  const tag = (id, type, count, value) => {
+    buf.writeUInt16LE(id, at);
+    buf.writeUInt16LE(type, at + 2);
+    buf.writeUInt32LE(count, at + 4);
+    if (type === 3 && count === 1) buf.writeUInt16LE(value, at + 8);
+    else buf.writeUInt32LE(value, at + 8);
+    at += 12;
+  };
+  tag(256, 4, 1, w);
+  tag(257, 4, 1, h);
+  tag(258, 3, 1, 8);
+  tag(259, 3, 1, 1);
+  tag(262, 3, 1, 1);
+  tag(273, 4, strips, offsetsAt);
+  tag(277, 3, 1, 1);
+  tag(278, 4, 1, rows);
+  tag(279, 4, strips, countsAt);
+  tag(284, 3, 1, 1);
+  buf.writeUInt32LE(0, at);
+  for (let k = 0; k < strips; k++) {
+    const n = Math.min(rows, h - k * rows);
+    buf.writeUInt32LE(dataAt + k * rows * w, offsetsAt + 4 * k);
+    buf.writeUInt32LE(n * w, countsAt + 4 * k);
+  }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) buf[dataAt + y * w + x] = (Math.floor(x / 24) * 9 + Math.floor(y / 24) * 40) % 256;
+  return buf.toString('base64');
+}
+const BIG_TIFF = bigTiff(4200, 300);
+
+function rasterScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const file = (n) => `new File([Uint8Array.from(atob(${JSON.stringify(RASTER_FILES[n])}), (c) => c.charCodeAt(0))], ${JSON.stringify(n)})`;
+  /** The drawing open, its rasters' files the session's, the view round `b`. */
+  const opened = async (ui, b, hide = []) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const files = { 'dem.tif': ${file('dem.tif')}, 'orto.tif': ${file('orto.tif')}, 'tarama.png': ${file('tarama.png')} };
+      for (const [n, f] of Object.entries(files)) rasterService().setFile('rasters/' + n, f);
+      if (!(await k.files.load(${JSON.stringify(RASTERS)}, null))) throw new Error('rasters.kcad did not load');
+      k.selection.clear();
+      for (const id of ${JSON.stringify(hide)}) k.doc.layers.setVisible(id, false);
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'data', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+    // The tiles come from the raster workers: draw, let them come, draw again.
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const valley = [X0 - 360, Y0 - 540, X0 + 800, Y0 + 20];
+  const select = (layer) => `(() => { const k = window.kentos; const r = [...k.doc.all()].find((e) => e.kind === 'raster' && e.layerId === ${JSON.stringify(layer)}); k.selection.set([r.id]); })()`;
+  const adding = (names) => async (ui) => {
+    await opened(ui, valley);
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const files = [${names.map(file).join(', ')}];
+      k.files.pickFilesForImport = async () => files;
+      await k.commands.execute('raster.add');
+    })()`);
+    await ui.waitFor(`!!document.querySelector('.raster-facts__list')`);
+    await ui.sleep(600);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  /** Raster oturt over the scanned sheet with four points, Projektif: the raster resampled in its worker, embedded, shown. */
+  const projective = async (ui) => {
+    await opened(ui, valley);
+    await ui.eval(select('tarama'));
+    await ui.eval(`window.kentos.commands.execute('raster.georef')`);
+    await ui.waitFor(`!!document.querySelector('.dialog--fit .calc-grid')`);
+    const rows = [
+      ['12.5', '14.0', '486880.6', '4420547.1'],
+      ['287.0', '11.5', '487159.2', '4420549.4'],
+      ['283.5', '248.0', '487158.9', '4420309.0'],
+      ['9.0', '251.5', '486876.0', '4420310.6'],
+    ];
+    await ui.eval(`(() => {
+      const inputs = [...document.querySelectorAll('.dialog--fit .calc-grid tbody tr')];
+      ${JSON.stringify(rows)}.forEach((r, i) => {
+        const cells = [...inputs[i].querySelectorAll('input:not([type=checkbox])')];
+        r.forEach((v, j) => { cells[j].value = v; cells[j].dispatchEvent(new Event('input', { bubbles: true })); });
+      });
+    })()`);
+    await ui.clickText('.dialog--fit .seg__opt', 'Projektif');
+    await ui.sleep(300);
+    await ui.clickText('.dialog--fit .btn--primary', 'Uygula');
+    const t0 = Date.now();
+    while (!(await ui.eval(`[...window.kentos.doc.all()].some((e) => e.kind === 'raster' && e.layerId === 'tarama' && !!e.asset)`))) {
+      if (Date.now() - t0 > 30000) {
+        const dump = await ui.eval(`JSON.stringify([...window.kentos.doc.all()].filter((e) => e.kind === 'raster').map(({ style, ...e }) => e))`);
+        (await import('node:fs')).writeFileSync('/tmp/claude-1000/-home-cihad-Projects-kentos-cad/a9df79f3-41bb-48d8-aa27-ac3f8136f722/scratchpad/rasters-dump.json', dump);
+        throw new Error('not resampled');
+      }
+      await ui.sleep(300);
+    }
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  /** Raster ekle with a raster 4200 pixels wide without overviews: its pyramid made once in the worker and kept in IndexedDB. */
+  const pyramid = async (ui) => {
+    await opened(ui, valley);
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const big = new File([Uint8Array.from(atob(${JSON.stringify(BIG_TIFF)}), (c) => c.charCodeAt(0))], 'genis.tif');
+      k.files.pickFilesForImport = async () => [big];
+      await k.commands.execute('raster.add');
+    })()`);
+    await ui.waitFor(`!!document.querySelector('.raster-facts__list')`);
+    await ui.clickText('.dialog .btn--primary', 'Ekle');
+    await ui.waitFor(`[...window.kentos.doc.all()].some((e) => e.kind === 'raster' && e.file === 'genis.tif')`);
+    // The whole raster in view: its coarse levels wait for the pyramid, made in its worker.
+    await ui.eval(`(() => { const k = window.kentos; const r = [...k.doc.all()].find((e) => e.file === 'genis.tif'); k.view.camera.fit({ minX: r.affine[0], minY: r.affine[3] + r.affine[5] * r.height, maxX: r.affine[0] + r.affine[1] * r.width, maxY: r.affine[3] }, 24); k.view.requestRender(); })()`);
+    const made = `(async () => {
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      if (rasterService().pyramids.value.length) return false;
+      const db = await new Promise((ok, no) => { const r = indexedDB.open('kentos.rasters', 1); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+      if (!db.objectStoreNames.contains('pyramids')) return (db.close(), false);
+      const n = await new Promise((ok) => { const q = db.transaction('pyramids').objectStore('pyramids').count(); q.onsuccess = () => ok(q.result); });
+      db.close();
+      return n > 0;
+    })()`;
+    const t0 = Date.now();
+    while (!(await ui.eval(made))) {
+      if (Date.now() - t0 > 60000) throw new Error('the pyramid file was not made');
+      await ui.eval(`window.kentos.view.requestRender()`);
+      await ui.sleep(300);
+    }
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  return [
+    { id: 'raster-vadi', open: (ui) => opened(ui, valley), close },
+    { id: 'raster-oturt-projektif', open: projective, close },
+    { id: 'raster-piramit', open: pyramid, close },
+    { id: 'raster-orto', open: (ui) => opened(ui, [X0 + 100, Y0 - 300, X0 + 460, Y0 - 80]), close },
+    { id: 'raster-dem', open: (ui) => opened(ui, [X0 - 20, Y0 - 540, X0 + 790, Y0 + 20], ['orto']), close },
+    { id: 'raster-ekle', open: adding(['dem.tif']), close },
+    { id: 'raster-ekle-tarama', open: adding(['tarama.png', 'tarama.pgw']), close },
+    {
+      id: 'raster-stili',
+      open: async (ui) => {
+        await opened(ui, [X0 - 20, Y0 - 540, X0 + 790, Y0 + 20], ['orto']);
+        await ui.eval(select('dem'));
+        await ui.eval(`window.kentos.commands.execute('raster.style')`);
+        await ui.waitFor(`!!document.querySelector('.raster-ramps')`);
+        await ui.sleep(1500);
+      },
+      close,
+    },
+    {
+      id: 'raster-oturt',
+      open: async (ui) => {
+        await opened(ui, valley);
+        await ui.eval(select('tarama'));
+        await ui.eval(`(async () => {
+          const k = window.kentos;
+          await k.commands.execute('raster.georef');
+        })()`);
+        await ui.waitFor(`!!document.querySelector('.dialog--fit .calc-grid')`);
+        const rows = [
+          ['12.5', '14.0', '486882.6', '4420546.1'],
+          ['287.0', '11.5', '487157.2', '4420548.4'],
+          ['283.5', '248.0', '487153.9', '4420312.0'],
+          ['9.0', '251.5', '486879.0', '4420308.6'],
+        ];
+        await ui.eval(`(() => {
+          const inputs = [...document.querySelectorAll('.dialog--fit .calc-grid tbody tr')];
+          const rows = ${JSON.stringify(rows)};
+          rows.forEach((r, i) => {
+            const cells = [...inputs[i].querySelectorAll('input:not([type=checkbox])')];
+            r.forEach((v, j) => { cells[j].value = v; cells[j].dispatchEvent(new Event('input', { bubbles: true })); });
+          });
+        })()`);
+        await ui.sleep(600);
+      },
+      close,
+    },
+  ];
+}
+
 function imageScenes() {
   const o = { x: 487000, y: 4420000 };
   const hover = async (ui, x, y) => hoverAt(ui, o.x + x, o.y + y);

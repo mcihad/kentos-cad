@@ -329,7 +329,10 @@
     "cogo.check",
     "cogo.update",
     "view.overview",
-    "view.magnifier"
+    "view.magnifier",
+    "raster.add",
+    "raster.style",
+    "raster.georef"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

@@ -654,7 +654,8 @@ fn validate_item(it: &Value, i: usize) -> Vec<String> {
         )),
         Some("asset") => {
             let format = js_str(g("format"));
-            if !matches!(format.as_str(), "svg" | "png" | "jpeg") {
+            // A raster's file may be a GeoTIFF too (docs/adr/0204 §2).
+            if !matches!(format.as_str(), "svg" | "png" | "jpeg" | "tiff") {
                 issues.push(format!("{w}: bilinmeyen varlık biçimi"));
             }
             match g("data").and_then(Value::as_str) {
@@ -679,9 +680,13 @@ fn validate_item(it: &Value, i: usize) -> Vec<String> {
                     }
                 }
                 Some(data) => {
-                    let ok = ["data:image/png;base64,", "data:image/jpeg;base64,"]
-                        .iter()
-                        .any(|p| data.starts_with(p));
+                    let ok = [
+                        "data:image/png;base64,",
+                        "data:image/jpeg;base64,",
+                        "data:image/tiff;base64,",
+                    ]
+                    .iter()
+                    .any(|p| data.starts_with(p));
                     if !ok {
                         issues.push(format!("{w}: görüntü verisi data: adresi olmalı"));
                     }

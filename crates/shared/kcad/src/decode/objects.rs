@@ -8,7 +8,8 @@
 //! text's `align`, `widthFactor` and `mask` (docs/adr/0145), schema 8 the
 //! `leader` kind (docs/adr/0146), schema 9 the dimension's new kinds, its
 //! `mask` and a slope's `za`, `zb` (docs/adr/0147), schema 22 the `table`
-//! kind (docs/adr/0184), the drawing's only; in an older schema they are
+//! kind (docs/adr/0184), schema 24 the `image` kind (docs/adr/0192) and 29
+//! the `raster` kind (docs/adr/0204), the drawing's only; in an older schema they are
 //! unknown fields, kinds or values. A block definition's objects are read
 //! the same way, without persistent ids.
 
@@ -21,10 +22,11 @@ use kentos_contracts::{
     HatchAssoc, HatchEntity, HatchGradient, HatchPattern, HatchPatternType, ImageEntity,
     ImageFields, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, MAX_AFFIX,
     MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO, MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_OBLIQUE,
-    MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph, PathEntity, PatternLine, PointEntity, PointPart,
-    RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign,
-    TextEntity, TextFace, TextRun, TextScript, Vec2, label_scale_ok, oblique_holds,
-    width_factor_ok,
+    MAX_RASTER_BANDS, MAX_RASTER_SIDE, MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph, PathEntity,
+    PatternLine, PointEntity, PointPart, RasterEntity, RasterFields, RasterRender,
+    RasterResampling, RasterSample, RasterStretch, RasterStyle, RingGeometry, SplineEntity,
+    TableAlign, TableEntity, TableGrid, TableSource, TextAlign, TextEntity, TextFace, TextRun,
+    TextScript, Vec2, label_scale_ok, oblique_holds, width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -36,9 +38,9 @@ use crate::{
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES,
     SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
-    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
-    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
+    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_RASTERS,
+    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS,
+    SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
     SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
@@ -61,6 +63,7 @@ enum Kind {
     Leader,
     Table,
     Image,
+    Raster,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -84,6 +87,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("leader", Kind::Leader),
     ("table", Kind::Table),
     ("image", Kind::Image),
+    ("raster", Kind::Raster),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -145,6 +149,8 @@ pub(super) struct Features {
     pub(super) topology: bool,
     /// Schema 28: the survey settings' a priori standard deviations (docs/adr/0203 §1).
     pub(super) survey_sigmas: bool,
+    /// Schema 29: the `raster` kind (docs/adr/0204 §2).
+    rasters: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -179,6 +185,7 @@ impl Features {
             layer_fields: schema >= SCHEMA_WITH_LAYER_FIELDS,
             topology: schema >= SCHEMA_WITH_TOPOLOGY,
             survey_sigmas: schema >= SCHEMA_WITH_SURVEY_SIGMAS,
+            rasters: schema >= SCHEMA_WITH_RASTERS,
             uids: true,
         }
     }
@@ -289,12 +296,38 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     | "clip"
                     | "opacity"
             ),
+            Kind::Raster => matches!(
+                key,
+                "affine"
+                    | "width"
+                    | "height"
+                    | "bands"
+                    | "sample"
+                    | "asset"
+                    | "file"
+                    | "srid"
+                    | "style"
+                    | "opacity"
+            ),
         }
 }
 
 /// Every field an object may have; each kind takes its own.
+/// A raster's own fields (docs/adr/0204 §2).
+#[derive(Default)]
+struct RasterRead {
+    affine: Option<[f64; 6]>,
+    width: Option<u32>,
+    height: Option<u32>,
+    bands: Option<u32>,
+    sample: Option<RasterSample>,
+    srid: Option<u32>,
+    style: Option<RasterStyle>,
+}
+
 #[derive(Default)]
 struct Fields {
+    raster: RasterRead,
     uid: Option<EntityId>,
     attrs: Option<BTreeMap<String, String>>,
     color: Option<String>,
@@ -496,6 +529,7 @@ pub(super) fn object(
             && (has.leaders || *kind != Kind::Leader)
             && (has.tables || *kind != Kind::Table)
             && (has.images || *kind != Kind::Image)
+            && (has.rasters || *kind != Kind::Raster)
     }) else {
         return Err(r.fail(
             Code::UnknownKind,
@@ -511,6 +545,10 @@ pub(super) fn object(
     // Only the drawing's: a block definition holds no picture (docs/adr/0192 §1).
     if kind == Kind::Image && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında resim olamaz"));
+    }
+    // Nor a raster (docs/adr/0204 §2).
+    if kind == Kind::Raster && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında raster olamaz"));
     }
     let mut f = Fields::default();
     map(r, |r, key| {
@@ -562,6 +600,12 @@ pub(super) fn object(
             "ratio" => f.ratio = Some(r.float()?),
             "t0" => f.t0 = Some(r.float()?),
             "t1" => f.t1 = Some(r.float()?),
+            "width" if kind == Kind::Raster => {
+                f.raster.width = Some(r.uint(u64::from(MAX_RASTER_SIDE))? as u32)
+            }
+            "height" if kind == Kind::Raster => {
+                f.raster.height = Some(r.uint(u64::from(MAX_RASTER_SIDE))? as u32)
+            }
             "height" if kind == Kind::Leader => {
                 let at = r.position();
                 let h = r.float()?;
@@ -579,6 +623,26 @@ pub(super) fn object(
                 f.height = Some(r.float()?);
             }
             "rotation" => f.rotation = Some(r.float()?),
+            "bands" => f.raster.bands = Some(r.uint(u64::from(MAX_RASTER_BANDS))? as u32),
+            "sample" => {
+                let names: Vec<(&str, RasterSample)> =
+                    RasterSample::ALL.iter().map(|s| (s.name(), *s)).collect();
+                f.raster.sample = Some(named(r, &names)?);
+            }
+            "srid" => f.raster.srid = Some(r.uint(u64::from(u32::MAX))? as u32),
+            "affine" => {
+                let at = r.position();
+                let v = floats(r)?;
+                let affine: [f64; 6] = v.as_slice().try_into().map_err(|_| {
+                    r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!("rasterin dönüşümü 6 sayı olmalı, {} var", v.len()),
+                    )
+                })?;
+                f.raster.affine = Some(affine);
+            }
+            "style" if kind == Kind::Raster => f.raster.style = Some(raster_style(r)?),
             "width" => f.width = Some(r.float()?),
             "asset" => f.asset = Some(text(r)?),
             "file" => f.file = Some(text(r)?),
@@ -1192,7 +1256,112 @@ fn build(
             }
             Entity::Image(ImageEntity { base, image })
         }
+        Kind::Raster => {
+            let raster = RasterFields {
+                affine: required(r, f.raster.affine, "affine")?,
+                width: required(r, f.raster.width, "width")?,
+                height: required(r, f.raster.height, "height")?,
+                bands: required(r, f.raster.bands, "bands")?,
+                sample: required(r, f.raster.sample, "sample")?,
+                asset: f.asset.take(),
+                file: f.file.take(),
+                srid: required(r, f.raster.srid, "srid")?,
+                style: required(r, f.raster.style.take(), "style")?,
+                opacity: f.opacity,
+            };
+            // Its place, size, bands, one source, look and opacity hold together (docs/adr/0204 §2).
+            if let Some(words) = raster.problem() {
+                return Err(r.fail(Code::BadValue, &words));
+            }
+            Entity::Raster(RasterEntity { base, raster })
+        }
     })
+}
+
+/// A raster's look (§6.6, docs/adr/0204 §4): `render` and `bands` always, the
+/// rest only when not their default (one spelling: no `stretch` "none", no
+/// `resampling` "bilinear", no `invert` false).
+fn raster_style(r: &mut Reader<'_>) -> Result<RasterStyle, KcadError> {
+    let (mut render, mut bands) = (None, None);
+    let mut st = RasterStyle {
+        render: RasterRender::Rgb,
+        bands: Vec::new(),
+        stretch: RasterStretch::None,
+        min: None,
+        max: None,
+        ramp: None,
+        invert: false,
+        azimuth: None,
+        altitude: None,
+        z_factor: None,
+        nodata: None,
+        resampling: RasterResampling::Bilinear,
+    };
+    map(r, |r, key| {
+        match key {
+            "render" => {
+                let names: Vec<(&str, RasterRender)> =
+                    RasterRender::ALL.iter().map(|v| (v.name(), *v)).collect();
+                render = Some(named(r, &names)?);
+            }
+            "bands" => {
+                bands = Some(list(r, |r, _| {
+                    Ok(r.uint(u64::from(MAX_RASTER_BANDS))? as u32)
+                })?)
+            }
+            "stretch" => {
+                let at = r.position();
+                let names: Vec<(&str, RasterStretch)> =
+                    RasterStretch::ALL.iter().map(|v| (v.name(), *v)).collect();
+                st.stretch = named(r, &names)?;
+                if st.stretch == RasterStretch::None {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "gerdirme “none” yazılmaz; gerdirmesiz görünüşte alan yoktur",
+                    ));
+                }
+            }
+            "resampling" => {
+                let at = r.position();
+                let names: Vec<(&str, RasterResampling)> = RasterResampling::ALL
+                    .iter()
+                    .map(|v| (v.name(), *v))
+                    .collect();
+                st.resampling = named(r, &names)?;
+                if st.resampling == RasterResampling::Bilinear {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "örnekleme “bilinear” yazılmaz; çift doğrusal görünüşte alan yoktur",
+                    ));
+                }
+            }
+            "invert" => {
+                let at = r.position();
+                if !r.bool()? {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "ters çevirme false yazılmaz; çevrilmemiş rampada alan yoktur",
+                    ));
+                }
+                st.invert = true;
+            }
+            "ramp" => st.ramp = Some(text(r)?),
+            "min" => st.min = Some(r.float()?),
+            "max" => st.max = Some(r.float()?),
+            "azimuth" => st.azimuth = Some(r.float()?),
+            "altitude" => st.altitude = Some(r.float()?),
+            "zFactor" => st.z_factor = Some(r.float()?),
+            "nodata" => st.nodata = Some(r.float()?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    st.render = required(r, render, "render")?;
+    st.bands = required(r, bands, "bands")?;
+    Ok(st)
 }
 
 /// A table's merged range (§6.6): its `row`, `col`, `rows` and `cols`.

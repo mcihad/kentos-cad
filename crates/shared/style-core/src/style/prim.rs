@@ -120,6 +120,20 @@ pub enum FillPaint {
         opacity: f64,
         level: f64,
     },
+    /// A raster over its frame (docs/adr/0204 §5): `raster` names its file
+    /// (`asset:<id>` or `file:<path>`), `look` its style (the contract's
+    /// JSON); its affine (`[x₀, a, b, y₀, c, d]`, x₀ and y₀ from the anchor in
+    /// a batch), its size in pixels, whether it is sampled nearest. The
+    /// raster pass draws its tiles in view.
+    Raster {
+        raster: String,
+        look: String,
+        affine: [f64; 6],
+        size: [f64; 2],
+        nearest: bool,
+        opacity: f64,
+        level: f64,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -549,6 +563,24 @@ impl FillPaint {
                 o.str("unit", unit.name());
                 o.num("level", *level);
             }
+            FillPaint::Raster {
+                raster,
+                look,
+                affine,
+                size,
+                nearest,
+                opacity,
+                level,
+            } => {
+                o.str("kind", "raster");
+                o.str("raster", raster);
+                o.str("look", look);
+                nums(o.key("affine"), affine);
+                nums(o.key("size"), size);
+                o.bool("nearest", *nearest);
+                o.num("opacity", *opacity);
+                o.num("level", *level);
+            }
             FillPaint::Image {
                 image,
                 corner,
@@ -578,7 +610,8 @@ impl FillPaint {
             | FillPaint::Gradient { level, .. }
             | FillPaint::Pattern { level, .. }
             | FillPaint::Tile { level, .. }
-            | FillPaint::Image { level, .. } => *level,
+            | FillPaint::Image { level, .. }
+            | FillPaint::Raster { level, .. } => *level,
         }
     }
 }

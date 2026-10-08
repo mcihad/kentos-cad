@@ -254,6 +254,15 @@ pub fn image_corners(i: &kentos_contracts::ImageEntity) -> Vec<Vec2> {
     f.corners().iter().map(|p| back(*p)).collect()
 }
 
+/// A raster's frame's four corners (docs/adr/0204 §2).
+pub fn raster_corners(r: &kentos_contracts::RasterEntity) -> Vec<Vec2> {
+    r.raster
+        .corners()
+        .iter()
+        .map(|&(x, y)| Vec2 { x, y })
+        .collect()
+}
+
 /// A table's four corners (docs/adr/0184 §2): top left, top right, bottom
 /// right, bottom left.
 pub fn table_corners(t: &TableEntity) -> Vec<Vec2> {
@@ -574,6 +583,23 @@ pub(crate) fn shape(e: &Entity) -> Shape {
                 .map(|c| c.iter().map(|q| core(*q)).collect()),
             opacity: i.image.opacity,
         },
+        // A raster is no block's piece either (docs/adr/0204 §2); its frame for what it covers.
+        Entity::Raster(r) => {
+            let f = &r.raster;
+            Shape::Raster {
+                affine: f.affine,
+                width: f64::from(f.width),
+                height: f64::from(f.height),
+                bands: f64::from(f.bands),
+                sample: f.sample.name().to_owned(),
+                asset: f.asset.clone(),
+                file: f.file.clone(),
+                srid: f64::from(f.srid),
+                style: kentos_geometry_core::api::json::Json::parse(&f.style.to_json_text())
+                    .unwrap_or(kentos_geometry_core::api::json::Json::Null),
+                opacity: f.opacity,
+            }
+        }
         // Its attributes show as texts, which these formats leave out of a block.
         Entity::Insert(i) => Shape::Insert {
             block: i.block.to_text(),
@@ -798,7 +824,9 @@ fn entity(s: &Shape) -> Option<Entity> {
             assoc: None,
         }),
         // A block holds no table (docs/adr/0184 §1); the core opens inserts.
-        Shape::Insert { .. } | Shape::Table { .. } | Shape::Image { .. } => return None,
+        Shape::Insert { .. } | Shape::Table { .. } | Shape::Image { .. } | Shape::Raster { .. } => {
+            return None;
+        }
     })
 }
 

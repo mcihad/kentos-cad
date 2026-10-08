@@ -21,6 +21,8 @@ import { registerCloudCommands } from './cloud/commands';
 import { CloudSession } from './cloud/session';
 import { pendingInvitation } from './cloud/invitationLink';
 import { registerCalcCommands } from './calc';
+import { registerRasterCommands } from './rasterCommands';
+import { mountRasterJobs } from '../ui/raster/RasterJobs';
 import { registerFileExchangeCommands } from './fileExchange';
 import { DocumentFiles } from './fileIO';
 import { RecoveryCopies } from './recovery';
@@ -164,6 +166,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   });
   registerFileExchangeCommands(ctx);
   registerCalcCommands(ctx);
+  registerRasterCommands(ctx);
   // The open cloud project as the rename and delete dialogs name it.
   const openTarget = () => {
     const p = ctx.cloud.project.value;
@@ -208,6 +211,8 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
 
   shell = new AppShell(ctx);
   root.replaceChildren(shell.el);
+  // The rasters' pyramids and Raster oturt's resampling, with Durdur (docs/adr/0204 §3, §6).
+  mountRasterJobs(ctx);
   // Pafta düzeni (docs/sheet/integration.md §3): the Model | Pafta tabs, the Pafta tab, its commands and keys.
   installSheets(ctx, shell, frontHistory, frontPrint);
   keymap.attach(window);

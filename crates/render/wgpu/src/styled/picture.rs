@@ -127,6 +127,27 @@ pub trait ImageSource {
     fn bitmap(&self, _key: &str) -> Option<Arc<Bitmap>> {
         None
     }
+
+    /// A raster's tile, `raster_tiles::SLOT` × `SLOT` premultiplied RGBA, by
+    /// its paint (`raster`: `asset:<id>`, `file:<path>`; `look`: its style's
+    /// JSON; `affine`: its pixels' place, whose linear part sizes a shaded
+    /// relief) and place (docs/adr/0204 §5) when the host has it; otherwise
+    /// none, and the host starts making it and asks for a frame when done.
+    fn raster_tile(
+        &self,
+        _raster: &str,
+        _look: &str,
+        _affine: &[f64; 6],
+        _level: u32,
+        _tx: u32,
+        _ty: u32,
+    ) -> Option<Arc<Vec<u8>>> {
+        None
+    }
+
+    /// A frame of rasters begins: what the host was asked for before and is
+    /// not asked for again by its end may be dropped.
+    fn raster_frame(&self) {}
 }
 
 /// No pictures and no glyphs: shapes, strokes and fills still draw (tests, previews without fonts).

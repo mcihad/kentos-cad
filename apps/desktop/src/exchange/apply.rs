@@ -709,6 +709,9 @@ fn finite(e: &Entity) -> bool {
                     && i.clip.as_deref().is_none_or(ps)
                     && i.opacity.is_none_or(f64::is_finite)
             }
+            Entity::Raster(e) => {
+                fs(&e.raster.affine) && e.raster.opacity.is_none_or(f64::is_finite)
+            }
             Entity::Leader(e) => ps(&e.pts) && fs(&[e.height, e.rotation]),
             Entity::Table(e) => {
                 p(&e.p)

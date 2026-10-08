@@ -169,6 +169,7 @@ class CreateOperation(_StrEnum):
     - ``rangeRings``: Menzil halkaları (docs/adr/0197 §3): rings round a centre and rays to the outer one.
     - ``planRoad``: Plan yolu (docs/adr/0198 §2): a road's areas from its axis, and the axis.
     - ``networkAdjust``: Yatay ağ dengelemesi (docs/adr/0203 §8): the network's new points the drawing has not.
+    - ``raster``: Raster ekle (docs/adr/0204 §8): a raster placed.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -201,9 +202,10 @@ class CreateOperation(_StrEnum):
     RANGE_RINGS = "rangeRings"
     PLAN_ROAD = "planRoad"
     NETWORK_ADJUST = "networkAdjust"
+    RASTER = "raster"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -359,6 +361,8 @@ class EditOperation(_StrEnum):
     - ``topologyFix``: Topoloji düzelt (docs/adr/0202 §4): a topology finding fixed, its objects updated in place or deleted.
     - ``networkAdjust``: Yatay ağ dengelemesi (docs/adr/0203 §8): points moved to their adjusted places, vertices on them with them.
     - ``levelAdjust``: Kot ağı dengelemesi (docs/adr/0203 §8): points given their adjusted heights, vertices on them too.
+    - ``rasterStyle``: Raster stili (docs/adr/0204 §4): rasters' looks and opacities written in place.
+    - ``rasterGeoref``: Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -412,9 +416,11 @@ class EditOperation(_StrEnum):
     TOPOLOGY_FIX = "topologyFix"
     NETWORK_ADJUST = "networkAdjust"
     LEVEL_ADJUST = "levelAdjust"
+    RASTER_STYLE = "rasterStyle"
+    RASTER_GEOREF = "rasterGeoref"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -697,6 +703,72 @@ PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "att
 """The names of :class:`PropertiesOperation`, for a plain string."""
 
 
+class RasterRender(_StrEnum):
+    """How the bands are drawn (docs/adr/0204 §4).
+
+    - ``rgb``: Three bands as red, green and blue, a fourth as alpha.
+    - ``gray``: One band in grey.
+    - ``palette``: One band through the file's palette.
+    - ``ramp``: One band through a colour ramp.
+    - ``hillshade``: One band (heights) as a shaded relief.
+    - ``rampShade``: The ramp darkened by the shaded relief.
+    """
+    RGB = "rgb"
+    GRAY = "gray"
+    PALETTE = "palette"
+    RAMP = "ramp"
+    HILLSHADE = "hillshade"
+    RAMP_SHADE = "rampShade"
+
+
+RasterRenderName = Literal["rgb", "gray", "palette", "ramp", "hillshade", "rampShade"]
+"""The names of :class:`RasterRender`, for a plain string."""
+
+
+class RasterResampling(_StrEnum):
+    """How a pixel between samples is shown."""
+    BILINEAR = "bilinear"
+    NEAREST = "nearest"
+
+
+RasterResamplingName = Literal["bilinear", "nearest"]
+"""The names of :class:`RasterResampling`, for a plain string."""
+
+
+class RasterSample(_StrEnum):
+    """A band's samples."""
+    U8 = "u8"
+    I8 = "i8"
+    U16 = "u16"
+    I16 = "i16"
+    U32 = "u32"
+    I32 = "i32"
+    F32 = "f32"
+    F64 = "f64"
+
+
+RasterSampleName = Literal["u8", "i8", "u16", "i16", "u32", "i32", "f32", "f64"]
+"""The names of :class:`RasterSample`, for a plain string."""
+
+
+class RasterStretch(_StrEnum):
+    """How values are brought to colours (docs/adr/0204 §4).
+
+    - ``none``: As they are (8 bit).
+    - ``minMax``: The band's least to its most.
+    - ``percent``: Its 2nd to its 98th percentile.
+    - ``manual``: The style's `min` to `max`.
+    """
+    NONE = "none"
+    MIN_MAX = "minMax"
+    PERCENT = "percent"
+    MANUAL = "manual"
+
+
+RasterStretchName = Literal["none", "minMax", "percent", "manual"]
+"""The names of :class:`RasterStretch`, for a plain string."""
+
+
 class RegistryDatum(_StrEnum):
     """One of the registry's datums."""
     TUREF = "TUREF"
@@ -950,6 +1022,7 @@ class Entity(_Union):
     - :class:`LeaderEntity` (``kind: leader``)
     - :class:`TableEntity` (``kind: table``)
     - :class:`ImageEntity` (``kind: image``)
+    - :class:`RasterEntity` (``kind: raster``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -1023,6 +1096,7 @@ class EntityGeometry(_Union):
     - :class:`LeaderEntityGeometry` (``kind: leader``)
     - :class:`TableEntityGeometry` (``kind: table``)
     - :class:`ImageEntityGeometry` (``kind: image``)
+    - :class:`RasterEntityGeometry` (``kind: raster``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -1130,6 +1204,9 @@ _LocalDefinitionT = TypeVar("_LocalDefinitionT", bound="LocalDefinition")
 
 
 _PathEntityT = TypeVar("_PathEntityT", bound="PathEntity")
+
+
+_RasterFieldsT = TypeVar("_RasterFieldsT", bound="RasterFields")
 
 
 _TmDefinitionT = TypeVar("_TmDefinitionT", bound="TmDefinition")
@@ -6444,6 +6521,226 @@ class ProjectSummary(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RasterEntity(Entity):
+    """A raster (docs/adr/0204 §2).
+    Attributes:
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        affine: `[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the
+            upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's
+            geotransform order). Invertible.
+        width: Its size in pixels.
+        srid: The file's coordinate system; 0: the file named none and the user took the project's.
+        asset: The project library's asset its file is (embedded); exactly one of
+            `asset` and `file` is given.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        file: The file it shows (linked): absolute, or relative to the drawing's folder.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
+        opacity: 0.1 to 1; absent: opaque.
+        symbol: Library symbol overriding the layer's style.
+    """
+    TAG_VALUE: ClassVar[str] = "raster"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    affine: list[float]
+    width: int
+    height: int
+    bands: int
+    sample: RasterSample | RasterSampleName
+    srid: int
+    style: RasterStyle
+    asset: str | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    opacity: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "raster"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["affine"] = [float(e0) for e0 in self.affine]
+        out["width"] = self.width
+        out["height"] = self.height
+        out["bands"] = self.bands
+        out["sample"] = _enum_out(self.sample)
+        out["srid"] = self.srid
+        out["style"] = self.style.to_json()
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.opacity is not UNSET:
+            out["opacity"] = None if self.opacity is None else float(self.opacity)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RasterEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            affine=[float(e0) for e0 in data["affine"]],
+            width=data["width"],
+            height=data["height"],
+            bands=data["bands"],
+            sample=_enum_in(RasterSample, data["sample"]),
+            srid=data["srid"],
+            style=RasterStyle.from_json(data["style"]),
+            asset=data.get("asset", UNSET),
+            color=data.get("color", UNSET),
+            file=data.get("file", UNSET),
+            label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RasterFields(_Model):
+    """What places and shows a raster: the raster object's own fields, and its
+    geometry in the commands (`EntityGeometry::Raster`).
+    Attributes:
+        affine: `[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the
+            upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's
+            geotransform order). Invertible.
+        width: Its size in pixels.
+        srid: The file's coordinate system; 0: the file named none and the user took the project's.
+        asset: The project library's asset its file is (embedded); exactly one of
+            `asset` and `file` is given.
+        file: The file it shows (linked): absolute, or relative to the drawing's folder.
+        opacity: 0.1 to 1; absent: opaque.
+    """
+    affine: list[float]
+    width: int
+    height: int
+    bands: int
+    sample: RasterSample | RasterSampleName
+    srid: int
+    style: RasterStyle
+    asset: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+    opacity: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["affine"] = [float(e0) for e0 in self.affine]
+        out["width"] = self.width
+        out["height"] = self.height
+        out["bands"] = self.bands
+        out["sample"] = _enum_out(self.sample)
+        out["srid"] = self.srid
+        out["style"] = self.style.to_json()
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.opacity is not UNSET:
+            out["opacity"] = None if self.opacity is None else float(self.opacity)
+        return out
+
+    @classmethod
+    def from_json(cls: type[_RasterFieldsT], data: Mapping[str, Any]) -> _RasterFieldsT:
+        return cls(
+            affine=[float(e0) for e0 in data["affine"]],
+            width=data["width"],
+            height=data["height"],
+            bands=data["bands"],
+            sample=_enum_in(RasterSample, data["sample"]),
+            srid=data["srid"],
+            style=RasterStyle.from_json(data["style"]),
+            asset=data.get("asset", UNSET),
+            file=data.get("file", UNSET),
+            opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RasterStyle(_Model):
+    """A raster's look (docs/adr/0204 §4).
+    Attributes:
+        bands: The bands drawn, from 1: three or four for `rgb`, one otherwise.
+        altitude: Its height above the horizon, degrees (0–90).
+        azimuth: Gölgeli kabartma's light: degrees from north, clockwise (0–360).
+        invert: The ramp turned round.
+        min: `manual`'s least and most value.
+        nodata: The value shown as nothing, in place of the file's.
+        ramp: One of `RASTER_RAMPS`; absent: Gri.
+        z_factor: Heights multiplied by it (over 0).
+    """
+    render: RasterRender | RasterRenderName
+    bands: list[int]
+    altitude: float | None | Unset = UNSET
+    azimuth: float | None | Unset = UNSET
+    invert: bool | Unset = UNSET
+    max: float | None | Unset = UNSET
+    min: float | None | Unset = UNSET
+    nodata: float | None | Unset = UNSET
+    ramp: str | None | Unset = UNSET
+    resampling: RasterResampling | RasterResamplingName | Unset = UNSET
+    stretch: RasterStretch | RasterStretchName | Unset = UNSET
+    z_factor: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["render"] = _enum_out(self.render)
+        out["bands"] = list(self.bands)
+        if self.altitude is not UNSET:
+            out["altitude"] = None if self.altitude is None else float(self.altitude)
+        if self.azimuth is not UNSET:
+            out["azimuth"] = None if self.azimuth is None else float(self.azimuth)
+        if self.invert is not UNSET:
+            out["invert"] = self.invert
+        if self.max is not UNSET:
+            out["max"] = None if self.max is None else float(self.max)
+        if self.min is not UNSET:
+            out["min"] = None if self.min is None else float(self.min)
+        if self.nodata is not UNSET:
+            out["nodata"] = None if self.nodata is None else float(self.nodata)
+        if self.ramp is not UNSET:
+            out["ramp"] = self.ramp
+        if self.resampling is not UNSET:
+            out["resampling"] = _enum_out(self.resampling)
+        if self.stretch is not UNSET:
+            out["stretch"] = _enum_out(self.stretch)
+        if self.z_factor is not UNSET:
+            out["zFactor"] = None if self.z_factor is None else float(self.z_factor)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RasterStyle:
+        return cls(
+            render=_enum_in(RasterRender, data["render"]),
+            bands=list(data["bands"]),
+            altitude=UNSET if "altitude" not in data else None if data["altitude"] is None else float(data["altitude"]),
+            azimuth=UNSET if "azimuth" not in data else None if data["azimuth"] is None else float(data["azimuth"]),
+            invert=data.get("invert", UNSET),
+            max=UNSET if "max" not in data else None if data["max"] is None else float(data["max"]),
+            min=UNSET if "min" not in data else None if data["min"] is None else float(data["min"]),
+            nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+            ramp=data.get("ramp", UNSET),
+            resampling=_enum_in(RasterResampling, data["resampling"]) if "resampling" in data else UNSET,
+            stretch=_enum_in(RasterStretch, data["stretch"]) if "stretch" in data else UNSET,
+            z_factor=UNSET if "zFactor" not in data else None if data["zFactor"] is None else float(data["zFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RingGeometry(_Model):
     """A closed ring in vertex + bulge form (a polygon hole).
     Attributes:
@@ -8351,6 +8648,18 @@ class ImageEntityGeometry(ImageFields, EntityGeometry):
 
 
 @dataclass(kw_only=True, slots=True)
+class RasterEntityGeometry(RasterFields, EntityGeometry):
+    """A raster (docs/adr/0204 §2): its pixels placed by `affine`, its size,
+    bands and samples, its file (`asset` embedded or `file` linked,
+    exactly one), the file's system, its look and opacity.
+    """
+    TAG_VALUE: ClassVar[str] = "raster"
+
+    def to_json(self) -> dict[str, Any]:
+        return {"kind": "raster", **RasterFields.to_json(self)}
+
+
+@dataclass(kw_only=True, slots=True)
 class CreateFeatureChange(FeatureChange):
     """A new object; the client picks the UUID so a retry cannot create it twice."""
     TAG_VALUE: ClassVar[str] = "create"
@@ -8768,13 +9077,13 @@ _CRS_PLANE: dict[str, type[CrsPlane]] = {"similarity": SimilarityCrsPlane, "affi
 _CRS_SYSTEM: dict[str, type[CrsSystem]] = {"tm": TmCrsSystem, "geographic": GeographicCrsSystem, "local": LocalCrsSystem}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
 
 
-_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry, "image": ImageEntityGeometry}
+_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry, "image": ImageEntityGeometry, "raster": RasterEntityGeometry}
 
 
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
@@ -9014,6 +9323,18 @@ __all__ = [
     "ProjectiveTransform",
     "PropertiesOperation",
     "PropertiesOperationName",
+    "RasterEntity",
+    "RasterEntityGeometry",
+    "RasterFields",
+    "RasterRender",
+    "RasterRenderName",
+    "RasterResampling",
+    "RasterResamplingName",
+    "RasterSample",
+    "RasterSampleName",
+    "RasterStretch",
+    "RasterStretchName",
+    "RasterStyle",
     "RayEntity",
     "RayEntityGeometry",
     "RegistryDatum",

@@ -76,6 +76,7 @@ pub fn defining_bounds(e: &Entity) -> Option<Bounds> {
         Entity::Leader(e) => e.pts.iter().for_each(&mut add),
         Entity::Table(e) => crate::blocks::table_corners(e).iter().for_each(&mut add),
         Entity::Image(e) => crate::blocks::image_corners(e).iter().for_each(&mut add),
+        Entity::Raster(e) => crate::blocks::raster_corners(e).iter().for_each(&mut add),
     }
     b
 }
