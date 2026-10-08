@@ -1148,6 +1148,7 @@ impl App {
         // the drawing area's own events move the pointer themselves.
         let locks = (!matches!(message, Message::Viewport(_)))
             .then_some((self.locks.length, self.locks.toward));
+        let held = self.window_over();
         let task = self.handle(message);
         // A template's run ends with its tool (templates.rs).
         self.follow_template();
@@ -1187,7 +1188,21 @@ impl App {
         self.follow_layout(Instant::now());
         self.follow_navigation(Instant::now());
         self.cloud_after(Instant::now());
+        // A window that opens over the drawing has the keyboard: a text box under
+        // it (the command line that opened it) lets go first, before the window's
+        // own field takes it. The view keeps the window's widgets as they were
+        // when something comes over them (view.rs), so nothing else would.
+        if !held && self.window_over() {
+            self.line_focused = false;
+            return release_keyboard().chain(task);
+        }
         task
+    }
+
+    /// Whether a window is open over the drawing: a dialog, the application
+    /// menu or the sheet templates' gallery.
+    fn window_over(&self) -> bool {
+        self.dialog.is_some() || self.app_menu.is_some() || self.sheets.gallery_open()
     }
 
     /// After every message: the geometry store takes the drawing's changes

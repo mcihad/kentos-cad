@@ -185,6 +185,8 @@ mod vertices;
 mod view;
 mod view_commands;
 mod viewport;
+#[cfg(test)]
+mod window_layers_tests;
 
 use kentos_ui::theme::typography;
 

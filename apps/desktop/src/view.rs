@@ -159,9 +159,10 @@ impl App {
         layers.extend(self.rasters_jobs_view());
         layers.extend(self.opening_view());
         layers.extend(self.cloud_opening_view());
-        if layers.len() == 1 {
-            return layers.remove(0);
-        }
+        // A stack even of the window alone: a panel or a dialog coming and going
+        // changes the layers over the window, not the window's place in the tree,
+        // so its widgets keep their state (an open menu, a field, the drawing
+        // area's size). The rasters' panel comes and goes by itself (rasters/jobs.rs).
         iced::widget::Stack::with_children(layers).into()
     }
 
