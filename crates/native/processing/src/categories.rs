@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 16] = [
+pub const CATEGORIES: [Category; 17] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -128,5 +128,12 @@ pub const CATEGORIES: [Category; 16] = [
         "Taranmış harita",
         "captureLine",
         "Çizgi yakalama, alan kapatma, eğrilere kot verme",
+    ),
+    // docs/adr/0235: the water's way over a DEM.
+    category(
+        "hydrology",
+        "Hidroloji",
+        "streams",
+        "Çukur doldurma, akış yönü ve birikimi, havzalar, dere ağı, nemlilik indisi",
     ),
 ];

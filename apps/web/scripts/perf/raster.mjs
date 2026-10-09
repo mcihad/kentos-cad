@@ -7,12 +7,13 @@
 // (Ortalama, 2×), Komşuluk istatistiği (5 × 5 Ortalama), Histogram and Bölgesel istatistik (10 000 parcels); then raster and
 // vector (docs/adr/0234 §11, vector_timing.rs's work): Rasterleştir (10 000 parcels onto 4096²), Rasterden alan (a 4096²
 // class raster of some 50 000 regions), Rasterden çizgi (4096², about 3 % line cells), Rasterden nokta (Adım 10), Çizgi
-// yakala and Alan kapat on an 8192² scanned sheet, Eğrilere kot ver over 10 000 curves (in the page). Starts its own Vite dev
+// yakala and Alan kapat on an 8192² scanned sheet, Eğrilere kot ver over 10 000 curves (in the page); then hydrology
+// (docs/adr/0235 §12, hydro_timing.rs's work): every tool over its 4096² DEM with pits and flats. Starts its own Vite dev
 // server and one headless Chrome; the DEMs are written once by GDAL into .run/perf (python3 with numpy and osgeo) and
 // fetched by the page as a file the user gave. The worker's whole run is timed: its start, the module, reading the
 // file's blocks, the job and the result's coding. Nothing else heavy may run meanwhile (docs/adr/0005).
 //
-//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector]
+//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector|hydro]
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { cpus } from 'node:os';
@@ -39,6 +40,35 @@ n = ${n}
 x = np.arange(n, dtype=np.float64)[None, :]
 y = np.arange(n, dtype=np.float64)[:, None]
 z = (400.0 + 120.0 * np.sin(x / 230.0) * np.cos(y / 310.0) + 0.05 * x + 3.0 * np.sin(x / 7.0) * np.cos(y / 9.0)).astype(np.float32)
+d = gdal.GetDriverByName('GTiff').Create(${JSON.stringify(path)}, n, n, 1, gdal.GDT_Float32, ['TILED=YES', 'BLOCKXSIZE=256', 'BLOCKYSIZE=256', 'COMPRESS=DEFLATE', 'ZLEVEL=1'])
+d.SetGeoTransform([500000.0, 5.0, 0.0, 4420000.0, 0.0, -5.0])
+s = osr.SpatialReference(); s.ImportFromEPSG(5254); d.SetProjection(s.ExportToWkt())
+d.GetRasterBand(1).WriteArray(z)
+d = None
+`;
+  execFileSync('python3', ['-c', script], { stdio: 'inherit' });
+  return path;
+}
+
+/** hydro_timing.rs's DEM: the same hills with a little noise (pits and flats as a real model has them), 5 m, at `path`. */
+function hydroDem(n) {
+  const path = `${dir}dem-hidro-${n}.tif`;
+  if (existsSync(path)) return path;
+  const script = `
+import numpy as np
+from osgeo import gdal, osr
+gdal.UseExceptions()
+n = ${n}
+i = np.arange(n, dtype=np.uint32)[None, :]
+j = np.arange(n, dtype=np.uint32)[:, None]
+h = (i * np.uint32(0x9e3779b9)) ^ (j * np.uint32(0x85ebca6b))
+h ^= h >> np.uint32(15)
+h = h * np.uint32(0x2c1b3c6d)
+h ^= h >> np.uint32(12)
+noise = (h % np.uint32(1000)).astype(np.float64) / 1000.0
+x = np.arange(n, dtype=np.float64)[None, :]
+y = np.arange(n, dtype=np.float64)[:, None]
+z = (400.0 + 120.0 * np.sin(x / 230.0) * np.cos(y / 310.0) + 0.05 * x + 3.0 * np.sin(x / 7.0) * np.cos(y / 9.0) + 0.8 * noise).astype(np.float32)
 d = gdal.GetDriverByName('GTiff').Create(${JSON.stringify(path)}, n, n, 1, gdal.GDT_Float32, ['TILED=YES', 'BLOCKXSIZE=256', 'BLOCKYSIZE=256', 'COMPRESS=DEFLATE', 'ZLEVEL=1'])
 d.SetGeoTransform([500000.0, 5.0, 0.0, 4420000.0, 0.0, -5.0])
 s = osr.SpatialReference(); s.ImportFromEPSG(5254); d.SetProjection(s.ExportToWkt())
@@ -258,6 +288,41 @@ img[np.broadcast_to(contour, (n, n))] = (150, 80, 30)`);
       for (let r = 0; r < runs; r++) times.push((await b.eval(job.run)) / 1000);
       times.sort((a, c) => a - c);
       console.log(`${job.name.padEnd(26)} ${job.size}  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
+    }
+  }
+  // Hidroloji (docs/adr/0235 §12): hydro_timing.rs's jobs over its DEM, the whole worker run each (the result written or
+  // the objects made); Noktadan havza with its ten points.
+  if (part('hydro')) {
+    const file = hydroDem(4096);
+    const points = Array.from({ length: 10 }, (_, k) => ({ kind: 'point', p: { x: 500000 + 2000 * k + 777, y: 4420000 - 1500 * (k % 7) - 999 } }));
+    const hydroJobs = [
+      { name: 'Çukur doldur', budget: 6, tool: { kind: 'fill', band: 1, slope: 0, result: 'filled' } },
+      { name: 'Akış yönü', budget: 8, tool: { kind: 'flowDirection', band: 1, fill: true, coding: 'esri' } },
+      { name: 'Akış birikimi, D8', budget: 10, tool: { kind: 'flowAccumulation', band: 1, fill: true, method: 'd8', exponent: 0, unit: 'cells' } },
+      { name: 'Akış birikimi, Çoklu yön', budget: 16, tool: { kind: 'flowAccumulation', band: 1, fill: true, method: 'mfd', exponent: 0, unit: 'cells' } },
+      { name: 'Akış birikimi, D∞', budget: 16, tool: { kind: 'flowAccumulation', band: 1, fill: true, method: 'dinf', exponent: 0, unit: 'cells' } },
+      { name: 'Topografik nemlilik indisi', budget: 18, tool: { kind: 'wetness', band: 1, fill: true, method: 'mfd', exponent: 0, slope: 0.1 } },
+      { name: 'Havzalar, ana havzalar', budget: 12, tool: { kind: 'basins', band: 1, fill: true, mode: 'main', threshold: 0, least: 0 } },
+      { name: 'Dere ağı', budget: 12, tool: { kind: 'streams', band: 1, fill: true, threshold: 0, simplify: 1 } },
+      { name: 'Noktadan havza, 10 nokta', budget: 10, tool: { kind: 'watershed', band: 1, fill: true, snap: 50 }, shapes: points },
+    ];
+    for (const job of hydroJobs) {
+      const times = [];
+      for (let r = 0; r < runs; r++) {
+        const ms = await b.eval(`(async () => {
+          const { analyzeOps } = await import('/src/io/rasterAnalysis.ts');
+          const blob = await (await fetch('/@fs${file}')).blob();
+          const spec = JSON.stringify({ tool: ${JSON.stringify(job.tool)}, inputs: [{ affine: [500000, 5, 0, 4420000, 0, -5], name: 'A' }], epsg: 5254 });
+          const t0 = performance.now();
+          const out = await analyzeOps([blob], spec, ${JSON.stringify(JSON.stringify(job.shapes ?? []))}, { progress() {}, canceled: false });
+          const ms = performance.now() - t0;
+          if (!out.bytes && !out.features) throw new Error('no result');
+          return ms;
+        })()`);
+        times.push(ms / 1000);
+      }
+      times.sort((a, c) => a - c);
+      console.log(`${job.name.padEnd(28)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
     }
   }
 } finally {

@@ -750,13 +750,14 @@ fn the_geometry_cases_do_what_they_say() {
 /// Each drawing's defaults and each tool's default values on it, as the web reads them.
 #[test]
 fn the_defaults_the_tools_take_from_the_drawing() {
-    let (file, geometry, surface, interpolation, raster_ops, raster_vector) = (
+    let (file, geometry, surface, interpolation, raster_ops, raster_vector, hydrology) = (
         cases(),
         case_file("geometry.json"),
         case_file("surface.json"),
         case_file("interpolation.json"),
         case_file("raster-ops.json"),
         case_file("raster-vector.json"),
+        case_file("hydrology.json"),
     );
     let registry = Registry::builtin();
     let lookup = |id: &str| registry.tool(id);
@@ -768,7 +769,8 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         .chain(surface["documents"].as_object().expect("documents"))
         .chain(interpolation["documents"].as_object().expect("documents"))
         .chain(raster_ops["documents"].as_object().expect("documents"))
-        .chain(raster_vector["documents"].as_object().expect("documents"));
+        .chain(raster_vector["documents"].as_object().expect("documents"))
+        .chain(hydrology["documents"].as_object().expect("documents"));
     for (name, d) in documents {
         let doc = load(name);
         let defaults = Defaults::of(&doc);

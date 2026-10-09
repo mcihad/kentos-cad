@@ -405,7 +405,15 @@
     "processing.run.raster.toPoints",
     "processing.run.scan.captureLine",
     "processing.run.scan.closeArea",
-    "processing.run.scan.contourElevations"
+    "processing.run.scan.contourElevations",
+    "processing.run.hydrology.fill",
+    "processing.run.hydrology.flowDirection",
+    "processing.run.hydrology.flowAccumulation",
+    "processing.run.hydrology.wetness",
+    "processing.run.hydrology.pourPoint",
+    "processing.run.hydrology.watershed",
+    "processing.run.hydrology.basins",
+    "processing.run.hydrology.streams"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

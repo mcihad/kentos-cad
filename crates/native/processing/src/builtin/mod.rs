@@ -3,6 +3,7 @@
 pub mod calculate_field;
 pub mod edge_lengths;
 pub mod geometry;
+pub mod hydrology;
 pub mod info_from_enclosing;
 pub mod info_from_inside;
 pub mod interpolation;
@@ -90,6 +91,15 @@ pub fn tools() -> Vec<Tool> {
         raster_vector::capture_line(),
         raster_vector::close_area(),
         raster_vector::contour_elevations_tool(),
+        // Hidroloji (docs/adr/0235): both platforms.
+        hydrology::fill(),
+        hydrology::flow_direction(),
+        hydrology::accumulation(),
+        hydrology::wetness(),
+        hydrology::pour_point(),
+        hydrology::watershed(),
+        hydrology::basins(),
+        hydrology::streams(),
     ]
 }
 

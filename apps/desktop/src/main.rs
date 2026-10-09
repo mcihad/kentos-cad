@@ -147,6 +147,8 @@ mod settings_sections;
 mod settings_view;
 // Map services (docs/adr/0208): their tiles, connections' secrets and the device's cache.
 #[cfg(test)]
+mod hydrology_scenes;
+#[cfg(test)]
 mod interpolation_scenes;
 #[cfg(test)]
 mod raster_ops_scenes;

@@ -26,6 +26,8 @@ use crate::areas::{Areas, Span, union};
 use crate::calc::{Calc, Empty};
 use crate::focal::{Focal, Region, Window};
 use crate::grid::Grid;
+use crate::hydro::accum::Method as FlowMethod;
+use crate::hydro::{BasinMode, Coding, HydroNotes, HydroTool, HydroWork, Unit};
 use crate::inputs::{
     Input, Mapping, Raw, Sampling, View, empty_of, mapping, place_in, point_of, region_for,
     sample_row,
@@ -283,6 +285,104 @@ pub enum OpsTool {
         holes: HolesName,
         simplify: f64,
     },
+    /// Çukur doldur (docs/adr/0235 §3): the least slope (percent), the result.
+    Fill {
+        band: u32,
+        slope: f64,
+        result: FillResult,
+    },
+    /// Akış yönü (§4).
+    FlowDirection {
+        band: u32,
+        fill: bool,
+        coding: CodingName,
+    },
+    /// Akış birikimi (§5): Çoklu yön's exponent (0: adaptive).
+    FlowAccumulation {
+        band: u32,
+        fill: bool,
+        method: FlowMethodName,
+        exponent: f64,
+        unit: UnitName,
+    },
+    /// Topografik nemlilik indisi (§6): the least slope (percent).
+    Wetness {
+        band: u32,
+        fill: bool,
+        method: FlowMethodName,
+        exponent: f64,
+        slope: f64,
+    },
+    /// Döküm noktası (§7): the snapping distance (m); the points are the run's objects.
+    PourPoint {
+        band: u32,
+        fill: bool,
+        snap: f64,
+    },
+    /// Noktadan havza (§8).
+    Watershed {
+        band: u32,
+        fill: bool,
+        snap: f64,
+    },
+    /// Havzalar (§9): the stream threshold (m², 0 the largest / 100) and the least area (m²).
+    Basins {
+        band: u32,
+        fill: bool,
+        mode: BasinModeName,
+        threshold: f64,
+        least: f64,
+    },
+    /// Dere ağı (§10).
+    Streams {
+        band: u32,
+        fill: bool,
+        threshold: f64,
+        simplify: f64,
+    },
+}
+
+/// Çukur doldur's result.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum FillResult {
+    Filled,
+    Depth,
+}
+
+/// Akış yönü's coding.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum CodingName {
+    Esri,
+    Taudem,
+}
+
+/// How flow is shared.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum FlowMethodName {
+    D8,
+    Mfd,
+    Dinf,
+}
+
+/// Akış birikimi's unit.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum UnitName {
+    Cells,
+    Area,
+    Sca,
+}
+
+/// Havzalar' kind.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum BasinModeName {
+    Main,
+    Sub,
+    Route,
 }
 
 /// Rasterden alan's neighbours.
@@ -341,6 +441,161 @@ fn within(v: f64, least: f64, most: f64, what: &str) -> Result<f64, String> {
     Ok(v)
 }
 
+/// A hydrology tool's settings, checked (docs/adr/0235).
+fn hydro_tool(tool: &OpsTool) -> Result<Option<(HydroTool, u32)>, String> {
+    let method = |m: FlowMethodName, p: f64| -> Result<FlowMethod, String> {
+        Ok(match m {
+            FlowMethodName::D8 => FlowMethod::D8,
+            FlowMethodName::Dinf => FlowMethod::Dinf,
+            FlowMethodName::Mfd => {
+                if !(p == 0.0 || (0.1..=100.0).contains(&p)) {
+                    return Err(
+                        "Çoklu yönün üssü 0 (uyarlanan) ya da 0,1 ile 100 arasında olmalı.".into(),
+                    );
+                }
+                FlowMethod::Mfd(p)
+            }
+        })
+    };
+    let threshold = |t: f64| -> Result<f64, String> {
+        if !(t >= 0.0 && t.is_finite()) {
+            return Err("Eşik alanı 0 (kendiliğinden) ya da artı bir alan olmalı.".into());
+        }
+        Ok(t)
+    };
+    Ok(Some(match *tool {
+        OpsTool::Fill {
+            band,
+            slope,
+            result,
+        } => (
+            HydroTool::Fill {
+                slope: within(slope, 0.0, 100.0, "En küçük eğim (yüzde)")?,
+                depth: result == FillResult::Depth,
+            },
+            band,
+        ),
+        OpsTool::FlowDirection { band, fill, coding } => (
+            HydroTool::Direction {
+                fill,
+                coding: match coding {
+                    CodingName::Esri => Coding::Esri,
+                    CodingName::Taudem => Coding::Taudem,
+                },
+            },
+            band,
+        ),
+        OpsTool::FlowAccumulation {
+            band,
+            fill,
+            method: m,
+            exponent,
+            unit,
+        } => (
+            HydroTool::Accumulation {
+                fill,
+                method: method(m, exponent)?,
+                unit: match unit {
+                    UnitName::Cells => Unit::Cells,
+                    UnitName::Area => Unit::Area,
+                    UnitName::Sca => Unit::Sca,
+                },
+            },
+            band,
+        ),
+        OpsTool::Wetness {
+            band,
+            fill,
+            method: m,
+            exponent,
+            slope,
+        } => {
+            if !(slope > 0.0 && slope <= 100.0) {
+                return Err("En küçük eğim (yüzde) 0'dan büyük ve en çok 100 olmalı.".into());
+            }
+            (
+                HydroTool::Wetness {
+                    fill,
+                    method: method(m, exponent)?,
+                    slope,
+                },
+                band,
+            )
+        }
+        OpsTool::PourPoint { band, fill, snap } => (
+            HydroTool::PourPoints {
+                fill,
+                snap: within(snap, 0.0, 1e6, "Yaklaştırma uzaklığı")?,
+            },
+            band,
+        ),
+        OpsTool::Watershed { band, fill, snap } => (
+            HydroTool::Watershed {
+                fill,
+                snap: within(snap, 0.0, 1e6, "Yaklaştırma uzaklığı")?,
+            },
+            band,
+        ),
+        OpsTool::Basins {
+            band,
+            fill,
+            mode,
+            threshold: t,
+            least,
+        } => (
+            HydroTool::Basins {
+                fill,
+                mode: match mode {
+                    BasinModeName::Main => BasinMode::Main,
+                    BasinModeName::Sub => BasinMode::Sub,
+                    BasinModeName::Route => BasinMode::Route,
+                },
+                threshold: threshold(t)?,
+                least: within(least, 0.0, f64::MAX, "En küçük alan")?,
+            },
+            band,
+        ),
+        OpsTool::Streams {
+            band,
+            fill,
+            threshold: t,
+            simplify,
+        } => (
+            HydroTool::Streams {
+                fill,
+                threshold: threshold(t)?,
+                simplify: within(simplify, 0.0, 1e6, "Sadeleştirme")?,
+            },
+            band,
+        ),
+        _ => return Ok(None),
+    }))
+}
+
+/// A hydrology result's look (§3–§6).
+fn hydro_style(tool: &HydroTool, source: Option<&RasterStyle>, kind: &Kind) -> RasterStyle {
+    let ramp = |name: &str, stretch: RasterStretch| RasterStyle {
+        stretch,
+        ..ramp_style(name)
+    };
+    match tool {
+        HydroTool::Fill { depth: false, .. } => kept_style(source, kind),
+        HydroTool::Fill { depth: true, .. } => ramp("Viridis", RasterStretch::MinMax),
+        HydroTool::Direction { coding, .. } => RasterStyle {
+            stretch: RasterStretch::Manual,
+            min: Some(1.0),
+            max: Some(if *coding == Coding::Esri { 128.0 } else { 8.0 }),
+            resampling: kentos_contracts::RasterResampling::Nearest,
+            ..ramp_style("Spektral")
+        },
+        HydroTool::Wetness { .. } => RasterStyle {
+            invert: true,
+            ..ramp("Mavi-kırmızı", RasterStretch::Percent)
+        },
+        _ => ramp("Viridis", RasterStretch::Percent),
+    }
+}
+
 /// A zone's figures (Bölgesel istatistik): its sums and the chosen statistic.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ZoneFigures {
@@ -385,6 +640,8 @@ pub struct Notes {
     pub cells: u64,
     /// Cells of the result without a value.
     pub empty_cells: u64,
+    /// A hydrology run's (docs/adr/0235).
+    pub hydro: HydroNotes,
 }
 
 struct Hist {
@@ -445,6 +702,7 @@ enum Work {
         maps: Vec<Mapping>,
     },
     Vector(Box<VectorWork>),
+    Hydro(Box<HydroWork>),
 }
 
 /// The result raster's samples: type, bands (alpha included), nodata.
@@ -991,6 +1249,36 @@ impl OpsJob {
                 let (work, grid) = VectorWork::new(tool, first, threads)?;
                 (grid, Work::Vector(Box::new(work)), None, None)
             }
+            OpsTool::Fill { .. }
+            | OpsTool::FlowDirection { .. }
+            | OpsTool::FlowAccumulation { .. }
+            | OpsTool::Wetness { .. }
+            | OpsTool::PourPoint { .. }
+            | OpsTool::Watershed { .. }
+            | OpsTool::Basins { .. }
+            | OpsTool::Streams { .. } => {
+                let (tool, band) = hydro_tool(&spec.tool)?.ok_or("Hidroloji aracı bilinmiyor.")?;
+                let b = band_index(first, band)?;
+                let grid = first.grid();
+                let kind = tool.raster(first.sample).map(|(sample, nodata)| Kind {
+                    sample,
+                    values: 1,
+                    alpha: false,
+                    nodata: Some(nodata),
+                });
+                let style = kind.map(|k| hydro_style(&tool, first_style, &k));
+                let work = HydroWork::new(
+                    tool,
+                    b,
+                    first.sample,
+                    (grid.width, grid.height),
+                    grid.affine,
+                    spec.geographic,
+                    &shapes,
+                    threads,
+                )?;
+                (grid, Work::Hydro(Box::new(work)), kind, style)
+            }
             OpsTool::CellStatistics { band, stat, ignore } => {
                 if inputs.len() < 2 {
                     return Err("Hücre istatistiği en az iki raster ister.".into());
@@ -1111,6 +1399,11 @@ impl OpsJob {
             }
             Work::Cells { .. } => (0..self.inputs.len()).for_each(|k| add(k, 0)),
             Work::Vector(v) => add(0, v.margin()),
+            Work::Hydro(h) => {
+                if h.reading() {
+                    add(0, 0)
+                }
+            }
             Work::Resample { method, ru, rv } => match method {
                 Method::Point(s) => add(0, s.margin()),
                 _ => {
@@ -1218,6 +1511,9 @@ impl OpsJob {
 
     /// Whether every block of every strip (and pass) is done.
     pub fn done(&self) -> bool {
+        if let Work::Hydro(h) = &self.work {
+            return h.done();
+        }
         let bounds = matches!(&self.work, Work::Histogram(h) if h.bounds_pass);
         !bounds && self.next >= self.grid.height
     }
@@ -1232,6 +1528,7 @@ impl OpsJob {
         let f = f.min(1.0);
         match &self.work {
             Work::Vector(v) => v.share(f),
+            Work::Hydro(h) => h.share(f),
             Work::Histogram(h) if h.bounds_pass => f / 3.0,
             Work::Histogram(h) if h.two_pass => 1.0 / 3.0 + 2.0 * f / 3.0,
             _ => f,
@@ -1262,21 +1559,49 @@ impl OpsJob {
         if self.done() {
             return Ok(Vec::new());
         }
+        if let Work::Hydro(h) = &mut self.work
+            && !h.reading()
+        {
+            // The DEM is in memory: a stage of the work, or the result's next strip.
+            if h.emitting() {
+                let kind = self.kind.ok_or("Sonuç rasteri yok.")?;
+                let n = TILE.min(self.grid.height - self.next.min(self.grid.height));
+                let strip = h.strip(n, kind.sample);
+                self.next += n;
+                let bytes = match self.out.as_mut() {
+                    Some(out) => out.push(Rows::Any(&strip), n)?,
+                    None => Vec::new(),
+                };
+                if h.done() {
+                    self.notes.hydro = h.notes.clone();
+                }
+                return Ok(bytes);
+            }
+            h.step()?;
+            if h.emitting() {
+                self.next = 0;
+            }
+            if h.done() {
+                self.notes.hydro = h.notes.clone();
+            }
+            return Ok(Vec::new());
+        }
         let rect = self.rect();
         let (c0, c1, y0, y1) = rect;
         let n = y1 - y0;
         let bw = (c1 - c0) as usize;
         let regions = self.regions(rect);
-        if matches!(self.work, Work::Vector(_)) {
-            // The vectorizing tools read the file's samples a cell at a time.
+        if matches!(self.work, Work::Vector(_) | Work::Hydro(_)) {
+            // The vectorizing and hydrology tools read the file's samples a cell at a time.
             let raw = match regions.first() {
                 Some(&(k, r)) => self.inputs[k].raw(r)?,
                 None => Raw::empty(),
             };
-            let Work::Vector(v) = &mut self.work else {
-                unreachable!()
-            };
-            v.block(rect, &raw)?;
+            match &mut self.work {
+                Work::Vector(v) => v.block(rect, &raw)?,
+                Work::Hydro(h) => h.block(rect, &raw),
+                _ => unreachable!(),
+            }
         } else if let Some(kind) = self.kind {
             let mut views: Vec<Option<View>> = vec![None; self.inputs.len()];
             for (k, r) in regions {
@@ -1307,6 +1632,14 @@ impl OpsJob {
             v.strip_done(y0, n)?;
         }
         self.next += n;
+        if self.next >= self.grid.height
+            && let Work::Hydro(h) = &mut self.work
+        {
+            // The DEM read: its work steps from here, no strip written yet.
+            h.read_done();
+            self.strip = None;
+            return Ok(Vec::new());
+        }
         if self.next >= self.grid.height
             && let Work::Vector(v) = &mut self.work
             && let Some(g) = v.pass_done()?
@@ -1614,7 +1947,7 @@ impl OpsJob {
                     }
                 });
             }
-            Work::Zonal { .. } | Work::Histogram(_) | Work::Vector(_) => {}
+            Work::Zonal { .. } | Work::Histogram(_) | Work::Vector(_) | Work::Hydro(_) => {}
         }
         Ok(())
     }
@@ -1803,6 +2136,9 @@ impl OpsJob {
             }
             Work::Histogram(h) => Ok(OpsFinished::Histogram(h.out)),
             Work::Vector(v) => Ok(OpsFinished::Features(v.finish()?)),
+            Work::Hydro(mut h) if h.tool().raster(RasterSample::F32).is_none() => {
+                Ok(OpsFinished::Features(h.finish()?))
+            }
             _ => {
                 let out = self.out.ok_or("Sonuç rasteri yok.")?;
                 let (tail, header) = out.finish()?;

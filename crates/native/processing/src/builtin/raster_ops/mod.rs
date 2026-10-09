@@ -313,6 +313,14 @@ fn spec_kind(spec: &OpsSpec) -> &'static str {
         OpsTool::ToPoints { .. } => "toPoints",
         OpsTool::CaptureLine { .. } => "captureLine",
         OpsTool::CloseArea { .. } => "closeArea",
+        OpsTool::Fill { .. } => "fill",
+        OpsTool::FlowDirection { .. } => "flowDirection",
+        OpsTool::FlowAccumulation { .. } => "flowAccumulation",
+        OpsTool::Wetness { .. } => "wetness",
+        OpsTool::PourPoint { .. } => "pourPoint",
+        OpsTool::Watershed { .. } => "watershed",
+        OpsTool::Basins { .. } => "basins",
+        OpsTool::Streams { .. } => "streams",
     }
 }
 

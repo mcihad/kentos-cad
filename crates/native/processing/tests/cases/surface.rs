@@ -171,7 +171,8 @@ fn contour_objects(k: usize, layer: &str) -> Vec<Value> {
 /// each written raster's level 0 against its reference (`rasterOf`: the
 /// surface reference; `interpolationOf`: the interpolation reference, a
 /// second band its `error`; `rasterOpsOf`: the raster operations' reference,
-/// by its case's rule; `rasterVectorOf`: Rasterleştir's reference, exact).
+/// by its case's rule; `rasterVectorOf`: Rasterleştir's reference, exact;
+/// `hydrologyOf`: the hydrology reference, by its case's rule).
 fn raster_cases(name: &str, least: usize) {
     let file = case_file(name);
     let tol = file["tolerance"].as_f64().expect("a tolerance");
@@ -186,6 +187,9 @@ fn raster_cases(name: &str, least: usize) {
     let raster_vector: Value =
         serde_json::from_slice(&surface_fixture("../../raster-vector/v1/cases.json"))
             .expect("the raster and vector reference reads");
+    let hydrology: Value =
+        serde_json::from_slice(&surface_fixture("../../hydrology/v1/cases.json"))
+            .expect("the hydrology reference reads");
     let rasters: BTreeMap<String, Vec<u8>> = file["rasters"]
         .as_object()
         .map(|m| {
@@ -239,6 +243,7 @@ fn raster_cases(name: &str, least: usize) {
             ("interpolationOf", "interpolation"),
             ("rasterOpsOf", "ops"),
             ("rasterVectorOf", "vector"),
+            ("hydrologyOf", "hydrology"),
         ] {
             for (name, of) in c["expect"][key].as_object().cloned().unwrap_or_default() {
                 wanted.push((name, of, kind));
@@ -289,14 +294,19 @@ fn raster_cases(name: &str, least: usize) {
                 }
                 continue;
             }
-            if *kind == "ops" {
-                // The raster operations' reference: its samples by its case's rule.
-                let reference = raster_ops["cases"]
+            if *kind == "ops" || *kind == "hydrology" {
+                // The raster operations' or the hydrology reference: its samples by its case's rule.
+                let file = if *kind == "ops" {
+                    &raster_ops
+                } else {
+                    &hydrology
+                };
+                let reference = file["cases"]
                     .as_array()
                     .unwrap()
                     .iter()
                     .find(|t| t["name"] == *of)
-                    .unwrap_or_else(|| panic!("{id}: no raster operations' case {of}"));
+                    .unwrap_or_else(|| panic!("{id}: no {kind} case {of}"));
                 let want = &reference["expect"]["raster"];
                 let exact = want["rule"] == "exact";
                 let values = want["values"].as_array().expect("the values whole");
@@ -414,6 +424,13 @@ fn the_raster_operations_cases_do_what_they_say() {
 #[test]
 fn the_raster_and_vector_cases_do_what_they_say() {
     raster_cases("raster-vector.json", 13);
+}
+
+/// Hidroloji's shared cases (fixtures/processing/v1/hydrology.json,
+/// scripts/fixtures/hydrology_processing_cases.py; docs/adr/0235).
+#[test]
+fn the_hydrology_cases_do_what_they_say() {
+    raster_cases("hydrology.json", 20);
 }
 
 /// The names an expression field offers on rasters (docs/adr/0233 §3): the

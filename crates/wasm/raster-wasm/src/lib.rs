@@ -766,9 +766,21 @@ impl OpsAnalysis {
             .take()
             .ok_or_else(|| JsError::new("Çözümleme bitti."))?;
         let n = job.notes().clone();
+        let h = &n.hydro;
         self.notes = serde_json::json!({
             "cells": n.cells,
             "emptyCells": n.empty_cells,
+            // Hidroloji (docs/adr/0235): what the run met.
+            "hydro": {
+                "cells": h.cells,
+                "empty": h.empty,
+                "skipped": h.skipped,
+                "emptyPoints": h.empty_points,
+                "dropped": h.dropped,
+                "threshold": h.threshold,
+                "links": h.links,
+                "most": h.most,
+            },
         })
         .to_string();
         match job.finish().map_err(fail)? {
@@ -916,5 +928,21 @@ impl OpsAnalysis {
         self.features
             .as_ref()
             .map_or_else(Vec::new, |f| f.xy.clone())
+    }
+
+    /// The names of the numbers each feature carries (docs/adr/0235: Havza, Alan …).
+    #[wasm_bindgen(js_name = featureFields)]
+    pub fn feature_fields(&self) -> Vec<String> {
+        self.features.as_ref().map_or_else(Vec::new, |f| {
+            f.fields.iter().map(|s| (*s).to_owned()).collect()
+        })
+    }
+
+    /// Those numbers, `featureFields().length` a feature.
+    #[wasm_bindgen(js_name = featureNumbers)]
+    pub fn feature_numbers(&self) -> Vec<f64> {
+        self.features
+            .as_ref()
+            .map_or_else(Vec::new, |f| f.numbers.clone())
     }
 }

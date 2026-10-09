@@ -29,6 +29,7 @@ pub mod focal;
 pub mod frame;
 pub mod from_points;
 pub mod grid;
+pub mod hydro;
 pub mod index;
 pub mod inputs;
 pub mod insolation;

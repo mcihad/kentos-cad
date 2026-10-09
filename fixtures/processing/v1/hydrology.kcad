@@ -1,0 +1,336 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: hidroloji",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 1000,
+  "y": 2000
+ },
+ "layers": [
+  {
+   "id": "noktalar",
+   "name": "Çıkış noktaları",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "guzergah",
+   "name": "Güzergâh",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#1565C0",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "ag",
+   "name": "Drenaj ağı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "vadi",
+   "name": "Vadi",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "teras",
+   "name": "Teraslar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "koni",
+   "name": "Koni",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "ag",
+ "entities": [
+  {
+   "kind": "raster",
+   "affine": [
+    1000.0,
+    10.0,
+    0.0,
+    2000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 32,
+   "height": 26,
+   "bands": 1,
+   "sample": "f32",
+   "file": "ag.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 1,
+   "layerId": "ag",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    1000.0,
+    10.0,
+    0.0,
+    2000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 14,
+   "height": 11,
+   "bands": 1,
+   "sample": "f32",
+   "file": "vadi.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 2,
+   "layerId": "vadi",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    1000.0,
+    10.0,
+    0.0,
+    2000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 13,
+   "height": 13,
+   "bands": 1,
+   "sample": "f32",
+   "file": "teras.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 3,
+   "layerId": "teras",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    1000.0,
+    10.0,
+    0.0,
+    2000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 11,
+   "height": 11,
+   "bands": 1,
+   "sample": "f32",
+   "file": "koni.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 4,
+   "layerId": "koni",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 1305.0,
+    "y": 1755.0
+   },
+   "id": 5,
+   "layerId": "noktalar",
+   "attrs": {
+    "Ad": "Ç1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 1205.0,
+    "y": 1845.0
+   },
+   "id": 6,
+   "layerId": "noktalar",
+   "attrs": {
+    "Ad": "Ç2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 1125.0,
+    "y": 1815.0
+   },
+   "id": 7,
+   "layerId": "noktalar",
+   "attrs": {
+    "Ad": "Ç3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500.0,
+    "y": 2500.0
+   },
+   "id": 8,
+   "layerId": "noktalar",
+   "attrs": {
+    "Ad": "Ç4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 1205.0,
+    "y": 1845.0
+   },
+   "id": 9,
+   "layerId": "noktalar",
+   "attrs": {
+    "Ad": "Ç5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 1095.0,
+    "y": 1965.0
+   },
+   "id": 10,
+   "layerId": "noktalar",
+   "attrs": {
+    "Ad": "Ç6"
+   }
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 1003.0,
+     "y": 1867.0
+    },
+    {
+     "x": 1160.0,
+     "y": 1859.0
+    },
+    {
+     "x": 1317.0,
+     "y": 1872.0
+    }
+   ],
+   "id": 11,
+   "layerId": "guzergah",
+   "attrs": {
+    "Ad": "Eksen 1"
+   }
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 1223.0,
+     "y": 1997.0
+    },
+    {
+     "x": 1236.0,
+     "y": 1744.0
+    }
+   ],
+   "id": 12,
+   "layerId": "guzergah",
+   "attrs": {
+    "Ad": "Eksen 2"
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

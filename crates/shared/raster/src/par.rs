@@ -45,6 +45,37 @@ pub fn rows<T: Send>(
     f(0, out);
 }
 
+/// `f(k, item)` for each item, the threads taking the next item as they
+/// finish one (items of uneven work spread); one after another in WASM.
+pub fn each_mut<T: Send>(threads: usize, items: &mut [T], f: &(dyn Fn(usize, &mut T) + Sync)) {
+    #[cfg(not(target_arch = "wasm32"))]
+    if threads > 1 && items.len() > 1 {
+        use std::sync::Mutex;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let slots: Vec<Mutex<&mut T>> = items.iter_mut().map(Mutex::new).collect();
+        let next = AtomicUsize::new(0);
+        std::thread::scope(|s| {
+            for _ in 0..threads.min(slots.len()) {
+                s.spawn(|| {
+                    loop {
+                        let k = next.fetch_add(1, Ordering::Relaxed);
+                        let Some(slot) = slots.get(k) else {
+                            break;
+                        };
+                        let mut item = slot.lock().unwrap_or_else(|e| e.into_inner());
+                        f(k, &mut item);
+                    }
+                });
+            }
+        });
+        return;
+    }
+    let _ = threads;
+    for (k, item) in items.iter_mut().enumerate() {
+        f(k, item);
+    }
+}
+
 /// Threads for an analysis on this machine: the cores but one, at least 1, at most 8.
 pub fn threads() -> usize {
     #[cfg(not(target_arch = "wasm32"))]

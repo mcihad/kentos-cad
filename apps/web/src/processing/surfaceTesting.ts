@@ -68,6 +68,8 @@ interface OpsApi {
   featureRings(): Uint32Array;
   featureSizes(): Uint32Array;
   featureXy(): Float64Array;
+  featureFields(): string[];
+  featureNumbers(): Float64Array;
   free(): void;
 }
 type HeaderOpening = { need(): Float64Array; put(offset: number, bytes: Uint8Array): void; analysis(spec: string): AnalysisApi; free(): void };
@@ -237,6 +239,8 @@ export async function analyzeOpsHere(sources: (Uint8Array | string)[], spec: str
           rings: a.featureRings(),
           sizes: a.featureSizes(),
           xy: a.featureXy(),
+          fields: a.featureFields(),
+          numbers: a.featureNumbers(),
         },
       };
     }

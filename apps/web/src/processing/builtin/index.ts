@@ -17,6 +17,7 @@ import { summaryStatistics } from './summaryStatistics';
 import { INTERPOLATION_TOOLS } from './interpolation/tools';
 import { RASTER_OPS_TOOLS } from './rasterOps/tools';
 import { RASTER_VECTOR_TOOLS } from './rasterVector/tools';
+import { HYDROLOGY_TOOLS } from './hydrology/tools';
 import { SURFACE_TOOLS } from './surface/tools';
 import { vertexNumbering } from './vertexNumbering';
 
@@ -50,4 +51,6 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   ...RASTER_OPS_TOOLS,
   // Raster ve vektör and Taranmış harita (docs/adr/0234): its operation and point jobs, Eğrilere kot ver the geometry core's.
   ...RASTER_VECTOR_TOOLS,
+  // Hidroloji (docs/adr/0235): the raster core's operation job over the DEM in memory.
+  ...HYDROLOGY_TOOLS,
 ];

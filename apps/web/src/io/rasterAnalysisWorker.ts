@@ -228,8 +228,10 @@ async function ops(job: OpsRequest): Promise<void> {
         rings: a.featureRings(),
         sizes: a.featureSizes(),
         xy: a.featureXy(),
+        fields: a.featureFields(),
+        numbers: a.featureNumbers(),
       };
-      const moved = [features.values.buffer, features.tags.buffer, features.rings.buffer, features.sizes.buffer, features.xy.buffer];
+      const moved = [features.values.buffer, features.tags.buffer, features.rings.buffer, features.sizes.buffer, features.xy.buffer, features.numbers.buffer];
       scope.postMessage({ type: 'done', ops: { ...result, features } }, moved);
       return;
     }

@@ -11,7 +11,8 @@ import { analyzeHere, analyzeOpsHere, analyzePointsHere, level0, surfaceModulesB
  * each point's cross-validation within the method's bound), and the raster operations' (scripts/fixtures/raster_ops_cases.py,
  * docs/adr/0233: each sample by its case's rule, the zones' figures, the histograms, the refusals), and raster and vector's
  * (scripts/fixtures/raster_vector_cases.py, docs/adr/0234: the features bit for bit, Rasterleştir's every sample and its
- * notes, the refusals). Skipped only when the packages have not been built.
+ * notes, the refusals), and hydrology's (scripts/fixtures/hydrology_cases.py, docs/adr/0235: each sample by its case's
+ * rule, the objects and their numbers, the notes, the refusals). Skipped only when the packages have not been built.
  */
 
 type Bytes = Uint8Array<ArrayBuffer>;
@@ -171,13 +172,16 @@ interface OpsCase {
  */
 function tiffOf(r: OpsInput): Uint8Array {
   const one = r.bands === 1;
-  if (r.alpha || !((r.sample === 'f32' && one) || (r.sample === 'i16' && one) || (r.sample === 'u8' && (one || r.bands === 3)))) throw new Error(`${r.name}: not an input this writer makes`);
-  const float = r.sample === 'f32';
-  const size = float ? 4 : r.sample === 'i16' ? 2 : 1;
+  if (r.alpha || !((r.sample === 'f32' && one) || (r.sample === 'f64' && one) || (r.sample === 'i16' && one) || (r.sample === 'u8' && (one || r.bands === 3))))
+    throw new Error(`${r.name}: not an input this writer makes`);
+  const float = r.sample === 'f32' || r.sample === 'f64';
+  const size = r.sample === 'f64' ? 8 : r.sample === 'f32' ? 4 : r.sample === 'i16' ? 2 : 1;
   const strip = new Uint8Array(r.width * r.height * r.bands * size);
   const sv = new DataView(strip.buffer);
   const empty = typeof r.nodata === 'number' ? r.nodata : 0;
-  r.values.forEach((v, k) => (float ? sv.setFloat32(4 * k, v ?? NaN, true) : size === 2 ? sv.setInt16(2 * k, v ?? empty, true) : (strip[k] = v ?? empty)));
+  r.values.forEach((v, k) =>
+    size === 8 ? sv.setFloat64(8 * k, v ?? NaN, true) : size === 4 ? sv.setFloat32(4 * k, v ?? NaN, true) : size === 2 ? sv.setInt16(2 * k, v ?? empty, true) : (strip[k] = v ?? empty),
+  );
   const nodata = r.nodata === null ? null : String(r.nodata);
   // [tag, type (2 ASCII, 3 SHORT, 4 LONG), values]; the strip's offset is filled in below.
   const tags: [number, 2 | 3 | 4, number[] | string][] = [
@@ -353,6 +357,76 @@ describe.skipIf(!surfaceModulesBuilt)('raster and vector in the module (crates/w
       expect(Array.from(f.rings)).toEqual(want.rings);
       expect(Array.from(f.sizes)).toEqual(want.sizes);
       expect(alike(f.xy, want.xy), `xy ${Array.from(f.xy).slice(0, 16)}`).toBe(true);
+    });
+  }
+});
+
+interface HydroCase {
+  name: string;
+  input: OpsInput;
+  geographic: boolean;
+  tool: { kind: string };
+  shapes: unknown[];
+  expect: {
+    refused?: string;
+    rule?: string;
+    raster?: { width: number; height: number; rule: string; values: (number | null)[] };
+    features?: { kind: string; fields: string[]; numbers: number[]; rings: number[]; sizes: number[]; xy: number[] };
+    notes?: Record<string, number | number[]>;
+  };
+}
+
+/** A sample against the reference's (null: none) by its rule (`exact` bit for bit, `f32ulp` one unit in float32). */
+const hydroMeets = (got: number, want: number | null, rule: string) =>
+  want === null ? Number.isNaN(got) : rule === 'f32ulp' ? ulps(got, want) <= 1 : Object.is(got, want) || got === want;
+
+describe.skipIf(!surfaceModulesBuilt)('hydrology in the module (crates/wasm/raster-wasm, docs/adr/0235)', () => {
+  const hydro = json<{ cases: HydroCase[] }>('hydrology/v1/cases.json');
+
+  it('reads every case', () => {
+    expect(hydro.cases.length).toBeGreaterThanOrEqual(130);
+  });
+
+  for (const c of hydro.cases) {
+    it(`hydrology: ${c.name}`, async () => {
+      const input = { ...c.input, name: 'A' };
+      const spec = JSON.stringify({ tool: c.tool, inputs: [{ affine: input.affine, name: 'A' }], geographic: c.geographic });
+      const run = analyzeOpsHere([tiffOf(input)], spec, JSON.stringify(c.shapes));
+      if (c.expect.refused) {
+        await expect(run).rejects.toThrow(c.expect.refused);
+        return;
+      }
+      const out = await run;
+      const notes = (JSON.parse(out.notes) as { hydro: Record<string, number | number[]> }).hydro;
+      if (c.expect.raster) {
+        const r = c.expect.raster;
+        expect([out.grid[6], out.grid[7]]).toEqual([r.width, r.height]);
+        const got = await level0(out.bytes!);
+        expect(got.length).toBe(r.values.length);
+        const off = got.findIndex((g, k) => !hydroMeets(g, r.values[k], r.rule));
+        expect(off, `sample ${off}: ${got[off]} for ${r.values[off]}`).toBe(-1);
+      } else {
+        const f = out.features!;
+        const want = c.expect.features!;
+        expect(f.kind).toBe(want.kind);
+        expect(f.fields).toEqual(want.fields);
+        const km = want.fields.indexOf('Km');
+        const stride = want.fields.length;
+        expect(f.numbers.length).toBe(want.numbers.length);
+        want.numbers.forEach((w, k) => {
+          const g = f.numbers[k];
+          if (c.expect.rule === 'km' && k % stride === km) expect(Math.abs(g - w), `number ${k}`).toBeLessThanOrEqual(1e-9);
+          else expect(Object.is(g, w) || g === w, `number ${k}: ${g} for ${w}`).toBe(true);
+        });
+        expect(Array.from(f.rings)).toEqual(want.rings);
+        expect(Array.from(f.sizes)).toEqual(want.sizes);
+        expect(Array.from(f.xy)).toEqual(want.xy);
+      }
+      // Hydrology's notes in the module's words: the reference's `empty` list is `emptyPoints`.
+      for (const [key, value] of Object.entries(c.expect.notes ?? {})) {
+        const k = key === 'empty' && Array.isArray(value) ? 'emptyPoints' : key;
+        expect(notes[k], `note ${key}`).toEqual(value);
+      }
     });
   }
 });

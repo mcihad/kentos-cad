@@ -55,6 +55,9 @@ pub struct Features {
     pub sizes: Vec<u32>,
     /// x, y of every vertex in order.
     pub xy: Vec<f64>,
+    /// Named numbers each feature carries (docs/adr/0235: Havza, Alan, Bağ …), `fields.len()` a feature.
+    pub fields: Vec<&'static str>,
+    pub numbers: Vec<f64>,
 }
 
 impl Features {
@@ -67,6 +70,16 @@ impl Features {
             rings: Vec::new(),
             sizes: Vec::new(),
             xy: Vec::new(),
+            fields: Vec::new(),
+            numbers: Vec::new(),
+        }
+    }
+
+    /// Features carrying the named numbers `fields`.
+    pub fn with_fields(kind: FeatureKind, fields: &[&'static str]) -> Features {
+        Features {
+            fields: fields.to_vec(),
+            ..Features::new(kind)
         }
     }
 

@@ -32,4 +32,6 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   // docs/adr/0234: vectors burnt into cells, regions, lines and points out of them; scanned sheets digitized.
   { id: 'rasterVector', label: 'Raster ve vektör', icon: 'rasterize', description: 'Rasterleştirme; rasterden alan, çizgi ve nokta' },
   { id: 'scannedMap', label: 'Taranmış harita', icon: 'captureLine', description: 'Çizgi yakalama, alan kapatma, eğrilere kot verme' },
+  // docs/adr/0235: the water's way over a DEM.
+  { id: 'hydrology', label: 'Hidroloji', icon: 'streams', description: 'Çukur doldurma, akış yönü ve birikimi, havzalar, dere ağı, nemlilik indisi' },
 ];

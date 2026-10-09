@@ -7550,6 +7550,1016 @@
     ]
    }
   },
+  "hydrology.fill": {
+   "title": "Çukur doldur",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Yükseklik modeli",
+     "description": "Yükseklik modeli (DEM) rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "slope",
+     "label": "En küçük eğim",
+     "description": "Yüzde; 0 çukurları düz doldurur, artı değerde doldurulan yüzey çıkışa en az bu eğimle alçalır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "result",
+     "label": "Sonuç",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "filled",
+        "label": "Doldurulmuş yükseklik"
+       },
+       {
+        "value": "depth",
+        "label": "Dolgu derinliği"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-dolu” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-dolu.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "streams",
+     "text": "Hidroloji"
+    },
+    "icon": "fillSinks",
+    "about": "Yükseklik modelinin çukurlarını taşma yüksekliğine doldurur: her hücreden rasterin dışına alçalan bir yol kalır.",
+    "help": [
+     "Doldurulmuş yüzey f ≥ z olan ve her iç hücrenin f(n) + ε·d ≤ f(c) olan bir komşusu bulunan en küçük yüzeydir (ε en küçük eğim / 100). En küçük eğim 0'da her hücre taşma yüksekliğine, kenara giden yolların en yüksek noktalarının en küçüğüne yükselir (Wang ve Liu 2006; Planchon ve Darboux 2002); artı eğimde çukurlar ve düzlükler bu eğimle çıkışa doğru alçalır.",
+     "Hesap öncelik kuyruklu taşmadır (Barnes ve ark. 2014); birden çok iş parçacığında raster şeritlerde paralel doldurulur (Barnes 2016), sonuç aynıdır.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir; kenardaki ve değersiz hücreye komşu hücreler çıkıştır: su rasterin dışına ya da değersiz hücreye akabilir.",
+     "Dolgu derinliği doldurulmuş yükseklik eksi DEM'dir. Sonuç 32 bit (DEM 64 bitse 64 bit) karolu GeoTIFF'tir; Çizime ekle açıksa DEM'in katmanının hemen üstüne eklenir.",
+     "Bütün raster bellekte çalışılır: en çok 2²⁵ hücre (5792 × 5792)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "CUKURDOLDUR",
+     "FILLSINKS"
+    ]
+   }
+  },
+  "hydrology.flowDirection": {
+   "title": "Akış yönü",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Yükseklik modeli",
+     "description": "Yükseklik modeli (DEM) rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "fill",
+     "label": "Çukurları doldur",
+     "description": "Önce çukurlar doldurulur; kapalıysa çukurlar akışı durdurur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "coding",
+     "label": "Kodlama",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "esri",
+        "label": "ESRI (1–128)"
+       },
+       {
+        "value": "taudem",
+        "label": "1–8 (TauDEM)"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-yon” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-yon.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "streams",
+     "text": "Hidroloji"
+    },
+    "icon": "flowDirection",
+    "about": "Her hücrenin suyunu verdiği komşuyu D8 kodu olarak yazar.",
+    "help": [
+     "D8: hücre, eğimi (yükseklik farkı / merkezler arası uzaklık) en büyük alçak komşusuna akar; eşitlerde doğudan saat yönünde ilki.",
+     "ESRI kodları doğudan saat yönünde 1, 2, 4, 8, 16, 32, 64, 128 (güneydoğu 2, kuzey 64); 1–8 TauDEM'inki: doğudan saat yönünün tersine. Çıkış hücresinin alçak komşusu yoksa dışarı akar. Yönsüz hücre 0, değersiz 255.",
+     "Çukurları doldur açıkken önce çukurlar taşma yüksekliğine doldurulur (en küçük eğim 0); düzlüklerde yön Barnes ve ark.'nın (2014) yöntemiyle verilir: alçak kenara yaklaşan ve yüksek kenardan uzaklaşan iki gradyan.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir; kenardaki ve değersiz hücreye komşu hücreler çıkıştır: su rasterin dışına ya da değersiz hücreye akabilir.",
+     "Bütün raster bellekte çalışılır: en çok 2²⁵ hücre (5792 × 5792)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "AKISYONU",
+     "FLOWDIR"
+    ]
+   }
+  },
+  "hydrology.flowAccumulation": {
+   "title": "Akış birikimi",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Yükseklik modeli",
+     "description": "Yükseklik modeli (DEM) rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "fill",
+     "label": "Çukurları doldur",
+     "description": "Önce çukurlar doldurulur; kapalıysa çukurlar akışı durdurur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "method",
+     "label": "Yöntem",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "d8",
+        "label": "D8"
+       },
+       {
+        "value": "dinf",
+        "label": "D∞ (Tarboton)"
+       },
+       {
+        "value": "mfd",
+        "label": "Çoklu yön (MFD)"
+       }
+      ]
+     }
+    },
+    {
+     "name": "exponent",
+     "label": "Çoklu yönün üssü",
+     "description": "0: uyarlanan (Qin ve ark. 2007, ArcGIS Pro'nunki); 0,1–100: sabit üs (1: Quinn ve ark. 1991).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "unit",
+     "label": "Birim",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "cells",
+        "label": "Hücre sayısı"
+       },
+       {
+        "value": "area",
+        "label": "Alan (m²)"
+       },
+       {
+        "value": "sca",
+        "label": "Özgül havza alanı (m)"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-birikim” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-birikim.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "streams",
+     "text": "Hidroloji"
+    },
+    "icon": "flowAccumulation",
+    "about": "Her hücreden geçen suyun geldiği alanı yazar: hücre sayısı, alan ya da özgül havza alanı.",
+    "help": [
+     "Birikim hücrenin kendisi ve yukarısındaki hücrelerin paylarıdır (hücre kendini sayar; ArcGIS'in Flow Accumulation'ı saymaz, onunki bir eksiktir). Özgül havza alanı alan / hücrenin genişliğidir.",
+     "D8: bütün pay yönüne. D∞ (Tarboton 1997): sekiz üçgen yüzün en dik alçalanı, pay iki komşu arasında açıyla. Çoklu yön: pay L·tᵖ ile orantılı (t eğim, L Quinn ve ark.'nın kontur uzunluğu: dikte 0,5, çaprazda 0,354); üs sabit ya da uyarlanan p = 8,9·min(e, 1) + 1,1 (Qin ve ark. 2007, e hücrenin en dik eğimi). Alçak komşusu olmayan hücrenin payı D8 yönüne.",
+     "Çukurları doldur açıkken önce çukurlar taşma yüksekliğine doldurulur (en küçük eğim 0); düzlüklerde yön Barnes ve ark.'nın (2014) yöntemiyle verilir: alçak kenara yaklaşan ve yüksek kenardan uzaklaşan iki gradyan.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir; kenardaki ve değersiz hücreye komşu hücreler çıkıştır: su rasterin dışına ya da değersiz hücreye akabilir.",
+     "Bütün raster bellekte çalışılır: en çok 2²⁵ hücre (5792 × 5792)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "AKISBIRIKIMI",
+     "FLOWACC"
+    ]
+   }
+  },
+  "hydrology.wetness": {
+   "title": "Topografik nemlilik indisi",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Yükseklik modeli",
+     "description": "Yükseklik modeli (DEM) rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "fill",
+     "label": "Çukurları doldur",
+     "description": "Önce çukurlar doldurulur; kapalıysa çukurlar akışı durdurur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "method",
+     "label": "Yöntem",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "mfd",
+        "label": "Çoklu yön (MFD)"
+       },
+       {
+        "value": "d8",
+        "label": "D8"
+       },
+       {
+        "value": "dinf",
+        "label": "D∞ (Tarboton)"
+       }
+      ]
+     }
+    },
+    {
+     "name": "exponent",
+     "label": "Çoklu yönün üssü",
+     "description": "0: uyarlanan (Qin ve ark. 2007, ArcGIS Pro'nunki); 0,1–100: sabit üs (1: Quinn ve ark. 1991).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "slope",
+     "label": "En küçük eğim",
+     "description": "Yüzde; tan β bunun altındaysa bu kullanılır (CSIRO'nun DEM-H TWI'ında %0,1).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-twi” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-twi.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "streams",
+     "text": "Hidroloji"
+    },
+    "icon": "wetness",
+    "about": "Topografik nemlilik indisi TWI = ln(a / tan β): suyun toplandığı düz yerler yüksek, sırtlar düşük.",
+    "help": [
+     "a özgül havza alanıdır (m; Akış birikimi'nin), tan β yüzeyin Horn yöntemiyle eğimi (ADR 0231); tan β en küçük eğimin altındaysa en küçük eğim alınır. Beven ve Kirkby'nin (1979) indisidir.",
+     "Yöntem birikimin yöntemidir; Çoklu yön varsayılandır. Sonuç 32 bit; görünüş kuruda kırmızı, ıslakta mavi.",
+     "Çukurları doldur açıkken önce çukurlar taşma yüksekliğine doldurulur (en küçük eğim 0); düzlüklerde yön Barnes ve ark.'nın (2014) yöntemiyle verilir: alçak kenara yaklaşan ve yüksek kenardan uzaklaşan iki gradyan.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir; kenardaki ve değersiz hücreye komşu hücreler çıkıştır: su rasterin dışına ya da değersiz hücreye akabilir.",
+     "Bütün raster bellekte çalışılır: en çok 2²⁵ hücre (5792 × 5792)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "NEMLILIK",
+     "TWI"
+    ]
+   }
+  },
+  "hydrology.pourPoint": {
+   "title": "Döküm noktası",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Yükseklik modeli",
+     "description": "Yükseklik modeli (DEM) rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "points",
+     "label": "Noktalar",
+     "description": "Döküm noktaları: nokta nesneleri (çok noktalının her noktası).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "fill",
+     "label": "Çukurları doldur",
+     "description": "Önce çukurlar doldurulur; kapalıysa çukurlar akışı durdurur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "snap",
+     "label": "Yaklaştırma uzaklığı",
+     "description": "0: noktanın hücresi; artı bir uzaklıkta bu uzaklıktaki hücrelerden D8 birikimi en büyük olanı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur; yükseklik modelinin katmanının hemen üstünde.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "streams",
+     "text": "Hidroloji"
+    },
+    "icon": "pourPoint",
+    "about": "Noktaları yakındaki en büyük akış birikimli hücreye taşır: havzanın çıkışı derenin üstüne gelir.",
+    "help": [
+     "Yaklaştırma 0'da noktanın hücresi; artı bir uzaklıkta merkezi bu uzaklıkta olan hücrelerden D8 birikimi en büyük olanı (eşitse noktaya en yakın, o da eşitse satır satır ilki; ArcGIS'in Snap Pour Point'i).",
+     "Her nokta hücresinin merkezine yazılır; öznitelikleri Nokta (girdideki sırası), Birikim (hücre), Alan (m²) ve Uzaklık (m). Rasterin dışındaki ya da değersiz hücreye düşen nokta atlanır.",
+     "Çukurları doldur açıkken önce çukurlar taşma yüksekliğine doldurulur (en küçük eğim 0); düzlüklerde yön Barnes ve ark.'nın (2014) yöntemiyle verilir: alçak kenara yaklaşan ve yüksek kenardan uzaklaşan iki gradyan.",
+     "Bütün raster bellekte çalışılır: en çok 2²⁵ hücre (5792 × 5792)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DOKUMNOKTASI",
+     "SNAPPOUR"
+    ]
+   }
+  },
+  "hydrology.watershed": {
+   "title": "Noktadan havza",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Yükseklik modeli",
+     "description": "Yükseklik modeli (DEM) rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "points",
+     "label": "Noktalar",
+     "description": "Döküm noktaları: nokta nesneleri (çok noktalının her noktası).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "fill",
+     "label": "Çukurları doldur",
+     "description": "Önce çukurlar doldurulur; kapalıysa çukurlar akışı durdurur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "snap",
+     "label": "Yaklaştırma uzaklığı",
+     "description": "0: noktanın hücresi; artı bir uzaklıkta bu uzaklıktaki hücrelerden D8 birikimi en büyük olanı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur; yükseklik modelinin katmanının hemen üstünde.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "streams",
+     "text": "Hidroloji"
+    },
+    "icon": "watershed",
+    "about": "Her döküm noktasının havzasını alan olarak yazar: suyu o noktadan geçen bütün hücreler.",
+    "help": [
+     "Hücre D8 yolundaki ilk döküm noktasının havzasındadır: yukarıdaki nokta aşağıdakinin havzasından kendi havzasını ayırır (ArcGIS'in Watershed'i). İki nokta aynı hücreye düşerse hücre girdide sonra gelenindir; öbürünün havzası boş kalır, söylenir.",
+     "Yaklaştırma Döküm noktası'nınkidir. Alanlar hücre kenarlarındandır (8 komşu); öznitelikleri Havza (noktanın girdideki sırası) ve Alan (m²).",
+     "Çukurları doldur açıkken önce çukurlar taşma yüksekliğine doldurulur (en küçük eğim 0); düzlüklerde yön Barnes ve ark.'nın (2014) yöntemiyle verilir: alçak kenara yaklaşan ve yüksek kenardan uzaklaşan iki gradyan.",
+     "Bütün raster bellekte çalışılır: en çok 2²⁵ hücre (5792 × 5792)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "HAVZABUL",
+     "NOKTAHAVZA",
+     "WATERSHED"
+    ]
+   }
+  },
+  "hydrology.basins": {
+   "title": "Havzalar",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Yükseklik modeli",
+     "description": "Yükseklik modeli (DEM) rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "fill",
+     "label": "Çukurları doldur",
+     "description": "Önce çukurlar doldurulur; kapalıysa çukurlar akışı durdurur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "mode",
+     "label": "Biçim",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "main",
+        "label": "Ana havzalar"
+       },
+       {
+        "value": "sub",
+        "label": "Alt havzalar"
+       },
+       {
+        "value": "route",
+        "label": "Güzergâhı kesen dereler"
+       }
+      ]
+     }
+    },
+    {
+     "name": "threshold",
+     "label": "Eşik alanı",
+     "description": "D8 birikimi (alan) bu değerden küçük olmayan hücreler deredir; 0: en büyük birikimin yüzde biri.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m²"
+     }
+    },
+    {
+     "name": "routes",
+     "label": "Güzergâh",
+     "description": "Yol ya da kanal ekseni: çizgi, çoklu çizgi ya da yay.",
+     "optional": true,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "least",
+     "label": "En küçük alan",
+     "description": "Bundan küçük havza yazılmaz; 0 hepsi.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m²"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur; yükseklik modelinin katmanının hemen üstünde.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "streams",
+     "text": "Hidroloji"
+    },
+    "icon": "basins",
+    "about": "Bütün havzaları, dere kollarının alt havzalarını ya da bir güzergâhı kesen derelerin havzalarını alan olarak yazar.",
+    "help": [
+     "Ana havzalar: her hücre D8 yolunun bittiği hücreye göre (dışarı akan çıkış ya da yönsüz hücre); tek hücrelik havza da havzadır (ArcGIS'in Basin'i). Alt havzalar: Dere ağı'nın her kolunun kendi havzası (Bağ, Sıra). Güzergâhı kesen dereler: güzergâhın geçtiği dere hücrelerinden dere boyunca en aşağıdakiler geçiştir; her geçişin bütün havzası (menfez ve köprünün beslenme alanı, örtüşebilir), Km güzergâhtaki yeri, Sıra kolun Strahler sırası.",
+     "En küçük alandan küçük havza yazılmaz, sayısı söylenir. Alanlar hücre kenarlarındandır.",
+     "Çukurları doldur açıkken önce çukurlar taşma yüksekliğine doldurulur (en küçük eğim 0); düzlüklerde yön Barnes ve ark.'nın (2014) yöntemiyle verilir: alçak kenara yaklaşan ve yüksek kenardan uzaklaşan iki gradyan.",
+     "Bütün raster bellekte çalışılır: en çok 2²⁵ hücre (5792 × 5792)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "HAVZALAR",
+     "ALTHAVZA",
+     "BASINS"
+    ]
+   }
+  },
+  "hydrology.streams": {
+   "title": "Dere ağı",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Yükseklik modeli",
+     "description": "Yükseklik modeli (DEM) rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "fill",
+     "label": "Çukurları doldur",
+     "description": "Önce çukurlar doldurulur; kapalıysa çukurlar akışı durdurur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "threshold",
+     "label": "Eşik alanı",
+     "description": "D8 birikimi (alan) bu değerden küçük olmayan hücreler deredir; 0: en büyük birikimin yüzde biri.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m²"
+     }
+    },
+    {
+     "name": "simplify",
+     "label": "Sadeleştirme",
+     "description": "Douglas–Peucker toleransı, hücre cinsinden; 0 yalnız doğrultudaki köşeleri atar.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur; yükseklik modelinin katmanının hemen üstünde.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "streams",
+     "text": "Hidroloji"
+    },
+    "icon": "streams",
+    "about": "Akış birikimi eşiği aşan hücrelerden dere ağını çoklu çizgi olarak yazar; her kolun Strahler ve Shreve sırasıyla.",
+    "help": [
+     "Dere hücresi D8 birikimi (alan) eşikten küçük olmayan hücredir. Kol kaynakta ya da kavşakta başlar, bir sonraki kavşakta ya da yolun sonunda biter; kavşakta biten kol aktığı kolun ilk hücresine uzanır.",
+     "Strahler: kaynak 1; aynı en büyük sıradan iki ya da daha çok kol birleşince bir artar. Shreve: gelenlerin toplamı. Öznitelikler: Bağ, Sıra, Shreve, Uzunluk (m), Düşü (m), Eğim (düşü / uzunluk), Alan (kolun sonundaki birikim, m²), Aşağı (aktığı kol).",
+     "Sadeleştirme hücre cinsinden Douglas–Peucker toleransıdır; 0 yalnız doğrultudaki köşeleri atar.",
+     "Çukurları doldur açıkken önce çukurlar taşma yüksekliğine doldurulur (en küçük eğim 0); düzlüklerde yön Barnes ve ark.'nın (2014) yöntemiyle verilir: alçak kenara yaklaşan ve yüksek kenardan uzaklaşan iki gradyan.",
+     "Bütün raster bellekte çalışılır: en çok 2²⁵ hücre (5792 × 5792)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DEREAGI",
+     "STREAMORDER"
+    ]
+   }
+  },
   "model:builtin.parcelSheet": {
    "title": "Parsel ölçü yazıları",
    "rows": [

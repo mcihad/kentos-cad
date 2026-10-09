@@ -588,6 +588,14 @@ pub const PORTED: &[&str] = &[
     "processing.run.scan.captureLine",
     "processing.run.scan.closeArea",
     "processing.run.scan.contourElevations",
+    "processing.run.hydrology.fill",
+    "processing.run.hydrology.flowDirection",
+    "processing.run.hydrology.flowAccumulation",
+    "processing.run.hydrology.wetness",
+    "processing.run.hydrology.pourPoint",
+    "processing.run.hydrology.watershed",
+    "processing.run.hydrology.basins",
+    "processing.run.hydrology.streams",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

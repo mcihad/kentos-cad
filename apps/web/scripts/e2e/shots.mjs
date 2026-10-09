@@ -6072,6 +6072,85 @@ function rasterVectorScenes() {
   ];
 }
 
+// Hidroloji (docs/adr/0235) over the shared valley's elevation model with a road's axis and two outlets
+// (fixtures/interaction/v1/hydrology.kcad, scripts/fixtures/hydrology_scene.py): the filled lakes' depth, the flow
+// accumulation, the wetness index, the stream network, the outlets' watersheds, the links' sub-basins and the basins of the
+// streams the road crosses. The desktop's are `tools_screens`' hid-* (apps/desktop/src/hydrology_scenes.rs), at the same
+// places with the same values.
+const HYDROLOGY_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/hydrology.kcad', import.meta.url), 'utf8');
+SCENES.hydrology = hydrologyScenes();
+
+function hydrologyScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const VALLEY = [X0, Y0 - 518.4, X0 + 768, Y0];
+  // The eastern streams and the road across them, the view's right side the model's east edge.
+  const EAST = [487400, 4420160, 487968, 4420490];
+  /** The valley with the road and the outlets open, the CBS ribbon's Raster on, the view on `b`. */
+  const opened = async (ui, b) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      rasterService().setFile('rasters/dem.tif', new File([Uint8Array.from(atob(${JSON.stringify(RASTER_FILES['dem.tif'])}), (c) => c.charCodeAt(0))], 'dem.tif'));
+      if (!(await k.files.load(${JSON.stringify(HYDROLOGY_SCENE)}, null))) throw new Error('hydrology.kcad did not load');
+      k.selection.clear();
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** Runs `tool` with `values` to its end and closes its window. */
+  const runTool = async (ui, tool, values) => {
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    await ui.escapeAll(2);
+  };
+  /** The runs in turn over the opened drawing. */
+  const drawn = (view, runs) => async (ui) => {
+    await opened(ui, view);
+    for (const [tool, values] of runs) await runTool(ui, tool, values);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  /** `tool`'s window with `values` over the opened drawing, after the runs `before`. */
+  const windowOf = (view, tool, values, before = []) => async (ui) => {
+    await opened(ui, view);
+    for (const [t, v] of before) await runTool(ui, t, v);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const DEM = { input: QUERY_LAYER('dem') };
+  const STREAMS = ['hydrology.streams', { ...DEM, threshold: 2000 }];
+  const ROUTE = { ...DEM, mode: 'route', threshold: 2000, routes: QUERY_LAYER('yol') };
+  return [
+    { id: 'hid-serit', open: async (ui) => (await opened(ui, VALLEY), await tiles(ui)), close },
+    { id: 'hid-doldur-cizim', open: drawn(VALLEY, [['hydrology.fill', { ...DEM, result: 'depth' }]]), close },
+    { id: 'hid-birikim-cizim', open: drawn(VALLEY, [['hydrology.flowAccumulation', DEM]]), close },
+    { id: 'hid-twi-cizim', open: drawn(VALLEY, [['hydrology.wetness', DEM]]), close },
+    { id: 'hid-dere', open: windowOf(VALLEY, ...STREAMS), close },
+    { id: 'hid-dere-cizim', open: drawn(VALLEY, [STREAMS]), close },
+    { id: 'hid-havza-cizim', open: drawn(VALLEY, [['hydrology.watershed', { ...DEM, points: QUERY_LAYER('cikis'), snap: 10 }], STREAMS]), close },
+    { id: 'hid-alt-havzalar-cizim', open: drawn(VALLEY, [['hydrology.basins', { ...DEM, mode: 'sub', threshold: 2000 }], STREAMS]), close },
+    { id: 'hid-guzergah', open: windowOf(EAST, 'hydrology.basins', ROUTE, [STREAMS]), close },
+    { id: 'hid-guzergah-cizim', open: drawn(EAST, [['hydrology.basins', ROUTE], STREAMS]), close },
+  ];
+}
+
 // Harita servisleri (docs/adr/0208) over a CBS project in TUREF / TM33 at Ankara's Kızılay: parcels and a building over
 // a ready basemap, its tiles from the service itself (the network is needed), in the project's system. The desktop's
 // are `tools_screens`' servis-* (apps/desktop/src/service_scenes.rs), the same drawing.

@@ -143,6 +143,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çakışma kuralı, sonuç girdinin katmanının altında), Rasterden alan, Rasterden çizgi (Lü–Wang'lı inceltme), Rasterden nokta (adımla, her
   hücre, tepeler ve çukurlar); Taranmış harita kategorisinde Çizgi yakala (renge göre, tıklanan çizgi ve ona bağlılar, isteğe bağlı kot),
   Alan kapat ve Eğrilere kot ver (kesen çizginin sırasıyla); vektör sonuçlar rasterin hemen üstündeki yeni katmanda (ADR 0234);
+  hidroloji: İşlemler'in Hidroloji kategorisinde Çukur doldur (taşma yüksekliğine ya da en küçük eğimle; derinlik; şeritlerde paralel
+  doldurma), Akış yönü (D8, ESRI ya da TauDEM kodları, düzlükler Barnes'ın gradyanlarıyla), Akış birikimi (D8, D∞, çoklu yön; hücre,
+  alan, özgül havza alanı), Topografik nemlilik indisi, Döküm noktası, Noktadan havza, Havzalar (ana, alt havzalar, güzergâhı kesen
+  derelerin havzaları km'leriyle) ve Dere ağı (Strahler, Shreve, uzunluk, düşü, eğim); bütün DEM bellekte, 2²⁵ hücreye kadar; sonuçlar
+  DEM'in hemen üstündeki yeni katmanda (ADR 0235);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -426,6 +431,11 @@ python3 scripts/fixtures/raster_vector_processing_cases.py --check   # raster ve
 python3 scripts/fixtures/scanned_scene.py --check   # taranmış paftanın sahnesini (fixtures/interaction/v1/scanned.kcad ve scanned/pafta.tif) GDAL'la yeniden üretip karşılaştır (ADR 0234)
 cargo test --release -p kentos-raster --test all vector_timing -- --ignored --nocapture --test-threads=1   # 4096² ve 8192² rasterlerde yedi aracın süreleri; KENTOS_PHASES=1 Çizgi yakala'nın aşamalarını da yazar (ADR 0234 §11)
 KENTOS_SHOTS_ONLY=vek-serit,vek-yakala-cizim,vek-kapat-cizim,vek-kot cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # raster ve vektör araçlarının resimleri, .run/shots/arac-vek-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs rastervector); ADR 0234)
+python3 scripts/fixtures/hydrology_cases.py --check   # hidrolojinin sekiz aracını (doldurma, D8 ve düzlükler, D8, çoklu yön ve D∞ birikimi, TWI, döküm noktası, havzalar, dere ağı ve sıraları) ADR'den, KentOS kodu olmadan denetle; GRASS GIS'in r.terraflow, r.watershed ve r.water.outlet'iyle çapraz denetim (grass yoksa atlanır); durumlar fixtures/hydrology/v1/cases.json (ADR 0235)
+python3 scripts/fixtures/hydrology_processing_cases.py --check   # hidroloji araçlarının İşlemler durumlarını denetle; rasterleri GDAL yazar, yazılan dosyalar başvuruya bağlı; durumlar fixtures/processing/v1/hydrology.json, hydrology.kcad ve hydrology/ (ADR 0235)
+python3 scripts/fixtures/hydrology_scene.py --check   # hidroloji resimlerinin çizimini (fixtures/interaction/v1/hydrology.kcad: vadinin DEM'i, yol ekseni, çıkış noktaları) denetle (ADR 0235)
+cargo test --release -p kentos-raster --test all hydro_timing -- --ignored --nocapture --test-threads=1   # 4096² DEM'de sekiz aracın dokuz işinin süreleri; KENTOS_PHASES=1 birikimin aşamalarını da yazar (ADR 0235 §12; web'inkiler: (cd apps/web && node scripts/perf/raster.mjs --only hydro))
+KENTOS_SHOTS_ONLY=hid-serit,hid-dere-cizim,hid-havza-cizim,hid-guzergah-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # hidrolojinin resimleri, .run/shots/arac-hid-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hydrology); ADR 0235)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
 cargo test --release -p kentos-pointcloud --test all timing -- --ignored --nocapture   # aynı bulutta düğümün görünüşe göre çözülmesi (katman katman) ve LAZ yazma, tek ve dört iş parçacığıyla (önce perf::clouds dosyayı yazar; ADR 0207 §12)
@@ -1307,7 +1317,12 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `thin`, `simplify`, `capture`, `work`), `rasterize`, `inputs`'un `Raw`'ı; geometri çekirdeğinde `ops::contour_elevations` (bağımsız
   başvuru `raster_vector_cases.py`, GDAL'la çapraz denetim); WASM `OpsAnalysis`'in nesneleri; İşlemler'in `builtin/raster_vector/`'u ve
   `rasterVector/`'u iki platformda, `Patch.zs`; ortak durumlar `fixtures/processing/v1/raster-vector.json`
-  (`raster_vector_processing_cases.py`), taranmış paftanın sahnesi `scanned.kcad` (`scanned_scene.py`). Dalda sıradaki `GIS-35`.
+  (`raster_vector_processing_cases.py`), taranmış paftanın sahnesi `scanned.kcad` (`scanned_scene.py`). `GIS-35` hidroloji
+  ([ADR 0235](docs/adr/0235-hydrology.md); sahibin sözü “Bu konu çok önemli iyi araştır”) tek parçada bitti (9 Ekim): raster çekirdeğinde
+  `hydro` (`surface`, `heap`, `fill`, `tiled`, `flow`, `accum`, `basins`, `streams`; bağımsız başvuru `hydrology_cases.py`, GRASS'la
+  çapraz denetim), `ops`'un sekiz türü, `vector`'ün `fields` ve `numbers`'ı; WASM `featureFields`, `featureNumbers`; İşlemler'in
+  `builtin/hydrology/`'si iki platformda; ortak durumlar `fixtures/processing/v1/hydrology.json` (`hydrology_processing_cases.py`),
+  resimlerin sahnesi `hydrology.kcad` (`hydrology_scene.py`). Dalda sıradaki `GIS-36`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

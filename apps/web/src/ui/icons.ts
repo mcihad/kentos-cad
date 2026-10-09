@@ -770,6 +770,22 @@ export const ICONS = {
     '<path d="M3 5.5 9 2.5l8 3.5-1.5 9.5-9.5 2z" stroke-width="3.6" stroke-opacity=".25"/><path d="M3 5.5 9 2.5l8 3.5-1.5 9.5-9.5 2z" fill="currentColor" fill-opacity=".18" stroke-width="1.3"/><path d="M8.6 7.4v6.2l1.6-1.5 1.1 2.5 1.2-.5-1.1-2.5h2.2z" fill="currentColor" stroke="none"/>',
   contourElevations:
     '<path d="M2 5.2c3-2 6 1 9-.5s5-2 7-.5M2 10c3-2 6 1 9-.5s5-2 7-.5M2 14.8c3-2 6 1 9-.5s5-2 7-.5" stroke-width="1.2"/><path d="M6.4 18.2 13.6 1.8" stroke-width="1.2" stroke-dasharray="1.6 1.3"/><circle cx="12.3" cy="4.8" r="1.3" fill="currentColor" stroke="none"/><circle cx="10.2" cy="9.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.1" cy="14.3" r="1.3" fill="currentColor" stroke="none"/>',
+  fillSinks:
+    '<path d="M2 5.5c2.4 0 3 9 8 9s5.6-9 8-9" stroke-width="1.4"/><path d="M4.6 9.6c1 2.9 2.6 4.9 5.4 4.9s4.4-2 5.4-4.9z" fill="currentColor" fill-opacity=".34" stroke="none"/><path d="M3.8 9.6h12.4" stroke-width="1.1"/><path d="M10 2v4.4M8.2 4.8 10 6.6l1.8-1.8" stroke-width="1.3"/>',
+  flowDirection:
+    '<path d="M2 7.3h16M2 12.7h16M7.3 2v16M12.7 2v16" stroke-width=".7" stroke-opacity=".35"/><path d="M4.4 4.4 14.8 14.8" stroke-width="1.7"/><path d="M8.4 15.2h6.8V8.4" stroke-width="1.7"/>',
+  flowAccumulation:
+    '<path d="M2 7.3h16M2 12.7h16M7.3 2v16M12.7 2v16" stroke-width=".7" stroke-opacity=".35"/><rect x="2.6" y="2.6" width="4.1" height="4.1" fill="currentColor" fill-opacity=".2" stroke="none"/><rect x="13.3" y="2.6" width="4.1" height="4.1" fill="currentColor" fill-opacity=".2" stroke="none"/><rect x="7.9" y="7.9" width="4.2" height="4.2" fill="currentColor" fill-opacity=".55" stroke="none"/><rect x="7.9" y="13.3" width="4.2" height="4.1" fill="currentColor" stroke="none"/>',
+  wetness:
+    '<path d="M2 17c3-.8 4.5-3 8-3s5 2.2 8 3" stroke-width="1.2" stroke-opacity=".6"/><path d="M10 2.4c2.9 3.7 4.3 6.1 4.3 7.9a4.3 4.3 0 0 1-8.6 0c0-1.8 1.4-4.2 4.3-7.9z" fill="currentColor" fill-opacity=".28" stroke-width="1.4"/><path d="M8.2 10.6a1.9 1.9 0 0 0 1.6 1.8" stroke-width="1.2"/>',
+  pourPoint:
+    '<path d="M2.5 3c2.5 1 4 3 5 5.5S10 14 13.5 15" stroke-width="1.5"/><circle cx="14.6" cy="15.2" r="3.1" stroke-width="1.3"/><circle cx="14.6" cy="15.2" r="1.1" fill="currentColor" stroke="none"/><path d="M14.6 10.6v1.4M14.6 18.4v1.2M10 15.2h1.4M17.8 15.2h1.2" stroke-width="1.1"/>',
+  watershed:
+    '<path d="M4 4.5 9.5 2l7 2.8.8 6.3-5.3 6.6H8.4L2.6 11z" fill="currentColor" fill-opacity=".16" stroke-width="1.3"/><path d="M5.5 6.5c1.5 1 2.6 2.5 4.6 3.4M14.5 5.5 12 9.8M10.1 9.9l.2 7.8" stroke-width="1.2"/><circle cx="10.3" cy="17.6" r="1.5" fill="currentColor" stroke="none"/>',
+  basins:
+    '<path d="M3 4.5 9 2.2l.8 8.2-7.2 2.2z" fill="currentColor" fill-opacity=".32" stroke="none"/><path d="M9.8 10.4 18 10.2l-3 6.8-7 1.2-5.4-5.6z" fill="currentColor" fill-opacity=".16" stroke="none"/><path d="M3 4.5 9 2.2l7.2 1.6L18 10.2l-3 6.8-7 1.2-5.4-5.6z" stroke-width="1.3"/><path d="M9 2.2l.8 8.2M2.6 12.6l7.2-2.2L18 10.2" stroke-width="1.2"/>',
+  streams:
+    '<path d="M2.5 2.5 5 6.6M8 2 6.6 6.4" stroke-width="1"/><path d="M5 6.6l1.6-.2 2.6 5.3M17.5 5.5l-2.7 3.4M13.5 2.8l.9 4.8" stroke-width="1.5"/><path d="M14.4 7.6l.4 1.3-5.6 2.8M9.2 11.7l1.4 6.3" stroke-width="2.4"/>',
   server: '<rect x="3" y="3" width="14" height="5.5" rx="1"/><rect x="3" y="11.5" width="14" height="5.5" rx="1"/><path d="M6 5.75h.01M6 14.25h.01" stroke-width="2"/><path d="M9.5 5.75h4.5M9.5 14.25h4.5"/>',
   cloud: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 9v4.6M7.9 11.6 10 13.7l2.1-2.1"/>',
   cloudUpload: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 13.8V9.2M7.9 11.1 10 9l2.1 2.1"/>',

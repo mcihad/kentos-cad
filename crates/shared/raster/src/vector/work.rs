@@ -561,7 +561,7 @@ impl VectorWork {
 
 /// A ring's corners as float64, turned when the affine mirrors the cell
 /// space (an outline then still runs counter-clockwise in the world).
-fn world_ring(r: &Ring, flip: bool) -> Vec<[f64; 2]> {
+pub(crate) fn world_ring(r: &Ring, flip: bool) -> Vec<[f64; 2]> {
     let mut pts: Vec<[f64; 2]> = r.iter().map(|&[u, v]| [u as f64, v as f64]).collect();
     if flip && pts.len() > 1 {
         pts[1..].reverse();

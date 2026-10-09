@@ -134,7 +134,7 @@ fn kind_of(s: Shape) -> Option<Kind> {
 
 /// A shape's chord paths (world): its vertices with the 0.1 mm chords'
 /// points of its arcs between them; the ellipse's and spline's chords the core's.
-fn chord_paths(s: &Shape, out: &mut Vec<Vec<Vec2>>) {
+pub(crate) fn chord_paths(s: &Shape, out: &mut Vec<Vec<Vec2>>) {
     let path = |pts: &[Vec2], bulges: Option<&[f64]>, closed: bool| -> Vec<Vec2> {
         let n = pts.len();
         let mut p = Vec::with_capacity(n + 1);

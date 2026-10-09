@@ -106,6 +106,9 @@ export interface AnalysisFeatures {
   rings: Uint32Array;
   sizes: Uint32Array;
   xy: Float64Array;
+  /** The names of the numbers each feature carries (docs/adr/0235: Havza, Alan …), and those numbers, `fields.length` a feature. */
+  fields: string[];
+  numbers: Float64Array;
 }
 
 export type AnalysisReply =
