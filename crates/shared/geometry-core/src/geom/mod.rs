@@ -26,3 +26,4 @@ pub mod spline;
 pub mod survey;
 pub mod table;
 pub mod tangent_circle;
+pub mod tiles;

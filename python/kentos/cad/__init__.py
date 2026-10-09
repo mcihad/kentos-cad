@@ -27,7 +27,7 @@ from .document import *  # noqa: F403
 from .errors import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import arc, blocks, circle, entities, line, point, polygon, polyline, project  # noqa: E402  isort: skip
+from . import arc, blocks, circle, entities, layers, line, point, polygon, polyline, project  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -54,6 +54,8 @@ __all__ = [
     "ArrayLayout",
     "AttributeDefinition",
     "AttributesTableSource",
+    "AuthKind",
+    "AuthKindName",
     "BlockChange",
     "BlockDefined",
     "BlockDefinition",
@@ -155,6 +157,9 @@ __all__ = [
     "EntityEdit",
     "EntityGeometry",
     "FeatureChange",
+    "FeatureFeed",
+    "FeedKind",
+    "FeedKindName",
     "FieldChoice",
     "FileCommit",
     "FileCommitted",
@@ -201,10 +206,15 @@ __all__ = [
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",
+    "LayerServiceOperation",
+    "LayerServiceOperationName",
     "LayerSnap",
     "LayerState",
     "LayerStateNode",
     "LayerStyle",
+    "LayersService",
+    "LayersServicePlan",
+    "LayersServiced",
     "LeaderArrow",
     "LeaderArrowName",
     "LeaderEntity",
@@ -331,6 +341,11 @@ __all__ = [
     "ServerCommand",
     "ServerConflict",
     "ServerError",
+    "ServiceConnection",
+    "ServiceKind",
+    "ServiceKindName",
+    "ServiceLayer",
+    "ServiceParam",
     "SimilarityCrsPlane",
     "SimilarityTransform",
     "SplineEntity",
@@ -355,6 +370,8 @@ __all__ = [
     "TextScript",
     "TextScriptName",
     "TextStyleDef",
+    "TileGrid",
+    "TileMatrix",
     "TmCrsSystem",
     "TmDefinition",
     "TopologyException",
@@ -384,6 +401,7 @@ __all__ = [
     "command",
     "current",
     "entities",
+    "layers",
     "line",
     "point",
     "polygon",

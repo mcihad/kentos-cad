@@ -102,6 +102,9 @@ pub struct StyledCache {
     /// definition's `Arc`, so a changed one is found by pointer.
     blocks: Vec<Arc<BlockDefinition>>,
     scene: StyledScene,
+    /// Each service layer's part (docs/adr/0208 §3): its service's key and
+    /// opacity, and the one batch the service pass draws its tiles for.
+    services: HashMap<String, (String, u64, Arc<StyledLayerPart>)>,
     /// What the last rebuild cost, and how many layer parts it built.
     pub last_build: Option<(Duration, usize)>,
 }
@@ -165,6 +168,14 @@ pub(crate) fn shown_layers(nodes: &[LayerNode]) -> Vec<&LayerNode> {
     walk(nodes, true, &mut out);
     out.reverse();
     out
+}
+
+/// The services of the layers drawn now (shown, with their groups), bottom first.
+pub(crate) fn shown_service_layers(nodes: &[LayerNode]) -> Vec<&kentos_contracts::ServiceLayer> {
+    shown_layers(nodes)
+        .into_iter()
+        .filter_map(|n| n.service.as_ref())
+        .collect()
 }
 
 /// Every layer's name by id (`$katman`).
@@ -337,6 +348,10 @@ impl StyledCache {
         }
         let mut plans: Vec<Plan> = Vec::new();
         for node in &shown {
+            // A service layer holds no objects: its tiles are the service pass's.
+            if node.service.is_some() {
+                continue;
+            }
             let cached = self.layers.get(&node.id);
             let count = doc.count(&node.id);
             let reads_index = cached.is_some_and(|l| l.reads_index && l.style == node.style);
@@ -538,7 +553,16 @@ impl StyledCache {
         let mut parts: Vec<Arc<StyledLayerPart>> = Vec::new();
         let mut order: Vec<(u32, u32)> = Vec::new();
         let mut split_any = false;
+        let mut served = HashSet::new();
         for node in &shown {
+            if let Some(service) = &node.service {
+                let base = parts.len();
+                let part = self.service_part(doc, node, service);
+                served.insert(node.id.clone());
+                order.push((base as u32, 0));
+                parts.push(part);
+                continue;
+            }
             let Some(layer) = self.layers.get(&node.id) else {
                 continue;
             };
@@ -559,6 +583,7 @@ impl StyledCache {
             }
             parts.extend(list.into_iter().cloned());
         }
+        self.services.retain(|id, _| served.contains(id));
         let same = self.scene.under == under
             && self.scene.layers.len() == parts.len()
             && self
@@ -582,6 +607,64 @@ impl StyledCache {
             self.last_build = Some((started.elapsed(), count));
         }
         self.scene.clone()
+    }
+}
+
+impl StyledCache {
+    /// A service layer's part: one batch the service pass draws its tiles
+    /// for, under the key the hub knows the service by; made again only when
+    /// the service, its connection or its opacity changes.
+    fn service_part(
+        &mut self,
+        doc: &kentos_domain::Document,
+        node: &LayerNode,
+        service: &kentos_contracts::ServiceLayer,
+    ) -> Arc<StyledLayerPart> {
+        use kentos_native_style::batches::{BatchKind, FillPaintBatch, StyledBatch, Unit};
+        let connection = service
+            .connection
+            .as_ref()
+            .and_then(|c| doc.settings().connections.iter().find(|k| &k.id == c));
+        let key = crate::services::key_of(service, connection);
+        let opacity = service.opacity.unwrap_or(1.0);
+        if let Some((k, o, part)) = self.services.get(&node.id)
+            && *k == key
+            && *o == opacity.to_bits()
+        {
+            return part.clone();
+        }
+        let part = Arc::new(StyledLayerPart {
+            id: NEXT_LAYER.fetch_add(1, Ordering::Relaxed),
+            layer: StyledLayer {
+                data: Vec::new(),
+                batches: vec![StyledBatch {
+                    range: 0..0,
+                    kind: BatchKind::Fill {
+                        paint: FillPaintBatch::Service {
+                            service: key.clone(),
+                            opacity,
+                        },
+                    },
+                    level: 0.0,
+                    key: 0,
+                    // Everywhere: the pass draws the tiles the view meets.
+                    bounds: [
+                        f64::NEG_INFINITY,
+                        f64::NEG_INFINITY,
+                        f64::INFINITY,
+                        f64::INFINITY,
+                    ],
+                    origin: [0.0, 0.0],
+                    reach: 0.0,
+                    reach_unit: Unit::World,
+                    min_scale: None,
+                    max_scale: None,
+                }],
+            },
+        });
+        self.services
+            .insert(node.id.clone(), (key, opacity.to_bits(), part.clone()));
+        part
     }
 }
 

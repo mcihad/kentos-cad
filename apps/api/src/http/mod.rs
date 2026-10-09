@@ -20,6 +20,10 @@ mod native_tests;
 #[cfg(test)]
 mod people_tests;
 pub mod projects;
+// The map services' proxy (docs/adr/0208 §13).
+pub mod proxy;
+#[cfg(test)]
+mod proxy_tests;
 // The sheet template library (docs/sheet/design.md §13).
 pub mod sheet_templates;
 #[cfg(test)]
@@ -66,6 +70,8 @@ pub struct AppState {
     pub logins: Arc<limit::LoginLimiter>,
     /// The object store of file projects (docs/adr/0031).
     pub blobs: kentos_application::blobs::Blobs,
+    /// The map services' proxy (docs/adr/0208 §13); `None`: off.
+    pub proxy: Option<Arc<proxy::Proxy>>,
 }
 
 impl AppState {
@@ -198,6 +204,7 @@ pub fn router(state: AppState) -> Router {
             get(checkpoints::download),
         )
         .route("/v1/ws", get(ws::upgrade))
+        .route("/v1/proxy", get(proxy::forward).post(proxy::forward))
         .layer(middleware);
     // An upload's bytes are larger and slower than any other request: their
     // route has its own limit (the largest file) and timeout.

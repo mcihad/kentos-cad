@@ -171,6 +171,39 @@ pub trait ImageSource {
 
     /// A frame of clouds begins: what is not asked for again by its end may be dropped.
     fn cloud_frame(&self) {}
+
+    /// A map service's view by its paint's `service` (docs/adr/0208 §3):
+    /// its grid and the transformations to and from the project's system;
+    /// none while the host has not read what it needs (its capabilities, its
+    /// style, a session), and nothing of it shows.
+    fn service_view(&self, _service: &str) -> Option<Arc<super::service_tiles::ServiceView>> {
+        None
+    }
+
+    /// A service's picture tile when the host has it; otherwise none, and the
+    /// host starts getting it and asks for a frame when done.
+    fn service_tile(
+        &self,
+        _service: &str,
+        _t: kentos_geometry_core::geom::tiles::TileRef,
+    ) -> Option<super::service_tiles::ServiceTile> {
+        None
+    }
+
+    /// A service's vector tile styled for the display's `zoom` (the host
+    /// keeps a few steps of it) when the host has it; otherwise none, as
+    /// `service_tile`.
+    fn service_vector(
+        &self,
+        _service: &str,
+        _t: kentos_geometry_core::geom::tiles::TileRef,
+        _zoom: f64,
+    ) -> Option<Arc<super::service_tiles::VectorTile>> {
+        None
+    }
+
+    /// A frame of services begins: what is not asked for again by its end may be dropped.
+    fn service_frame(&self) {}
 }
 
 /// No pictures and no glyphs: shapes, strokes and fills still draw (tests, previews without fonts).

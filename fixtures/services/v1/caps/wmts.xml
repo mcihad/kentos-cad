@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Capabilities xmlns="http://www.opengis.net/wmts/1.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.0.0">
+  <ows:ServiceIdentification>
+    <ows:Title>Örnek WMTS</ows:Title>
+    <ows:ServiceType>OGC WMTS</ows:ServiceType>
+    <ows:ServiceTypeVersion>1.0.0</ows:ServiceTypeVersion>
+  </ows:ServiceIdentification>
+  <ows:OperationsMetadata>
+    <ows:Operation name="GetTile">
+      <ows:DCP><ows:HTTP><ows:Get xlink:href="https://wmts.ornek.gov.tr/wmts?"><ows:Constraint name="GetEncoding"><ows:AllowedValues><ows:Value>KVP</ows:Value></ows:AllowedValues></ows:Constraint></ows:Get></ows:HTTP></ows:DCP>
+    </ows:Operation>
+  </ows:OperationsMetadata>
+  <Contents>
+    <Layer>
+      <ows:Title>Ortofoto</ows:Title>
+      <ows:Identifier>orto</ows:Identifier>
+      <ows:WGS84BoundingBox><ows:LowerCorner>25.5 35.8</ows:LowerCorner><ows:UpperCorner>44.9 42.2</ows:UpperCorner></ows:WGS84BoundingBox>
+      <Style isDefault="true"><ows:Title>Varsayılan</ows:Title><ows:Identifier>default</ows:Identifier></Style>
+      <Format>image/jpeg</Format>
+      <Format>image/png</Format>
+      <TileMatrixSetLink><TileMatrixSet>GoogleMapsCompatible</TileMatrixSet></TileMatrixSetLink>
+      <TileMatrixSetLink><TileMatrixSet>WGS84</TileMatrixSet></TileMatrixSetLink>
+      <ResourceURL format="image/jpeg" resourceType="tile" template="https://wmts.ornek.gov.tr/orto/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg"/>
+    </Layer>
+    <Layer>
+      <ows:Title>Pafta</ows:Title>
+      <ows:Identifier>pafta</ows:Identifier>
+      <Style isDefault="true"><ows:Identifier>default</ows:Identifier></Style>
+      <Format>image/png</Format>
+      <TileMatrixSetLink><TileMatrixSet>TM30</TileMatrixSet></TileMatrixSetLink>
+    </Layer>
+    <TileMatrixSet>
+      <ows:Identifier>GoogleMapsCompatible</ows:Identifier>
+      <ows:SupportedCRS>urn:ogc:def:crs:EPSG:6.18.3:3857</ows:SupportedCRS>
+      <WellKnownScaleSet>urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible</WellKnownScaleSet>
+      <TileMatrix><ows:Identifier>0</ows:Identifier><ScaleDenominator>559082264.0287178</ScaleDenominator><TopLeftCorner>-20037508.34278925 20037508.34278925</TopLeftCorner><TileWidth>256</TileWidth><TileHeight>256</TileHeight><MatrixWidth>1</MatrixWidth><MatrixHeight>1</MatrixHeight></TileMatrix>
+      <TileMatrix><ows:Identifier>1</ows:Identifier><ScaleDenominator>279541132.0143589</ScaleDenominator><TopLeftCorner>-20037508.34278925 20037508.34278925</TopLeftCorner><TileWidth>256</TileWidth><TileHeight>256</TileHeight><MatrixWidth>2</MatrixWidth><MatrixHeight>2</MatrixHeight></TileMatrix>
+      <TileMatrix><ows:Identifier>2</ows:Identifier><ScaleDenominator>139770566.0071794</ScaleDenominator><TopLeftCorner>-20037508.34278925 20037508.34278925</TopLeftCorner><TileWidth>256</TileWidth><TileHeight>256</TileHeight><MatrixWidth>4</MatrixWidth><MatrixHeight>4</MatrixHeight></TileMatrix>
+    </TileMatrixSet>
+    <TileMatrixSet>
+      <ows:Identifier>WGS84</ows:Identifier>
+      <ows:SupportedCRS>urn:ogc:def:crs:EPSG::4326</ows:SupportedCRS>
+      <TileMatrix><ows:Identifier>0</ows:Identifier><ScaleDenominator>279541132.0143589</ScaleDenominator><TopLeftCorner>90 -180</TopLeftCorner><TileWidth>256</TileWidth><TileHeight>256</TileHeight><MatrixWidth>2</MatrixWidth><MatrixHeight>1</MatrixHeight></TileMatrix>
+      <TileMatrix><ows:Identifier>1</ows:Identifier><ScaleDenominator>139770566.0071794</ScaleDenominator><TopLeftCorner>90 -180</TopLeftCorner><TileWidth>256</TileWidth><TileHeight>256</TileHeight><MatrixWidth>4</MatrixWidth><MatrixHeight>2</MatrixHeight></TileMatrix>
+    </TileMatrixSet>
+    <TileMatrixSet>
+      <ows:Identifier>TM30</ows:Identifier>
+      <ows:SupportedCRS>EPSG:5254</ows:SupportedCRS>
+      <TileMatrix><ows:Identifier>a</ows:Identifier><ScaleDenominator>35714.28571428571</ScaleDenominator><TopLeftCorner>4700000 300000</TopLeftCorner><TileWidth>256</TileWidth><TileHeight>256</TileHeight><MatrixWidth>40</MatrixWidth><MatrixHeight>30</MatrixHeight></TileMatrix>
+      <TileMatrix><ows:Identifier>b</ows:Identifier><ScaleDenominator>17857.142857142855</ScaleDenominator><TopLeftCorner>4700000 300000</TopLeftCorner><TileWidth>512</TileWidth><TileHeight>512</TileHeight><MatrixWidth>40</MatrixWidth><MatrixHeight>30</MatrixHeight></TileMatrix>
+    </TileMatrixSet>
+  </Contents>
+</Capabilities>

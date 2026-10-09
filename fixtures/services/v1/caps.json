@@ -1,0 +1,288 @@
+{
+ "format": "kentos.service-caps",
+ "version": 1,
+ "source": "OWSLib 0.35.0, PROJ through pyproj",
+ "wms": [
+  {
+   "file": "wms-130.xml",
+   "version": "1.3.0",
+   "title": "Ankara Kent Bilgi Sistemi",
+   "getMap": "https://kbs.ornek.bel.tr/geoserver/ows?",
+   "formats": [
+    "image/png",
+    "image/jpeg",
+    "image/png; mode=8bit"
+   ],
+   "layers": [
+    {
+     "name": "kadastro:parsel",
+     "title": "Parseller",
+     "queryable": true,
+     "styles": [
+      "parsel_cizgi",
+      "parsel_dolgu"
+     ],
+     "srids": [
+      3857,
+      4326,
+      5254,
+      5255
+     ],
+     "wgs84": [
+      32.5,
+      39.7,
+      33.0,
+      40.1
+     ]
+    },
+    {
+     "name": "kadastro:yapi",
+     "title": "Yapılar",
+     "queryable": false,
+     "styles": [
+      "default"
+     ],
+     "srids": [
+      3857,
+      5254,
+      5255
+     ],
+     "wgs84": [
+      32.3,
+      39.6,
+      33.2,
+      40.2
+     ]
+    },
+    {
+     "name": "imar:plan",
+     "title": "İmar planı",
+     "queryable": true,
+     "styles": [],
+     "srids": [
+      3857,
+      5254
+     ],
+     "wgs84": [
+      32.3,
+      39.6,
+      33.2,
+      40.2
+     ]
+    }
+   ]
+  },
+  {
+   "file": "wms-111.xml",
+   "version": "1.1.1",
+   "title": "Eski harita servisi",
+   "getMap": "http://eski.ornek.gov.tr/cgi-bin/mapserv?map=harita.map&",
+   "formats": [
+    "image/gif",
+    "image/png"
+   ],
+   "layers": [
+    {
+     "name": "harita",
+     "title": "Harita",
+     "queryable": false,
+     "styles": [],
+     "srids": [
+      3857,
+      4326
+     ],
+     "wgs84": [
+      26.0,
+      36.0,
+      45.0,
+      42.0
+     ]
+    },
+    {
+     "name": "iller",
+     "title": "İl sınırları",
+     "queryable": true,
+     "styles": [
+      "sinir"
+     ],
+     "srids": [
+      3857,
+      4326,
+      5253
+     ],
+     "wgs84": [
+      25.6,
+      35.8,
+      44.8,
+      42.1
+     ]
+    }
+   ]
+  }
+ ],
+ "wmts": {
+  "file": "wmts.xml",
+  "title": "Örnek WMTS",
+  "layers": [
+   {
+    "id": "orto",
+    "title": "Ortofoto",
+    "formats": [
+     "image/jpeg",
+     "image/png"
+    ],
+    "styles": [
+     "default"
+    ],
+    "sets": [
+     "GoogleMapsCompatible",
+     "WGS84"
+    ],
+    "templates": [
+     [
+      "image/jpeg",
+      "https://wmts.ornek.gov.tr/orto/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg"
+     ]
+    ],
+    "wgs84": [
+     25.5,
+     35.8,
+     44.9,
+     42.2
+    ]
+   },
+   {
+    "id": "pafta",
+    "title": "Pafta",
+    "formats": [
+     "image/png"
+    ],
+    "styles": [
+     "default"
+    ],
+    "sets": [
+     "TM30"
+    ],
+    "templates": [],
+    "wgs84": null
+   }
+  ],
+  "sets": [
+   {
+    "id": "GoogleMapsCompatible",
+    "srid": 3857,
+    "matrices": [
+     {
+      "id": "0",
+      "resolution": 156543.03392804097,
+      "x0": -20037508.34278925,
+      "y0": 20037508.34278925,
+      "tileWidth": 256,
+      "tileHeight": 256,
+      "matrixWidth": 1,
+      "matrixHeight": 1
+     },
+     {
+      "id": "1",
+      "resolution": 78271.51696402048,
+      "x0": -20037508.34278925,
+      "y0": 20037508.34278925,
+      "tileWidth": 256,
+      "tileHeight": 256,
+      "matrixWidth": 2,
+      "matrixHeight": 2
+     },
+     {
+      "id": "2",
+      "resolution": 39135.758482010235,
+      "x0": -20037508.34278925,
+      "y0": 20037508.34278925,
+      "tileWidth": 256,
+      "tileHeight": 256,
+      "matrixWidth": 4,
+      "matrixHeight": 4
+     }
+    ]
+   },
+   {
+    "id": "WGS84",
+    "srid": 4326,
+    "matrices": [
+     {
+      "id": "0",
+      "resolution": 0.703125,
+      "x0": -180.0,
+      "y0": 90.0,
+      "tileWidth": 256,
+      "tileHeight": 256,
+      "matrixWidth": 2,
+      "matrixHeight": 1
+     },
+     {
+      "id": "1",
+      "resolution": 0.35156249999999994,
+      "x0": -180.0,
+      "y0": 90.0,
+      "tileWidth": 256,
+      "tileHeight": 256,
+      "matrixWidth": 4,
+      "matrixHeight": 2
+     }
+    ]
+   },
+   {
+    "id": "TM30",
+    "srid": 5254,
+    "matrices": [
+     {
+      "id": "a",
+      "resolution": 9.999999999999998,
+      "x0": 300000.0,
+      "y0": 4700000.0,
+      "tileWidth": 256,
+      "tileHeight": 256,
+      "matrixWidth": 40,
+      "matrixHeight": 30
+     },
+     {
+      "id": "b",
+      "resolution": 4.999999999999999,
+      "x0": 300000.0,
+      "y0": 4700000.0,
+      "tileWidth": 512,
+      "tileHeight": 512,
+      "matrixWidth": 40,
+      "matrixHeight": 30
+     }
+    ]
+   }
+  ]
+ },
+ "wfs": {
+  "file": "wfs-200.xml",
+  "title": "Ankara WFS",
+  "getFeature": "https://kbs.ornek.bel.tr/geoserver/wfs",
+  "formats": [
+   "application/gml+xml; version=3.2",
+   "application/json"
+  ],
+  "types": [
+   {
+    "name": "kadastro:parsel",
+    "title": "Parseller",
+    "srids": [
+     5255,
+     4326,
+     3857
+    ]
+   },
+   {
+    "name": "imar:yol",
+    "title": "Yollar",
+    "srids": [
+     5254
+    ]
+   }
+  ]
+ }
+}

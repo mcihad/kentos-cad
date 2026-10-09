@@ -67,6 +67,7 @@ pub fn check_tree(tree: &[LayerNode], active: &str) -> AppResult<()> {
     }
     snaps(tree)?;
     schemas(tree)?;
+    services(tree)?;
     match find_layer(tree, active) {
         Some((n, _)) if n.kind == LayerNodeType::Layer => Ok(()),
         _ => Err(AppError::invalid(format!(
@@ -120,6 +121,57 @@ fn schemas(nodes: &[LayerNode]) -> AppResult<()> {
         schemas(&n.children)?;
     }
     Ok(())
+}
+
+/// A layer's map service and source as the KCAD readers take them
+/// (docs/adr/0208 §2, §10): on a layer only, not both, each by its rules.
+/// That a connection named is the project's and that no object is on a
+/// service layer are the project's whole links (`check_services`).
+fn services(nodes: &[LayerNode]) -> AppResult<()> {
+    for n in nodes {
+        if (n.service.is_some() || n.feed.is_some()) && n.kind == LayerNodeType::Group {
+            return Err(AppError::invalid(format!(
+                "“{}” bir grup; grubun servisi ve veri kaynağı olmaz, ikisi de yalnız katmanındır.",
+                n.name
+            )));
+        }
+        if n.service.is_some() && n.feed.is_some() {
+            return Err(AppError::invalid(format!(
+                "“{}” katmanı hem servisten çizilir hem nesnelerini bir kaynaktan alır; ikisi birden olmaz.",
+                n.name
+            )));
+        }
+        if let Some(problem) = n.service.as_ref().and_then(|s| s.problem()) {
+            return Err(AppError::invalid(format!(
+                "“{}” katmanının servisi: {problem}",
+                n.name
+            )));
+        }
+        if let Some(problem) = n.feed.as_ref().and_then(|f| f.problem()) {
+            return Err(AppError::invalid(format!(
+                "“{}” katmanının veri kaynağı: {problem}",
+                n.name
+            )));
+        }
+        services(&n.children)?;
+    }
+    Ok(())
+}
+
+/// A project's connections and the links of its layers' services
+/// (docs/adr/0208 §2): the connections by their rules, a connection named
+/// is the project's. Objects are checked as they are written (`writable_layer`).
+pub fn check_services(
+    tree: &[LayerNode],
+    connections: &[kentos_contracts::ServiceConnection],
+) -> AppResult<()> {
+    if let Some(problem) = kentos_contracts::connections_problem(connections) {
+        return Err(AppError::invalid(problem));
+    }
+    match kentos_contracts::service_links(tree, connections, &[]) {
+        Some(fault) => Err(AppError::invalid(format!("{}.", fault.words()))),
+        None => Ok(()),
+    }
 }
 
 /// The stored name of a storage mode (`project.storage`, migration 0006).
@@ -225,6 +277,7 @@ pub async fn create(
     access.require(Capability::ProjectCreate)?;
     check_name(&input.name)?;
     check_tree(&input.layers, &input.active_layer)?;
+    check_services(&input.layers, &input.settings.connections)?;
     let description =
         crate::catalog::check_description(input.description.as_deref().unwrap_or(""))?;
     let tags = crate::catalog::normalize_tags(input.tags.as_deref().unwrap_or(&[]))?;
@@ -584,6 +637,8 @@ mod tests {
             children,
             snap,
             fields: Vec::new(),
+            service: None,
+            feed: None,
         }
     }
 

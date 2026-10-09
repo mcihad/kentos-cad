@@ -342,6 +342,34 @@ impl ImageSource for Images {
         crate::rasters::tiles::service().frame();
     }
 
+    /// The map services' views and tiles from the app's hub (docs/adr/0208 §3, §9).
+    fn service_view(&self, service: &str) -> Option<Arc<kentos_render_wgpu::styled::ServiceView>> {
+        crate::services::hub().view(service)
+    }
+
+    fn service_tile(
+        &self,
+        service: &str,
+        t: kentos_geometry_core::geom::tiles::TileRef,
+    ) -> Option<kentos_render_wgpu::styled::ServiceTile> {
+        crate::services::hub().tile(service, t)
+    }
+
+    fn service_vector(
+        &self,
+        service: &str,
+        t: kentos_geometry_core::geom::tiles::TileRef,
+        zoom: f64,
+    ) -> Option<Arc<kentos_render_wgpu::styled::VectorTile>> {
+        crate::services::hub().vector(service, t, zoom)
+    }
+
+    fn service_frame(&self) {
+        if crate::services::in_use() {
+            crate::services::hub().frame();
+        }
+    }
+
     /// The points pass's clouds from the app's point cloud service (docs/adr/0207 §6).
     fn cloud_trees(&self, cloud: &str) -> Option<Arc<kentos_render_wgpu::styled::CloudTrees>> {
         crate::pointclouds::service::service().trees(cloud)

@@ -28,6 +28,10 @@ import { setGeometry, setProperties, uidsOf } from './write';
 import { fixed } from '../../core/displayNumber';
 import { projectCrsCode, projectCrsName } from '../../model/projectCrs';
 import { sourceWords } from '../../model/tables';
+import { serviceHub } from '../../render/serviceHub';
+import { chosenLayer } from '../layers/chosenLayer';
+import { serviceFailure } from '../layers/serviceMenu';
+import { serviceSection } from './serviceRows';
 
 /**
  * Öznitelikler: geometry and GIS attributes of the selection, editable. It
@@ -46,7 +50,9 @@ export class PropertiesPanel extends Panel {
     this.ctx = ctx;
     this.body.append(this.summary, this.empty, this.grid.el);
     const refresh = () => this.schedule();
-    this.d.add(watchAll([ctx.selection.ids, ctx.doc.layers.version, ctx.doc.layers.active, ctx.doc.settings.changed, ctx.format.changed], refresh));
+    this.d.add(watchAll([ctx.selection.ids, ctx.doc.layers.version, ctx.doc.layers.active, ctx.doc.settings.changed, ctx.format.changed, chosenLayer], refresh));
+    // A map service failed or came back: the layer's Durum, when its section is on screen.
+    this.d.add(serviceHub().listen(() => this.empty.hidden || this.schedule()));
     this.d.add(ctx.doc.events.on('changed', refresh));
     this.d.add(ctx.doc.events.on('attrs', refresh));
     this.render();
@@ -100,7 +106,12 @@ export class PropertiesPanel extends Panel {
   private documentSections(): PropSection[] {
     const { doc } = this.ctx;
     const active = doc.layers.get(doc.layers.active.value);
+    // The layer chosen in the tree (else the active one), when a map service draws or fed it (docs/adr/0208 §14).
+    const chosen = (chosenLayer.value ? doc.layers.get(chosenLayer.value) : undefined) ?? active;
+    const service = chosen ? serviceSection(this.ctx, chosen, serviceFailure(this.ctx, chosen)) : null;
     return [
+      // The layer chosen is what the user is looking at: its section first.
+      ...(service ? [service] : []),
       {
         id: 'doc',
         title: 'Çizim',

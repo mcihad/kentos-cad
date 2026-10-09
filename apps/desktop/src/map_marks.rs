@@ -37,13 +37,19 @@ const UCS_MARGIN: f32 = 30.0;
 const UCS_ARM: f32 = 38.0;
 
 /// Draws a CBS project's grid north and scale bar over the drawing, or a CAD
-/// project's coordinate axes (docs/adr/0165 §5).
-pub fn paint(frame: &mut Frame, camera: &Camera, colors: &Colors, axes: Axes) {
+/// project's coordinate axes (docs/adr/0165 §5); the scale bar `lift` pixels
+/// higher, over the map services' credits (docs/adr/0208 §3).
+pub fn paint(frame: &mut Frame, camera: &Camera, colors: &Colors, axes: Axes, lift: f32) {
     let size = frame.size();
     match axes {
         Axes::Gis => {
             north_arrow(frame, size, colors);
-            scale_bar(frame, camera.scale, size, colors);
+            scale_bar(
+                frame,
+                camera.scale,
+                Size::new(size.width, size.height - lift),
+                colors,
+            );
         }
         Axes::Cad => ucs_icon(frame, ucs_at(camera, size), colors),
     }

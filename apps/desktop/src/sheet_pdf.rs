@@ -290,10 +290,10 @@ impl App {
     }
 }
 
-/// Opens a file in the system's viewer (no package: the platform's own opener), its process
-/// waited on beside the app.
+/// Opens a file in the system's viewer, or an address in the browser (no package: the
+/// platform's own opener), its process waited on beside the app.
 #[cfg(not(test))]
-fn open_with_viewer(path: &Path) -> std::io::Result<()> {
+pub(crate) fn open_with_viewer(path: &Path) -> std::io::Result<()> {
     use std::process::Command;
     #[cfg(target_os = "windows")]
     let mut command = {
@@ -327,7 +327,7 @@ thread_local! {
 }
 
 #[cfg(test)]
-fn open_with_viewer(path: &Path) -> std::io::Result<()> {
+pub(crate) fn open_with_viewer(path: &Path) -> std::io::Result<()> {
     OPENED.with(|o| o.borrow_mut().push(path.to_owned()));
     Ok(())
 }

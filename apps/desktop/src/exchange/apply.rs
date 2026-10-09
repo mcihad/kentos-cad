@@ -416,6 +416,8 @@ fn make_layers(
             style: (**style).clone(),
             snap: None,
             fields: fields.clone(),
+            service: None,
+            feed: None,
         };
         doc.add_layer(new, parent.as_deref(), false)
             .map_err(|r| r.to_string())?;

@@ -28,6 +28,12 @@ fn runtime() -> Result<&'static Runtime, ApiFailure> {
         .map_err(|e| ApiFailure::local(format!("Bulut bağlantısı başlatılamadı: {e}")))
 }
 
+/// The runtime itself, for work that answers through a callback (map
+/// services' requests, `fetch`).
+pub(crate) fn handle() -> Result<&'static Runtime, ApiFailure> {
+    runtime()
+}
+
 /// Runs `work` on the cloud's runtime; the returned future, awaited on any
 /// executor, gives its result. Dropped before that, it stops the work.
 pub(crate) fn run<T: Send + 'static>(

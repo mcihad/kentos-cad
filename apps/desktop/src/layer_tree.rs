@@ -273,6 +273,16 @@ impl App {
         let Some(doc) = &mut self.document else {
             return;
         };
+        // A map service layer takes no objects: its settings instead (docs/adr/0208 §14).
+        if doc
+            .model
+            .layers()
+            .get(id)
+            .is_some_and(|n| n.service.is_some())
+        {
+            self.open_service_window(Some(id.to_owned()));
+            return;
+        }
         match doc.model.layers().get(id).map(|n| (n.kind, n.expanded)) {
             Some((LayerNodeType::Layer, _)) => {
                 doc.model.set_active_layer(id);

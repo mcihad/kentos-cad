@@ -38,6 +38,8 @@ use crate::document::{self, Document};
 
 mod clouds;
 mod frame;
+// Map services (docs/adr/0208 §16).
+mod services;
 
 /// The drawing of measure.rs: `n` parcels of 20 vertices on one layer.
 fn drawing(n: usize) -> DocumentSnapshotV2 {
@@ -108,6 +110,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             topology: None,
             annotation: None,
             text_styles: Vec::new(),
+            connections: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,
@@ -134,6 +137,8 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             children: Vec::new(),
             snap: None,
             fields: Vec::new(),
+            service: None,
+            feed: None,
         }],
         active_layer: "parsel".into(),
         entities,

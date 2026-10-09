@@ -278,6 +278,147 @@ fn document_section(doc: &Document) -> Section {
     }
 }
 
+/// A layer drawn from a map service (docs/adr/0208 §14): its kind, address,
+/// layers, system, levels, connection, opacity, credits and how it is going;
+/// a layer whose objects came from a service: where from and when.
+pub(crate) fn service_section(
+    doc: &Document,
+    node: &kentos_contracts::LayerNode,
+    failure: Option<String>,
+) -> Option<Section> {
+    let settings = doc.settings();
+    let connection = |id: &Option<String>| {
+        id.as_ref().map(
+            |id| match settings.connections.iter().find(|c| &c.id == id) {
+                Some(c) => {
+                    let here = crate::services::secrets::secrets()
+                        .get(&c.origin, &c.id)
+                        .is_some();
+                    format!(
+                        "{} ({}){}",
+                        c.name,
+                        c.auth.label(),
+                        if c.auth == kentos_contracts::AuthKind::None || here {
+                            ""
+                        } else {
+                            ", değerleri bu cihazda yok"
+                        }
+                    )
+                }
+                None => id.clone(),
+            },
+        )
+    };
+    let system = |srid: u32| {
+        kentos_project::crs::system(srid).map_or_else(
+            || format!("EPSG:{srid}"),
+            |c| format!("{} (EPSG:{srid})", c.name),
+        )
+    };
+    if let Some(s) = &node.service {
+        let mut rows = vec![
+            Row::text("Tür", s.kind.label()),
+            Row::text(
+                "Adres",
+                if s.url.is_empty() {
+                    "Google Map Tiles API".to_owned()
+                } else {
+                    s.url.clone()
+                },
+            ),
+        ];
+        if !s.layers.is_empty() {
+            rows.push(Row::text("Katmanlar", s.layers.join(", ")));
+        }
+        if let Some(st) = &s.style {
+            rows.push(Row::text(
+                if s.kind == kentos_contracts::ServiceKind::Google {
+                    "Harita türü"
+                } else {
+                    "Stil"
+                },
+                st.clone(),
+            ));
+        }
+        if let Some(srid) = s.srid.or(s.grid.as_ref().map(|g| g.srid)) {
+            rows.push(Row::text("Sistem", system(srid)));
+        } else if matches!(
+            s.kind,
+            kentos_contracts::ServiceKind::Xyz
+                | kentos_contracts::ServiceKind::Google
+                | kentos_contracts::ServiceKind::Vector
+        ) {
+            rows.push(Row::text("Sistem", system(3857)));
+        }
+        rows.push(Row::figure(
+            "Katlar",
+            format!(
+                "{}–{}",
+                s.min_zoom.unwrap_or(0),
+                s.max_zoom.map_or_else(|| "—".to_owned(), |z| z.to_string())
+            ),
+        ));
+        if let Some(c) = connection(&s.connection) {
+            rows.push(Row::text("Bağlantı", c));
+        }
+        rows.push(Row::figure(
+            "Saydamlık",
+            format!("% {}", (s.opacity.unwrap_or(1.0) * 100.0).round()),
+        ));
+        if let Some(a) = &s.attribution {
+            rows.push(Row::text("Atıf", a.clone()));
+        }
+        rows.push(Row::text(
+            "Durum",
+            failure.unwrap_or_else(|| "Çiziliyor".to_owned()),
+        ));
+        return Some(Section {
+            id: "service",
+            title: "Servis katmanı".into(),
+            rows,
+        });
+    }
+    let f = node.feed.as_ref()?;
+    let mut rows = vec![
+        Row::text("Tür", f.kind.label()),
+        Row::text("Adres", f.url.clone()),
+    ];
+    if let Some(n) = &f.name {
+        rows.push(Row::text("Tür adı", n.clone()));
+    }
+    if let Some(srid) = f.srid {
+        rows.push(Row::text("İstenen sistem", system(srid)));
+    }
+    if let Some(q) = &f.filter {
+        rows.push(Row::text("Süzgeç", q.clone()));
+    }
+    rows.push(Row::text(
+        "Alan",
+        if f.bbox.is_some() {
+            "İstenen alan"
+        } else {
+            "Hepsi"
+        },
+    ));
+    if let Some(k) = &f.key {
+        rows.push(Row::text("Anahtar alan", k.clone()));
+    }
+    if let Some(c) = connection(&f.connection) {
+        rows.push(Row::text("Bağlantı", c));
+    }
+    if let Some(t) = &f.fetched {
+        rows.push(Row::text(
+            "Son alınış",
+            t.replace('T', " ").trim_end_matches('Z').to_owned() + " UTC",
+        ));
+    }
+    Some(Section {
+        id: "feed",
+        title: "Veri kaynağı".into(),
+        rows,
+    })
+}
+
 /// A colour as the panel names it: “Çeşitli” for a mixed selection, “Katmana göre”, or its name.
 fn color_text(current: Option<Option<&str>>) -> String {
     match current {

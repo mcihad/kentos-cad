@@ -1,0 +1,346 @@
+{
+ "format": "kentos.service-presets",
+ "version": 1,
+ "groups": [
+  {
+   "id": "osm",
+   "name": "OpenStreetMap"
+  },
+  {
+   "id": "vector",
+   "name": "Vektör altlıklar"
+  },
+  {
+   "id": "imagery",
+   "name": "Uydu ve hava fotoğrafı"
+  },
+  {
+   "id": "turkey",
+   "name": "Türkiye"
+  },
+  {
+   "id": "google",
+   "name": "Google Haritalar"
+  },
+  {
+   "id": "keyed",
+   "name": "Anahtarlı servisler"
+  }
+ ],
+ "presets": [
+  {
+   "id": "osm-standard",
+   "group": "osm",
+   "name": "OSM Standart",
+   "icon": "basemapOsm",
+   "service": {
+    "kind": "xyz",
+    "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "maxZoom": 19,
+    "attribution": "© OpenStreetMap katkıda bulunanlar"
+   },
+   "attributionUrl": "https://www.openstreetmap.org/copyright",
+   "perHost": 2,
+   "note": "OpenStreetMap Vakfı'nın karo sunucusu: toplu indirme ve önden çekme yapılmaz, istekler makine başına ikiyle sınırlıdır."
+  },
+  {
+   "id": "osm-topo",
+   "group": "osm",
+   "name": "OSM Topo",
+   "icon": "basemapTopo",
+   "service": {
+    "kind": "xyz",
+    "url": "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    "subdomains": [
+     "a",
+     "b",
+     "c"
+    ],
+    "maxZoom": 17,
+    "attribution": "Harita verisi © OpenStreetMap katkıda bulunanlar, SRTM · Harita stili © OpenTopoMap (CC-BY-SA)"
+   },
+   "attributionUrl": "https://opentopomap.org/about",
+   "perHost": 2,
+   "note": "OpenTopoMap: eş yükselti eğrili, gölgeli topoğrafik harita; en çok 17. kat."
+  },
+  {
+   "id": "osm-hot",
+   "group": "osm",
+   "name": "OSM İnsani (HOT)",
+   "icon": "basemapHot",
+   "service": {
+    "kind": "xyz",
+    "url": "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+    "subdomains": [
+     "a",
+     "b"
+    ],
+    "maxZoom": 19,
+    "attribution": "© OpenStreetMap katkıda bulunanlar · Humanitarian OpenStreetMap Team · OpenStreetMap France"
+   },
+   "attributionUrl": "https://www.hotosm.org/",
+   "perHost": 2,
+   "note": "OpenStreetMap France'ın sunucusu; binalar ve yollar belirgin."
+  },
+  {
+   "id": "cyclosm",
+   "group": "osm",
+   "name": "CyclOSM",
+   "icon": "basemapCycle",
+   "service": {
+    "kind": "xyz",
+    "url": "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
+    "subdomains": [
+     "a",
+     "b",
+     "c"
+    ],
+    "maxZoom": 20,
+    "attribution": "© OpenStreetMap katkıda bulunanlar · CyclOSM · OpenStreetMap France"
+   },
+   "attributionUrl": "https://www.cyclosm.org/",
+   "perHost": 2,
+   "note": "Bisiklet yolları ve eğimler öne çıkan OpenStreetMap haritası."
+  },
+  {
+   "id": "ofm-liberty",
+   "group": "vector",
+   "name": "OpenFreeMap Liberty",
+   "icon": "basemapVector",
+   "service": {
+    "kind": "vector",
+    "url": "https://tiles.openfreemap.org/styles/liberty",
+    "attribution": "OpenFreeMap © OpenMapTiles · © OpenStreetMap katkıda bulunanlar"
+   },
+   "attributionUrl": "https://openfreemap.org",
+   "note": "Vektör karolar: yazılar her ölçekte keskin, harita projenin sistemine çizilir."
+  },
+  {
+   "id": "ofm-bright",
+   "group": "vector",
+   "name": "OpenFreeMap Bright",
+   "icon": "basemapVectorBright",
+   "service": {
+    "kind": "vector",
+    "url": "https://tiles.openfreemap.org/styles/bright",
+    "attribution": "OpenFreeMap © OpenMapTiles · © OpenStreetMap katkıda bulunanlar"
+   },
+   "attributionUrl": "https://openfreemap.org",
+   "note": "Vektör karolar, canlı renkler."
+  },
+  {
+   "id": "ofm-positron",
+   "group": "vector",
+   "name": "OpenFreeMap Positron",
+   "icon": "basemapVectorLight",
+   "service": {
+    "kind": "vector",
+    "url": "https://tiles.openfreemap.org/styles/positron",
+    "attribution": "OpenFreeMap © OpenMapTiles · © OpenStreetMap katkıda bulunanlar"
+   },
+   "attributionUrl": "https://openfreemap.org",
+   "note": "Vektör karolar, açık gri: çizimin altında sakin bir zemin."
+  },
+  {
+   "id": "esri-imagery",
+   "group": "imagery",
+   "name": "Esri Uydu",
+   "icon": "basemapImagery",
+   "service": {
+    "kind": "xyz",
+    "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    "maxZoom": 19,
+    "attribution": "Esri, Maxar, Earthstar Geographics ve CBS kullanıcı topluluğu"
+   },
+   "attributionUrl": "https://www.esri.com/en-us/legal/terms/full-master-agreement",
+   "note": "Esri'nin kullanım koşulları geçerlidir; ticari kullanımda Esri hesabı gerekebilir."
+  },
+  {
+   "id": "hgm-harita",
+   "group": "turkey",
+   "name": "HGM ATLAS Harita",
+   "icon": "basemapHgm",
+   "service": {
+    "kind": "xyz",
+    "url": "https://atlas.harita.gov.tr/webservis/harita/{z}/{x}/{y}.png",
+    "maxZoom": 18,
+    "attribution": "© Harita Genel Müdürlüğü (HGM ATLAS)",
+    "bbox": [
+     25.6,
+     35.8,
+     44.9,
+     42.2
+    ]
+   },
+   "connection": {
+    "id": "hgm-atlas",
+    "name": "HGM ATLAS",
+    "origin": "https://atlas.harita.gov.tr",
+    "auth": "query",
+    "names": [
+     "apikey"
+    ]
+   },
+   "attributionUrl": "https://atlas.harita.gov.tr",
+   "note": "API anahtarı Harita Genel Müdürlüğü ile yapılan protokolle alınır."
+  },
+  {
+   "id": "hgm-ortofoto",
+   "group": "turkey",
+   "name": "HGM ATLAS Ortofoto",
+   "icon": "basemapHgmPhoto",
+   "service": {
+    "kind": "xyz",
+    "url": "https://atlas.harita.gov.tr/webservis/ortofoto/{z}/{x}/{y}.png",
+    "maxZoom": 18,
+    "attribution": "© Harita Genel Müdürlüğü (HGM ATLAS)",
+    "bbox": [
+     25.6,
+     35.8,
+     44.9,
+     42.2
+    ]
+   },
+   "connection": {
+    "id": "hgm-atlas",
+    "name": "HGM ATLAS",
+    "origin": "https://atlas.harita.gov.tr",
+    "auth": "query",
+    "names": [
+     "apikey"
+    ]
+   },
+   "attributionUrl": "https://atlas.harita.gov.tr",
+   "note": "API anahtarı Harita Genel Müdürlüğü ile yapılan protokolle alınır."
+  },
+  {
+   "id": "google-roadmap",
+   "group": "google",
+   "name": "Google Yol",
+   "icon": "basemapGoogleRoad",
+   "service": {
+    "kind": "google",
+    "url": "",
+    "style": "roadmap",
+    "maxZoom": 22,
+    "attribution": "Google Maps"
+   },
+   "connection": {
+    "id": "google",
+    "name": "Google Map Tiles API",
+    "origin": "https://tile.googleapis.com",
+    "auth": "google"
+   },
+   "attributionUrl": "https://developers.google.com/maps/documentation/tile/policies",
+   "note": "Google Cloud hesabınızın Map Tiles API anahtarı gerekir; kullanım Google'ın koşullarına ve faturalandırmasına tabidir."
+  },
+  {
+   "id": "google-satellite",
+   "group": "google",
+   "name": "Google Uydu",
+   "icon": "basemapGoogleSatellite",
+   "service": {
+    "kind": "google",
+    "url": "",
+    "style": "satellite",
+    "maxZoom": 22,
+    "attribution": "Google Maps"
+   },
+   "connection": {
+    "id": "google",
+    "name": "Google Map Tiles API",
+    "origin": "https://tile.googleapis.com",
+    "auth": "google"
+   },
+   "attributionUrl": "https://developers.google.com/maps/documentation/tile/policies",
+   "note": "Google Cloud hesabınızın Map Tiles API anahtarı gerekir; kullanım Google'ın koşullarına ve faturalandırmasına tabidir."
+  },
+  {
+   "id": "google-terrain",
+   "group": "google",
+   "name": "Google Arazi",
+   "icon": "basemapGoogleTerrain",
+   "service": {
+    "kind": "google",
+    "url": "",
+    "style": "terrain",
+    "maxZoom": 22,
+    "attribution": "Google Maps"
+   },
+   "connection": {
+    "id": "google",
+    "name": "Google Map Tiles API",
+    "origin": "https://tile.googleapis.com",
+    "auth": "google"
+   },
+   "attributionUrl": "https://developers.google.com/maps/documentation/tile/policies",
+   "note": "Google Cloud hesabınızın Map Tiles API anahtarı gerekir; kullanım Google'ın koşullarına ve faturalandırmasına tabidir."
+  },
+  {
+   "id": "google-hybrid",
+   "group": "google",
+   "name": "Google Karma",
+   "icon": "basemapGoogleHybrid",
+   "service": {
+    "kind": "google",
+    "url": "",
+    "style": "hybrid",
+    "maxZoom": 22,
+    "attribution": "Google Maps"
+   },
+   "connection": {
+    "id": "google",
+    "name": "Google Map Tiles API",
+    "origin": "https://tile.googleapis.com",
+    "auth": "google"
+   },
+   "attributionUrl": "https://developers.google.com/maps/documentation/tile/policies",
+   "note": "Uydu görüntüsü, üstünde yollar ve adlar. Google Cloud hesabınızın Map Tiles API anahtarı gerekir."
+  },
+  {
+   "id": "maptiler-streets",
+   "group": "keyed",
+   "name": "MapTiler Streets (vektör)",
+   "icon": "basemapMaptiler",
+   "service": {
+    "kind": "vector",
+    "url": "https://api.maptiler.com/maps/streets-v2/style.json",
+    "attribution": "© MapTiler · © OpenStreetMap katkıda bulunanlar"
+   },
+   "connection": {
+    "id": "maptiler",
+    "name": "MapTiler",
+    "origin": "https://api.maptiler.com",
+    "auth": "query",
+    "names": [
+     "key"
+    ]
+   },
+   "attributionUrl": "https://www.maptiler.com/copyright/",
+   "note": "MapTiler hesabınızın anahtarı gerekir."
+  },
+  {
+   "id": "maptiler-satellite",
+   "group": "keyed",
+   "name": "MapTiler Uydu",
+   "icon": "basemapMaptilerSatellite",
+   "service": {
+    "kind": "xyz",
+    "url": "https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg",
+    "maxZoom": 20,
+    "attribution": "© MapTiler · © OpenStreetMap katkıda bulunanlar"
+   },
+   "connection": {
+    "id": "maptiler",
+    "name": "MapTiler",
+    "origin": "https://api.maptiler.com",
+    "auth": "query",
+    "names": [
+     "key"
+    ]
+   },
+   "attributionUrl": "https://www.maptiler.com/copyright/",
+   "note": "MapTiler hesabınızın anahtarı gerekir."
+  }
+ ]
+}

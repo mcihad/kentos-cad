@@ -9,6 +9,7 @@ import { entitiesDelete } from './entitiesDelete';
 import { entitiesEdit } from './entitiesEdit';
 import { entitiesSet } from './entitiesSet';
 import { entitiesTransform } from './entitiesTransform';
+import { layersService } from './layersService';
 import { lineCreate } from './lineCreate';
 import { pointCreate } from './pointCreate';
 import { polygonCreate } from './polygonCreate';
@@ -37,6 +38,8 @@ export const WEB_COMMANDS: readonly ProductCommand<never, unknown, unknown>[] = 
   // Blok oluştur and the Bloklar panel (docs/adr/0144).
   blocksDefine,
   blocksEdit,
+  // Harita servisi and the service layers' menus (docs/adr/0208 §15).
+  layersService,
 ];
 
 /** The handler of a command id and version; undefined for one the web does not run (never guessed). */

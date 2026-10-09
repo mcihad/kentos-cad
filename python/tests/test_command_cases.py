@@ -39,6 +39,17 @@ class Case:
         # Block ids taken by `captureBlock`, and the setup's (docs/adr/0144).
         self.blocks: dict[str, str] = {}
         self.setup_blocks = [b.id for b in self.doc.blocks()]
+        # The layer the last command added or would add (`$layer`, docs/adr/0208 §15).
+        self.layer: str | None = None
+
+    def layer_ids(self) -> set[str]:
+        out: set[str] = set()
+        stack = list(json.loads(self.doc._session.layers()))
+        while stack:
+            node = stack.pop()
+            out.add(node["id"])
+            stack.extend(node.get("children") or [])
+        return out
 
     def slots(self) -> dict[int, cad.Record]:
         return {r.entity.id: r for r in self.doc.entities(page_size=10_000)}
@@ -63,6 +74,9 @@ class Case:
                 return record.uid
             if "$uid:" in value:
                 return re.sub(r"\$uid:([A-Za-z0-9_-]+)", lambda m: self.uids[m.group(1)], value)
+            if value == "$layer":
+                assert self.layer is not None, f"{at}: $layer: no command added a layer"
+                return self.layer
             if value.startswith("$"):
                 name = value[1:]
                 return self.doc.revision if name == "current" else self.revisions[name]
@@ -109,9 +123,27 @@ class Case:
                 raise AssertionError(f"{at}: a non-finite number crossed the JSON boundary")
             assert self.doc.revision == before, f"{at}: written"
             return
+        layers_before = self.layer_ids()
         outcome = self.wrapper.run(self.doc, typed, op=step["op"])
         got = wire(outcome)
         want = json.loads(json.dumps(step["result"]))
+        # `$layer`: the layer the command added (execute) or would add (plan): an id the tree did not have.
+        for path in (("output", "layer"), ("output", "node", "id")):
+            w: Any = want
+            g: Any = got
+            for part in path:
+                w = w.get(part) if isinstance(w, dict) else None
+                g = g.get(part) if isinstance(g, dict) else None
+            if w != "$layer":
+                continue
+            fresh = (
+                isinstance(g, str)
+                and re.fullmatch(r"layer-\d+", g) is not None
+                and g not in layers_before
+                and (g in self.layer_ids()) == (step["op"] == "execute")
+            )
+            assert fresh, f"{at}: {'.'.join(path)}: {g!r} is not a new layer's id"
+            self.layer = g
         if want.get("output", {}) and isinstance(want.get("output"), dict) and want["output"].get("uid") == "$uid":
             uid = got["output"]["uid"]
             slot = got["output"]["id"]
@@ -160,6 +192,13 @@ class Case:
                         assert block.id not in self.setup_blocks and block.id not in self.blocks.values(), f"{at}: {name} is not new"
                     else:
                         assert block.id == self.fill(id, at), f"{at}: {name} is {block.id}"
+            elif key == "layers":
+                # The layer tree, every node whole; `$layer` the one a command added (docs/adr/0208 §15).
+                same(json.loads(self.doc._session.layers()), self.fill(want, at), f"{at}: layers")
+            elif key == "connections":
+                # The project's connections (docs/adr/0208 §2).
+                settings = json.loads(self.doc._session.summary())["settings"]
+                same(settings.get("connections", []), want, f"{at}: connections")
             else:
                 raise AssertionError(f"{at}: unknown expectation {key}")
 

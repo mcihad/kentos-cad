@@ -1,4 +1,6 @@
+import type { FeatureFeed } from '../contracts/generated/FeatureFeed';
 import type { LayerField } from '../contracts/generated/LayerField';
+import type { ServiceLayer } from '../contracts/generated/ServiceLayer';
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
 import type { LayerRenderer } from './style';
@@ -64,6 +66,10 @@ export interface LayerNode {
   snap?: LayerSnap;
   /** A layer's fields (docs/adr/0199 §1): the schema of its objects' attributes, in order; absent, none. Never a group's. */
   fields?: LayerField[];
+  /** The map service a layer is drawn from (docs/adr/0208 §2); such a layer holds no objects. Never a group's. */
+  service?: ServiceLayer;
+  /** Where a layer's objects came from, to take them again (docs/adr/0208 §10). Never a group's, never with `service`. */
+  feed?: FeatureFeed;
 }
 
 /** A layer's own snapping: `{ off: true }` or `{ kinds: [...] }` (contracts' `LayerSnap`, exactly one of the two). */
@@ -129,8 +135,22 @@ export class LayerStore {
     // Ids read from a file ("layer-12") keep the counter ahead of them, so new layers never collide.
     const m = n.id ? /^layer-(\d+)$/.exec(n.id) : null;
     if (m) uid = Math.max(uid, Number(m[1]));
+    return this.shape(n, n.id ?? `layer-${++uid}`);
+  }
+
+  /** The id `make` would give a node without one, the counter left as it is (a command's plan, docs/adr/0208 §15). */
+  peekId(): string {
+    return `layer-${uid + 1}`;
+  }
+
+  /** What `make` would give, the counter left as it is: a node without an id gets `peekId`'s. */
+  preview(n: LayerInit): LayerNode {
+    return this.shape(n, n.id ?? this.peekId());
+  }
+
+  private shape(n: LayerInit, id: string): LayerNode {
     const node: LayerNode = {
-      id: n.id ?? `layer-${++uid}`,
+      id,
       name: n.name,
       type: n.type ?? (n.children ? 'group' : 'layer'),
       visible: n.visible ?? true,
@@ -142,6 +162,9 @@ export class LayerStore {
       ...(n.snap && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { snap: n.snap.kinds ? { kinds: [...n.snap.kinds] } : { off: true } }),
       // A layer's fields (docs/adr/0199 §1); a group keeps none, an empty list is none.
       ...(n.fields?.length && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { fields: structuredClone(n.fields) }),
+      // A layer's map service or source (docs/adr/0208 §2, §10); a group keeps neither.
+      ...(n.service && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { service: structuredClone(n.service) }),
+      ...(n.feed && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { feed: structuredClone(n.feed) }),
     };
     node.children = (n.children ?? []).map((c) => this.make(c));
     return node;
@@ -339,6 +362,26 @@ export class LayerStore {
     if (fields.length) n.fields = structuredClone([...fields]);
     else delete n.fields;
     this.changedState(id);
+  }
+
+  /** Gives a layer its name, map service and source (docs/adr/0208 §2, §10): the document's undoable `setLayerService` applies it. */
+  replaceService(id: string, name: string, service: ServiceLayer | undefined, feed: FeatureFeed | undefined): void {
+    const n = this.get(id);
+    if (!n || n.type !== 'layer') return;
+    if (n.name !== name) {
+      n.name = name;
+      this.events.emit('structure', undefined);
+    }
+    if (service) n.service = structuredClone(service);
+    else delete n.service;
+    if (feed) n.feed = structuredClone(feed);
+    else delete n.feed;
+    this.changedState(id);
+  }
+
+  /** Whether a layer is drawn from a map service (docs/adr/0208 §2): no object goes on it. */
+  isServed(id: string): boolean {
+    return this.get(id)?.service !== undefined;
   }
 
   rename(id: string, name: string): void {

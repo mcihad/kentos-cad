@@ -246,6 +246,8 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         children: Vec::new(),
         snap: None,
         fields: Vec::new(),
+        service: None,
+        feed: None,
     }];
     doc.entities = vec![Entity::Line(LineEntity {
         base: EntityBase {

@@ -21,7 +21,7 @@ use kentos_contracts::{
 };
 
 use crate::document::Document;
-use crate::history::{LayerPlace, Op};
+use crate::history::{LayerPlace, Op, Served, ServedBy};
 use crate::identity::{Slot, new_uid};
 use crate::layers::NewLayer;
 use crate::store::Stored;
@@ -33,6 +33,7 @@ pub mod labels {
     pub const CHANGE: &str = "Değiştir";
     pub const LAYER_STYLE: &str = "Katman stili";
     pub const LAYER_FIELDS: &str = "Alanlar";
+    pub const LAYER_SERVICE: &str = "Servis katmanı";
     pub const LAYER_REMOVE: &str = "Katman sil";
     pub const LAYER_ADD: &str = "Katman ekle";
     pub const GROUP_ADD: &str = "Grup ekle";
@@ -244,6 +245,75 @@ impl Document {
         Ok(true)
     }
 
+    /// Gives a layer its map service and its source as one undo step named
+    /// `label` (docs/adr/0208 §2, §10): `next` is what the layer is drawn from
+    /// or took its objects from afterwards (an empty one: neither); `rename`,
+    /// a new name in the same step. Refused with nothing changed (the web's
+    /// `setLayerService`): a group, a blank name, both at once, a service or
+    /// a source with a problem (the contract's `problem`s), a service on a
+    /// layer that holds objects. That a connection named is the project's is
+    /// the command's to check (`cad.layers.service`). An unknown id changes
+    /// nothing; returns whether it changed.
+    pub fn set_layer_service(
+        &mut self,
+        id: &str,
+        next: ServedBy,
+        rename: Option<&str>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(node) = self.layers.get(id) else {
+            return Ok(false);
+        };
+        let name = &node.name;
+        if rename.is_some_and(|n| n.trim().is_empty()) {
+            return Err(Refusal("Katmanın adı boş olamaz; bir ad verin.".into()));
+        }
+        if node.kind == LayerNodeType::Group {
+            return Err(Refusal(format!(
+                "“{name}” bir grup; servis ve veri kaynağı yalnız katmanın olur."
+            )));
+        }
+        if next.service.is_some() && next.feed.is_some() {
+            return Err(Refusal(format!(
+                "“{name}” katmanı hem servisten çizilir hem nesnelerini bir kaynaktan alır; ikisi birden olmaz."
+            )));
+        }
+        let problem = next
+            .service
+            .as_ref()
+            .and_then(|s| s.problem())
+            .or_else(|| next.feed.as_ref().and_then(|f| f.problem()));
+        if let Some(problem) = problem {
+            return Err(Refusal(problem));
+        }
+        if next.service.is_some() && self.holds_objects(id) {
+            return Err(Refusal(format!(
+                "“{name}” katmanında nesne var; servis katmanı nesne tutmaz. Servisi yeni bir katmana ekleyin."
+            )));
+        }
+        let before = Served {
+            name: node.name.clone(),
+            by: ServedBy {
+                service: node.service.clone(),
+                feed: node.feed.clone(),
+            },
+        };
+        let next = Served {
+            name: rename.map_or_else(|| node.name.clone(), |n| n.trim().to_owned()),
+            by: next,
+        };
+        if before == next {
+            return Ok(false);
+        }
+        let op = Op::LayerService {
+            layer: id.to_owned(),
+            before: Box::new(before),
+            after: Box::new(next),
+        };
+        self.record(vec![op], label);
+        Ok(true)
+    }
+
     /// Deletes a layer, or a group with everything under it, and the objects
     /// on them, as one undo step “Katman sil” (into the open transaction or
     /// group, if one is). Undo puts the node back in its place with its
@@ -425,6 +495,21 @@ impl Document {
         parent: Option<&str>,
         activate: bool,
     ) -> Result<String, Refusal> {
+        self.add_layer_at(new, parent, None, None, activate)
+    }
+
+    /// [`Document::add_layer`] at `index` among the group's nodes (first on
+    /// top; none or past the end: last, drawn under everything else) and
+    /// named `label` (none: “Katman ekle” or “Grup ekle”), as
+    /// `cad.layers.service` places a service layer (docs/adr/0208 §15).
+    pub fn add_layer_at(
+        &mut self,
+        new: NewLayer,
+        parent: Option<&str>,
+        index: Option<usize>,
+        label: Option<&str>,
+        activate: bool,
+    ) -> Result<String, Refusal> {
         if let Some(id) = new.id.as_deref().filter(|id| self.layers.get(id).is_some()) {
             return Err(Refusal(format!(
                 "“{id}” kimlikli katman zaten var; katman eklenmedi."
@@ -433,11 +518,12 @@ impl Document {
         let node = self.layers.make(new);
         let id = node.id.clone();
         let container = self.layers.container_for(parent);
-        let index = self.layers.len_of(container.as_deref());
-        let label = match node.kind {
+        let len = self.layers.len_of(container.as_deref());
+        let index = index.map_or(len, |i| i.min(len));
+        let label = label.unwrap_or(match node.kind {
             LayerNodeType::Group => labels::GROUP_ADD,
             LayerNodeType::Layer => labels::LAYER_ADD,
-        };
+        });
         let before = self.layers.active().to_owned();
         let active = (activate && node.kind == LayerNodeType::Layer && before != id).then(|| {
             Op::LayerActive {

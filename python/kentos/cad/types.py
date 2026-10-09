@@ -86,6 +86,32 @@ ArrangeModeName = Literal["left", "center", "right", "top", "middle", "bottom", 
 """The names of :class:`ArrangeMode`, for a plain string."""
 
 
+class AuthKind(_StrEnum):
+    """The proof a service asks for (docs/adr/0208 §12).
+
+    - ``none``
+    - ``query``: `name=value` in the address, one or more.
+    - ``header``: `Name: value` headers, one or more.
+    - ``basic``: HTTP Basic: a user name and a password.
+    - ``bearer``: `Authorization: Bearer <token>`.
+    - ``arcgis``: An ArcGIS token from `generateToken`, by a user name and a password.
+    - ``oauth2``: OAuth 2's client credentials at a token address.
+    - ``google``: Google's API key and session.
+    """
+    NONE = "none"
+    QUERY = "query"
+    HEADER = "header"
+    BASIC = "basic"
+    BEARER = "bearer"
+    ARCGIS = "arcgis"
+    OAUTH2 = "oauth2"
+    GOOGLE = "google"
+
+
+AuthKindName = Literal["none", "query", "header", "basic", "bearer", "arcgis", "oauth2", "google"]
+"""The names of :class:`AuthKind`, for a plain string."""
+
+
 class BlockEditOperation(_StrEnum):
     """What `cad.blocks.edit` does; it names the undo step.
 
@@ -464,6 +490,24 @@ EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "br
 """The names of :class:`EditOperation`, for a plain string."""
 
 
+class FeedKind(_StrEnum):
+    """What a layer's objects were taken from (docs/adr/0208 §10).
+
+    - ``wfs``
+    - ``ogcFeatures``
+    - ``arcgis``: An ArcGIS REST layer's `query`.
+    - ``geojson``: A GeoJSON document at an address.
+    """
+    WFS = "wfs"
+    OGC_FEATURES = "ogcFeatures"
+    ARCGIS = "arcgis"
+    GEOJSON = "geojson"
+
+
+FeedKindName = Literal["wfs", "ogcFeatures", "arcgis", "geojson"]
+"""The names of :class:`FeedKind`, for a plain string."""
+
+
 class GradientShape(_StrEnum):
     """How a gradient runs over its hatch (docs/adr/0186 §3).
 
@@ -569,6 +613,24 @@ class LayerNodeType(_StrEnum):
 
 LayerNodeTypeName = Literal["group", "layer"]
 """The names of :class:`LayerNodeType`, for a plain string."""
+
+
+class LayerServiceOperation(_StrEnum):
+    """What `cad.layers.service` does; it names the undo step.
+
+    - ``add``: A layer drawn from a service (“Harita servisi ekle”).
+    - ``addFeed``: A layer for a service's objects, with its fields (“Veri katmanı ekle”).
+    - ``update``: A new name, service or feed (“Servis katmanını değiştir”).
+    - ``remove``: A layer drawn from a service taken away (“Servis katmanını sil”).
+    """
+    ADD = "add"
+    ADD_FEED = "addFeed"
+    UPDATE = "update"
+    REMOVE = "remove"
+
+
+LayerServiceOperationName = Literal["add", "addFeed", "update", "remove"]
+"""The names of :class:`LayerServiceOperation`, for a plain string."""
 
 
 class LeaderArrow(_StrEnum):
@@ -865,6 +927,30 @@ class RegistryDatum(_StrEnum):
 
 RegistryDatumName = Literal["TUREF", "ED50", "WGS84"]
 """The names of :class:`RegistryDatum`, for a plain string."""
+
+
+class ServiceKind(_StrEnum):
+    """What a service layer draws (docs/adr/0208 §1).
+
+    - ``wms``
+    - ``wmts``
+    - ``xyz``: Tiles by an address template, Web Mercator (TMS with `yFlip`).
+    - ``ogcTiles``: OGC API Tiles' map tiles.
+    - ``arcgis``: An ArcGIS REST MapServer or ImageServer: its cached tiles, else `export`.
+    - ``google``: Google's Map Tiles API, 2D tiles.
+    - ``vector``: Vector tiles (MVT) by a MapLibre style, a TileJSON or a template.
+    """
+    WMS = "wms"
+    WMTS = "wmts"
+    XYZ = "xyz"
+    OGC_TILES = "ogcTiles"
+    ARCGIS = "arcgis"
+    GOOGLE = "google"
+    VECTOR = "vector"
+
+
+ServiceKindName = Literal["wms", "wmts", "xyz", "ogcTiles", "arcgis", "google", "vector"]
+"""The names of :class:`ServiceKind`, for a plain string."""
 
 
 class TableAlign(_StrEnum):
@@ -3892,6 +3978,71 @@ class EntitiesTransformed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FeatureFeed(_Model):
+    """Where a layer's objects came from, to take them again (docs/adr/0208 §10).
+    Attributes:
+        bbox: The area asked, `[x₁, y₁, x₂, y₂]` in the project's system; absent: all.
+        fetched: When they were last taken (RFC 3339).
+        filter: CQL, or ArcGIS's `where`.
+        key: The attribute that matches objects when they are taken again.
+        name: WFS's type, OGC's collection, ArcGIS's layer.
+        srid: The system asked of the service.
+        version: WFS's version.
+    """
+    kind: FeedKind | FeedKindName
+    url: str
+    bbox: list[float] | None | Unset = UNSET
+    connection: str | None | Unset = UNSET
+    fetched: str | None | Unset = UNSET
+    filter: str | None | Unset = UNSET
+    key: str | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    version: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["url"] = self.url
+        if self.bbox is not UNSET:
+            out["bbox"] = None if self.bbox is None else [float(e0) for e0 in self.bbox]
+        if self.connection is not UNSET:
+            out["connection"] = self.connection
+        if self.fetched is not UNSET:
+            out["fetched"] = self.fetched
+        if self.filter is not UNSET:
+            out["filter"] = self.filter
+        if self.key is not UNSET:
+            out["key"] = self.key
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FeatureFeed:
+        return cls(
+            kind=_enum_in(FeedKind, data["kind"]),
+            url=data["url"],
+            bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
+            connection=data.get("connection", UNSET),
+            fetched=data.get("fetched", UNSET),
+            filter=data.get("filter", UNSET),
+            key=data.get("key", UNSET),
+            limit=data.get("limit", UNSET),
+            name=data.get("name", UNSET),
+            srid=data.get("srid", UNSET),
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldChoice(_Model):
     """One value of a field's value list: the code written to the attribute
     and the label shown for it.
@@ -4628,9 +4779,13 @@ class LayerField(_Model):
 class LayerNode(_Model):
     """A node of the layer tree: a group or a layer.
     Attributes:
+        feed: Where the layer's objects were taken from, to take them again
+            (docs/adr/0208 §10). Only a layer has it, never a group.
         fields: A layer's fields (docs/adr/0199 §1): the schema of its objects'
             attributes, in the order the table and the form show them; empty, no
             schema (and nothing written). Only a layer has them, never a group.
+        service: A layer drawn from a map service (docs/adr/0208 §2): it holds no
+            objects. Only a layer has it, never a group.
         snap: A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;
             absent, the general kinds. Only a layer has it, never a group.
     """
@@ -4642,7 +4797,9 @@ class LayerNode(_Model):
     expanded: bool
     style: LayerStyle
     children: list[LayerNode]
+    feed: FeatureFeed | None | Unset = UNSET
     fields: list[LayerField] | Unset = UNSET
+    service: ServiceLayer | None | Unset = UNSET
     snap: LayerSnap | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -4655,8 +4812,12 @@ class LayerNode(_Model):
         out["expanded"] = self.expanded
         out["style"] = self.style.to_json()
         out["children"] = [e0.to_json() for e0 in self.children]
+        if self.feed is not UNSET:
+            out["feed"] = None if self.feed is None else self.feed.to_json()
         if self.fields is not UNSET:
             out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.service is not UNSET:
+            out["service"] = None if self.service is None else self.service.to_json()
         if self.snap is not UNSET:
             out["snap"] = None if self.snap is None else self.snap.to_json()
         return out
@@ -4672,7 +4833,9 @@ class LayerNode(_Model):
             expanded=data["expanded"],
             style=LayerStyle.from_json(data["style"]),
             children=[LayerNode.from_json(e0) for e0 in data["children"]],
+            feed=UNSET if "feed" not in data else None if data["feed"] is None else FeatureFeed.from_json(data["feed"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
+            service=UNSET if "service" not in data else None if data["service"] is None else ServiceLayer.from_json(data["service"]),
             snap=UNSET if "snap" not in data else None if data["snap"] is None else LayerSnap.from_json(data["snap"]),
         )
 
@@ -4815,6 +4978,146 @@ class LayerStyle(_Model):
             pick_interior=data.get("pickInterior", UNSET),
             point=UNSET if "point" not in data else None if data["point"] is None else PointStyle.from_json(data["point"]),
             renderer=data.get("renderer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersService(_Model):
+    """Input of `cad.layers.service` v1: one change of the layer tree, as one
+    undo step named after the operation.
+
+    - `add`: `name`, `service`; `parent` and `index` place it;
+    - `addFeed`: `name`, `feed`, `fields` (absent: none); placed as `add`;
+    - `update`: `layer`, and any of `name`, `service` (a service layer's),
+      `feed` (a feed layer's);
+    - `remove`: `layer` (a service layer).
+
+    `parent`: the group it goes into, or a layer whose group it goes into;
+    absent, the top. `index`: its place among the group's nodes, first on
+    top; absent or past the end, last: drawn first, under everything else.
+    `connections`: the project's connections it adds or replaces (by id), in
+    the same step.
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer` (update
+    and remove without `layer`), `empty_name` (add, addFeed; update with a
+    name that is empty or only white space), `no_service` (add),
+    `no_feed` (addFeed), `service_and_feed` (both given), `invalid_service`,
+    `invalid_feed`, `invalid_fields`, `invalid_connection` (the project's
+    connections with these, by `connections_problem`); then
+    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `layer_not_found`, `not_a_layer` (a group), `not_a_service_layer`
+    (update's service on a layer that has none, update's feed on a layer
+    without one, remove on a layer drawn from no service), `layer_has_objects`
+    (update giving a service to a layer with objects), `unknown_connection`
+    (a service or feed naming a connection the project does not have).
+    Attributes:
+        connections: Connections added to the project, or replacing its own of the same id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        fields: `addFeed`: the layer's fields (docs/adr/0199 §1).
+        layer: `update`, `remove`: the layer's id.
+        name: `add`, `addFeed`: the new layer's name; `update`: a new name.
+    """
+    operation: LayerServiceOperation | LayerServiceOperationName
+    connections: list[ServiceConnection] | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    feed: FeatureFeed | None | Unset = UNSET
+    fields: list[LayerField] | None | Unset = UNSET
+    index: int | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    parent: str | None | Unset = UNSET
+    service: ServiceLayer | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.connections is not UNSET:
+            out["connections"] = None if self.connections is None else [e0.to_json() for e0 in self.connections]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.feed is not UNSET:
+            out["feed"] = None if self.feed is None else self.feed.to_json()
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else [e0.to_json() for e0 in self.fields]
+        if self.index is not UNSET:
+            out["index"] = self.index
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.parent is not UNSET:
+            out["parent"] = self.parent
+        if self.service is not UNSET:
+            out["service"] = None if self.service is None else self.service.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersService:
+        return cls(
+            operation=_enum_in(LayerServiceOperation, data["operation"]),
+            connections=UNSET if "connections" not in data else None if data["connections"] is None else [ServiceConnection.from_json(e0) for e0 in data["connections"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            feed=UNSET if "feed" not in data else None if data["feed"] is None else FeatureFeed.from_json(data["feed"]),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else [LayerField.from_json(e0) for e0 in data["fields"]],
+            index=data.get("index", UNSET),
+            layer=data.get("layer", UNSET),
+            name=data.get("name", UNSET),
+            parent=data.get("parent", UNSET),
+            service=UNSET if "service" not in data else None if data["service"] is None else ServiceLayer.from_json(data["service"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersServicePlan(_Model):
+    """What `cad.layers.service` would write (plan mode); nothing is written.
+    Attributes:
+        connections: The project's connections as execute would leave them.
+        revision: The document revision the plan was made against.
+        node: The layer as execute would leave it (`add`, `addFeed`: its id the one
+            it would be given); absent for `remove`.
+    """
+    connections: list[ServiceConnection]
+    revision: str
+    node: LayerNode | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["connections"] = [e0.to_json() for e0 in self.connections]
+        out["revision"] = self.revision
+        if self.node is not UNSET:
+            out["node"] = None if self.node is None else self.node.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersServicePlan:
+        return cls(
+            connections=[ServiceConnection.from_json(e0) for e0 in data["connections"]],
+            revision=data["revision"],
+            node=UNSET if "node" not in data else None if data["node"] is None else LayerNode.from_json(data["node"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersServiced(_Model):
+    """Output of `cad.layers.service` v1.
+    Attributes:
+        layer: The layer added, changed or removed.
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersServiced:
+        return cls(
+            layer=data["layer"],
+            revision=data["revision"],
         )
 
 
@@ -6686,6 +6989,7 @@ class ProjectSettings(_Model):
         plot_scale: Plot scale denominator (1:1000 → 1000).
         annotation: The project's annotation heights on paper (docs/adr/0205 §1); absent:
             every kind's default.
+        connections: The project's service connections without their secrets (docs/adr/0208 §2).
         custom_crs: The project's own coordinate system when it is a definition
             (docs/adr/0168 §1); `srid` is then 0.
         datum_transforms: The project's datum choices (docs/adr/0168 §3); none: EPSG's ways.
@@ -6713,6 +7017,7 @@ class ProjectSettings(_Model):
     angle_unit: AngleUnit | AngleUnitName
     plot_scale: float
     annotation: AnnotationHeights | None | Unset = UNSET
+    connections: list[ServiceConnection] | Unset = UNSET
     custom_crs: CrsDefinition | None | Unset = UNSET
     datum_transforms: list[DatumTransform] | Unset = UNSET
     dimension_styles: list[DimensionStyleDef] | Unset = UNSET
@@ -6736,6 +7041,8 @@ class ProjectSettings(_Model):
         out["plotScale"] = float(self.plot_scale)
         if self.annotation is not UNSET:
             out["annotation"] = None if self.annotation is None else self.annotation.to_json()
+        if self.connections is not UNSET:
+            out["connections"] = [e0.to_json() for e0 in self.connections]
         if self.custom_crs is not UNSET:
             out["customCrs"] = None if self.custom_crs is None else self.custom_crs.to_json()
         if self.datum_transforms is not UNSET:
@@ -6772,6 +7079,7 @@ class ProjectSettings(_Model):
             angle_unit=_enum_in(AngleUnit, data["angleUnit"]),
             plot_scale=float(data["plotScale"]),
             annotation=UNSET if "annotation" not in data else None if data["annotation"] is None else AnnotationHeights.from_json(data["annotation"]),
+            connections=[ServiceConnection.from_json(e0) for e0 in data["connections"]] if "connections" in data else UNSET,
             custom_crs=UNSET if "customCrs" not in data else None if data["customCrs"] is None else CrsDefinition.from_json(data["customCrs"]),
             datum_transforms=[DatumTransform.from_json(e0) for e0 in data["datumTransforms"]] if "datumTransforms" in data else UNSET,
             dimension_styles=[DimensionStyleDef.from_json(e0) for e0 in data["dimensionStyles"]] if "dimensionStyles" in data else UNSET,
@@ -7224,6 +7532,198 @@ class RubberLink(_Model):
         return cls(
             from_=Vec2.from_json(data["from"]),
             to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ServiceConnection(_Model):
+    """A connection of the project (docs/adr/0208 §2): what proof requests to
+    its origin carry, without the secrets.
+    Attributes:
+        origin: `https://host[:port]`: proof goes to this origin only.
+        names: The parameters' (query) or headers' (header) names.
+        scope: OAuth 2's scope.
+        token_url: ArcGIS's `generateToken` or OAuth 2's token address.
+    """
+    id: str
+    name: str
+    origin: str
+    auth: AuthKind | AuthKindName
+    names: list[str] | Unset = UNSET
+    scope: str | None | Unset = UNSET
+    token_url: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["origin"] = self.origin
+        out["auth"] = _enum_out(self.auth)
+        if self.names is not UNSET:
+            out["names"] = list(self.names)
+        if self.scope is not UNSET:
+            out["scope"] = self.scope
+        if self.token_url is not UNSET:
+            out["tokenUrl"] = self.token_url
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ServiceConnection:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            origin=data["origin"],
+            auth=_enum_in(AuthKind, data["auth"]),
+            names=list(data["names"]) if "names" in data else UNSET,
+            scope=data.get("scope", UNSET),
+            token_url=data.get("tokenUrl", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ServiceLayer(_Model):
+    """A layer drawn from a service (docs/adr/0208 §2).
+    Attributes:
+        url: XYZ: the template; WMS, WMTS, ArcGIS: the service's address; OGC
+            API Tiles: the tile set's; vector: the style's, the TileJSON's or the
+            template; Google: empty.
+        bbox: The service's extent, WGS 84 degrees (west, south, east, north), as
+            its capabilities give it: what “Servisin kapsamına yakınlaştır” shows.
+        connection: The project's connection whose proof goes with the requests.
+        dynamic: WMS and `export`: one picture of the view instead of tiles.
+        format: The image's media type (`image/png`, …).
+        grid: WMTS's, OGC's and a cached ArcGIS service's matrices.
+        layers: WMS's layer names; WMTS's one layer; ArcGIS's layers shown.
+        matrix_set: WMTS's matrix set's identifier (`TILEMATRIXSET`).
+        opacity: 0.1 to 1; absent: opaque.
+        preset: The ready basemap it came from.
+        srid: The system asked: WMS's `CRS`, ArcGIS's `imageSR`; a grid's own.
+        style: WMS's and WMTS's style; Google's map type.
+        subdomains: `{s}`'s values, taken in turn.
+        template: WMTS REST's and OGC's tile template.
+        tile_size: XYZ's and the vector tiles' tile side, pixels; absent 256.
+        transparent: WMS's and `export`'s `TRANSPARENT`.
+        version: WMS's version.
+        y_flip: TMS: rows counted from the bottom.
+    """
+    kind: ServiceKind | ServiceKindName
+    url: str
+    attribution: str | None | Unset = UNSET
+    bbox: list[float] | None | Unset = UNSET
+    connection: str | None | Unset = UNSET
+    dynamic: bool | Unset = UNSET
+    format: str | None | Unset = UNSET
+    grid: TileGrid | None | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+    matrix_set: str | None | Unset = UNSET
+    max_zoom: int | None | Unset = UNSET
+    min_zoom: int | None | Unset = UNSET
+    opacity: float | None | Unset = UNSET
+    params: list[ServiceParam] | Unset = UNSET
+    preset: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    style: str | None | Unset = UNSET
+    subdomains: list[str] | Unset = UNSET
+    template: str | None | Unset = UNSET
+    tile_size: int | None | Unset = UNSET
+    transparent: bool | Unset = UNSET
+    version: str | None | Unset = UNSET
+    y_flip: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["url"] = self.url
+        if self.attribution is not UNSET:
+            out["attribution"] = self.attribution
+        if self.bbox is not UNSET:
+            out["bbox"] = None if self.bbox is None else [float(e0) for e0 in self.bbox]
+        if self.connection is not UNSET:
+            out["connection"] = self.connection
+        if self.dynamic is not UNSET:
+            out["dynamic"] = self.dynamic
+        if self.format is not UNSET:
+            out["format"] = self.format
+        if self.grid is not UNSET:
+            out["grid"] = None if self.grid is None else self.grid.to_json()
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.matrix_set is not UNSET:
+            out["matrixSet"] = self.matrix_set
+        if self.max_zoom is not UNSET:
+            out["maxZoom"] = self.max_zoom
+        if self.min_zoom is not UNSET:
+            out["minZoom"] = self.min_zoom
+        if self.opacity is not UNSET:
+            out["opacity"] = None if self.opacity is None else float(self.opacity)
+        if self.params is not UNSET:
+            out["params"] = [e0.to_json() for e0 in self.params]
+        if self.preset is not UNSET:
+            out["preset"] = self.preset
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.style is not UNSET:
+            out["style"] = self.style
+        if self.subdomains is not UNSET:
+            out["subdomains"] = list(self.subdomains)
+        if self.template is not UNSET:
+            out["template"] = self.template
+        if self.tile_size is not UNSET:
+            out["tileSize"] = self.tile_size
+        if self.transparent is not UNSET:
+            out["transparent"] = self.transparent
+        if self.version is not UNSET:
+            out["version"] = self.version
+        if self.y_flip is not UNSET:
+            out["yFlip"] = self.y_flip
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ServiceLayer:
+        return cls(
+            kind=_enum_in(ServiceKind, data["kind"]),
+            url=data["url"],
+            attribution=data.get("attribution", UNSET),
+            bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
+            connection=data.get("connection", UNSET),
+            dynamic=data.get("dynamic", UNSET),
+            format=data.get("format", UNSET),
+            grid=UNSET if "grid" not in data else None if data["grid"] is None else TileGrid.from_json(data["grid"]),
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            matrix_set=data.get("matrixSet", UNSET),
+            max_zoom=data.get("maxZoom", UNSET),
+            min_zoom=data.get("minZoom", UNSET),
+            opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+            params=[ServiceParam.from_json(e0) for e0 in data["params"]] if "params" in data else UNSET,
+            preset=data.get("preset", UNSET),
+            srid=data.get("srid", UNSET),
+            style=data.get("style", UNSET),
+            subdomains=list(data["subdomains"]) if "subdomains" in data else UNSET,
+            template=data.get("template", UNSET),
+            tile_size=data.get("tileSize", UNSET),
+            transparent=data.get("transparent", UNSET),
+            version=data.get("version", UNSET),
+            y_flip=data.get("yFlip", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ServiceParam(_Model):
+    """A parameter sent with every request (`TIME`, `CQL_FILTER`, …): never a secret."""
+    name: str
+    value: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ServiceParam:
+        return cls(
+            name=data["name"],
+            value=data["value"],
         )
 
 
@@ -7794,6 +8294,68 @@ class TextStyleDef(_Model):
             italic=data.get("italic", UNSET),
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
             width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TileGrid(_Model):
+    """A service's tile grid as read: its system and its matrices, coarsest first."""
+    srid: int
+    matrices: list[TileMatrix]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["srid"] = self.srid
+        out["matrices"] = [e0.to_json() for e0 in self.matrices]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TileGrid:
+        return cls(
+            srid=data["srid"],
+            matrices=[TileMatrix.from_json(e0) for e0 in data["matrices"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TileMatrix(_Model):
+    """One matrix of a tile grid (docs/adr/0208 §3): its pixel's size in the
+    grid system's units, its top left corner as east and north (longitude
+    and latitude), whatever order the service wrote them in, its tiles' and
+    its own size in tiles.
+    """
+    id: str
+    resolution: float
+    x0: float
+    y0: float
+    tile_width: int
+    tile_height: int
+    matrix_width: int
+    matrix_height: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["resolution"] = float(self.resolution)
+        out["x0"] = float(self.x0)
+        out["y0"] = float(self.y0)
+        out["tileWidth"] = self.tile_width
+        out["tileHeight"] = self.tile_height
+        out["matrixWidth"] = self.matrix_width
+        out["matrixHeight"] = self.matrix_height
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TileMatrix:
+        return cls(
+            id=data["id"],
+            resolution=float(data["resolution"]),
+            x0=float(data["x0"]),
+            y0=float(data["y0"]),
+            tile_width=data["tileWidth"],
+            tile_height=data["tileHeight"],
+            matrix_width=data["matrixWidth"],
+            matrix_height=data["matrixHeight"],
         )
 
 
@@ -9620,6 +10182,8 @@ __all__ = [
     "ArrayLayout",
     "AttributeDefinition",
     "AttributesTableSource",
+    "AuthKind",
+    "AuthKindName",
     "BlockChange",
     "BlockDefined",
     "BlockDefinition",
@@ -9708,6 +10272,9 @@ __all__ = [
     "EntityEdit",
     "EntityGeometry",
     "FeatureChange",
+    "FeatureFeed",
+    "FeedKind",
+    "FeedKindName",
     "FieldChoice",
     "FileCommit",
     "FileCommitted",
@@ -9748,10 +10315,15 @@ __all__ = [
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",
+    "LayerServiceOperation",
+    "LayerServiceOperationName",
     "LayerSnap",
     "LayerState",
     "LayerStateNode",
     "LayerStyle",
+    "LayersService",
+    "LayersServicePlan",
+    "LayersServiced",
     "LeaderArrow",
     "LeaderArrowName",
     "LeaderEntity",
@@ -9861,6 +10433,11 @@ __all__ = [
     "RubberLink",
     "RubbersheetTransform",
     "ScaleTransform",
+    "ServiceConnection",
+    "ServiceKind",
+    "ServiceKindName",
+    "ServiceLayer",
+    "ServiceParam",
     "SimilarityCrsPlane",
     "SimilarityTransform",
     "SplineEntity",
@@ -9884,6 +10461,8 @@ __all__ = [
     "TextScript",
     "TextScriptName",
     "TextStyleDef",
+    "TileGrid",
+    "TileMatrix",
     "TmCrsSystem",
     "TmDefinition",
     "TopologyException",

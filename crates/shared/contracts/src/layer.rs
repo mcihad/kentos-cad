@@ -242,6 +242,16 @@ pub struct LayerNode {
         ts(as = "Option<Vec<crate::fields::LayerField>>", optional)
     )]
     pub fields: Vec<crate::fields::LayerField>,
+    /// A layer drawn from a map service (docs/adr/0208 §2): it holds no
+    /// objects. Only a layer has it, never a group.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub service: Option<crate::service::ServiceLayer>,
+    /// Where the layer's objects were taken from, to take them again
+    /// (docs/adr/0208 §10). Only a layer has it, never a group.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub feed: Option<crate::service::FeatureFeed>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

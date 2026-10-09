@@ -55,7 +55,8 @@ describe('menus from the catalog', () => {
     // Resim beside Blok (docs/adr/0192 §5).
     expect(draw.map((b) => b.label)).toEqual(['Çizgi', 'Eğri', 'Şekil', 'Yardımcı', 'Nokta', 'Yol', 'Açıklama', 'Blok', 'Resim', 'Tablo']);
     const map = menuBlocks(menuById('map')!.items, TOOL_CATALOG);
-    expect(map.map((b) => b.label)).toEqual(['Parsel', 'Arazi', 'Ölçme', 'Pafta']);
+    // Altlık: the map services (docs/adr/0208 §14).
+    expect(map.map((b) => b.label)).toEqual(['Parsel', 'Arazi', 'Ölçme', 'Altlık', 'Pafta']);
     expect(map[0].items).toEqual(['tool.parcel', 'tool.subdivide', 'map.parcelReport', 'map.edgeLengths']);
   });
 

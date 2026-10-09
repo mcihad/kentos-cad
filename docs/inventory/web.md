@@ -4,15 +4,15 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 424 | 399 | 0 | 25 |
+| Komutlar | 445 | 420 | 0 | 25 |
 | Araçlar | 121 | 119 | 0 | 2 |
 | İşlem araçları | 20 | 20 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
 | Ayarlar | 93 | 93 | 0 | 0 |
 | Tarayıcı depoları | 12 | 12 | 0 | 0 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 593 | 593 | 0 | 0 |
-| Pencereler ve paneller | 122 | 122 | 0 | 0 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 652 | 652 | 0 | 0 |
+| Pencereler ve paneller | 126 | 126 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -62,15 +62,15 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 352 | 0 | 58 | 12 | 2 | 424 |
+| Komutlar | 373 | 0 | 58 | 12 | 2 | 445 |
 | Araçlar | 119 | 0 | 0 | 2 | 0 | 121 |
 | İşlem araçları | 20 | 0 | 0 | 0 | 0 | 20 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
 | Ayarlar | 89 | 0 | 3 | 0 | 1 | 93 |
 | Tarayıcı depoları | 10 | 0 | 0 | 0 | 2 | 12 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 593 | 0 | 0 | 0 | 0 | 593 |
-| Pencereler ve paneller | 102 | 2 | 17 | 0 | 1 | 122 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 652 | 0 | 0 | 0 | 0 | 652 |
+| Pencereler ve paneller | 106 | 2 | 17 | 0 | 1 | 126 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -89,7 +89,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 424; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 445; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -190,11 +190,11 @@ Yok.
 
 Yok.
 
-#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 593)
+#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 652)
 
 Yok.
 
-#### Pencereler ve paneller (19 / 122)
+#### Pencereler ve paneller (19 / 126)
 
 - `apps/web/src/ui/io/TakeFromDialog.ts#openTakeFrom` openTakeFrom
 - `apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog` openProjectTypeDialog
@@ -218,4 +218,4 @@ Yok.
 
 ## Test başvurusu
 
-162 / 424 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+180 / 445 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

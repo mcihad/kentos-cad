@@ -16,6 +16,8 @@ members = [
     "crates/shared/ncz",
     # The project file, .kcad v2 (docs/specs/kcad-v2.md, docs/adr/0025).
     "crates/shared/kcad",
+    # Map services (docs/adr/0208): requests, capabilities, vector tiles and their styles.
+    "crates/shared/services",
     # The expression language (docs/adr/0100): processing tools, styles and filters.
     "crates/shared/expression",
     # Sheet layouts, pafta düzeni (docs/sheet/design.md): one core for the web and the desktop.
@@ -32,6 +34,8 @@ members = [
     "crates/wasm/ncz-wasm",
     # The sheet core in a module of its own, loaded when the sheet mode opens.
     "crates/wasm/sheet-wasm",
+    # Map services (docs/adr/0208) in a module of their own, loaded when a drawing shows a service.
+    "crates/wasm/services-wasm",
     "crates/wasm/svg-wasm",
     # Native libraries (desktop, later the server; never the browser): the drawing
     # document, the counterpart of the web's TypeScript one (docs/adr/0020), the
@@ -80,6 +84,7 @@ default-members = [
     "crates/shared/pointcloud",
     "crates/shared/ncz",
     "crates/shared/kcad",
+    "crates/shared/services",
     "crates/shared/expression",
     "crates/shared/sheet",
     "crates/shared/style-core",
@@ -90,6 +95,7 @@ default-members = [
     "crates/wasm/dxf-wasm",
     "crates/wasm/ncz-wasm",
     "crates/wasm/sheet-wasm",
+    "crates/wasm/services-wasm",
     "crates/wasm/svg-wasm",
     "crates/native/domain",
     "crates/native/application",

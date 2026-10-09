@@ -167,6 +167,7 @@ impl App {
             | BottomTab::Table
             | BottomTab::Search
             | BottomTab::Topology
+            | BottomTab::ServiceInfo
             | BottomTab::Python => None,
         }
     }

@@ -1,4 +1,5 @@
 import { supportedSamples, type AtlasSource, type FrameState, type LineBatch, type RenderBackend, type RGBA, type SceneLayer } from '../types';
+import type { ServiceSource } from '../servicePass';
 import { FILL_FS, FILL_VS, LINE_FS, LINE_VS, POINT_FS, POINT_VS } from './shaders';
 import { StyledRenderer, type GpuStyled } from './styledRenderer';
 
@@ -126,6 +127,11 @@ export class WebGL2Backend implements RenderBackend {
   useAtlas(atlas: AtlasSource): void {
     this.baseKey = '';
     this.styled.useAtlas(atlas);
+  }
+
+  useServices(services: ServiceSource | null): void {
+    this.baseKey = '';
+    this.styled.useServices(services);
   }
 
   resize(width: number, height: number, dpr: number): void {

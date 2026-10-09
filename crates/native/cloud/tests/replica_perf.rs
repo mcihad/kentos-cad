@@ -94,6 +94,7 @@ fn opened(n: usize) -> Opened {
         topology: None,
         annotation: None,
         text_styles: Vec::new(),
+        connections: Vec::new(),
     };
     let layers = vec![LayerNode {
         id: "parsel".into(),
@@ -115,6 +116,8 @@ fn opened(n: usize) -> Opened {
         children: Vec::new(),
         snap: None,
         fields: Vec::new(),
+        service: None,
+        feed: None,
     }];
     let project = Uuid::now_v7();
     let snapshot = DocumentSnapshotV2 {

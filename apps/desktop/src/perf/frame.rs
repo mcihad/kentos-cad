@@ -57,6 +57,11 @@ impl Parts {
     fn cpu(&self) -> f64 {
         self.event + self.app + self.view + self.layout + self.draw
     }
+
+    /// The headless GPU's frame and read back, milliseconds (none without a GPU).
+    pub(super) fn gpu_ms(&self) -> f64 {
+        self.gpu.unwrap_or(0.0)
+    }
 }
 
 /// The interface without a window, driven as Iced's runtime drives it.

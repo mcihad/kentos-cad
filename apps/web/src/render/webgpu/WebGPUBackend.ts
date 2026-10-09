@@ -1,4 +1,5 @@
 import { supportedSamples, type AtlasSource, type FrameState, type RenderBackend, type RGBA, type SceneLayer } from '../types';
+import type { ServiceSource } from '../servicePass';
 import { WGSL } from './shaders';
 import { WebGPUStyledRenderer, type GpuStyledLayer } from './styledRenderer';
 
@@ -244,6 +245,11 @@ export class WebGPUBackend implements RenderBackend {
   useAtlas(atlas: AtlasSource): void {
     this.baseKey = '';
     this.styled.useAtlas(atlas);
+  }
+
+  useServices(services: ServiceSource | null): void {
+    this.baseKey = '';
+    this.styled.useServices(services);
   }
 
   resize(width: number, height: number, dpr: number): void {

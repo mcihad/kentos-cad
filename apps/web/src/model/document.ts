@@ -1,4 +1,6 @@
+import type { FeatureFeed } from '../contracts/generated/FeatureFeed';
 import type { MigrationSource } from '../contracts/generated/MigrationSource';
+import type { ServiceLayer } from '../contracts/generated/ServiceLayer';
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
 import { isUuid, uuidv7 } from '../core/uuid';
@@ -13,6 +15,7 @@ import { LayerStore } from './layers';
 import { followHatches, tiesOf } from './hatchTies';
 import { followLinks } from './linkedTexts';
 import { sameJson } from './sameJson';
+import { canonical, feedProblem, serviceProblem } from './serviceRules';
 import type { ProjectStyles } from './style';
 
 type Op =
@@ -23,6 +26,8 @@ type Op =
   | { type: 'layerStyle'; layerId: string; before: LayerStyle; after: LayerStyle }
   /** A layer's fields (docs/adr/0199 §3): undoable like its look. */
   | { type: 'layerFields'; layerId: string; before: LayerField[]; after: LayerField[] }
+  /** A layer's name, map service and source (docs/adr/0208 §2, §10): undoable like its look. */
+  | { type: 'layerService'; layerId: string; before: Served; after: Served }
   /**
    * A layer or a group taken out of the tree with everything under it
    * (`removeLayer`), and its inverse: `node` is a copy as it was (children,
@@ -44,6 +49,15 @@ type Op =
   | { type: 'blockRemove'; index: number; block: BlockDefinition }
   | { type: 'blockUpdate'; before: BlockDefinition; after: BlockDefinition };
 
+/** What a layer is drawn from or took its objects from (docs/adr/0208): none, a service, or a source. */
+export interface ServedBy {
+  service?: ServiceLayer;
+  feed?: FeatureFeed;
+}
+
+/** A service layer as its undo step keeps it: its name too. */
+type Served = ServedBy & { name: string };
+
 /** A layer tree node as a history step keeps it, and its place: the parent group (null: the top) and the index there. */
 interface LayerPlace {
   node: LayerNode;
@@ -55,8 +69,8 @@ interface LayerPlace {
 const isLayerTreeOp = (o: Op): o is Extract<Op, { type: 'layerRemove' | 'layerAdd' }> => o.type === 'layerRemove' || o.type === 'layerAdd';
 
 /** Whether an op is about layers (their tree, style or the active one) rather than an object. */
-const isLayerOp = (o: Op): o is Extract<Op, { type: 'layerStyle' | 'layerFields' | 'layerRemove' | 'layerAdd' | 'layerActive' }> =>
-  o.type === 'layerStyle' || o.type === 'layerFields' || o.type === 'layerActive' || isLayerTreeOp(o);
+const isLayerOp = (o: Op): o is Extract<Op, { type: 'layerStyle' | 'layerFields' | 'layerService' | 'layerRemove' | 'layerAdd' | 'layerActive' }> =>
+  o.type === 'layerStyle' || o.type === 'layerFields' || o.type === 'layerService' || o.type === 'layerActive' || isLayerTreeOp(o);
 
 /** Whether an op changes the block definitions. */
 const isBlockOp = (o: Op): o is Extract<Op, { type: 'blockAdd' | 'blockRemove' | 'blockUpdate' }> =>
@@ -513,6 +527,31 @@ export class CadDocument {
   }
 
   /**
+   * Gives a layer its map service and its source as one undo step named `label` (docs/adr/0208 §2, §10): `next` is
+   * what the layer is drawn from or took its objects from afterwards (an empty one: neither); `name`, a new name in the
+   * same step. Refused with nothing changed (`Refusal`, the desktop's `set_layer_service`): a group, a blank name, both
+   * at once, a service or a source with a problem (`serviceProblem`, `feedProblem`), a service on a layer that holds
+   * objects. That a connection named is the project's is the command's to check (`cad.layers.service`). An unknown id
+   * changes nothing; returns whether it changed.
+   */
+  setLayerService(layerId: string, next: ServedBy, label = 'Servis katmanı', name?: string): boolean {
+    const node = this.layers.get(layerId);
+    if (!node) return false;
+    if (name !== undefined && !name.trim()) throw new Refusal('Katmanın adı boş olamaz; bir ad verin.');
+    if (node.type === 'group') throw new Refusal(`“${node.name}” bir grup; servis ve veri kaynağı yalnız katmanın olur.`);
+    if (next.service && next.feed) throw new Refusal(`“${node.name}” katmanı hem servisten çizilir hem nesnelerini bir kaynaktan alır; ikisi birden olmaz.`);
+    const problem = (next.service && serviceProblem(next.service)) || (next.feed && feedProblem(next.feed));
+    if (problem) throw new Refusal(problem);
+    if (next.service && this.layerIndex.get(layerId)?.size)
+      throw new Refusal(`“${node.name}” katmanında nesne var; servis katmanı nesne tutmaz. Servisi yeni bir katmana ekleyin.`);
+    const before: Served = structuredClone({ name: node.name, ...(node.service && { service: node.service }), ...(node.feed && { feed: node.feed }) });
+    const after: Served = structuredClone({ name: name?.trim() ?? node.name, ...(next.service && { service: next.service }), ...(next.feed && { feed: next.feed }) });
+    if (sameJson(canonical(before), canonical(after))) return false;
+    this.record({ type: 'layerService', layerId, before, after }, label);
+    return true;
+  }
+
+  /**
    * Adds a layer, or a group, as one undo step “Katman ekle” / “Grup ekle”
    * (into the open transaction or group, if one is, under its name): where
    * `LayerStore.add` puts it (into a group given as `parentId`, else that
@@ -522,9 +561,10 @@ export class CadDocument {
    * same step. Undo takes it away again: the active layer it set goes back to
    * the one before; one made active by hand that goes with it gives way to
    * the first layer of the tree. Refused with a `Refusal`, nothing changed,
-   * when an id of it is already in the tree. Returns the node in the tree.
+   * when an id of it is already in the tree. `index` and `label` place and name it otherwise (`cad.layers.service`,
+   * docs/adr/0208 §15). Returns the node in the tree.
    */
-  addLayer(init: LayerInit, parentId: string | null = null, opts: { activate?: boolean } = {}): LayerNode {
+  addLayer(init: LayerInit, parentId: string | null = null, opts: { activate?: boolean; index?: number; label?: string } = {}): LayerNode {
     const layers = this.layers;
     const taken = init.id !== undefined && layers.get(init.id) ? init.id : undefined;
     if (taken !== undefined) throw new Refusal(`“${taken}” kimlikli katman zaten var; katman eklenmedi.`);
@@ -533,8 +573,10 @@ export class CadDocument {
     if (again !== undefined) throw new Refusal(`“${again}” kimlikli katman zaten var; katman eklenmedi.`);
     const parent = layers.containerFor(parentId);
     const container = parent === null ? null : layers.get(parent);
-    const index = container ? container.children.length : layers.tree.length;
-    const label = node.type === 'group' ? 'Grup ekle' : 'Katman ekle';
+    // `index` places it among the group's nodes (first on top); none or past the end: last, drawn under the rest.
+    const length = container ? container.children.length : layers.tree.length;
+    const index = opts.index === undefined ? length : Math.min(Math.max(0, opts.index), length);
+    const label = opts.label ?? (node.type === 'group' ? 'Grup ekle' : 'Katman ekle');
     const before = layers.active.value;
     if (container) container.expanded = true;
     this.transact(label, () => {
@@ -872,6 +914,7 @@ export class CadDocument {
           dimensionStyles: m.settings.dimensionStyles ?? [],
           topology: m.settings.topology ?? null,
           annotation: m.settings.annotation ?? null,
+          connections: m.settings.connections ?? [],
         });
       if (m?.name !== undefined) this.name.set(m.name);
       if (m?.styles) this.styles.set(m.styles);
@@ -1073,6 +1116,7 @@ export class CadDocument {
         try {
           if (op.type === 'layerStyle') this.layers.replaceStyle(op.layerId, op.after);
           else if (op.type === 'layerFields') this.layers.replaceFields(op.layerId, op.after);
+          else if (op.type === 'layerService') this.layers.replaceService(op.layerId, op.after.name, op.after.service, op.after.feed);
           else if (op.type === 'layerActive') {
             if (this.layers.active.value === op.before) this.layers.setActive(op.after);
           }
@@ -1229,6 +1273,7 @@ function invert(op: Op): Op {
   if (op.type === 'blockUpdate') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerStyle') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerFields') return { ...op, before: op.after, after: op.before };
+  if (op.type === 'layerService') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerActive') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerRemove') return { ...op, type: 'layerAdd' };
   if (op.type === 'layerAdd') return { ...op, type: 'layerRemove' };

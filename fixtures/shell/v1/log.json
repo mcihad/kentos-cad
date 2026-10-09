@@ -34,6 +34,11 @@
    "icon": "topologyCheck"
   },
   {
+   "id": "serviceInfo",
+   "label": "Servis bilgisi",
+   "icon": "serviceInfo"
+  },
+  {
    "id": "messages",
    "label": "Uyarılar",
    "icon": "warning"

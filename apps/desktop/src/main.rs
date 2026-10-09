@@ -145,6 +145,10 @@ mod settings_look;
 mod settings_look_tests;
 mod settings_sections;
 mod settings_view;
+// Map services (docs/adr/0208): their tiles, connections' secrets and the device's cache.
+#[cfg(test)]
+mod service_scenes;
+mod services;
 mod sheet_inputs;
 mod sheet_library;
 mod sheet_pdf;

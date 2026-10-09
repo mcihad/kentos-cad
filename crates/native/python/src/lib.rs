@@ -16,6 +16,8 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+mod services;
+
 use std::path::PathBuf;
 
 use kentos_contracts::Bounds;
@@ -242,6 +244,14 @@ fn local_commands() -> Vec<(&'static str, u32)> {
 mod native {
     #[pymodule_export]
     use super::{PySession, catalog, local_commands};
+    // kentos.services (docs/adr/0208 §15).
+    #[pymodule_export]
+    use super::services::{
+        PyFeedReading, PyFeedTaking, PyServiceReading, services_auth_apply, services_auth_missing,
+        services_box_in, services_infer_fields, services_layer_colors, services_new_objects,
+        services_preset_layer, services_presets, services_read_token, services_same_system,
+        services_taken_words, services_to_project, services_token_request,
+    };
     use pyo3::prelude::*;
 
     #[pymodule_init]

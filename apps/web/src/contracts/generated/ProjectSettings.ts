@@ -8,6 +8,7 @@ import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { LayerState } from "./LayerState";
+import type { ServiceConnection } from "./ServiceConnection";
 import type { SurveySettings } from "./SurveySettings";
 import type { TextStyleDef } from "./TextStyleDef";
 import type { TopologySettings } from "./TopologySettings";
@@ -80,4 +81,8 @@ topology?: TopologySettings,
  * The project's annotation heights on paper (docs/adr/0205 §1); absent:
  * every kind's default.
  */
-annotation?: AnnotationHeights, };
+annotation?: AnnotationHeights, 
+/**
+ * The project's service connections without their secrets (docs/adr/0208 §2).
+ */
+connections?: Array<ServiceConnection>, };

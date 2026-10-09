@@ -281,6 +281,52 @@
             ],
             "type": "object"
           },
+          "AuthKind": {
+            "description": "The proof a service asks for (docs/adr/0208 §12).",
+            "oneOf": [
+              {
+                "enum": [
+                  "none"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "query",
+                "description": "`name=value` in the address, one or more.",
+                "type": "string"
+              },
+              {
+                "const": "header",
+                "description": "`Name: value` headers, one or more.",
+                "type": "string"
+              },
+              {
+                "const": "basic",
+                "description": "HTTP Basic: a user name and a password.",
+                "type": "string"
+              },
+              {
+                "const": "bearer",
+                "description": "`Authorization: Bearer <token>`.",
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS token from `generateToken`, by a user name and a password.",
+                "type": "string"
+              },
+              {
+                "const": "oauth2",
+                "description": "OAuth 2's client credentials at a token address.",
+                "type": "string"
+              },
+              {
+                "const": "google",
+                "description": "Google's API key and session.",
+                "type": "string"
+              }
+            ]
+          },
           "BlockChange": {
             "description": "A change of one block definition. An update replaces it whole and a\ndelete removes it, each guarded by `expectedVersions[\"block:<id>\"]`.",
             "oneOf": [
@@ -1861,6 +1907,115 @@
               }
             ]
           },
+          "FeatureFeed": {
+            "description": "Where a layer's objects came from, to take them again (docs/adr/0208 §10).",
+            "properties": {
+              "bbox": {
+                "description": "The area asked, `[x₁, y₁, x₂, y₂]` in the project's system; absent: all.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fetched": {
+                "description": "When they were last taken (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "description": "CQL, or ArcGIS's `where`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute that matches objects when they are taken again.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/FeedKind"
+              },
+              "limit": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "WFS's type, OGC's collection, ArcGIS's layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked of the service.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "url": {
+                "type": "string"
+              },
+              "version": {
+                "description": "WFS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "FeedKind": {
+            "description": "What a layer's objects were taken from (docs/adr/0208 §10).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wfs",
+                  "ogcFeatures"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST layer's `query`.",
+                "type": "string"
+              },
+              {
+                "const": "geojson",
+                "description": "A GeoJSON document at an address.",
+                "type": "string"
+              }
+            ]
+          },
           "FieldChoice": {
             "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
             "properties": {
@@ -2617,6 +2772,17 @@
               "expanded": {
                 "type": "boolean"
               },
+              "feed": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FeatureFeed"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the layer's objects were taken from, to take them again\n(docs/adr/0208 §10). Only a layer has it, never a group."
+              },
               "fields": {
                 "description": "A layer's fields (docs/adr/0199 §1): the schema of its objects'\nattributes, in the order the table and the form show them; empty, no\nschema (and nothing written). Only a layer has them, never a group.",
                 "items": {
@@ -2632,6 +2798,17 @@
               },
               "name": {
                 "type": "string"
+              },
+              "service": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ServiceLayer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer drawn from a map service (docs/adr/0208 §2): it holds no\nobjects. Only a layer has it, never a group."
               },
               "snap": {
                 "anyOf": [
@@ -3615,6 +3792,13 @@
               "areaUnit": {
                 "$ref": "#/$defs/AreaUnit"
               },
+              "connections": {
+                "description": "The project's service connections without their secrets (docs/adr/0208 §2).",
+                "items": {
+                  "$ref": "#/$defs/ServiceConnection"
+                },
+                "type": "array"
+              },
               "customCrs": {
                 "anyOf": [
                   {
@@ -4116,6 +4300,275 @@
             },
             "required": [
               "pts"
+            ],
+            "type": "object"
+          },
+          "ServiceConnection": {
+            "description": "A connection of the project (docs/adr/0208 §2): what proof requests to\nits origin carry, without the secrets.",
+            "properties": {
+              "auth": {
+                "$ref": "#/$defs/AuthKind"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "names": {
+                "description": "The parameters' (query) or headers' (header) names.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "origin": {
+                "description": "`https://host[:port]`: proof goes to this origin only.",
+                "type": "string"
+              },
+              "scope": {
+                "description": "OAuth 2's scope.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tokenUrl": {
+                "description": "ArcGIS's `generateToken` or OAuth 2's token address.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "origin",
+              "auth"
+            ],
+            "type": "object"
+          },
+          "ServiceKind": {
+            "description": "What a service layer draws (docs/adr/0208 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wms",
+                  "wmts"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "xyz",
+                "description": "Tiles by an address template, Web Mercator (TMS with `yFlip`).",
+                "type": "string"
+              },
+              {
+                "const": "ogcTiles",
+                "description": "OGC API Tiles' map tiles.",
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST MapServer or ImageServer: its cached tiles, else `export`.",
+                "type": "string"
+              },
+              {
+                "const": "google",
+                "description": "Google's Map Tiles API, 2D tiles.",
+                "type": "string"
+              },
+              {
+                "const": "vector",
+                "description": "Vector tiles (MVT) by a MapLibre style, a TileJSON or a template.",
+                "type": "string"
+              }
+            ]
+          },
+          "ServiceLayer": {
+            "description": "A layer drawn from a service (docs/adr/0208 §2).",
+            "properties": {
+              "attribution": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bbox": {
+                "description": "The service's extent, WGS 84 degrees (west, south, east, north), as\nits capabilities give it: what “Servisin kapsamına yakınlaştır” shows.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "description": "The project's connection whose proof goes with the requests.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dynamic": {
+                "description": "WMS and `export`: one picture of the view instead of tiles.",
+                "type": "boolean"
+              },
+              "format": {
+                "description": "The image's media type (`image/png`, …).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "grid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TileGrid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "WMTS's, OGC's and a cached ArcGIS service's matrices."
+              },
+              "kind": {
+                "$ref": "#/$defs/ServiceKind"
+              },
+              "layers": {
+                "description": "WMS's layer names; WMTS's one layer; ArcGIS's layers shown.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "matrixSet": {
+                "description": "WMTS's matrix set's identifier (`TILEMATRIXSET`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "minZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "params": {
+                "items": {
+                  "$ref": "#/$defs/ServiceParam"
+                },
+                "type": "array"
+              },
+              "preset": {
+                "description": "The ready basemap it came from.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked: WMS's `CRS`, ArcGIS's `imageSR`; a grid's own.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "style": {
+                "description": "WMS's and WMTS's style; Google's map type.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "subdomains": {
+                "description": "`{s}`'s values, taken in turn.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "template": {
+                "description": "WMTS REST's and OGC's tile template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tileSize": {
+                "description": "XYZ's and the vector tiles' tile side, pixels; absent 256.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "transparent": {
+                "description": "WMS's and `export`'s `TRANSPARENT`.",
+                "type": "boolean"
+              },
+              "url": {
+                "description": "XYZ: the template; WMS, WMTS, ArcGIS: the service's address; OGC\nAPI Tiles: the tile set's; vector: the style's, the TileJSON's or the\ntemplate; Google: empty.",
+                "type": "string"
+              },
+              "version": {
+                "description": "WMS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "yFlip": {
+                "description": "TMS: rows counted from the bottom.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "ServiceParam": {
+            "description": "A parameter sent with every request (`TIME`, `CQL_FILTER`, …): never a secret.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
             ],
             "type": "object"
           },
@@ -4964,6 +5417,78 @@
             ],
             "type": "object"
           },
+          "TileGrid": {
+            "description": "A service's tile grid as read: its system and its matrices, coarsest first.",
+            "properties": {
+              "matrices": {
+                "items": {
+                  "$ref": "#/$defs/TileMatrix"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "srid",
+              "matrices"
+            ],
+            "type": "object"
+          },
+          "TileMatrix": {
+            "description": "One matrix of a tile grid (docs/adr/0208 §3): its pixel's size in the\ngrid system's units, its top left corner as east and north (longitude\nand latitude), whatever order the service wrote them in, its tiles' and\nits own size in tiles.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "matrixHeight": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "matrixWidth": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "resolution": {
+                "format": "double",
+                "type": "number"
+              },
+              "tileHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "tileWidth": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "x0": {
+                "format": "double",
+                "type": "number"
+              },
+              "y0": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "resolution",
+              "x0",
+              "y0",
+              "tileWidth",
+              "tileHeight",
+              "matrixWidth",
+              "matrixHeight"
+            ],
+            "type": "object"
+          },
           "TmDefinition": {
             "description": "A transverse Mercator grid: its origin's latitude (0 when left out),\ncentral meridian, scale and false origin.",
             "properties": {
@@ -5684,6 +6209,52 @@
             ],
             "type": "string"
           },
+          "AuthKind": {
+            "description": "The proof a service asks for (docs/adr/0208 §12).",
+            "oneOf": [
+              {
+                "enum": [
+                  "none"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "query",
+                "description": "`name=value` in the address, one or more.",
+                "type": "string"
+              },
+              {
+                "const": "header",
+                "description": "`Name: value` headers, one or more.",
+                "type": "string"
+              },
+              {
+                "const": "basic",
+                "description": "HTTP Basic: a user name and a password.",
+                "type": "string"
+              },
+              {
+                "const": "bearer",
+                "description": "`Authorization: Bearer <token>`.",
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS token from `generateToken`, by a user name and a password.",
+                "type": "string"
+              },
+              {
+                "const": "oauth2",
+                "description": "OAuth 2's client credentials at a token address.",
+                "type": "string"
+              },
+              {
+                "const": "google",
+                "description": "Google's API key and session.",
+                "type": "string"
+              }
+            ]
+          },
           "Bounds": {
             "properties": {
               "maxX": {
@@ -6200,6 +6771,115 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "FeatureFeed": {
+            "description": "Where a layer's objects came from, to take them again (docs/adr/0208 §10).",
+            "properties": {
+              "bbox": {
+                "description": "The area asked, `[x₁, y₁, x₂, y₂]` in the project's system; absent: all.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fetched": {
+                "description": "When they were last taken (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "description": "CQL, or ArcGIS's `where`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute that matches objects when they are taken again.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/FeedKind"
+              },
+              "limit": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "WFS's type, OGC's collection, ArcGIS's layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked of the service.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "url": {
+                "type": "string"
+              },
+              "version": {
+                "description": "WFS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "FeedKind": {
+            "description": "What a layer's objects were taken from (docs/adr/0208 §10).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wfs",
+                  "ogcFeatures"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST layer's `query`.",
+                "type": "string"
+              },
+              {
+                "const": "geojson",
+                "description": "A GeoJSON document at an address.",
+                "type": "string"
+              }
+            ]
+          },
           "FieldChoice": {
             "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
             "properties": {
@@ -6512,6 +7192,17 @@
               "expanded": {
                 "type": "boolean"
               },
+              "feed": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FeatureFeed"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the layer's objects were taken from, to take them again\n(docs/adr/0208 §10). Only a layer has it, never a group."
+              },
               "fields": {
                 "description": "A layer's fields (docs/adr/0199 §1): the schema of its objects'\nattributes, in the order the table and the form show them; empty, no\nschema (and nothing written). Only a layer has them, never a group.",
                 "items": {
@@ -6527,6 +7218,17 @@
               },
               "name": {
                 "type": "string"
+              },
+              "service": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ServiceLayer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer drawn from a map service (docs/adr/0208 §2): it holds no\nobjects. Only a layer has it, never a group."
               },
               "snap": {
                 "anyOf": [
@@ -6780,6 +7482,13 @@
               "areaUnit": {
                 "$ref": "#/$defs/AreaUnit"
               },
+              "connections": {
+                "description": "The project's service connections without their secrets (docs/adr/0208 §2).",
+                "items": {
+                  "$ref": "#/$defs/ServiceConnection"
+                },
+                "type": "array"
+              },
               "customCrs": {
                 "anyOf": [
                   {
@@ -7002,6 +7711,275 @@
             ],
             "type": "string"
           },
+          "ServiceConnection": {
+            "description": "A connection of the project (docs/adr/0208 §2): what proof requests to\nits origin carry, without the secrets.",
+            "properties": {
+              "auth": {
+                "$ref": "#/$defs/AuthKind"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "names": {
+                "description": "The parameters' (query) or headers' (header) names.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "origin": {
+                "description": "`https://host[:port]`: proof goes to this origin only.",
+                "type": "string"
+              },
+              "scope": {
+                "description": "OAuth 2's scope.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tokenUrl": {
+                "description": "ArcGIS's `generateToken` or OAuth 2's token address.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "origin",
+              "auth"
+            ],
+            "type": "object"
+          },
+          "ServiceKind": {
+            "description": "What a service layer draws (docs/adr/0208 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wms",
+                  "wmts"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "xyz",
+                "description": "Tiles by an address template, Web Mercator (TMS with `yFlip`).",
+                "type": "string"
+              },
+              {
+                "const": "ogcTiles",
+                "description": "OGC API Tiles' map tiles.",
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST MapServer or ImageServer: its cached tiles, else `export`.",
+                "type": "string"
+              },
+              {
+                "const": "google",
+                "description": "Google's Map Tiles API, 2D tiles.",
+                "type": "string"
+              },
+              {
+                "const": "vector",
+                "description": "Vector tiles (MVT) by a MapLibre style, a TileJSON or a template.",
+                "type": "string"
+              }
+            ]
+          },
+          "ServiceLayer": {
+            "description": "A layer drawn from a service (docs/adr/0208 §2).",
+            "properties": {
+              "attribution": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bbox": {
+                "description": "The service's extent, WGS 84 degrees (west, south, east, north), as\nits capabilities give it: what “Servisin kapsamına yakınlaştır” shows.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "description": "The project's connection whose proof goes with the requests.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dynamic": {
+                "description": "WMS and `export`: one picture of the view instead of tiles.",
+                "type": "boolean"
+              },
+              "format": {
+                "description": "The image's media type (`image/png`, …).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "grid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TileGrid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "WMTS's, OGC's and a cached ArcGIS service's matrices."
+              },
+              "kind": {
+                "$ref": "#/$defs/ServiceKind"
+              },
+              "layers": {
+                "description": "WMS's layer names; WMTS's one layer; ArcGIS's layers shown.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "matrixSet": {
+                "description": "WMTS's matrix set's identifier (`TILEMATRIXSET`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "minZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "params": {
+                "items": {
+                  "$ref": "#/$defs/ServiceParam"
+                },
+                "type": "array"
+              },
+              "preset": {
+                "description": "The ready basemap it came from.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked: WMS's `CRS`, ArcGIS's `imageSR`; a grid's own.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "style": {
+                "description": "WMS's and WMTS's style; Google's map type.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "subdomains": {
+                "description": "`{s}`'s values, taken in turn.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "template": {
+                "description": "WMTS REST's and OGC's tile template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tileSize": {
+                "description": "XYZ's and the vector tiles' tile side, pixels; absent 256.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "transparent": {
+                "description": "WMS's and `export`'s `TRANSPARENT`.",
+                "type": "boolean"
+              },
+              "url": {
+                "description": "XYZ: the template; WMS, WMTS, ArcGIS: the service's address; OGC\nAPI Tiles: the tile set's; vector: the style's, the TileJSON's or the\ntemplate; Google: empty.",
+                "type": "string"
+              },
+              "version": {
+                "description": "WMS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "yFlip": {
+                "description": "TMS: rows counted from the bottom.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "ServiceParam": {
+            "description": "A parameter sent with every request (`TIME`, `CQL_FILTER`, …): never a secret.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
           "SurveySettings": {
             "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171); the a priori standard\ndeviations of a network adjustment (docs/adr/0203 §1). Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
             "properties": {
@@ -7183,6 +8161,78 @@
               "id",
               "name",
               "font"
+            ],
+            "type": "object"
+          },
+          "TileGrid": {
+            "description": "A service's tile grid as read: its system and its matrices, coarsest first.",
+            "properties": {
+              "matrices": {
+                "items": {
+                  "$ref": "#/$defs/TileMatrix"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "srid",
+              "matrices"
+            ],
+            "type": "object"
+          },
+          "TileMatrix": {
+            "description": "One matrix of a tile grid (docs/adr/0208 §3): its pixel's size in the\ngrid system's units, its top left corner as east and north (longitude\nand latitude), whatever order the service wrote them in, its tiles' and\nits own size in tiles.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "matrixHeight": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "matrixWidth": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "resolution": {
+                "format": "double",
+                "type": "number"
+              },
+              "tileHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "tileWidth": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "x0": {
+                "format": "double",
+                "type": "number"
+              },
+              "y0": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "resolution",
+              "x0",
+              "y0",
+              "tileWidth",
+              "tileHeight",
+              "matrixWidth",
+              "matrixHeight"
             ],
             "type": "object"
           },
@@ -7797,6 +8847,52 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "AuthKind": {
+            "description": "The proof a service asks for (docs/adr/0208 §12).",
+            "oneOf": [
+              {
+                "enum": [
+                  "none"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "query",
+                "description": "`name=value` in the address, one or more.",
+                "type": "string"
+              },
+              {
+                "const": "header",
+                "description": "`Name: value` headers, one or more.",
+                "type": "string"
+              },
+              {
+                "const": "basic",
+                "description": "HTTP Basic: a user name and a password.",
+                "type": "string"
+              },
+              {
+                "const": "bearer",
+                "description": "`Authorization: Bearer <token>`.",
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS token from `generateToken`, by a user name and a password.",
+                "type": "string"
+              },
+              {
+                "const": "oauth2",
+                "description": "OAuth 2's client credentials at a token address.",
+                "type": "string"
+              },
+              {
+                "const": "google",
+                "description": "Google's API key and session.",
+                "type": "string"
+              }
+            ]
           },
           "BlockDefinition": {
             "description": "A block definition (docs/adr/0144): objects drawn once, placed many\ntimes. Its objects' ids are local to it; their layer is kept, but an\ninsert draws them on its own layer (the DXF's layer 0), each with its own\ncolour or line weight when it has one.",
@@ -9305,6 +10401,115 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "FeatureFeed": {
+            "description": "Where a layer's objects came from, to take them again (docs/adr/0208 §10).",
+            "properties": {
+              "bbox": {
+                "description": "The area asked, `[x₁, y₁, x₂, y₂]` in the project's system; absent: all.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fetched": {
+                "description": "When they were last taken (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "description": "CQL, or ArcGIS's `where`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute that matches objects when they are taken again.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/FeedKind"
+              },
+              "limit": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "WFS's type, OGC's collection, ArcGIS's layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked of the service.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "url": {
+                "type": "string"
+              },
+              "version": {
+                "description": "WFS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "FeedKind": {
+            "description": "What a layer's objects were taken from (docs/adr/0208 §10).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wfs",
+                  "ogcFeatures"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST layer's `query`.",
+                "type": "string"
+              },
+              {
+                "const": "geojson",
+                "description": "A GeoJSON document at an address.",
+                "type": "string"
+              }
+            ]
+          },
           "FieldChoice": {
             "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
             "properties": {
@@ -10061,6 +11266,17 @@
               "expanded": {
                 "type": "boolean"
               },
+              "feed": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FeatureFeed"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the layer's objects were taken from, to take them again\n(docs/adr/0208 §10). Only a layer has it, never a group."
+              },
               "fields": {
                 "description": "A layer's fields (docs/adr/0199 §1): the schema of its objects'\nattributes, in the order the table and the form show them; empty, no\nschema (and nothing written). Only a layer has them, never a group.",
                 "items": {
@@ -10076,6 +11292,17 @@
               },
               "name": {
                 "type": "string"
+              },
+              "service": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ServiceLayer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer drawn from a map service (docs/adr/0208 §2): it holds no\nobjects. Only a layer has it, never a group."
               },
               "snap": {
                 "anyOf": [
@@ -11109,6 +12336,13 @@
               "areaUnit": {
                 "$ref": "#/$defs/AreaUnit"
               },
+              "connections": {
+                "description": "The project's service connections without their secrets (docs/adr/0208 §2).",
+                "items": {
+                  "$ref": "#/$defs/ServiceConnection"
+                },
+                "type": "array"
+              },
               "customCrs": {
                 "anyOf": [
                   {
@@ -11646,6 +12880,275 @@
             },
             "required": [
               "pts"
+            ],
+            "type": "object"
+          },
+          "ServiceConnection": {
+            "description": "A connection of the project (docs/adr/0208 §2): what proof requests to\nits origin carry, without the secrets.",
+            "properties": {
+              "auth": {
+                "$ref": "#/$defs/AuthKind"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "names": {
+                "description": "The parameters' (query) or headers' (header) names.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "origin": {
+                "description": "`https://host[:port]`: proof goes to this origin only.",
+                "type": "string"
+              },
+              "scope": {
+                "description": "OAuth 2's scope.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tokenUrl": {
+                "description": "ArcGIS's `generateToken` or OAuth 2's token address.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "origin",
+              "auth"
+            ],
+            "type": "object"
+          },
+          "ServiceKind": {
+            "description": "What a service layer draws (docs/adr/0208 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wms",
+                  "wmts"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "xyz",
+                "description": "Tiles by an address template, Web Mercator (TMS with `yFlip`).",
+                "type": "string"
+              },
+              {
+                "const": "ogcTiles",
+                "description": "OGC API Tiles' map tiles.",
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST MapServer or ImageServer: its cached tiles, else `export`.",
+                "type": "string"
+              },
+              {
+                "const": "google",
+                "description": "Google's Map Tiles API, 2D tiles.",
+                "type": "string"
+              },
+              {
+                "const": "vector",
+                "description": "Vector tiles (MVT) by a MapLibre style, a TileJSON or a template.",
+                "type": "string"
+              }
+            ]
+          },
+          "ServiceLayer": {
+            "description": "A layer drawn from a service (docs/adr/0208 §2).",
+            "properties": {
+              "attribution": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bbox": {
+                "description": "The service's extent, WGS 84 degrees (west, south, east, north), as\nits capabilities give it: what “Servisin kapsamına yakınlaştır” shows.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "description": "The project's connection whose proof goes with the requests.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dynamic": {
+                "description": "WMS and `export`: one picture of the view instead of tiles.",
+                "type": "boolean"
+              },
+              "format": {
+                "description": "The image's media type (`image/png`, …).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "grid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TileGrid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "WMTS's, OGC's and a cached ArcGIS service's matrices."
+              },
+              "kind": {
+                "$ref": "#/$defs/ServiceKind"
+              },
+              "layers": {
+                "description": "WMS's layer names; WMTS's one layer; ArcGIS's layers shown.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "matrixSet": {
+                "description": "WMTS's matrix set's identifier (`TILEMATRIXSET`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "minZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "params": {
+                "items": {
+                  "$ref": "#/$defs/ServiceParam"
+                },
+                "type": "array"
+              },
+              "preset": {
+                "description": "The ready basemap it came from.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked: WMS's `CRS`, ArcGIS's `imageSR`; a grid's own.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "style": {
+                "description": "WMS's and WMTS's style; Google's map type.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "subdomains": {
+                "description": "`{s}`'s values, taken in turn.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "template": {
+                "description": "WMTS REST's and OGC's tile template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tileSize": {
+                "description": "XYZ's and the vector tiles' tile side, pixels; absent 256.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "transparent": {
+                "description": "WMS's and `export`'s `TRANSPARENT`.",
+                "type": "boolean"
+              },
+              "url": {
+                "description": "XYZ: the template; WMS, WMTS, ArcGIS: the service's address; OGC\nAPI Tiles: the tile set's; vector: the style's, the TileJSON's or the\ntemplate; Google: empty.",
+                "type": "string"
+              },
+              "version": {
+                "description": "WMS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "yFlip": {
+                "description": "TMS: rows counted from the bottom.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "ServiceParam": {
+            "description": "A parameter sent with every request (`TIME`, `CQL_FILTER`, …): never a secret.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
             ],
             "type": "object"
           },
@@ -12507,6 +14010,78 @@
               "id",
               "name",
               "font"
+            ],
+            "type": "object"
+          },
+          "TileGrid": {
+            "description": "A service's tile grid as read: its system and its matrices, coarsest first.",
+            "properties": {
+              "matrices": {
+                "items": {
+                  "$ref": "#/$defs/TileMatrix"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "srid",
+              "matrices"
+            ],
+            "type": "object"
+          },
+          "TileMatrix": {
+            "description": "One matrix of a tile grid (docs/adr/0208 §3): its pixel's size in the\ngrid system's units, its top left corner as east and north (longitude\nand latitude), whatever order the service wrote them in, its tiles' and\nits own size in tiles.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "matrixHeight": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "matrixWidth": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "resolution": {
+                "format": "double",
+                "type": "number"
+              },
+              "tileHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "tileWidth": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "x0": {
+                "format": "double",
+                "type": "number"
+              },
+              "y0": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "resolution",
+              "x0",
+              "y0",
+              "tileWidth",
+              "tileHeight",
+              "matrixWidth",
+              "matrixHeight"
             ],
             "type": "object"
           },
@@ -69908,6 +71483,1759 @@
             ],
             "block": "01925f3e-7c1c-7b22-8d33-4c5e6f708192",
             "operation": "attributes"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.layers.service",
+      "version": 1,
+      "title": "Servis katmanı",
+      "summary": "Katman ağacına bir harita servisinden çizilen katman ekler (add: XYZ ve TMS, WMTS, WMS, OGC API Tiles, ArcGIS REST, Google'ın 2B karoları, vektör karolar), nesneleri bir servisten alınan katman ekler (addFeed: WFS, OGC API Features, ArcGIS katmanı, GeoJSON adresi; alanlarıyla), birini değiştirir (update: ad, servis ya da kaynak) ya da bir servis katmanını siler (remove); tek geri alma adımı, adı işlemin. parent katmanın gireceği grup (ya da yanına gireceği katman), index gruptaki yeri: ilki en üstte çizilir, verilmezse en sona, her şeyin altına girer. connections projenin bağlantılarına eklenir ya da aynı kimliklisinin yerini alır; bağlantı yalnız doğrulamanın türünü ve gizli olmayan adları taşır, gizli değerler çizime yazılmaz. Servis katmanı nesne tutmaz; servis ya da kaynak projenin bağlantılarından birini adlandırır. Nesneler servisten alındıktan sonra cad.entities.create ile yazılır; aynı işlem grubunda tek adım olur. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "AuthKind": {
+            "description": "The proof a service asks for (docs/adr/0208 §12).",
+            "oneOf": [
+              {
+                "enum": [
+                  "none"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "query",
+                "description": "`name=value` in the address, one or more.",
+                "type": "string"
+              },
+              {
+                "const": "header",
+                "description": "`Name: value` headers, one or more.",
+                "type": "string"
+              },
+              {
+                "const": "basic",
+                "description": "HTTP Basic: a user name and a password.",
+                "type": "string"
+              },
+              {
+                "const": "bearer",
+                "description": "`Authorization: Bearer <token>`.",
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS token from `generateToken`, by a user name and a password.",
+                "type": "string"
+              },
+              {
+                "const": "oauth2",
+                "description": "OAuth 2's client credentials at a token address.",
+                "type": "string"
+              },
+              {
+                "const": "google",
+                "description": "Google's API key and session.",
+                "type": "string"
+              }
+            ]
+          },
+          "FeatureFeed": {
+            "description": "Where a layer's objects came from, to take them again (docs/adr/0208 §10).",
+            "properties": {
+              "bbox": {
+                "description": "The area asked, `[x₁, y₁, x₂, y₂]` in the project's system; absent: all.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fetched": {
+                "description": "When they were last taken (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "description": "CQL, or ArcGIS's `where`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute that matches objects when they are taken again.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/FeedKind"
+              },
+              "limit": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "WFS's type, OGC's collection, ArcGIS's layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked of the service.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "url": {
+                "type": "string"
+              },
+              "version": {
+                "description": "WFS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "FeedKind": {
+            "description": "What a layer's objects were taken from (docs/adr/0208 §10).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wfs",
+                  "ogcFeatures"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST layer's `query`.",
+                "type": "string"
+              },
+              {
+                "const": "geojson",
+                "description": "A GeoJSON document at an address.",
+                "type": "string"
+              }
+            ]
+          },
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
+          "LayerField": {
+            "description": "A field of a layer (docs/adr/0199 §1): its name is the attribute's key.",
+            "properties": {
+              "alias": {
+                "description": "The name the table and the form show.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "default": {
+                "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind"
+              },
+              "length": {
+                "description": "A text's most characters (1–10 000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "max": {
+                "description": "A number's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "A number's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "description": "An object may not leave it empty; written only as `true`.",
+                "type": "boolean"
+              },
+              "scale": {
+                "description": "A decimal's most fraction digits (0–15).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "The values a text or a number takes, when only some.",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "enum": [
+              "text",
+              "integer",
+              "decimal",
+              "date",
+              "boolean"
+            ],
+            "type": "string"
+          },
+          "LayerServiceOperation": {
+            "description": "What `cad.layers.service` does; it names the undo step.",
+            "oneOf": [
+              {
+                "const": "add",
+                "description": "A layer drawn from a service (“Harita servisi ekle”).",
+                "type": "string"
+              },
+              {
+                "const": "addFeed",
+                "description": "A layer for a service's objects, with its fields (“Veri katmanı ekle”).",
+                "type": "string"
+              },
+              {
+                "const": "update",
+                "description": "A new name, service or feed (“Servis katmanını değiştir”).",
+                "type": "string"
+              },
+              {
+                "const": "remove",
+                "description": "A layer drawn from a service taken away (“Servis katmanını sil”).",
+                "type": "string"
+              }
+            ]
+          },
+          "ServiceConnection": {
+            "description": "A connection of the project (docs/adr/0208 §2): what proof requests to\nits origin carry, without the secrets.",
+            "properties": {
+              "auth": {
+                "$ref": "#/$defs/AuthKind"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "names": {
+                "description": "The parameters' (query) or headers' (header) names.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "origin": {
+                "description": "`https://host[:port]`: proof goes to this origin only.",
+                "type": "string"
+              },
+              "scope": {
+                "description": "OAuth 2's scope.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tokenUrl": {
+                "description": "ArcGIS's `generateToken` or OAuth 2's token address.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "origin",
+              "auth"
+            ],
+            "type": "object"
+          },
+          "ServiceKind": {
+            "description": "What a service layer draws (docs/adr/0208 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wms",
+                  "wmts"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "xyz",
+                "description": "Tiles by an address template, Web Mercator (TMS with `yFlip`).",
+                "type": "string"
+              },
+              {
+                "const": "ogcTiles",
+                "description": "OGC API Tiles' map tiles.",
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST MapServer or ImageServer: its cached tiles, else `export`.",
+                "type": "string"
+              },
+              {
+                "const": "google",
+                "description": "Google's Map Tiles API, 2D tiles.",
+                "type": "string"
+              },
+              {
+                "const": "vector",
+                "description": "Vector tiles (MVT) by a MapLibre style, a TileJSON or a template.",
+                "type": "string"
+              }
+            ]
+          },
+          "ServiceLayer": {
+            "description": "A layer drawn from a service (docs/adr/0208 §2).",
+            "properties": {
+              "attribution": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bbox": {
+                "description": "The service's extent, WGS 84 degrees (west, south, east, north), as\nits capabilities give it: what “Servisin kapsamına yakınlaştır” shows.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "description": "The project's connection whose proof goes with the requests.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dynamic": {
+                "description": "WMS and `export`: one picture of the view instead of tiles.",
+                "type": "boolean"
+              },
+              "format": {
+                "description": "The image's media type (`image/png`, …).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "grid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TileGrid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "WMTS's, OGC's and a cached ArcGIS service's matrices."
+              },
+              "kind": {
+                "$ref": "#/$defs/ServiceKind"
+              },
+              "layers": {
+                "description": "WMS's layer names; WMTS's one layer; ArcGIS's layers shown.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "matrixSet": {
+                "description": "WMTS's matrix set's identifier (`TILEMATRIXSET`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "minZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "params": {
+                "items": {
+                  "$ref": "#/$defs/ServiceParam"
+                },
+                "type": "array"
+              },
+              "preset": {
+                "description": "The ready basemap it came from.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked: WMS's `CRS`, ArcGIS's `imageSR`; a grid's own.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "style": {
+                "description": "WMS's and WMTS's style; Google's map type.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "subdomains": {
+                "description": "`{s}`'s values, taken in turn.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "template": {
+                "description": "WMTS REST's and OGC's tile template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tileSize": {
+                "description": "XYZ's and the vector tiles' tile side, pixels; absent 256.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "transparent": {
+                "description": "WMS's and `export`'s `TRANSPARENT`.",
+                "type": "boolean"
+              },
+              "url": {
+                "description": "XYZ: the template; WMS, WMTS, ArcGIS: the service's address; OGC\nAPI Tiles: the tile set's; vector: the style's, the TileJSON's or the\ntemplate; Google: empty.",
+                "type": "string"
+              },
+              "version": {
+                "description": "WMS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "yFlip": {
+                "description": "TMS: rows counted from the bottom.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "ServiceParam": {
+            "description": "A parameter sent with every request (`TIME`, `CQL_FILTER`, …): never a secret.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          "TileGrid": {
+            "description": "A service's tile grid as read: its system and its matrices, coarsest first.",
+            "properties": {
+              "matrices": {
+                "items": {
+                  "$ref": "#/$defs/TileMatrix"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "srid",
+              "matrices"
+            ],
+            "type": "object"
+          },
+          "TileMatrix": {
+            "description": "One matrix of a tile grid (docs/adr/0208 §3): its pixel's size in the\ngrid system's units, its top left corner as east and north (longitude\nand latitude), whatever order the service wrote them in, its tiles' and\nits own size in tiles.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "matrixHeight": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "matrixWidth": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "resolution": {
+                "format": "double",
+                "type": "number"
+              },
+              "tileHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "tileWidth": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "x0": {
+                "format": "double",
+                "type": "number"
+              },
+              "y0": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "resolution",
+              "x0",
+              "y0",
+              "tileWidth",
+              "tileHeight",
+              "matrixWidth",
+              "matrixHeight"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.layers.service` v1: one change of the layer tree, as one\nundo step named after the operation.\n\n- `add`: `name`, `service`; `parent` and `index` place it;\n- `addFeed`: `name`, `feed`, `fields` (absent: none); placed as `add`;\n- `update`: `layer`, and any of `name`, `service` (a service layer's),\n  `feed` (a feed layer's);\n- `remove`: `layer` (a service layer).\n\n`parent`: the group it goes into, or a layer whose group it goes into;\nabsent, the top. `index`: its place among the group's nodes, first on\ntop; absent or past the end, last: drawn first, under everything else.\n`connections`: the project's connections it adds or replaces (by id), in\nthe same step.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer` (update\nand remove without `layer`), `empty_name` (add, addFeed; update with a\nname that is empty or only white space), `no_service` (add),\n`no_feed` (addFeed), `service_and_feed` (both given), `invalid_service`,\n`invalid_feed`, `invalid_fields`, `invalid_connection` (the project's\nconnections with these, by `connections_problem`); then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`layer_not_found`, `not_a_layer` (a group), `not_a_service_layer`\n(update's service on a layer that has none, update's feed on a layer\nwithout one, remove on a layer drawn from no service), `layer_has_objects`\n(update giving a service to a layer with objects), `unknown_connection`\n(a service or feed naming a connection the project does not have).",
+        "properties": {
+          "connections": {
+            "description": "Connections added to the project, or replacing its own of the same id.",
+            "items": {
+              "$ref": "#/$defs/ServiceConnection"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "feed": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/FeatureFeed"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fields": {
+            "description": "`addFeed`: the layer's fields (docs/adr/0199 §1).",
+            "items": {
+              "$ref": "#/$defs/LayerField"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "index": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "`update`, `remove`: the layer's id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "`add`, `addFeed`: the new layer's name; `update`: a new name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/LayerServiceOperation"
+          },
+          "parent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "service": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ServiceLayer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "LayersService",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.service` v1.",
+        "properties": {
+          "layer": {
+            "description": "The layer added, changed or removed.",
+            "type": "string"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "revision"
+        ],
+        "title": "LayersServiced",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "AuthKind": {
+            "description": "The proof a service asks for (docs/adr/0208 §12).",
+            "oneOf": [
+              {
+                "enum": [
+                  "none"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "query",
+                "description": "`name=value` in the address, one or more.",
+                "type": "string"
+              },
+              {
+                "const": "header",
+                "description": "`Name: value` headers, one or more.",
+                "type": "string"
+              },
+              {
+                "const": "basic",
+                "description": "HTTP Basic: a user name and a password.",
+                "type": "string"
+              },
+              {
+                "const": "bearer",
+                "description": "`Authorization: Bearer <token>`.",
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS token from `generateToken`, by a user name and a password.",
+                "type": "string"
+              },
+              {
+                "const": "oauth2",
+                "description": "OAuth 2's client credentials at a token address.",
+                "type": "string"
+              },
+              {
+                "const": "google",
+                "description": "Google's API key and session.",
+                "type": "string"
+              }
+            ]
+          },
+          "FeatureFeed": {
+            "description": "Where a layer's objects came from, to take them again (docs/adr/0208 §10).",
+            "properties": {
+              "bbox": {
+                "description": "The area asked, `[x₁, y₁, x₂, y₂]` in the project's system; absent: all.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fetched": {
+                "description": "When they were last taken (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "description": "CQL, or ArcGIS's `where`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute that matches objects when they are taken again.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/FeedKind"
+              },
+              "limit": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "WFS's type, OGC's collection, ArcGIS's layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked of the service.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "url": {
+                "type": "string"
+              },
+              "version": {
+                "description": "WFS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "FeedKind": {
+            "description": "What a layer's objects were taken from (docs/adr/0208 §10).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wfs",
+                  "ogcFeatures"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST layer's `query`.",
+                "type": "string"
+              },
+              {
+                "const": "geojson",
+                "description": "A GeoJSON document at an address.",
+                "type": "string"
+              }
+            ]
+          },
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LayerField": {
+            "description": "A field of a layer (docs/adr/0199 §1): its name is the attribute's key.",
+            "properties": {
+              "alias": {
+                "description": "The name the table and the form show.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "default": {
+                "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind"
+              },
+              "length": {
+                "description": "A text's most characters (1–10 000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "max": {
+                "description": "A number's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "A number's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "description": "An object may not leave it empty; written only as `true`.",
+                "type": "boolean"
+              },
+              "scale": {
+                "description": "A decimal's most fraction digits (0–15).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "The values a text or a number takes, when only some.",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "enum": [
+              "text",
+              "integer",
+              "decimal",
+              "date",
+              "boolean"
+            ],
+            "type": "string"
+          },
+          "LayerNode": {
+            "description": "A node of the layer tree: a group or a layer.",
+            "properties": {
+              "children": {
+                "items": {
+                  "$ref": "#/$defs/LayerNode"
+                },
+                "type": "array"
+              },
+              "expanded": {
+                "type": "boolean"
+              },
+              "feed": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FeatureFeed"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the layer's objects were taken from, to take them again\n(docs/adr/0208 §10). Only a layer has it, never a group."
+              },
+              "fields": {
+                "description": "A layer's fields (docs/adr/0199 §1): the schema of its objects'\nattributes, in the order the table and the form show them; empty, no\nschema (and nothing written). Only a layer has them, never a group.",
+                "items": {
+                  "$ref": "#/$defs/LayerField"
+                },
+                "type": "array"
+              },
+              "id": {
+                "type": "string"
+              },
+              "locked": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "service": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ServiceLayer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer drawn from a map service (docs/adr/0208 §2): it holds no\nobjects. Only a layer has it, never a group."
+              },
+              "snap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSnap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
+              },
+              "style": {
+                "$ref": "#/$defs/LayerStyle"
+              },
+              "type": {
+                "$ref": "#/$defs/LayerNodeType"
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "type",
+              "visible",
+              "locked",
+              "expanded",
+              "style",
+              "children"
+            ],
+            "type": "object"
+          },
+          "LayerNodeType": {
+            "enum": [
+              "group",
+              "layer"
+            ],
+            "type": "string"
+          },
+          "LayerSnap": {
+            "description": "A layer's own snapping (docs/adr/0163 §4): `{ \"off\": true }`, no\nsnapping to its objects; or `{ \"kinds\": [...] }`, only these kinds (as\nfar as the general kinds take them). Exactly one of the two, and a list\nthat is not empty: the readers refuse anything else ([`LayerSnap::problem`]).",
+            "properties": {
+              "kinds": {
+                "description": "Only these kinds ([`LAYER_SNAP_KINDS`]' names).",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "off": {
+                "description": "No snapping to the layer's objects; written only as `true`.",
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "LayerStyle": {
+            "description": "A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.",
+            "properties": {
+              "color": {
+                "description": "Hex colour or a theme token (fg, fg-dim, ink, paper).",
+                "type": "string"
+              },
+              "fill": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "description": "Plot line weight in mm.",
+                "format": "double",
+                "type": "number"
+              },
+              "pickInterior": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "renderer": true
+            },
+            "required": [
+              "color",
+              "lineType",
+              "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "PointStyle": {
+            "properties": {
+              "size": {
+                "description": "Diameter in CSS px.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "$ref": "#/$defs/PointSymbol"
+              }
+            },
+            "required": [
+              "symbol",
+              "size"
+            ],
+            "type": "object"
+          },
+          "PointSymbol": {
+            "enum": [
+              "ring",
+              "cross",
+              "triangle"
+            ],
+            "type": "string"
+          },
+          "ServiceConnection": {
+            "description": "A connection of the project (docs/adr/0208 §2): what proof requests to\nits origin carry, without the secrets.",
+            "properties": {
+              "auth": {
+                "$ref": "#/$defs/AuthKind"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "names": {
+                "description": "The parameters' (query) or headers' (header) names.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "origin": {
+                "description": "`https://host[:port]`: proof goes to this origin only.",
+                "type": "string"
+              },
+              "scope": {
+                "description": "OAuth 2's scope.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tokenUrl": {
+                "description": "ArcGIS's `generateToken` or OAuth 2's token address.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "origin",
+              "auth"
+            ],
+            "type": "object"
+          },
+          "ServiceKind": {
+            "description": "What a service layer draws (docs/adr/0208 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wms",
+                  "wmts"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "xyz",
+                "description": "Tiles by an address template, Web Mercator (TMS with `yFlip`).",
+                "type": "string"
+              },
+              {
+                "const": "ogcTiles",
+                "description": "OGC API Tiles' map tiles.",
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST MapServer or ImageServer: its cached tiles, else `export`.",
+                "type": "string"
+              },
+              {
+                "const": "google",
+                "description": "Google's Map Tiles API, 2D tiles.",
+                "type": "string"
+              },
+              {
+                "const": "vector",
+                "description": "Vector tiles (MVT) by a MapLibre style, a TileJSON or a template.",
+                "type": "string"
+              }
+            ]
+          },
+          "ServiceLayer": {
+            "description": "A layer drawn from a service (docs/adr/0208 §2).",
+            "properties": {
+              "attribution": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bbox": {
+                "description": "The service's extent, WGS 84 degrees (west, south, east, north), as\nits capabilities give it: what “Servisin kapsamına yakınlaştır” shows.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "description": "The project's connection whose proof goes with the requests.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dynamic": {
+                "description": "WMS and `export`: one picture of the view instead of tiles.",
+                "type": "boolean"
+              },
+              "format": {
+                "description": "The image's media type (`image/png`, …).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "grid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TileGrid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "WMTS's, OGC's and a cached ArcGIS service's matrices."
+              },
+              "kind": {
+                "$ref": "#/$defs/ServiceKind"
+              },
+              "layers": {
+                "description": "WMS's layer names; WMTS's one layer; ArcGIS's layers shown.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "matrixSet": {
+                "description": "WMTS's matrix set's identifier (`TILEMATRIXSET`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "minZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "params": {
+                "items": {
+                  "$ref": "#/$defs/ServiceParam"
+                },
+                "type": "array"
+              },
+              "preset": {
+                "description": "The ready basemap it came from.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked: WMS's `CRS`, ArcGIS's `imageSR`; a grid's own.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "style": {
+                "description": "WMS's and WMTS's style; Google's map type.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "subdomains": {
+                "description": "`{s}`'s values, taken in turn.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "template": {
+                "description": "WMTS REST's and OGC's tile template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tileSize": {
+                "description": "XYZ's and the vector tiles' tile side, pixels; absent 256.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "transparent": {
+                "description": "WMS's and `export`'s `TRANSPARENT`.",
+                "type": "boolean"
+              },
+              "url": {
+                "description": "XYZ: the template; WMS, WMTS, ArcGIS: the service's address; OGC\nAPI Tiles: the tile set's; vector: the style's, the TileJSON's or the\ntemplate; Google: empty.",
+                "type": "string"
+              },
+              "version": {
+                "description": "WMS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "yFlip": {
+                "description": "TMS: rows counted from the bottom.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "ServiceParam": {
+            "description": "A parameter sent with every request (`TIME`, `CQL_FILTER`, …): never a secret.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          "TileGrid": {
+            "description": "A service's tile grid as read: its system and its matrices, coarsest first.",
+            "properties": {
+              "matrices": {
+                "items": {
+                  "$ref": "#/$defs/TileMatrix"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "srid",
+              "matrices"
+            ],
+            "type": "object"
+          },
+          "TileMatrix": {
+            "description": "One matrix of a tile grid (docs/adr/0208 §3): its pixel's size in the\ngrid system's units, its top left corner as east and north (longitude\nand latitude), whatever order the service wrote them in, its tiles' and\nits own size in tiles.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "matrixHeight": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "matrixWidth": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "resolution": {
+                "format": "double",
+                "type": "number"
+              },
+              "tileHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "tileWidth": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "x0": {
+                "format": "double",
+                "type": "number"
+              },
+              "y0": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "resolution",
+              "x0",
+              "y0",
+              "tileWidth",
+              "tileHeight",
+              "matrixWidth",
+              "matrixHeight"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.layers.service` would write (plan mode); nothing is written.",
+        "properties": {
+          "connections": {
+            "description": "The project's connections as execute would leave them.",
+            "items": {
+              "$ref": "#/$defs/ServiceConnection"
+            },
+            "type": "array"
+          },
+          "node": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerNode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The layer as execute would leave it (`add`, `addFeed`: its id the one\nit would be given); absent for `remove`."
+          },
+          "revision": {
+            "description": "The document revision the plan was made against.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connections",
+          "revision"
+        ],
+        "title": "LayersServicePlan",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "OpenStreetMap altlığı en alta",
+          "input": {
+            "name": "OpenStreetMap",
+            "operation": "add",
+            "service": {
+              "attribution": "© OpenStreetMap katkıda bulunanlar",
+              "kind": "xyz",
+              "maxZoom": 19,
+              "preset": "osm-standard",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+            }
+          },
+          "output": {
+            "layer": "layer-7",
+            "revision": "41"
+          }
+        },
+        {
+          "title": "Belediyenin WMS'i, anahtarı adreste giden bir bağlantıyla",
+          "input": {
+            "connections": [
+              {
+                "auth": "query",
+                "id": "belediye",
+                "name": "Belediye KBS",
+                "names": [
+                  "apikey"
+                ],
+                "origin": "https://kbs.ornek-belediye.bel.tr"
+              }
+            ],
+            "index": 0,
+            "name": "İmar planı",
+            "operation": "add",
+            "service": {
+              "connection": "belediye",
+              "format": "image/png",
+              "kind": "wms",
+              "layers": [
+                "imar:plan"
+              ],
+              "srid": 5254,
+              "transparent": true,
+              "url": "https://kbs.ornek-belediye.bel.tr/geoserver/wms",
+              "version": "1.3.0"
+            }
+          }
+        },
+        {
+          "title": "WFS'ten alınacak parseller için veri katmanı",
+          "input": {
+            "feed": {
+              "key": "parsel_id",
+              "kind": "wfs",
+              "name": "kadastro:parsel",
+              "srid": 5254,
+              "url": "https://kbs.ornek-belediye.bel.tr/geoserver/wfs",
+              "version": "2.0.0"
+            },
+            "name": "Parseller (WFS)",
+            "operation": "addFeed"
           }
         }
       ]

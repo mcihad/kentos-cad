@@ -33,6 +33,9 @@ TABS = [
     {'id': 'points', 'label': 'Noktalar', 'icon': 'pointEditor'},
     {'id': 'table', 'label': 'Tablo', 'icon': 'featureTable'},
     {'id': 'search', 'label': 'Arama', 'icon': 'dataSearch'},
+    # Topoloji kuralları' findings (docs/adr/0202 §5), Servis bilgisi's answers (docs/adr/0208 §11).
+    {'id': 'topology', 'label': 'Topoloji', 'icon': 'topologyCheck'},
+    {'id': 'serviceInfo', 'label': 'Servis bilgisi', 'icon': 'serviceInfo'},
     {'id': 'messages', 'label': 'Uyarılar', 'icon': 'warning'},
 ]
 TEXTS = {

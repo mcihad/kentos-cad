@@ -381,7 +381,8 @@ impl App {
             menu = menu
                 .item(
                     "Etkin katman yap",
-                    (!active).then(|| event(Event::Activate(id.clone()))),
+                    // A map service layer takes no objects (docs/adr/0208 §2).
+                    (!active && node.service.is_none()).then(|| event(Event::Activate(id.clone()))),
                 )
                 .icon(Icon::Check);
         }
@@ -405,6 +406,27 @@ impl App {
             } else {
                 Icon::Lock
             });
+        // A layer drawn from a map service: its service's items, none of the objects' (docs/adr/0208 §14).
+        if node.service.is_some() {
+            return self
+                .service_menu(node, menu.separator())
+                .item("Yeniden adlandır", event(Event::Rename(id.clone())))
+                .icon(crate::icons::from_web(Some("edit")))
+                .shortcut("F2")
+                .separator()
+                .item("Sil", event(Event::Remove(id)))
+                .icon(crate::icons::from_web(Some("trash")))
+                .shortcut("Del");
+        }
+        // A layer whose objects came from a service: taken again (docs/adr/0208 §10).
+        if node.feed.is_some() {
+            menu = menu
+                .item(
+                    "Yenile",
+                    Message::Services(crate::services::app::Event::FeedRefresh(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("feedRefresh")));
+        }
         // Kenet ▸ (layer_snap.rs, docs/adr/0163 §4).
         if let Some(doc) = &self.document {
             menu = menu

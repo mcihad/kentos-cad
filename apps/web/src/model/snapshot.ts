@@ -4,6 +4,8 @@ import { tableProblem, type TableShape } from './tables';
 import { imageProblem, type ImageShape } from './imageRules';
 import { rasterProblem, type RasterShape } from './rasterRules';
 import { pointCloudProblem } from './pointCloudRules';
+import { readConnections, readFeed, readService } from './serviceRead';
+import { linkFaultWords, serviceLinks } from './serviceRules';
 import type { PointCloudFields } from '../contracts/generated/PointCloudFields';
 import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
@@ -275,6 +277,8 @@ export function readBlockDefinitions(list: unknown): { ok: true; blocks: BlockDe
 // `f` a field of it; `at(w, f)` is made only for a message.
 
 class Bad extends Error {}
+/** The layers objects may be on; `served`, those drawn from a map service, where none may be (docs/adr/0208 §2). */
+type Leaves = Set<string> & { served?: ReadonlySet<string> };
 const fail = (where: string, what: string): never => {
   throw new Bad(`${where}: ${what}`);
 };
@@ -399,10 +403,22 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
   // A drawing's CRS is never guessed: an unknown SRID stops the open (CLAUDE.md §9.7).
   if (!crsBySrid(srid)) fail('Proje ayarları › SRID', `EPSG:${srid} tanınmıyor; koordinat sistemi tahmin edilmez`);
   const layers = Array.isArray(data.layers) ? data.layers.map((n, i) => layer(n, `Katman ${i + 1}`)) : fail('Katmanlar', 'liste olmalı');
-  const leaves = new Set<string>();
-  const walk = (list: LayerInit[]) => list.forEach((l) => (l.type === 'group' ? walk(l.children ?? []) : leaves.add(l.id!)));
+  const leaves: Leaves = new Set<string>();
+  const served = new Set<string>();
+  const walk = (list: LayerInit[]) =>
+    list.forEach((l) => {
+      if (l.type === 'group') return walk(l.children ?? []);
+      leaves.add(l.id!);
+      if (l.service) served.add(l.id!);
+    });
   walk(layers);
   if (!leaves.size) fail('Katmanlar', 'en az bir katman olmalı');
+  // The project's connections (docs/adr/0208 §2), and the links of its layers' services: a connection named is one of
+  // them, no layer has both; an object on a service layer is refused as it is read (`entity`).
+  const connections = settings.connections === undefined ? undefined : readConnections(settings.connections, 'Proje ayarları › bağlantılar', fail);
+  const fault = serviceLinks(layers, connections ?? [], []);
+  if (fault) fail('Katmanlar', linkFaultWords(fault));
+  if (served.size) leaves.served = served;
   if (!Array.isArray(data.entities)) fail('Nesneler', 'liste olmalı');
   const styles = isObj(data.styles) && Array.isArray(data.styles.items) && Array.isArray(data.styles.categories) ? data.styles : fail('Proje stilleri', '{items, categories} olmalı');
   const hv = data.homeView;
@@ -466,6 +482,7 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
             : fail('Proje ayarları › topoloji kuralları', 'nesne olmalı')),
         // The project's annotation heights (docs/adr/0205 §1): numbers by kind, kept as a project keeps them.
         ...(settings.annotation === undefined ? {} : { annotation: annotationOf(settings.annotation) }),
+        ...(connections === undefined ? {} : { connections }),
       },
       origin: vec(data.origin, 'Yerel orijin'),
       homeView: isObj(hv) ? { minX: num(hv.minX, 'Başlangıç görünümü'), minY: num(hv.minY, 'Başlangıç görünümü'), maxX: num(hv.maxX, 'Başlangıç görünümü'), maxY: num(hv.maxY, 'Başlangıç görünümü') } : null,
@@ -565,6 +582,9 @@ function layer(v: unknown, where: string): LayerInit {
     children,
     ...(v.snap !== undefined && { snap: layerSnap(v.snap, type, `${w} › kenet`) }),
     ...(v.fields !== undefined && { fields: layerFieldsAt(v.fields, type, `${w} › alanlar`) }),
+    // A layer's map service and source (docs/adr/0208 §2, §10), by the contract's rules.
+    ...(v.service !== undefined && { service: readService(v.service, type, `${w} › servis`, fail) }),
+    ...(v.feed !== undefined && { feed: readFeed(v.feed, type, `${w} › veri kaynağı`, fail) }),
   };
 }
 
@@ -714,6 +734,7 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
   ids.add(id as number);
   const layerId = strAt(v.layerId, w, 'katman');
   if (layers && !layers.has(layerId)) fail(at(w, 'katman'), `“${layerId}” katmanı dosyada yok`);
+  if ((layers as Leaves | undefined)?.served?.has(layerId)) fail(at(w, 'katman'), 'nesne bir servis katmanında; servis katmanı nesne tutmaz');
   const attrs = isObj(v.attrs) ? v.attrs : fail(at(w, 'öznitelikler'), 'nesne olmalı');
   for (const k in attrs) if (typeof attrs[k] !== 'string') str(attrs[k], at(w, `öznitelik “${k}”`));
   if (v.lineWeight !== undefined) {

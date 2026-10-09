@@ -19,13 +19,13 @@ use kentos_domain::contracts::{
 };
 use kentos_domain::contracts::{
     BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT, CAD_ENTITIES_SET,
-    EntitiesCreate, EntitiesSetProperties,
+    EntitiesCreate, EntitiesSetProperties, LayersService,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::create;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, arc, array, blocks_define, blocks_edit, circle, delete,
-    edit, line, point, polygon, polyline, set, transform,
+    edit, layers_service, line, point, polygon, polyline, set, transform,
 };
 use serde_json::{Value, json};
 
@@ -41,6 +41,8 @@ struct State {
     blocks: HashMap<String, BlockId>,
     /// The ids of the setup's definitions: a new one is none of them.
     setup_blocks: Vec<BlockId>,
+    /// The layer the last command added or would add (`$layer`, docs/adr/0208 §15).
+    layer: Option<String>,
 }
 
 const STEP_KEYS: &[&str] = &[
@@ -112,6 +114,12 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
             Value::String(uid.to_string())
         }
         Value::String(text) if text.contains("$uid:") => Value::String(with_uids(text, state, at)?),
+        Value::String(text) if text == "$layer" => Value::String(
+            state
+                .layer
+                .clone()
+                .ok_or_else(|| format!("{at}: $layer: bir komut katman eklemedi"))?,
+        ),
         Value::String(text) if text.starts_with('$') => {
             let name = &text[1..];
             let revision = if name == "current" {
@@ -285,6 +293,16 @@ impl Input for BlocksDefine {
     /// `base.x`, `base.y`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         coordinate(&mut self.base, "base", path)
+    }
+}
+
+impl Input for LayersService {
+    /// `service.opacity` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "service.opacity" => self.service.as_mut()?.opacity.as_mut(),
+            _ => None,
+        }
     }
 }
 
@@ -804,6 +822,7 @@ fn run_op(
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
         CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),
         CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
+        kentos_domain::contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))
@@ -813,12 +832,13 @@ fn run_op(
 fn run_command(
     command: &str,
     doc: &mut Document,
-    state: &State,
+    state: &mut State,
     step: &Value,
     at: &str,
 ) -> Outcome<()> {
     let op = step["op"].as_str().unwrap_or("?");
     let input = fill(&step["input"], doc, state, at)?;
+    let before = layer_ids(doc.layers().nodes());
     let got = run_op(command, op, doc, input, step, at)?;
     let Some(want) = step.get("result") else {
         return Err(format!("{at}: komut adımında “result” yok"));
@@ -845,7 +865,37 @@ fn run_command(
             *field = Value::String(text.to_owned());
         }
     }
+    // “$layer”: the layer the command added (execute) or would add (plan): an id the tree did not have (docs/adr/0208 §15).
+    for pointer in ["/output/layer", "/output/node/id"] {
+        if want.pointer(pointer) != Some(&json!("$layer")) {
+            continue;
+        }
+        let id = got.pointer(pointer).and_then(Value::as_str).unwrap_or("");
+        let after = layer_ids(doc.layers().nodes());
+        let fresh = id
+            .strip_prefix("layer-")
+            .is_some_and(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()))
+            && !before.contains(id)
+            && after.contains(id) == (op == "execute");
+        if !fresh {
+            return Err(format!(
+                "{at}: {pointer}: “{id}” yeni bir katmanın kimliği değil"
+            ));
+        }
+        state.layer = Some(id.to_owned());
+    }
     expect_same(&got, &fill(&want, doc, state, at)?, "sonuç", at)
+}
+
+/// Every node's id of a layer tree.
+fn layer_ids(nodes: &[kentos_domain::contracts::LayerNode]) -> std::collections::HashSet<String> {
+    let mut out = std::collections::HashSet::new();
+    let mut stack: Vec<&kentos_domain::contracts::LayerNode> = nodes.iter().collect();
+    while let Some(n) = stack.pop() {
+        out.insert(n.id.clone());
+        stack.extend(n.children.iter());
+    }
+    out
 }
 
 fn run_step(
@@ -1013,6 +1063,18 @@ fn check(
                         None => return Err(format!("{at}: blok kimliği metin olmalı")),
                     }
                 }
+            }
+            // The layer tree, every node whole; `$layer` the one a command added (docs/adr/0208 §15).
+            "layers" => {
+                let got =
+                    serde_json::to_value(doc.layers().nodes()).map_err(|e| format!("{at}: {e}"))?;
+                expect_same(&got, &fill(want, doc, state, at)?, "katmanlar", at)?;
+            }
+            // The project's connections (docs/adr/0208 §2).
+            "connections" => {
+                let got = serde_json::to_value(&doc.settings().connections)
+                    .map_err(|e| format!("{at}: {e}"))?;
+                expect_same(&got, want, "bağlantılar", at)?;
             }
             // A misspelt expectation would otherwise pass unchecked.
             other => return Err(format!("{at}: bilinmeyen beklenti “{other}”")),

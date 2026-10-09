@@ -514,8 +514,11 @@ fn fill_paths(
         FillPaintBatch::Pattern { .. } => Err("desen dolgusu"),
         FillPaintBatch::Tile { .. } => Err("resimli dolgu"),
         FillPaintBatch::Image { .. } => Err("resim"),
-        // A raster is out of a sheet's output (docs/adr/0204, Kapsam dışı; §16.4): left out.
-        FillPaintBatch::Raster { .. } | FillPaintBatch::PointCloud { .. } => Ok(Vec::new()),
+        // A raster is out of a sheet's output (docs/adr/0204, Kapsam dışı; §16.4): left out;
+        // so is a map service's picture (docs/adr/0208, Kapsam dışı).
+        FillPaintBatch::Raster { .. }
+        | FillPaintBatch::PointCloud { .. }
+        | FillPaintBatch::Service { .. } => Ok(Vec::new()),
     }
 }
 
@@ -678,6 +681,8 @@ fn why_not(layer: &StyledLayer, b: &StyledBatch) -> Option<&'static str> {
             FillPaintBatch::Raster { .. } => None,
             // A cloud's sheet output is a later item (docs/adr/0207, Kapsam dışı).
             FillPaintBatch::PointCloud { .. } => Some("nokta bulutu"),
+            // A map service's sheet output is a later item (docs/adr/0208, Kapsam dışı).
+            FillPaintBatch::Service { .. } => Some("harita servisi"),
             FillPaintBatch::Gradient { .. } => Some("degrade dolgu"),
         },
         BatchKind::Marker { look, .. } => match look {

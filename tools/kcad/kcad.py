@@ -122,6 +122,25 @@ SCHEMA_WITH_RASTERS = 29
 SCHEMA_WITH_ANNOTATION = 30
 # Schema 31: schema 30 and the `pointcloud` kind, only in the drawing, and a raster's `url` (docs/adr/0207 §1, §3).
 SCHEMA_WITH_POINT_CLOUDS = 31
+# Schema 32: schema 31 and map services (docs/adr/0208 §2): a layer node's `service` and `feed`, the settings'
+# `connections` (without their secrets).
+SCHEMA_WITH_SERVICES = 32
+# Map services' bounds and names (kentos_contracts::service).
+SERVICE_KINDS = ("xyz", "wms", "wmts", "ogcTiles", "arcgis", "google", "vector")
+FEED_KINDS = ("wfs", "ogcFeatures", "arcgis", "geojson")
+AUTH_KINDS = ("none", "query", "header", "basic", "bearer", "arcgis", "oauth2", "google")
+GOOGLE_MAP_TYPES = ("roadmap", "satellite", "terrain", "hybrid")
+WMS_VERSIONS = ("1.1.1", "1.3.0")
+WFS_VERSIONS = ("1.0.0", "1.1.0", "2.0.0")
+MAX_SERVICE_URL = 4096
+MAX_SERVICE_LAYERS = 64
+MAX_TILE_MATRICES = 40
+MAX_SERVICE_PARAMS = 32
+MAX_SUBDOMAINS = 16
+MAX_ZOOM = 30
+MAX_FEED_LIMIT = 500_000
+MAX_CONNECTIONS = 256
+MAX_AUTH_NAMES = 8
 # A point cloud's bounds (kentos_contracts::pointcloud): its files, a path's or an address's letters, a point's size,
 # its opacity; its files' formats, looks, units (px is the field's absence) and shapes (round is the field's absence).
 MAX_CLOUD_SOURCES = 4096
@@ -216,7 +235,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -327,6 +346,244 @@ def _number(text):
     from fractions import Fraction
 
     return Fraction(text)
+
+
+def _control(text):
+    return any(unicodedata.category(c) == "Cc" for c in text)
+
+
+def http_problem(what, text):
+    """Why `text` is no HTTP or HTTPS address of at most MAX_SERVICE_URL letters without control characters
+    (kentos_contracts::service::http_problem)."""
+    lower = text.strip().lower()
+    rest = lower[8:] if lower.startswith("https://") else lower[7:] if lower.startswith("http://") else None
+    if rest is None or not rest or rest.startswith("/"):
+        return f"{what} bir HTTP ya da HTTPS adresi olmalı (http:// ya da https:// ile başlamalı); “{text}” değil."
+    if len(text) > MAX_SERVICE_URL or _control(text):
+        return f"{what} en çok {MAX_SERVICE_URL} harf olmalı ve denetim karakteri içermemeli."
+    return None
+
+
+def _token(name):
+    return 0 < len(name) <= 64 and all(c.isascii() and (c.isalnum() or c in "-_.") for c in name)
+
+
+def _plain(text, most):
+    return len(text) <= most and not _control(text)
+
+
+def grid_problem(g):
+    if g["srid"] == 0:
+        return "Karo ızgarasının sistemi bir EPSG kodu olmalı."
+    ms = g["matrices"]
+    if not 0 < len(ms) <= MAX_TILE_MATRICES:
+        return f"Karo ızgarasının 1 ile {MAX_TILE_MATRICES} arasında matrisi olmalı."
+    for i, m in enumerate(ms, 1):
+        if not m["id"] or not _plain(m["id"], 128):
+            return f"{i}. matrisin adı 1 ile 128 harf arasında olmalı."
+        if any(o["id"] == m["id"] for o in ms[: i - 1]):
+            return f"“{m['id']}” matrisi iki kez var."
+        if not (math.isfinite(m["resolution"]) and m["resolution"] > 0):
+            return f"{i}. matrisin pikseli sıfırdan büyük, sonlu olmalı."
+        if not all(1 <= m[k] <= 4096 for k in ("tileWidth", "tileHeight")):
+            return f"{i}. matrisin karosu 1 ile 4096 piksel arasında olmalı."
+        if not all(1 <= m[k] <= 1 << 40 for k in ("matrixWidth", "matrixHeight")):
+            return f"{i}. matrisin karo sayısı 1 ile 2⁴⁰ arasında olmalı."
+    return None
+
+
+def service_problem(s):
+    """A layer's map service by the contract's rules (kentos_contracts::service::ServiceLayer::problem), in their order."""
+    kind = s["kind"]
+    if kind == "google":
+        if s["url"]:
+            return "Google katmanının adresi boş olmalı; karoların adresi oturumdan gelir."
+        if s.get("style") not in GOOGLE_MAP_TYPES:
+            return "Google katmanının harita türü bir Google harita türü olmalı."
+        if "connection" not in s:
+            return "Google katmanının API anahtarı bir bağlantıda olmalı."
+    else:
+        p = http_problem("Servisin adresi", s["url"])
+        if p:
+            return p
+    u = s["url"]
+    layers = s.get("layers", [])
+    if kind == "xyz":
+        if not ("{quadkey}" in u or ("{z}" in u and "{x}" in u and ("{y}" in u or "{-y}" in u))):
+            return "XYZ şablonunda {z}, {x} ve {y} (ya da {-y}) ya da {quadkey} olmalı."
+        if "{s}" in u and not s.get("subdomains"):
+            return "Şablonda {s} var; alt alanları verin."
+    elif kind == "wms":
+        if not layers:
+            return "WMS katmanı en az bir katman adı istemeli."
+        if "srid" not in s:
+            return "WMS katmanının istenen sistemi (srid) olmalı."
+        if "version" in s and s["version"] not in WMS_VERSIONS:
+            return "WMS sürümü 1.1.1 ya da 1.3.0 olmalı."
+    elif kind == "wmts":
+        if len(layers) != 1:
+            return "WMTS katmanı tek bir katman göstermeli."
+        if "grid" not in s or "matrixSet" not in s:
+            return "WMTS katmanının karo ızgarası ve matris kümesinin adı olmalı."
+    elif kind == "ogcTiles":
+        if "grid" not in s or "template" not in s:
+            return "OGC API Tiles katmanının ızgarası ve karo şablonu olmalı."
+    elif kind == "arcgis":
+        if "srid" not in s and "grid" not in s:
+            return "ArcGIS katmanının ızgarası ya da istenen sistemi olmalı."
+    if len(layers) > MAX_SERVICE_LAYERS or any(not l or not _plain(l, 256) for l in layers):
+        return "Katman adları en çok 64 tane ve 1 ile 256 harf arasında olmalı."
+    for key, most in (("style", 256), ("format", 128), ("attribution", 512), ("version", 16), ("preset", 64), ("connection", 64), ("matrixSet", 256)):
+        if key in s and (not s[key] or not _plain(s[key], most)):
+            return f"{key} 1 ile {most} harf arasında olmalı ve denetim karakteri içermemeli."
+    if "template" in s:
+        p = http_problem("Karo şablonu", s["template"])
+        if p:
+            return p
+    if s.get("srid") == 0:
+        return "İstenen sistem bir EPSG kodu olmalı."
+    if "grid" in s:
+        p = grid_problem(s["grid"])
+        if p:
+            return p
+    if "tileSize" in s and not 64 <= s["tileSize"] <= 4096:
+        return "Karonun boyu 64 ile 4096 piksel arasında olmalı."
+    lo, hi = s.get("minZoom", 0), s.get("maxZoom", MAX_ZOOM)
+    if lo > hi or hi > MAX_ZOOM:
+        return "Katlar 0 ile 30 arasında olmalı, en küçüğü en büyüğünden büyük olmamalı."
+    subs = s.get("subdomains", [])
+    if len(subs) > MAX_SUBDOMAINS or not all(_token(x) for x in subs):
+        return "Alt alanlar en çok 16 tane; her biri harf, rakam ve tire olmalı."
+    params = s.get("params", [])
+    if len(params) > MAX_SERVICE_PARAMS:
+        return "En çok 32 ek parametre olabilir."
+    for p in params:
+        if not _token(p["name"]) or not _plain(p["value"], 1024):
+            return f"Ek parametre “{p['name']}”: adı ve değeri uygun değil."
+    o = s.get("opacity")
+    if o is not None and not (math.isfinite(o) and 0.1 <= o <= 1.0):
+        return f"Servis katmanının donukluğu 0.1 ile 1 arasında olmalı; {o} verildi."
+    b = s.get("bbox")
+    if b is not None:
+        w, so, e, n = b
+        if not (all(math.isfinite(x) for x in b) and -180 <= w <= e <= 180 and -90 <= so <= n <= 90):
+            return "Servisin kapsamı WGS 84 derecesinde batı, güney, doğu ve kuzey olmalı."
+    return None
+
+
+def feed_problem(f):
+    """A layer's feed by the contract's rules (kentos_contracts::service::FeatureFeed::problem), in their order."""
+    p = http_problem("Verinin adresi", f["url"])
+    if p:
+        return p
+    if "name" not in f and f["kind"] in ("wfs", "ogcFeatures", "arcgis"):
+        return "Kaynağın tür, koleksiyon ya da katman adı (name) olmalı."
+    if "name" in f and (not f["name"] or not _plain(f["name"], 256)):
+        return "Tür adı 1 ile 256 harf arasında olmalı."
+    if "version" in f:
+        if f["kind"] != "wfs":
+            return "Sürüm yalnız WFS kaynağının olur."
+        if f["version"] not in WFS_VERSIONS:
+            return "WFS sürümü 1.0.0, 1.1.0 ya da 2.0.0 olmalı."
+    if f.get("srid") == 0:
+        return "İstenen sistem bir EPSG kodu olmalı."
+    b = f.get("bbox")
+    if b is not None and not (all(math.isfinite(x) for x in b) and b[0] <= b[2] and b[1] <= b[3]):
+        return "İstenen alan sonlu dört sayı olmalı, en küçükler en büyüklerden büyük olmamalı."
+    if "limit" in f and not 1 <= f["limit"] <= MAX_FEED_LIMIT:
+        return "En çok nesne 1 ile 500000 arasında olmalı."
+    for key, most in (("filter", 8192), ("key", 128), ("connection", 64), ("fetched", 40)):
+        if key in f and (not f[key] or not _plain(f[key], most)):
+            return f"{key} 1 ile {most} harf arasında olmalı ve denetim karakteri içermemeli."
+    return None
+
+
+def origin_problem(origin):
+    """Why `origin` is no lower-case `http(s)://host[:port]` without a path (kentos_contracts::service::origin_problem)."""
+    rest = origin[8:] if origin.startswith("https://") else origin[7:] if origin.startswith("http://") else None
+    bad = f"Bağlantının kökeni şema ve makine olmalı, yolu olmamalı; “{origin}” değil."
+    if rest is None or any(c in rest for c in "/?#@"):
+        return bad
+    if rest.startswith("["):
+        close = rest.find("]")
+        if close < 0:
+            return bad
+        host, after = rest[: close + 1], rest[close + 1:]
+        if after and not after.startswith(":"):
+            return bad
+        port = after[1:] if after else None
+        ok = len(host) > 2 and all(c in "0123456789abcdef:." for c in host[1:-1])
+    else:
+        host, _, port = rest.rpartition(":") if ":" in rest else (rest, "", None)
+        port = port if ":" in rest else None
+        ok = 0 < len(host) <= 253 and all(c in "abcdefghijklmnopqrstuvwxyz0123456789-." for c in host)
+    if port is not None and not (port.isdigit() and 0 < int(port) <= 65535):
+        ok = False
+    return None if ok else bad
+
+
+def connections_problem(list_):
+    """The project's connections by the contract's rules (kentos_contracts::service::connections_problem)."""
+    if len(list_) > MAX_CONNECTIONS:
+        return "Projenin en çok 256 bağlantısı olabilir."
+    for i, c in enumerate(list_):
+        cid = c["id"]
+        if not (0 < len(cid) <= 64 and all(ch.isascii() and (ch.isalnum() or ch in "-_") for ch in cid)):
+            return "Bağlantının kimliği 1 ile 64 harf, rakam, tire ya da alt çizgi olmalı."
+        if not c["name"].strip() or not _plain(c["name"], 128):
+            return "Bağlantının adı 1 ile 128 harf arasında olmalı."
+        p = origin_problem(c["origin"])
+        if p:
+            return p
+        names = c.get("names", [])
+        named = c["auth"] in ("query", "header")
+        if named and not 0 < len(names) <= MAX_AUTH_NAMES:
+            return "Parametre ya da başlık bağlantısının 1 ile 8 arasında adı olmalı."
+        if not named and names:
+            return "Bu doğrulama türü ad taşımaz."
+        if not all(_token(n) for n in names):
+            return "Parametre ve başlık adları harf, rakam, tire, nokta ve alt çizgiden olmalı."
+        token = c.get("tokenUrl")
+        if token is None and c["auth"] == "oauth2":
+            return "OAuth 2 bağlantısının belirteç adresi olmalı."
+        if token is not None:
+            if c["auth"] not in ("arcgis", "oauth2"):
+                return "Belirteç adresi yalnız ArcGIS ve OAuth 2 bağlantısının olur."
+            p = http_problem("Belirteç adresi", token)
+            if p:
+                return p
+        if "scope" in c:
+            if c["auth"] != "oauth2":
+                return "Kapsam yalnız OAuth 2 bağlantısının olur."
+            if not c["scope"] or not _plain(c["scope"], 256):
+                return "Kapsam 1 ile 256 harf arasında olmalı."
+        if any(o["id"] == cid for o in list_[:i]):
+            return f"“{cid}” kimlikli bağlantı iki kez var."
+    return None
+
+
+def service_links_problem(layers, connections, entities):
+    """The drawing's services' links (kentos_contracts::service::service_links): a connection named is the project's;
+    an object is on no layer drawn from a service. Returns (place, words) or None."""
+    known = {c["id"] for c in connections}
+    served = set()
+
+    def walk(nodes):
+        for n in nodes:
+            yield n
+            yield from walk(n["children"])
+
+    for n in walk(layers):
+        for owner in ("service", "feed"):
+            c = n.get(owner, {}).get("connection")
+            if c is not None and c not in known:
+                return ("layers", f"“{n['name']}” katmanının bağlantısı “{c}” projenin bağlantıları arasında yok")
+        if "service" in n:
+            served.add(n["id"])
+    for i, e in enumerate(entities):
+        if e["layerId"] in served:
+            return (f"entities/{i}", "nesne bir servis katmanında; servis katmanı nesne tutmaz")
+    return None
 
 
 def fields_problem(fields):
@@ -844,6 +1101,7 @@ class _Schema:
         self.topology = version >= SCHEMA_WITH_TOPOLOGY
         self.survey_sigmas = version >= SCHEMA_WITH_SURVEY_SIGMAS
         self.annotation = version >= SCHEMA_WITH_ANNOTATION
+        self.services = version >= SCHEMA_WITH_SERVICES
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -863,6 +1121,12 @@ class _Schema:
                 "migratedFrom": (self.source, False),
             }
         )(v)
+        # Schema 32's links (docs/adr/0208 §2).
+        links = service_links_problem(d["layers"], d["settings"].get("connections", []), d["entities"])
+        if links:
+            place, words = links
+            self.path.extend(place.split("/"))
+            self.fail("bad_value", words)
         out = {
             "format": DOCUMENT_FORMAT,
             "version": DOCUMENT_VERSION,
@@ -912,6 +1176,7 @@ class _Schema:
                 **({"textStyles": (self.text_styles, False), "dimensionStyles": (self.dimension_styles, False)} if self.styles else {}),
                 **({"topology": (self.topology_, False)} if self.topology else {}),
                 **({"annotation": (self.annotation_, False)} if self.annotation else {}),
+                **({"connections": (self.connections_, False)} if self.services else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -1263,6 +1528,7 @@ class _Schema:
                 "name": (self.text, True),
                 **({"snap": (self.layer_snap_, False)} if self.layer_snap else {}),
                 **({"fields": (self.layer_fields_, False)} if self.layer_fields else {}),
+                **({"service": (self.service_, False), "feed": (self.feed_, False)} if self.services else {}),
                 "type": (self.enum(("group", "layer")), True),
                 "style": (self.layer_style, True),
                 "locked": (self.bool, True),
@@ -1275,7 +1541,121 @@ class _Schema:
             self.fail("bad_value", "grubun keneti olmaz; kenet yalnız katmanındır")
         if "fields" in n and n["type"] == "group":
             self.fail("bad_value", "grubun alanları olmaz; alanlar yalnız katmanındır")
+        if "service" in n and "feed" in n:
+            self.fail("bad_value", "katman hem servisten çizilir hem nesnelerini bir kaynaktan alır; ikisi birden olmaz")
+        if "service" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun servisi olmaz; servis yalnız katmanındır")
+        if "feed" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun veri kaynağı olmaz; kaynak yalnız katmanındır")
         return n
+
+    # Schema 32's map services (docs/adr/0208 §2): read field by field, then checked whole by the contract's rules.
+
+    def nonempty_texts(self, v):
+        texts = self.array(self.text)(v)
+        if not texts:
+            self.fail("bad_value", "boş liste yazılmaz")
+        return texts
+
+    def only_true(self, v):
+        if self.bool(v) is not True:
+            self.fail("bad_value", "false yazılmaz; alan yalnız true iken vardır")
+        return True
+
+    def tile_grid(self, v):
+        matrix = self.fields(
+            {
+                "id": (self.text, True),
+                "x0": (self.float, True),
+                "y0": (self.float, True),
+                "resolution": (self.float, True),
+                "tileWidth": (self.uint(32), True),
+                "tileHeight": (self.uint(32), True),
+                "matrixWidth": (self.uint(64), True),
+                "matrixHeight": (self.uint(64), True),
+            }
+        )
+        return self.fields({"srid": (self.uint(32), True), "matrices": (self.array(matrix), True)})(v)
+
+    def service_(self, v):
+        s = self.fields(
+            {
+                "kind": (self.enum(SERVICE_KINDS), True),
+                "url": (self.text, True),
+                "layers": (self.nonempty_texts, False),
+                "style": (self.text, False),
+                "format": (self.text, False),
+                "srid": (self.uint(32), False),
+                "grid": (self.tile_grid, False),
+                "matrixSet": (self.text, False),
+                "template": (self.text, False),
+                "tileSize": (self.uint(32), False),
+                "minZoom": (self.uint(32), False),
+                "maxZoom": (self.uint(32), False),
+                "subdomains": (self.nonempty_texts, False),
+                "yFlip": (self.only_true, False),
+                "transparent": (self.only_true, False),
+                "version": (self.text, False),
+                "params": (self.array(self.fields({"name": (self.text, True), "value": (self.text, True)})), False),
+                "dynamic": (self.only_true, False),
+                "attribution": (self.text, False),
+                "opacity": (self.float, False),
+                "connection": (self.text, False),
+                "preset": (self.text, False),
+                "bbox": (self.array(self.float), False),
+            }
+        )(v)
+        if "params" in s and not s["params"]:
+            self.fail("bad_value", "boş parametre listesi yazılmaz")
+        if "bbox" in s and len(s["bbox"]) != 4:
+            self.fail("bad_value", f"servisin kapsamı 4 sayı olmalı, {len(s['bbox'])} var")
+        problem = service_problem(s)
+        if problem:
+            self.fail("bad_value", problem)
+        return s
+
+    def feed_(self, v):
+        f = self.fields(
+            {
+                "kind": (self.enum(FEED_KINDS), True),
+                "url": (self.text, True),
+                "name": (self.text, False),
+                "srid": (self.uint(32), False),
+                "filter": (self.text, False),
+                "bbox": (self.array(self.float), False),
+                "limit": (self.uint(64), False),
+                "version": (self.text, False),
+                "key": (self.text, False),
+                "connection": (self.text, False),
+                "fetched": (self.text, False),
+            }
+        )(v)
+        if "bbox" in f and len(f["bbox"]) != 4:
+            self.fail("bad_value", f"istenen alan 4 sayı olmalı, {len(f['bbox'])} var")
+        problem = feed_problem(f)
+        if problem:
+            self.fail("bad_value", problem)
+        return f
+
+    def connections_(self, v):
+        conn = self.fields(
+            {
+                "id": (self.text, True),
+                "name": (self.text, True),
+                "origin": (self.text, True),
+                "auth": (self.enum(AUTH_KINDS), True),
+                "names": (self.nonempty_texts, False),
+                "tokenUrl": (self.text, False),
+                "scope": (self.text, False),
+            }
+        )
+        all_ = self.array(conn)(v)
+        if not all_:
+            self.fail("bad_value", "boş bağlantı listesi yazılmaz")
+        problem = connections_problem(all_)
+        if problem:
+            self.fail("bad_value", problem)
+        return all_
 
     def layer_fields_(self, v):
         """A layer's fields (schema 26, docs/adr/0199 §1): each its name and kind and what it has, `required` only

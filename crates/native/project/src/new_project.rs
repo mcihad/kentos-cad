@@ -74,6 +74,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         topology: None,
         annotation: None,
         text_styles: Vec::new(),
+        connections: Vec::new(),
     }
 }
 
@@ -251,6 +252,8 @@ fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
         children: Vec::new(),
         snap: None,
         fields: Vec::new(),
+        service: None,
+        feed: None,
     }
 }
 

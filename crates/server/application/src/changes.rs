@@ -56,7 +56,8 @@ use crate::cad::{PROJECTION_VERSION, Stored, to_stored, to_stored_block};
 use crate::error::{AppError, AppResult};
 use crate::idempotency;
 use crate::projects::{
-    FEATURE_COLUMNS, FeatureRow, check_name, check_srid, check_tree, find_layer, gone, record,
+    FEATURE_COLUMNS, FeatureRow, check_name, check_services, check_srid, check_tree, find_layer,
+    gone, record,
 };
 
 /// Most object changes one command may carry; larger sets go in several commands.
@@ -90,6 +91,10 @@ fn writable_layer(tree: &[LayerNode], id: &str) -> AppResult<()> {
         ))),
         Some((n, true)) => Err(AppError::forbidden(format!(
             "“{}” katmanı kilitli. Kilidi Katmanlar panelinden açın.",
+            n.name
+        ))),
+        Some((n, _)) if n.service.is_some() => Err(AppError::invalid(format!(
+            "“{}” bir servis katmanı; çizimi servisten gelir, ona nesne yazılmaz.",
             n.name
         ))),
         Some(_) => Ok(()),
@@ -402,6 +407,32 @@ pub async fn commit(
             }
         };
         check_tree(&tree, &active)?;
+    }
+    // A layer's service names one of the project's connections (docs/adr/0208 §2): checked with the settings after
+    // the patch, the stored ones when it brings none.
+    if patch.layers.is_some() || patch.settings.is_some() {
+        let connections = match &patch.settings {
+            Some(s) => s.connections.clone(),
+            None => {
+                let stored: Value = sqlx::query_scalar(
+                    "select settings from kentos.project where tenant_id = $1 and id = $2",
+                )
+                .bind(access.tenant)
+                .bind(project)
+                .fetch_one(&mut *tx)
+                .await?;
+                stored
+                    .get("connections")
+                    .cloned()
+                    .map(serde_json::from_value::<Vec<kentos_contracts::ServiceConnection>>)
+                    .transpose()
+                    .map_err(|e| {
+                        AppError::invalid(format!("Projenin bağlantıları okunamadı: {e}"))
+                    })?
+                    .unwrap_or_default()
+            }
+        };
+        check_services(&tree, &connections)?;
     }
     if new_srid != srid as u32 {
         check_srid(&mut tx, new_srid).await?;

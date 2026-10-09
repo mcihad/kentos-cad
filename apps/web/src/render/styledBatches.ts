@@ -243,7 +243,8 @@ function dashPeriod(dash: readonly number[]): number {
  * pattern it would from the anchor (docs/adr/0157 §3). The desktop's `fold` (native style `batches.rs`) is its twin.
  */
 function fold(paint: FillPaintBatch, o: readonly [number, number] | undefined): FillPaintBatch {
-  if (!o || (o[0] === 0 && o[1] === 0) || paint.kind === 'solid') return paint;
+  // A map service's batch is not the style core's: its quads are from the view's tile each frame.
+  if (!o || (o[0] === 0 && o[1] === 0) || paint.kind === 'solid' || paint.kind === 'service') return paint;
   // A picture's frame from the tile (docs/adr/0192 §3).
   if (paint.kind === 'image') return { ...paint, corner: [paint.corner[0] - o[0], paint.corner[1] - o[1]] };
   // A raster's first pixel from the tile (docs/adr/0204 §5).

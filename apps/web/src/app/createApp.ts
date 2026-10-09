@@ -23,6 +23,8 @@ import { pendingInvitation } from './cloud/invitationLink';
 import { registerCalcCommands } from './calc';
 import { registerPointCloudCommands } from './pointCloudCommands';
 import { registerRasterCommands } from './rasterCommands';
+import { registerServiceCommands } from './serviceCommands';
+import { browserSecrets } from './connectionSecrets';
 import { mountRasterJobs } from '../ui/raster/RasterJobs';
 import { registerFileExchangeCommands } from './fileExchange';
 import { DocumentFiles } from './fileIO';
@@ -106,6 +108,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
     ),
     server: new ServerStatus(),
     grids: new GridLibrary(indexedGridStore()),
+    secrets: browserSecrets(),
   } as AppContext & { tools: ToolManager; view: ViewportController; files: DocumentFiles; cloud: CloudSession; recovery: RecoveryCopies };
   ctx.tools = new ToolManager(ctx);
   ctx.view = new ViewportController(ctx);
@@ -168,6 +171,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   registerFileExchangeCommands(ctx);
   registerCalcCommands(ctx);
   registerRasterCommands(ctx);
+  registerServiceCommands(ctx);
   registerPointCloudCommands(ctx);
   // The open cloud project as the rename and delete dialogs name it.
   const openTarget = () => {

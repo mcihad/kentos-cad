@@ -204,6 +204,16 @@ pub(crate) fn layer_at(doc: &Document, id: &str, path: &str) -> Result<Vec<Comma
             at(),
         )));
     }
+    // A layer drawn from a map service holds no objects (docs/adr/0208 §2).
+    if node.service.is_some() {
+        return Err(Stop::Failed(error(
+            codes::SERVICE_LAYER,
+            format!(
+                "“{name}” bir servis katmanı; çizimi servisten gelir, ona nesne eklenmez. Başka bir katmanı etkinleştirin."
+            ),
+            at(),
+        )));
+    }
     if layers.is_locked(id) {
         return Err(Stop::Failed(error(
             codes::LAYER_LOCKED,

@@ -10,6 +10,7 @@ import type { CloudSession } from './cloud/session';
 import type { RecoveryCopies } from './recovery';
 import type { DocumentFiles } from './fileIO';
 import type { GridLibrary } from './gridLibrary';
+import type { ConnectionSecrets } from './connectionSecrets';
 import type { ServerStatus } from './server';
 import type { Formatter } from './format';
 import type { ProcessingService } from './processing';
@@ -54,6 +55,8 @@ export interface AppContext {
   readonly recovery: RecoveryCopies;
   /** The device's NTv2 grids for the project's datum choices (app/gridLibrary.ts, docs/adr/0168 §4). */
   readonly grids: GridLibrary;
+  /** The map services' connections' secrets on this device (app/connectionSecrets.ts, docs/adr/0208 §12). */
+  readonly secrets: ConnectionSecrets;
   /** Whether the KentOS API answers (`/v1/health`); the drawing works without it (app/server.ts). */
   readonly server: ServerStatus;
   /** Signing in, the open cloud project, its autosave and live events (app/cloud/session.ts). */

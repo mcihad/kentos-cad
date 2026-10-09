@@ -13,6 +13,9 @@
 //!   glyph outlines) so this crate reads no files and knows no fonts;
 //! - [`raster_tiles`]: rasters' tiles (docs/adr/0204 §5): the raster atlas
 //!   and each frame's quads of the tiles in view;
+//! - [`service_tiles`]: map services' tiles (docs/adr/0208 §3, §9): picture
+//!   tiles through the raster atlas as meshes moved into the project's
+//!   system, vector tiles as styled layers of their own;
 //! - [`points`]: point clouds (docs/adr/0207 §6): each cloud's nodes in view
 //!   drawn into a picture of its own with their depth, shown over its plan;
 //! - [`uniform`]: the frame and style blocks as the contract lays them out;
@@ -28,9 +31,11 @@ pub mod pictures;
 pub mod points;
 pub mod raster;
 pub mod raster_tiles;
+pub mod service_tiles;
 pub mod shader;
 pub mod uniform;
 
 pub use gpu::{StyledFrame, StyledGpu, StyledLayerPart, StyledScene, ViewStyled};
 pub use picture::{Bitmap, ImageSource, NoImages, Picture, TextOutline};
 pub use points::{CloudNode, CloudTrees};
+pub use service_tiles::{ServiceImage, ServiceTile, ServiceView, Transform, VectorTile};

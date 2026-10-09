@@ -44,6 +44,8 @@ mod stationing;
 mod template_members;
 mod text;
 mod text_along;
+// The map services' tiles (docs/adr/0208 §3).
+mod tiles;
 mod topology;
 mod topology_rules;
 mod vertex_points;

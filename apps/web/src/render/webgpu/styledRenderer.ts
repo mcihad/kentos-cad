@@ -1,6 +1,7 @@
 import { batchImage, batchImagePx, batchInView, batchLegible, MARKER_STRIDE, STROKE_STRIDE, type AtlasHit, type AtlasSource, type StyledBatch } from '../types';
 import { fitted, GREY, levelCanvas, levelCount } from '../pictures';
 import { RasterQuads, RasterSlots, SLOT, UPLOADS_PER_FRAME, rasterAtlasSize, rasterQuads } from '../rasterPass';
+import { positionTile, ServiceMeshes, serviceQuads, serviceVectors, type ServicePaint, type ServiceSource } from '../servicePass';
 import { dashValues, inScale, patternReach, type StyledFrame } from '../webgl2/styledRenderer';
 import { SHAPE_IDS } from '../webgl2/styledShaders';
 import { STYLED_WGSL } from './styledShaders';
@@ -36,6 +37,8 @@ interface GpuStyled {
   /** A raster's quads this frame (docs/adr/0204 §5): written into `vertex` by prepare, grown as needed. */
   quads?: RasterQuads;
   vertexBytes?: number;
+  /** A vector service's tiles this frame (docs/adr/0208 §9), drawn where it is. */
+  vectors?: GpuStyledLayer[];
 }
 
 export interface GpuStyledLayer {
@@ -81,6 +84,11 @@ export class WebGPUStyledRenderer {
   private readonly pipes = new Map<number, StyledPipes>();
   private atlas: AtlasSource | null = null;
   private rasterPage: RasterPage | null = null;
+  /** The map services' tiles (docs/adr/0208 §3): their meshes and their vector tiles' buffers by tile. */
+  private services: ServiceSource | null = null;
+  private readonly meshes = new ServiceMeshes();
+  private readonly vectorLayers = new Map<string, { layer: GpuStyledLayer; at: number }>();
+  private vectorFrame = 0;
 
   /** `frame`: the backend's frame uniform, which the styled pipelines read beside their atlas; `lens`: the magnifier's. */
   constructor(device: GPUDevice, format: GPUTextureFormat, frame: GPUBuffer, lens: GPUBuffer) {
@@ -189,13 +197,18 @@ export class WebGPUStyledRenderer {
     });
   }
 
+  /** The map services' tiles (render/serviceHub.ts). */
+  useServices(services: ServiceSource | null): void {
+    this.services = services;
+  }
+
   // ── Upload ───────────────────────────────────────────────────────────
 
   upload(batches: readonly StyledBatch[]): GpuStyledLayer {
     const list: GpuStyled[] = [];
     for (const b of batches) {
-      if (b.kind === 'fill' && b.paint.kind === 'raster') {
-        // A raster's quads change every frame (docs/adr/0204 §5): written by prepare.
+      if (b.kind === 'fill' && (b.paint.kind === 'raster' || b.paint.kind === 'service')) {
+        // A raster's (and a map service's) quads change every frame (docs/adr/0204 §5): written by prepare.
         const vertex = this.device.createBuffer({ size: 1024, usage: BUFFER.VERTEX | BUFFER.COPY_DST });
         const data = this.styleData(b);
         const style = this.device.createBuffer({ size: STYLE_BYTES, usage: BUFFER.UNIFORM | BUFFER.COPY_DST });
@@ -262,8 +275,8 @@ export class WebGPUStyledRenderer {
       } else if (p.kind === 'image') {
         f.set([p.corner[0], p.corner[1], p.size[0], p.size[1]], 20);
         f.set([Math.cos(p.angle), Math.sin(p.angle), p.opacity, p.mirror ? 1 : 0], 24);
-      } else if (p.kind === 'raster') {
-        // b.z: the raster's opacity (docs/adr/0204 §5).
+      } else if (p.kind === 'raster' || p.kind === 'service') {
+        // b.z: the raster's (or the map service's) opacity (docs/adr/0204 §5, docs/adr/0208 §3).
         f.set([0, 0, p.opacity, 0], 24);
       } else if (p.kind === 'pattern') {
         const r = patternReach(p);
@@ -416,6 +429,17 @@ export class WebGPUStyledRenderer {
         if (!s.quads) continue;
         const b = s.batch;
         s.visible = false;
+        if (b.kind === 'fill' && b.paint.kind === 'service') {
+          if (!started) {
+            started = true;
+            atlas?.rasterFrame();
+            this.rasters().slots.beginFrame();
+            this.meshes.beginFrame();
+            this.services?.frame();
+          }
+          this.prepareService(s, b.paint, f, view, budget);
+          continue;
+        }
         if (!atlas || b.kind !== 'fill' || b.paint.kind !== 'raster' || !inScale(b, f.scaleDenominator) || !batchInView(b, view, f.pxPerM, f.dpr)) continue;
         const page = this.rasters();
         if (!started) {
@@ -444,6 +468,84 @@ export class WebGPUStyledRenderer {
   }
 
   /**
+   * A map service's batch this frame (docs/adr/0208 §3): its picture tiles' quads from the view's position tile (its
+   * style's origin written again when it moves), or its vector tiles' batches uploaded once and shown as a layer's are.
+   */
+  private prepareService(s: GpuStyled, paint: ServicePaint, f: StyledFrame, view: readonly [number, number, number, number], budget: { left: number }): void {
+    const services = this.services;
+    s.vectors = undefined;
+    if (!services || !s.quads) return;
+    const grid = services.grid(paint.service);
+    if (!grid) return;
+    if (grid.vector) {
+      const tiles = serviceVectors(paint, view, f.pxPerM / f.dpr, services);
+      this.vectorFrame++;
+      const layers: GpuStyledLayer[] = [];
+      for (const t of tiles) {
+        let held = this.vectorLayers.get(t.id);
+        if (!held) {
+          held = { layer: this.upload(t.batches), at: this.vectorFrame };
+          this.vectorLayers.set(t.id, held);
+        }
+        held.at = this.vectorFrame;
+        for (const v of held.layer.list) {
+          const vb = v.batch;
+          v.visible = inScale(vb, f.scaleDenominator) && batchInView(vb, view, f.pxPerM, f.dpr) && batchLegible(vb, f.pxPerM, f.dpr);
+          const image = v.visible ? batchImage(vb) : null;
+          if (!image) continue;
+          const hit = this.atlas?.lookup(image, batchImagePx(vb, f.pxPerM, f.dpr)) ?? null;
+          if (!hit) {
+            v.visible = false;
+            continue;
+          }
+          if (hit === v.hit) continue;
+          v.hit = hit;
+          const data = new Float32Array(v.data);
+          data.set(hit.uv, 16);
+          if (vb.kind === 'marker') data[24] = hit.aspect;
+          this.device.queue.writeBuffer(v.style, 0, v.data);
+        }
+        layers.push(held.layer);
+      }
+      if (this.vectorLayers.size > 256)
+        for (const [id, h] of this.vectorLayers)
+          if (h.at < this.vectorFrame - 64) {
+            this.release(h.layer);
+            this.vectorLayers.delete(id);
+          }
+      s.vectors = layers;
+      s.visible = layers.length > 0;
+      return;
+    }
+    const page = this.rasters();
+    const put = (slot: number, rgba: Uint8Array) => {
+      const [x, y] = page.slots.origin(slot);
+      this.device.queue.writeTexture({ texture: page.texture, origin: { x, y } }, rgba as Uint8Array<ArrayBuffer>, { bytesPerRow: SLOT * 4, rowsPerImage: SLOT }, [SLOT, SLOT]);
+    };
+    // The quads from the view's position tile (docs/adr/0157): the style's origin follows it.
+    const origin = positionTile(f.cam[0], f.cam[1]);
+    const b = s.batch as { origin?: [number, number] };
+    if (b.origin?.[0] !== origin[0] || b.origin?.[1] !== origin[1]) {
+      b.origin = origin;
+      new Float32Array(s.data).set([origin[0], origin[1], 0, 0], 36);
+      this.device.queue.writeBuffer(s.style, 0, s.data);
+    }
+    serviceQuads(paint, origin, view, f.pxPerM, page.slots, services, this.meshes, put, budget, s.quads);
+    s.count = s.quads.count;
+    s.visible = s.count > 0;
+    if (!s.visible) return;
+    const bytes = s.count * 16;
+    if (bytes > (s.vertexBytes ?? 0)) {
+      s.vertex.destroy();
+      let size = s.vertexBytes ?? 1024;
+      while (size < bytes) size *= 2;
+      s.vertex = this.device.createBuffer({ size, usage: BUFFER.VERTEX | BUFFER.COPY_DST });
+      s.vertexBytes = size;
+    }
+    this.device.queue.writeBuffer(s.vertex, 0, s.quads.data.buffer, s.quads.data.byteOffset, bytes);
+  }
+
+  /**
    * Draws a layer's visible batches into a pass of `samples` per pixel; with `lens`, through the magnifier's frame
    * uniform, only those reaching its view (docs/adr/0181).
    * True when it set its own group 0 (the frame with the atlas): the
@@ -457,18 +559,25 @@ export class WebGPUStyledRenderer {
     for (const s of layer.list) {
       if (!s.visible || (lens && !batchInView(s.batch, lens.view, lens.pxPerM, lens.dpr))) continue;
       const b = s.batch;
-      const pipe = b.kind === 'stroke' ? pipes.stroke : b.kind === 'marker' ? pipes.marker : pipes[b.paint.kind];
+      // A vector service's tiles where it is, as layers (docs/adr/0208 §9); then on with this layer.
+      if (s.vectors) {
+        for (const v of s.vectors) this.draw(pass, v, samples, lens);
+        pass.setBindGroup(0, lens ? this.lensBind : this.frameBind);
+        current = null;
+        continue;
+      }
+      const pipe = b.kind === 'stroke' ? pipes.stroke : b.kind === 'marker' ? pipes.marker : b.paint.kind === 'service' ? pipes.raster : pipes[b.paint.kind];
       if (pipe !== current) {
         pass.setPipeline(pipe);
         current = pipe;
       }
       pass.setBindGroup(1, s.bind);
       pass.setVertexBuffer(0, s.vertex);
-      if (b.kind === 'fill' && b.paint.kind === 'raster') {
-        // The raster atlas in group 0, sampled as its look says; then the atlas again.
+      if (b.kind === 'fill' && (b.paint.kind === 'raster' || b.paint.kind === 'service')) {
+        // The raster atlas in group 0, sampled as its look says (a service's linearly); then the atlas again.
         const page = this.rasters();
         const groups = lens ? page.lens : page.frame;
-        pass.setBindGroup(0, b.paint.nearest ? groups.nearest : groups.linear);
+        pass.setBindGroup(0, b.paint.kind === 'raster' && b.paint.nearest ? groups.nearest : groups.linear);
         pass.draw(s.count);
         pass.setBindGroup(0, lens ? this.lensBind : this.frameBind);
       } else if (b.kind === 'fill' && b.paint.kind === 'image') {
@@ -484,6 +593,8 @@ export class WebGPUStyledRenderer {
   }
 
   dispose(): void {
+    for (const h of this.vectorLayers.values()) this.release(h.layer);
+    this.vectorLayers.clear();
     this.texture.destroy();
     this.rasterPage?.texture.destroy();
     for (const p of this.pictures.values()) p.texture.destroy();

@@ -217,6 +217,15 @@
 .tree__folder {
   color: var(--c-text-3);
 }
+/* A map service layer whose service shows nothing (docs/adr/0208 §14): why, in its tip. */
+.tree__fail {
+  display: inline-flex;
+  flex: none;
+  color: var(--c-danger);
+}
+.tree__fail[hidden] {
+  display: none;
+}
 .tree__name {
   flex: 1;
   min-width: 0;
@@ -1153,4 +1162,49 @@
 /* A finding left on purpose is quiet. */
 .topo tbody tr.topo__row--exception td {
   color: var(--c-text-3);
+}
+
+/* Servis bilgisi (docs/adr/0208 §11): the point, then each service layer's records, field and value, long values wrapped. */
+.svc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 12px 12px;
+  font-size: var(--fs-sm);
+}
+.svc-info__at {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.svc-info__block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.svc-info__layer {
+  font-weight: 600;
+}
+.svc-info__record {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.svc-info__muted {
+  color: var(--c-text-3);
+}
+.svc-info__fields {
+  display: grid;
+  grid-template-columns: minmax(calc(120px * var(--ui-scale)), max-content) minmax(0, 1fr);
+  gap: 2px 14px;
+  margin: 0;
+}
+.svc-info__fields dt {
+  max-width: calc(220px * var(--ui-scale));
+  overflow: hidden;
+  color: var(--c-text-2);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.svc-info__fields dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }

@@ -87,8 +87,8 @@ export function checkRevision(doc: CadDocument, expected: string | null | undefi
 }
 
 /**
- * The layer the object goes on: known, a layer not a group, not locked by
- * itself or a group above. A hidden one takes the object with a warning.
+ * The layer the object goes on: known, a layer not a group, not drawn from a
+ * map service, not locked by itself or a group above. A hidden one takes the object with a warning.
  * The locked and hidden texts are the drawing tools' own words
  * (tools/targetLayer.ts), kept since the tools write through here.
  */
@@ -98,6 +98,9 @@ export function checkLayer(doc: CadDocument, id: string, path = 'layerId'): Stop
   if (!node) return failed(error('layer_not_found', `“${id}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.`, path));
   if (node.type !== 'layer')
     return failed(error('not_a_layer', `“${node.name}” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.`, path));
+  // A layer drawn from a map service holds no objects (docs/adr/0208 §2).
+  if (node.service)
+    return failed(error('service_layer', `“${node.name}” bir servis katmanı; çizimi servisten gelir, ona nesne eklenmez. Başka bir katmanı etkinleştirin.`, path));
   if (layers.isLocked(id))
     return failed(error('layer_locked', `“${node.name}” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.`, path));
   return layers.isVisible(id) ? [] : [{ code: 'layer_hidden', message: `“${node.name}” katmanı gizli; çizilen nesne görünmeyecek.`, path }];

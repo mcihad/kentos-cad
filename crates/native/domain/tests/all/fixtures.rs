@@ -446,6 +446,17 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
                     Some(v) => serde_json::from_value(v.clone())
                         .or_else(|e| fail(format!("{at}: alanlar okunamadı: {e}")))?,
                 },
+                // A service and a feed (docs/adr/0208 §2), as `LayerInit` carries them.
+                service: match layer.get("service") {
+                    None => None,
+                    Some(v) => serde_json::from_value(v.clone())
+                        .or_else(|e| fail(format!("{at}: servis okunamadı: {e}")))?,
+                },
+                feed: match layer.get("feed") {
+                    None => None,
+                    Some(v) => serde_json::from_value(v.clone())
+                        .or_else(|e| fail(format!("{at}: kaynak okunamadı: {e}")))?,
+                },
             };
             let parent = step.get("parent").and_then(Value::as_str);
             let activate = step

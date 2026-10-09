@@ -46,6 +46,7 @@ fn the_panels_words_tabs_and_levels_are_the_webs() {
             plan::TAB_TABLE,
             plan::TAB_SEARCH,
             plan::TAB_TOPOLOGY,
+            plan::TAB_SERVICE_INFO,
             plan::TAB_MESSAGES
         ]
     );

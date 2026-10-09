@@ -1,0 +1,500 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Harita servisleri",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis",
+    "connections": [
+      {
+        "id": "hgm-atlas",
+        "name": "HGM ATLAS",
+        "origin": "https://atlas.harita.gov.tr",
+        "auth": "query",
+        "names": [
+          "apikey"
+        ]
+      },
+      {
+        "id": "google",
+        "name": "Google Haritalar",
+        "origin": "https://tile.googleapis.com",
+        "auth": "google"
+      },
+      {
+        "id": "kurum-cbs",
+        "name": "Kurumun CBS sunucusu",
+        "origin": "https://cbs.example.gov.tr:8443",
+        "auth": "basic"
+      },
+      {
+        "id": "portal",
+        "name": "ArcGIS portalı",
+        "origin": "https://gis.example.com",
+        "auth": "arcgis",
+        "tokenUrl": "https://gis.example.com/portal/sharing/rest/generateToken"
+      },
+      {
+        "id": "kurum-api",
+        "name": "Kurumun API'si",
+        "origin": "https://api.example.com",
+        "auth": "oauth2",
+        "tokenUrl": "https://auth.example.com/oauth2/token",
+        "scope": "tiles.read"
+      },
+      {
+        "id": "veri",
+        "name": "Açık veri",
+        "origin": "https://data.example.com",
+        "auth": "header",
+        "names": [
+          "X-Api-Key",
+          "X-Client"
+        ]
+      }
+    ]
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel (WFS)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "feed": {
+        "kind": "wfs",
+        "url": "https://cbs.example.gov.tr:8443/geoserver/wfs",
+        "name": "tkgm:parsel",
+        "srid": 5256,
+        "bbox": [
+          499900.0,
+          4399900.0,
+          500100.5,
+          4400100.25
+        ],
+        "limit": 5000,
+        "version": "2.0.0",
+        "key": "parselNo",
+        "connection": "kurum-cbs",
+        "fetched": "2026-10-08T09:30:00Z"
+      }
+    },
+    {
+      "id": "durak",
+      "name": "Duraklar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "feed": {
+        "kind": "geojson",
+        "url": "https://data.example.com/duraklar.geojson",
+        "srid": 4326,
+        "filter": "hat = '12'",
+        "connection": "veri"
+      }
+    },
+    {
+      "id": "altliklar",
+      "name": "Altlıklar",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "imar",
+          "name": "İmar planı (WMS)",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "service": {
+            "kind": "wms",
+            "url": "https://cbs.example.gov.tr:8443/geoserver/wms",
+            "layers": [
+              "imar:plan",
+              "imar:yapi"
+            ],
+            "style": "default",
+            "format": "image/png",
+            "srid": 5256,
+            "transparent": true,
+            "version": "1.3.0",
+            "params": [
+              {
+                "name": "TILED",
+                "value": "true"
+              },
+              {
+                "name": "CQL_FILTER",
+                "value": "ilce = 'Çankaya'"
+              }
+            ],
+            "opacity": 0.75,
+            "attribution": "Kurumun CBS sunucusu",
+            "connection": "kurum-cbs",
+            "bbox": [
+              32.5,
+              39.75,
+              33.0,
+              40.05
+            ]
+          }
+        },
+        {
+          "id": "orto",
+          "name": "Ortofoto (WMTS)",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "service": {
+            "kind": "wmts",
+            "url": "https://atlas.harita.gov.tr/wmts/1.0.0/WMTSCapabilities.xml",
+            "layers": [
+              "ortofoto"
+            ],
+            "format": "image/jpeg",
+            "grid": {
+              "srid": 5256,
+              "matrices": [
+                {
+                  "id": "0",
+                  "resolution": 128.0,
+                  "x0": 200000.0,
+                  "y0": 4700000.0,
+                  "tileWidth": 256,
+                  "tileHeight": 256,
+                  "matrixWidth": 20,
+                  "matrixHeight": 12
+                },
+                {
+                  "id": "1",
+                  "resolution": 64.0,
+                  "x0": 200000.0,
+                  "y0": 4700000.0,
+                  "tileWidth": 256,
+                  "tileHeight": 256,
+                  "matrixWidth": 40,
+                  "matrixHeight": 24
+                },
+                {
+                  "id": "2",
+                  "resolution": 0.5,
+                  "x0": 200000.0,
+                  "y0": 4700000.0,
+                  "tileWidth": 512,
+                  "tileHeight": 512,
+                  "matrixWidth": 2400,
+                  "matrixHeight": 1500
+                }
+              ]
+            },
+            "matrixSet": "TUREF_TM33",
+            "template": "https://atlas.harita.gov.tr/wmts/ortofoto/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpeg",
+            "connection": "hgm-atlas",
+            "preset": "hgm-ortofoto",
+            "bbox": [
+              25.6,
+              35.8,
+              44.9,
+              42.2
+            ]
+          }
+        },
+        {
+          "id": "tiles",
+          "name": "Kurumun karoları (OGC API)",
+          "type": "layer",
+          "visible": false,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "service": {
+            "kind": "ogcTiles",
+            "url": "https://api.example.com/ogc/collections/orto",
+            "grid": {
+              "srid": 3857,
+              "matrices": [
+                {
+                  "id": "0",
+                  "resolution": 156543.03392804097,
+                  "x0": -20037508.342789244,
+                  "y0": 20037508.342789244,
+                  "tileWidth": 256,
+                  "tileHeight": 256,
+                  "matrixWidth": 1,
+                  "matrixHeight": 1
+                }
+              ]
+            },
+            "template": "https://api.example.com/ogc/collections/orto/map/tiles/WebMercatorQuad/{tileMatrix}/{tileRow}/{tileCol}",
+            "connection": "kurum-api"
+          }
+        },
+        {
+          "id": "arcgis",
+          "name": "Altyapı (ArcGIS)",
+          "type": "layer",
+          "visible": true,
+          "locked": true,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "service": {
+            "kind": "arcgis",
+            "url": "https://gis.example.com/arcgis/rest/services/Altyapi/MapServer",
+            "layers": [
+              "0",
+              "3"
+            ],
+            "srid": 5256,
+            "dynamic": true,
+            "transparent": true,
+            "connection": "portal"
+          }
+        },
+        {
+          "id": "vektor",
+          "name": "OpenFreeMap Liberty",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "service": {
+            "kind": "vector",
+            "url": "https://tiles.openfreemap.org/styles/liberty",
+            "maxZoom": 14,
+            "attribution": "OpenFreeMap © OpenMapTiles, OpenStreetMap katkıcıları",
+            "preset": "ofm-liberty"
+          }
+        },
+        {
+          "id": "uydu",
+          "name": "Google uydu",
+          "type": "layer",
+          "visible": false,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "service": {
+            "kind": "google",
+            "url": "",
+            "style": "satellite",
+            "connection": "google",
+            "preset": "google-satellite"
+          }
+        },
+        {
+          "id": "topo",
+          "name": "OpenTopoMap",
+          "type": "layer",
+          "visible": false,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "service": {
+            "kind": "xyz",
+            "url": "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+            "subdomains": [
+              "a",
+              "b",
+              "c"
+            ],
+            "maxZoom": 17,
+            "attribution": "© OpenStreetMap katkıcıları, SRTM | © OpenTopoMap (CC-BY-SA)",
+            "preset": "osm-topo"
+          }
+        },
+        {
+          "id": "tms",
+          "name": "Belediyenin TMS'i",
+          "type": "layer",
+          "visible": false,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "service": {
+            "kind": "xyz",
+            "url": "https://tms.example.com/1.0.0/harita/{z}/{x}/{y}.png",
+            "tileSize": 512,
+            "minZoom": 5,
+            "maxZoom": 20,
+            "yFlip": true
+          }
+        },
+        {
+          "id": "osm",
+          "name": "OpenStreetMap",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "service": {
+            "kind": "xyz",
+            "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            "maxZoom": 19,
+            "attribution": "© OpenStreetMap katkıcıları",
+            "preset": "osm-standard"
+          }
+        }
+      ]
+    },
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "parselNo": "104/7",
+        "ada": "104"
+      },
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400020.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400020.0
+        }
+      ]
+    },
+    {
+      "kind": "point",
+      "id": 2,
+      "layerId": "durak",
+      "attrs": {
+        "ad": "Kızılay",
+        "hat": "12"
+      },
+      "p": {
+        "x": 500041.5,
+        "y": 4400012.75
+      }
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 500000.0,
+        "y": 4400030.0
+      },
+      "b": {
+        "x": 500050.0,
+        "y": 4400030.0
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a1-5555-7000-8000-000000000301",
+    "0192f5a1-5555-7000-8000-000000000302",
+    "0192f5a1-5555-7000-8000-000000000303"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

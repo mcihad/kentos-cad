@@ -1,5 +1,6 @@
 import { ARROW_ICONS } from './arrowIcons';
 import { HATCH_ICONS, HATCH_PREVIEWS } from './hatchIcons';
+import { SERVICE_ICONS } from './serviceIcons';
 
 /**
  * Hand-drawn 20×20 stroke icon set. Filled squares are CAD grips, so a tool
@@ -763,6 +764,8 @@ export const ICONS = {
   ...HATCH_PREVIEWS,
   // The leader arrowheads, each drawn from its shape (docs/adr/0205 §7; written by scripts/ui/arrow_icons.py).
   ...ARROW_ICONS,
+  // Map services and the ready basemaps (docs/adr/0208 §14).
+  ...SERVICE_ICONS,
 } as const;
 
 export type IconName = keyof typeof ICONS;

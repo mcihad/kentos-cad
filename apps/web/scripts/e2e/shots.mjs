@@ -5652,7 +5652,7 @@ function rasterScenes() {
     while (!(await ui.eval(`[...window.kentos.doc.all()].some((e) => e.kind === 'raster' && e.layerId === 'tarama' && !!e.asset)`))) {
       if (Date.now() - t0 > 30000) {
         const dump = await ui.eval(`JSON.stringify([...window.kentos.doc.all()].filter((e) => e.kind === 'raster').map(({ style, ...e }) => e))`);
-        (await import('node:fs')).writeFileSync('/tmp/claude-1000/-home-cihad-Projects-kentos-cad/a9df79f3-41bb-48d8-aa27-ac3f8136f722/scratchpad/rasters-dump.json', dump);
+        (await import('node:fs')).writeFileSync(new URL('./out/rasters-dump.json', import.meta.url), dump);
         throw new Error('not resampled');
       }
       await ui.sleep(300);
@@ -5740,6 +5740,222 @@ function rasterScenes() {
           });
         })()`);
         await ui.sleep(600);
+      },
+      close,
+    },
+  ];
+}
+
+// Harita servisleri (docs/adr/0208) over a CBS project in TUREF / TM33 at Ankara's Kızılay: parcels and a building over
+// a ready basemap, its tiles from the service itself (the network is needed), in the project's system. The desktop's
+// are `tools_screens`' servis-* (apps/desktop/src/service_scenes.rs), the same drawing.
+SCENES.services = serviceScenes();
+
+function serviceScenes() {
+  const [X0, Y0] = [487526, 4420745];
+  /** Draws until the services have brought every tile the view asked for. */
+  const tilesCome = async (ui) => {
+    const t0 = Date.now();
+    for (let i = 0; i < 60; i++) {
+      await ui.sleep(400);
+      await ui.eval(`window.kentos.view.requestRender()`);
+      const idle = await ui.eval(`(async () => (await import('/src/render/serviceHub.ts')).serviceHub().idle())()`);
+      if (idle && Date.now() - t0 > 2500) break;
+    }
+    await ui.sleep(500);
+    await ui.eval(`window.kentos.view.requestRender()`);
+    await ui.sleep(300);
+  };
+  /** The drawing over the preset `id` (parcels and a building at Kızılay, TUREF / TM33), the view fitted to the block. */
+  const opened = async (ui, id, wait = true) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { preset, layerOf } = await import('/src/model/servicePresets.ts');
+      const p = preset(${JSON.stringify(id)});
+      const layer = (id, name, color, extra) => ({ id, name, type: 'layer', visible: true, locked: false, expanded: true,
+        style: { color, lineType: 'continuous', lineWeight: 0.35, fill: color + '33' }, children: [], ...extra });
+      const rect = (id, layerId, x, y, w, h, name) => ({ kind: 'polygon', id, layerId, attrs: { Ada: '1234', Parsel: name }, label: name,
+        pts: [{ x, y }, { x: x + w, y }, { x: x + w, y: y + h }, { x, y: y + h }] });
+      const entities = [];
+      [24, 20, 26, 22].forEach((w, i) => entities.push(rect(i + 1, 'parsel', ${X0} - 60 + [0, 24, 44, 70][i], ${Y0} - 10, w, 34, String(11 + i))));
+      entities.push(rect(5, 'yapi', ${X0} - 52, ${Y0} + 2, 12, 14, 'A Blok'));
+      const drawing = { format: 'kentos.document', version: 1, name: 'Kızılay',
+        settings: { srid: 5255, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'gis', drawingFont: 'barlow',
+          connections: p.connection ? [p.connection] : [] },
+        origin: { x: ${X0}, y: ${Y0} },
+        layers: [layer('parsel', 'Parsel', '#E5484D', {}), layer('yapi', 'Yapı', '#3E63DD', {}), layer('altlik', 'Altlık', 'fg', { service: layerOf(p) })],
+        activeLayer: 'parsel', entities, styles: { items: [], categories: [] } };
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(JSON.stringify(drawing), null))) throw new Error('the drawing did not load');
+      k.selection.clear();
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'map', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${X0 - 260}, minY: ${Y0 - 170}, maxX: ${X0 + 260}, maxY: ${Y0 + 170} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+    if (wait) await tilesCome(ui);
+    if (process.env.KENTOS_SHOTS_DEBUG)
+      console.log(await ui.eval(`JSON.stringify({ origin: window.kentos.doc.origin, cam: window.kentos.view.camera.center, scale: window.kentos.view.camera.scale, first: [...window.kentos.doc.all()][0]?.pts?.[0], layers: window.kentos.doc.layers.leaves().map((l) => l.id) })`));
+  };
+  /** Harita servisi on kind `kind`, `url` read by Bağlan, and `pick` picked when given. */
+  const connected = async (ui, kind, url, pick) => {
+    await ui.eval(`window.kentos.commands.execute('service.add')`);
+    await ui.waitFor(`!!document.querySelector('.dialog--service .svc-kind')`);
+    await ui.clickText('.dialog--service .svc-kind', kind);
+    await ui.clickSel('.dialog--service input[aria-label="Adres"]');
+    await ui.type(url);
+    await ui.clickText('.dialog--service .svc-address .btn', 'Bağlan');
+    await ui.waitFor(`!!document.querySelector('.dialog--service .svc-item') || !!document.querySelector('.dialog--service .io-summary__line[data-kind="error"]')`, 30000);
+    if (pick !== null) await ui.clickText('.dialog--service .svc-item', pick);
+    await ui.sleep(400);
+  };
+  /** Servisten veri al read from Esri's world countries layer, the first type picked. */
+  const feedConnected = async (ui) => {
+    await ui.eval(`window.kentos.commands.execute('service.feed')`);
+    await ui.waitFor(`!!document.querySelector('.dialog--feed .svc-kind')`);
+    await ui.clickText('.dialog--feed .svc-kind', 'ArcGIS REST');
+    await ui.clickSel('.dialog--feed input[aria-label="Adres"]');
+    await ui.type('https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/World_Countries_(Generalized)/FeatureServer');
+    await ui.clickText('.dialog--feed .svc-address .btn', 'Bağlan');
+    await ui.waitFor(`!!document.querySelector('.dialog--feed .svc-item') || !!document.querySelector('.dialog--feed .io-summary__line[data-kind="error"]')`, 30000);
+    await ui.sleep(400);
+  };
+  /** A project in Web Mercator over Kansas with GeoSolutions' GeoServer's US states as a WMS. */
+  const states = async (ui) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { preset, layerOf } = await import('/src/model/servicePresets.ts');
+      const layer = (id, name, extra) => ({ id, name, type: 'layer', visible: true, locked: false, expanded: true,
+        style: { color: 'fg', lineType: 'continuous', lineWeight: 0.35 }, children: [], ...extra });
+      const service = { kind: 'wms', url: 'https://gs-stable.geo-solutions.it/geoserver/wms', layers: ['topp:states'], srid: 3857, version: '1.3.0', format: 'image/png', transparent: true };
+      const drawing = { format: 'kentos.document', version: 1, name: 'Kansas',
+        settings: { srid: 3857, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'gis', drawingFont: 'barlow' },
+        origin: { x: -10900000, y: 4700000 },
+        layers: [layer('eyalet', 'ABD eyaletleri', { service }), layer('altlik', 'Altlık', { service: layerOf(preset('osm-standard')) })],
+        activeLayer: 'eyalet', entities: [], styles: { items: [], categories: [] } };
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(JSON.stringify(drawing), null))) throw new Error('the drawing did not load');
+      k.selection.clear();
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'map', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: -11600000, minY: 4300000, maxX: -10200000, maxY: 5100000 }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ribbonOff(ui);
+  };
+  return [
+    { id: 'servis-osm', open: (ui) => opened(ui, 'osm-standard'), close },
+    { id: 'servis-topo', open: (ui) => opened(ui, 'osm-topo'), close },
+    { id: 'servis-uydu', open: (ui) => opened(ui, 'esri-imagery'), close },
+    { id: 'servis-vektor', open: (ui) => opened(ui, 'ofm-liberty'), close },
+    // A basemap that needs a key: added, and Bağlantılar opens on its connection.
+    {
+      id: 'servis-baglantilar',
+      open: async (ui) => {
+        await opened(ui, 'osm-standard');
+        await ui.eval(`window.kentos.commands.execute('basemap.hgmHarita')`);
+        await ui.waitFor(`!!document.querySelector('.dialog--connections')`);
+        await ui.sleep(500);
+      },
+      close,
+    },
+    // Harita servisi on its ready basemaps.
+    {
+      id: 'servis-pencere',
+      open: async (ui) => {
+        await opened(ui, 'osm-standard');
+        await ui.eval(`window.kentos.commands.execute('service.add')`);
+        await ui.waitFor(`!!document.querySelector('.dialog--service .svc-preset')`);
+        await ui.sleep(400);
+      },
+      close,
+    },
+    // A WMS read (terrestris' OSM-WMS), its layers listed and one picked.
+    { id: 'servis-wms', open: async (ui) => (await opened(ui, 'osm-standard'), await connected(ui, 'WMS', 'https://ows.terrestris.de/osm/service', 'OSM-WMS')), close },
+    // The WMS added over the basemap as a clear layer, its tiles drawn.
+    {
+      id: 'servis-wms-cizim',
+      open: async (ui) => {
+        await opened(ui, 'osm-standard');
+        await connected(ui, 'WMS', 'https://ows.terrestris.de/osm/service', 'OSM-Overlay-WMS');
+        await ui.clickText('.dialog--service .dialog__foot .btn', 'Ekle');
+        await tilesCome(ui);
+      },
+      close,
+    },
+    // An ArcGIS REST service read: its layers under the whole.
+    {
+      id: 'servis-arcgis',
+      open: async (ui) => (await opened(ui, 'osm-standard'), await connected(ui, 'ArcGIS REST', 'https://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer', 'World Topo Map')),
+      close,
+    },
+    // Servisten veri al on an ArcGIS feature layer (Esri's world countries), Görünüm's area.
+    { id: 'servis-veri', open: async (ui) => (await opened(ui, 'osm-standard'), await feedConnected(ui)), close },
+    // Its objects taken into a new layer that remembers its feed (the most 1000; Hepsi).
+    {
+      id: 'servis-veri-alindi',
+      open: async (ui) => {
+        await opened(ui, 'osm-standard');
+        await feedConnected(ui);
+        await ui.eval(`(() => {
+          const set = (label, v) => { const el = document.querySelector('.dialog--feed [aria-label="' + label + '"]'); el.value = v; el.dispatchEvent(new Event(el.tagName === 'SELECT' ? 'change' : 'input')); };
+          set('Alan', '3');
+          set('En çok nesne', '1000');
+        })()`);
+        await ui.clickText('.dialog--feed .dialog__foot .btn', 'Al');
+        await ui.waitFor(`!document.querySelector('.dialog--feed')`, 60000);
+        await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${X0} - 900000, minY: ${Y0} - 450000, maxX: ${X0} + 900000, maxY: ${Y0} + 450000 }, 24); k.view.requestRender(); })()`);
+        await tilesCome(ui);
+      },
+      close,
+    },
+    // A layer drawn from a service chosen in the tree: Öznitelikler's Servis katmanı.
+    {
+      id: 'servis-oznitelik',
+      open: async (ui) => {
+        await opened(ui, 'osm-standard');
+        await connected(ui, 'WMS', 'https://ows.terrestris.de/osm/service', 'OSM-Overlay-WMS');
+        await ui.clickText('.dialog--service .dialog__foot .btn', 'Ekle');
+        await tilesCome(ui);
+        await ui.clickText('.panel--layers .tree__name', 'OSM Overlay WMS');
+        await ui.sleep(400);
+      },
+      close,
+    },
+    // A service layer's menu in the tree.
+    {
+      id: 'servis-menu',
+      open: async (ui) => {
+        await opened(ui, 'osm-standard');
+        const at = await ui.eval(`(() => { const el = [...document.querySelectorAll('.panel--layers .tree__name')].find((e) => e.textContent.includes('Altlık')); const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+        await ui.contextClick(...at);
+        await ui.sleep(300);
+      },
+      close,
+    },
+    // Servis bilgisi on GeoSolutions' US states (a project in Web Mercator over Kansas).
+    {
+      id: 'servis-bilgi',
+      open: async (ui) => {
+        await states(ui);
+        await tilesCome(ui);
+        await ui.eval(`window.kentos.commands.execute('service.info')`);
+        await ui.waitFor(`window.kentos.tools.active?.id === 'pickPoint'`);
+        await ui.eval(`(async () => { window.__serviceInfo = (await import('/src/ui/bottom/serviceInfoRun.ts')).serviceInfo; })()`);
+        await ui.eval(`window.kentos.tools.active.acceptPoint({ x: -10910000, y: 4680000 })`);
+        await ui.waitFor(`window.__serviceInfo.at.value && !window.__serviceInfo.busy.value`, 30000);
+        await ui.sleep(500);
+      },
+      close,
+    },
+    // The credits' card the strip opens.
+    {
+      id: 'servis-atif',
+      open: async (ui) => {
+        await opened(ui, 'osm-topo');
+        await ui.clickSel('.service-credits');
+        await ui.sleep(300);
       },
       close,
     },

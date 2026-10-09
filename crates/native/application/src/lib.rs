@@ -44,6 +44,7 @@ mod dimension;
 pub mod edit;
 pub mod elevation;
 pub mod geometry;
+pub mod layers_service;
 pub mod line;
 pub mod point;
 pub mod polygon;
@@ -95,5 +96,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_BLOCKS_EDIT,
         kentos_contracts::CAD_BLOCKS_EDIT_VERSION,
+    ),
+    // Harita servisi and the service layers' menus ([`layers_service`], docs/adr/0208 §15).
+    (
+        kentos_contracts::CAD_LAYERS_SERVICE,
+        kentos_contracts::CAD_LAYERS_SERVICE_VERSION,
     ),
 ];

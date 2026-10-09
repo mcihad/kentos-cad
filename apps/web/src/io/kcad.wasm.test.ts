@@ -157,7 +157,7 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
         valid++;
       }
     }
-    expect(valid).toBe(37);
+    expect(valid).toBe(38);
   });
 
   it('packs every file as the Rust codec does: the page and the module lay the columns out the same', async () => {
@@ -187,8 +187,12 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
       ['survey-ground.json', 'survey-ground.kcad'],
       // Schema 17: multi-part polylines and points, their parts in the page's columns (docs/adr/0174).
       ['multi-part-lines.json', 'multi-part-lines.kcad'],
+      // Schema 26: a layer's fields, kept by the page's head (docs/adr/0199 §1).
+      ['layer-fields.json', 'layer-fields.kcad'],
       // Schema 27: the project's topology rules and exceptions, kept by the page's head (docs/adr/0202 §7).
       ['topology.json', 'topology.kcad'],
+      // Schema 32: layers drawn from map services, their sources and the project's connections (docs/adr/0208 §2).
+      ['services.json', 'services.kcad'],
     ]) {
       expect(encodeWith(m, pack(drawing(content))), file).toEqual(read(file));
     }

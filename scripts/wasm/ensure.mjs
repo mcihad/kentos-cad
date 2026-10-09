@@ -4,8 +4,9 @@
 // only when a file is imported or exported or a drawing opened or saved, DXF and
 // Netcad NCZ (apps/web/src/io/dxf/pkg, io/ncz/pkg), loaded only for such a file,
 // the SVG editor's geometry
-// (apps/web/src/style/svg/pkg), loaded with the editor, and the sheet core
-// (apps/web/src/product/sheet/pkg), loaded when the sheet mode opens (CLAUDE.md §20). `pnpm dev`,
+// (apps/web/src/style/svg/pkg), loaded with the editor, the sheet core
+// (apps/web/src/product/sheet/pkg), loaded when the sheet mode opens, and the map
+// services (apps/web/src/io/services/pkg), loaded when a drawing shows one (CLAUDE.md §20). `pnpm dev`,
 // `test`, `build`, `e2e` and the perf scripts run this first. Each package
 // has its own digest (the crates it is built from, the toolchain pins and the
 // profile) and stamp, so an edit to the formats never rebuilds the core and
@@ -34,6 +35,9 @@ const PACKAGES = [
   { label: 'SVG düzenleyicisi', script: 'rust:wasm:svg', out: 'apps/web/src/style/svg/pkg', lib: 'kentos_svg_wasm', sources: ['crates/shared/svg-core', 'crates/wasm/svg-wasm', 'crates/shared/geometry-core', 'crates/shared/expression', 'crates/shared/style-core', ...PINS] },
   // Sheet layouts (docs/sheet/design.md), loaded when the sheet mode opens: the core with its templates, metrics and profiles (data it embeds).
   { label: 'Pafta çekirdeği', script: 'rust:wasm:sheet', out: 'apps/web/src/product/sheet/pkg', lib: 'kentos_sheet_wasm', sources: ['crates/shared/sheet', 'crates/wasm/sheet-wasm', 'crates/shared/expression', 'crates/shared/geometry-core', 'crates/shared/contracts', ...PINS] },
+  // Map services (docs/adr/0208), loaded when a drawing shows a service or a services window opens: requests,
+  // capabilities, tiles and their meshes, vector tiles into the style engine's batches, labels and features.
+  { label: 'Harita servisleri', script: 'rust:wasm:services', out: 'apps/web/src/io/services/pkg', lib: 'kentos_services_wasm', sources: ['crates/shared/services', 'crates/wasm/services-wasm', 'crates/shared/formats', 'crates/shared/style-core', 'crates/shared/geometry-core', 'crates/shared/expression', 'crates/shared/contracts', 'fixtures/services/v1/presets.json', 'fixtures/crs/v1/registry.json', ...PINS] },
 ];
 
 function files(path) {

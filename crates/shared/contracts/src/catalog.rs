@@ -1588,6 +1588,91 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // Harita servisi, Servisten veri al and the layers' menus (docs/adr/0208 §15),
+        // held together by fixtures/commands/v1/cad.layers.service.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_SERVICE.into(),
+            version: crate::CAD_LAYERS_SERVICE_VERSION,
+            title: "Servis katmanı".into(),
+            summary: "Katman ağacına bir harita servisinden çizilen katman ekler (add: XYZ ve TMS, WMTS, WMS, OGC API Tiles, ArcGIS REST, Google'ın 2B karoları, vektör karolar), nesneleri bir servisten alınan katman ekler (addFeed: WFS, OGC API Features, ArcGIS katmanı, GeoJSON adresi; alanlarıyla), birini değiştirir (update: ad, servis ya da kaynak) ya da bir servis katmanını siler (remove); tek geri alma adımı, adı işlemin. \
+                      parent katmanın gireceği grup (ya da yanına gireceği katman), index gruptaki yeri: ilki en üstte çizilir, verilmezse en sona, her şeyin altına girer. \
+                      connections projenin bağlantılarına eklenir ya da aynı kimliklisinin yerini alır; bağlantı yalnız doğrulamanın türünü ve gizli olmayan adları taşır, gizli değerler çizime yazılmaz. \
+                      Servis katmanı nesne tutmaz; servis ya da kaynak projenin bağlantılarından birini adlandırır. \
+                      Nesneler servisten alındıktan sonra cad.entities.create ile yazılır; aynı işlem grubunda tek adım olur. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersService>(),
+            output: schema::<crate::LayersServiced>(),
+            plan: Some(schema::<crate::LayersServicePlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "OpenStreetMap altlığı en alta".into(),
+                    input: json!({
+                        "operation": "add",
+                        "name": "OpenStreetMap",
+                        "service": {
+                            "kind": "xyz",
+                            "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                            "maxZoom": 19,
+                            "attribution": "© OpenStreetMap katkıda bulunanlar",
+                            "preset": "osm-standard"
+                        }
+                    }),
+                    output: Some(json!({ "layer": "layer-7", "revision": "41" })),
+                },
+                CommandExample {
+                    title: "Belediyenin WMS'i, anahtarı adreste giden bir bağlantıyla".into(),
+                    input: json!({
+                        "operation": "add",
+                        "name": "İmar planı",
+                        "index": 0,
+                        "service": {
+                            "kind": "wms",
+                            "url": "https://kbs.ornek-belediye.bel.tr/geoserver/wms",
+                            "layers": ["imar:plan"],
+                            "srid": 5254,
+                            "version": "1.3.0",
+                            "format": "image/png",
+                            "transparent": true,
+                            "connection": "belediye"
+                        },
+                        "connections": [{
+                            "id": "belediye",
+                            "name": "Belediye KBS",
+                            "origin": "https://kbs.ornek-belediye.bel.tr",
+                            "auth": "query",
+                            "names": ["apikey"]
+                        }]
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "WFS'ten alınacak parseller için veri katmanı".into(),
+                    input: json!({
+                        "operation": "addFeed",
+                        "name": "Parseller (WFS)",
+                        "feed": {
+                            "kind": "wfs",
+                            "url": "https://kbs.ornek-belediye.bel.tr/geoserver/wfs",
+                            "name": "kadastro:parsel",
+                            "version": "2.0.0",
+                            "srid": 5254,
+                            "key": "parsel_id"
+                        }
+                    }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -1763,6 +1848,9 @@ mod tests {
                     crate::CAD_BLOCKS_EDIT => {
                         serde_json::from_value::<crate::BlocksEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_SERVICE => {
+                        serde_json::from_value::<crate::LayersService>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -1818,6 +1906,10 @@ mod tests {
                         }
                         crate::CAD_BLOCKS_EDIT => {
                             serde_json::from_value::<crate::BlocksEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_SERVICE => {
+                            serde_json::from_value::<crate::LayersServiced>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

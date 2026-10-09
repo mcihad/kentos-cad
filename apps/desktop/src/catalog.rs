@@ -528,6 +528,28 @@ pub const PORTED: &[&str] = &[
     "processing.run.pointcloud.tile",
     "processing.run.pointcloud.rasterize",
     "processing.run.pointcloud.boundary",
+    // docs/adr/0208: Harita servisleri (services/): the ready basemaps, Altlığı kaldır and Bağlantılar.
+    "basemap.osmStandard",
+    "basemap.osmTopo",
+    "basemap.osmHot",
+    "basemap.cyclosm",
+    "basemap.ofmLiberty",
+    "basemap.ofmBright",
+    "basemap.ofmPositron",
+    "basemap.esriImagery",
+    "basemap.hgmHarita",
+    "basemap.hgmOrtofoto",
+    "basemap.googleRoadmap",
+    "basemap.googleSatellite",
+    "basemap.googleTerrain",
+    "basemap.googleHybrid",
+    "basemap.maptilerStreets",
+    "basemap.maptilerSatellite",
+    "basemap.remove",
+    "service.connections",
+    "service.add",
+    "service.feed",
+    "service.info",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

@@ -17,6 +17,7 @@ mod blocks;
 mod crs;
 mod names;
 mod objects;
+mod services;
 mod styles;
 
 use kentos_contracts::{
@@ -37,9 +38,10 @@ use crate::{
     SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
-    SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES,
-    SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS,
-    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES,
+    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES,
+    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -219,6 +221,19 @@ impl<'d> Encoder<'d> {
             self.path.extend(said.path);
             return Err(self.fail(said.code, &said.what));
         }
+        // Schema 32's links (docs/adr/0208 §2), as a reader checks them.
+        if let Some(fault) =
+            kentos_contracts::service_links(&doc.layers, &doc.settings.connections, &doc.entities)
+        {
+            match fault {
+                kentos_contracts::ServiceLinkFault::Object { index } => {
+                    self.path.push(Seg::Name("entities"));
+                    self.path.push(Seg::Index(index));
+                }
+                _ => self.path.push(Seg::Name("layers")),
+            }
+            return Err(self.fail(Code::BadValue, &fault.words()));
+        }
         let optional = usize::from(!doc.blocks.is_empty())
             + usize::from(doc.home_view.is_some())
             + usize::from(doc.project_id.is_some())
@@ -290,7 +305,8 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.text_styles.is_empty())
             + usize::from(!s.dimension_styles.is_empty())
             + usize::from(s.topology.is_some())
-            + usize::from(has_heights(s));
+            + usize::from(has_heights(s))
+            + usize::from(!s.connections.is_empty());
         self.open(n, true)?;
         self.key("srid");
         self.w.uint(u64::from(s.srid));
@@ -344,6 +360,10 @@ impl<'d> Encoder<'d> {
         if !s.text_styles.is_empty() {
             self.key("textStyles");
             self.at(Seg::Name("textStyles"), |e| e.text_styles(&s.text_styles))?;
+        }
+        if !s.connections.is_empty() {
+            self.key("connections");
+            self.at(Seg::Name("connections"), |e| e.connections(&s.connections))?;
         }
         if let Some(f) = s.drawing_font {
             self.key("drawingFont");
@@ -628,13 +648,26 @@ impl<'d> Encoder<'d> {
     fn layer(&mut self, n: &'d LayerNode) -> Result<(), KcadError> {
         let fields = !n.fields.is_empty();
         self.open(
-            8 + usize::from(n.snap.is_some()) + usize::from(fields),
+            8 + usize::from(n.snap.is_some())
+                + usize::from(fields)
+                + usize::from(n.service.is_some())
+                + usize::from(n.feed.is_some()),
             true,
         )?;
-        // id (2), name snap type (4), style (5), fields locked (6), visible (7),
-        // children expanded (8).
+        // id (2), feed name snap type (4), style (5), fields locked (6),
+        // service visible (7), children expanded (8).
+        if n.service.is_some() && n.feed.is_some() {
+            return Err(self.fail(
+                Code::BadValue,
+                "katman hem servisten çizilir hem nesnelerini bir kaynaktan alır; ikisi birden olmaz",
+            ));
+        }
         self.key("id");
         self.at(Seg::Name("id"), |e| e.text(&n.id))?;
+        if let Some(feed) = &n.feed {
+            self.key("feed");
+            self.at(Seg::Name("feed"), |e| e.feed(n.kind, feed))?;
+        }
         self.key("name");
         self.at(Seg::Name("name"), |e| e.text(&n.name))?;
         if let Some(snap) = &n.snap {
@@ -654,6 +687,10 @@ impl<'d> Encoder<'d> {
         }
         self.key("locked");
         self.w.bool(n.locked);
+        if let Some(service) = &n.service {
+            self.key("service");
+            self.at(Seg::Name("service"), |e| e.service(n.kind, service))?;
+        }
         self.key("visible");
         self.w.bool(n.visible);
         self.key("children");
@@ -944,8 +981,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
         .is_some_and(|a| *a != AnnotationHeights::default())
 }
 
-/// The oldest schema that holds the drawing: 31 when it has a point cloud or
-/// a raster read from an address (docs/adr/0207), 30 when the project has
+/// The oldest schema that holds the drawing: 32 when a layer is drawn from a
+/// service or has a feed, or the project has connections (docs/adr/0208), 31
+/// when it has a point cloud or a raster read from an address
+/// (docs/adr/0207), 30 when the project has
 /// annotation heights or a dimension style lines, or a dimension of it or of
 /// a block definition has lines or a leader an arrowhead size or one of
 /// AutoCAD's arrowheads (docs/adr/0205), 29 when it has a raster
@@ -976,6 +1015,16 @@ fn has_heights(s: &ProjectSettings) -> bool {
 fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     fn snaps(nodes: &[LayerNode]) -> bool {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
+    }
+    fn services(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| n.service.is_some() || n.feed.is_some() || services(&n.children))
+    }
+    // Schema 32 (docs/adr/0208): a layer drawn from a service, a layer's
+    // feed, or the project's connections.
+    if services(&doc.layers) || !doc.settings.connections.is_empty() {
+        return SCHEMA_WITH_SERVICES;
     }
     // Schema 31 (docs/adr/0207): a point cloud, or a raster read from an address; the drawing's only.
     if doc.entities.iter().any(|e| match e {

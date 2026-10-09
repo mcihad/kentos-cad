@@ -54,7 +54,7 @@ FIELDS = {
     'layersFraction': {'kind': 'number', 'min': LAYERS['min'], 'max': LAYERS['max']},
     'bottomExpanded': {'kind': 'boolean'},
     'bottomHeight': {'kind': 'number', 'min': BOTTOM['min']},
-    'bottomTab': {'kind': 'enum', 'values': ['history', 'coords', 'points', 'table', 'search', 'messages']},
+    'bottomTab': {'kind': 'enum', 'values': ['history', 'coords', 'points', 'table', 'search', 'topology', 'serviceInfo', 'messages']},
     'dockTab': {'kind': 'enum', 'values': ['layers', 'processing', 'blocks', 'templates', 'sources']},
     'processingTab': {'kind': 'enum', 'values': ['tools', 'history']},
     'processingFolded': {'kind': 'texts'},

@@ -332,6 +332,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.set"
             | "cad.blocks.define"
             | "cad.blocks.edit"
+            // Its remove takes a service layer away (docs/adr/0208 §15).
+            | "cad.layers.service"
     );
     let description = format!(
         "{}\n\nSonuç CommandResult'tır: status completed (output, warnings) ya da failed, needs_input, \

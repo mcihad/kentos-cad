@@ -163,7 +163,10 @@ impl App {
                 ViewChange::PlaceTable(table, label) => self.place_table(*table, label),
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
                 ViewChange::Picked(p) => {
-                    if !self.processing_picked(p) && !self.blocks_picked(p) {
+                    if !self.processing_picked(p)
+                        && !self.blocks_picked(p)
+                        && !self.service_info_picked(p)
+                    {
                         self.calc_picked(p);
                     }
                 }

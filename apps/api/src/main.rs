@@ -171,6 +171,7 @@ async fn serve(config: Config) -> Result<(), String> {
         None => None,
     };
     let blobs = kentos_application::blobs::Blobs::new(&config.blob_dir);
+    let proxy = http::proxy::Proxy::new(http::proxy::Reach::parse(config.proxy_allow.as_deref())?)?;
     if let Some(db) = &database {
         tokio::spawn(prune_events(db.clone(), config.event_retention));
         tokio::spawn(purge_trash(db.clone()));
@@ -183,6 +184,7 @@ async fn serve(config: Config) -> Result<(), String> {
         hub: hub::Hub::default(),
         logins: Default::default(),
         blobs,
+        proxy: Some(Arc::new(proxy)),
     };
     let listener = tokio::net::TcpListener::bind(addr)
         .await

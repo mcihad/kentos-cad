@@ -95,7 +95,9 @@ use crate::layer::LineType;
 ///    AutoCAD's arrowheads; the columns' dimension line flags and leader arrowhead size.
 /// 41: point clouds (docs/adr/0207): `.kcad` document schema 31, the typed columns'
 ///    `pointcloud` kind and a raster's `url`; DXF and GeoJSON leave point clouds out and say so.
-pub const FORMATS_VERSION: u32 = 41;
+/// 42: map services (docs/adr/0208): `.kcad` document schema 32, a layer's `service` and `feed`
+///    and the settings' `connections`.
+pub const FORMATS_VERSION: u32 = 42;
 
 // ── Every import ────────────────────────────────────────────────────────
 

@@ -168,6 +168,12 @@ pub enum Dialog {
     LayerMerge,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
     LayerFields,
+    /// Bağlantılar (services/connections.rs).
+    Connections,
+    /// Harita servisi (services/window.rs).
+    ServiceAdd,
+    /// Servisten veri al (services/feed_window.rs).
+    Feed,
     /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6); the window is `App::topology_rules`.
     TopologyRules,
     /// Katman durumları (layer_states.rs, docs/adr/0177 §4); the window is `App::layer_states_window`.
@@ -280,6 +286,9 @@ pub enum Message {
     /// The point cloud service made nodes, opened a file or an index moved
     /// on: the drawing draws again with them (docs/adr/0207 §6).
     CloudsReady,
+    /// The map services brought tiles or read what they need, or one failed:
+    /// the drawing draws again, the failure goes to the log (docs/adr/0208 §6).
+    ServicesReady,
     /// The point cloud windows, XYZ sor's answers and the indexes' panel (pointclouds/).
     PointClouds(crate::pointclouds::Event),
     /// A mouse press anywhere or the window losing the focus while the key
@@ -382,6 +391,8 @@ pub enum Message {
     TableUpdate(crate::tables::update::Event),
     /// Genel bakış and Büyüteç over the drawing (navigation_cards.rs).
     Navigation(crate::navigation_cards::Event),
+    /// The map services' credits and windows (services/app.rs, docs/adr/0208).
+    Services(crate::services::app::Event),
     /// Metin dosyası yerleştir's file: its name and bytes, or none (text_file.rs).
     TextFile(Option<(String, Vec<u8>)>),
     /// Resim ekle's file: its name, path and bytes, or none (cancelled).
@@ -595,6 +606,18 @@ pub struct App {
     pub(crate) vertices: crate::vertices::VertexPanel,
     /// The labels the view shows, as last asked of the geometry store (labels.rs).
     pub(crate) label_spots: crate::labels::Spots,
+    /// The map services' labels and credits for the view, as last worked out (services/overlay.rs).
+    pub(crate) service_marks: crate::services::overlay::Kept,
+    /// Whether the services' credits card is open (services/app.rs).
+    pub(crate) service_credits: bool,
+    /// Bağlantılar, while it is open (services/connections.rs, docs/adr/0208 §12).
+    pub(crate) connections: Option<crate::services::connections::Window>,
+    /// Harita servisi, while it is open (services/window.rs, docs/adr/0208 §14).
+    pub(crate) service_window: Option<crate::services::window::Window>,
+    /// Servisten veri al, while it is open (services/feed_window.rs, docs/adr/0208 §10).
+    pub(crate) feed_window: Option<crate::services::feed_window::Window>,
+    /// Servis bilgisi's point and answers (services/info.rs, docs/adr/0208 §11).
+    pub(crate) service_info: crate::services::info::Info,
     /// The last left press's object with no command running, and when (a double click edits a text).
     pub(crate) last_click: Option<(kentos_domain::Slot, Instant)>,
     /// The log (message_log.rs): every line said, 500 at most, with its time
@@ -908,6 +931,12 @@ impl App {
             topology_rules: None,
             vertices: Default::default(),
             label_spots: Default::default(),
+            service_marks: Default::default(),
+            service_credits: false,
+            connections: None,
+            service_window: None,
+            feed_window: None,
+            service_info: Default::default(),
             last_click: None,
             log: {
                 let mut log = crate::log_plan::Log::default();
@@ -1137,6 +1166,12 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // The map services' tiles as they come (services/, docs/adr/0208 §6).
+            if crate::services::in_use() {
+                Subscription::run(crate::services::ready)
+            } else {
+                Subscription::none()
+            },
             // The status bar's message: when it goes, and its fades (message_log.rs).
             self.log_subscription(Instant::now()),
             // The kept layout, written after its last change; the window's size.
@@ -1198,6 +1233,7 @@ impl App {
             self.text_file_tasks(),
             self.image_file_tasks(),
             self.raster_values_tasks(),
+            self.service_info_tasks(),
             self.cloud_query_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
@@ -1351,7 +1387,14 @@ impl App {
             Message::Rasters(event) => return self.rasters_event(event),
             // The next frame draws them; the panel shows the indexes' progress.
             Message::CloudsReady => {}
+            // The next frame draws them; a service that failed is said once.
+            Message::ServicesReady => {
+                for text in crate::services::hub().take_notices() {
+                    self.warn(text);
+                }
+            }
             Message::PointClouds(event) => return self.pointclouds_event(event),
+            Message::Services(event) => return self.services_event(event),
             Message::CommandCancelled => {
                 self.line_focused = false;
                 return self.run("tool.cancel");
@@ -1824,6 +1867,10 @@ impl App {
         if id.starts_with("cloud.") {
             return self.cloud_command(id);
         }
+        // A ready basemap (services/basemaps.rs, docs/adr/0208 §14).
+        if id.starts_with("basemap.") && id != "basemap.remove" {
+            return self.basemap_command(id);
+        }
         if crate::exchange::COMMANDS.contains(&id) {
             return self.exchange_command(id);
         }
@@ -2047,6 +2094,12 @@ impl App {
             "layer.list" => self.open_layer_list(),
             // Veri karşılaştır (docs/adr/0179).
             "data.compare" => self.open_data_compare(),
+            // Harita servisleri (services/, docs/adr/0208 §14).
+            "basemap.remove" => self.remove_basemap(),
+            "service.connections" => self.open_connections(None),
+            "service.add" => self.open_service_window(None),
+            "service.feed" => self.open_feed_window(),
+            "service.info" => self.start_service_info(),
             // Raster ekle and Raster stili (rasters/, docs/adr/0204 §8); Raster oturt is a Hesap window.
             "raster.add" => return self.raster_add_command(),
             "raster.style" => return self.raster_look_command(),
@@ -2208,6 +2261,13 @@ impl App {
             "view.previous" => self.view_history.can_back(),
             "view.next" => self.view_history.can_forward(),
             "view.extentCheck" => doc.is_some(),
+            // Only while a ready basemap is at the bottom (docs/adr/0208 §14).
+            "basemap.remove" => doc.is_some_and(|d| {
+                crate::services::basemaps::bottom_basemap(d.layers().nodes()).is_some()
+            }),
+            "service.connections" | "service.add" | "service.feed" | "service.info" => {
+                doc.is_some()
+            }
             id if crate::clipboard::COMMANDS.contains(&id) => self.clipboard_available(id),
             "server.check" => !self.server_checking,
             id if id.starts_with("cloud.") => self.cloud_available(id),

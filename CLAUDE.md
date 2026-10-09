@@ -120,6 +120,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   stili (canlı önizleme), XYZ sor, Sanal bulut olarak kaydet; İşlemler'in Nokta bulutu kategorisi: alan sorgusu, Seyrelt, Zemin süzgeci
   (SMRF), Yüksekliğe göre sınıfla, Bulutu kırp, Bulutları birleştir, Karola, Rasterleştir (GeoTIFF), Sınır çıkar; sonuçlar LAS, LAZ ya da
   COPC; Raster ekle'de Adres (GeoTIFF ve COG, HTTP aralıklarıyla) (ADR 0207);
+  harita servisleri ve altlıklar: servis katmanı (XYZ ve TMS, WMS 1.1.1 ve 1.3.0, WMTS, OGC API Tiles, ArcGIS REST, Google Map Tiles API,
+  vektör karolar MapLibre stiliyle), veri katmanı (WFS, OGC API Features, ArcGIS katmanı, GeoJSON adresi; Yenile) ve projenin bağlantıları
+  (adreste parametre, başlık, kullanıcı adı ve parola, belirteç, ArcGIS belirteci, OAuth 2, Google anahtarı; gizli değerler cihazda), `.kcad`
+  şema 32; karolar projenin sistemine ağla, vektör karonun noktaları da aynı ağla; Altlık ▾ (hazır altlıklar), Harita servisi, Servisten veri al,
+  Servis bilgisi, Bağlantılar (CBS'de Harita, CAD'de Ekle); katmanın menüsü, rozeti ve Öznitelikler'deki bölümü; atıf şeridi ve kartı;
+  `cad.layers.service`; web vekili `kentosd`'nin `/v1/proxy`'si; Python `kentos.services` (ADR 0208);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -374,6 +380,14 @@ python3 scripts/fixtures/pointcloud_index_cases.py --check   # COPC dizinini (ku
 python3 scripts/fixtures/pointcloud_ops_cases.py --check   # nokta bulutu işlemlerini (Seyrelt, Zemin süzgeci, Yüksekliğe göre sınıfla, Bulutu kırp, alan sorgusu, Karola, Rasterleştir, Sınır çıkar, Bulutları birleştir) ADR'nin tanımlarından laspy ve numpy'la denetle; durumlar fixtures/pointcloud/v1/ops.json (ADR 0207 §7)
 python3 scripts/fixtures/pointcloud_scene.py --check   # nokta bulutlarının sahnesini (fixtures/interaction/v1/pointclouds.kcad ve pointclouds/koy.laz) KentOS kodu olmadan laspy ve LASzip'le yeniden üretip karşılaştır (ADR 0207)
 python3 scripts/fixtures/pointcloud_command_cases.py --check   # nokta bulutunun masaüstüne özgü komut durumlarını (fixtures/commands/v1/desktop) sözleşmenin kurallarından denetle (ADR 0207 §10)
+python3 scripts/fixtures/service_tiles_cases.py --check   # harita servislerinin karolarını (görünümün ızgaradaki kutusu ve pikseli, kat, görünen karolar ve sıraları, karonun ağı, quadkey) pyproj'la, KentOS kodu olmadan denetle; durumlar fixtures/services/v1/tiles.json (ADR 0208 §3)
+python3 scripts/fixtures/service_mvt_cases.py --check   # vektör karo okuyucusunu GDAL'ın MVT sürücüsünün yazdığı ve okuduğu karoyla denetle; durumlar fixtures/services/v1/mvt.json ve mvt/kizilay.pbf (ADR 0208 §9)
+python3 scripts/fixtures/service_caps_cases.py --check   # WMS, WMTS ve WFS yetenek okuyucularını OWSLib'le ve PROJ'un eksen sıralarıyla denetle; durumlar fixtures/services/v1/caps.json ve caps/*.xml (ADR 0208 §5, §6, §10)
+python3 scripts/fixtures/service_rules_cases.py --check   # servis katmanının, veri kaynağının ve bağlantıların kurallarını bağımsız KCAD okuyucusunun kurallarıyla denetle; durumlar fixtures/services/v1/rules.json (ADR 0208 §2)
+python3 scripts/fixtures/layer_service_command_cases.py --check   # cad.layers.service durumlarını sözleşmenin kurallarından denetle (ADR 0208 §15)
+KENTOS_SHOTS_ONLY=servis-osm,servis-vektor,servis-pencere,servis-wms,servis-veri,servis-oznitelik,servis-bilgi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # harita servislerinin masaüstü resimleri (ağ gerekir), .run/shots/arac-servis-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs services); ADR 0208)
+cargo test --release -p kentos-desktop perf::services -- --ignored --nocapture --test-threads=1   # görünen karolar, karo ağı, PNG çözümü, şehir karosunun MVT'si ve stili, önbellekten tam görünüm ve iki altlıklı kareler; gerçek karolar bir kez .run/perf/'e (ADR 0208 §16)
+cargo test -p kentos-api proxy   # kentosd'nin servis vekili: adres kuralları, başlıklar, yerel sunucuyla yönlendirme, 32 MB, POST ve iç ağ reddi (ADR 0208 §13)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
 cargo test --release -p kentos-pointcloud --test all timing -- --ignored --nocapture   # aynı bulutta düğümün görünüşe göre çözülmesi (katman katman) ve LAZ yazma, tek ve dört iş parçacığıyla (önce perf::clouds dosyayı yazar; ADR 0207 §12)
@@ -550,6 +564,9 @@ pnpm kentosd -- <komut>  # yönetim CLI; yetkili hedefte bilinçli kullanılır
   açar); masaüstünde `$XDG_DATA_HOME/kentos-cad/pafta/` (yoksa `~/.local/share/kentos-cad/pafta/`;
   ADR 0164). NTv2 ızgaraları cihazındır, projeninki değil: IndexedDB `kentos.grids` (`grids` bilgiler, `bytes` baytlar; anahtar
   SHA-256), masaüstünde `$XDG_DATA_HOME/kentos-cad/izgara/<sha256>.gsb` ve yanında `<sha256>.json` (ADR 0168 §4).
+  Harita servislerinin bağlantılarının gizli değerleri çizime yazılmaz: web'de localStorage `kentos.connections.v1`, masaüstünde
+  `~/.config/kentos-cad/baglantilar.json` (0600); okunamayan kayıt `…#unreadable-<zaman>` olarak ayrılır. Masaüstünün servis önbelleği
+  `$XDG_CACHE_HOME/kentos-cad/servis/` (en çok 2 GB; ADR 0208 §3).
   Hata ayıklarken kullanıcı verisini izinsiz silmeyin.
 
 ## 3. Teknik kısıtlar
@@ -1218,7 +1235,16 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   noktaların çizim hattı (`styled/points.rs`, `shaders/wgsl/points`, stilli çizimin 7. sürümü); masaüstünde `pointclouds/`, İşlemler'in
   `builtin/pointcloud/`'u ve `files`'ı, rasterin adresi (`rasters/tiles.rs`'in `Origin::Url`'si); komut durumları `fixtures/commands/v1/desktop`;
   sahne `fixtures/interaction/v1/pointclouds.kcad`; süreler `perf::clouds`. Sahip aksini söyleyene dek her modül iki platformda, gerektiğinde
-  bulut tarafıyla yapılır; platform sorulmaz, ikonları sorulmadan seçilir (sahibin kararları, 8 Ekim akşamı). Sıradaki `GIS-10`.
+  bulut tarafıyla yapılır; platform sorulmaz, ikonları sorulmadan seçilir (sahibin kararları, 8 Ekim akşamı). `GIS-10` harita servisleri
+  ve altlıklar ([ADR 0208](docs/adr/0208-map-services-and-basemaps.md); kapsam sahibin sözleri: sayılanların hepsi, Google ve vektör karolar,
+  bütün kimlik doğrulama türleri, GeoJSON; iki platform ve bulut) tek parçada bitti (9 Ekim): sözleşmenin `service`'i (`ServiceLayer`,
+  `FeatureFeed`, `ServiceConnection`), `cad_layers` (`cad.layers.service`), `.kcad` şema 32 (`FORMATS_VERSION` 42); çekirdek
+  `kentos-services` ve geometri çekirdeğinin `geom::tiles`'ı (bağımsız başvurular `service_tiles_cases.py` pyproj'la,
+  `service_mvt_cases.py` GDAL'la, `service_caps_cases.py` OWSLib'le, `service_rules_cases.py`, `layer_service_command_cases.py`); WASM
+  `crates/wasm/services-wasm`; masaüstünde `services/` (hub, `net`, `cache`, `secrets`, `window`, `feed_window`, `connections`, `info`,
+  `overlay`), çizim hattında `styled/service_tiles.rs`; web'de `io/services/` (`worker.ts`, `feedWorker.ts`, `fetch.ts`),
+  `render/serviceHub.ts`, `render/servicePass.ts`, `ui/services/`, `ui/bottom/ServiceInfoPanel.ts`; sunucuda `http/proxy.rs`; Python
+  `python/kentos/services.py`; süreler `perf::services`. Sıradaki `GIS-11`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

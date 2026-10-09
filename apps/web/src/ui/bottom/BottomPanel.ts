@@ -16,6 +16,7 @@ import { vertexListing } from './coordinates';
 import { FeatureTable, resetFeatureTable } from './FeatureTable';
 import { PointTable } from './PointTable';
 import { SearchPanel } from './SearchPanel';
+import { ServiceInfoPanel } from './ServiceInfoPanel';
 import { TopologyPanel } from './TopologyPanel';
 import { resetTopology } from './topologyRun';
 import { isEditable } from './vertexEdit';
@@ -50,6 +51,8 @@ export class BottomPanel extends Component {
   private features: FeatureTable | null = null;
   /** Topoloji, the topology rules' findings (docs/adr/0202 §5), while its tab is on screen. */
   private topology: TopologyPanel | null = null;
+  /** Servis bilgisi, what the services said about a point (docs/adr/0208 §11), while its tab is on screen. */
+  private serviceInfo: ServiceInfoPanel | null = null;
 
   constructor(ctx: AppContext) {
     super();
@@ -140,6 +143,7 @@ export class BottomPanel extends Component {
     this.d.add(() => this.search?.dispose());
     this.d.add(() => this.features?.dispose());
     this.d.add(() => this.topology?.dispose());
+    this.d.add(() => this.serviceInfo?.dispose());
   }
 
   /**
@@ -201,6 +205,8 @@ export class BottomPanel extends Component {
     this.features = null;
     this.topology?.dispose();
     this.topology = null;
+    this.serviceInfo?.dispose();
+    this.serviceInfo = null;
     this.log = null;
     if (!this.ctx.ui.bottomExpanded.value) return;
     const tab = this.ctx.ui.bottomTab.value;
@@ -220,6 +226,10 @@ export class BottomPanel extends Component {
     if (tab === 'topology') {
       this.topology = new TopologyPanel(this.ctx);
       return replaceChildren(this.content, this.topology.el);
+    }
+    if (tab === 'serviceInfo') {
+      this.serviceInfo = new ServiceInfoPanel(this.ctx);
+      return replaceChildren(this.content, this.serviceInfo.el);
     }
     const entries = this.entriesOf(tab);
     if (!entries.length) {

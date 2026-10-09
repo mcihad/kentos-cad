@@ -41,6 +41,9 @@ kentos-cloud = { path = "../../crates/native/cloud" }
 kentos-formats = { path = "../../crates/shared/formats" }
 # Point clouds (docs/adr/0207): LAS, LAZ, COPC and text clouds, their index, looks and operations.
 kentos-pointcloud = { path = "../../crates/shared/pointcloud" }
+# Map services (docs/adr/0208): requests, capabilities, vector tiles and their styles, labels,
+# features and the HTTP cache rules, shared with the web's WASM.
+kentos-services = { path = "../../crates/shared/services" }
 # Netcad NCZ in (docs/adr/0138): a port of GPL-2.0-or-later code, not distributed before the
 # author's permission (crates/shared/ncz/README.md).
 kentos-ncz = { path = "../../crates/shared/ncz" }

@@ -758,15 +758,15 @@ export function drawCrosshair(g: CanvasRenderingContext2D, at: Vec2, cursor: Too
   g.restore();
 }
 
-/** Alternating map scale bar, bottom-right (the toolbox usually sits left). */
-export function drawScaleBar(g: CanvasRenderingContext2D, cam: Camera, pal: CanvasPalette): void {
+/** Alternating map scale bar, bottom-right (the toolbox usually sits left); `lift` px higher, over the services' credits. */
+export function drawScaleBar(g: CanvasRenderingContext2D, cam: Camera, pal: CanvasPalette, lift = 0): void {
   const targetPx = 120;
   const raw = targetPx / cam.scale;
   const p = Math.pow(10, Math.floor(Math.log10(raw)));
   const len = [1, 2, 5, 10].map((m) => m * p).reduce((best, v) => (Math.abs(v * cam.scale - targetPx) < Math.abs(best * cam.scale - targetPx) ? v : best));
   const px = len * cam.scale;
   const x0 = cam.width - 20 - px;
-  const y0 = cam.height - 22;
+  const y0 = cam.height - 22 - lift;
   g.save();
   for (let i = 0; i < 4; i++) {
     g.fillStyle = i % 2 ? pal.labelHalo : pal.fg;

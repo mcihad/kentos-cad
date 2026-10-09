@@ -585,6 +585,34 @@ impl Viewport {
         if crate::rasters::tiles::in_use() {
             crate::rasters::tiles::service().keep_only(&rasters);
         }
+        // The map services the scene shows (docs/adr/0208 §3): known to the hub
+        // with what they rest on; vector tiles built with the scene's colours.
+        let shown = crate::style::scene::shown_service_layers(doc.model.layers().nodes());
+        if !shown.is_empty() || crate::services::in_use() {
+            let settings = doc.model.settings();
+            let project =
+                std::sync::Arc::new(crate::services::systems::ProjectSystem::of(settings));
+            let hub = crate::services::hub();
+            let mut keys = std::collections::HashSet::new();
+            for service in shown {
+                let connection = service
+                    .connection
+                    .as_ref()
+                    .and_then(|c| settings.connections.iter().find(|k| &k.id == c));
+                let key = crate::services::key_of(service, connection);
+                hub.register(&key, service, connection, &project);
+                keys.insert(key);
+            }
+            hub.keep_only(&keys);
+            hub.set_look(crate::services::decode::VectorLook {
+                origin: kentos_geometry_core::Vec2 {
+                    x: look.origin.x,
+                    y: look.origin.y,
+                },
+                palette: look.palette.clone(),
+                view: look.view_colors,
+            });
+        }
         if !clouds.is_empty() || crate::pointclouds::service::in_use() {
             crate::pointclouds::register_scene(&clouds, &doc.model, folder);
         }

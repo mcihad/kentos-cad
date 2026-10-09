@@ -359,6 +359,8 @@ fn put_nodes(
                     style: n.style.clone(),
                     snap: n.snap.clone(),
                     fields: n.fields.clone(),
+                    service: n.service.clone(),
+                    feed: n.feed.clone(),
                 };
                 model.add_layer(new, parent, false).map_err(|r| r.0)?;
                 counts.layers += 1;

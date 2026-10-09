@@ -1,0 +1,5946 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.layers.service",
+  "commandVersion": 1,
+  "title": "Servis katmanı: harita servisi ve veri katmanı ekle, değiştir, sil (ADR 0208 §15)",
+  "note": "scripts/fixtures/layer_service_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/contracts/src/cad_layers.rs) KentOS kodu olmadan kurulur. `$layer` komutun eklediği (plan: ekleyeceği) katmanın kimliğidir: ağaçta olmayan bir `layer-N`; `expect.layers` katman ağacının tamamı, `expect.connections` projenin bağlantılarıdır.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Servis katmanları",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow",
+      "connections": [
+        {
+          "id": "kurum",
+          "name": "Kurumun CBS sunucusu",
+          "origin": "https://cbs.example.gov.tr",
+          "auth": "basic"
+        }
+      ]
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "parsel",
+        "name": "Parsel (WFS)",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [],
+        "feed": {
+          "kind": "wfs",
+          "url": "https://cbs.example.gov.tr/geoserver/wfs",
+          "name": "tkgm:parsel",
+          "srid": 5256,
+          "connection": "kurum"
+        }
+      },
+      {
+        "id": "altlik",
+        "name": "Altlıklar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "osm",
+            "name": "OpenStreetMap",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard"
+            }
+          },
+          {
+            "id": "imar",
+            "name": "İmar planı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "service": {
+              "kind": "wms",
+              "url": "https://cbs.example.gov.tr/geoserver/wms",
+              "layers": [
+                "imar:plan"
+              ],
+              "srid": 5256,
+              "transparent": true,
+              "connection": "kurum"
+            }
+          }
+        ]
+      },
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+          "parselNo": "104/7"
+        },
+        "pts": [
+          {
+            "x": 500000,
+            "y": 4400000
+          },
+          {
+            "x": 500020,
+            "y": 4400000
+          },
+          {
+            "x": 500020,
+            "y": 4400020
+          },
+          {
+            "x": 500000,
+            "y": 4400020
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+          "x": 500010,
+          "y": 4400030
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Ekle: OSM altlığı ağacın sonuna, her şeyin altına; adımı “Harita servisi ekle”, geri alınır ve yinelenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "OpenStreetMap",
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "$layer",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19,
+                  "attribution": "© OpenStreetMap katkıcıları",
+                  "preset": "osm-standard"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Harita servisi ekle",
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Harita servisi ekle",
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "$layer",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19,
+                  "attribution": "© OpenStreetMap katkıcıları",
+                  "preset": "osm-standard"
+                }
+              }
+            ],
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: grubun başına (parent bir grup, index 0)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Topo",
+            "parent": "altlik",
+            "index": 0,
+            "service": {
+              "kind": "xyz",
+              "url": "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+              "subdomains": [
+                "a",
+                "b",
+                "c"
+              ],
+              "maxZoom": 17,
+              "preset": "osm-topo"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "$layer",
+                    "name": "Topo",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.18
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+                      "subdomains": [
+                        "a",
+                        "b",
+                        "c"
+                      ],
+                      "maxZoom": 17,
+                      "preset": "osm-topo"
+                    }
+                  },
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: bir katmanın yanına (parent bir katman) onun grubunun sonuna",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Uydu",
+            "parent": "osm",
+            "service": {
+              "kind": "xyz",
+              "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+              "maxZoom": 19
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  },
+                  {
+                    "id": "$layer",
+                    "name": "Uydu",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.18
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                      "maxZoom": 19
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: index sondan büyükse sona; bilinmeyen parent ağacın en üstü",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "OpenStreetMap",
+            "parent": "yok",
+            "index": 99,
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "$layer",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19,
+                  "attribution": "© OpenStreetMap katkıcıları",
+                  "preset": "osm-standard"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: bağlantısıyla; bağlantı aynı adımda projeye eklenir, geri almada kalır (proje ayarı)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "HGM Harita",
+            "service": {
+              "kind": "wmts",
+              "url": "https://atlas.harita.gov.tr/wmts",
+              "layers": [
+                "harita"
+              ],
+              "grid": {
+                "srid": 3857,
+                "matrices": [
+                  {
+                    "id": "0",
+                    "resolution": 156543.03392804097,
+                    "x0": -20037508.342789244,
+                    "y0": 20037508.342789244,
+                    "tileWidth": 256,
+                    "tileHeight": 256,
+                    "matrixWidth": 1,
+                    "matrixHeight": 1
+                  }
+                ]
+              },
+              "matrixSet": "WebMercatorQuad",
+              "connection": "hgm"
+            },
+            "connections": [
+              {
+                "id": "hgm",
+                "name": "HGM ATLAS",
+                "origin": "https://atlas.harita.gov.tr",
+                "auth": "query",
+                "names": [
+                  "apikey"
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "$layer",
+                "name": "HGM Harita",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "service": {
+                  "kind": "wmts",
+                  "url": "https://atlas.harita.gov.tr/wmts",
+                  "layers": [
+                    "harita"
+                  ],
+                  "grid": {
+                    "srid": 3857,
+                    "matrices": [
+                      {
+                        "id": "0",
+                        "resolution": 156543.03392804097,
+                        "x0": -20037508.342789244,
+                        "y0": 20037508.342789244,
+                        "tileWidth": 256,
+                        "tileHeight": 256,
+                        "matrixWidth": 1,
+                        "matrixHeight": 1
+                      }
+                    ]
+                  },
+                  "matrixSet": "WebMercatorQuad",
+                  "connection": "hgm"
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              },
+              {
+                "id": "hgm",
+                "name": "HGM ATLAS",
+                "origin": "https://atlas.harita.gov.tr",
+                "auth": "query",
+                "names": [
+                  "apikey"
+                ]
+              }
+            ],
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Harita servisi ekle",
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              },
+              {
+                "id": "hgm",
+                "name": "HGM ATLAS",
+                "origin": "https://atlas.harita.gov.tr",
+                "auth": "query",
+                "names": [
+                  "apikey"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: aynı kimlikli bağlantı yerindekinin yerini alır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Yapılar",
+            "service": {
+              "kind": "wms",
+              "url": "https://cbs.example.gov.tr/geoserver/wms",
+              "layers": [
+                "imar:yapi"
+              ],
+              "srid": 5256,
+              "transparent": true,
+              "connection": "kurum"
+            },
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurum (belirteçle)",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "bearer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "$layer",
+                "name": "Yapılar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "service": {
+                  "kind": "wms",
+                  "url": "https://cbs.example.gov.tr/geoserver/wms",
+                  "layers": [
+                    "imar:yapi"
+                  ],
+                  "srid": 5256,
+                  "transparent": true,
+                  "connection": "kurum"
+                }
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurum (belirteçle)",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "bearer"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Veri katmanı ekle: kaynağı ve alanlarıyla; adımı “Veri katmanı ekle”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "addFeed",
+            "name": "Duraklar",
+            "parent": "0",
+            "index": 0,
+            "feed": {
+              "kind": "geojson",
+              "url": "https://data.example.com/duraklar.geojson",
+              "srid": 4326
+            },
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "hat",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "$layer",
+                "name": "Duraklar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "feed": {
+                  "kind": "geojson",
+                  "url": "https://data.example.com/duraklar.geojson",
+                  "srid": 4326
+                },
+                "fields": [
+                  {
+                    "name": "ad",
+                    "kind": "text"
+                  },
+                  {
+                    "name": "hat",
+                    "kind": "integer"
+                  }
+                ]
+              },
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Veri katmanı ekle",
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: adı ve donukluğu tek adımda; adımı “Servis katmanını değiştir”, geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "osm",
+            "name": "  OSM  ",
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard",
+              "opacity": 0.6
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "osm",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OSM",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard",
+                      "opacity": 0.6
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Servis katmanını değiştir",
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Servis katmanını değiştir",
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OSM",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard",
+                      "opacity": 0.6
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: veri katmanının kaynağı; nesneleri kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "parsel",
+            "feed": {
+              "kind": "wfs",
+              "url": "https://cbs.example.gov.tr/geoserver/wfs",
+              "name": "tkgm:parsel",
+              "srid": 5256,
+              "connection": "kurum",
+              "limit": 1000,
+              "fetched": "2026-10-08T09:30:00Z"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "parsel",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum",
+                  "limit": 1000,
+                  "fetched": "2026-10-08T09:30:00Z"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: yalnız ad",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "imar",
+            "name": "İmar (WMS)"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "imar",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar (WMS)",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: aynı değerler bir şey yazmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "osm",
+            "name": "OpenStreetMap",
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "osm",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sil: servis katmanı; adımı “Servis katmanını sil”, geri alınır, yerine döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "layer": "osm"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "osm",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Servis katmanını sil",
+          "expect": {
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sil: etkin katman silinmez; belgenin sözüyle reddedilir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Servis katmanları",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "connections": [
+            {
+              "id": "kurum",
+              "name": "Kurumun CBS sunucusu",
+              "origin": "https://cbs.example.gov.tr",
+              "auth": "basic"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "parsel",
+            "name": "Parsel (WFS)",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "feed": {
+              "kind": "wfs",
+              "url": "https://cbs.example.gov.tr/geoserver/wfs",
+              "name": "tkgm:parsel",
+              "srid": 5256,
+              "connection": "kurum"
+            }
+          },
+          {
+            "id": "altlik",
+            "name": "Altlıklar",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "osm",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19,
+                  "attribution": "© OpenStreetMap katkıcıları",
+                  "preset": "osm-standard"
+                }
+              },
+              {
+                "id": "imar",
+                "name": "İmar planı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "wms",
+                  "url": "https://cbs.example.gov.tr/geoserver/wms",
+                  "layers": [
+                    "imar:plan"
+                  ],
+                  "srid": 5256,
+                  "transparent": true,
+                  "connection": "kurum"
+                }
+              }
+            ]
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "osm",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "parsel",
+            "attrs": {
+              "parselNo": "104/7"
+            },
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500020,
+                "y": 4400000
+              },
+              {
+                "x": 500020,
+                "y": 4400020
+              },
+              {
+                "x": 500000,
+                "y": 4400020
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400030
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "layer": "osm"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_refused",
+              "message": "“OpenStreetMap” etkin katman; silinemez. Önce başka bir katmanı etkinleştirin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrula: yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "operation": "add",
+            "name": "OpenStreetMap",
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: eklenecek katman ve bağlantılar; yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "add",
+            "name": "HGM Harita",
+            "service": {
+              "kind": "wmts",
+              "url": "https://atlas.harita.gov.tr/wmts",
+              "layers": [
+                "harita"
+              ],
+              "grid": {
+                "srid": 3857,
+                "matrices": [
+                  {
+                    "id": "0",
+                    "resolution": 156543.03392804097,
+                    "x0": -20037508.342789244,
+                    "y0": 20037508.342789244,
+                    "tileWidth": 256,
+                    "tileHeight": 256,
+                    "matrixWidth": 1,
+                    "matrixHeight": 1
+                  }
+                ]
+              },
+              "matrixSet": "WebMercatorQuad",
+              "connection": "hgm"
+            },
+            "connections": [
+              {
+                "id": "hgm",
+                "name": "HGM ATLAS",
+                "origin": "https://atlas.harita.gov.tr",
+                "auth": "query",
+                "names": [
+                  "apikey"
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "node": {
+                "id": "$layer",
+                "name": "HGM Harita",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "service": {
+                  "kind": "wmts",
+                  "url": "https://atlas.harita.gov.tr/wmts",
+                  "layers": [
+                    "harita"
+                  ],
+                  "grid": {
+                    "srid": 3857,
+                    "matrices": [
+                      {
+                        "id": "0",
+                        "resolution": 156543.03392804097,
+                        "x0": -20037508.342789244,
+                        "y0": 20037508.342789244,
+                        "tileWidth": 256,
+                        "tileHeight": 256,
+                        "matrixWidth": 1,
+                        "matrixHeight": 1
+                      }
+                    ]
+                  },
+                  "matrixSet": "WebMercatorQuad",
+                  "connection": "hgm"
+                }
+              },
+              "connections": [
+                {
+                  "id": "kurum",
+                  "name": "Kurumun CBS sunucusu",
+                  "origin": "https://cbs.example.gov.tr",
+                  "auth": "basic"
+                },
+                {
+                  "id": "hgm",
+                  "name": "HGM ATLAS",
+                  "origin": "https://atlas.harita.gov.tr",
+                  "auth": "query",
+                  "names": [
+                    "apikey"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: değişecek katman; yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "update",
+            "layer": "osm",
+            "name": "OSM",
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard",
+              "opacity": 0.6
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "node": {
+                "id": "osm",
+                "name": "OSM",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19,
+                  "attribution": "© OpenStreetMap katkıcıları",
+                  "preset": "osm-standard",
+                  "opacity": 0.6
+                }
+              },
+              "connections": [
+                {
+                  "id": "kurum",
+                  "name": "Kurumun CBS sunucusu",
+                  "origin": "https://cbs.example.gov.tr",
+                  "auth": "basic"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: silmede katman yok, bağlantılar olduğu gibi",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "remove",
+            "layer": "imar"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "connections": [
+                {
+                  "id": "kurum",
+                  "name": "Kurumun CBS sunucusu",
+                  "origin": "https://cbs.example.gov.tr",
+                  "auth": "basic"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katmanı olmayan değiştirme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "name": "OSM"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_layer",
+              "message": "Değiştirilecek ya da silinecek katmanın kimliğini (layer) verin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş ad (yalnız boşluk)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": " \t",
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_name",
+              "message": "Katmanın adı boş olamaz; bir ad verin.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "değiştirmede boş ad",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "osm",
+            "name": ""
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_name",
+              "message": "Katmanın adı boş olamaz; bir ad verin.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "servissiz ekleme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Boş"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_service",
+              "message": "Eklenecek servis (service) verilmedi; servisin türünü ve adresini verin.",
+              "path": "service"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kaynaksız veri katmanı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "addFeed",
+            "name": "Boş"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_feed",
+              "message": "Veri katmanının kaynağı (feed) verilmedi; servisin türünü, adresini ve tür adını verin.",
+              "path": "feed"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "servis ve kaynak birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "İkisi",
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard"
+            },
+            "feed": {
+              "kind": "wfs",
+              "url": "https://cbs.example.gov.tr/geoserver/wfs",
+              "name": "tkgm:parsel",
+              "srid": 5256,
+              "connection": "kurum"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "service_and_feed",
+              "message": "Bir katman ya servisten çizilir ya nesnelerini bir kaynaktan alır; service ile feed birlikte verilmez.",
+              "path": "feed"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan servis (XYZ şablonunda satır yok)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Bozuk",
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.example.com/{z}/{x}.png"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_service",
+              "message": "XYZ şablonunda {z}, {x} ve {y} (ya da {-y}) ya da {quadkey} olmalı.",
+              "path": "service"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan kaynak (WFS'in tür adı yok)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "addFeed",
+            "name": "Bozuk",
+            "feed": {
+              "kind": "wfs",
+              "url": "https://cbs.example.gov.tr/wfs"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_feed",
+              "message": "WFS kaynağının tür, koleksiyon ya da katman adı (name) olmalı.",
+              "path": "feed"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynı adlı iki alan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "addFeed",
+            "name": "Duraklar",
+            "feed": {
+              "kind": "geojson",
+              "url": "https://data.example.com/duraklar.geojson",
+              "srid": 4326
+            },
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "AD",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_fields",
+              "message": "“AD” adlı iki alan var; alan adları bir kez kullanılır.",
+              "path": "fields"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan bağlantı (kökeninde yol)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "HGM",
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard"
+            },
+            "connections": [
+              {
+                "id": "hgm",
+                "name": "HGM ATLAS",
+                "origin": "https://atlas.harita.gov.tr/wmts",
+                "auth": "query",
+                "names": [
+                  "apikey"
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_connection",
+              "message": "“HGM ATLAS” bağlantısı: Bağlantının kökeni küçük harfle şema ve makine (https://ornek.gov.tr, isteğe bağlı :kapı) olmalı, yolu olmamalı; “https://atlas.harita.gov.tr/wmts” değil.",
+              "path": "connections"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "OSM",
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard"
+            },
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm çakışması: plan edilen sürümden sonra çizim değişmişse hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "once"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "imar",
+            "name": "İmar (WMS)"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "imar",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "layer": "osm",
+            "expectedRevision": "$once"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar (WMS)",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimde olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "layer": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "grup",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "altlik",
+            "name": "Altlık"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Altlıklar” bir katman grubu; servis ve veri kaynağı yalnız katmanın olur.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "servis katmanı olmayanı silme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "layer": "parsel"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_service_layer",
+              "message": "“Parsel (WFS)” bir servis katmanı değil; bu komut yalnız servis katmanını siler. Katmanı Katmanlar panelinden silin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "servis katmanı olmayana servis",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "0",
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_service_layer",
+              "message": "“0” bir servis katmanı değil; servisi yalnız servis katmanının değişir.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kaynağı olmayana kaynak",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "osm",
+            "feed": {
+              "kind": "wfs",
+              "url": "https://cbs.example.gov.tr/geoserver/wfs",
+              "name": "tkgm:parsel",
+              "srid": 5256,
+              "connection": "kurum"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_service_layer",
+              "message": "“OpenStreetMap” katmanının veri kaynağı yok; kaynak yalnız veri katmanının değişir.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "projede olmayan bağlantı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "HGM",
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19,
+              "attribution": "© OpenStreetMap katkıcıları",
+              "preset": "osm-standard",
+              "connection": "hgm"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_connection",
+              "message": "“hgm” bağlantısı projede yok; bağlantıyı connections ile birlikte verin ya da Bağlantılar penceresinden ekleyin.",
+              "path": "service.connection"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kaynağın projede olmayan bağlantısı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "parsel",
+            "feed": {
+              "kind": "wfs",
+              "url": "https://cbs.example.gov.tr/geoserver/wfs",
+              "name": "tkgm:parsel",
+              "srid": 5256,
+              "connection": "eski"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_connection",
+              "message": "“eski” bağlantısı projede yok; bağlantıyı connections ile birlikte verin ya da Bağlantılar penceresinden ekleyin.",
+              "path": "feed.connection"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel (WFS)",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "feed": {
+                  "kind": "wfs",
+                  "url": "https://cbs.example.gov.tr/geoserver/wfs",
+                  "name": "tkgm:parsel",
+                  "srid": 5256,
+                  "connection": "kurum"
+                }
+              },
+              {
+                "id": "altlik",
+                "name": "Altlıklar",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "osm",
+                    "name": "OpenStreetMap",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "xyz",
+                      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "maxZoom": 19,
+                      "attribution": "© OpenStreetMap katkıcıları",
+                      "preset": "osm-standard"
+                    }
+                  },
+                  {
+                    "id": "imar",
+                    "name": "İmar planı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "service": {
+                      "kind": "wms",
+                      "url": "https://cbs.example.gov.tr/geoserver/wms",
+                      "layers": [
+                        "imar:plan"
+                      ],
+                      "srid": 5256,
+                      "transparent": true,
+                      "connection": "kurum"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "connections": [
+              {
+                "id": "kurum",
+                "name": "Kurumun CBS sunucusu",
+                "origin": "https://cbs.example.gov.tr",
+                "auth": "basic"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -10,13 +10,16 @@ import type { Affine } from '../model/geom/affine';
 import type { Edge } from '../model/geom/intersect';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
 import type { Bounds, Vec2 } from '../model/geometry';
-import { highlightHex, modedPalette, parseHex, readCanvasPalette, withAlpha, type CanvasPalette } from '../render/color';
+import type { LayerNode } from '../model/layers';
+import { highlightHex, modedPalette, parseHex, readCanvasPalette, viewRgba, withAlpha, type CanvasPalette } from '../render/color';
 import { onFaceLoaded } from '../render/drawingFaces';
 import { createBackend } from '../render/createBackend';
 import { buildGrid, gridExtent, type GridExtent } from '../render/grid';
 import { Atlas } from '../render/atlas';
 import { buildSceneLayer, widenLines } from '../render/sceneBuilder';
 import { buildStyledLayer } from '../render/styledLayer';
+import { serviceHub, serviceKey } from '../render/serviceHub';
+import { connectionOf, CreditsStrip, drawServiceLabels, serviceProject, serviceSceneLayer, shownServices } from './serviceLayers';
 import type { BackendKind, RenderBackend } from '../render/types';
 import { webgpuSupported } from '../render/webgpu/support';
 import type { ToolPointer } from '../tools/Tool';
@@ -195,6 +198,10 @@ export class ViewportController {
   private dirtyLayers = new Set<string>();
   /** Images of styled symbols (SVG, text, raster, pattern tiles), shared by the backends. */
   private readonly atlas = new Atlas();
+  /** The map services' credits under the scale bar (docs/adr/0208 §3). */
+  private credits: CreditsStrip | null = null;
+  /** The services the scene showed last, to tell the hub when they change. */
+  private servicesShown = '';
   private allDirty = true;
   /** The scale symbols were last compiled at, and the wait before recompiling after a zoom (screen-sized symbols). */
   private builtSymbolScale = 0;
@@ -271,6 +278,7 @@ export class ViewportController {
       this.backend = backend;
       this.glCanvas = canvas;
       backend.useAtlas(this.atlas);
+      backend.useServices(serviceHub());
       this.backendKind.set(backend.kind);
       this.backendLabel.set(backend.label);
       this.adopt(backend, preferred[0], errors);
@@ -381,6 +389,7 @@ export class ViewportController {
       this.backend = backend;
       this.glCanvas = canvas;
       backend.useAtlas(this.atlas);
+      backend.useServices(serviceHub());
       backend.resize(this.size.w, this.size.h, this.dpr);
       this.allDirty = true;
       this.highlightDirty = true;
@@ -799,6 +808,34 @@ export class ViewportController {
     );
     this.atlas.onChange = () => this.requestRender();
     d.add(() => (this.atlas.onChange = null));
+    // The map services (docs/adr/0208): tiles arriving redraw the view, a service that fails is said once, the
+    // connections' secrets are this device's, the proxy is for a signed-in page.
+    const hub = serviceHub();
+    d.add(hub.listen(() => this.requestRender()));
+    hub.onNotice((text) => this.ctx.log.warn(text));
+    d.add(() => hub.onNotice(null));
+    hub.useSecrets((c) => this.ctx.secrets.get(c.origin, c.id));
+    d.add(this.ctx.cloud.auth.subscribe((a) => hub.setProxy(a === 'signedIn'), true));
+    d.add(
+      this.ctx.secrets.version.subscribe(() => {
+        this.servicesShown = '';
+        this.requestRender();
+      }),
+    );
+    d.add(
+      doc.settings.connections.subscribe(() => {
+        this.allDirty = true;
+        this.servicesShown = '';
+        this.requestRender();
+      }),
+    );
+    if (this.host) {
+      this.credits = new CreditsStrip(this.host);
+      d.add(() => {
+        this.credits?.dispose();
+        this.credits = null;
+      });
+    }
     d.add(
       doc.layers.events.on('state', ({ ids }) => {
         ids.forEach((id) => this.dirtyLayers.add(id));
@@ -1369,15 +1406,45 @@ export class ViewportController {
         this.constructionLayers.delete(id);
         continue;
       }
+      // A layer drawn from a map service: one batch the passes draw from its tiles (docs/adr/0208 §3).
+      if (node.service) {
+        this.constructionLayers.delete(id);
+        backend.upload(serviceSceneLayer(id, serviceKeyOf(doc, node), node.service.opacity ?? 1, doc.origin));
+        continue;
+      }
       const list = doc.byLayer(id);
       if (list.some(isConstruction)) this.constructionLayers.add(id);
       else this.constructionLayers.delete(id);
       backend.upload(buildStyledLayer(id, list, node.style, style));
     }
+    this.syncServices();
     if (this.highlightDirty) {
       this.highlightDirty = false;
       this.uploadHighlight();
     }
+  }
+
+  /**
+   * The services the scene shows, told to the hub when they change (new ones resolved, the others let go), with the
+   * colours vector tiles are decoded in.
+   */
+  private syncServices(): void {
+    const doc = this.ctx.doc;
+    const hub = serviceHub();
+    const list = shownServices(doc);
+    if (!list.length && !hub.inUse) return;
+    const project = serviceProject(doc);
+    const key = JSON.stringify([list.map((s) => s.key), project, this.ctx.secrets.version.value]);
+    if (key !== this.servicesShown) {
+      this.servicesShown = key;
+      hub.setHidpi(this.dpr > 1.5);
+      hub.show(list, project);
+    }
+    const view = { mode: this.ctx.prefs.colorMode.value, opaque: !this.ctx.prefs.transparency.value };
+    hub.setLook(
+      { palette: this.palette, plotScale: 1, asset: (id) => this.ctx.styles.library.asset(id), view },
+      JSON.stringify([this.palette, view, doc.origin]),
+    );
   }
 
   private uploadHighlight(): void {
@@ -1582,11 +1649,45 @@ export class ViewportController {
     g.restore();
   }
 
+  /**
+   * The map services' labels (placed by the services worker for this view) and their credits' strip: how far the
+   * scale bar goes up over the strip (docs/adr/0208 §3, §9).
+   */
+  private drawServices(g: CanvasRenderingContext2D): number {
+    const hub = serviceHub();
+    if (!hub.inUse || !this.credits) return 0;
+    const cam = this.camera;
+    const doc = this.ctx.doc;
+    // The camera is in the project's system (the passes' view is from the drawing's anchor).
+    const b = cam.visibleBounds();
+    const labels = hub.labels(b.minX, b.maxY, cam.scale, cam.width, cam.height);
+    const mode = this.ctx.prefs.colorMode.value;
+    drawServiceLabels(g, labels, (c) => viewRgba(c, mode, this.palette));
+    const shown = shownServices(doc);
+    const keys = shown.map((s) => s.key).reverse();
+    // Google's credits are for the view: its box in degrees from the service's grid (Web Mercator).
+    const google = (key: string) => {
+      const grid = hub.grid(key);
+      if (!grid) return null;
+      const seen = grid.tiles(b.minX, b.minY, b.maxX, b.maxY, cam.scale * this.dpr);
+      if (seen.length < 8) return null;
+      const R = 6378137;
+      const lon = (x: number) => (x / R) * (180 / Math.PI);
+      const lat = (y: number) => (2 * Math.atan(Math.exp(y / R)) - Math.PI / 2) * (180 / Math.PI);
+      return { zoom: seen[0], south: lat(seen[3]), west: lon(seen[2]), north: lat(seen[5]), east: lon(seen[4]) };
+    };
+    this.credits.theme(this.palette);
+    this.credits.update(hub.credits(keys, google), (texts) => joinedCredits(texts));
+    return this.credits.lift();
+  }
+
   /** The overlay of the drawing area through its own camera: text, grips, the tool's draft, snaps, marks, the cross-hair. */
   private drawMainOverlay(g: CanvasRenderingContext2D): void {
     const cam = this.camera;
     const pal = this.palette;
     const l0 = import.meta.env.DEV ? performance.now() : 0;
+    // The map services' labels under the drawing's own text, their credits in the corner (docs/adr/0208 §3, §9).
+    const lift = this.drawServices(g);
     this.drawCachedLabels(g);
     if (this.paragraphPreview) paragraphRecords(g, pal, cam, this.paragraphPreview.records, this.paragraphPreview.text, this.paragraphPreview.runs, this.paragraphPreview.face);
     const l1 = import.meta.env.DEV ? performance.now() : 0;
@@ -1612,12 +1713,29 @@ export class ViewportController {
     if (this.ctx.format.axes === 'cad') drawUcsIcon(g, cam, pal);
     else {
       drawNorthArrow(g, cam, pal);
-      drawScaleBar(g, cam, pal);
+      drawScaleBar(g, cam, pal, lift);
     }
     // An edge awaited for a lock is picked, whatever the tool's look (docs/adr/0166 §3).
     const look = this.ctx.tools.lockPick.value ? 'pick' : this.ctx.tools.active.cursor;
     if (this.screenCursor && !this.panFrom) drawCrosshair(g, this.screenCursor, look, pal, this.ctx.prefs.crosshair.value);
   }
+}
+
+/** Credits joined without repeats: one another holds whole goes (the services core's `attribution::joined`). */
+function joinedCredits(texts: readonly string[]): string[] {
+  const out: string[] = [];
+  for (const raw of texts) {
+    const c = raw.trim();
+    if (!c || out.some((o) => o.includes(c))) continue;
+    for (let i = out.length - 1; i >= 0; i--) if (c.includes(out[i])) out.splice(i, 1);
+    out.push(c);
+  }
+  return out;
+}
+
+/** A service layer's key in the hub: its service and its connection. */
+function serviceKeyOf(doc: AppContext['doc'], node: LayerNode): string {
+  return node.service ? serviceKey(node.service, connectionOf(doc, node)) : '';
 }
 
 /** An extension from its end to `d` along it, to draw: the segment, or an arc's points at most 5° apart. */

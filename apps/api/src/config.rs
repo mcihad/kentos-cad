@@ -42,6 +42,10 @@ pub struct Config {
     /// Absent: `.run/blobs` beside the env file, for development; a server
     /// sets its own, on storage that is backed up with the database.
     pub blob_dir: PathBuf,
+    /// The networks of the organisation the map services' proxy may reach
+    /// besides the public internet (`KENTOS_PROXY_ALLOW`: `10.20.0.0/16, fd00::/8`;
+    /// docs/adr/0208 §13). Absent: none.
+    pub proxy_allow: Option<String>,
 }
 
 /// Days of event log kept unless `KENTOS_EVENT_RETENTION_DAYS` says otherwise.
@@ -132,6 +136,7 @@ impl Config {
                         .unwrap_or_else(|| std::path::Path::new("."))
                         .join(".run/blobs")
                 }),
+            proxy_allow: get("KENTOS_PROXY_ALLOW"),
             env_file,
             vars,
         })

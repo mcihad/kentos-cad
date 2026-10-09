@@ -303,6 +303,8 @@ def settings(s):
                 "dimensionStyles": (dimension_styles, False),
                 "topology": (topology, False),
                 "annotation": (annotation, False),
+                # Schema 32 (docs/adr/0208 §2): the project's connections to map services, without their secrets.
+                "connections": (connections, False),
             },
             "settings",
         )
@@ -628,9 +630,121 @@ def layer_field(f):
     return cmap(fields(f, table, f"alan {f.get('name')}"))
 
 
+# Schema 32 (docs/adr/0208 §2): a layer's map service, where its objects came from, and the project's connections.
+SERVICE_KINDS = ("xyz", "wms", "wmts", "ogcTiles", "arcgis", "google", "vector")
+FEED_KINDS = ("wfs", "ogcFeatures", "arcgis", "geojson")
+AUTH_KINDS = ("none", "query", "header", "basic", "bearer", "arcgis", "oauth2", "google")
+
+
+def only_true(b):
+    """A flag of schema 32: written only when true."""
+    assert b is True, "bayrak yalnız true iken yazılır"
+    return b"\xf5"
+
+
+def nonempty(encode):
+    """A list of schema 32: written only when it is not empty."""
+
+    def enc(list_):
+        assert list_, "boş liste yazılmaz"
+        return array([encode(x) for x in list_])
+
+    return enc
+
+
+def tile_matrix(m):
+    return cmap(fields(m, {"id": (text, True), "x0": (f64, True), "y0": (f64, True), "resolution": (f64, True),
+                           "tileWidth": (uint, True), "tileHeight": (uint, True), "matrixWidth": (uint, True),
+                           "matrixHeight": (uint, True)}, f"matris {m.get('id')}"))
+
+
+def tile_grid(g):
+    return cmap(fields(g, {"srid": (uint, True), "matrices": (nonempty(tile_matrix), True)}, "karo ızgarası"))
+
+
+def service(s):
+    """A layer's map service (schema 32, docs/adr/0208 §2): its kind and address, then what it has; a Google layer has
+    no address of its own (its tiles' address comes from its session) and its key is a connection's."""
+    assert (s["url"] == "") == (s["kind"] == "google"), f"servis {s['kind']}: adres"
+    assert s["kind"] != "google" or "connection" in s, "Google katmanının bağlantısı olmalı"
+    param = lambda p: cmap(fields(p, {"name": (text, True), "value": (text, True)}, "parametre"))
+    table = {
+        "kind": (enum(SERVICE_KINDS), True),
+        "url": (text, True),
+        "layers": (nonempty(text), False),
+        "style": (text, False),
+        "format": (text, False),
+        "srid": (uint, False),
+        "grid": (tile_grid, False),
+        "matrixSet": (text, False),
+        "template": (text, False),
+        "tileSize": (uint, False),
+        "minZoom": (uint, False),
+        "maxZoom": (uint, False),
+        "subdomains": (nonempty(text), False),
+        "yFlip": (only_true, False),
+        "transparent": (only_true, False),
+        "version": (text, False),
+        "params": (nonempty(param), False),
+        "dynamic": (only_true, False),
+        "attribution": (text, False),
+        "opacity": (f64, False),
+        "connection": (text, False),
+        "preset": (text, False),
+        # The service's extent in WGS 84 degrees: west, south, east, north.
+        "bbox": (floats, False),
+    }
+    if "bbox" in s:
+        w, so, e, n = s["bbox"]
+        assert -180 <= w <= e <= 180 and -90 <= so <= n <= 90, "servisin kapsamı WGS 84 derecesinde"
+    return cmap(fields(s, table, f"servis {s['kind']}"))
+
+
+def feed(f):
+    """Where a layer's objects came from (schema 32, docs/adr/0208 §10): its kind and address, then what it has."""
+    assert "bbox" not in f or len(f["bbox"]) == 4, "istenen alan dört sayı"
+    table = {
+        "kind": (enum(FEED_KINDS), True),
+        "url": (text, True),
+        "name": (text, False),
+        "srid": (uint, False),
+        "filter": (text, False),
+        "bbox": (floats, False),
+        "limit": (uint, False),
+        "version": (text, False),
+        "key": (text, False),
+        "connection": (text, False),
+        "fetched": (text, False),
+    }
+    return cmap(fields(f, table, f"kaynak {f['kind']}"))
+
+
+def connection(c):
+    """A project's connection (schema 32, docs/adr/0208 §2): where its secret is used and how, never the secret."""
+    assert ("names" in c) == (c["auth"] in ("query", "header")), f"bağlantı {c['id']}: adlar"
+    table = {
+        "id": (text, True),
+        "name": (text, True),
+        "origin": (text, True),
+        "auth": (enum(AUTH_KINDS), True),
+        "names": (nonempty(text), False),
+        "tokenUrl": (text, False),
+        "scope": (text, False),
+    }
+    return cmap(fields(c, table, f"bağlantı {c['id']}"))
+
+
+def connections(list_):
+    ids = [c["id"] for c in list_]
+    assert len(set(ids)) == len(ids), "bağlantının kimliği bir kez"
+    return nonempty(connection)(list_)
+
+
 def layer(n):
     assert "snap" not in n or n["type"] == "layer", f"layer {n.get('id')}: grubun keneti olmaz"
     assert "fields" not in n or (n["type"] == "layer" and n["fields"]), f"layer {n.get('id')}: alanlar yalnız katmanın, boş değil"
+    assert not ({"service", "feed"} & set(n)) or n["type"] == "layer", f"layer {n.get('id')}: servis ve kaynak yalnız katmanın"
+    assert not {"service", "feed"} <= set(n), f"layer {n.get('id')}: servis ve kaynak birlikte olmaz"
     return cmap(
         fields(
             n,
@@ -640,6 +754,9 @@ def layer(n):
                 "snap": (layer_snap, False),
                 # Schema 26 (docs/adr/0199 §1): the schema of its objects' attributes.
                 "fields": (lambda fs: array([layer_field(f) for f in fs]), False),
+                # Schema 32 (docs/adr/0208 §2, §10): drawn from a map service, or its objects from a source.
+                "service": (service, False),
+                "feed": (feed, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -1049,7 +1166,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 31 with a point cloud or a raster read from an address, only in the
+    """The oldest schema that holds the drawing: 32 with a layer drawn from a map service or one whose objects came from
+    a source, or the project's connections (docs/adr/0208 §2), 31 with a point cloud or a raster read from an address, only in the
     drawing (docs/adr/0207), 30 with the project's annotation heights, a dimension style's or a
     dimension's lines, a leader's arrowhead's size or one of AutoCAD's arrowheads, in the drawing or a block definition
     (docs/adr/0205), 29 with a raster, only in the drawing (docs/adr/0204 §2), 28 with the
@@ -1106,6 +1224,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
             for e in es
         )
 
+    def served(nodes):
+        return any("service" in n or "feed" in n or served(n["children"]) for n in nodes)
+
+    if served(layers) or (settings and "connections" in settings):
+        return 32
     if any(e["kind"] == "pointcloud" or (e["kind"] == "raster" and "url" in e) for e in entities):
         return 31
     if settings and ("annotation" in settings or any(k in st for st in settings.get("dimensionStyles", []) for k in DIMENSION_LINES)):
@@ -1361,7 +1484,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-32.kcad"] = container(root(cmap(parts), version=uint(32)))
+    files["schema-version-33.kcad"] = container(root(cmap(parts), version=uint(33)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1807,6 +1930,99 @@ def broken(minimal_content, minimal_file):
     files["layer-fields-unknown-field.kcad"] = with_fields([field(unit=text("m"))])
     files["layer-fields-without-kind.kcad"] = with_fields([cmap({"name": text("Ada")})])
     files["layer-fields-choice-without-label.kcad"] = with_fields([field(values=array([cmap({"code": text("K")})]))])
+
+    # A layer's map service, where its objects came from and the project's connections are schema 32's
+    # (docs/adr/0208 §2, §10): in schema 31 unknown fields; a service or a source on a group, both on one layer, an
+    # object on a service layer, a connection named that the project has not, and every rule of the contract's
+    # `problem`s broken one at a time; flags written false and empty lists refused as such.
+    osm = {"kind": text("xyz"), "url": text("https://tile.openstreetmap.org/{z}/{x}/{y}.png")}
+
+    def on_layer(extra, node_type="layer", schema=32, settings_extra=None, entities=None):
+        node = {
+            "id": text(top["id"]),
+            "name": text(top["name"]),
+            **extra,
+            "type": text(node_type),
+            "visible": boolean(top["visible"]),
+            "locked": boolean(top["locked"]),
+            "expanded": boolean(top["expanded"]),
+            "style": cmap(layer_style_parts(top["style"])),
+            "children": array([]),
+        }
+        body = {**parts, "layers": array([cmap(node)])}
+        body["entities"] = array([]) if entities is None else entities
+        if settings_extra:
+            body["settings"] = cmap({**settings_parts(m["settings"]), **settings_extra})
+        return container(root(cmap(body), version=uint(schema)))
+
+    def served(schema=32, node_type="layer", entities=None, **fields_):
+        return on_layer({"service": cmap({**osm, **fields_})}, node_type=node_type, schema=schema, entities=entities)
+
+    def fed(schema=32, node_type="layer", **fields_):
+        return on_layer({"feed": cmap({"kind": text("wfs"), "url": text("https://cbs.example.com/wfs"), "name": text("tkgm:parsel"), **fields_})}, node_type=node_type, schema=schema)
+
+    def connected(conns, schema=32, **service_fields):
+        extra = {"service": cmap({**osm, **service_fields})} if service_fields else {}
+        return on_layer(extra, schema=schema, settings_extra={"connections": array(conns)})
+
+    def conn(cid="hgm", auth="query", **extra):
+        if auth in ("query", "header") and "names" not in extra:
+            extra["names"] = array([text("apikey")])
+        return cmap({"id": text(cid), "name": text("HGM ATLAS"), "origin": text("https://atlas.harita.gov.tr"), "auth": text(auth), **extra})
+
+    grid = lambda **m_: cmap({"srid": uint(5256), "matrices": array([cmap({"id": text("0"), "resolution": f64(128.0), "x0": f64(200000.0), "y0": f64(4700000.0), "tileWidth": uint(256), "tileHeight": uint(256), "matrixWidth": uint(20), "matrixHeight": uint(12), **m_})])})
+    files["service-in-schema-31.kcad"] = served(schema=31)
+    files["feed-in-schema-31.kcad"] = fed(schema=31)
+    files["connections-in-schema-31.kcad"] = connected([conn()], schema=31)
+    files["service-on-group.kcad"] = served(node_type="group")
+    files["feed-on-group.kcad"] = fed(node_type="group")
+    files["service-and-feed.kcad"] = on_layer({"service": cmap(osm), "feed": cmap({"kind": text("geojson"), "url": text("https://data.example.com/a.geojson")})})
+    point_on = cmap({"point": cmap({"uid": blob(uid_bytes(m["uids"][0])), "attrs": cmap({}), "layerId": text(top["id"]), "p": point(m["entities"][0]["p"])})})
+    files["service-holds-object.kcad"] = served(entities=array([point_on]))
+    files["service-unknown-connection.kcad"] = served(connection=text("hgm"))
+    files["service-unknown-kind.kcad"] = served(kind=text("tms"))
+    files["service-unknown-field.kcad"] = served(apiKey=text("gizli"))
+    files["service-without-url.kcad"] = on_layer({"service": cmap({"kind": text("xyz")})})
+    files["service-url-ftp.kcad"] = served(url=text("ftp://tile.example.com/{z}/{x}/{y}.png"))
+    files["service-xyz-no-y.kcad"] = served(url=text("https://tile.example.com/{z}/{x}.png"))
+    files["service-xyz-subdomains-missing.kcad"] = served(url=text("https://{s}.tile.example.com/{z}/{x}/{y}.png"))
+    files["service-wms-no-layers.kcad"] = served(kind=text("wms"), url=text("https://cbs.example.com/wms"), srid=uint(5256))
+    files["service-wms-no-srid.kcad"] = served(kind=text("wms"), url=text("https://cbs.example.com/wms"), layers=array([text("imar")]))
+    files["service-wms-version.kcad"] = served(kind=text("wms"), url=text("https://cbs.example.com/wms"), layers=array([text("imar")]), srid=uint(5256), version=text("1.2.0"))
+    files["service-wmts-no-grid.kcad"] = served(kind=text("wmts"), url=text("https://cbs.example.com/wmts"), layers=array([text("orto")]), matrixSet=text("TM33"))
+    files["service-wmts-two-layers.kcad"] = served(kind=text("wmts"), url=text("https://cbs.example.com/wmts"), layers=array([text("orto"), text("yol")]), matrixSet=text("TM33"), grid=grid())
+    files["service-grid-empty.kcad"] = served(kind=text("wmts"), url=text("https://cbs.example.com/wmts"), layers=array([text("orto")]), matrixSet=text("TM33"), grid=cmap({"srid": uint(5256), "matrices": array([])}))
+    files["service-grid-zero-resolution.kcad"] = served(kind=text("wmts"), url=text("https://cbs.example.com/wmts"), layers=array([text("orto")]), matrixSet=text("TM33"), grid=grid(resolution=f64(0.0)))
+    files["service-grid-big-tile.kcad"] = served(kind=text("wmts"), url=text("https://cbs.example.com/wmts"), layers=array([text("orto")]), matrixSet=text("TM33"), grid=grid(tileWidth=uint(8192)))
+    files["service-google-url.kcad"] = served(kind=text("google"), style=text("satellite"), connection=text("google"))
+    files["service-google-map-type.kcad"] = served(kind=text("google"), url=text(""), style=text("streets"))
+    files["service-layers-empty.kcad"] = served(layers=array([]))
+    files["service-params-empty.kcad"] = served(params=array([]))
+    files["service-param-name.kcad"] = served(params=array([cmap({"name": text("a b"), "value": text("1")})]))
+    files["service-yflip-false.kcad"] = served(yFlip=boolean(False))
+    files["service-zoom-order.kcad"] = served(minZoom=uint(18), maxZoom=uint(12))
+    files["service-zoom-big.kcad"] = served(maxZoom=uint(31))
+    files["service-tile-size-small.kcad"] = served(tileSize=uint(32))
+    files["service-opacity-zero.kcad"] = served(opacity=f64(0.0))
+    # The extent's west east of its east, and three numbers.
+    files["service-bbox-order.kcad"] = served(bbox=array([f64(v) for v in (44.9, 35.8, 25.6, 42.2)]))
+    files["service-bbox-three.kcad"] = served(bbox=array([f64(v) for v in (25.6, 35.8, 44.9)]))
+    files["service-style-empty.kcad"] = served(style=text(""))
+    files["feed-no-name.kcad"] = on_layer({"feed": cmap({"kind": text("wfs"), "url": text("https://cbs.example.com/wfs")})})
+    files["feed-bbox-three.kcad"] = fed(bbox=floats([1.0, 2.0, 3.0]))
+    files["feed-bbox-order.kcad"] = fed(bbox=floats([10.0, 0.0, 0.0, 10.0]))
+    files["feed-version-geojson.kcad"] = on_layer({"feed": cmap({"kind": text("geojson"), "url": text("https://data.example.com/a.geojson"), "version": text("2.0.0")})})
+    files["feed-limit-zero.kcad"] = fed(limit=uint(0))
+    files["feed-unknown-connection.kcad"] = fed(connection=text("kurum"))
+    files["connections-empty.kcad"] = connected([])
+    files["connection-origin-path.kcad"] = connected([conn(origin=text("https://atlas.harita.gov.tr/wms"))])
+    files["connection-origin-upper.kcad"] = connected([conn(origin=text("https://Atlas.harita.gov.tr"))])
+    files["connection-duplicate.kcad"] = connected([conn(), conn()])
+    files["connection-query-no-names.kcad"] = connected([conn(names=array([]))])
+    files["connection-basic-names.kcad"] = connected([conn(auth="basic", names=array([text("user")]))])
+    files["connection-oauth2-no-token-url.kcad"] = connected([conn(auth="oauth2")])
+    files["connection-scope-not-oauth2.kcad"] = connected([conn(auth="bearer", scope=text("read"))])
+    files["connection-secret.kcad"] = connected([conn(auth="basic", password=text("gizli"))])
     files["big-negative.kcad"] = container(with_parts({**parts, "styles": cmap({"items": array([b"\x3b" + b"\xff" * 8]), "categories": array([])})}))
     files["bytes-in-opaque.kcad"] = container(with_parts({**parts, "styles": cmap({"items": array([blob(b"\x01")]), "categories": array([])})}))
     files["bad-enum.kcad"] = container(with_parts({**parts, "settings": cmap({**settings_parts(m["settings"]), "areaUnit": text("acre")})}))
@@ -1999,6 +2215,7 @@ def build():
     out["rasters.kcad"] = container(document(load("rasters.json")))
     out["annotation.kcad"] = container(document(load("annotation.json")))
     out["pointclouds.kcad"] = container(document(load("pointclouds.json")))
+    out["services.kcad"] = container(document(load("services.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

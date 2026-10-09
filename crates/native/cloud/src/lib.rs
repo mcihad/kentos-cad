@@ -27,6 +27,8 @@
 pub mod api;
 pub mod drafts;
 pub mod failure;
+// Map services' requests (docs/adr/0208 §6): tiles, capabilities, styles, objects, tokens.
+pub mod fetch;
 pub mod follow;
 pub mod open;
 // Public addresses read by ranges: a COG or a COPC on a web server (docs/adr/0207 §1).

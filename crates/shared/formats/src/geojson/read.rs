@@ -547,6 +547,10 @@ fn positions(n: &Nest) -> Result<Vec<Pos>, Bad> {
     }
 }
 
+/// The report's name for a feature whose geometry is null (a map service
+/// that cannot show it in the system asked gives it so; docs/adr/0208 §10).
+pub const NULL_GEOMETRY: &str = "Geometrisi boş Feature";
+
 /// Makes a feature's objects (an empty layer: the file's default layer).
 fn emit(f: Feature, c: &mut Collect, line: u32) {
     if f.kind.as_deref() != Some("Feature") {
@@ -565,11 +569,9 @@ fn emit(f: Feature, c: &mut Collect, line: u32) {
             );
         }
         Some(Geom::Null) => {
-            return c.report.skip(
-                "Geometrisi boş Feature",
-                "geometry null; alınacak şekil yok",
-                line,
-            );
+            return c
+                .report
+                .skip(NULL_GEOMETRY, "geometry null; alınacak şekil yok", line);
         }
         Some(g) => g,
     };

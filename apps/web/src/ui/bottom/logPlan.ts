@@ -20,6 +20,8 @@ export const BOTTOM_TABS: readonly { id: BottomTab; label: string; icon: string 
   { id: 'search', label: 'Arama', icon: 'dataSearch' },
   // Topoloji kuralları' findings (docs/adr/0202 §5).
   { id: 'topology', label: 'Topoloji', icon: 'topologyCheck' },
+  // Servis bilgisi's answers (docs/adr/0208 §11).
+  { id: 'serviceInfo', label: 'Servis bilgisi', icon: 'serviceInfo' },
   { id: 'messages', label: 'Uyarılar', icon: 'warning' },
 ];
 

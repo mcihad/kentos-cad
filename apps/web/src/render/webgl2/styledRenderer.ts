@@ -1,6 +1,7 @@
 import { batchImage, batchImagePx, batchInView, batchLegible, MARKER_STRIDE, STROKE_STRIDE, type AtlasHit, type AtlasSource, type RGBA, type ScaleRange, type StyledBatch } from '../types';
 import { fitted, GREY } from '../pictures';
 import { RasterQuads, RasterSlots, SLOT, UPLOADS_PER_FRAME, rasterAtlasSize, rasterQuads } from '../rasterPass';
+import { positionTile, ServiceMeshes, serviceQuads, serviceVectors, type ServicePaint, type ServiceSource } from '../servicePass';
 import { AREA_VS, GRADIENT_FS, HATCH_FS, IMAGE_FS, MARKER_FS, MARKER_VS, PATTERN_FS, RASTER_FS, RASTER_VS, SHAPE_IDS, STROKE_FS, STROKE_VS, TILE_FS } from './styledShaders';
 
 /**
@@ -37,6 +38,8 @@ export interface GpuStyled {
   hit: AtlasHit | null;
   /** A raster's quads this frame (docs/adr/0204 §5): written into its buffer by prepare. */
   quads?: RasterQuads;
+  /** A vector service's tiles this frame (docs/adr/0208 §9), drawn where it is. */
+  vectors?: GpuStyled[][];
 }
 
 export interface StyledFrame {
@@ -95,6 +98,11 @@ export class StyledRenderer {
   /** The pictures' own textures by key (docs/adr/0192 §3); the grey stand-in under `''`. */
   private readonly pictures = new Map<string, WebGLTexture>();
   private atlas: AtlasSource | null = null;
+  /** The map services' tiles (docs/adr/0208 §3): their meshes and their vector tiles' buffers by tile. */
+  private services: ServiceSource | null = null;
+  private readonly meshes = new ServiceMeshes();
+  private readonly vectorLayers = new Map<string, { list: GpuStyled[]; at: number }>();
+  private vectorFrame = 0;
   private texture: WebGLTexture | null = null;
   private frameNo = 0;
   /** The frame the programs' frame uniforms were last set for: another (the magnifier's camera) sets them again. */
@@ -201,6 +209,11 @@ void main() { outColor = u_color; }`;
     });
   }
 
+  /** The map services' tiles (render/serviceHub.ts). */
+  useServices(services: ServiceSource | null): void {
+    this.services = services;
+  }
+
   // ── Upload ───────────────────────────────────────────────────────────
 
   upload(batches: readonly StyledBatch[]): GpuStyled[] {
@@ -224,8 +237,8 @@ void main() { outColor = u_color; }`;
         this.attrib(this.marker.a.a_i0, 4, stride, 0, 1);
         this.attrib(this.marker.a.a_i1, 1, stride, 16, 1);
         out.push({ ...common, count: b.instances.length / MARKER_STRIDE });
-      } else if (b.paint.kind === 'raster') {
-        // A raster's quads change every frame (docs/adr/0204 §5): written by prepare.
+      } else if (b.paint.kind === 'raster' || b.paint.kind === 'service') {
+        // A raster's (and a map service's) quads change every frame (docs/adr/0204 §5): written by prepare.
         gl.bufferData(gl.ARRAY_BUFFER, 16, gl.DYNAMIC_DRAW);
         this.attrib(this.raster.a.a_q, 4, 16, 0, 0);
         out.push({ ...common, count: 0, quads: new RasterQuads() });
@@ -306,6 +319,17 @@ void main() { outColor = u_color; }`;
         if (!s.quads) continue;
         const b = s.batch;
         s.visible = false;
+        if (b.kind === 'fill' && b.paint.kind === 'service') {
+          if (!started) {
+            started = true;
+            if (atlas) atlas.rasterFrame();
+            this.rasterPage().beginFrame();
+            this.meshes.beginFrame();
+            this.services?.frame();
+          }
+          this.prepareService(s, b.paint, f, view, budget);
+          continue;
+        }
         if (!atlas || b.kind !== 'fill' || b.paint.kind !== 'raster' || !inScale(b, f.scaleDenominator) || !batchInView(b, view, f.pxPerM, f.dpr)) continue;
         const slots = this.rasterPage();
         if (!started) {
@@ -326,6 +350,70 @@ void main() { outColor = u_color; }`;
         gl.bindBuffer(gl.ARRAY_BUFFER, s.buffers[0]);
         gl.bufferData(gl.ARRAY_BUFFER, s.quads.data.subarray(0, s.count * 4), gl.DYNAMIC_DRAW);
       }
+  }
+
+  /**
+   * A map service's batch this frame (docs/adr/0208 §3): its picture tiles' quads from the view's position tile, or
+   * its vector tiles' batches uploaded once and shown as a layer's are.
+   */
+  private prepareService(s: GpuStyled, paint: ServicePaint, f: StyledFrame, view: readonly [number, number, number, number], budget: { left: number }): void {
+    const services = this.services;
+    const b = s.batch;
+    s.vectors = undefined;
+    if (!services || !s.quads) return;
+    const grid = services.grid(paint.service);
+    if (!grid) return;
+    if (grid.vector) {
+      const tiles = serviceVectors(paint, view, f.pxPerM / f.dpr, services);
+      this.vectorFrame++;
+      const lists: GpuStyled[][] = [];
+      for (const t of tiles) {
+        let held = this.vectorLayers.get(t.id);
+        if (!held) {
+          held = { list: this.upload(t.batches), at: this.vectorFrame };
+          this.vectorLayers.set(t.id, held);
+        }
+        held.at = this.vectorFrame;
+        for (const v of held.list) {
+          const vb = v.batch;
+          v.visible = inScale(vb, f.scaleDenominator) && batchInView(vb, view, f.pxPerM, f.dpr) && batchLegible(vb, f.pxPerM, f.dpr);
+          v.hit = null;
+          const image = v.visible ? batchImage(vb) : null;
+          if (image) {
+            v.hit = this.atlas?.lookup(image, batchImagePx(vb, f.pxPerM, f.dpr)) ?? null;
+            if (!v.hit) v.visible = false;
+          }
+        }
+        lists.push(held.list);
+      }
+      // Tiles not drawn lately let their buffers go.
+      if (this.vectorLayers.size > 256)
+        for (const [id, h] of this.vectorLayers)
+          if (h.at < this.vectorFrame - 64) {
+            this.release(h.list);
+            this.vectorLayers.delete(id);
+          }
+      s.vectors = lists;
+      s.visible = lists.length > 0;
+      return;
+    }
+    const slots = this.rasterPage();
+    const gl = this.gl;
+    const put = (slot: number, rgba: Uint8Array) => {
+      const [x, y] = slots.origin(slot);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.rasterTexture);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, SLOT, SLOT, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+    };
+    // The quads from the view's position tile (docs/adr/0157), so a far basemap keeps its digits.
+    const origin = positionTile(f.cam[0], f.cam[1]);
+    (b as { origin?: [number, number] }).origin = origin;
+    serviceQuads(paint, origin, view, f.pxPerM, slots, services, this.meshes, put, budget, s.quads);
+    s.count = s.quads.count;
+    s.visible = s.count > 0;
+    if (!s.visible) return;
+    gl.bindBuffer(gl.ARRAY_BUFFER, s.buffers[0]);
+    gl.bufferData(gl.ARRAY_BUFFER, s.quads.data.subarray(0, s.count * 4), gl.DYNAMIC_DRAW);
   }
 
   /**
@@ -434,6 +522,31 @@ void main() { outColor = u_color; }`;
           gl.uniform3f(p.u.u_round, paint.centre[0], paint.centre[1], paint.radius);
           gl.uniform1i(p.u.u_shape, paint.shape);
           gl.uniform1i(p.u.u_inverted, paint.inverted ? 1 : 0);
+        } else if (paint.kind === 'service') {
+          // A vector service's tiles where it is, as layers (docs/adr/0208 §9); then on with this layer.
+          if (s.vectors) {
+            for (const list of s.vectors) this.draw(list, f, cull);
+            this.current = null;
+            this.premul = null;
+            if (this.texture) {
+              gl.activeTexture(gl.TEXTURE0);
+              gl.bindTexture(gl.TEXTURE_2D, this.texture);
+            }
+            continue;
+          }
+          // Its picture tiles from the raster atlas (docs/adr/0208 §3), as a raster's are drawn.
+          const p = this.raster;
+          this.use(p, f, b);
+          this.premultiplied(true);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, this.rasterTexture);
+          if (this.samplers) gl.bindSampler(0, this.samplers.linear);
+          gl.uniform1i(p.u.u_atlas, 0);
+          gl.uniform1f(p.u.u_opacity, paint.opacity);
+          gl.drawArrays(gl.TRIANGLES, 0, s.count);
+          gl.bindSampler(0, null);
+          gl.bindTexture(gl.TEXTURE_2D, this.texture);
+          continue;
         } else if (paint.kind === 'raster') {
           // Its tiles from the raster atlas, sampled as its look says (docs/adr/0204 §5).
           const p = this.raster;
@@ -539,6 +652,8 @@ void main() { outColor = u_color; }`;
   }
 
   dispose(): void {
+    for (const h of this.vectorLayers.values()) this.release(h.list);
+    this.vectorLayers.clear();
     const gl = this.gl;
     // The atlas is not detached: after a backend switch it already feeds the new backend.
     for (const p of [this.stroke, this.hatch, this.gradient, this.tile, this.solid, this.pattern, this.marker, this.image, this.raster]) gl.deleteProgram(p.program);

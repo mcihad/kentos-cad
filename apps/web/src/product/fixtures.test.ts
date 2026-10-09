@@ -33,6 +33,10 @@ interface Expect {
   blocks?: Json[];
   /** A definition's name → its id: "new" (none the setup had nor `captureBlock` took), "$block:name" or the id itself. */
   blockIds?: Record<string, string>;
+  /** The layer tree, every node whole; `$layer` the one a command added (docs/adr/0208 §15). */
+  layers?: Json[];
+  /** The project's connections (docs/adr/0208 §2). */
+  connections?: Json[];
 }
 
 interface Step {
@@ -65,7 +69,7 @@ interface Fixture {
 }
 
 const STEP_KEYS: readonly string[] = ['op', 'input', 'nonFinite', 'result', 'returns', 'as', 'id', 'name', 'expect', 'note'];
-const EXPECT_KEYS: readonly string[] = ['ids', 'entities', 'canUndo', 'canRedo', 'dirty', 'revision', 'uids', 'blocks', 'blockIds'];
+const EXPECT_KEYS: readonly string[] = ['ids', 'entities', 'canUndo', 'canRedo', 'dirty', 'revision', 'uids', 'blocks', 'blockIds', 'layers', 'connections'];
 const NON_FINITE = { NaN: Number.NaN, Infinity: Number.POSITIVE_INFINITY, '-Infinity': Number.NEGATIVE_INFINITY } as const;
 
 const files = import.meta.glob<string>('../../../../fixtures/commands/v1/*.json', { query: '?raw', import: 'default', eager: true });
@@ -88,6 +92,8 @@ class Run {
   /** Block ids taken by `captureBlock`, and the setup's (docs/adr/0144). */
   private readonly blocks = new Map<string, string>();
   private readonly setupBlocks: readonly string[];
+  /** The layer the last command added or would add (`$layer`, docs/adr/0208 §15). */
+  private layer: string | null = null;
 
   constructor(setup: Json, command: ProductCommand<unknown, unknown, unknown>) {
     this.command = command;
@@ -119,6 +125,10 @@ class Run {
       const uid = this.doc.uidOf(Number(value.slice('$uidOf:'.length)));
       if (uid === undefined) throw new Error(`${where}: ${value}: o yuvada nesne yok`);
       return uid;
+    }
+    if (value === '$layer') {
+      if (this.layer === null) throw new Error(`${where}: $layer: bir komut katman eklemedi`);
+      return this.layer;
     }
     if (typeof value === 'string' && value.includes('$uid:'))
       return value.replace(/\$uid:([A-Za-z0-9_-]+)/g, (_, name: string) => {
@@ -205,6 +215,7 @@ class Run {
     }
     if (s.result === undefined) throw new Error(`${where}: komut adımında “result” yok`);
     const cx = { doc: this.doc };
+    const before = new Set(this.doc.layers.all().map((n) => n.id));
     const result = s.op === 'validate' ? this.command.validate(cx, input) : s.op === 'plan' ? this.command.plan(cx, input) : this.command.execute(cx, input);
     const got = JSON.parse(JSON.stringify(result)) as { output?: { uid?: string; id?: number } };
     const want = structuredClone(s.result) as { output?: { uid?: string } };
@@ -214,6 +225,19 @@ class Run {
       expect(isUuid(uid), `${where}: output.uid bir UUID olmalı: ${uid}`).toBe(true);
       expect(uid, `${where}: output.uid yuvadaki nesnenin kimliği olmalı`).toBe(this.doc.uidOf(got.output?.id ?? -1));
       want.output.uid = uid;
+    }
+    // “$layer”: the layer the command added (execute) or would add (plan): an id the tree did not have (docs/adr/0208 §15).
+    const out = (got as { output?: { layer?: string; node?: { id?: string } } }).output;
+    const wanted = (want as { output?: { layer?: string; node?: { id?: string } } }).output;
+    for (const [mine, theirs] of [
+      [wanted?.layer, out?.layer],
+      [wanted?.node?.id, out?.node?.id],
+    ] as const) {
+      if (mine !== '$layer') continue;
+      const id = theirs ?? '';
+      const fresh = /^layer-\d+$/.test(id) && !before.has(id) && (this.doc.layers.get(id) !== undefined) === (s.op === 'execute');
+      expect(fresh, `${where}: “${id}” yeni bir katmanın kimliği olmalı`).toBe(true);
+      this.layer = id;
     }
     expect(got, `${where}: sonuç`).toEqual(this.fill(want as Json, where));
   }
@@ -245,6 +269,8 @@ class Run {
         expect(isUuid(block!.id), `${where}: “${name}” bloğunun kimliği`).toBe(true);
       } else expect(block!.id, `${where}: “${name}” bloğunun kimliği`).toBe(this.fill(want, where));
     }
+    if (e.layers) expect(JSON.parse(JSON.stringify(doc.layers.tree)), `${where}: katmanlar`).toEqual(this.fill(e.layers, where));
+    if (e.connections) expect(JSON.parse(JSON.stringify(doc.settings.connections.value)), `${where}: bağlantılar`).toEqual(e.connections);
     for (const [id, name] of Object.entries(e.uids ?? {})) {
       const uid = doc.uidOf(Number(id));
       expect(isUuid(uid), `${where}: ${id} nesnesinin kalıcı kimliği`).toBe(true);

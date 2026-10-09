@@ -2,6 +2,8 @@ import type { AppContext } from '../../app/context';
 import { listen } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { LINE_TYPE_LABEL, type LayerNode, type LineType } from '../../model/layers';
+import { serviceIcon } from '../../model/servicePresets';
+import { serviceHub } from '../../render/serviceHub';
 import { layerSnapItems, SNAP_TIP, snapState, toggledSnap, type SnapState } from './layerSnap';
 import { h } from '../dom';
 import { icon } from '../icons';
@@ -12,6 +14,8 @@ import { askRemove } from '../widgets/confirm';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 import { TreeView } from '../widgets/TreeView';
 import { objectsOfNode, zoomItem } from './layerZoom';
+import { chosenLayer } from './chosenLayer';
+import { feedItem, serviceFailure, serviceItems } from './serviceMenu';
 import { colorSwatch, layerSwatch } from './swatch';
 import { treeLocked } from './treeRights';
 import { fixed } from '../../core/displayNumber';
@@ -33,9 +37,11 @@ interface Row {
   readonly lock: HTMLElement;
   /** The layer's own snapping (docs/adr/0163 §4); a group's writes to all its layers. */
   readonly magnet: HTMLElement;
-  /** A layer's colour swatch; a group shows a folder. */
+  /** A layer's colour swatch; a group shows a folder, a map service layer its service's icon. */
   readonly swatch: HTMLElement | null;
-  readonly shown: { count?: number; visible?: boolean; locked?: boolean; hidden?: boolean; active?: boolean; color?: string; snap?: SnapState };
+  /** A map service layer's badge: why its service shows nothing, when it failed (docs/adr/0208 §14). */
+  readonly fail: HTMLElement | null;
+  readonly shown: { count?: number; visible?: boolean; locked?: boolean; hidden?: boolean; active?: boolean; color?: string; snap?: SnapState; fail?: string | null };
 }
 
 /**
@@ -89,7 +95,15 @@ export class LayersPanel extends Panel {
         renderRow: (n, row) => this.renderRow(n, row),
         // Only the rows in view are built; one scrolled away takes no more writes.
         releaseRow: (n) => this.rows.delete(n.id),
-        onActivate: (n) => (n.type === 'layer' ? layers.setActive(n.id) : layers.setExpanded(n.id, !n.expanded)),
+        // A map service layer takes no objects: its settings instead (docs/adr/0208 §14).
+        onActivate: (n) =>
+          n.service
+            ? void import('../services/ServiceDialog').then((m) => m.openServiceDialog(ctx, n.id))
+            : n.type === 'layer'
+              ? layers.setActive(n.id)
+              : layers.setExpanded(n.id, !n.expanded),
+        // The row chosen: Öznitelikler shows its service or source with nothing selected (docs/adr/0208 §14).
+        onSelect: (n) => chosenLayer.set(n.id),
         onToggle: (n) => layers.toggleVisible(n.id),
         onRename: (n) => this.rename(n),
         onDelete: (n) => void this.remove(n),
@@ -131,6 +145,15 @@ export class LayersPanel extends Panel {
     this.d.add(watchAll([layers.active, ctx.prefs.theme], () => this.writeStates()));
     this.d.add(ctx.doc.events.on('changed', () => this.writeCounts()));
     this.d.add(ctx.selection.ids.subscribe(() => this.followSelection()));
+    this.d.add(ctx.doc.events.on('reset', () => chosenLayer.set(null)));
+    // A service that failed or came back: its row's badge, once a frame at most.
+    let badges = 0;
+    this.d.add(
+      serviceHub().listen(() => {
+        if (!badges) badges = requestAnimationFrame(() => ((badges = 0), this.writeFailures()));
+      }),
+    );
+    this.d.add(() => cancelAnimationFrame(badges));
     this.rebuild();
     this.followSelection();
   }
@@ -295,6 +318,7 @@ export class LayersPanel extends Panel {
       shown.active = active;
       r.item.toggleAttribute('data-active', active);
     }
+    this.writeFailure(r);
     if (r.swatch) {
       const color = layerSwatch(n, this.ctx.view.palette);
       if (shown.color !== color) {
@@ -315,19 +339,38 @@ export class LayersPanel extends Panel {
     // Off and on again: off goes back to the general kinds; a group's writes to all its layers.
     const magnet = rowButton('ibtn ibtn--row', () => layers.setSnap(n.id, toggledSnap(layers, n)));
     let swatch: HTMLElement | null = null;
-    if (isLayer) {
+    if (isLayer && !n.service) {
       const s = rowButton('swatch swatch--btn', () => PopupMenu.open(this.colorItems(n), s.getBoundingClientRect(), { minWidth: 180 }));
       s.setAttribute('aria-label', 'Katman rengi');
       swatch = s;
     }
     const name = h('span', { class: 'tree__name', title: layers.path(n.id) }, n.name);
     const count = h('span', { class: 'tree__count num' });
-    content.append(swatch ?? h('span', { class: 'tree__folder' }, icon('folder', 15)), name, count, eye, lock, magnet);
+    const fail = n.service ? h('span', { class: 'tree__fail', hidden: true }, icon('warning', 12)) : null;
+    const lead = swatch ?? h('span', { class: 'tree__folder' }, icon(n.service ? serviceIcon(n.service) : 'folder', 15));
+    content.append(lead, name, ...(fail ? [fail] : []), count, eye, lock, magnet);
 
-    const row: Row = { node: n, item, name, count, eye, lock, magnet, swatch, shown: {} };
+    const row: Row = { node: n, item, name, count, eye, lock, magnet, swatch, fail, shown: {} };
     this.rows.set(n.id, row);
     this.writeCount(row);
     this.writeState(row);
+  }
+
+  /** The map service rows' badges. */
+  private writeFailures(): void {
+    for (const r of this.rows.values()) if (r.fail) this.writeFailure(r);
+  }
+
+  /** Why a service layer shows nothing, as its row's badge and in its name's tip. */
+  private writeFailure(r: Row): void {
+    if (!r.fail) return;
+    const why = serviceFailure(this.ctx, r.node);
+    if (r.shown.fail === why) return;
+    r.shown.fail = why;
+    r.fail.hidden = !why;
+    const path = this.ctx.doc.layers.path(r.node.id);
+    r.name.title = why ? `${path}\n${why}` : path;
+    r.fail.title = why ?? '';
   }
 
   private colorItems(n: LayerNode): MenuItem[] {
@@ -343,10 +386,27 @@ export class LayersPanel extends Panel {
     const layers = this.ctx.doc.layers;
     const isLayer = n.type === 'layer';
     const items: MenuItem[] = [];
-    if (isLayer) items.push({ label: 'Etkin katman yap', icon: 'check', disabled: layers.active.value === n.id, run: () => layers.setActive(n.id) });
+    // A map service layer takes no objects (docs/adr/0208 §2).
+    if (isLayer) items.push({ label: 'Etkin katman yap', icon: 'check', disabled: layers.active.value === n.id || !!n.service, run: () => layers.setActive(n.id) });
     items.push(
       { label: n.visible ? 'Gizle' : 'Göster', icon: n.visible ? 'eyeOff' : 'eye', shortcut: 'Space', run: () => layers.toggleVisible(n.id) },
       { label: n.locked ? 'Kilidi aç' : 'Kilitle', icon: n.locked ? 'unlock' : 'lock', run: () => layers.toggleLocked(n.id) },
+    );
+    // A layer drawn from a map service: its service's items, none of the objects' (docs/adr/0208 §14).
+    if (n.service) {
+      items.push(
+        { kind: 'separator' },
+        ...serviceItems(this.ctx, n),
+        { kind: 'separator' },
+        { label: 'Yeniden adlandır', icon: 'edit', shortcut: 'F2', run: () => this.rename(n) },
+        { kind: 'separator' },
+        { label: 'Sil', icon: 'trash', shortcut: 'Delete', run: () => void this.remove(n) },
+      );
+      return items;
+    }
+    // A layer whose objects came from a service: taken again (docs/adr/0208 §10).
+    if (n.feed) items.push(feedItem(this.ctx, n));
+    items.push(
       { label: 'Kenet', icon: 'magnet', items: () => layerSnapItems(this.ctx, n) },
       { label: 'Yalnızca bunu göster', icon: 'layerIsolate', run: () => layers.isolate(n.id) },
       { label: 'Tüm katmanları göster', icon: 'layersShowAll', run: () => layers.showAll() },

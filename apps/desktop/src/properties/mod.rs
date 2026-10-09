@@ -263,11 +263,27 @@ impl App {
 
     fn work_out_panel(&self, doc: &Document) -> Panel {
         let selected: Vec<Slot> = self.selection.ids().to_vec();
-        rows::panel(doc, &selected, |ids| {
+        let mut panel = rows::panel(doc, &selected, |ids| {
             // Summed by the geometry store, as the web sums them: a selection can be large.
             let ids: Vec<f64> = ids.iter().map(|s| f64::from(s.0)).collect();
             self.spatial.store().measure(&ids)
-        })
+        });
+        // Nothing selected: the layer chosen in the tree (else the active one), when a service draws or fed it.
+        if selected.is_empty() {
+            let layers = doc.model.layers();
+            let id = self.selected_layer.as_deref().unwrap_or(layers.active());
+            if let Some(node) = layers.get(id)
+                && let Some(section) = rows::service_section(
+                    doc,
+                    node,
+                    node.service.as_ref().and_then(|s| self.service_failure(s)),
+                )
+            {
+                // The layer chosen is what the user is looking at: its section first.
+                panel.sections.insert(0, section);
+            }
+        }
+        panel
     }
 
     /// The header's meta: “#12”, “3 nesne”; none with nothing selected.

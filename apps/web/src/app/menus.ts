@@ -6,6 +6,7 @@ import type { AppContext } from './context';
 import { modelCommandId, processingCommandId } from './processing';
 import { filterOf, SHOW_ALL, type WorkspaceFilter } from './workspaces';
 import { FILTER_KINDS } from '../tools/selectable';
+import { basemapCommand, PRESET_GROUPS, PRESETS } from '../model/servicePresets';
 
 /**
  * Declarative main menu: the single source for where commands live. The
@@ -66,6 +67,13 @@ const sec = (section: string): MenuSection => ({ section });
 
 /** Seçim süzgeci's list under its on/off command: the kinds, then every kind or none at once (docs/adr/0187 §5). */
 export const SELECT_FILTER_KINDS: readonly MenuSpec[] = [sec('Seçilebilir türler'), ...FILTER_KINDS.map((k) => `edit.selectFilter.${k}`), '-', 'edit.selectFilterAll', 'edit.selectFilterNone'];
+
+/** Altlık ▾ (docs/adr/0208 §14): the ready basemaps by group, then Altlığı kaldır. */
+export const BASEMAP_ITEMS: readonly MenuSpec[] = [
+  ...PRESET_GROUPS.flatMap((g) => [sec(g.name), ...PRESETS.filter((p) => p.group === g.id).map((p) => basemapCommand(p.id))]),
+  '-',
+  'basemap.remove',
+];
 
 export const MAIN_MENU: TopMenu[] = [
   {
@@ -197,7 +205,24 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'map',
     label: 'Harita',
-    items: ['@tools:map', sec('Parsel'), 'map.parcelReport', 'map.edgeLengths', sec('Arazi'), 'map.contours', 'map.profile', sec('Pafta'), 'map.sheet'],
+    items: [
+      '@tools:map',
+      // Harita servisleri (docs/adr/0208 §14): the basemaps, the services, their data and connections.
+      sec('Altlık'),
+      { label: 'Altlık', icon: 'basemap', primary: true, items: BASEMAP_ITEMS },
+      'service.add',
+      'service.feed',
+      'service.info',
+      'service.connections',
+      sec('Parsel'),
+      'map.parcelReport',
+      'map.edgeLengths',
+      sec('Arazi'),
+      'map.contours',
+      'map.profile',
+      sec('Pafta'),
+      'map.sheet',
+    ],
   },
   {
     id: 'crs',

@@ -1,0 +1,18 @@
+[package]
+name = "kentos-services-wasm"
+description = "KentOS map services for the browser (docs/adr/0208): the services core's wasm-bindgen boundary, loaded the first time a drawing shows a service or a services window opens"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-geometry-core = { path = "../../shared/geometry-core" }
+kentos-services = { path = "../../shared/services" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+wasm-bindgen = { workspace = true }

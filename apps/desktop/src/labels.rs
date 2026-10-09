@@ -81,9 +81,21 @@ pub fn layer<'a>(
     preview: Option<Preview>,
     mode: ColorMode,
     size: LabelSize,
+    lift: f32,
 ) -> Element<'a, Message> {
     build(
-        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, preview, true, mode,
+        doc,
+        drawing,
+        spatial,
+        kept,
+        camera,
+        canvas,
+        palette,
+        format,
+        hidden,
+        preview,
+        Some(lift),
+        mode,
         size,
     )
 }
@@ -106,7 +118,7 @@ pub fn lens_layer<'a>(
     size: LabelSize,
 ) -> Element<'a, Message> {
     build(
-        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, preview, false, mode,
+        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, preview, None, mode,
         size,
     )
 }
@@ -135,7 +147,7 @@ fn build<'a>(
     format: &Format,
     hidden: Option<Slot>,
     preview: Option<Preview>,
-    map_marks: bool,
+    map_marks: Option<f32>,
     mode: ColorMode,
     size: LabelSize,
 ) -> Element<'a, Message> {
@@ -185,6 +197,7 @@ fn build<'a>(
     }
     let font = doc.settings().drawing_font.unwrap_or(DrawingFont::Barlow);
     (canvas as u8, font as u8, mode as u8).hash(&mut key);
+    map_marks.map(f32::to_bits).hash(&mut key);
     // The number formats decide a dimension's text.
     format!("{format:?}").hash(&mut key);
     canvas::Canvas::new(Labels {
@@ -232,7 +245,7 @@ impl Colors {
 
     /// A colour as the mode shows it, its alpha kept: in one colour the
     /// palette's ink, in gray its brightness (the batches' rule, `view_rgba`).
-    fn shown(&self, c: Color) -> Color {
+    pub(crate) fn shown(&self, c: Color) -> Color {
         match self.mode {
             ColorMode::Color => c,
             ColorMode::Mono => {
@@ -320,8 +333,9 @@ struct Labels<'a> {
     fence: Option<Fence>,
     /// The object whose label is being drawn (a sheet PDF puts it in its layer).
     current: Cell<Option<Slot>>,
-    /// Grid north and the scale bar, or the axes, over the text (not in Büyüteç's window).
-    map_marks: bool,
+    /// Grid north and the scale bar, or the axes, over the text (not in Büyüteç's window):
+    /// how far the scale bar is lifted over the map services' credits.
+    map_marks: Option<f32>,
     /// A multi-line text being written or edited, over the rest (docs/adr/0182 §4).
     preview: Option<Rc<Preview>>,
 }
@@ -386,7 +400,7 @@ pub fn paint_in_map(
         key: 0,
         fence: Some(fence),
         current: Cell::new(None),
-        map_marks: false,
+        map_marks: None,
         preview: None,
     }
     .paint(frame);
@@ -446,7 +460,7 @@ pub fn texts_in_map(
         key: 0,
         fence: Some(fence),
         current: Cell::new(None),
-        map_marks: false,
+        map_marks: None,
         preview: None,
     }
     .paint(&mut list);
@@ -461,7 +475,13 @@ trait Ink {
     /// A quadrilateral of the screen filled (a multi-line text's mask, docs/adr/0182 §3).
     fn fill_quad(&mut self, quad: [Point; 4], color: Color, of: Option<Slot>);
     /// Grid north and the scale bar, or a CAD project's coordinate axes.
-    fn marks(&mut self, camera: &Camera, colors: &Colors, axes: kentos_interaction::Axes);
+    fn marks(
+        &mut self,
+        camera: &Camera,
+        colors: &Colors,
+        axes: kentos_interaction::Axes,
+        lift: f32,
+    );
     /// A ring of the screen filled, and a line drawn (a grown leader's
     /// arrowhead, docs/adr/0205 §5); a list of pieces takes none.
     fn fill_ring(&mut self, _ring: &[Point], _color: Color) {}
@@ -488,8 +508,14 @@ impl Ink for Frame {
         self.fill(&path, color);
     }
 
-    fn marks(&mut self, camera: &Camera, colors: &Colors, axes: kentos_interaction::Axes) {
-        crate::map_marks::paint(self, camera, colors, axes);
+    fn marks(
+        &mut self,
+        camera: &Camera,
+        colors: &Colors,
+        axes: kentos_interaction::Axes,
+        lift: f32,
+    ) {
+        crate::map_marks::paint(self, camera, colors, axes, lift);
     }
 
     fn fill_ring(&mut self, ring: &[Point], color: Color) {
@@ -667,7 +693,14 @@ impl Ink for Collect<'_> {
         });
     }
 
-    fn marks(&mut self, _camera: &Camera, _colors: &Colors, _axes: kentos_interaction::Axes) {}
+    fn marks(
+        &mut self,
+        _camera: &Camera,
+        _colors: &Colors,
+        _axes: kentos_interaction::Axes,
+        _lift: f32,
+    ) {
+    }
 }
 
 #[derive(Default)]
@@ -1353,8 +1386,10 @@ impl Labels<'_> {
         }
         // Grid north and the scale bar over the text, or a CAD project's coordinate axes,
         // as the web's overlay (map_marks.rs); a sheet's map has its own.
-        if self.fence.is_none() && self.map_marks {
-            frame.marks(&self.view, &self.colors, self.format.axes);
+        if self.fence.is_none()
+            && let Some(lift) = self.map_marks
+        {
+            frame.marks(&self.view, &self.colors, self.format.axes, lift);
         }
     }
 
@@ -1872,6 +1907,47 @@ fn outlines(
         dy.to_bits(),
         (piece.lean / piece.width_factor).to_bits(),
     );
+    kept_outlines(key, make)
+}
+
+/// A text's glyph outlines `size` pixels high, its baseline's left end at
+/// the origin (a map service's letter along its line, services/overlay.rs),
+/// kept as a turned text's are.
+pub(crate) fn text_outlines(text: &str, font: Font, size: f32) -> Rc<Vec<Path>> {
+    let dy = -measure(text, font).baseline * size / REFERENCE;
+    let key = (
+        text.to_owned(),
+        font,
+        size.to_bits(),
+        0f32.to_bits(),
+        dy.to_bits(),
+        0f32.to_bits(),
+    );
+    kept_outlines(key, || {
+        let mut glyphs: Vec<Path> = Vec::new();
+        canvas::Text {
+            content: text.to_owned(),
+            position: Point::new(0.0, dy),
+            max_width: f32::INFINITY,
+            color: Color::BLACK,
+            size: Pixels(size),
+            line_height: text::LineHeight::Relative(1.0),
+            font,
+            align_x: text::Alignment::Left,
+            align_y: Vertical::Top,
+            shaping: text::Shaping::Advanced,
+        }
+        .draw_with(|path, _| glyphs.push(path));
+        glyphs
+    })
+}
+
+/// How far below the top of a line one `size` high a text's baseline falls in `font`.
+pub(crate) fn baseline_in(text: &str, font: Font, size: f32) -> f32 {
+    measure(text, font).baseline * size / REFERENCE
+}
+
+fn kept_outlines(key: OutlineKey, make: impl FnOnce() -> Vec<Path>) -> Rc<Vec<Path>> {
     OUTLINES.with(|kept| {
         if let Some(glyphs) = kept.borrow().get(&key) {
             return glyphs.clone();
@@ -2550,7 +2626,7 @@ fn perf() {
         key: 0,
         fence: None,
         current: Cell::new(None),
-        map_marks: true,
+        map_marks: Some(0.0),
         preview: None,
     };
     let started = Instant::now();

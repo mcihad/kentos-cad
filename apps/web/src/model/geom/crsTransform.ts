@@ -1,4 +1,3 @@
-import type { CrsDef } from '../../geo/crs';
 import { op } from '../../wasm/core';
 import type { Vec2 } from '../geometry';
 
@@ -71,21 +70,7 @@ export type DatumChoice = {
   readonly name: string;
 } & ({ readonly helmert: Helmert } | { readonly grid: { readonly id: string; readonly accuracy?: number } });
 
-/** The core's system for a registry entry (the desktop's `transform_system`); null for the local one. */
-export function systemOf(crs: CrsDef): System | null {
-  if (crs.projection === 'Pseudo-Mercator') return { kind: 'mercator' };
-  if (crs.datum === 'LOCAL') return null;
-  if (crs.kind === 'geographic') return { kind: 'geographic', datum: crs.datum };
-  if (crs.kind !== 'projected' || crs.centralMeridian === undefined) return null;
-  return {
-    kind: 'tm',
-    datum: crs.datum,
-    centralMeridian: crs.centralMeridian,
-    scaleFactor: crs.scaleFactor ?? 1,
-    falseEasting: crs.falseEasting ?? 0,
-    falseNorthing: crs.falseNorthing ?? 0,
-  };
-}
+export { systemOf } from './crsSystem';
 
 /**
  * A point moved: where it falls, how far that can be off (m; 0 where only the projection changed; left out when a

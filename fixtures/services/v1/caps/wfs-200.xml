@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wfs:WFS_Capabilities version="2.0.0" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:fes="http://www.opengis.net/fes/2.0">
+  <ows:ServiceIdentification>
+    <ows:Title>Ankara WFS</ows:Title>
+    <ows:ServiceType>WFS</ows:ServiceType>
+    <ows:ServiceTypeVersion>2.0.0</ows:ServiceTypeVersion>
+  </ows:ServiceIdentification>
+  <ows:OperationsMetadata>
+    <ows:Operation name="GetFeature">
+      <ows:DCP><ows:HTTP><ows:Get xlink:href="https://kbs.ornek.bel.tr/geoserver/wfs"/><ows:Post xlink:href="https://kbs.ornek.bel.tr/geoserver/wfs"/></ows:HTTP></ows:DCP>
+      <ows:Parameter name="outputFormat"><ows:AllowedValues><ows:Value>application/gml+xml; version=3.2</ows:Value><ows:Value>application/json</ows:Value></ows:AllowedValues></ows:Parameter>
+    </ows:Operation>
+    <ows:Constraint name="ImplementsResultPaging"><ows:NoValues/><ows:DefaultValue>TRUE</ows:DefaultValue></ows:Constraint>
+  </ows:OperationsMetadata>
+  <wfs:FeatureTypeList>
+    <wfs:FeatureType xmlns:kadastro="https://kbs.ornek.bel.tr/kadastro">
+      <wfs:Name>kadastro:parsel</wfs:Name>
+      <wfs:Title>Parseller</wfs:Title>
+      <wfs:Abstract>Tapu parselleri.</wfs:Abstract>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::5255</wfs:DefaultCRS>
+      <wfs:OtherCRS>urn:ogc:def:crs:EPSG::4326</wfs:OtherCRS>
+      <wfs:OtherCRS>urn:ogc:def:crs:EPSG::3857</wfs:OtherCRS>
+      <ows:WGS84BoundingBox><ows:LowerCorner>32.5 39.7</ows:LowerCorner><ows:UpperCorner>33.0 40.1</ows:UpperCorner></ows:WGS84BoundingBox>
+    </wfs:FeatureType>
+    <wfs:FeatureType xmlns:imar="https://kbs.ornek.bel.tr/imar">
+      <wfs:Name>imar:yol</wfs:Name>
+      <wfs:Title>Yollar</wfs:Title>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::5254</wfs:DefaultCRS>
+    </wfs:FeatureType>
+  </wfs:FeatureTypeList>
+</wfs:WFS_Capabilities>

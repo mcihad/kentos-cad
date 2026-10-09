@@ -278,6 +278,8 @@ pub struct StyledGpu {
     rasters: super::raster_tiles::RasterAtlas,
     /// The point clouds' nodes and pictures (docs/adr/0207 §6).
     points: super::points::PointsGpu,
+    /// Map services' tile meshes (docs/adr/0208 §3).
+    meshes: super::service_tiles::Meshes,
     /// The device's alignment of dynamic uniform offsets.
     align: u64,
     /// Colours are sRGB-encoded as written; an sRGB target would encode them twice.
@@ -372,6 +374,7 @@ impl StyledGpu {
             pictures: super::pictures::PictureTextures::new(device),
             rasters: super::raster_tiles::RasterAtlas::new(device),
             points: super::points::PointsGpu::new(device, format.is_srgb()),
+            meshes: super::service_tiles::Meshes::default(),
             format,
             module,
             frame_layout,
@@ -488,7 +491,9 @@ impl StyledGpu {
                         FillPaintBatch::Pattern { .. } => Pipe::Pattern,
                         FillPaintBatch::Tile { .. } => Pipe::Tile,
                         FillPaintBatch::Image { .. } => Pipe::Image,
-                        FillPaintBatch::Raster { .. } => Pipe::Raster,
+                        FillPaintBatch::Raster { .. } | FillPaintBatch::Service { .. } => {
+                            Pipe::Raster
+                        }
                         FillPaintBatch::PointCloud { .. } => Pipe::Cloud,
                     },
                     AREA_FLOATS,
@@ -533,9 +538,20 @@ impl StyledGpu {
                 } => Some(super::points::CloudPaint::new(cloud, look, color)),
                 _ => None,
             };
+            // A map service shows its tiles in view (docs/adr/0208 §3, §9).
+            let service = match &b.kind {
+                BatchKind::Fill {
+                    paint: FillPaintBatch::Service { service, .. },
+                } => Some(super::service_tiles::ServicePaint {
+                    service: service.clone(),
+                }),
+                _ => None,
+            };
             batches.push(GpuBatch {
                 raster,
                 cloud,
+                service,
+                vector: Vec::new(),
                 quads: 0..0,
                 picture,
                 pipe,
@@ -689,7 +705,9 @@ impl StyledGpu {
         }
         view.pictures.retain(|k, _| drawn.contains(k));
         // The rasters' tiles in view (docs/adr/0204 §5): their quads in one buffer, the atlas filled.
-        let raster_waits = self.prepare_rasters(device, queue, view, box_, px_per_m, images);
+        let raster_waits = self.prepare_rasters(device, queue, view, box_, frame, images);
+        // The services' vector tiles in view (docs/adr/0208 §9), each a styled layer of its own.
+        let vector_waits = self.prepare_vectors(device, queue, view, box_, frame, images);
         // The clouds' pictures (docs/adr/0207 §6), each bound with the frame.
         let cloud_waits = self.prepare_clouds(device, queue, view, frame, images);
         for up in self.atlas.take_uploads() {
@@ -717,7 +735,7 @@ impl StyledGpu {
                 },
             );
         }
-        self.atlas.pending || raster_waits || cloud_waits
+        self.atlas.pending || raster_waits || cloud_waits || vector_waits
     }
 
     /// The clouds in view drawn into their pictures; whether a node waits for another frame.
@@ -781,6 +799,119 @@ impl StyledGpu {
         waiting
     }
 
+    /// The services' vector tiles in view (docs/adr/0208 §9): each tile's
+    /// styled layer uploaded once and kept while it is drawn lately, its
+    /// batches' visibility and images decided as a layer's are; a service's
+    /// batch keeps the tiles it draws, in order. Whether a tile waits.
+    fn prepare_vectors(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        view: &mut ViewStyled,
+        box_: [f64; 4],
+        frame: &StyledFrame,
+        images: &dyn ImageSource,
+    ) -> bool {
+        let mut wanted: Vec<(usize, usize, String)> = Vec::new();
+        for (li, layer) in view.layers.iter_mut().enumerate() {
+            for (bi, g) in layer.batches.iter_mut().enumerate() {
+                if let Some(p) = &g.service {
+                    g.vector.clear();
+                    if g.visible {
+                        wanted.push((li, bi, p.service.clone()));
+                    }
+                }
+            }
+        }
+        if wanted.is_empty() && view.vector_layers.is_empty() {
+            return false;
+        }
+        view.vector_frame += 1;
+        let stamp = view.vector_frame;
+        let box_world = [
+            box_[0] + frame.origin[0],
+            box_[1] + frame.origin[1],
+            box_[2] + frame.origin[0],
+            box_[3] + frame.origin[1],
+        ];
+        let mut waiting = false;
+        for (li, bi, service) in wanted {
+            let Some(sv) = images.service_view(&service).filter(|s| s.vector) else {
+                continue;
+            };
+            let Some(seen) = super::service_tiles::in_view(&sv, box_world, frame.scale) else {
+                continue;
+            };
+            let zoom = super::service_tiles::display_zoom(&sv, seen.view.units_per_px);
+            let mut parts = Vec::with_capacity(seen.tiles.len());
+            for &t in &seen.tiles {
+                let Some(tile) = images.service_vector(&service, t, zoom) else {
+                    waiting = true;
+                    continue;
+                };
+                let id = tile.part.id;
+                if let Some((_, at)) = view.vector_layers.get_mut(&id) {
+                    *at = stamp;
+                } else {
+                    let uploaded = self.upload(device, &tile.part);
+                    view.vector_layers.insert(id, (uploaded, stamp));
+                }
+                parts.push(id);
+            }
+            // Coarser tiles first: a finer one drawn over the part it shares.
+            if let Some(g) = view.layers.get_mut(li).and_then(|l| l.batches.get_mut(bi)) {
+                g.vector = parts;
+            }
+        }
+        // Tiles not drawn for a while let their buffers go.
+        if view.vector_layers.len() > VECTOR_LAYERS {
+            let keep = stamp.saturating_sub(2);
+            view.vector_layers.retain(|_, (_, at)| *at >= keep);
+        }
+        // Each drawn tile's batches: shown or not, their images placed.
+        let px_per_m = frame.scale * frame.dpr;
+        for _ in 0..2 {
+            let generation = self.atlas.generation;
+            for (layer, at) in view.vector_layers.values_mut() {
+                if *at != stamp {
+                    continue;
+                }
+                let batches = &layer.source.layer.batches;
+                for (g, b) in layer.batches.iter_mut().zip(batches) {
+                    g.visible = b.in_scale(frame.scale_denominator)
+                        && b.in_view(box_, px_per_m, frame.dpr)
+                        && b.legible(px_per_m, frame.dpr);
+                    if !g.visible {
+                        continue;
+                    }
+                    let Some(image) = b.image() else {
+                        continue;
+                    };
+                    let Some(hit) =
+                        self.atlas
+                            .lookup(image, b.image_px(px_per_m, frame.dpr), images)
+                    else {
+                        g.visible = false;
+                        continue;
+                    };
+                    if g.placed == Some((generation, hit.uv)) {
+                        continue;
+                    }
+                    g.placed = Some((generation, hit.uv));
+                    g.block.set_rect(hit.uv);
+                    if matches!(b.kind, BatchKind::Marker { .. }) {
+                        g.block.set_aspect(hit.aspect);
+                    }
+                    queue.write_buffer(&layer.styles, u64::from(g.offset), &g.block.bytes());
+                }
+            }
+            if self.atlas.generation == generation {
+                break;
+            }
+        }
+        waiting
+    }
+
     /// Points the clouds keep on the GPU (statistics).
     pub fn cloud_points(&self) -> u64 {
         self.points.resident()
@@ -793,23 +924,65 @@ impl StyledGpu {
         queue: &wgpu::Queue,
         view: &mut ViewStyled,
         box_: [f64; 4],
-        px_per_m: f64,
+        frame: &StyledFrame,
         images: &dyn ImageSource,
     ) -> bool {
+        let px_per_m = frame.scale * frame.dpr;
         view.quads.clear();
-        let any = view
-            .layers
-            .iter()
-            .any(|l| l.batches.iter().any(|g| g.visible && g.raster.is_some()));
+        let any = view.layers.iter().any(|l| {
+            l.batches
+                .iter()
+                .any(|g| g.visible && (g.raster.is_some() || g.service.is_some()))
+        });
         if !any {
             return false;
         }
         self.rasters.begin_frame();
+        self.meshes.begin_frame();
         images.raster_frame();
+        images.service_frame();
         let mut uploads = 0;
+        // A service's quads are relative to the tile of the view's centre
+        // (docs/adr/0157): exact in float32 however far the view goes.
+        let tile = super::service_tiles::center_tile(frame.center);
+        let box_world = [
+            box_[0] + frame.origin[0],
+            box_[1] + frame.origin[1],
+            box_[2] + frame.origin[0],
+            box_[3] + frame.origin[1],
+        ];
         for layer in &mut view.layers {
             let batches = &layer.source.layer.batches;
             for (g, b) in layer.batches.iter_mut().zip(batches) {
+                if let Some(paint) = &g.service {
+                    let shown = g
+                        .visible
+                        .then(|| images.service_view(&paint.service))
+                        .flatten();
+                    g.quads = match shown.filter(|s| !s.vector) {
+                        // A picture's level by the device's pixels: sharp on a high DPI screen
+                        // (a vector tile's zoom is the logical pixel's, docs/adr/0208 §3).
+                        Some(service) => view.quads.add_service(
+                            paint,
+                            &service,
+                            [tile[0] + frame.origin[0], tile[1] + frame.origin[1]],
+                            box_world,
+                            frame.scale * frame.dpr,
+                            &mut self.rasters,
+                            &mut self.meshes,
+                            queue,
+                            images,
+                            &mut uploads,
+                        ),
+                        None => 0..0,
+                    };
+                    let origin = [tile[0] as f32, tile[1] as f32, 0.0, 0.0];
+                    if g.block.origin != origin {
+                        g.block.origin = origin;
+                        queue.write_buffer(&layer.styles, u64::from(g.offset), &g.block.bytes());
+                    }
+                    continue;
+                }
                 let Some(paint) = &g.raster else {
                     continue;
                 };
@@ -971,10 +1144,30 @@ impl StyledGpu {
         pass.set_bind_group(0, frame_bind, &[]);
         let mut current: Option<Pipe> = None;
         let mut batch = |layer: &GpuLayer, i: usize| {
-            let Some(vertex) = &layer.vertex else {
+            let Some(b) = layer.batches.get(i) else {
                 return;
             };
-            let Some(b) = layer.batches.get(i) else {
+            // A map service's picture tiles: their quads with the raster atlas
+            // in group 0, as a raster's (docs/adr/0208 §3); it has no vertices of its own.
+            if b.service.is_some() {
+                let (Some(binds), Some(quads)) = (rasters, &view.quad_buffer) else {
+                    return;
+                };
+                if !b.visible || b.quads.is_empty() {
+                    return;
+                }
+                if current != Some(Pipe::Raster) {
+                    pass.set_pipeline(pipes.get(Pipe::Raster));
+                    current = Some(Pipe::Raster);
+                }
+                pass.set_bind_group(0, &binds.linear, &[]);
+                pass.set_bind_group(1, &layer.bind, &[b.offset]);
+                pass.set_vertex_buffer(0, quads.slice(..));
+                pass.draw(b.quads.clone(), 0..1);
+                pass.set_bind_group(0, frame_bind, &[]);
+                return;
+            }
+            let Some(vertex) = &layer.vertex else {
                 return;
             };
             if !b.visible || b.count == 0 {
@@ -1062,24 +1255,40 @@ impl StyledGpu {
                 pass.set_bind_group(0, frame_bind, &[]);
             }
         };
+        // A service's vector tiles are drawn where its batch is (docs/adr/0208 §9).
+        let mut draw = |layer: &GpuLayer, i: usize| match layer.batches.get(i) {
+            Some(g) if !g.vector.is_empty() => {
+                for id in &g.vector {
+                    if let Some((tile, _)) = view.vector_layers.get(id) {
+                        for j in 0..tile.batches.len() {
+                            batch(tile, j);
+                        }
+                    }
+                }
+            }
+            _ => batch(layer, i),
+        };
         match &view.order {
             Some(order) => {
                 for &(l, b) in order.iter() {
                     if let Some(layer) = view.layers.get(l as usize) {
-                        batch(layer, b as usize);
+                        draw(layer, b as usize);
                     }
                 }
             }
             None => {
                 for layer in &view.layers {
                     for i in 0..layer.batches.len() {
-                        batch(layer, i);
+                        draw(layer, i);
                     }
                 }
             }
         }
     }
 }
+
+/// Vector tiles kept on the GPU at most before those not drawn lately go.
+const VECTOR_LAYERS: usize = 384;
 
 /// A frame's uniform: the camera centre in two float32 parts (docs/adr/0157
 /// §2), so the shader takes it from each batch's tile without losing digits.
@@ -1145,6 +1354,11 @@ fn srgb_to_linear(c: f32) -> f32 {
 struct GpuBatch {
     /// A raster's paint (docs/adr/0204 §5): its tiles in view are drawn instead of its frame.
     raster: Option<super::raster_tiles::RasterPaint>,
+    /// A map service's paint (docs/adr/0208 §3, §9): its picture tiles are
+    /// drawn as the raster's quads, its vector tiles' layers in `vector`.
+    service: Option<super::service_tiles::ServicePaint>,
+    /// The vector tiles this frame draws for the service, by their layers' ids.
+    vector: Vec<u64>,
     /// A cloud's paint (docs/adr/0207 §6): its picture is shown over its plan.
     cloud: Option<super::points::CloudPaint>,
     /// The vertices of the view's raster quads this frame's tiles take.
@@ -1205,6 +1419,10 @@ pub struct ViewStyled {
     cloud_targets: HashMap<String, super::points::CloudTarget>,
     cloud_binds: HashMap<String, (Arc<wgpu::TextureView>, wgpu::BindGroup)>,
     cloud_rev: u64,
+    /// The services' vector tiles on the GPU by their layers' ids, each with
+    /// the frame it was last drawn in (docs/adr/0208 §9).
+    vector_layers: HashMap<u64, (GpuLayer, u64)>,
+    vector_frame: u64,
 }
 
 impl ViewStyled {
@@ -1228,6 +1446,8 @@ impl ViewStyled {
             cloud_targets: HashMap::new(),
             cloud_binds: HashMap::new(),
             cloud_rev: 0,
+            vector_layers: HashMap::new(),
+            vector_frame: 0,
         }
     }
 
@@ -1253,6 +1473,19 @@ impl ViewStyled {
                 if let Some((generation, uv)) = b.placed {
                     generation.hash(hasher);
                     uv.map(f32::to_bits).hash(hasher);
+                }
+                // A service's vector tiles drawn, and what of each shows (docs/adr/0208 §9).
+                for id in &b.vector {
+                    id.hash(hasher);
+                    if let Some((tile, _)) = self.vector_layers.get(id) {
+                        for g in &tile.batches {
+                            g.visible.hash(hasher);
+                            if let Some((generation, uv)) = g.placed {
+                                generation.hash(hasher);
+                                uv.map(f32::to_bits).hash(hasher);
+                            }
+                        }
+                    }
                 }
             }
         }

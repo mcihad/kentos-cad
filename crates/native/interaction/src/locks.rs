@@ -244,6 +244,7 @@ mod tests {
             topology: None,
             annotation: None,
             text_styles: Vec::new(),
+            connections: Vec::new(),
         })
     }
 

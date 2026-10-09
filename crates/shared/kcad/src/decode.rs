@@ -9,6 +9,7 @@
 mod blocks;
 mod crs;
 mod objects;
+mod services;
 mod styles;
 
 use kentos_contracts::{
@@ -284,6 +285,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     let (entities, uids) = required(r, entities, "entities")?;
     let settings = required(r, settings_, "settings")?;
     let active_layer = required(r, active_layer, "activeLayer")?;
+    service_links(r, &layers, &settings, &entities)?;
     Ok(DocumentSnapshotV2 {
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -302,6 +304,35 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     })
 }
 
+/// Schema 32's links (docs/adr/0208 §2), as `service_links` says them: a
+/// service's and a feed's connection is one of the project's; a layer drawn
+/// from a service holds no objects.
+fn service_links(
+    r: &mut Reader<'_>,
+    layers: &[LayerNode],
+    settings: &ProjectSettings,
+    entities: &[kentos_contracts::Entity],
+) -> Result<(), KcadError> {
+    let Some(fault) = kentos_contracts::service_links(layers, &settings.connections, entities)
+    else {
+        return Ok(());
+    };
+    let segs = match fault {
+        kentos_contracts::ServiceLinkFault::Object { index } => {
+            vec![Seg::Name("entities"), Seg::Index(index)]
+        }
+        _ => vec![Seg::Name("layers")],
+    };
+    for s in &segs {
+        r.push(*s);
+    }
+    let e = r.fail(Code::BadValue, &fault.words());
+    for _ in &segs {
+        r.pop();
+    }
+    Err(e)
+}
+
 /// The settings; `has` says whether the schema has the drawing unit (11 and
 /// up), the second coordinate system (12 and up), the project's own
 /// systems and datum choices (13 and up) and the survey settings (14).
@@ -313,6 +344,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut layer_states = Vec::new();
     let mut topology = None;
     let mut annotation = None;
+    let mut connections = Vec::new();
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
@@ -382,6 +414,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "layerStates" if has.layer_states => layer_states = layer_states_list(r)?,
             "topology" if has.topology => topology = Some(topology_settings(r)?),
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
+            "connections" if has.services => connections = services::connections(r)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
             "dimensionStyles" if has.styles => {
                 dimension_styles = styles::dimension_styles(r, has.annotation)?
@@ -451,6 +484,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         dimension_styles,
         topology,
         annotation,
+        connections,
     })
 }
 
@@ -719,13 +753,15 @@ fn project_styles(r: &mut Reader<'_>) -> Result<ProjectStyles, KcadError> {
 fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut id, mut name, mut kind, mut style) = (None, None, None, None);
     let (mut locked, mut visible, mut children, mut expanded) = (None, None, None, None);
-    let (mut snap, mut fields) = (None, None);
+    let (mut snap, mut fields, mut service, mut feed) = (None, None, None, None);
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
             "name" => name = Some(text(r)?),
             "snap" if has.layer_snap => snap = Some(layer_snap(r)?),
             "fields" if has.layer_fields => fields = Some(layer_fields(r)?),
+            "service" if has.services => service = Some(services::service_layer(r)?),
+            "feed" if has.services => feed = Some(services::feature_feed(r)?),
             "type" => {
                 kind = Some(named(
                     r,
@@ -770,6 +806,30 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 ));
             }
             (fields, _) => fields.unwrap_or_default(),
+        },
+        service: match (service, kind) {
+            (Some(_), _) if feed.is_some() => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "katman hem servisten çizilir hem nesnelerini bir kaynaktan alır; ikisi birden olmaz",
+                ));
+            }
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grubun servisi olmaz; servis yalnız katmanındır",
+                ));
+            }
+            (service, _) => service,
+        },
+        feed: match (feed, kind) {
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grubun veri kaynağı olmaz; kaynak yalnız katmanındır",
+                ));
+            }
+            (feed, _) => feed,
         },
     })
 }

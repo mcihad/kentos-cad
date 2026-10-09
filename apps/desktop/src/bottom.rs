@@ -54,18 +54,21 @@ pub enum BottomTab {
     Search,
     /// Topoloji kuralları' findings (topology/, docs/adr/0202 §5).
     Topology,
+    /// Servis bilgisi's answers (services/info.rs, docs/adr/0208 §11).
+    ServiceInfo,
     Messages,
     Python,
 }
 
 impl BottomTab {
-    const ALL: [BottomTab; 8] = [
+    const ALL: [BottomTab; 9] = [
         BottomTab::History,
         BottomTab::Coords,
         BottomTab::Points,
         BottomTab::Table,
         BottomTab::Search,
         BottomTab::Topology,
+        BottomTab::ServiceInfo,
         BottomTab::Messages,
         BottomTab::Python,
     ];
@@ -142,6 +145,9 @@ impl App {
                 Tab::new(plan::TAB_TOPOLOGY)
                     .icon(from_web(Some("topologyCheck")))
                     .closable(false),
+                Tab::new(plan::TAB_SERVICE_INFO)
+                    .icon(from_web(Some("serviceInfo")))
+                    .closable(false),
                 Tab::new(plan::TAB_MESSAGES)
                     .icon(from_web(Some("warning")))
                     .closable(false)
@@ -173,6 +179,7 @@ impl App {
             BottomTab::Table => self.features_tab(),
             BottomTab::Search => self.data_tab(),
             BottomTab::Topology => self.topology_tab(),
+            BottomTab::ServiceInfo => self.service_info_tab(),
             BottomTab::Messages => self.log_list(LogListing::Messages),
             BottomTab::Python => self.python_tab(),
         };
@@ -202,6 +209,7 @@ impl App {
             BottomTab::Table => plan::TAB_TABLE,
             BottomTab::Search => plan::TAB_SEARCH,
             BottomTab::Topology => plan::TAB_TOPOLOGY,
+            BottomTab::ServiceInfo => plan::TAB_SERVICE_INFO,
             BottomTab::Messages => plan::TAB_MESSAGES,
             BottomTab::Python => "Python",
         })

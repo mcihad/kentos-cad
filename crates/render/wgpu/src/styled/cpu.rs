@@ -528,6 +528,8 @@ fn fill(
                 FillPaintBatch::Raster { .. } => continue,
                 // Nor a point cloud (docs/adr/0207, Kapsam dışı).
                 FillPaintBatch::PointCloud { .. } => continue,
+                // Nor a map service: its tiles are the screen's (docs/adr/0208, Kapsam dışı).
+                FillPaintBatch::Service { .. } => continue,
             };
             let cov = f64::from(m) / 255.0;
             over(

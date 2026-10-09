@@ -1,0 +1,29 @@
+[package]
+name = "kentos-services"
+description = "Map services of KentOS (docs/adr/0208): requests, capabilities, vector tiles and their styles, labels, features and the HTTP cache rules, shared by the browser (WASM), the desktop and the server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure dependencies only, like the formats core (CLAUDE.md §14): this crate
+# builds for every target and never reaches for the network, the file system
+# or a runtime. It builds the requests a host sends and reads the answers it
+# gets; the hosts fetch (the desktop's cloud client, the browser's fetch, the
+# server's proxy). The tiles' grids and meshes are the geometry core's
+# (`geom::tiles`); a vector tile's areas, lines and points become the style
+# engine's batches (`kentos-style-core`), so both platforms draw them as they
+# draw a layer.
+[dependencies]
+kentos-contracts = { path = "../contracts", default-features = false }
+# A service's GeoJSON is read by the formats core as a file is (docs/adr/0046).
+kentos-formats = { path = "../formats" }
+kentos-geometry-core = { path = "../geometry-core" }
+kentos-style-core = { path = "../style-core" }
+libm = { workspace = true }
+# Gzipped vector tiles (docs/adr/0208 §9): inflate only; already the formats core's.
+miniz_oxide = { workspace = true }
+# Capabilities and GML are XML (WMS, WMTS, WFS); the formats core reads XML with it too.
+roxmltree = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

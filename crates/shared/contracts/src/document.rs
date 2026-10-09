@@ -195,6 +195,13 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub annotation: Option<crate::AnnotationHeights>,
+    /// The project's service connections without their secrets (docs/adr/0208 §2).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::ServiceConnection>>", optional)
+    )]
+    pub connections: Vec<crate::ServiceConnection>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names

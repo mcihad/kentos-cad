@@ -701,6 +701,26 @@ impl App {
                     &self.settings.text("graphics.highlightColor"),
                     rgba8(Tokens::of(&self.theme()).accent),
                 );
+                // The map services' labels under the drawing's text, their credits in the
+                // corner (services/overlay.rs, docs/adr/0208 §3, §9).
+                let services = crate::services::in_use().then(|| {
+                    let colors = crate::labels::colors(self.canvas(), &crate::viewport::palette(self.canvas()))
+                        .in_mode(self.color_mode());
+                    let key = crate::services::overlay::key_of_view(&doc.model, &self.viewport.camera, &colors);
+                    let marks = self
+                        .service_marks
+                        .marks(&doc.model, &self.viewport.camera, &colors, key);
+                    (marks, key)
+                });
+                let service_labels = services
+                    .as_ref()
+                    .and_then(|(marks, key)| crate::services::overlay::layer(marks.clone(), *key));
+                let credits = services
+                    .as_ref()
+                    .map(|(marks, _)| self.credits_view(marks))
+                    .unwrap_or_default();
+                // The scale bar over the credits' strip.
+                let lift = if credits.is_empty() { 0.0 } else { crate::services::app::scale_bar_lift() };
                 // The drawing's text over the scene, under the marks (labels.rs, docs/adr/0055).
                 // The text being edited in place is hidden meanwhile (text_field.rs).
                 let labels = crate::labels::layer(
@@ -719,6 +739,7 @@ impl App {
                     self.paragraph_preview(),
                     self.color_mode(),
                     self.label_size(),
+                    lift,
                 );
                 let area = self.viewport.view(
                     doc,
@@ -736,7 +757,11 @@ impl App {
                 // The paragraph editor over the drawing (paragraph_editor.rs, docs/adr/0182 §4).
                 let writing = self.paragraph_view();
                 ContextMenu::controlled(
-                    stack![area, labels, over]
+                    stack![area]
+                        .extend(service_labels)
+                        .push(labels)
+                        .push(over)
+                        .extend(credits)
                         // Genel bakış and Büyüteç over the drawing (navigation_cards.rs, docs/adr/0181).
                         .extend(self.navigation_view())
                         // The rollover card beside the pointer (hover_card.rs).
@@ -939,6 +964,29 @@ impl App {
                 .folder()
                 .icon(kentos_ui::icon::icon(Icon::Folder).size(14.0))
                 .expanded(node.expanded, Message::LayerExpanded(node.id.clone())),
+            // A layer drawn from a map service: its kind's icon, and why it shows nothing when it failed
+            // (docs/adr/0208 §14).
+            LayerNodeType::Layer if node.service.is_some() => {
+                let service = node.service.as_ref().expect("a service");
+                let mut row = row.icon(
+                    kentos_ui::icon::icon(crate::icons::from_web(Some(
+                        crate::services::app::service_icon(service),
+                    )))
+                    .size(14.0),
+                );
+                if let Some(why) = self.service_failure(service) {
+                    row = row
+                        .cells([kentos_ui::icon::icon(Icon::Warning)
+                            .size(12.0)
+                            .tone(kentos_ui::icon::Tone::Danger)
+                            .into()])
+                        .tip(kentos_ui::widget::Tip::new(format!(
+                            "{}\n{why}",
+                            doc.model.layers().path(&node.id)
+                        )));
+                }
+                row
+            }
             LayerNodeType::Layer => {
                 let palette = crate::viewport::palette(self.canvas());
                 let color = palette
@@ -1509,6 +1557,9 @@ impl App {
             Asking::FindReplace => self.find_replace_view(),
             Asking::LayerMerge => self.layer_merge_view(),
             Asking::LayerFields => self.layer_fields_view(),
+            Asking::Connections => self.connections_view(),
+            Asking::ServiceAdd => self.service_window_view(),
+            Asking::Feed => self.feed_window_view(),
             Asking::TopologyRules => self.topology_rules_view(),
             Asking::LayerStates => self.layer_states_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),

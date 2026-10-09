@@ -4,13 +4,13 @@
 
 use kentos_contracts::{
     ArcCreate, BlocksDefine, BlocksEdit, CircleCreate, EntitiesArray, EntitiesCreate,
-    EntitiesDelete, EntitiesEdit, EntitiesSetProperties, EntitiesTransform, LineCreate,
-    PointCreate, PolygonCreate, PolylineCreate,
+    EntitiesDelete, EntitiesEdit, EntitiesSetProperties, EntitiesTransform, LayersService,
+    LineCreate, PointCreate, PolygonCreate, PolylineCreate,
 };
 use kentos_domain::Document;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, arc, array, blocks_define, blocks_edit, circle, create,
-    delete, edit, line, point, polygon, polyline, set, transform,
+    delete, edit, layers_service, line, point, polygon, polyline, set, transform,
 };
 use serde_json::Value;
 
@@ -97,6 +97,7 @@ pub fn run(
         kentos_contracts::CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
         kentos_contracts::CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),
         kentos_contracts::CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
+        kentos_contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         other => return Err(refusal(other)),
     };
     answer.map_err(|e| {

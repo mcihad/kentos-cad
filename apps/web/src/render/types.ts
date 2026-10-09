@@ -98,6 +98,11 @@ export type FillPaintBatch =
    */
   | { kind: 'raster'; raster: string; url: string | null; look: string; affine: readonly number[]; size: readonly [number, number]; nearest: boolean; opacity: number }
   /**
+   * A map service's tiles (docs/adr/0208 §3): pictures through the raster pass as meshes, or its vector tiles'
+   * batches drawn where it is; `anchor` is the drawing's anchor in the project's system (the tiles' meshes are there).
+   */
+  | { kind: 'service'; service: string; opacity: number; anchor: readonly [number, number] }
+  /**
    * One shape on a grid computed per pixel (sizes in `unit`): `size` is the
    * cell, `mark` the shape in it; `jitter` and `coverage` scatter it at
    * random per cell; `tint` is the share of a cell the shape inks, used
@@ -259,6 +264,8 @@ export type AtlasUpload = (source: HTMLCanvasElement, x: number, y: number) => v
  * mipmaps; each new image is handed to the backend's `upload` as it is
  * drawn. A frame first looks up everything it will draw, then draws.
  */
+import type { ServiceSource } from './servicePass';
+
 export interface AtlasSource {
   /** Page size in px (the texture is size × size, RGBA, premultiplied on upload). */
   readonly size: number;
@@ -361,6 +368,8 @@ export interface RenderBackend {
   upload(layer: SceneLayer): void;
   /** Where atlas images (SVG, text, raster, pattern tiles) come from; shared by both backends. */
   useAtlas(atlas: AtlasSource): void;
+  /** Where the map services' tiles come from (render/serviceHub.ts, docs/adr/0208 §3). */
+  useServices(services: ServiceSource | null): void;
   remove(id: string): void;
   render(frame: FrameState): void;
   dispose(): void;

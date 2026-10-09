@@ -5,12 +5,14 @@ import type { DimensionStyleDef } from '../contracts/generated/DimensionStyleDef
 import type { DrawingFont } from '../contracts/generated/DrawingFont';
 import type { DrawingUnit } from '../contracts/generated/DrawingUnit';
 import type { LayerState } from '../contracts/generated/LayerState';
+import type { ServiceConnection } from '../contracts/generated/ServiceConnection';
 import type { SurveySettings } from '../contracts/generated/SurveySettings';
 import type { TextStyleDef } from '../contracts/generated/TextStyleDef';
 import type { TopologySettings } from '../contracts/generated/TopologySettings';
 import type { Workspace } from '../contracts/generated/Workspace';
 import { crsBySrid, DEFAULT_SRID, type CrsDef } from '../geo/crs';
 import { sanitizedDimensionStyles, sanitizedTextStyles } from './annotationStyles';
+import { sameJson } from './sameJson';
 import { sameTopology, sanitizeTopology } from './topologyRules';
 import { ANNOTATION_KINDS, annotationMm, paperHeight, sanitizedAnnotationHeights, type AnnotationHeights, type AnnotationKind } from './annotationScale';
 
@@ -78,6 +80,8 @@ export interface ProjectSettingsData {
   topology?: TopologySettings;
   /** The project's annotation heights on paper (docs/adr/0205 §1); absent: every kind's default. */
   annotation?: AnnotationHeights;
+  /** The project's connections to map services, without their secrets (docs/adr/0208 §2); absent: none. */
+  connections?: ServiceConnection[];
 }
 
 /**
@@ -258,6 +262,8 @@ export class ProjectSettings {
   readonly topology: Signal<TopologySettings | null>;
   /** The project's annotation heights, or null, as a project keeps them (docs/adr/0205 §1; `sanitizedAnnotationHeights`). */
   readonly annotation: Signal<AnnotationHeights | null>;
+  /** The project's connections to map services, without their secrets (docs/adr/0208 §2). */
+  readonly connections: Signal<readonly ServiceConnection[]>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
 
@@ -283,6 +289,7 @@ export class ProjectSettings {
     this.dimensionStyles = new Signal<readonly DimensionStyleDef[]>(sanitizedDimensionStyles(d.dimensionStyles ?? []));
     this.topology = new Signal(sanitizeTopology(d.topology), sameTopology);
     this.annotation = new Signal(sanitizedAnnotationHeights(d.annotation) ?? null, sameHeights);
+    this.connections = new Signal<readonly ServiceConnection[]>(structuredClone(d.connections ?? []), sameJson);
     watchAll(
       [
         this.crs,
@@ -304,6 +311,7 @@ export class ProjectSettings {
         this.dimensionStyles,
         this.topology,
         this.annotation,
+        this.connections,
       ],
       () => this.changed.update((v) => v + 1),
     );
@@ -339,6 +347,8 @@ export class ProjectSettings {
       ...(this.topology.value ? { topology: structuredClone(this.topology.value) } : {}),
       // Written only when there are (KCAD schema 30).
       ...(this.annotation.value ? { annotation: { ...this.annotation.value } } : {}),
+      // Written only when there are (KCAD schema 32).
+      ...(this.connections.value.length ? { connections: structuredClone([...this.connections.value]) } : {}),
     };
   }
 
@@ -398,6 +408,7 @@ export class ProjectSettings {
       dimensionStyles: data.dimensionStyles ?? [],
       topology: data.topology ?? null,
       annotation: data.annotation ?? null,
+      connections: data.connections ?? [],
     });
     this.workspace.set(typeOf(data.workspace));
     this.drawingUnit.set(data.drawingUnit ?? 'm');
@@ -438,6 +449,7 @@ export class ProjectSettings {
     if (data.dimensionStyles !== undefined) this.dimensionStyles.set(sanitizedDimensionStyles(data.dimensionStyles));
     if (data.topology !== undefined) this.topology.set(sanitizeTopology(data.topology));
     if (data.annotation !== undefined) this.annotation.set(sanitizedAnnotationHeights(data.annotation ?? undefined) ?? null);
+    if (data.connections !== undefined) this.connections.set(structuredClone([...data.connections]));
   }
 
   /** The project's text style `id`, or null (Standart, or one it no longer has). */

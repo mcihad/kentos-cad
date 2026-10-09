@@ -77,11 +77,12 @@ impl RasterPaint {
 
 /// A tile's name in the atlas.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-struct TileId {
-    raster: u64,
-    level: u32,
-    tx: u32,
-    ty: u32,
+pub(crate) struct TileId {
+    pub(crate) raster: u64,
+    pub(crate) level: u32,
+    /// Wide enough for a map service's columns and rows (docs/adr/0208 §3).
+    pub(crate) tx: u64,
+    pub(crate) ty: u64,
 }
 
 /// The raster atlas: its texture and which tile each slot holds.
@@ -92,7 +93,7 @@ pub struct RasterAtlas {
     pub(crate) nearest: wgpu::Sampler,
     width: u32,
     height: u32,
-    held: HashMap<TileId, u32>,
+    pub(crate) held: HashMap<TileId, u32>,
     owner: Vec<Option<TileId>>,
     /// The frame each slot was last drawn in.
     used: Vec<u64>,
@@ -159,7 +160,7 @@ impl RasterAtlas {
 
     /// The atlas rectangle (u₀, v₀, u₁, v₁) of a slot's tile pixels
     /// (`x`, `y`) to (`x + w`, `y + h`), its apron left round them.
-    fn uv(&self, slot: u32, x: f64, y: f64, w: f64, h: f64) -> [f32; 4] {
+    pub(crate) fn uv(&self, slot: u32, x: f64, y: f64, w: f64, h: f64) -> [f32; 4] {
         let (ox, oy) = self.origin(slot);
         let (aw, ah) = (f64::from(self.width), f64::from(self.height));
         let u0 = (f64::from(ox) + 1.0 + x) / aw;
@@ -188,12 +189,12 @@ impl RasterAtlas {
         Some(i as u32)
     }
 
-    fn touch(&mut self, slot: u32) {
+    pub(crate) fn touch(&mut self, slot: u32) {
         self.used[slot as usize] = self.frame;
     }
 
     /// Writes a tile into a slot.
-    fn put(&mut self, queue: &wgpu::Queue, id: TileId, rgba: &[u8]) -> Option<u32> {
+    pub(crate) fn put(&mut self, queue: &wgpu::Queue, id: TileId, rgba: &[u8]) -> Option<u32> {
         if rgba.len() != (SLOT * SLOT * 4) as usize {
             return None;
         }
@@ -278,8 +279,8 @@ impl RasterQuads {
             let id = TileId {
                 raster: paint.key,
                 level: t.level,
-                tx: t.tx,
-                ty: t.ty,
+                tx: u64::from(t.tx),
+                ty: u64::from(t.ty),
             };
             let (tw, th) = (t.uv[0] * f64::from(TILE), t.uv[1] * f64::from(TILE));
             let held = match atlas.held.get(&id).copied() {
@@ -319,8 +320,8 @@ impl RasterQuads {
                         let parent = TileId {
                             raster: paint.key,
                             level: k,
-                            tx: t.tx >> up,
-                            ty: t.ty >> up,
+                            tx: u64::from(t.tx >> up),
+                            ty: u64::from(t.ty >> up),
                         };
                         if let Some(&slot) = atlas.held.get(&parent) {
                             let f = f64::from(1u32 << up);

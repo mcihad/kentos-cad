@@ -19,7 +19,9 @@
 use std::collections::{HashSet, VecDeque};
 use std::sync::Arc;
 
-use kentos_contracts::{BlockDefinition, BlockId, Entity, LayerField, LayerNode, LayerStyle};
+use kentos_contracts::{
+    BlockDefinition, BlockId, Entity, FeatureFeed, LayerField, LayerNode, LayerStyle, ServiceLayer,
+};
 
 use crate::changes::Journal;
 use crate::document::Document;
@@ -43,6 +45,21 @@ fn free_apart<T: Send + 'static>(value: T, ops: usize) {
     }
 }
 
+/// What a layer is drawn from or took its objects from (docs/adr/0208):
+/// none, a map service, or a source (the web's `ServedBy`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ServedBy {
+    pub service: Option<ServiceLayer>,
+    pub feed: Option<FeatureFeed>,
+}
+
+/// A service layer as its undo step keeps it: its name too.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Served {
+    pub name: String,
+    pub by: ServedBy,
+}
+
 #[derive(Clone, Debug)]
 pub(crate) enum Op {
     Add(Stored),
@@ -63,6 +80,12 @@ pub(crate) enum Op {
         layer: String,
         before: Vec<LayerField>,
         after: Vec<LayerField>,
+    },
+    /// A layer's name, map service and source (docs/adr/0208 §2, §10), before and after.
+    LayerService {
+        layer: String,
+        before: Box<Served>,
+        after: Box<Served>,
     },
     /// A layer or a group taken out of the tree with everything under it
     /// (`Document::remove_layer`), and its inverse, which puts it back; a
@@ -132,6 +155,15 @@ impl Op {
                 before,
                 after,
             } => Op::LayerFields {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerService {
+                layer,
+                before,
+                after,
+            } => Op::LayerService {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
@@ -425,6 +457,7 @@ impl Document {
                 Op::Update { before, .. } => hit(before),
                 Op::LayerStyle { .. }
                 | Op::LayerFields { .. }
+                | Op::LayerService { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
                 | Op::LayerActive { .. }
@@ -538,6 +571,10 @@ impl Document {
             }
             Op::LayerFields { layer, after, .. } => {
                 self.layers.replace_fields(layer, after);
+                return;
+            }
+            Op::LayerService { layer, after, .. } => {
+                self.layers.replace_service(layer, after);
                 return;
             }
             // A node still holding objects stays: taking it away would leave

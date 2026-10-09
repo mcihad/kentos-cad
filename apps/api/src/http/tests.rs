@@ -27,6 +27,7 @@ fn config() -> Config {
         event_retention: std::time::Duration::from_secs(7 * 24 * 3600),
         trash_retention: std::time::Duration::from_secs(30 * 24 * 3600),
         blob_dir: std::env::temp_dir().join("kentos-api-tests-blobs"),
+        proxy_allow: None,
     }
 }
 
@@ -41,6 +42,7 @@ pub(super) fn app(database: Option<Db>) -> Router {
         blobs: kentos_application::blobs::Blobs::new(
             std::env::temp_dir().join(format!("kentos-api-blobs-{}", uuid::Uuid::now_v7())),
         ),
+        proxy: None,
     })
 }
 

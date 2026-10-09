@@ -225,6 +225,8 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
       // Raster (docs/adr/0204 §8): Netcad's Raster Yükle, AutoCAD Map's Insert › Image.
       { pick: 'Raster', icon: 'rasterAdd', commands: RASTERS },
       POINT_CLOUD_PANEL,
+      // Harita altlığı (docs/adr/0208 §14): a ready basemap or a map service under the drawing, AutoCAD Map's Connect.
+      { menu: 'map', sections: ['Altlık'] },
       { pick: 'İçe aktar', icon: 'import', commands: IMPORTS },
       // Çizimler arası alışveriş (docs/adr/0193): AutoCAD's DesignCenter and WBLOCK.
       { pick: 'Alışveriş', icon: 'takeFrom', commands: ['file.takeFrom', 'file.saveSelection'] },
@@ -317,6 +319,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     sources: [
       { menu: 'view', sections: ['Yakınlaştır'] },
       { menu: 'crs', sections: ['Koordinat sistemi'] },
+      // Altlık (docs/adr/0208 §14): ArcGIS Pro's Basemap and Add Data, QGIS's XYZ, WMS/WMTS and vector tiles.
+      { menu: 'map', sections: ['Altlık'] },
       { menu: 'map', sections: ['Parsel', 'Ölçme'] },
       // Plan yolu çizimi (docs/adr/0198 §5): the roads beside the parcels.
       { pick: 'Yol', icon: 'planRoad', commands: ['tool.planRoad', 'tool.roadJunctions', 'tool.medianClose'] },

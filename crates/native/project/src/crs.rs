@@ -36,6 +36,10 @@ pub struct System {
     pub scale_factor: Option<f64>,
     /// `metre` or `degree`.
     pub unit: String,
+    /// The order EPSG gives its axes: `en`, `ne` (TUREF's and ED50's TM
+    /// zones) or `latlon` (docs/adr/0208 §5).
+    #[serde(default)]
+    pub axis_order: String,
     /// Where the system is meant for (“25.5°–28.5° D (3° dilim)”).
     #[serde(default)]
     pub area: Option<String>,

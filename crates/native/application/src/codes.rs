@@ -19,6 +19,8 @@ pub const REVISION_CONFLICT: &str = "revision_conflict";
 pub const LAYER_NOT_FOUND: &str = "layer_not_found";
 pub const NOT_A_LAYER: &str = "not_a_layer";
 pub const LAYER_LOCKED: &str = "layer_locked";
+/// The layer named is drawn from a map service and holds no objects (docs/adr/0208 §2).
+pub const SERVICE_LAYER: &str = "service_layer";
 /// The desktop only: every slot (`u32`) of the document has been given out.
 pub const SLOTS_EXHAUSTED: &str = "slots_exhausted";
 /// No object named (`cad.entities.delete`).
@@ -182,3 +184,27 @@ pub const NOT_A_TABLE: &str = "not_a_table";
 /// A block rule the checks before it did not see, as the document said it
 /// (never expected: the commands check the document's own rules first).
 pub const BLOCK_REFUSED: &str = "block_refused";
+
+// cad.layers.service (docs/adr/0208 §15).
+/// `add` without a service.
+pub const NO_SERVICE: &str = "no_service";
+/// `addFeed` without a source.
+pub const NO_FEED: &str = "no_feed";
+/// A service and a source given together.
+pub const SERVICE_AND_FEED: &str = "service_and_feed";
+/// A service against its rules (`ServiceLayer::problem`).
+pub const INVALID_SERVICE: &str = "invalid_service";
+/// A source against its rules (`FeatureFeed::problem`).
+pub const INVALID_FEED: &str = "invalid_feed";
+/// A layer's fields against their rules (`fields_problem`).
+pub const INVALID_FIELDS: &str = "invalid_fields";
+/// The project's connections against their rules (`connections_problem`).
+pub const INVALID_CONNECTION: &str = "invalid_connection";
+/// An update or a removal of a layer that is not of the kind it changes.
+pub const NOT_A_SERVICE_LAYER: &str = "not_a_service_layer";
+/// A service given to a layer that holds objects.
+pub const LAYER_HAS_OBJECTS: &str = "layer_has_objects";
+/// A service or a source naming a connection the project does not have.
+pub const UNKNOWN_CONNECTION: &str = "unknown_connection";
+/// The document refused the change (a layer that may not be removed).
+pub const LAYER_REFUSED: &str = "layer_refused";

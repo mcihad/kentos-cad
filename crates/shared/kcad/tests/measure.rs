@@ -83,6 +83,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             topology: None,
             annotation: None,
             text_styles: Vec::new(),
+            connections: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,
@@ -109,6 +110,8 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             children: Vec::new(),
             snap: None,
             fields: Vec::new(),
+            service: None,
+            feed: None,
         }],
         active_layer: "parsel".into(),
         entities,

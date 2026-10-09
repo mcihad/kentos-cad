@@ -6,5 +6,5 @@
 mod read;
 mod write;
 
-pub use read::read;
+pub use read::{NULL_GEOMETRY, read};
 pub use write::{WriteInput, input_from_json, write};

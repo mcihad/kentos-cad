@@ -8,7 +8,10 @@
 
 use std::collections::{HashMap, HashSet};
 
-use kentos_contracts::{LayerField, LayerNode, LayerNodeType, LayerSnap, LayerStyle, LineType};
+use kentos_contracts::{
+    FeatureFeed, LayerField, LayerNode, LayerNodeType, LayerSnap, LayerStyle, LineType,
+    ServiceLayer,
+};
 
 #[derive(Clone, Debug)]
 pub struct LayerTree {
@@ -39,6 +42,10 @@ pub struct NewLayer {
     /// A layer's fields (docs/adr/0199 §1): an import's file gives them
     /// (§6), Başka çizimden al keeps them; a group keeps none.
     pub fields: Vec<LayerField>,
+    /// A layer drawn from a map service, or where its objects came from
+    /// (docs/adr/0208 §2); a group keeps neither.
+    pub service: Option<ServiceLayer>,
+    pub feed: Option<FeatureFeed>,
 }
 
 impl NewLayer {
@@ -53,6 +60,8 @@ impl NewLayer {
             style: default_style(),
             snap: None,
             fields: Vec::new(),
+            service: None,
+            feed: None,
         }
     }
 
@@ -370,6 +379,15 @@ impl LayerTree {
         }
     }
 
+    /// A layer's name, map service and source (docs/adr/0208 §2, §10), as an undo or a redo puts them.
+    pub(crate) fn replace_service(&mut self, id: &str, served: &crate::history::Served) {
+        if let Some(node) = self.node_mut(id) {
+            node.name.clone_from(&served.name);
+            node.service.clone_from(&served.by.service);
+            node.feed.clone_from(&served.by.feed);
+        }
+    }
+
     /// A node as the document's `add_layer` makes it, not yet in the tree:
     /// open, with no children, its id the given one (the counter kept ahead
     /// of a `layer-N`) or the next `layer-N` (the web's `LayerStore.make`).
@@ -394,9 +412,24 @@ impl LayerTree {
             } else {
                 Vec::new()
             },
+            service: new.service.filter(|_| new.kind == LayerNodeType::Layer),
+            feed: new.feed.filter(|_| new.kind == LayerNodeType::Layer),
             style: new.style,
             children: Vec::new(),
         }
+    }
+
+    /// What [`LayerTree::make`] would give, the counter left as it is: a
+    /// node without an id gets the next `layer-N` (a command's plan,
+    /// docs/adr/0208 §15).
+    pub fn preview(&self, new: NewLayer) -> LayerNode {
+        let mut copy = Self {
+            roots: Vec::new(),
+            active: String::new(),
+            paths: self.paths.clone(),
+            counter: self.counter,
+        };
+        copy.make(new)
     }
 
     /// The group a node added beside or into `parent` goes into: `parent`

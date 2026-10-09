@@ -45,6 +45,8 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
         children: Vec::new(),
         snap: None,
         fields: Vec::new(),
+        service: None,
+        feed: None,
     }
 }
 
@@ -123,6 +125,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             topology: None,
             annotation: None,
             text_styles: Vec::new(),
+            connections: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,

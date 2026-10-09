@@ -2585,6 +2585,7 @@ dependencies = [
  "kentos-processing",
  "kentos-project",
  "kentos-render-wgpu",
+ "kentos-services",
  "kentos-sheet",
  "kentos-sheet-ui",
  "kentos-svg-core",
@@ -2835,7 +2836,10 @@ name = "kentos-python"
 version = "0.1.0"
 dependencies = [
  "kentos-contracts",
+ "kentos-geometry-core",
  "kentos-headless",
+ "kentos-project",
+ "kentos-services",
  "pyo3",
  "serde",
  "serde_json",
@@ -2855,6 +2859,33 @@ dependencies = [
  "serde_json",
  "tiny-skia",
  "wgpu",
+]
+
+[[package]]
+name = "kentos-services"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-formats",
+ "kentos-geometry-core",
+ "kentos-style-core",
+ "libm",
+ "miniz_oxide 0.9.1",
+ "roxmltree",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-services-wasm"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-geometry-core",
+ "kentos-services",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]

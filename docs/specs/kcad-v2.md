@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `31`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-32.kcad`) |
+| `version` | tam sayı | `2`'den `32`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-33.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -257,6 +257,8 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 31**, şema 30'un kendisi ve nokta bulutlarıdır (ADR 0207): `pointcloud` nesne türü (§6.6) ve rasterin adresi, `url` (§6.6). Nokta bulutu yalnız belgenin nesnesidir: şema 31'de bir blok tanımında `bad_value`'dur (`fixtures/kcad/v2/broken/pointcloud-in-block.kcad`). Yazıcı `31`'i **yalnız çizimde nokta bulutu ya da adresten okunan raster varken** yazar. Başka her çizim şema 2–30'dur ve eskisiyle bayt bayt aynıdır. Şema 2–30 yükünde `pointcloud` bilinmeyen türdür (`unknown_kind`, `fixtures/kcad/v2/broken/pointcloud-in-schema-30.kcad`), rasterin `url`'si bilinmeyen alandır (`unknown_field`, `raster-url-in-schema-30.kcad`): eski okuyucu bulutu ya da adresi sessizce düşürmez, dosyayı açmaz. Şema 31 şema 30'u kapsar. Bulutun noktaları dosyaya yazılmaz; gömülü bulutun baytları projenin stillerinde (§6.7) opak bir öğedir. Örnek dosya `pointclouds.kcad`.
 
+**Şema 32**, şema 31'in kendisi ve harita servisleridir (ADR 0208): katmanın `service`'i (katman bir harita servisinden çizilir: XYZ, WMS, WMTS, OGC API Tiles, ArcGIS, Google, vektör karolar) ve `feed`'i (katmanın nesneleri bir servisten ya da adresten alındı: WFS, OGC API Features, ArcGIS, GeoJSON) (§6.5), proje ayarlarının `connections`'ı (servislerin kimlik doğrulaması, sırrı olmadan; §6.4.7). Yazıcı `32`'yi **yalnız servisten çizilen ya da nesneleri bir kaynaktan alınan katman ya da projenin bağlantısı varken** yazar. Başka her çizim şema 2–31'dir ve eskisiyle bayt bayt aynıdır. Şema 2–31 yükünde üçü de bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/service-in-schema-31.kcad`, `feed-in-schema-31.kcad`, `connections-in-schema-31.kcad`): eski okuyucu servis katmanını boş bir katman sanıp bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 32 şema 31'i kapsar. Karolar, servisin cevapları ve sırlar dosyaya yazılmaz (§6.10). Örnek dosya `services.kcad`.
+
 Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
@@ -304,6 +306,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `areaUnit` | numaralı metin | evet | `m2`, `donum`, `ha` |
 | `topology` | harita (§6.4.5) | | şema 27'de: projenin topoloji kuralları, toleransı ve istisnaları (ADR 0202 §7) |
 | `annotation` | harita (§6.4.6) | | şema 30'da: projenin yazı yükseklikleri, kâğıtta mm (ADR 0205 §1) |
+| `connections` | dizi (§6.4.7) | | şema 32'de: projenin harita servislerine bağlantıları, sırları olmadan (ADR 0208 §2); boş dizi yazılmaz |
 | `angleUnit` | numaralı metin | evet | `grad`, `deg` |
 | `customCrs` | harita (§6.4.1) | | şema 13'te: projenin kendi sistemi bir tanımsa o (ADR 0168 §1); o zaman `srid` 0'dır, değilse `bad_value` (`broken/custom-crs-with-srid.kcad`). Böyle projenin ikinci sistemi olabilir (`secondSrid`), çizim birimi metredir |
 | `plotScale` | float | evet | çizim ölçeği paydası (1:1000 → `1000.0`) |
@@ -456,6 +459,22 @@ Bilinmeyen anahtar `unknown_field`'dır.
 
 Şema 30'da (ADR 0205 §1). Harita, anahtarları kodlanmış sırasıyla `text` < `table` < `leader` < `measure` < `station` < `dimension` < `coordinate`; hepsi isteğe bağlı float'tır, kâğıtta mm: sıfırdan büyük, en çok 100 (`broken/annotation-zero.kcad`, `broken/annotation-too-tall.kcad`). Harita boş olamaz (`broken/annotation-empty.kcad`); bilinmeyen anahtar `unknown_field` (`broken/annotation-unknown-kind.kcad`), tam sayı `wrong_type`'tır (`broken/annotation-int.kcad`). Bir türün yüksekliği yoksa varsayılanıdır: `text` (Yazı), `leader` (Kılavuz), `dimension` (Ölçü) ve `table` (Tablo) 2,5, `coordinate` (Koordinat yazısı), `station` (Km yazısı) ve `measure` (Kenar ve köşe yazıları) 2. Çizimdeki yükseklik `mm / 1000 × plotScale`'dir; nesneler kendi yüksekliklerini metrede taşır, bu alan yalnız yeni nesnelerin ve izlemenin kuralıdır (ADR 0205 §2, §3).
 
+#### 6.4.7 Bağlantılar
+
+Şema 32'de (ADR 0208 §2). Bir bağlantı, bir sunucunun kimlik doğrulamasıdır: hangi kökene (şema, makine ve kapı) gidildiğinde nasıl doğrulanılır. **Sır dosyaya yazılmaz** (anahtar, parola, belirteç, istemci sırrı): sırlar cihazındır (masaüstünde `baglantilar.json`, web'de tarayıcının deposu); dosyayı açan kendi sırrını girer. Bilinmeyen anahtar (`password` dahil) `unknown_field`'dır (`broken/connection-secret.kcad`).
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `id` | metin | evet | projede bir kez (`broken/connection-duplicate.kcad`); 1–64 harf, rakam, tire ya da alt çizgi; katmanlar bununla anar |
+| `auth` | numaralı metin | evet | `none`, `query` (adresin parametresi), `header` (istek başlığı), `basic` (kullanıcı adı ve parola), `bearer` (belirteç), `arcgis` (ArcGIS belirteci), `oauth2` (istemci kimliğiyle belirteç), `google` (Google Map Tiles API anahtarı ve oturumu) |
+| `name` | metin | evet | görünen ad, 1–128 harf |
+| `names` | dizi: metin | | `query` ve `header`'da zorunlu: parametrenin ya da başlığın adları (1–8; harf, rakam, tire, nokta, alt çizgi); başkalarında yazılmaz (`broken/connection-basic-names.kcad`); boş dizi yazılmaz |
+| `scope` | metin | | yalnız `oauth2`'de: istenen kapsam (`broken/connection-scope-not-oauth2.kcad`) |
+| `origin` | metin | evet | küçük harfle `http(s)://makine[:kapı]`, yolsuz, varsayılan kapı yazılmaz (`broken/connection-origin-path.kcad`, `broken/connection-origin-upper.kcad`); sır yalnız bu kökene gider |
+| `tokenUrl` | metin | | `arcgis` ve `oauth2`'de belirtecin alındığı adres; `oauth2`'de zorunlu (`broken/connection-oauth2-no-token-url.kcad`) |
+
+Liste en çok 256 bağlantıdır; boş liste yazılmaz (`broken/connections-empty.kcad`). Kurallar sözleşmenindir (`kentos_contracts::service::connections_problem`); kıran liste `bad_value`'dur.
+
 ### 6.5 Katman ağacı
 
 **Katman** (grup ya da katman):
@@ -463,12 +482,14 @@ Bilinmeyen anahtar `unknown_field`'dır.
 | Anahtar | Tür | Zorunlu | Anlamı |
 |---|---|---|---|
 | `id` | metin | evet | proje içinde benzersiz kimlik; ad değişince değişmez |
+| `feed` | veri kaynağı | | şema 32'de: katmanın nesnelerinin alındığı servis ya da adres (aşağıda); yalnız katmanda |
 | `name` | metin | evet | görünen ad |
 | `snap` | katman keneti | | şema 10'da: katmanın kendi keneti (aşağıda); yalnız katmanda, grupta `bad_value` |
 | `type` | numaralı metin | evet | `group`, `layer` |
 | `style` | katman stili | evet | |
 | `fields` | dizi: alan | | şema 26'da: katmanın nesnelerinin özniteliklerinin şeması (aşağıda); boş değil; yalnız katmanda, grupta `bad_value` |
 | `locked` | bool | evet | |
+| `service` | servis | | şema 32'de: katman bu harita servisinden çizilir (aşağıda); yalnız katmanda; böyle katman nesne tutmaz |
 | `visible` | bool | evet | |
 | `children` | dizi: katman | evet | alt düğümler (katmanda boş dizi) |
 | `expanded` | bool | evet | ağaçta açık mı |
@@ -498,6 +519,54 @@ Bilinmeyen anahtar `unknown_field`'dır.
 | `required` | bool | | yalnız `true`: nesne alanı boş bırakamaz |
 
 Anahtarlar kodlanmış sırasıyladır. Tek biçimler ve alan listesinin kuralları ADR 0199 §1'dedir (`kentos_contracts::fields`): ad boş değil, başında ya da sonunda boşluk yok, en çok 64 karakter, denetim karakteri yok, Türkçe katlanarak bir kez; takma ad boş değil, en çok 64 karakter; uzunluk yalnız metinde, ondalık basamak yalnız ondalıkta, aralık yalnız sayılarda (uçları tek biçimde, en az en çoktan büyük değil), değer listesi yalnız metin ve sayılarda (boş değil, kodlar boş değil ve sayılarda tek biçimde, kodlar ve katlanmış etiketler bir kez); varsayılan alanın kurallarına uyan tek biçim. Kuralı kıran liste, boş liste, `required: false`, bilinmeyen tür ve negatif sayı `bad_value`'dur; bilinmeyen anahtar `unknown_field`, türü ya da etiketi olmayan `missing_field`'dır (`fixtures/kcad/v2/broken/layer-fields-*.kcad`).
+
+**Servis** (şema 32; ADR 0208 §2): katmanın çizildiği harita servisi. Anahtarlar kodlanmış sırasıyladır; bayraklar yalnız `true` iken, diziler yalnız boş değilken yazılır (`broken/service-yflip-false.kcad`, `broken/service-layers-empty.kcad`, `broken/service-params-empty.kcad`).
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `url` | metin | evet | servisin adresi (XYZ'de karo şablonu: `{z}`, `{x}`, `{y}` ya da `{-y}`, ya da `{quadkey}`; `{s}` varsa `subdomains`); `http://` ya da `https://`, en çok 4096 harf; Google'da boş (adres oturumdan) |
+| `bbox` | 4 ondalık | | servisin kapsamı WGS 84 derecesinde: batı, güney, doğu, kuzey (−180 ≤ batı ≤ doğu ≤ 180, −90 ≤ güney ≤ kuzey ≤ 90); yeteneklerden, “Servisin kapsamına yakınlaştır” için |
+| `grid` | karo ızgarası | | WMTS, OGC API Tiles ve önbellekli ArcGIS'in ızgarası: `srid` u32 (0 değil) ve `matrices` (1–40 matris: `id` metin, `x0`, `y0`, `resolution` float, `tileWidth`, `tileHeight` 1–4096, `matrixWidth`, `matrixHeight` 1–2⁴⁰) |
+| `kind` | numaralı metin | evet | `xyz`, `wms`, `wmts`, `ogcTiles`, `arcgis`, `google`, `vector` |
+| `srid` | u32 | | istenen sistem (WMS'te zorunlu; 0 değil) |
+| `style` | metin | | WMS ve WMTS'te stil, vektörde stilin adresi, Google'da harita türü (`roadmap`, `satellite`, `terrain`, `hybrid`) |
+| `yFlip` | bool | | yalnız `true`: TMS gibi satırlar güneyden sayılır |
+| `format` | metin | | istenen resim türü (`image/png`) |
+| `layers` | dizi: metin | | WMS'te en az biri, WMTS'te tek biri; en çok 64, her biri 1–256 harf |
+| `params` | dizi: harita | | ek parametreler: `name` (harf, rakam, tire, nokta, alt çizgi) ve `value` (en çok 1024 harf); en çok 32 |
+| `preset` | metin | | hazır altlığın adı (`osm-standard`) |
+| `dynamic` | bool | | yalnız `true`: ArcGIS'in ızgarasız `export`'u |
+| `maxZoom` | u32 | | en büyük kat, en çok 30 |
+| `minZoom` | u32 | | en küçük kat, `maxZoom`'dan büyük değil |
+| `opacity` | float | | 0,1–1; yokluğu 1 |
+| `version` | metin | | WMS'te `1.1.1` ya da `1.3.0` |
+| `template` | metin | | OGC API Tiles'ın ve WMTS'in REST karo şablonu |
+| `tileSize` | u32 | | karonun pikseli, 64–4096 |
+| `matrixSet` | metin | | WMTS'in matris kümesinin adı (WMTS'te zorunlu) |
+| `connection` | metin | | projenin bağlantılarından birinin `id`'si (Google'da zorunlu) |
+| `subdomains` | dizi: metin | | `{s}`'in değerleri, en çok 16 |
+| `attribution` | metin | | servisin kaynak notu, en çok 512 harf |
+| `transparent` | bool | | yalnız `true`: saydam zemin istenir |
+
+Kurallar sözleşmenindir (`kentos_contracts::service::ServiceLayer::problem`); kıran servis `bad_value`'dur (`fixtures/kcad/v2/broken/service-*.kcad`). Servis katmanında nesne bulunmaz (`broken/service-holds-object.kcad`).
+
+**Veri kaynağı** (şema 32; ADR 0208 §10): katmanın nesnelerinin alındığı yer; nesneler katmanda kalır, kaynak yalnız yeniden almanın tarifidir.
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `key` | metin | | nesneleri eşleyen özniteliğin adı |
+| `url` | metin | evet | servisin ya da dosyanın adresi, `http://` ya da `https://` |
+| `bbox` | 4 float | | istenen alan, kaynağın sisteminde: en küçük doğu, kuzey, en büyük doğu, kuzey |
+| `kind` | numaralı metin | evet | `wfs`, `ogcFeatures`, `arcgis`, `geojson` |
+| `name` | metin | | WFS'in türü, OGC API'nin koleksiyonu, ArcGIS'in katmanı (üçünde zorunlu) |
+| `srid` | u32 | | istenen sistem (0 değil) |
+| `limit` | u64 | | en çok nesne, 1–500 000 |
+| `filter` | metin | | süzgeç (CQL ya da `where`), en çok 8192 harf |
+| `fetched` | metin | | son alınış, RFC 3339 |
+| `version` | metin | | yalnız WFS'te: `1.0.0`, `1.1.0`, `2.0.0` |
+| `connection` | metin | | projenin bağlantılarından birinin `id`'si |
+
+Bir katmanda servis ve kaynak birlikte bulunmaz (`broken/service-and-feed.kcad`); ikisi de grupta `bad_value`'dur (`broken/service-on-group.kcad`, `broken/feed-on-group.kcad`). Andıkları bağlantı projenin olmalıdır (`broken/service-unknown-connection.kcad`, `broken/feed-unknown-connection.kcad`).
 
 **Katman stili:**
 
@@ -714,7 +783,7 @@ Anahtarlar kodlanmış sırasıyladır. Tek biçimler ve alan listesinin kuralla
 
 ### 6.10 Dosyaya girmeyenler
 
-Çalışma yuvaları, seçim, geri alma ve yineleme geçmişi, kirli bayrağı, kamera, GPU tamponları, seçme ve kenet indeksleri, tarayıcı ve cihaz durumu (localStorage, IndexedDB taslakları), kullanıcı ve cihaz tercihleri dosyaya yazılmaz (`FILE-05`). Parola, belirteç ve imzalı adres yazılmaz (`SYNC-13`).
+Çalışma yuvaları, seçim, geri alma ve yineleme geçmişi, kirli bayrağı, kamera, GPU tamponları, seçme ve kenet indeksleri, tarayıcı ve cihaz durumu (localStorage, IndexedDB taslakları), kullanıcı ve cihaz tercihleri dosyaya yazılmaz (`FILE-05`). Parola, belirteç ve imzalı adres yazılmaz (`SYNC-13`); servislerin bağlantılarının sırları da (§6.4.7). Servislerin karoları ve cevapları dosyaya yazılmaz; önbellekleri cihazındır (ADR 0208 §7).
 
 ### 6.11 Belge kuralları
 

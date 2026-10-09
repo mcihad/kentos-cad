@@ -322,6 +322,14 @@ pub enum FillPaintBatch {
         color: String,
         opacity: f64,
     },
+    /// A layer drawn from a map service (docs/adr/0208 §3, §9): `service`
+    /// names it (the host's key), `opacity` its donukluk. The service pass
+    /// draws its tiles in view: pictures through the raster atlas, vector
+    /// tiles as styled layers of their own.
+    Service {
+        service: String,
+        opacity: f64,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -757,6 +765,10 @@ impl Looks<'_> {
                     opacity: self.fill_opacity(n(p, "opacity")),
                 }
             }
+            "service" => FillPaintBatch::Service {
+                service: s(p, "service").to_owned(),
+                opacity: self.fill_opacity(n(p, "opacity")),
+            },
             "pointcloud" => FillPaintBatch::PointCloud {
                 cloud: s(p, "cloud").to_owned(),
                 look: s(p, "look").to_owned(),
@@ -1647,6 +1659,11 @@ fn paint_json(p: &FillPaintBatch) -> Value {
             "to": to,
             "centre": centre,
             "radius": radius,
+        }),
+        FillPaintBatch::Service { service, opacity } => json!({
+            "kind": "service",
+            "service": service,
+            "opacity": opacity,
         }),
         FillPaintBatch::PointCloud {
             cloud,

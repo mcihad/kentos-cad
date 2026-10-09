@@ -27,6 +27,11 @@ export interface CrsDef {
   falseEasting?: number;
   falseNorthing?: number;
   unit: 'metre' | 'degree';
+  /**
+   * The order EPSG gives its axes (docs/adr/0208 §5): east then north (`en`), north then east (`ne`: TUREF's and
+   * ED50's TM zones), or latitude then longitude (`latlon`). WMS 1.3.0, WMTS and WFS 2.0 write coordinates in it.
+   */
+  axisOrder: 'en' | 'ne' | 'latlon';
   /** Human description of the zone's longitude band. */
   area: string;
 }
@@ -48,6 +53,7 @@ const LOCAL: CrsDef = {
   kind: 'local',
   datum: 'LOCAL',
   unit: 'metre',
+  axisOrder: 'en',
   area: 'Koordinat sistemi yok: teknik çizim, başlangıç 0,0',
 };
 
@@ -72,6 +78,7 @@ const tm = (srid: number, datum: 'TUREF' | 'ED50', cm: number): CrsDef => ({
   falseEasting: 500_000,
   falseNorthing: 0,
   unit: 'metre',
+  axisOrder: 'ne',
   area: `${cm - 1.5}°–${cm + 1.5}° D (3° dilim)`,
 });
 
@@ -89,6 +96,7 @@ const utm = (srid: number, datum: 'ED50' | 'WGS84', zone: number): CrsDef => {
     falseEasting: 500_000,
     falseNorthing: 0,
     unit: 'metre',
+    axisOrder: 'en',
     area: `${cm - 3}°–${cm + 3}° D (6° dilim)`,
   };
 };
@@ -98,11 +106,11 @@ const TM_MERIDIANS = [27, 30, 33, 36, 39, 42, 45];
 export const CRS_REGISTRY: readonly CrsDef[] = [
   LOCAL,
   ...TM_MERIDIANS.map((cm, i) => tm(5253 + i, 'TUREF', cm)),
-  { srid: 5252, name: 'TUREF', kind: 'geographic', datum: 'TUREF', ellipsoid: 'GRS80', unit: 'degree', area: 'Türkiye, coğrafi (enlem/boylam)' },
+  { srid: 5252, name: 'TUREF', kind: 'geographic', datum: 'TUREF', ellipsoid: 'GRS80', unit: 'degree', axisOrder: 'latlon', area: 'Türkiye, coğrafi (enlem/boylam)' },
   ...TM_MERIDIANS.map((cm, i) => tm(2319 + i, 'ED50', cm)),
   ...[35, 36, 37, 38].map((z) => utm(23000 + z, 'ED50', z)),
   ...[35, 36, 37, 38].map((z) => utm(32600 + z, 'WGS84', z)),
-  { srid: 4326, name: 'WGS 84', kind: 'geographic', datum: 'WGS84', ellipsoid: 'WGS84', unit: 'degree', area: 'Dünya, coğrafi (enlem/boylam)' },
+  { srid: 4326, name: 'WGS 84', kind: 'geographic', datum: 'WGS84', ellipsoid: 'WGS84', unit: 'degree', axisOrder: 'latlon', area: 'Dünya, coğrafi (enlem/boylam)' },
   {
     srid: 3857,
     name: 'WGS 84 / Pseudo-Mercator',
@@ -111,6 +119,7 @@ export const CRS_REGISTRY: readonly CrsDef[] = [
     ellipsoid: 'WGS84',
     projection: 'Pseudo-Mercator',
     unit: 'metre',
+    axisOrder: 'en',
     area: 'Web haritaları (altlık karolar)',
   },
 ];
