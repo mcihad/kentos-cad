@@ -413,7 +413,11 @@
     "processing.run.hydrology.pourPoint",
     "processing.run.hydrology.watershed",
     "processing.run.hydrology.basins",
-    "processing.run.hydrology.streams"
+    "processing.run.hydrology.streams",
+    "processing.run.distance.euclidean",
+    "processing.run.distance.cost",
+    "processing.run.distance.path",
+    "processing.run.distance.corridor"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

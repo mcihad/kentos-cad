@@ -5,6 +5,8 @@
 //! through a whole job, its GeoTIFF read back.
 
 mod contours;
+mod distance;
+mod distance_timing;
 mod host;
 mod hydro_timing;
 mod hydrology;

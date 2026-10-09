@@ -148,6 +148,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   alan, özgül havza alanı), Topografik nemlilik indisi, Döküm noktası, Noktadan havza, Havzalar (ana, alt havzalar, güzergâhı kesen
   derelerin havzaları km'leriyle) ve Dere ağı (Strahler, Shreve, uzunluk, düşü, eğim); bütün DEM bellekte, 2²⁵ hücreye kadar; sonuçlar
   DEM'in hemen üstündeki yeni katmanda (ADR 0235);
+  uzaklık ve maliyet: İşlemler'in Uzaklık ve maliyet kategorisinde Uzaklık yüzeyi (nesnelerden ya da rasterin değerli hücrelerinden;
+  kesin uzaklık dönüşümü; uzaklık ya da en yakın kaynak), Birikimli maliyet (8 ya da at hamleleriyle 16 komşu; köşeden bağlı engel
+  geçilmez; Yükseklik modeliyle yüzey uzunluğu ve en büyük boyuna eğim; maliyet ya da en ucuz kaynak), En düşük maliyetli yol (Yol,
+  Kaynak, Maliyet, Uzunluk) ve Maliyet koridoru (yüzde ya da değer eşiği); bütün raster bellekte; nesnelerden uzaklık kaynakların
+  katmanının, öbürleri maliyet rasterinin yanında (ADR 0236);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -435,6 +440,11 @@ python3 scripts/fixtures/hydrology_cases.py --check   # hidrolojinin sekiz arac�
 python3 scripts/fixtures/hydrology_processing_cases.py --check   # hidroloji araçlarının İşlemler durumlarını denetle; rasterleri GDAL yazar, yazılan dosyalar başvuruya bağlı; durumlar fixtures/processing/v1/hydrology.json, hydrology.kcad ve hydrology/ (ADR 0235)
 python3 scripts/fixtures/hydrology_scene.py --check   # hidroloji resimlerinin çizimini (fixtures/interaction/v1/hydrology.kcad: vadinin DEM'i, yol ekseni, çıkış noktaları) denetle (ADR 0235)
 cargo test --release -p kentos-raster --test all hydro_timing -- --ignored --nocapture --test-threads=1   # 4096² DEM'de sekiz aracın dokuz işinin süreleri; KENTOS_PHASES=1 birikimin aşamalarını da yazar (ADR 0235 §12; web'inkiler: (cd apps/web && node scripts/perf/raster.mjs --only hydro))
+python3 scripts/fixtures/distance_cases.py --check   # uzaklık ve maliyetin dört aracını (kesin düz uzaklık kaba kuvvetle, birikimli maliyet önceliğiyle Dijkstra'yla, geldiği komşu, yollar, koridor) ADR'den, KentOS kodu olmadan denetle; GRASS GIS'in r.cost ve r.grow.distance'ı ve GDAL'ın Proximity'siyle çapraz denetim (grass yoksa atlanır); durumlar fixtures/distance/v1/cases.json (ADR 0236)
+python3 scripts/fixtures/distance_processing_cases.py --check   # uzaklık ve maliyet araçlarının İşlemler durumlarını denetle; rasterleri GDAL yazar, yazılan dosyalar başvuruya bağlı; durumlar fixtures/processing/v1/distance.json, distance.kcad ve distance/ (ADR 0236)
+python3 scripts/fixtures/distance_scene.py --check   # uzaklık ve maliyet resimlerinin çizimini ve maliyet rasterini (fixtures/interaction/v1/distance.kcad, distance/maliyet.tif: vadinin DEM'i, eğimden maliyet, göl, köyler, yol) denetle (ADR 0236)
+cargo test --release -p kentos-raster --test all distance_timing -- --ignored --nocapture --test-threads=1   # 4096² maliyet rasterinde dört aracın dokuz işinin süreleri; KENTOS_PHASES=1 aşamaları da yazar (ADR 0236 §8; web'inkiler: (cd apps/web && node scripts/perf/raster.mjs --only distance))
+KENTOS_SHOTS_ONLY=uzk-serit,uzk-yol-cizim,uzk-koridor-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # uzaklık ve maliyetin resimleri, .run/shots/arac-uzk-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs distance); ADR 0236)
 KENTOS_SHOTS_ONLY=hid-serit,hid-dere-cizim,hid-havza-cizim,hid-guzergah-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # hidrolojinin resimleri, .run/shots/arac-hid-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hydrology); ADR 0235)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
@@ -1322,7 +1332,13 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `hydro` (`surface`, `heap`, `fill`, `tiled`, `flow`, `accum`, `basins`, `streams`; bağımsız başvuru `hydrology_cases.py`, GRASS'la
   çapraz denetim), `ops`'un sekiz türü, `vector`'ün `fields` ve `numbers`'ı; WASM `featureFields`, `featureNumbers`; İşlemler'in
   `builtin/hydrology/`'si iki platformda; ortak durumlar `fixtures/processing/v1/hydrology.json` (`hydrology_processing_cases.py`),
-  resimlerin sahnesi `hydrology.kcad` (`hydrology_scene.py`). Dalda sıradaki `GIS-36`.
+  resimlerin sahnesi `hydrology.kcad` (`hydrology_scene.py`). `GIS-36` uzaklık ve maliyet
+  ([ADR 0236](docs/adr/0236-distance-and-cost.md)) tek parçada bitti (9 Ekim): raster çekirdeğinde `distance` (`edt`, `network`, `mod`;
+  bağımsız başvuru `distance_cases.py`, GRASS'ın r.cost ve r.grow.distance'ı ve GDAL'ın Proximity'siyle çapraz denetim), `ops`'un dört
+  türü, `from_points`'in `PointTool::Distance`'ı; WASM notlarında `distance`; İşlemler'in `builtin/distance/`'ı iki platformda, web
+  koşucusunun yerleşimi görünen girdiyle; ortak durumlar `fixtures/processing/v1/distance.json` (`distance_processing_cases.py`),
+  resimlerin sahnesi `distance.kcad` (`distance_scene.py`). GIS-31–36 dalı bitti; `main`'e birleşir (sahibin sözü, 9 Ekim: “36 bitince
+  main ile birleştir ve main push yap”).
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

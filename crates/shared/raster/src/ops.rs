@@ -24,6 +24,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::areas::{Areas, Span, union};
 use crate::calc::{Calc, Empty};
+use crate::distance::network::Neighbours;
+use crate::distance::{DistanceNotes, DistanceTool, DistanceWork, Threshold};
 use crate::focal::{Focal, Region, Window};
 use crate::grid::Grid;
 use crate::hydro::accum::Method as FlowMethod;
@@ -340,6 +342,80 @@ pub enum OpsTool {
         threshold: f64,
         simplify: f64,
     },
+    /// Uzaklık yüzeyi from a raster's cells with values (docs/adr/0236 §3):
+    /// the largest distance (m, 0: none).
+    Distance {
+        band: u32,
+        max: f64,
+        result: DistanceResult,
+    },
+    /// Birikimli maliyet (docs/adr/0236 §4); a second input is the surface.
+    /// The grade limit in per cent (0: none), the largest sum (0: none).
+    CostDistance {
+        band: u32,
+        neighbours: NeighboursName,
+        surface_length: bool,
+        slope: f64,
+        max: f64,
+        result: CostResult,
+        sample: FloatSample,
+    },
+    /// En düşük maliyetli yol (docs/adr/0236 §5): the objects before
+    /// `first` are the sources, the rest the destinations.
+    CostPath {
+        band: u32,
+        neighbours: NeighboursName,
+        surface_length: bool,
+        slope: f64,
+        simplify: f64,
+        first: u32,
+    },
+    /// Maliyet koridoru (docs/adr/0236 §6): the objects before `first` are
+    /// the first ends, the rest the second.
+    CostCorridor {
+        band: u32,
+        neighbours: NeighboursName,
+        surface_length: bool,
+        slope: f64,
+        first: u32,
+        threshold: ThresholdName,
+        value: f64,
+        sample: FloatSample,
+    },
+}
+
+/// Uzaklık yüzeyi's result (docs/adr/0236 §3).
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum DistanceResult {
+    Distance,
+    Allocation,
+}
+
+/// Birikimli maliyet's result (docs/adr/0236 §4).
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum CostResult {
+    Cost,
+    Allocation,
+}
+
+/// The cost network's neighbours (docs/adr/0236 §2).
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+pub enum NeighboursName {
+    #[serde(rename = "8")]
+    Eight,
+    #[serde(rename = "16")]
+    Sixteen,
+}
+
+/// Maliyet koridoru's threshold (docs/adr/0236 §6).
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum ThresholdName {
+    None,
+    Percent,
+    Value,
 }
 
 /// Çukur doldur's result.
@@ -596,6 +672,125 @@ fn hydro_style(tool: &HydroTool, source: Option<&RasterStyle>, kind: &Kind) -> R
     }
 }
 
+/// Uzaklık ve maliyet's tool (docs/adr/0236): its settings, band and the result's samples; none for another tool.
+fn distance_tool(tool: &OpsTool) -> Option<(DistanceTool, u32, RasterSample)> {
+    let neighbours = |n: NeighboursName| match n {
+        NeighboursName::Eight => Neighbours::Eight,
+        NeighboursName::Sixteen => Neighbours::Sixteen,
+    };
+    let float = |s: FloatSample| match s {
+        FloatSample::F32 => RasterSample::F32,
+        FloatSample::F64 => RasterSample::F64,
+    };
+    Some(match *tool {
+        OpsTool::Distance { band, max, result } => (
+            DistanceTool::Euclid {
+                max,
+                allocation: result == DistanceResult::Allocation,
+            },
+            band,
+            RasterSample::F32,
+        ),
+        OpsTool::CostDistance {
+            band,
+            neighbours: n,
+            surface_length,
+            slope,
+            max,
+            result,
+            sample,
+        } => {
+            let allocation = result == CostResult::Allocation;
+            (
+                DistanceTool::Cost {
+                    neighbours: neighbours(n),
+                    surface_length,
+                    slope,
+                    max,
+                    allocation,
+                },
+                band,
+                if allocation {
+                    RasterSample::F32
+                } else {
+                    float(sample)
+                },
+            )
+        }
+        OpsTool::CostPath {
+            band,
+            neighbours: n,
+            surface_length,
+            slope,
+            simplify,
+            first,
+        } => (
+            DistanceTool::Path {
+                neighbours: neighbours(n),
+                surface_length,
+                slope,
+                simplify,
+                first: first as usize,
+            },
+            band,
+            RasterSample::F32,
+        ),
+        OpsTool::CostCorridor {
+            band,
+            neighbours: n,
+            surface_length,
+            slope,
+            first,
+            threshold,
+            value,
+            sample,
+        } => (
+            DistanceTool::Corridor {
+                neighbours: neighbours(n),
+                surface_length,
+                slope,
+                first: first as usize,
+                threshold: match threshold {
+                    ThresholdName::None => Threshold::None,
+                    ThresholdName::Percent => Threshold::Percent(value),
+                    ThresholdName::Value => Threshold::Value(value),
+                },
+            },
+            band,
+            float(sample),
+        ),
+        _ => return None,
+    })
+}
+
+/// A distance or cost result's look (docs/adr/0236 §3, §4, §6): the
+/// distances and sums Viridis, the sources' numbers spectral, cell by cell.
+fn distance_style(tool: &DistanceTool) -> RasterStyle {
+    let allocation = matches!(
+        tool,
+        DistanceTool::Euclid {
+            allocation: true,
+            ..
+        } | DistanceTool::Cost {
+            allocation: true,
+            ..
+        }
+    );
+    if allocation {
+        return RasterStyle {
+            resampling: kentos_contracts::RasterResampling::Nearest,
+            ..ramp_style("Spektral")
+        };
+    }
+    match tool {
+        DistanceTool::Cost { .. } => RasterStyle {
+            stretch: RasterStretch::Percent,
+            ..ramp_style("Viridis")
+        },
+        _ => ramp_style("Viridis"),
+    }
+}
+
 /// A zone's figures (Bölgesel istatistik): its sums and the chosen statistic.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ZoneFigures {
@@ -642,6 +837,8 @@ pub struct Notes {
     pub empty_cells: u64,
     /// A hydrology run's (docs/adr/0235).
     pub hydro: HydroNotes,
+    /// A distance or cost run's (docs/adr/0236).
+    pub distance: DistanceNotes,
 }
 
 struct Hist {
@@ -703,6 +900,7 @@ enum Work {
     },
     Vector(Box<VectorWork>),
     Hydro(Box<HydroWork>),
+    Distance(Box<DistanceWork>),
 }
 
 /// The result raster's samples: type, bands (alpha included), nodata.
@@ -1279,6 +1477,50 @@ impl OpsJob {
                 )?;
                 (grid, Work::Hydro(Box::new(work)), kind, style)
             }
+            OpsTool::Distance { .. }
+            | OpsTool::CostDistance { .. }
+            | OpsTool::CostPath { .. }
+            | OpsTool::CostCorridor { .. } => {
+                let (tool, band, sample) =
+                    distance_tool(&spec.tool).ok_or("Uzaklık aracı bilinmiyor.")?;
+                let b = band_index(first, band)?;
+                let surface = match tool {
+                    DistanceTool::Euclid { .. } => {
+                        if inputs.len() > 1 {
+                            return Err(
+                                "Uzaklık yüzeyi tek raster ister: kaynakların rasteri.".into()
+                            );
+                        }
+                        None
+                    }
+                    _ => {
+                        if inputs.len() > 2 {
+                            return Err(
+                                "En çok iki raster: maliyet rasteri ve yükseklik modeli.".into()
+                            );
+                        }
+                        inputs.get(1).map(|i| i.affine)
+                    }
+                };
+                let grid = first.grid();
+                let kind = tool.raster().then_some(Kind {
+                    sample,
+                    values: 1,
+                    alpha: false,
+                    nodata: Some(f64::NAN),
+                });
+                let style = kind.map(|_| distance_style(&tool));
+                let work = DistanceWork::new(
+                    tool,
+                    b,
+                    grid,
+                    spec.geographic,
+                    surface,
+                    shapes.clone(),
+                    threads,
+                )?;
+                (grid, Work::Distance(Box::new(work)), kind, style)
+            }
             OpsTool::CellStatistics { band, stat, ignore } => {
                 if inputs.len() < 2 {
                     return Err("Hücre istatistiği en az iki raster ister.".into());
@@ -1404,6 +1646,14 @@ impl OpsJob {
                     add(0, 0)
                 }
             }
+            Work::Distance(d) => {
+                if d.reading() {
+                    add(0, 0);
+                    if d.reads_surface() {
+                        add(1, Sampling::Bilinear.margin());
+                    }
+                }
+            }
             Work::Resample { method, ru, rv } => match method {
                 Method::Point(s) => add(0, s.margin()),
                 _ => {
@@ -1514,6 +1764,9 @@ impl OpsJob {
         if let Work::Hydro(h) = &self.work {
             return h.done();
         }
+        if let Work::Distance(d) = &self.work {
+            return d.done();
+        }
         let bounds = matches!(&self.work, Work::Histogram(h) if h.bounds_pass);
         !bounds && self.next >= self.grid.height
     }
@@ -1529,6 +1782,7 @@ impl OpsJob {
         match &self.work {
             Work::Vector(v) => v.share(f),
             Work::Hydro(h) => h.share(f),
+            Work::Distance(d) => d.share(f),
             Work::Histogram(h) if h.bounds_pass => f / 3.0,
             Work::Histogram(h) if h.two_pass => 1.0 / 3.0 + 2.0 * f / 3.0,
             _ => f,
@@ -1586,12 +1840,52 @@ impl OpsJob {
             }
             return Ok(Vec::new());
         }
+        if let Work::Distance(d) = &mut self.work
+            && !d.reading()
+        {
+            // The raster is in memory: a stage of the work, or the result's next strip.
+            if d.emitting() {
+                let kind = self.kind.ok_or("Sonuç rasteri yok.")?;
+                let n = TILE.min(self.grid.height - self.next.min(self.grid.height));
+                let strip = d.strip(n, kind.sample);
+                self.next += n;
+                let bytes = match self.out.as_mut() {
+                    Some(out) => out.push(Rows::Any(&strip), n)?,
+                    None => Vec::new(),
+                };
+                if d.done() {
+                    self.notes.distance = d.notes.clone();
+                }
+                return Ok(bytes);
+            }
+            d.step()?;
+            if d.emitting() {
+                self.next = 0;
+            }
+            if d.done() {
+                self.notes.distance = d.notes.clone();
+            }
+            return Ok(Vec::new());
+        }
         let rect = self.rect();
         let (c0, c1, y0, y1) = rect;
         let n = y1 - y0;
         let bw = (c1 - c0) as usize;
         let regions = self.regions(rect);
-        if matches!(self.work, Work::Vector(_) | Work::Hydro(_)) {
+        if matches!(self.work, Work::Distance(_)) {
+            // The cost raster (or the sources') and the surface read onto the grid.
+            let mut views: Vec<Option<View>> = vec![None; self.inputs.len()];
+            for (k, r) in regions {
+                views[k] = Some(self.inputs[k].view(r, self.threads)?);
+            }
+            if let Work::Distance(d) = &mut self.work {
+                d.block(
+                    rect,
+                    views.first().and_then(Option::as_ref),
+                    views.get(1).and_then(Option::as_ref),
+                );
+            }
+        } else if matches!(self.work, Work::Vector(_) | Work::Hydro(_)) {
             // The vectorizing and hydrology tools read the file's samples a cell at a time.
             let raw = match regions.first() {
                 Some(&(k, r)) => self.inputs[k].raw(r)?,
@@ -1637,6 +1931,13 @@ impl OpsJob {
         {
             // The DEM read: its work steps from here, no strip written yet.
             h.read_done();
+            self.strip = None;
+            return Ok(Vec::new());
+        }
+        if self.next >= self.grid.height
+            && let Work::Distance(d) = &mut self.work
+        {
+            d.read_done()?;
             self.strip = None;
             return Ok(Vec::new());
         }
@@ -1947,7 +2248,11 @@ impl OpsJob {
                     }
                 });
             }
-            Work::Zonal { .. } | Work::Histogram(_) | Work::Vector(_) | Work::Hydro(_) => {}
+            Work::Zonal { .. }
+            | Work::Histogram(_)
+            | Work::Vector(_)
+            | Work::Hydro(_)
+            | Work::Distance(_) => {}
         }
         Ok(())
     }
@@ -2139,6 +2444,7 @@ impl OpsJob {
             Work::Hydro(mut h) if h.tool().raster(RasterSample::F32).is_none() => {
                 Ok(OpsFinished::Features(h.finish()?))
             }
+            Work::Distance(mut d) if !d.tool().raster() => Ok(OpsFinished::Features(d.finish()?)),
             _ => {
                 let out = self.out.ok_or("Sonuç rasteri yok.")?;
                 let (tail, header) = out.finish()?;

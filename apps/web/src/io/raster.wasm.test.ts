@@ -12,7 +12,9 @@ import { analyzeHere, analyzeOpsHere, analyzePointsHere, level0, surfaceModulesB
  * docs/adr/0233: each sample by its case's rule, the zones' figures, the histograms, the refusals), and raster and vector's
  * (scripts/fixtures/raster_vector_cases.py, docs/adr/0234: the features bit for bit, Rasterleştir's every sample and its
  * notes, the refusals), and hydrology's (scripts/fixtures/hydrology_cases.py, docs/adr/0235: each sample by its case's
- * rule, the objects and their numbers, the notes, the refusals). Skipped only when the packages have not been built.
+ * rule, the objects and their numbers, the notes, the refusals), and distance and cost's (scripts/fixtures/distance_cases.py,
+ * docs/adr/0236: each sample by its case's rule, the paths and their numbers, the notes, the refusals). Skipped only when
+ * the packages have not been built.
  */
 
 type Bytes = Uint8Array<ArrayBuffer>;
@@ -426,6 +428,84 @@ describe.skipIf(!surfaceModulesBuilt)('hydrology in the module (crates/wasm/rast
       for (const [key, value] of Object.entries(c.expect.notes ?? {})) {
         const k = key === 'empty' && Array.isArray(value) ? 'emptyPoints' : key;
         expect(notes[k], `note ${key}`).toEqual(value);
+      }
+    });
+  }
+});
+
+interface DistanceCase {
+  name: string;
+  job: 'ops' | 'points';
+  input?: OpsInput;
+  surface?: OpsInput | null;
+  geographic?: boolean;
+  tool: { kind: string };
+  spec?: Record<string, unknown>;
+  shapes: unknown[];
+  expect: {
+    refused?: string;
+    raster?: { width: number; height: number; rule: string; affine?: number[]; values: (number | null)[] };
+    features?: { kind: string; fields: string[]; numbers: number[]; rings: number[]; sizes: number[]; xy: number[] };
+    notes?: Record<string, number | number[] | null>;
+  };
+}
+
+describe.skipIf(!surfaceModulesBuilt)('distance and cost in the module (crates/wasm/raster-wasm, docs/adr/0236)', () => {
+  const distance = json<{ cases: DistanceCase[] }>('distance/v1/cases.json');
+
+  it('reads every case', () => {
+    expect(distance.cases.length).toBeGreaterThanOrEqual(39);
+  });
+
+  for (const c of distance.cases) {
+    it(`distance: ${c.name}`, async () => {
+      if (c.job === 'points') {
+        // Uzaklık yüzeyi from objects: the point job on the objects' box with its margin, or a raster's grid.
+        const run = analyzePointsHere(JSON.stringify(c.shapes), 'null', JSON.stringify(c.spec), true);
+        if (c.expect.refused) {
+          await expect(run).rejects.toThrow(c.expect.refused);
+          return;
+        }
+        const out = await run;
+        const r = c.expect.raster!;
+        expect(Array.from(out.grid.slice(0, 6))).toEqual(r.affine);
+        const got = await level0(out.bytes);
+        const off = got.findIndex((g, k) => !hydroMeets(g, r.values[k], r.rule));
+        expect(off, `sample ${off}: ${got[off]} for ${r.values[off]}`).toBe(-1);
+        expect(JSON.parse(out.notes)).toMatchObject(c.expect.notes!);
+        return;
+      }
+      // The cost raster first, the surface second.
+      const inputs = [{ ...c.input!, name: 'A' }, ...(c.surface ? [{ ...c.surface, name: 'B' }] : [])];
+      const spec = JSON.stringify({ tool: c.tool, inputs: inputs.map((r) => ({ affine: r.affine, name: r.name })), geographic: c.geographic ?? false });
+      const run = analyzeOpsHere(inputs.map(tiffOf), spec, JSON.stringify(c.shapes));
+      if (c.expect.refused) {
+        await expect(run).rejects.toThrow(c.expect.refused);
+        return;
+      }
+      const out = await run;
+      const notes = (JSON.parse(out.notes) as { distance: Record<string, number | number[] | null> }).distance;
+      const r = c.expect.raster;
+      if (r) {
+        expect([out.grid[6], out.grid[7]]).toEqual([r.width, r.height]);
+        const got = await level0(out.bytes!);
+        expect(got.length).toBe(r.values.length);
+        const off = got.findIndex((g, k) => !hydroMeets(g, r.values[k], r.rule));
+        expect(off, `sample ${off}: ${got[off]} for ${r.values[off]}`).toBe(-1);
+      } else {
+        const f = out.features!;
+        const want = c.expect.features!;
+        expect(f.kind).toBe(want.kind);
+        expect(f.fields).toEqual(want.fields);
+        expect(Array.from(f.numbers)).toEqual(want.numbers);
+        expect(Array.from(f.sizes)).toEqual(want.sizes);
+        expect(Array.from(f.xy)).toEqual(want.xy);
+      }
+      // The notes in the module's words (least and most null when no cell has a value), by the raster's rule.
+      for (const [key, value] of Object.entries(c.expect.notes ?? {})) {
+        const got = notes[key];
+        if (r?.rule === 'f32ulp' && typeof value === 'number' && typeof got === 'number') expect(ulps(got, value), `note ${key}`).toBeLessThanOrEqual(1);
+        else expect(got, `note ${key}`).toEqual(value);
       }
     });
   }

@@ -34,4 +34,6 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   { id: 'scannedMap', label: 'Taranmış harita', icon: 'captureLine', description: 'Çizgi yakalama, alan kapatma, eğrilere kot verme' },
   // docs/adr/0235: the water's way over a DEM.
   { id: 'hydrology', label: 'Hidroloji', icon: 'streams', description: 'Çukur doldurma, akış yönü ve birikimi, havzalar, dere ağı, nemlilik indisi' },
+  // docs/adr/0236: how far, and how dear, every cell is from the sources.
+  { id: 'distance', label: 'Uzaklık ve maliyet', icon: 'costPath', description: 'Uzaklık yüzeyi, birikimli maliyet, en düşük maliyetli yol, maliyet koridoru' },
 ];

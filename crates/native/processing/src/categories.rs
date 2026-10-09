@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 17] = [
+pub const CATEGORIES: [Category; 18] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -135,5 +135,12 @@ pub const CATEGORIES: [Category; 17] = [
         "Hidroloji",
         "streams",
         "Çukur doldurma, akış yönü ve birikimi, havzalar, dere ağı, nemlilik indisi",
+    ),
+    // docs/adr/0236: how far, and how dear, every cell is from the sources.
+    category(
+        "distance",
+        "Uzaklık ve maliyet",
+        "costPath",
+        "Uzaklık yüzeyi, birikimli maliyet, en düşük maliyetli yol, maliyet koridoru",
     ),
 ];

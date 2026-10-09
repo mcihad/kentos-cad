@@ -18,6 +18,7 @@ import { INTERPOLATION_TOOLS } from './interpolation/tools';
 import { RASTER_OPS_TOOLS } from './rasterOps/tools';
 import { RASTER_VECTOR_TOOLS } from './rasterVector/tools';
 import { HYDROLOGY_TOOLS } from './hydrology/tools';
+import { DISTANCE_TOOLS } from './distance/tools';
 import { SURFACE_TOOLS } from './surface/tools';
 import { vertexNumbering } from './vertexNumbering';
 
@@ -53,4 +54,6 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   ...RASTER_VECTOR_TOOLS,
   // Hidroloji (docs/adr/0235): the raster core's operation job over the DEM in memory.
   ...HYDROLOGY_TOOLS,
+  // Uzaklık ve maliyet (docs/adr/0236): the point job from objects, the operation job over the cost raster.
+  ...DISTANCE_TOOLS,
 ];

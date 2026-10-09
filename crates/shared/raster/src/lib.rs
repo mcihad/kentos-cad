@@ -25,6 +25,7 @@ pub mod calc;
 pub mod contours;
 pub mod dd;
 pub mod density;
+pub mod distance;
 pub mod focal;
 pub mod frame;
 pub mod from_points;

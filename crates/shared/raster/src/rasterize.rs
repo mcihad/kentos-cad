@@ -237,6 +237,23 @@ impl Objects {
         Ok(out)
     }
 
+    /// `shapes`, each burning its number (its place among them, from 1;
+    /// docs/adr/0236 §2: a source's or a destination's number).
+    pub fn numbered(shapes: Vec<Shape>) -> Objects {
+        let mut out = Objects {
+            items: Vec::new(),
+            values: vec![f64::NAN; shapes.len()],
+            unread: 0,
+        };
+        for (o, s) in shapes.into_iter().enumerate() {
+            if let Some(k) = kind_of(s) {
+                out.values[o] = (o + 1) as f64;
+                out.items.push((o as u32, k));
+            }
+        }
+        out
+    }
+
     /// Objects to burn.
     pub fn len(&self) -> usize {
         self.items.len()

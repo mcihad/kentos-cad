@@ -172,6 +172,15 @@ pub enum PointTool {
         overlap: Overlap,
         sample: BurnSample,
     },
+    /// Uzaklık yüzeyi from objects (docs/adr/0236 §3): the largest distance
+    /// (m, 0: none); the margin (m) round the objects' box when the grid is theirs.
+    Distance {
+        #[serde(default)]
+        max: f64,
+        result: crate::ops::DistanceResult,
+        #[serde(default)]
+        margin: f64,
+    },
 }
 
 fn one() -> u32 {
@@ -275,6 +284,10 @@ enum Work {
     /// Rasterleştir's objects until the grid is known, then their burn.
     Objects(Box<(Objects, Overlap, BurnSample)>),
     Burn(Box<Burn>),
+    /// Uzaklık yüzeyi's objects until the grid is known (the largest
+    /// distance, the nearest source's number asked), then its run.
+    NearObjects(Box<(Objects, f64, bool)>),
+    Near(Box<crate::distance::Near>),
 }
 
 /// The run's state.
@@ -529,7 +542,8 @@ impl PointJob {
                     }
                     PointTool::Kernel { .. }
                     | PointTool::LineDensity { .. }
-                    | PointTool::Rasterize { .. } => {
+                    | PointTool::Rasterize { .. }
+                    | PointTool::Distance { .. } => {
                         return Err("Yoğunluğun girdisi bu araca uymuyor.".into());
                     }
                 };
@@ -575,6 +589,37 @@ impl PointJob {
                     1,
                 )
             }
+            (
+                PointTool::Distance {
+                    max,
+                    result,
+                    margin,
+                },
+                PointInput::Lines { shapes, .. },
+            ) => {
+                let objects = Objects::numbered(shapes);
+                notes.taken = objects.len();
+                if objects.is_empty() {
+                    return Err(
+                        "Kaynak nesne yok: Kaynaklar'da nokta, çizgi ya da alan seçin.".into(),
+                    );
+                }
+                if !(margin.is_finite() && *margin >= 0.0) {
+                    return Err("Kenar payı 0 ya da artı bir uzunluk olmalı.".into());
+                }
+                if !(max.is_finite() && *max >= 0.0) {
+                    return Err("En büyük uzaklık 0 ya da artı olmalı.".into());
+                }
+                let b = objects.bounds().ok_or("Kaynakların yeri okunamadı.")?;
+                let allocation = *result == crate::ops::DistanceResult::Allocation;
+                (
+                    Work::NearObjects(Box::new((objects, *max, allocation))),
+                    [b[0] - margin, b[1] - margin, b[2] + margin, b[3] + margin],
+                    if allocation { "Spektral" } else { "Viridis" },
+                    false,
+                    1,
+                )
+            }
             (_, PointInput::Lines { .. }) => {
                 return Err("Çizgiler yalnız Çizgi yoğunluğu'na ve Rasterleştir'e girer.".into());
             }
@@ -583,10 +628,27 @@ impl PointJob {
             Some(g) => Grid::of(g.affine, g.width, g.height)?,
             None => Grid::of_box(box_of, spec.cell)?,
         };
+        let geographic_system = match &spec.system {
+            Some(v) => Json::parse(&v.to_string())
+                .and_then(|j| System::from_json(&j))
+                .map_err(|e| format!("Projenin koordinat sistemi okunamadı: {e}"))?
+                .is_geographic(),
+            None => false,
+        };
         let work = match work {
             Work::Objects(o) => {
                 let (objects, overlap, sample) = *o;
                 Work::Burn(Box::new(Burn::new(objects, &grid, overlap, sample)?))
+            }
+            Work::NearObjects(o) => {
+                let (objects, max, allocation) = *o;
+                Work::Near(Box::new(crate::distance::Near::new(
+                    objects,
+                    grid,
+                    geographic_system,
+                    max,
+                    allocation,
+                )?))
             }
             w => w,
         };
@@ -595,13 +657,7 @@ impl PointJob {
             _ => (RasterSample::F32, f64::NAN),
         };
         let cross = spec.cross && matches!(work, Work::Interp(_));
-        let geographic = match &spec.system {
-            Some(v) => Json::parse(&v.to_string())
-                .and_then(|j| System::from_json(&j))
-                .map_err(|e| format!("Projenin koordinat sistemi okunamadı: {e}"))?
-                .is_geographic(),
-            None => false,
-        };
+        let geographic = geographic_system;
         let (out, header) = Out::new(
             OutSpec {
                 width: grid.width,
@@ -665,8 +721,10 @@ impl PointJob {
             Work::Interp(p) => p.at(q, &mut Scratch::default()),
             Work::Kernel(d) => (d.at(q), f64::NAN),
             Work::Lines(d) => (d.at(q, &mut d.stamps()), f64::NAN),
-            // A burn's values come row by row.
-            Work::Objects(_) | Work::Burn(_) => (f64::NAN, f64::NAN),
+            // A burn's values and the distances come row by row.
+            Work::Objects(_) | Work::Burn(_) | Work::NearObjects(_) | Work::Near(_) => {
+                (f64::NAN, f64::NAN)
+            }
         }
     }
 
@@ -694,7 +752,9 @@ impl PointJob {
             } else {
                 base.nodata
             },
-            resampling: if matches!(self.work, Work::Burn(_)) {
+            resampling: if matches!(&self.work, Work::Burn(_))
+                || matches!(&self.work, Work::Near(n) if n.allocation())
+            {
                 RasterResampling::Nearest
             } else {
                 base.resampling
@@ -738,6 +798,15 @@ impl PointJob {
     fn strip(&mut self) -> Result<Vec<u8>, String> {
         let y0 = self.next;
         let n = TILE.min(self.grid.height - y0);
+        if let Work::Near(d) = &mut self.work {
+            d.compute(self.threads)?;
+            let vals = d.rows(y0, n);
+            let rows: Vec<f32> = vals.iter().map(|&v| v as f32).collect();
+            self.notes.empty += rows.iter().filter(|v| v.is_nan()).count() as u64;
+            let bytes = self.out.push(Rows::F32(&rows), n)?;
+            self.next += n;
+            return Ok(bytes);
+        }
         if let Work::Burn(b) = &mut self.work {
             let (samples, empty) = b.strip(y0, n, self.threads)?;
             self.notes.empty += empty;
@@ -778,7 +847,7 @@ impl PointJob {
                     }
                 });
             }
-            Work::Objects(_) | Work::Burn(_) => {
+            Work::Objects(_) | Work::Burn(_) | Work::NearObjects(_) | Work::Near(_) => {
                 return Err("Rasterleştirmenin nesneleri ızgaraya yerleşmedi.".into());
             }
             Work::Lines(d) => {
@@ -843,6 +912,9 @@ impl PointJob {
         let mut notes = self.notes;
         if let Work::Burn(b) = &self.work {
             notes.outside = b.outside();
+        }
+        if let Work::Near(d) = &self.work {
+            notes.outside = d.outside as usize;
         }
         let (tail, header) = self.out.finish()?;
         Ok(PointFinished {

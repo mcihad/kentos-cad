@@ -123,13 +123,13 @@ export const HELP_CROSS =
 export const ends = <S extends string, L extends string>(suffix: S, name: L) => [CELL, EXTENT, GRID, output(suffix), ADD, layer(name)] as const;
 export const endsCross = <S extends string, L extends string>(suffix: S, name: L) => [CELL, EXTENT, GRID, CROSS, output(suffix), ADD, layer(name)] as const;
 
-/** A result's name from a layer's (the desktop's `Beside::stem`): its last part, a known extension cut. */
-export function stemOfName(full: string): string {
+/** A result's name from a layer's (the desktop's `Beside::stem`): its last part, a known extension cut; `fallback` when empty. */
+export function stemOfName(full: string, fallback = 'yuzey'): string {
   const base = (full.split(/[/\\]/).pop() ?? full).split(/[?#]/)[0];
   const lower = base.toLowerCase();
   const ext = ['.copc.laz', '.laz', '.las', '.xyz', '.pts', '.txt', '.csv', '.tif', '.tiff', '.png', '.jpg', '.jpeg'].find((e) => lower.endsWith(e));
   const stem = ext ? base.slice(0, base.length - ext.length) : base;
-  return stem || 'yuzey';
+  return stem || fallback;
 }
 
 const NO_HOST = 'Bu araç rasterin dosyasını okuyup sonucu dosyaya yazar; bu ortamda dosya erişimi yok.';

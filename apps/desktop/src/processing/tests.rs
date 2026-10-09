@@ -596,10 +596,11 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     let _ = app.update(Message::Run("processing.toolbox"));
     assert!(app.docks.is_shown(Panel::Processing));
     assert_eq!(app.processing.panel.tab, Tab::Tools);
-    // The web's 59 (Yüzey analizi's eight, docs/adr/0231, İnterpolasyon and Yoğunluk's seven, docs/adr/0232, the
+    // The web's 63 (Yüzey analizi's eight, docs/adr/0231, İnterpolasyon and Yoğunluk's seven, docs/adr/0232, the
     // raster operations' nine, docs/adr/0233, Raster ve vektör and Taranmış harita's seven, docs/adr/0234, Hidroloji's
-    // eight, docs/adr/0235, among them) and the nine point cloud tools, the desktop's own for now (docs/adr/0207 §7).
-    assert_eq!(app.processing_meta(), "68 araç");
+    // eight, docs/adr/0235, Uzaklık ve maliyet's four, docs/adr/0236, among them) and the nine point cloud tools, the
+    // desktop's own for now (docs/adr/0207 §7).
+    assert_eq!(app.processing_meta(), "72 araç");
     // Turkish letters folded: “kose numara” finds Köşe noktalarını numarala only (as the web's test).
     event(
         &mut app,

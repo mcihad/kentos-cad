@@ -596,6 +596,10 @@ pub const PORTED: &[&str] = &[
     "processing.run.hydrology.watershed",
     "processing.run.hydrology.basins",
     "processing.run.hydrology.streams",
+    "processing.run.distance.euclidean",
+    "processing.run.distance.cost",
+    "processing.run.distance.path",
+    "processing.run.distance.corridor",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

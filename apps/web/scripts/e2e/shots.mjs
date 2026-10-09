@@ -6151,6 +6151,84 @@ function hydrologyScenes() {
   ];
 }
 
+// Uzaklık ve maliyet (docs/adr/0236) over the shared valley's elevation model, a cost raster made from its slope with a
+// lake that cannot be crossed, five villages and the road along the valley's south (fixtures/interaction/v1/distance.kcad,
+// scripts/fixtures/distance_scene.py): the distance from the road, the villages' nearest one, the cost from Köy A, the
+// least cost paths climbing at most 30 % and the corridor to Köy B. The desktop's are `tools_screens`' uzk-*
+// (apps/desktop/src/distance_scenes.rs), at the same places with the same values.
+const DISTANCE_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/distance.kcad', import.meta.url), 'utf8');
+const DISTANCE_COST = readFileSync(new URL('../../../../fixtures/interaction/v1/distance/maliyet.tif', import.meta.url)).toString('base64');
+SCENES.distance = distanceScenes();
+
+function distanceScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const VALLEY = [X0, Y0 - 518.4, X0 + 768, Y0];
+  /** The valley with the villages, the road and the cost raster open, the CBS ribbon's Raster on, the view on it. */
+  const opened = async (ui) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const file = (b64, name) => new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], name);
+      rasterService().setFile('rasters/dem.tif', file(${JSON.stringify(RASTER_FILES['dem.tif'])}, 'dem.tif'));
+      rasterService().setFile('distance/maliyet.tif', file(${JSON.stringify(DISTANCE_COST)}, 'maliyet.tif'));
+      if (!(await k.files.load(${JSON.stringify(DISTANCE_SCENE)}, null))) throw new Error('distance.kcad did not load');
+      k.selection.clear();
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    const b = VALLEY;
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** Runs `tool` with `values` to its end and closes its window. */
+  const runTool = async (ui, tool, values) => {
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    await ui.escapeAll(2);
+  };
+  const drawn = (runs) => async (ui) => {
+    await opened(ui);
+    for (const [tool, values] of runs) await runTool(ui, tool, values);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const windowOf = (tool, values) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const L = QUERY_LAYER;
+  const FROM_ROAD = { sources: L('yol'), extent: 'raster', grid: L('maliyet') };
+  const PATHS = { input: L('maliyet'), sources: L('baslangic'), targets: L('varis'), useSurface: true, surface: L('dem'), surfaceLength: true, slope: 30 };
+  const TO_B = { input: L('maliyet'), sources: L('baslangic'), targets: L('ikinci') };
+  return [
+    { id: 'uzk-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'uzk-yuzey', open: windowOf('distance.euclidean', FROM_ROAD), close },
+    { id: 'uzk-yuzey-cizim', open: drawn([['distance.euclidean', FROM_ROAD]]), close },
+    { id: 'uzk-tahsis-cizim', open: drawn([['distance.euclidean', { sources: L('koyler'), result: 'allocation', extent: 'raster', grid: L('maliyet') }]]), close },
+    { id: 'uzk-maliyet-cizim', open: drawn([['distance.cost', { input: L('maliyet'), sources: L('baslangic') }]]), close },
+    { id: 'uzk-yol', open: windowOf('distance.path', PATHS), close },
+    { id: 'uzk-yol-cizim', open: drawn([['distance.path', PATHS]]), close },
+    // The path's layer first: the corridor's then goes right above the cost raster, under it.
+    { id: 'uzk-koridor-cizim', open: drawn([['distance.path', TO_B], ['distance.corridor', { ...TO_B, threshold: 'percent', percent: 5 }]]), close },
+  ];
+}
+
 // Harita servisleri (docs/adr/0208) over a CBS project in TUREF / TM33 at Ankara's Kızılay: parcels and a building over
 // a ready basemap, its tiles from the service itself (the network is needed), in the project's system. The desktop's
 // are `tools_screens`' servis-* (apps/desktop/src/service_scenes.rs), the same drawing.

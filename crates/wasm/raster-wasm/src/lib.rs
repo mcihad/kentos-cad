@@ -781,6 +781,15 @@ impl OpsAnalysis {
                 "links": h.links,
                 "most": h.most,
             },
+            // Uzaklık ve maliyet (docs/adr/0236): what the run met (least and most null when no cell has a value).
+            "distance": {
+                "sources": n.distance.sources,
+                "outside": n.distance.outside,
+                "unreached": n.distance.unreached,
+                "least": n.distance.least,
+                "most": n.distance.most,
+                "cells": n.distance.cells,
+            },
         })
         .to_string();
         match job.finish().map_err(fail)? {

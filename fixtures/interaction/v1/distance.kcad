@@ -1,0 +1,319 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Güzergâh",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 2,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "gis"
+ },
+ "origin": {
+  "x": 487580.0,
+  "y": 4420340.0
+ },
+ "layers": [
+  {
+   "id": "koyler",
+   "name": "Köyler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "baslangic",
+   "name": "Başlangıç",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#2E7D32",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "varis",
+   "name": "Varış",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#1565C0",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "ikinci",
+   "name": "Koridorun ucu",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#6A1B9A",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Mevcut yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#1F2933",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "maliyet",
+   "name": "Maliyet",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "dem",
+   "name": "Yükseklik modeli",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#7A6B5B",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "maliyet",
+ "entities": [
+  {
+   "kind": "point",
+   "p": {
+    "x": 487296.0,
+    "y": 4420150.0
+   },
+   "id": 1,
+   "layerId": "koyler",
+   "attrs": {
+    "Ad": "Köy A"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487904.0,
+    "y": 4420480.0
+   },
+   "id": 2,
+   "layerId": "koyler",
+   "attrs": {
+    "Ad": "Köy B"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487600.0,
+    "y": 4420560.0
+   },
+   "id": 3,
+   "layerId": "koyler",
+   "attrs": {
+    "Ad": "Köy C"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487750.0,
+    "y": 4420180.0
+   },
+   "id": 4,
+   "layerId": "koyler",
+   "attrs": {
+    "Ad": "Köy D"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487380.0,
+    "y": 4420400.0
+   },
+   "id": 5,
+   "layerId": "koyler",
+   "attrs": {
+    "Ad": "Köy E"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487296.0,
+    "y": 4420150.0
+   },
+   "id": 6,
+   "layerId": "baslangic",
+   "attrs": {
+    "Ad": "Köy A"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487904.0,
+    "y": 4420480.0
+   },
+   "id": 7,
+   "layerId": "varis",
+   "attrs": {
+    "Ad": "Köy B"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487600.0,
+    "y": 4420560.0
+   },
+   "id": 8,
+   "layerId": "varis",
+   "attrs": {
+    "Ad": "Köy C"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487904.0,
+    "y": 4420480.0
+   },
+   "id": 9,
+   "layerId": "ikinci",
+   "attrs": {
+    "Ad": "Köy B"
+   }
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 487210.0,
+     "y": 4420230.0
+    },
+    {
+     "x": 487380.0,
+     "y": 4420210.0
+    },
+    {
+     "x": 487560.0,
+     "y": 4420250.0
+    },
+    {
+     "x": 487760.0,
+     "y": 4420200.0
+    },
+    {
+     "x": 487960.0,
+     "y": 4420240.0
+    }
+   ],
+   "id": 10,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Mevcut yol"
+   }
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487200.0,
+    1.6,
+    0.0,
+    4420600.0,
+    0.0,
+    -1.6
+   ],
+   "width": 480,
+   "height": 324,
+   "bands": 1,
+   "sample": "f32",
+   "file": "distance/maliyet.tif",
+   "srid": 5256,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "percent",
+    "ramp": "Sıcaklık"
+   },
+   "id": 11,
+   "layerId": "maliyet",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487200.0,
+    1.6,
+    0.0,
+    4420600.0,
+    0.0,
+    -1.6
+   ],
+   "width": 480,
+   "height": 324,
+   "bands": 1,
+   "sample": "f32",
+   "file": "rasters/dem.tif",
+   "srid": 5256,
+   "style": {
+    "render": "rampShade",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 12,
+   "layerId": "dem",
+   "attrs": {}
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

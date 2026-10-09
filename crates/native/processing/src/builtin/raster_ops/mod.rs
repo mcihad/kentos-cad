@@ -321,6 +321,10 @@ fn spec_kind(spec: &OpsSpec) -> &'static str {
         OpsTool::Watershed { .. } => "watershed",
         OpsTool::Basins { .. } => "basins",
         OpsTool::Streams { .. } => "streams",
+        OpsTool::Distance { .. } => "distance",
+        OpsTool::CostDistance { .. } => "costDistance",
+        OpsTool::CostPath { .. } => "costPath",
+        OpsTool::CostCorridor { .. } => "costCorridor",
     }
 }
 

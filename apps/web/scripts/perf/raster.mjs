@@ -8,12 +8,14 @@
 // vector (docs/adr/0234 §11, vector_timing.rs's work): Rasterleştir (10 000 parcels onto 4096²), Rasterden alan (a 4096²
 // class raster of some 50 000 regions), Rasterden çizgi (4096², about 3 % line cells), Rasterden nokta (Adım 10), Çizgi
 // yakala and Alan kapat on an 8192² scanned sheet, Eğrilere kot ver over 10 000 curves (in the page); then hydrology
-// (docs/adr/0235 §12, hydro_timing.rs's work): every tool over its 4096² DEM with pits and flats. Starts its own Vite dev
+// (docs/adr/0235 §12, hydro_timing.rs's work): every tool over its 4096² DEM with pits and flats; then distance and cost
+// (docs/adr/0236 §8, distance_timing.rs's work): each tool over its 4096² cost raster with lakes, the sources' raster and
+// hydrology's DEM as the surface, Uzaklık yüzeyi from 2000 points and 100 lines. Starts its own Vite dev
 // server and one headless Chrome; the DEMs are written once by GDAL into .run/perf (python3 with numpy and osgeo) and
 // fetched by the page as a file the user gave. The worker's whole run is timed: its start, the module, reading the
 // file's blocks, the job and the result's coding. Nothing else heavy may run meanwhile (docs/adr/0005).
 //
-//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector|hydro]
+//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector|hydro|distance]
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { cpus } from 'node:os';
@@ -77,6 +79,41 @@ d = None
 `;
   execFileSync('python3', ['-c', script], { stdio: 'inherit' });
   return path;
+}
+
+/** distance_timing.rs's rasters of n × n cells of 5 m: the cost (dearer up the hills, lakes without a value) and the sources'. */
+function distanceRasters(n) {
+  const cost = `${dir}maliyet-${n}.tif`;
+  const wells = `${dir}kaynaklar-${n}.tif`;
+  if (existsSync(cost) && existsSync(wells)) return { cost, wells };
+  const script = `
+import numpy as np
+from osgeo import gdal, osr
+gdal.UseExceptions()
+n = ${n}
+def hash(i, j):
+    h = (i * np.uint32(0x9e3779b9)) ^ (j * np.uint32(0x85ebca6b))
+    h ^= h >> np.uint32(15)
+    h = h * np.uint32(0x2c1b3c6d)
+    return h ^ (h >> np.uint32(12))
+i = np.arange(n, dtype=np.uint32)[None, :]
+j = np.arange(n, dtype=np.uint32)[:, None]
+x = np.arange(n, dtype=np.float64)[None, :]
+y = np.arange(n, dtype=np.float64)[:, None]
+lake = np.sin(x / 97.0) * np.cos(y / 131.0) + 0.3 * np.sin((x + y) / 41.0)
+cost = 1.0 + 4.0 * np.abs(np.sin(x / 230.0) * np.cos(y / 310.0)) + (hash(i, j) % np.uint32(100)).astype(np.float64) / 100.0
+cost = np.where(lake > 1.05, np.nan, cost).astype(np.float32)
+wells = np.where(hash(i, j) % np.uint32(20000) == 0, (hash(j, i) % np.uint32(50)).astype(np.float64) + 1.0, np.nan).astype(np.float32)
+for path, z in ((${JSON.stringify(cost)}, cost), (${JSON.stringify(wells)}, wells)):
+    d = gdal.GetDriverByName('GTiff').Create(path, n, n, 1, gdal.GDT_Float32, ['TILED=YES', 'BLOCKXSIZE=256', 'BLOCKYSIZE=256', 'COMPRESS=DEFLATE', 'ZLEVEL=1'])
+    d.SetGeoTransform([500000.0, 5.0, 0.0, 4420000.0, 0.0, -5.0])
+    s = osr.SpatialReference(); s.ImportFromEPSG(5254); d.SetProjection(s.ExportToWkt())
+    d.GetRasterBand(1).SetNoDataValue(float('nan'))
+    d.GetRasterBand(1).WriteArray(z)
+    d = None
+`;
+  execFileSync('python3', ['-c', script], { stdio: 'inherit' });
+  return { cost, wells };
 }
 
 /** A raster of n × n cells of 2 m written by `body` (numpy: `img`, uint8, `n`), tiled 256, Deflate, at `path`, unless it is there. */
@@ -324,6 +361,83 @@ img[np.broadcast_to(contour, (n, n))] = (150, 80, 30)`);
       times.sort((a, c) => a - c);
       console.log(`${job.name.padEnd(28)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
     }
+  }
+  // Uzaklık ve maliyet (docs/adr/0236 §8): distance_timing.rs's jobs, the whole worker run each (the result written or
+  // the paths made); the surface the hydrology DEM; Uzaklık yüzeyi from objects as the point job.
+  if (part('distance')) {
+    const { cost, wells } = distanceRasters(4096);
+    const surface = hydroDem(4096);
+    const at = (x, y) => ({ kind: 'point', p: { x, y } });
+    const sources = Array.from({ length: 10 }, (_, k) => at(500000 + 2000 * k + 777, 4420000 - 1500 * (k % 7) - 999));
+    const far = (k) => at(500000 + 20000 - 1700 * k - 333, 4420000 - 19000 + 2100 * k);
+    const path = [at(500777, 4419001), ...Array.from({ length: 5 }, (_, k) => far(k))];
+    const ends = [at(500777, 4419001), at(519777, 4400667)];
+    const net = { band: 1, neighbours: '16', surfaceLength: false, slope: 0 };
+    const distanceJobs = [
+      { name: 'Uzaklık yüzeyi, rasterden', budget: 3, files: [wells], tool: { kind: 'distance', band: 1, max: 0, result: 'distance' } },
+      { name: 'Uzaklık yüzeyi, en yakın kaynak', budget: 3, files: [wells], tool: { kind: 'distance', band: 1, max: 0, result: 'allocation' } },
+      { name: 'Birikimli maliyet, 8 komşu', budget: 10, files: [cost], tool: { kind: 'costDistance', ...net, neighbours: '8', max: 0, result: 'cost', sample: 'f32' }, shapes: sources },
+      { name: 'Birikimli maliyet, 16 komşu', budget: 12, files: [cost], tool: { kind: 'costDistance', ...net, max: 0, result: 'cost', sample: 'f32' }, shapes: sources },
+      { name: 'Birikimli maliyet, kaynak', budget: 13, files: [cost], tool: { kind: 'costDistance', ...net, max: 0, result: 'allocation', sample: 'f32' }, shapes: sources },
+      {
+        name: 'Birikimli maliyet, yüzey ve eğim',
+        budget: 15,
+        files: [cost, surface],
+        tool: { kind: 'costDistance', ...net, surfaceLength: true, slope: 30, max: 0, result: 'cost', sample: 'f32' },
+        shapes: sources,
+      },
+      { name: 'En düşük maliyetli yol, 5 varış', budget: 12, files: [cost], tool: { kind: 'costPath', ...net, simplify: 1, first: 1 }, shapes: path },
+      { name: 'Maliyet koridoru', budget: 18, files: [cost], tool: { kind: 'costCorridor', ...net, first: 1, threshold: 'percent', value: 5, sample: 'f32' }, shapes: ends },
+    ];
+    for (const job of distanceJobs) {
+      const times = [];
+      for (let r = 0; r < runs; r++) {
+        const ms = await b.eval(`(async () => {
+          const { analyzeOps } = await import('/src/io/rasterAnalysis.ts');
+          const files = ${JSON.stringify(job.files)};
+          const blobs = await Promise.all(files.map(async (f) => (await fetch('/@fs' + f)).blob()));
+          const spec = JSON.stringify({ tool: ${JSON.stringify(job.tool)}, inputs: files.map((_, k) => ({ affine: [500000, 5, 0, 4420000, 0, -5], name: 'AB'[k] })), epsg: 5254 });
+          const t0 = performance.now();
+          const out = await analyzeOps(blobs, spec, ${JSON.stringify(JSON.stringify(job.shapes ?? []))}, { progress() {}, canceled: false });
+          const ms = performance.now() - t0;
+          if (!out.bytes && !out.features) throw new Error('no result');
+          return ms;
+        })()`);
+        times.push(ms / 1000);
+      }
+      times.sort((a, c) => a - c);
+      console.log(`${job.name.padEnd(34)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
+    }
+    // From 2000 points and 100 lines onto the 4096² grid: the point job.
+    const h = (i, j) => {
+      let x = (Math.imul(i, 0x9e3779b9) ^ Math.imul(j, 0x85ebca6b)) >>> 0;
+      x = (x ^ (x >>> 15)) >>> 0;
+      x = Math.imul(x, 0x2c1b3c6d) >>> 0;
+      return (x ^ (x >>> 12)) >>> 0;
+    };
+    const objects = [
+      ...Array.from({ length: 2000 }, (_, k) => at(500000 + (h(k, 1) % 20480) + 0.37, 4420000 - (h(k, 2) % 20480) - 0.41)),
+      ...Array.from({ length: 100 }, (_, k) => ({
+        kind: 'line',
+        a: { x: 500000 + (h(k, 3) % 20480) + 0.13, y: 4420000 - (h(k, 4) % 20480) - 0.29 },
+        b: { x: 500000 + (h(k, 5) % 20480) + 0.71, y: 4420000 - (h(k, 6) % 20480) - 0.53 },
+      })),
+    ];
+    const pointSpec = JSON.stringify({ tool: { kind: 'distance', max: 0, result: 'distance', margin: 0 }, grid: { affine: [500000, 5, 0, 4420000, 0, -5], width: 4096, height: 4096 } });
+    const times = [];
+    for (let r = 0; r < runs; r++) {
+      const ms = await b.eval(`(async () => {
+        const { analyzePoints } = await import('/src/io/rasterAnalysis.ts');
+        const t0 = performance.now();
+        const out = await analyzePoints(${JSON.stringify(JSON.stringify(objects))}, 'null', ${JSON.stringify(pointSpec)}, true, { progress() {}, canceled: false });
+        const ms = performance.now() - t0;
+        if (!out.bytes) throw new Error('no result');
+        return ms;
+      })()`);
+      times.push(ms / 1000);
+    }
+    times.sort((a, c) => a - c);
+    console.log(`${'Uzaklık yüzeyi, 2000 nokta, 100 çizgi'.padEnd(34)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe 4 s`);
   }
 } finally {
   b.close();

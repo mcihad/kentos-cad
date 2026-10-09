@@ -1,6 +1,7 @@
 //! The tools and models that ship with KentOS (the web's `builtin/`).
 
 pub mod calculate_field;
+pub mod distance;
 pub mod edge_lengths;
 pub mod geometry;
 pub mod hydrology;
@@ -100,6 +101,11 @@ pub fn tools() -> Vec<Tool> {
         hydrology::watershed(),
         hydrology::basins(),
         hydrology::streams(),
+        // Uzaklık ve maliyet (docs/adr/0236): both platforms.
+        distance::euclidean(),
+        distance::cost(),
+        distance::path(),
+        distance::corridor(),
     ]
 }
 

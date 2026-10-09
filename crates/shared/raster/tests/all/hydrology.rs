@@ -22,7 +22,7 @@ enum Ran {
     Features(Features),
 }
 
-fn raster_of(r: &Value) -> Raster {
+pub(crate) fn raster_of(r: &Value) -> Raster {
     let a: Vec<f64> = r["affine"]
         .as_array()
         .expect("affine")
@@ -50,7 +50,7 @@ fn raster_of(r: &Value) -> Raster {
     }
 }
 
-fn shapes_of(c: &Value) -> Vec<Shape> {
+pub(crate) fn shapes_of(c: &Value) -> Vec<Shape> {
     c["shapes"]
         .as_array()
         .expect("shapes")
@@ -147,11 +147,16 @@ fn meets(got: f64, want: &Value, rule: &str) -> bool {
     }
 }
 
-fn numbers(v: &Value) -> Vec<Value> {
+pub(crate) fn numbers(v: &Value) -> Vec<Value> {
     v.as_array().cloned().unwrap_or_default()
 }
 
-fn check_features(name: &str, f: &Features, want: &Value, rule: &str) -> Result<(), String> {
+pub(crate) fn check_features(
+    name: &str,
+    f: &Features,
+    want: &Value,
+    rule: &str,
+) -> Result<(), String> {
     let kind = match f.kind {
         FeatureKind::Polygons => "polygons",
         FeatureKind::Lines => "lines",

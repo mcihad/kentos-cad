@@ -309,9 +309,12 @@ export class ProcessingRunner {
         jobValues[p.name] = t;
       }
     }
-    // A new layer named to go above or below a features input: the layer of that input's first object.
+    // A new layer named to go above or below a features input: the layer of that input's first object. An input not shown
+    // is not resolved, and names none (Uzaklık yüzeyi's objects or raster, docs/adr/0236 §2).
     const layerOf = (param: string | undefined) => {
-      const first = param ? (jobValues[param] as FeatureRef | undefined)?.ids[0] : undefined;
+      const p = param ? tool.parameters.find((d) => d.name === param) : undefined;
+      if (!p || !isVisible(p, values)) return undefined;
+      const first = (jobValues[param!] as FeatureRef | undefined)?.ids?.[0];
       return first === undefined ? undefined : this.host.doc.get(first)?.layerId;
     };
     for (const plan of newLayers.values()) {

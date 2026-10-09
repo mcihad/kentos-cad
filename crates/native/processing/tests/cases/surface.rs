@@ -172,7 +172,8 @@ fn contour_objects(k: usize, layer: &str) -> Vec<Value> {
 /// surface reference; `interpolationOf`: the interpolation reference, a
 /// second band its `error`; `rasterOpsOf`: the raster operations' reference,
 /// by its case's rule; `rasterVectorOf`: Rasterleştir's reference, exact;
-/// `hydrologyOf`: the hydrology reference, by its case's rule).
+/// `hydrologyOf`: the hydrology reference, `distanceOf`: the distance and
+/// cost reference, by their case's rule).
 fn raster_cases(name: &str, least: usize) {
     let file = case_file(name);
     let tol = file["tolerance"].as_f64().expect("a tolerance");
@@ -190,6 +191,8 @@ fn raster_cases(name: &str, least: usize) {
     let hydrology: Value =
         serde_json::from_slice(&surface_fixture("../../hydrology/v1/cases.json"))
             .expect("the hydrology reference reads");
+    let distance: Value = serde_json::from_slice(&surface_fixture("../../distance/v1/cases.json"))
+        .expect("the distance reference reads");
     let rasters: BTreeMap<String, Vec<u8>> = file["rasters"]
         .as_object()
         .map(|m| {
@@ -244,6 +247,7 @@ fn raster_cases(name: &str, least: usize) {
             ("rasterOpsOf", "ops"),
             ("rasterVectorOf", "vector"),
             ("hydrologyOf", "hydrology"),
+            ("distanceOf", "distance"),
         ] {
             for (name, of) in c["expect"][key].as_object().cloned().unwrap_or_default() {
                 wanted.push((name, of, kind));
@@ -294,12 +298,12 @@ fn raster_cases(name: &str, least: usize) {
                 }
                 continue;
             }
-            if *kind == "ops" || *kind == "hydrology" {
-                // The raster operations' or the hydrology reference: its samples by its case's rule.
-                let file = if *kind == "ops" {
-                    &raster_ops
-                } else {
-                    &hydrology
+            if matches!(*kind, "ops" | "hydrology" | "distance") {
+                // The raster operations', the hydrology or the distance reference: its samples by its case's rule.
+                let file = match *kind {
+                    "ops" => &raster_ops,
+                    "hydrology" => &hydrology,
+                    _ => &distance,
                 };
                 let reference = file["cases"]
                     .as_array()
@@ -431,6 +435,13 @@ fn the_raster_and_vector_cases_do_what_they_say() {
 #[test]
 fn the_hydrology_cases_do_what_they_say() {
     raster_cases("hydrology.json", 20);
+}
+
+/// Uzaklık ve maliyet's shared cases (fixtures/processing/v1/distance.json,
+/// scripts/fixtures/distance_processing_cases.py; docs/adr/0236).
+#[test]
+fn the_distance_cases_do_what_they_say() {
+    raster_cases("distance.json", 18);
 }
 
 /// The names an expression field offers on rasters (docs/adr/0233 §3): the
