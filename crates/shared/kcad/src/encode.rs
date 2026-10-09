@@ -15,6 +15,7 @@
 
 mod blocks;
 mod crs;
+mod filter;
 mod names;
 mod networks;
 mod objects;
@@ -36,7 +37,7 @@ use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
     SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS,
-    SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND,
+    SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND,
     SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_NETWORKS,
@@ -238,6 +239,11 @@ impl<'d> Encoder<'d> {
         }
         // Schema 34's tree rules (docs/adr/0210 §2), as a reader checks them.
         if let Some(problem) = kentos_contracts::scenarios_problem(&doc.layers) {
+            self.path.push(Seg::Name("layers"));
+            return Err(self.fail(Code::BadValue, &problem));
+        }
+        // Schema 35's tree rule (docs/adr/0211 §2), as a reader checks it.
+        if let Some(problem) = kentos_contracts::filters_problem(&doc.layers) {
             self.path.push(Seg::Name("layers"));
             return Err(self.fail(Code::BadValue, &problem));
         }
@@ -666,10 +672,11 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.feed.is_some())
                 + usize::from(n.time.is_some())
                 + usize::from(n.scenario.is_some())
-                + usize::from(n.replaces.is_some()),
+                + usize::from(n.replaces.is_some())
+                + usize::from(n.filter.is_some()),
             true,
         )?;
-        // id (2), feed name snap time type (4), style (5), fields locked (6),
+        // id (2), feed name snap time type (4), style (5), fields filter locked (6),
         // service visible (7), children expanded replaces scenario (8).
         if n.service.is_some() && n.feed.is_some() {
             return Err(self.fail(
@@ -703,6 +710,10 @@ impl<'d> Encoder<'d> {
         if fields {
             self.key("fields");
             self.at(Seg::Name("fields"), |e| e.layer_fields(n.kind, &n.fields))?;
+        }
+        if let Some(filter) = &n.filter {
+            self.key("filter");
+            self.at(Seg::Name("filter"), |e| e.layer_filter(n.kind, filter))?;
         }
         self.key("locked");
         self.w.bool(n.locked);
@@ -1008,7 +1019,8 @@ fn has_heights(s: &ProjectSettings) -> bool {
         .is_some_and(|a| *a != AnnotationHeights::default())
 }
 
-/// The oldest schema that holds the drawing: 34 when a layer has a time
+/// The oldest schema that holds the drawing: 35 when a layer has a filter
+/// (docs/adr/0211), 34 when a layer has a time
 /// setting, a group is a scenario or a layer stands for a base layer
 /// (docs/adr/0210), 33 when the project has a
 /// network (docs/adr/0209), 32 when a layer is drawn from a
@@ -1058,6 +1070,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || n.replaces.is_some()
                 || temporal(&n.children)
         })
+    }
+    fn filters(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| n.filter.is_some() || filters(&n.children))
+    }
+    // Schema 35 (docs/adr/0211): a layer's filter.
+    if filters(&doc.layers) {
+        return SCHEMA_WITH_FILTERS;
     }
     // Schema 34 (docs/adr/0210): a layer's time, a scenario, a scenario layer's base layer.
     if temporal(&doc.layers) {

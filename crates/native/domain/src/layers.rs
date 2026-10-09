@@ -52,6 +52,9 @@ pub struct NewLayer {
     pub time: Option<kentos_contracts::LayerTime>,
     pub scenario: Option<kentos_contracts::ScenarioInfo>,
     pub replaces: Option<String>,
+    /// A layer's filter (docs/adr/0211 §2), kept by the node it makes
+    /// (Başka çizimden al's layers); a group keeps none.
+    pub filter: Option<kentos_contracts::LayerFilter>,
 }
 
 impl NewLayer {
@@ -71,6 +74,7 @@ impl NewLayer {
             time: None,
             scenario: None,
             replaces: None,
+            filter: None,
         }
     }
 
@@ -406,6 +410,22 @@ impl LayerTree {
         }
     }
 
+    /// A layer's filter as it is now (docs/adr/0211 §2); None for an unknown id.
+    pub fn filter_of(&self, id: &str) -> Option<Option<kentos_contracts::LayerFilter>> {
+        self.get(id).map(|n| n.filter.clone())
+    }
+
+    /// A layer's filter, as an undo or a redo puts it.
+    pub(crate) fn replace_filter(
+        &mut self,
+        id: &str,
+        filter: Option<&kentos_contracts::LayerFilter>,
+    ) {
+        if let Some(node) = self.node_mut(id) {
+            node.filter = filter.cloned();
+        }
+    }
+
     pub(crate) fn replace_service(&mut self, id: &str, served: &crate::history::Served) {
         if let Some(node) = self.node_mut(id) {
             node.name.clone_from(&served.name);
@@ -443,6 +463,7 @@ impl LayerTree {
             time: new.time.filter(|_| new.kind == LayerNodeType::Layer),
             scenario: new.scenario.filter(|_| new.kind == LayerNodeType::Group),
             replaces: new.replaces.filter(|_| new.kind == LayerNodeType::Layer),
+            filter: new.filter.filter(|_| new.kind == LayerNodeType::Layer),
             style: new.style,
             children: Vec::new(),
         }

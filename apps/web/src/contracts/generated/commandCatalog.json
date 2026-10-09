@@ -2809,6 +2809,26 @@
             ],
             "type": "string"
           },
+          "LayerFilter": {
+            "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
+            "properties": {
+              "expression": {
+                "description": "The condition (İfadeyle seç's language, docs/adr/0100): an object\npasses when it is true.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "objects": {
+                "description": "Only these objects, by their persistent ids (Seçimden süzgeç); an id\nthe drawing does not hold is not wrong.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
           "LayerNode": {
             "description": "A node of the layer tree: a group or a layer.",
             "properties": {
@@ -2838,6 +2858,17 @@
                   "$ref": "#/$defs/LayerField"
                 },
                 "type": "array"
+              },
+              "filter": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerFilter"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
               "id": {
                 "type": "string"
@@ -7581,6 +7612,26 @@
             ],
             "type": "string"
           },
+          "LayerFilter": {
+            "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
+            "properties": {
+              "expression": {
+                "description": "The condition (İfadeyle seç's language, docs/adr/0100): an object\npasses when it is true.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "objects": {
+                "description": "Only these objects, by their persistent ids (Seçimden süzgeç); an id\nthe drawing does not hold is not wrong.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
           "LayerNode": {
             "description": "A node of the layer tree: a group or a layer.",
             "properties": {
@@ -7610,6 +7661,17 @@
                   "$ref": "#/$defs/LayerField"
                 },
                 "type": "array"
+              },
+              "filter": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerFilter"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
               "id": {
                 "type": "string"
@@ -12007,6 +12069,26 @@
             ],
             "type": "string"
           },
+          "LayerFilter": {
+            "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
+            "properties": {
+              "expression": {
+                "description": "The condition (İfadeyle seç's language, docs/adr/0100): an object\npasses when it is true.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "objects": {
+                "description": "Only these objects, by their persistent ids (Seçimden süzgeç); an id\nthe drawing does not hold is not wrong.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
           "LayerNode": {
             "description": "A node of the layer tree: a group or a layer.",
             "properties": {
@@ -12036,6 +12118,17 @@
                   "$ref": "#/$defs/LayerField"
                 },
                 "type": "array"
+              },
+              "filter": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerFilter"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
               "id": {
                 "type": "string"
@@ -73346,6 +73439,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "FeatureFeed": {
             "description": "Where a layer's objects came from, to take them again (docs/adr/0208 §10).",
             "properties": {
@@ -73653,6 +73751,26 @@
             ],
             "type": "string"
           },
+          "LayerFilter": {
+            "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
+            "properties": {
+              "expression": {
+                "description": "The condition (İfadeyle seç's language, docs/adr/0100): an object\npasses when it is true.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "objects": {
+                "description": "Only these objects, by their persistent ids (Seçimden süzgeç); an id\nthe drawing does not hold is not wrong.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
           "LayerNode": {
             "description": "A node of the layer tree: a group or a layer.",
             "properties": {
@@ -73682,6 +73800,17 @@
                   "$ref": "#/$defs/LayerField"
                 },
                 "type": "array"
+              },
+              "filter": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerFilter"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
               "id": {
                 "type": "string"
@@ -75505,6 +75634,11 @@
       },
       "plan": {
         "$defs": {
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "FeatureFeed": {
             "description": "Where a layer's objects came from, to take them again (docs/adr/0208 §10).",
             "properties": {
@@ -75812,6 +75946,26 @@
             ],
             "type": "string"
           },
+          "LayerFilter": {
+            "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
+            "properties": {
+              "expression": {
+                "description": "The condition (İfadeyle seç's language, docs/adr/0100): an object\npasses when it is true.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "objects": {
+                "description": "Only these objects, by their persistent ids (Seçimden süzgeç); an id\nthe drawing does not hold is not wrong.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
           "LayerNode": {
             "description": "A node of the layer tree: a group or a layer.",
             "properties": {
@@ -75841,6 +75995,17 @@
                   "$ref": "#/$defs/LayerField"
                 },
                 "type": "array"
+              },
+              "filter": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerFilter"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
               "id": {
                 "type": "string"
@@ -76701,6 +76866,1111 @@
           "input": {
             "operation": "apply",
             "scenario": "layer-21"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.layers.filter",
+      "version": 1,
+      "title": "Katman süzgeci",
+      "summary": "Katmanın süzgecini yazar ya da kaldırır (filter verilmezse ya da null ise): yalnız süzgeçten geçen nesneler çizilir, seçilir, kenetlenir, Öznitelik tablosunda, İşlemler'de ve Veride ara'da görünür. Süzgeç bir ifadedir (İfadeyle seç'in dili: Nitelik = 'Arsa' ve $alan > 500; doğru olan geçer, yanlış, boş ya da hatalı olan geçmez; $sıra ve $ölçek kullanılamaz) ya da nesnelerin kalıcı kimlik listesidir (Seçimden süzgeç) ya da ikisi birden (ikisinden de geçmeli). Süzgeç görünümdür: nesneler silinmez, dosya alışverişi ve komutlar bütün nesnelerle çalışır. Sonuç süzgeçten geçen ve katmanın bütün nesne sayısıdır. Katman ağacının değişikliğidir: tek geri alma adımı “Katman süzgeci”; süzgeç aynıysa hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "LayerFilter": {
+            "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
+            "properties": {
+              "expression": {
+                "description": "The condition (İfadeyle seç's language, docs/adr/0100): an object\npasses when it is true.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "objects": {
+                "description": "Only these objects, by their persistent ids (Seçimden süzgeç); an id\nthe drawing does not hold is not wrong.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.layers.filter` v1: a layer's filter written, or taken away\n(`filter` absent or null), as one undo step “Katman süzgeci”. A layer that\nalready has it as given is left as it is (`changed` false, no step).\n\nRefusals (`CommandError.code`), checked in this order: `invalid_filter`\n(`LayerFilter::problem`), `invalid_expression` (the condition does not\ncompile, or reads `$sıra` or `$ölçek`; the message says where); then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer drawn\nfrom a service: it holds no objects).",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "filter": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerFilter"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its new filter; absent or null takes it away."
+          },
+          "layer": {
+            "description": "The layer's id.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "LayersFilter",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.filter` v1.",
+        "properties": {
+          "changed": {
+            "description": "Whether the filter differed (an undo step was written).",
+            "type": "boolean"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "passed": {
+            "description": "The layer's objects that pass the filter (all of them without one).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "total": {
+            "description": "The layer's objects.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "layer",
+          "changed",
+          "passed",
+          "total",
+          "revision"
+        ],
+        "title": "LayersFiltered",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "FeatureFeed": {
+            "description": "Where a layer's objects came from, to take them again (docs/adr/0208 §10).",
+            "properties": {
+              "bbox": {
+                "description": "The area asked, `[x₁, y₁, x₂, y₂]` in the project's system; absent: all.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fetched": {
+                "description": "When they were last taken (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "description": "CQL, or ArcGIS's `where`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute that matches objects when they are taken again.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/FeedKind"
+              },
+              "limit": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "WFS's type, OGC's collection, ArcGIS's layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked of the service.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "url": {
+                "type": "string"
+              },
+              "version": {
+                "description": "WFS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "FeedKind": {
+            "description": "What a layer's objects were taken from (docs/adr/0208 §10).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wfs",
+                  "ogcFeatures"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST layer's `query`.",
+                "type": "string"
+              },
+              {
+                "const": "geojson",
+                "description": "A GeoJSON document at an address.",
+                "type": "string"
+              }
+            ]
+          },
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LayerField": {
+            "description": "A field of a layer (docs/adr/0199 §1): its name is the attribute's key.",
+            "properties": {
+              "alias": {
+                "description": "The name the table and the form show.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "default": {
+                "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind"
+              },
+              "length": {
+                "description": "A text's most characters (1–10 000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "max": {
+                "description": "A number's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "A number's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "description": "An object may not leave it empty; written only as `true`.",
+                "type": "boolean"
+              },
+              "scale": {
+                "description": "A decimal's most fraction digits (0–15).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "The values a text or a number takes, when only some.",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "enum": [
+              "text",
+              "integer",
+              "decimal",
+              "date",
+              "boolean"
+            ],
+            "type": "string"
+          },
+          "LayerFilter": {
+            "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
+            "properties": {
+              "expression": {
+                "description": "The condition (İfadeyle seç's language, docs/adr/0100): an object\npasses when it is true.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "objects": {
+                "description": "Only these objects, by their persistent ids (Seçimden süzgeç); an id\nthe drawing does not hold is not wrong.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "LayerNode": {
+            "description": "A node of the layer tree: a group or a layer.",
+            "properties": {
+              "children": {
+                "items": {
+                  "$ref": "#/$defs/LayerNode"
+                },
+                "type": "array"
+              },
+              "expanded": {
+                "type": "boolean"
+              },
+              "feed": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FeatureFeed"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the layer's objects were taken from, to take them again\n(docs/adr/0208 §10). Only a layer has it, never a group."
+              },
+              "fields": {
+                "description": "A layer's fields (docs/adr/0199 §1): the schema of its objects'\nattributes, in the order the table and the form show them; empty, no\nschema (and nothing written). Only a layer has them, never a group.",
+                "items": {
+                  "$ref": "#/$defs/LayerField"
+                },
+                "type": "array"
+              },
+              "filter": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerFilter"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
+              },
+              "id": {
+                "type": "string"
+              },
+              "locked": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "replaces": {
+                "description": "A scenario's layer: the base layer it stands for (docs/adr/0210 §9).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scenario": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ScenarioInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A group made a scenario (docs/adr/0210 §9). Only a group has it."
+              },
+              "service": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ServiceLayer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer drawn from a map service (docs/adr/0208 §2): it holds no\nobjects. Only a layer has it, never a group."
+              },
+              "snap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSnap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
+              },
+              "style": {
+                "$ref": "#/$defs/LayerStyle"
+              },
+              "time": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A temporal layer's time setting (docs/adr/0210 §2): which attributes\nhold its objects' start and end. Only a layer has it, never a group."
+              },
+              "type": {
+                "$ref": "#/$defs/LayerNodeType"
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "type",
+              "visible",
+              "locked",
+              "expanded",
+              "style",
+              "children"
+            ],
+            "type": "object"
+          },
+          "LayerNodeType": {
+            "enum": [
+              "group",
+              "layer"
+            ],
+            "type": "string"
+          },
+          "LayerSnap": {
+            "description": "A layer's own snapping (docs/adr/0163 §4): `{ \"off\": true }`, no\nsnapping to its objects; or `{ \"kinds\": [...] }`, only these kinds (as\nfar as the general kinds take them). Exactly one of the two, and a list\nthat is not empty: the readers refuse anything else ([`LayerSnap::problem`]).",
+            "properties": {
+              "kinds": {
+                "description": "Only these kinds ([`LAYER_SNAP_KINDS`]' names).",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "off": {
+                "description": "No snapping to the layer's objects; written only as `true`.",
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "LayerStyle": {
+            "description": "A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.",
+            "properties": {
+              "color": {
+                "description": "Hex colour or a theme token (fg, fg-dim, ink, paper).",
+                "type": "string"
+              },
+              "fill": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "description": "Plot line weight in mm.",
+                "format": "double",
+                "type": "number"
+              },
+              "pickInterior": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "renderer": true
+            },
+            "required": [
+              "color",
+              "lineType",
+              "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "PointStyle": {
+            "properties": {
+              "size": {
+                "description": "Diameter in CSS px.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "$ref": "#/$defs/PointSymbol"
+              }
+            },
+            "required": [
+              "symbol",
+              "size"
+            ],
+            "type": "object"
+          },
+          "PointSymbol": {
+            "enum": [
+              "ring",
+              "cross",
+              "triangle"
+            ],
+            "type": "string"
+          },
+          "ScenarioInfo": {
+            "description": "A group made a scenario (docs/adr/0210 §9): its layers are an alternative\nkept apart from the field state (Mevcut durum).",
+            "properties": {
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "ServiceKind": {
+            "description": "What a service layer draws (docs/adr/0208 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wms",
+                  "wmts"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "xyz",
+                "description": "Tiles by an address template, Web Mercator (TMS with `yFlip`).",
+                "type": "string"
+              },
+              {
+                "const": "ogcTiles",
+                "description": "OGC API Tiles' map tiles.",
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST MapServer or ImageServer: its cached tiles, else `export`.",
+                "type": "string"
+              },
+              {
+                "const": "google",
+                "description": "Google's Map Tiles API, 2D tiles.",
+                "type": "string"
+              },
+              {
+                "const": "vector",
+                "description": "Vector tiles (MVT) by a MapLibre style, a TileJSON or a template.",
+                "type": "string"
+              }
+            ]
+          },
+          "ServiceLayer": {
+            "description": "A layer drawn from a service (docs/adr/0208 §2).",
+            "properties": {
+              "attribution": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bbox": {
+                "description": "The service's extent, WGS 84 degrees (west, south, east, north), as\nits capabilities give it: what “Servisin kapsamına yakınlaştır” shows.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "description": "The project's connection whose proof goes with the requests.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dynamic": {
+                "description": "WMS and `export`: one picture of the view instead of tiles.",
+                "type": "boolean"
+              },
+              "format": {
+                "description": "The image's media type (`image/png`, …).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "grid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TileGrid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "WMTS's, OGC's and a cached ArcGIS service's matrices."
+              },
+              "kind": {
+                "$ref": "#/$defs/ServiceKind"
+              },
+              "layers": {
+                "description": "WMS's layer names; WMTS's one layer; ArcGIS's layers shown.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "matrixSet": {
+                "description": "WMTS's matrix set's identifier (`TILEMATRIXSET`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "minZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "params": {
+                "items": {
+                  "$ref": "#/$defs/ServiceParam"
+                },
+                "type": "array"
+              },
+              "preset": {
+                "description": "The ready basemap it came from.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked: WMS's `CRS`, ArcGIS's `imageSR`; a grid's own.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "style": {
+                "description": "WMS's and WMTS's style; Google's map type.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "subdomains": {
+                "description": "`{s}`'s values, taken in turn.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "template": {
+                "description": "WMTS REST's and OGC's tile template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tileSize": {
+                "description": "XYZ's and the vector tiles' tile side, pixels; absent 256.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "transparent": {
+                "description": "WMS's and `export`'s `TRANSPARENT`.",
+                "type": "boolean"
+              },
+              "url": {
+                "description": "XYZ: the template; WMS, WMTS, ArcGIS: the service's address; OGC\nAPI Tiles: the tile set's; vector: the style's, the TileJSON's or the\ntemplate; Google: empty.",
+                "type": "string"
+              },
+              "version": {
+                "description": "WMS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "yFlip": {
+                "description": "TMS: rows counted from the bottom.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "ServiceParam": {
+            "description": "A parameter sent with every request (`TIME`, `CQL_FILTER`, …): never a secret.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          "TileGrid": {
+            "description": "A service's tile grid as read: its system and its matrices, coarsest first.",
+            "properties": {
+              "matrices": {
+                "items": {
+                  "$ref": "#/$defs/TileMatrix"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "srid",
+              "matrices"
+            ],
+            "type": "object"
+          },
+          "TileMatrix": {
+            "description": "One matrix of a tile grid (docs/adr/0208 §3): its pixel's size in the\ngrid system's units, its top left corner as east and north (longitude\nand latitude), whatever order the service wrote them in, its tiles' and\nits own size in tiles.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "matrixHeight": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "matrixWidth": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "resolution": {
+                "format": "double",
+                "type": "number"
+              },
+              "tileHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "tileWidth": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "x0": {
+                "format": "double",
+                "type": "number"
+              },
+              "y0": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "resolution",
+              "x0",
+              "y0",
+              "tileWidth",
+              "tileHeight",
+              "matrixWidth",
+              "matrixHeight"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.layers.filter` would write (plan mode); nothing is written.",
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "node": {
+            "$ref": "#/$defs/LayerNode",
+            "description": "The layer as execute would leave it."
+          },
+          "passed": {
+            "description": "The layer's objects that would pass the filter, and all of them.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document revision the plan was made against.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "total": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "node",
+          "changed",
+          "passed",
+          "total",
+          "revision"
+        ],
+        "title": "LayersFilterPlan",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Yalnız büyük arsalar",
+          "input": {
+            "filter": {
+              "expression": "Nitelik = 'Arsa' ve $alan > 500"
+            },
+            "layer": "parsel"
+          },
+          "output": {
+            "changed": true,
+            "layer": "parsel",
+            "passed": 12,
+            "revision": "28",
+            "total": 68
+          }
+        },
+        {
+          "title": "Yalnız bu iki nesne (seçimden)",
+          "input": {
+            "filter": {
+              "objects": [
+                "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+                "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2002"
+              ]
+            },
+            "layer": "parsel"
+          }
+        },
+        {
+          "title": "Süzgeci kaldır",
+          "input": {
+            "layer": "parsel"
           }
         }
       ]

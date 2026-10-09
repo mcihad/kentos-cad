@@ -92,7 +92,8 @@ export class SelectSimilarTool implements Tool {
       return e ? [similarFacts(e)] : [];
     });
     if (!examples.length) return;
-    const objects = [...doc.all()].filter((e) => doc.layers.isVisible(e.layerId)).map(similarFacts);
+    // What a layer's filter leaves out is not on the layer (docs/adr/0211 §1).
+    const objects = [...doc.all()].filter((e) => doc.layers.isVisible(e.layerId) && this.ctx.view.geometry.filterShown(e.id)).map(similarFacts);
     const ids = selectableIds(this.ctx, similarTo(objects, examples, SelectSimilarTool.criteria));
     selection.set([...this.base, ...ids]);
     log.info(`Benzer ${ids.length} nesne seçildi (${criteriaText(SelectSimilarTool.criteria)}).`);

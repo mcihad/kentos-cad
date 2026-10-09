@@ -937,6 +937,7 @@ impl App {
             Some(Dialog::FindReplace) => self.find_replace = None,
             Some(Dialog::LayerMerge) => self.layer_merge = None,
             Some(Dialog::TimeLayer) => self.time.layer = None,
+            Some(Dialog::LayerFilter) => self.layer_filter = None,
             Some(Dialog::Scenario) => self.time.scenario = None,
             // The value list's window first, then Alanlar.
             Some(Dialog::LayerFields)

@@ -72,6 +72,10 @@ pub fn check_tree(tree: &[LayerNode], active: &str) -> AppResult<()> {
     if let Some(problem) = kentos_contracts::scenarios_problem(tree) {
         return Err(AppError::invalid(format!("Katman ağacı: {problem}.")));
     }
+    // The layers' filters (docs/adr/0211 §2): on a layer with objects, by their rules.
+    if let Some(problem) = kentos_contracts::filters_problem(tree) {
+        return Err(AppError::invalid(format!("Katman ağacı: {problem}.")));
+    }
     match find_layer(tree, active) {
         Some((n, _)) if n.kind == LayerNodeType::Layer => Ok(()),
         _ => Err(AppError::invalid(format!(
@@ -660,6 +664,7 @@ mod tests {
             time: None,
             scenario: None,
             replaces: None,
+            filter: None,
         }
     }
 
@@ -736,6 +741,52 @@ mod tests {
         assert!(check_tree(&[group, timed.clone()], "a").is_err());
         // A layer standing for another outside a scenario.
         assert!(check_tree(&[copy, timed], "a").is_err());
+    }
+
+    /// A layer's filter is checked as the files' readers check it (docs/adr/0211 §2): on a layer,
+    /// by its rules; a group keeps none.
+    #[test]
+    fn a_layers_filter_keeps_its_rules_on_a_layer() {
+        use kentos_contracts::{EntityId, LayerFilter};
+        let with = |kind, filter: LayerFilter| {
+            let mut n = node("a", kind, None, Vec::new());
+            n.filter = Some(filter);
+            n
+        };
+        let arsa = || LayerFilter {
+            expression: Some("Nitelik = 'Arsa'".to_owned()),
+            objects: Vec::new(),
+        };
+        assert!(check_tree(&[with(LayerNodeType::Layer, arsa())], "a").is_ok());
+        let listed = LayerFilter {
+            expression: None,
+            objects: vec![EntityId([7; 16])],
+        };
+        assert!(check_tree(&[with(LayerNodeType::Layer, listed)], "a").is_ok());
+        for (bad, says) in [
+            (LayerFilter::default(), "ne ifade ne nesne listesi"),
+            (
+                LayerFilter {
+                    expression: Some(" Nitelik = 'Arsa'".to_owned()),
+                    objects: Vec::new(),
+                },
+                "boşluk",
+            ),
+            (
+                LayerFilter {
+                    expression: None,
+                    objects: vec![EntityId([7; 16]), EntityId([7; 16])],
+                },
+                "iki kez",
+            ),
+        ] {
+            let e = check_tree(&[with(LayerNodeType::Layer, bad)], "a").expect_err(says);
+            assert!(e.to_string().contains(says), "{e}");
+        }
+        let mut group = with(LayerNodeType::Group, arsa());
+        group.children = vec![node("b", LayerNodeType::Layer, None, Vec::new())];
+        let e = check_tree(&[group], "b").expect_err("a group keeps none");
+        assert!(e.to_string().contains("grubun süzgeci olmaz"), "{e}");
     }
 
     /// A layer's fields are checked as the files' readers check them (docs/adr/0199 §1).

@@ -25,6 +25,8 @@ impl App {
             .model
             .entities()
             .filter(|e| shown.of(&doc.model, &e.base().layer_id))
+            // What a layer's filter leaves out is not on the layer (docs/adr/0211 §1).
+            .filter(|e| self.spatial.filter_shown(Slot(e.base().id)))
             // The kinds the selection filter holds (docs/adr/0187 §5).
             .filter(|e| {
                 let kept = selectable::entity_allowed(filter, e);

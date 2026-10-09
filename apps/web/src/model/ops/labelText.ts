@@ -21,7 +21,7 @@ import type { LabelStyle } from '../layers';
 export function fillTemplate(template: string | undefined, label: string): string {
   if (!template) return label;
   const i = template.indexOf('{label}');
-  return i < 0 ? template : template.slice(0, i) + label + template.slice(i + '{label}'.length);
+  return i < 0 ? template : `${template.slice(0, i)}${label}${template.slice(i + '{label}'.length)}`;
 }
 
 /** A label to write: where its object puts it, how big the object is, its text and its layer's label style. */

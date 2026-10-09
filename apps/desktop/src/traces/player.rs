@@ -421,6 +421,8 @@ pub struct Observation {
     pub hidden_layers: Vec<String>,
     pub locked_layers: Vec<String>,
     pub layers: Vec<String>,
+    /// The layer tree's counts by path, as its rows show them (docs/adr/0211 §4).
+    pub layer_counts: std::collections::BTreeMap<String, String>,
     /// The colour and line weight new objects take now.
     pub current_color: Option<String>,
     pub current_weight: Option<f64>,
@@ -1217,10 +1219,34 @@ impl<'a> Player<'a> {
             locked_layers: doc
                 .map_or_else(Vec::new, |d| layer_paths(d.model.layers(), |n| n.locked)),
             layers: doc.map_or_else(Vec::new, |d| layer_paths(d.model.layers(), |_| true)),
+            layer_counts: doc.map_or_else(Default::default, |d| layer_counts(app, d)),
             current_color: app.draft.color_text(),
             current_weight: app.draft.line_weight,
         }
     }
+}
+
+/// Every node's count as the layer tree shows it, by path (docs/adr/0211 §4).
+fn layer_counts(
+    app: &App,
+    doc: &crate::document::Document,
+) -> std::collections::BTreeMap<String, String> {
+    let layers = doc.model.layers();
+    let mut out = std::collections::BTreeMap::new();
+    let mut stack: Vec<&kentos_contracts::LayerNode> = layers.nodes().iter().collect();
+    while let Some(node) = stack.pop() {
+        let (shown, total, filtered) = app.layer_counted(doc, node);
+        out.insert(
+            layers.path(&node.id),
+            if filtered {
+                format!("{shown} / {total}")
+            } else {
+                total.to_string()
+            },
+        );
+        stack.extend(node.children.iter());
+    }
+    out
 }
 
 /// The paths of the tree's nodes that `which` takes, in tree order.

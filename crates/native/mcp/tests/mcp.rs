@@ -288,6 +288,71 @@ fn a_layers_time_and_a_scenario_go_through_their_tools() {
 }
 
 #[test]
+fn a_layers_filter_goes_through_its_tool_and_leaves_the_objects() {
+    // The traces' scene (docs/adr/0211): five parcels and two buildings with attributes.
+    let scene = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/interaction/v1/feature-table.kcad"
+    );
+    let mut server = Server::new();
+    let listed = ask(&mut server, 2, "tools/list", json!({}));
+    let tool = listed["result"]["tools"]
+        .as_array()
+        .and_then(|t| t.iter().find(|t| t["name"] == "cad.layers.filter"))
+        .expect("the command")
+        .clone();
+    // A filter is the layer's view: it takes nothing away.
+    assert_eq!(tool["annotations"]["destructiveHint"], false);
+    let opened = call(&mut server, "drawing.open", json!({ "path": scene }));
+    let drawing = opened["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let filtered = call(
+        &mut server,
+        "cad.layers.filter",
+        json!({ "drawing": drawing, "layer": "parsel", "filter": { "expression": "Ada = '101'" } }),
+    );
+    assert_eq!(filtered["isError"], false, "{filtered}");
+    let output = &filtered["structuredContent"]["output"];
+    assert_eq!(
+        (output["passed"].clone(), output["total"].clone()),
+        (json!(2), json!(5))
+    );
+    let layers = call(&mut server, "drawing.layers", json!({ "drawing": drawing }));
+    let parcels = layers["structuredContent"]["layers"]
+        .as_array()
+        .and_then(|l| l.iter().find(|n| n["id"] == "kadastro"))
+        .and_then(|g| g["children"].as_array())
+        .and_then(|c| c.iter().find(|n| n["id"] == "parsel"))
+        .expect("the parcels")
+        .clone();
+    assert_eq!(parcels["filter"], json!({ "expression": "Ada = '101'" }));
+    // The commands and queries see every object.
+    let page = call(
+        &mut server,
+        "drawing.entities",
+        json!({ "drawing": drawing, "layer": "parsel" }),
+    );
+    assert_eq!(
+        page["structuredContent"]["items"].as_array().map(Vec::len),
+        Some(5)
+    );
+    let refused = call(
+        &mut server,
+        "cad.layers.filter",
+        json!({ "drawing": drawing, "layer": "parsel", "filter": { "expression": "2 >= $sıra" } }),
+    );
+    assert_eq!(refused["isError"], true);
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"],
+        "invalid_expression"
+    );
+    let undone = call(&mut server, "drawing.undo", json!({ "drawing": drawing }));
+    assert_eq!(undone["structuredContent"]["step"], "Katman süzgeci");
+}
+
+#[test]
 fn refusals_a_model_can_act_on_are_results_and_malformed_requests_are_errors() {
     let mut server = Server::new();
     let made = call(&mut server, "drawing.new", json!({ "srid": 5256 }));

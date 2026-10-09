@@ -195,6 +195,8 @@ pub struct Store {
     times: IdMap<crate::time::Time>,
     /// The time slider's window (`set_time_window`); none, no object is left out by its time.
     time_window: Option<crate::time::Window>,
+    /// The objects their layer's filter leaves out (`set_filtered`, docs/adr/0211 §3).
+    filtered: IdSet,
 }
 
 /// An object read from the document's JSON: its id, layer, label and geometry.
@@ -331,6 +333,7 @@ impl Store {
     pub fn remove(&mut self, ids: &[f64]) {
         for id in ids {
             self.times.remove(&id.to_bits());
+            self.filtered.remove(&id.to_bits());
             if let Some(s) = self.by_id.remove(&id.to_bits()) {
                 if let Some(it) = &self.slots[s as usize] {
                     self.vacated.insert(id.to_bits(), it.order);
@@ -435,7 +438,8 @@ impl Store {
     }
 
     /// Empties the store (the layer table, label defaults, block definitions
-    /// and the time slider's window stay; the objects' times go with them).
+    /// and the time slider's window stay; the objects' times and filter marks
+    /// go with them).
     pub fn clear(&mut self) {
         let layers = (
             std::mem::take(&mut self.layer_ids),
@@ -494,6 +498,42 @@ impl Store {
         self.time_window
     }
 
+    /// The objects their layer's filter leaves out (docs/adr/0211 §3): `true`
+    /// marks one left out, `false` lets it in again. The host sends them as a
+    /// layer's filter or an object changes.
+    pub fn set_filtered(&mut self, entries: impl IntoIterator<Item = (f64, bool)>) {
+        for (id, out) in entries {
+            if out {
+                self.filtered.insert(id.to_bits());
+            } else {
+                self.filtered.remove(&id.to_bits());
+            }
+        }
+    }
+
+    /// Lets every object in again (the drawing reloaded, or its last filter gone).
+    pub fn clear_filtered(&mut self) {
+        self.filtered.clear();
+    }
+
+    /// Whether the object passes its layer's filter (always without one).
+    pub fn filter_shown(&self, id: f64) -> bool {
+        !self.filtered.contains(&id.to_bits())
+    }
+
+    /// Whether the view shows the object: it passes its layer's filter and
+    /// shows at the slider's window (docs/adr/0210 §6, 0211 §3).
+    pub fn view_shown(&self, id: f64) -> bool {
+        self.filter_shown(id) && self.time_shown(id)
+    }
+
+    /// For each of `ids`, 1 when the view shows it (a renderer's filter, in one call).
+    pub fn view_mask(&self, ids: &[f64]) -> Vec<u8> {
+        ids.iter()
+            .map(|&id| u8::from(self.view_shown(id)))
+            .collect()
+    }
+
     /// Whether the object shows at the slider's window: always without a window or a time of its own.
     pub fn time_shown(&self, id: f64) -> bool {
         match (&self.time_window, self.times.get(&id.to_bits())) {
@@ -510,10 +550,12 @@ impl Store {
             .times
             .iter()
             .filter(|(id, _)| {
-                self.by_id
-                    .get(*id)
-                    .and_then(|s| self.slots[*s as usize].as_ref())
-                    .is_some_and(|it| self.flags(it).visible)
+                !self.filtered.contains(*id)
+                    && self
+                        .by_id
+                        .get(*id)
+                        .and_then(|s| self.slots[*s as usize].as_ref())
+                        .is_some_and(|it| self.flags(it).visible)
             })
             .map(|(_, t)| {
                 count += 1;
@@ -530,9 +572,10 @@ impl Store {
             .collect()
     }
 
-    /// Whether queries see the object: its layer is shown and its time shows (docs/adr/0210 §6).
+    /// Whether queries see the object: its layer is shown, it passes the
+    /// layer's filter and its time shows (docs/adr/0210 §6, 0211 §3).
     pub fn shown(&self, it: &Item) -> bool {
-        self.flags(it).visible && self.time_shown(it.id)
+        self.flags(it).visible && self.view_shown(it.id)
     }
 
     /// Replaces the layer table: every node of the layer tree with its flags

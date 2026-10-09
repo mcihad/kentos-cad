@@ -10,6 +10,7 @@ import { entitiesEdit } from './entitiesEdit';
 import { entitiesSet } from './entitiesSet';
 import { entitiesTransform } from './entitiesTransform';
 import { layersService } from './layersService';
+import { layersFilter } from './layersFilter';
 import { layersTime } from './layersTime';
 import { lineCreate } from './lineCreate';
 import { networkDefine } from './networkDefine';
@@ -48,6 +49,8 @@ export const WEB_COMMANDS: readonly ProductCommand<never, unknown, unknown>[] = 
   // Zaman ayarları and the scenarios (docs/adr/0210 §11).
   layersTime,
   scenariosEdit,
+  // Katman süzgeci (docs/adr/0211 §5).
+  layersFilter,
 ];
 
 /** The handler of a command id and version; undefined for one the web does not run (never guessed). */

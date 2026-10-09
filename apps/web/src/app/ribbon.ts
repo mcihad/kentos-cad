@@ -347,6 +347,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'layer.fields', 'data.sources'] },
       // Veride ara (docs/adr/0178): a value in the layers' data, and a place by its coordinates.
       { pick: 'Ara', icon: 'dataSearch', commands: ['data.search', 'data.unmark'] },
+      // Katman süzgeci (docs/adr/0211 §4): the CAD ribbon has none (command search and the layer tree do).
+      { pick: 'Süzgeç', icon: 'layerFilter', commands: ['layer.filter', 'layer.filterFromSelection', 'layer.filterClear'] },
       { menu: 'file', sections: ['Dosya alışverişi'] },
       { menu: 'crs', sections: ['Koordinatlar'] },
       { pick: 'Öznitelik', icon: 'fieldCalc', commands: [processingCommandId('attributes.calculate'), processingCommandId('selection.byExpression')] },

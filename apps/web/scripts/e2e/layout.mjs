@@ -210,6 +210,26 @@ const ITEMS = [
     close: async (ui) => (await ui.run('time.slider'), await ui.eval('(() => { window.kentos.doc.undo(); window.kentos.doc.undo(); })()')),
     must: '.timebar:not([hidden])',
   },
+  // Katman süzgeci (docs/adr/0211 §4): the window over the parcels, with a condition that does not compile (its error
+  // in place), and the layer tree with a filtered layer (its funnel and “geçen / bütün”; the step undone on closing).
+  { id: 'layer-filter', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('parsel')`), await ui.run('layer.filter')), ready: '.dialog--layer-filter' },
+  {
+    id: 'layer-filter-error',
+    open: async (ui) => {
+      await ui.eval(`window.kentos.doc.layers.setActive('parsel')`);
+      await ui.run('layer.filter');
+      await ui.eval(
+        `(() => { const f = document.querySelector('.lfilter__expr'); f.value = "Nitelik = 'Arsa' ve $alan >"; f.dispatchEvent(new Event('input', { bubbles: true })); })()`,
+      );
+    },
+    must: '.lfilter__expr.is-invalid',
+  },
+  {
+    id: 'layer-tree-filtered',
+    open: (ui) => ui.eval(`window.kentos.doc.setLayerFilter('parsel', { expression: '$alan > 400' }, 'Katman süzgeci')`),
+    close: (ui) => ui.eval('window.kentos.doc.undo()'),
+    must: '.tree__filter:not([hidden])',
+  },
   { id: 'style-manager', open: (ui) => ui.run('style.manager'), ready: '.smgr__grid, .dialog' },
   { id: 'symbol-designer', open: async (ui) => (await ui.run('style.manager'), await ui.clickText('.dialog button', 'Yeni sembol'), await ui.clickText('.menu__item', 'Alan sembolü')) },
   { id: 'layer-style', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('ada')`), await ui.run('style.layerStyle')) },

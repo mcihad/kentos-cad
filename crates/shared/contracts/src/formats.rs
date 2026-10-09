@@ -100,7 +100,8 @@ use crate::layer::LineType;
 /// 43: networks (docs/adr/0209): `.kcad` document schema 33, the settings' `networks`.
 /// 44: temporal layers and scenarios (docs/adr/0210): `.kcad` document schema 34, a layer's `time`,
 ///    a group's `scenario` and a scenario layer's `replaces`.
-pub const FORMATS_VERSION: u32 = 44;
+/// 45: layer filters (docs/adr/0211): `.kcad` document schema 35, a layer's `filter`.
+pub const FORMATS_VERSION: u32 = 45;
 
 // ── Every import ────────────────────────────────────────────────────────
 

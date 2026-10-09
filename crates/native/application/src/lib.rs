@@ -44,6 +44,8 @@ mod dimension;
 pub mod edit;
 pub mod elevation;
 pub mod geometry;
+pub mod layer_filter;
+pub mod layers_filter;
 pub mod layers_service;
 pub mod layers_time;
 pub mod line;
@@ -118,5 +120,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_SCENARIOS_EDIT,
         kentos_contracts::CAD_SCENARIOS_EDIT_VERSION,
+    ),
+    // Katman süzgeci ([`layers_filter`], docs/adr/0211 §5).
+    (
+        kentos_contracts::CAD_LAYERS_FILTER,
+        kentos_contracts::CAD_LAYERS_FILTER_VERSION,
     ),
 ];

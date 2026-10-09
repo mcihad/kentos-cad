@@ -42,7 +42,9 @@ import {
 import { annotationHeightsProblem, ANNOTATION_KINDS, type AnnotationHeights } from './annotationScale';
 import { assocProblem, patternProblem } from './hatchRules';
 import type { LayerInit, LayerNode, LayerSnap } from './layers';
+import { filtersProblem } from './layerFilterRules';
 import { scenariosProblem } from './temporalRules';
+import type { LayerFilter } from '../contracts/generated/LayerFilter';
 import type { LayerTime } from '../contracts/generated/LayerTime';
 import type { ScenarioInfo } from '../contracts/generated/ScenarioInfo';
 import { DRAWING_FONT_IDS, DRAWING_UNIT_IDS, LEGACY_HYBRID, WORKSPACE_IDS } from './projectSettings';
@@ -420,6 +422,9 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
   // The layers' time settings and scenarios (docs/adr/0210 §2), the tree whole.
   const scenarioFault = scenariosProblem(layers as unknown as LayerNode[]);
   if (scenarioFault) fail('Katmanlar', scenarioFault);
+  // Schema 35's tree rule (docs/adr/0211 §2): filters on layers that hold objects, each by its rule.
+  const filterFault = filtersProblem(layers as unknown as LayerNode[]);
+  if (filterFault) fail('Katmanlar', filterFault);
   // The project's connections (docs/adr/0208 §2), and the links of its layers' services: a connection named is one of
   // them, no layer has both; an object on a service layer is refused as it is read (`entity`).
   const connections = settings.connections === undefined ? undefined : readConnections(settings.connections, 'Proje ayarları › bağlantılar', fail);
@@ -599,6 +604,7 @@ function layer(v: unknown, where: string): LayerInit {
     ...(v.time !== undefined && { time: layerTimeAt(v.time, `${w} › zaman`) }),
     ...(v.scenario !== undefined && { scenario: scenarioAt(v.scenario, `${w} › senaryo`) }),
     ...(v.replaces !== undefined && { replaces: str(v.replaces, `${w} › yerine geçtiği katman`) }),
+    ...(v.filter !== undefined && { filter: layerFilterAt(v.filter, `${w} › süzgeç`) }),
   };
 }
 
@@ -612,6 +618,17 @@ function layerTimeAt(v: unknown, where: string): LayerTime {
     ...(v.end !== undefined && { end: str(v.end, `${where} › bitiş`) }),
     ...(v.key !== undefined && { key: str(v.key, `${where} › kimlik`) }),
     ...(v.cumulative === true && { cumulative: true }),
+  };
+}
+
+/** A layer's filter (docs/adr/0211 §2): its condition and its objects' ids, each when it has them; the rule whole in `head`. */
+function layerFilterAt(v: unknown, where: string): LayerFilter {
+  if (!isObj(v)) return fail(where, 'nesne olmalı');
+  if (Object.keys(v).some((k) => k !== 'expression' && k !== 'objects')) return fail(where, 'yalnız expression ve objects olabilir');
+  if (v.objects !== undefined && !Array.isArray(v.objects)) return fail(`${where} › nesneler`, 'liste olmalı');
+  return {
+    ...(v.expression !== undefined && { expression: str(v.expression, `${where} › ifade`) }),
+    ...(Array.isArray(v.objects) && { objects: v.objects.map((x, i) => str(x, `${where} › nesneler › ${i + 1}`)) }),
   };
 }
 

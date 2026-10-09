@@ -316,7 +316,22 @@ impl App {
         {
             return index.clone();
         }
-        let made = Rc::new(index(&doc.model));
+        let mut made = index(&doc.model);
+        // A layer's filter leaves out what it does not pass (docs/adr/0211 §1).
+        if made.slots.iter().any(|s| !self.spatial.filter_shown(*s)) {
+            let keep: Vec<bool> = made
+                .slots
+                .iter()
+                .map(|s| self.spatial.filter_shown(*s))
+                .collect();
+            let mut k = keep.iter();
+            made.slots.retain(|_| *k.next().unwrap_or(&true));
+            let mut k = keep.iter();
+            made.layer_ids.retain(|_| *k.next().unwrap_or(&true));
+            let mut k = keep.iter();
+            made.records.retain(|_| *k.next().unwrap_or(&true));
+        }
+        let made = Rc::new(made);
         *self.search.indexed.borrow_mut() = Some((key, made.clone()));
         made
     }

@@ -168,6 +168,8 @@ pub enum Dialog {
     LayerMerge,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
     LayerFields,
+    /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.
+    LayerFilter,
     /// Bağlantılar (services/connections.rs).
     Connections,
     /// Harita servisi (services/window.rs).
@@ -380,6 +382,8 @@ pub enum Message {
     AttributeValues(crate::attribute_values::Event),
     FindReplace(crate::find_replace::Event),
     LayerMerge(crate::layer_merge::Event),
+    /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
+    LayerFilter(crate::layer_filters::Event),
     /// Katman durumları's window and Katman durumları ▾ (layer_states.rs).
     LayerStates(crate::layer_states::Event),
     AnnotationStyles(crate::annotation_styles::Event),
@@ -754,6 +758,8 @@ pub struct App {
     pub(crate) isolated_layers: Vec<String>,
     /// Katmanları birleştir's window (layer_merge.rs, docs/adr/0177 §3).
     pub(crate) layer_merge: Option<crate::layer_merge::Window>,
+    /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
+    pub(crate) layer_filter: Option<crate::layer_filters::Window>,
     /// Katman durumları's window (layer_states.rs, docs/adr/0177 §4).
     pub(crate) layer_states_window: Option<crate::layer_states::Window>,
     /// Yazı stilleri or Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5).
@@ -1026,6 +1032,7 @@ impl App {
             template_names: std::collections::HashMap::new(),
             isolated_layers: Vec::new(),
             layer_merge: None,
+            layer_filter: None,
             layer_states_window: None,
             annotation_styles: None,
             layer_purge: None,
@@ -1319,6 +1326,8 @@ impl App {
         self.selection.retain(|slot| model.get(slot).is_some());
         // The slider's range follows the drawing (docs/adr/0210 §5).
         self.time_refresh();
+        // A new object its layer's filter leaves out is said (docs/adr/0211 §3).
+        self.say_hidden_new();
     }
 
     fn handle(&mut self, message: Message) -> Task<Message> {
@@ -1481,6 +1490,7 @@ impl App {
             Message::AttributeValues(event) => self.attribute_values_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
             Message::LayerMerge(event) => return self.layer_merge_event(event),
+            Message::LayerFilter(event) => return self.layer_filter_event(event),
             Message::LayerStates(event) => return self.layer_states_event(event),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
@@ -2143,6 +2153,11 @@ impl App {
             }
             "layer.purge" => self.open_layer_purge(),
             "layer.list" => self.open_layer_list(),
+            // Katman süzgeci (layer_filters.rs, docs/adr/0211 §4): the active layer's; Katmanlar's menu names its
+            // layer (layering.rs).
+            "layer.filter" => return self.open_layer_filter(None),
+            "layer.filterFromSelection" => self.filter_from_selection(None),
+            "layer.filterClear" => self.clear_layer_filter(None),
             // Veri karşılaştır (docs/adr/0179).
             "data.compare" => self.open_data_compare(),
             // Harita servisleri (services/, docs/adr/0208 §14).

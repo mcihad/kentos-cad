@@ -354,10 +354,15 @@ def take_layers(ours, theirs, paths, same, taken):
             last = depth == len(here) - 1
             if hit is None:
                 made = {**copy.deepcopy(source), "id": free_id(source["id"], taken), "children": []}
-                # A scenario's links name the other drawing's layers: they do not come; the time setting does
-                # (docs/adr/0210 §9).
+                # A scenario's links name the other drawing's layers, a filter's list its objects: they do not come;
+                # the time setting and the filter's condition do (docs/adr/0210 §9, 0211 §2).
                 made.pop("scenario", None)
                 made.pop("replaces", None)
+                if "filter" in made:
+                    if made["filter"].get("expression") is not None:
+                        made["filter"] = {"expression": made["filter"]["expression"]}
+                    else:
+                        made.pop("filter")
                 parent_list.append(made)
                 parent_list = made["children"]
                 continue
@@ -690,6 +695,13 @@ THEIRS_SCENARIO["layers"].insert(0, {**group("k-oneri", "Öneri", [{**layer("k-o
 THEIRS_SCENARIO["entities"].append({"kind": "polygon", "id": 11, "layerId": "k-oneri-yol", "attrs": {"acilis": "2026-01-01"}, "pts": square(-10, -8, 60, -2)})
 THEIRS_SCENARIO["uids"].append(U(0x200B))
 
+# The source drawing with layer filters (docs/adr/0211): Bina by a condition and a list, Yol by a list alone; neither
+# is ours.
+THEIRS_FILTER = copy.deepcopy(THEIRS)
+THEIRS_FILTER["name"] = "Kaynak (süzgeç)"
+THEIRS_FILTER["layers"][1]["children"][1]["filter"] = {"expression": "Kat >= 3", "objects": [U(0x2001)]}
+THEIRS_FILTER["layers"][2]["filter"] = {"objects": [U(0x2003)]}
+
 
 # ── The cases ─────────────────────────────────────────────────────────
 
@@ -707,7 +719,8 @@ def build():
         "format": "kentos.exchange-cases",
         "version": 1,
         "source": SOURCE,
-        "drawings": {"ours": OURS, "theirs": THEIRS, "theirsLook": THEIRS_LOOK, "theirsScenario": THEIRS_SCENARIO},
+        "drawings": {"ours": OURS, "theirs": THEIRS, "theirsLook": THEIRS_LOOK, "theirsScenario": THEIRS_SCENARIO,
+                     "theirsFilter": THEIRS_FILTER},
         "selections": [
             {"name": "parsel, bağlı yazısı, lamba (iç içe Direk), ilişkisi kaydedilmeyen nesneye taramanın, tablo ve resim",
              "from": "theirs", "uids": [U(0x2001), U(0x2004), U(0x2005), U(0x2006), U(0x2007), U(0x2008)],
@@ -726,6 +739,9 @@ def build():
             {"name": "senaryo grubu sıradan grup olarak, yerine geçen katman bağsız gelir; zaman ayarları gelir",
              "into": "ours", "from": "theirsScenario", "picks": {"layers": ["Öneri / Yol", "Yol"]}, "same": "skip",
              "expect": take(OURS, THEIRS_SCENARIO, {"layers": ["Öneri / Yol", "Yol"]}, "skip")},
+            {"name": "süzgecin koşulu gelir, nesne listesi gelmez (öbür çizimin nesneleri); yalnız listesi olan süzgeç hiç gelmez",
+             "into": "ours", "from": "theirsFilter", "picks": {"layers": ["Kadastro / Bina", "Yol"]}, "same": "skip",
+             "expect": take(OURS, THEIRS_FILTER, {"layers": ["Kadastro / Bina", "Yol"]}, "skip")},
         ],
         "files": [
             {"name": "kaynak çizim blok olur: resim ve tablo kalır, katmanlar yoluyla açılır, Direk'in adı sayı alır",
@@ -738,6 +754,8 @@ def build():
              "into": "ours", "from": "theirs", "path": "Yol", "expect": layer_take(OURS, THEIRS, "Yol")},
             {"name": "açılan katmanın görünüşünün simgesi ve resmi de gelir, taramanın ilişkisi düşer",
              "into": "ours", "from": "theirsLook", "path": "Kadastro / Bina", "expect": layer_take(OURS, THEIRS_LOOK, "Kadastro / Bina")},
+            {"name": "açılan katmanın süzgecinin koşulu gelir, nesne listesi gelmez: nesneler yeni kimlikle gelir",
+             "into": "ours", "from": "theirsFilter", "path": "Kadastro / Bina", "expect": layer_take(OURS, THEIRS_FILTER, "Kadastro / Bina")},
             {"name": "grup katman değildir", "into": "ours", "from": "theirs", "path": "Kadastro", "expect": layer_take(OURS, THEIRS, "Kadastro")},
             {"name": "olmayan yol", "into": "ours", "from": "theirs", "path": "Yok", "expect": layer_take(OURS, THEIRS, "Yok")},
             {"name": "senaryonun katmanı nesneleriyle bağsız gelir, grubu sıradan grup",

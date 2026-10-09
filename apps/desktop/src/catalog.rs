@@ -570,6 +570,10 @@ pub const PORTED: &[&str] = &[
     "scenario.base",
     "scenario.compare",
     "scenario.apply",
+    // docs/adr/0211: Katman süzgeci (layer_filters.rs).
+    "layer.filter",
+    "layer.filterFromSelection",
+    "layer.filterClear",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

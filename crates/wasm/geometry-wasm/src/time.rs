@@ -1,6 +1,6 @@
 //! Temporal layers across the boundary (docs/adr/0210 §4–§6): a layer's
 //! objects' times from their texts in one call, and the store's times and
-//! the time slider's window. The small calls (reading, writing, steps and
+//! the time slider's window; and the layers' filters' marks (docs/adr/0211 §3). The small calls (reading, writing, steps and
 //! positions) go through the core's call table (`time::OPS`).
 
 use kentos_geometry_core::time::{self, Mode, Rule, Time, Window};
@@ -190,5 +190,26 @@ impl GeometryStore {
     #[wasm_bindgen(js_name = timeMask)]
     pub fn time_mask(&self, ids: &[f64]) -> Vec<u8> {
         self.store().time_mask(ids)
+    }
+
+    /// The objects their layer's filter leaves out (docs/adr/0211 §3): per id
+    /// in `ids`, 1 in `out` leaves it out, 0 lets it in again.
+    #[wasm_bindgen(js_name = setFiltered)]
+    pub fn set_filtered(&mut self, ids: &[f64], out: &[u8]) {
+        self.store_mut()
+            .set_filtered(ids.iter().copied().zip(out.iter().map(|&o| o != 0)));
+    }
+
+    /// Lets every object in again (no layer is filtered any more).
+    #[wasm_bindgen(js_name = clearFiltered)]
+    pub fn clear_filtered(&mut self) {
+        self.store_mut().clear_filtered();
+    }
+
+    /// For each of `ids`, 1 when the view shows it: it passes its layer's
+    /// filter and shows at the slider's window (the layer builder's filter).
+    #[wasm_bindgen(js_name = viewMask)]
+    pub fn view_mask(&self, ids: &[f64]) -> Vec<u8> {
+        self.store().view_mask(ids)
     }
 }

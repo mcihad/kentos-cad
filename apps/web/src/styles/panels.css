@@ -227,6 +227,19 @@
 .tree__clock[hidden] {
   display: none;
 }
+/* A filtered layer's funnel (docs/adr/0211 §4); a condition that does not compile shows it in the warning colour. */
+.tree__filter {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  color: var(--c-accent);
+}
+.tree__filter[data-error] {
+  color: var(--c-warn);
+}
+.tree__filter[hidden] {
+  display: none;
+}
 .tree__fail {
   display: inline-flex;
   flex: none;

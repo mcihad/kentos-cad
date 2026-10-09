@@ -258,6 +258,7 @@ fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
         time: None,
         scenario: None,
         replaces: None,
+        filter: None,
     }
 }
 

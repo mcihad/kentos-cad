@@ -806,6 +806,12 @@ export const ICONS = {
   timeLast: '<path d="M15 5v10M5.5 5l5 5-5 5"/>',
   pause: '<rect x="5.5" y="4.5" width="3" height="11" rx=".8" fill="currentColor" stroke="none"/><rect x="11.5" y="4.5" width="3" height="11" rx=".8" fill="currentColor" stroke="none"/>',
   loop: '<path d="M3.5 10.5V9a4 4 0 0 1 4-4h7.5"/><path d="M13 2.8 15.2 5 13 7.2"/><path d="M16.5 9.5V11a4 4 0 0 1-4 4H5"/><path d="M7 17.2 4.8 15 7 12.8"/>',
+  // Katman süzgeci (docs/adr/0211 §4): a layer with a funnel; a dashed selection box round two grips with a funnel; a
+  // funnel and a cross. A filtered layer's badge in the tree: a funnel, filled to read at 12 px.
+  layerFilter: '<path d="M2.5 8.2 8.5 5l6 3.2-6 3.2z"/><path d="m2.5 11.4 6 3.2 2.2-1.2"/><path d="M11 10.5h7.5l-2.9 3.4v3.7l-1.7-.9v-2.8z"/>',
+  layerFilterSelection: `<rect x="2.5" y="3" width="10" height="9.5" rx="1" stroke-dasharray="2 1.6"/>${grip(5.5, 6.5)}${grip(9.2, 9.5)}<path d="M11 10.5h7.5l-2.9 3.4v3.7l-1.7-.9v-2.8z"/>`,
+  layerFilterClear: '<path d="M2.5 3.5h12l-4.6 5.4v6.2l-2.8-1.4V8.9z"/><path d="m13 12 4.5 4.5m0-4.5L13 16.5"/>',
+  funnel: '<path d="M3 4h14l-5.5 6.5V16l-3-1.5v-4z" fill="currentColor" fill-opacity=".3"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

@@ -129,6 +129,11 @@ SCHEMA_WITH_SERVICES = 32
 SCHEMA_WITH_NETWORKS = 33
 # Schema 34: schema 33 and a layer node's `time`, a group's `scenario`, a scenario layer's `replaces` (docs/adr/0210 §2).
 SCHEMA_WITH_TEMPORAL = 34
+# Schema 35: schema 34 and a layer node's `filter` (docs/adr/0211 §2).
+SCHEMA_WITH_FILTERS = 35
+# A filter's bounds (kentos_contracts::layer_filter).
+FILTER_EXPRESSION_MAX = 10_000
+FILTER_OBJECTS_MAX = 100_000
 # A time setting's field names and a scenario's note (kentos_contracts::temporal).
 TIME_FIELD_MAX = 64
 SCENARIO_NOTE_MAX = 500
@@ -248,7 +253,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -709,6 +714,50 @@ def scenario_problem(s):
         return "senaryonun notu boş ya da başında veya sonunda boşluk var"
     if len(note) > SCENARIO_NOTE_MAX:
         return f"senaryonun notu {SCENARIO_NOTE_MAX} karakterden uzun"
+    return None
+
+
+def layer_filter_problem(f):
+    """A layer's filter (kentos_contracts::layer_filter::LayerFilter::problem, docs/adr/0211 §2): a condition or a list
+    of objects or both; the condition trimmed, 1–10 000 characters; the list at most 100 000 ids, each once (the reader
+    refuses an empty one: an empty list is not written)."""
+    if "expression" not in f and not f.get("objects"):
+        return "süzgeçte ne ifade ne nesne listesi var"
+    e = f.get("expression")
+    if e is not None:
+        if e.strip() != e or not e:
+            return "süzgecin ifadesi boş ya da başında veya sonunda boşluk var"
+        if len(e) > FILTER_EXPRESSION_MAX:
+            return f"süzgecin ifadesi {FILTER_EXPRESSION_MAX} karakterden uzun"
+    objects = f.get("objects")
+    if objects is not None:
+        if not objects:
+            return "süzgecin nesne listesi boş; boş liste yazılmaz"
+        if len(objects) > FILTER_OBJECTS_MAX:
+            return f"süzgecin listesinde {len(objects)} nesne var; en çok {FILTER_OBJECTS_MAX}"
+        seen = set()
+        for x in objects:
+            if x in seen:
+                return f"süzgecin listesinde {x} iki kez var"
+            seen.add(x)
+    return None
+
+
+def filters_problem(layers):
+    """The tree's filters (kentos_contracts::layer_filter::filters_problem, docs/adr/0211 §2): a filter only on a layer
+    that holds objects (not a group, not a layer drawn from a service), and every filter by its rule."""
+    for n in layers:
+        if "filter" in n:
+            if n["type"] == "group":
+                return f"“{n['name']}” bir grup; grubun süzgeci olmaz, süzgeç katmanındır"
+            if "service" in n:
+                return f"“{n['name']}” servisten çizilir; nesnesi olmayan katmanın süzgeci olmaz"
+            p = layer_filter_problem(n["filter"])
+            if p:
+                return f"“{n['name']}” katmanının süzgeci: {p}"
+        p = filters_problem(n["children"])
+        if p:
+            return p
     return None
 
 
@@ -1313,6 +1362,7 @@ class _Schema:
         self.services = version >= SCHEMA_WITH_SERVICES
         self.networks = version >= SCHEMA_WITH_NETWORKS
         self.temporal = version >= SCHEMA_WITH_TEMPORAL
+        self.filters = version >= SCHEMA_WITH_FILTERS
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -1340,6 +1390,11 @@ class _Schema:
             self.fail("bad_value", words)
         # Schema 34's tree rules (docs/adr/0210 §2).
         tree = scenarios_problem(d["layers"])
+        if tree:
+            self.path.append("layers")
+            self.fail("bad_value", tree)
+        # Schema 35's tree rule (docs/adr/0211 §2).
+        tree = filters_problem(d["layers"])
         if tree:
             self.path.append("layers")
             self.fail("bad_value", tree)
@@ -1747,6 +1802,7 @@ class _Schema:
                 **({"fields": (self.layer_fields_, False)} if self.layer_fields else {}),
                 **({"service": (self.service_, False), "feed": (self.feed_, False)} if self.services else {}),
                 **({"time": (self.layer_time_, False), "scenario": (self.scenario_, False), "replaces": (self.text, False)} if self.temporal else {}),
+                **({"filter": (self.layer_filter_, False)} if self.filters else {}),
                 "type": (self.enum(("group", "layer")), True),
                 "style": (self.layer_style, True),
                 "locked": (self.bool, True),
@@ -1771,7 +1827,18 @@ class _Schema:
             self.fail("bad_value", "katman senaryo olmaz; yalnız grup senaryodur")
         if "replaces" in n and n["type"] == "group":
             self.fail("bad_value", "grup bir katmanın yerine geçmez; yalnız katman geçer")
+        if "filter" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun süzgeci olmaz; süzgeç yalnız katmanındır")
         return n
+
+    # Schema 35's layer filter (docs/adr/0211 §2): read field by field, then checked by the contract's rule.
+
+    def layer_filter_(self, v):
+        f = self.fields({"objects": (self.array(self.id16), False), "expression": (self.text, False)})(v)
+        p = layer_filter_problem(f)
+        if p:
+            self.fail("bad_value", p)
+        return f
 
     # Schema 34's time settings and scenarios (docs/adr/0210 §2): read field by field, then checked by the contract's rules.
 

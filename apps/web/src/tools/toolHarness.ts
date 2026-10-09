@@ -95,6 +95,8 @@ export function toolHarness() {
       dimensionText: (l: Measured, look: DimensionLook = {}) => format.dimension(l, look),
       requestTextInput: (req: TextInputRequest) => void state.textInputs.push(req),
       focus: () => {},
+      // The view's picker: no layer filtered (docs/adr/0211), as a drawing without filters.
+      geometry: { filterShown: () => true, viewShown: (ids: readonly number[]) => new Uint8Array(ids.length).fill(1) },
     },
     // The manager's `exit` (tools/ToolManager.ts): the running tool's `cancel` first, and it leaves when that says no.
     tools: { exit: () => void (state.tool?.cancel?.() || state.exited++) },

@@ -20,6 +20,7 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.edit": entities.edit,
     "cad.entities.set": entities.set,
     "cad.entities.transform": entities.transform,
+    "cad.layers.filter": layers.filter,
     "cad.layers.service": layers.service,
     "cad.layers.time": layers.time,
     "cad.line.create": line.create,

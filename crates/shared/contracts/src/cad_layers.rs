@@ -200,3 +200,73 @@ pub struct LayersTimePlan {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
+
+/// Writes or takes away a layer's filter (docs/adr/0211 §5).
+pub const CAD_LAYERS_FILTER: &str = "cad.layers.filter";
+pub const CAD_LAYERS_FILTER_VERSION: u32 = 1;
+
+/// Input of `cad.layers.filter` v1: a layer's filter written, or taken away
+/// (`filter` absent or null), as one undo step “Katman süzgeci”. A layer that
+/// already has it as given is left as it is (`changed` false, no step).
+///
+/// Refusals (`CommandError.code`), checked in this order: `invalid_filter`
+/// (`LayerFilter::problem`), `invalid_expression` (the condition does not
+/// compile, or reads `$sıra` or `$ölçek`; the message says where); then
+/// `invalid_revision`, `revision_conflict` (status `conflict`),
+/// `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer drawn
+/// from a service: it holds no objects).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersFilter {
+    /// The layer's id.
+    pub layer: String,
+    /// Its new filter; absent or null takes it away.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub filter: Option<crate::layer_filter::LayerFilter>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.layers.filter` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersFiltered {
+    pub layer: String,
+    /// Whether the filter differed (an undo step was written).
+    pub changed: bool,
+    /// The layer's objects that pass the filter (all of them without one).
+    pub passed: u32,
+    /// The layer's objects.
+    pub total: u32,
+    /// The document's revision after the write, as decimal text.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.layers.filter` would write (plan mode); nothing is written.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersFilterPlan {
+    /// The layer as execute would leave it.
+    pub node: LayerNode,
+    pub changed: bool,
+    /// The layer's objects that would pass the filter, and all of them.
+    pub passed: u32,
+    pub total: u32,
+    /// The document revision the plan was made against.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}

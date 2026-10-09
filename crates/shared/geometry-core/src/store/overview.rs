@@ -86,7 +86,7 @@ impl Store {
             .filter_map(|&e| self.ordered_item(e))
             .filter(|it| {
                 self.flags.get(it.layer as usize).is_none_or(|f| f.visible)
-                    && self.time_shown(it.id)
+                    && self.view_shown(it.id)
             })
             .filter(|it| !matches!(look(&it.shape), Look::Never) && finite(&it.bounds))
     }

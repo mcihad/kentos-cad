@@ -226,6 +226,9 @@ pub struct Expect {
     pub(super) locked_layers: Option<Vec<String>>,
     /// Every layer and group by its path, in tree order (docs/adr/0177 §5).
     pub(super) layers: Option<Vec<String>>,
+    /// The layer tree's counts as its rows show them, by path (“Kadastro / Parsel”): “geçen / bütün” where a
+    /// filter leaves objects out (docs/adr/0211 §4); only the rows named, each exactly.
+    pub(super) layer_counts: Option<std::collections::BTreeMap<String, String>>,
     /// The colour and line weight new objects take now (the ribbon's
     /// Renk and Kalınlık); `null` the layer's, and absent differ.
     #[serde(default, deserialize_with = "present")]

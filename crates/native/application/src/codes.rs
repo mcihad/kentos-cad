@@ -238,3 +238,10 @@ pub const NO_SCENARIO: &str = "no_scenario";
 pub const NOT_A_BASE_LAYER: &str = "not_a_base_layer";
 /// `apply` of a node that is not a scenario group.
 pub const SCENARIO_NOT_FOUND: &str = "scenario_not_found";
+
+// ── cad.layers.filter (docs/adr/0211 §5) ───────────────────────────────
+
+/// A filter against its rules (`LayerFilter::problem`).
+pub const INVALID_FILTER: &str = "invalid_filter";
+/// A filter's condition that does not compile, or reads `$sıra` or `$ölçek`.
+pub const INVALID_EXPRESSION: &str = "invalid_expression";

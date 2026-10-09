@@ -1831,6 +1831,49 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // Katman süzgeci (docs/adr/0211 §5), held together by fixtures/commands/v1/cad.layers.filter.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_FILTER.into(),
+            version: crate::CAD_LAYERS_FILTER_VERSION,
+            title: "Katman süzgeci".into(),
+            summary: "Katmanın süzgecini yazar ya da kaldırır (filter verilmezse ya da null ise): yalnız süzgeçten geçen nesneler çizilir, seçilir, kenetlenir, Öznitelik tablosunda, İşlemler'de ve Veride ara'da görünür. \
+                      Süzgeç bir ifadedir (İfadeyle seç'in dili: Nitelik = 'Arsa' ve $alan > 500; doğru olan geçer, yanlış, boş ya da hatalı olan geçmez; $sıra ve $ölçek kullanılamaz) ya da nesnelerin kalıcı kimlik listesidir (Seçimden süzgeç) ya da ikisi birden (ikisinden de geçmeli). \
+                      Süzgeç görünümdür: nesneler silinmez, dosya alışverişi ve komutlar bütün nesnelerle çalışır. \
+                      Sonuç süzgeçten geçen ve katmanın bütün nesne sayısıdır. Katman ağacının değişikliğidir: tek geri alma adımı “Katman süzgeci”; süzgeç aynıysa hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersFilter>(),
+            output: schema::<crate::LayersFiltered>(),
+            plan: Some(schema::<crate::LayersFilterPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Yalnız büyük arsalar".into(),
+                    input: json!({ "layer": "parsel", "filter": { "expression": "Nitelik = 'Arsa' ve $alan > 500" } }),
+                    output: Some(json!({ "layer": "parsel", "changed": true, "passed": 12, "total": 68, "revision": "28" })),
+                },
+                CommandExample {
+                    title: "Yalnız bu iki nesne (seçimden)".into(),
+                    input: json!({
+                        "layer": "parsel",
+                        "filter": { "objects": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2002"] }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Süzgeci kaldır".into(),
+                    input: json!({ "layer": "parsel" }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -2018,6 +2061,9 @@ mod tests {
                     crate::CAD_SCENARIOS_EDIT => {
                         serde_json::from_value::<crate::ScenariosEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_FILTER => {
+                        serde_json::from_value::<crate::LayersFilter>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -2088,6 +2134,10 @@ mod tests {
                         }
                         crate::CAD_SCENARIOS_EDIT => {
                             serde_json::from_value::<crate::ScenariosEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_FILTER => {
+                            serde_json::from_value::<crate::LayersFiltered>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

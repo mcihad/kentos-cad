@@ -82,8 +82,23 @@ fn layer_name<'a>(doc: &'a Document, id: &str) -> &'a str {
     doc.layers().get(id).map_or("?", |l| l.name.as_str())
 }
 
-/// Objects in scope, before the kind filter.
+/// Objects in scope, before the kind filter: a layer's filter leaves out
+/// what it does not pass (docs/adr/0211 §1), in every scope but a model's own
+/// step outputs.
 fn in_scope<'d>(value: &FeaturesValue, host: &'d dyn Scene) -> Vec<&'d Entity> {
+    let doc = host.doc();
+    if let Scope::Ids(ids) = &value.scope {
+        return ids.iter().filter_map(|id| doc.get(Slot(*id))).collect();
+    }
+    let out = kentos_native_application::layer_filter::left_out(doc);
+    let mut list = scoped(value, host);
+    if !out.is_empty() {
+        list.retain(|e| !out.contains(&Slot(e.base().id)));
+    }
+    list
+}
+
+fn scoped<'d>(value: &FeaturesValue, host: &'d dyn Scene) -> Vec<&'d Entity> {
     let doc = host.doc();
     let shown = |e: &Entity| doc.layers().is_visible(&e.base().layer_id);
     match &value.scope {

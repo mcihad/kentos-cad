@@ -11,6 +11,8 @@ pub mod error;
 pub mod files;
 #[cfg(test)]
 mod files_tests;
+#[cfg(test)]
+mod filter_tests;
 pub mod invitations;
 #[cfg(test)]
 mod invitations_tests;

@@ -36,6 +36,7 @@ import { createProcessing, registerProcessingCommands } from './processing';
 import { NetworkService, type NetworkWorkerLike } from './networks';
 import { TimeSlider } from './timeSlider';
 import { registerTimeCommands } from './timeCommands';
+import { registerLayerFilterCommands } from './layerFilterCommands';
 import { registerNetworkCommands } from './networkCommands';
 import { createStyles, registerStyleCommands } from './styles';
 import { Formatter } from './format';
@@ -186,6 +187,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   registerServiceCommands(ctx);
   registerNetworkCommands(ctx);
   registerTimeCommands(ctx);
+  registerLayerFilterCommands(ctx);
   registerPointCloudCommands(ctx);
   // The open cloud project as the rename and delete dialogs name it.
   const openTarget = () => {

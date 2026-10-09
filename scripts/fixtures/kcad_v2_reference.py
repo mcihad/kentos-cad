@@ -812,11 +812,20 @@ def scenario(s):
     return cmap(fields(s, {"note": (text, False)}, "scenario"))
 
 
+def layer_filter(f):
+    """A layer's filter (schema 35, docs/adr/0211 §2): its objects' ids as 16-byte strings and its condition, each when
+    given; at least one, an empty list not written."""
+    assert "expression" in f or f.get("objects"), "süzgeçte ifade ya da liste olmalı"
+    assert f.get("objects", [None]), "boş liste yazılmaz"
+    return cmap(fields(f, {"objects": (lambda xs: array([blob(uid_bytes(x)) for x in xs]), False), "expression": (text, False)}, "filter"))
+
+
 def layer(n):
     assert "snap" not in n or n["type"] == "layer", f"layer {n.get('id')}: grubun keneti olmaz"
     assert "fields" not in n or (n["type"] == "layer" and n["fields"]), f"layer {n.get('id')}: alanlar yalnız katmanın, boş değil"
     assert not ({"service", "feed"} & set(n)) or n["type"] == "layer", f"layer {n.get('id')}: servis ve kaynak yalnız katmanın"
     assert not {"service", "feed"} <= set(n), f"layer {n.get('id')}: servis ve kaynak birlikte olmaz"
+    assert "filter" not in n or (n["type"] == "layer" and "service" not in n), f"layer {n.get('id')}: süzgeç yalnız nesnesi olan katmanın"
     return cmap(
         fields(
             n,
@@ -833,6 +842,8 @@ def layer(n):
                 "time": (layer_time, False),
                 "scenario": (scenario, False),
                 "replaces": (text, False),
+                # Schema 35 (docs/adr/0211 §2): a layer's filter.
+                "filter": (layer_filter, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -1242,7 +1253,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 34 with a layer's time setting, a scenario or a scenario layer's base
+    """The oldest schema that holds the drawing: 35 with a layer's filter (docs/adr/0211 §2), 34 with a layer's time
+    setting, a scenario or a scenario layer's base
     layer (docs/adr/0210 §2), 33 with the project's networks (docs/adr/0209 §2), 32 with a layer drawn
     from a map service or one whose objects came from
     a source, or the project's connections (docs/adr/0208 §2), 31 with a point cloud or a raster read from an address, only in the
@@ -1308,6 +1320,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def temporal(nodes):
         return any("time" in n or "scenario" in n or "replaces" in n or temporal(n["children"]) for n in nodes)
 
+    def filtered(nodes):
+        return any("filter" in n or filtered(n["children"]) for n in nodes)
+
+    if filtered(layers):
+        return 35
     if temporal(layers):
         return 34
     if settings and "networks" in settings:
@@ -1569,7 +1586,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-35.kcad"] = container(root(cmap(parts), version=uint(35)))
+    files["schema-version-36.kcad"] = container(root(cmap(parts), version=uint(36)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2174,6 +2191,26 @@ def broken(minimal_content, minimal_file):
     files["scenario-note-blank.kcad"] = on_layer({"scenario": cmap({"note": text("")})}, node_type="group", schema=34)
     files["replaces-outside-scenario.kcad"] = on_layer({"replaces": text("yol")}, schema=34)
 
+    # A layer's filter is schema 35's (docs/adr/0211 §2): in schema 34 an unknown field; every rule of the contract's
+    # `LayerFilter::problem` and `filters_problem` broken one at a time.
+    one_id = blob(uid_bytes("0192f5a1-7777-7000-8000-000000000601"))
+
+    def filtered_(**f):
+        base = {"expression": text("Nitelik = 'Arsa'"), **f}
+        return cmap({k: v for k, v in base.items() if v is not None})
+
+    files["filter-in-schema-34.kcad"] = on_layer({"filter": filtered_()}, schema=34)
+    files["filter-on-group.kcad"] = on_layer({"filter": filtered_()}, node_type="group", schema=35)
+    files["filter-on-service-layer.kcad"] = on_layer({"filter": filtered_(), "service": cmap(osm)}, schema=35)
+    files["filter-empty.kcad"] = on_layer({"filter": cmap({})}, schema=35)
+    files["filter-expression-blank.kcad"] = on_layer({"filter": filtered_(expression=text(" Nitelik = 'Arsa'"))}, schema=35)
+    files["filter-expression-long.kcad"] = on_layer({"filter": filtered_(expression=text("a" * 10_001))}, schema=35)
+    files["filter-objects-empty.kcad"] = on_layer({"filter": filtered_(objects=array([]))}, schema=35)
+    files["filter-objects-twice.kcad"] = on_layer({"filter": filtered_(objects=array([one_id, one_id]))}, schema=35)
+    files["filter-object-short.kcad"] = on_layer({"filter": filtered_(objects=array([blob(bytes(range(1, 16)))]))}, schema=35)
+    files["filter-object-nil.kcad"] = on_layer({"filter": filtered_(objects=array([blob(bytes(16))]))}, schema=35)
+    files["filter-unknown-field.kcad"] = on_layer({"filter": filtered_(scope=text("view"))}, schema=35)
+
     def node_(nid, node_type="layer", children=(), **extra):
         return cmap({"id": text(nid), "name": text(nid), **extra, "type": text(node_type), "visible": boolean(True),
                      "locked": boolean(False), "expanded": boolean(True), "style": cmap(layer_style_parts(top["style"])),
@@ -2387,6 +2424,7 @@ def build():
     out["services.kcad"] = container(document(load("services.json")))
     out["networks.kcad"] = container(document(load("networks.json")))
     out["scenarios.kcad"] = container(document(load("scenarios.json")))
+    out["filters.kcad"] = container(document(load("filters.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

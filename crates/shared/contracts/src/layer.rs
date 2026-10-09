@@ -265,6 +265,12 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub replaces: Option<String>,
+    /// The layer's filter (docs/adr/0211 §2): only the objects that pass it
+    /// are shown, picked and given to its tools. Only a layer has it, never a
+    /// group or a layer drawn from a service.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub filter: Option<crate::layer_filter::LayerFilter>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

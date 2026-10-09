@@ -366,6 +366,7 @@ fn put_nodes(
                     time: n.time.clone(),
                     scenario: None,
                     replaces: None,
+                    filter: None,
                 };
                 model.add_layer(new, parent, false).map_err(|r| r.0)?;
                 counts.layers += 1;

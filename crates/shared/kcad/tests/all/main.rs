@@ -7,6 +7,7 @@ mod blocks;
 mod columns;
 mod dimensions;
 mod elevations;
+mod filters;
 mod fixtures;
 mod hatches;
 mod images;

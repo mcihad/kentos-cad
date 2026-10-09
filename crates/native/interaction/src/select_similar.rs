@@ -182,6 +182,8 @@ impl SelectSimilar {
             .doc
             .entities()
             .filter(|e| layers.is_visible(&e.base().layer_id))
+            // What a layer's filter leaves out is not on the layer (docs/adr/0211 §1).
+            .filter(|e| cx.spatial.filter_shown(Slot(e.base().id)))
             .map(|e| Facts::of(Slot(e.base().id), e))
             .collect();
         let c = cx.memory.similar;

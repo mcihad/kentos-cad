@@ -124,6 +124,14 @@ impl Document {
         self.store.on_layer(layer).map(|stored| &*stored.entity)
     }
 
+    /// A layer's objects in document order with their persistent ids, in one pass (a layer's
+    /// filter asks every object's id, docs/adr/0211 §3).
+    pub fn by_layer_with_uids(&self, layer: &str) -> impl Iterator<Item = (Uuid, &Entity)> {
+        self.store
+            .on_layer(layer)
+            .map(|stored| (stored.uid, &*stored.entity))
+    }
+
     /// The objects of a layer whose places in the document fall in
     /// `places`, in document order, with their places. A place is kept by an
     /// object that changes and taken again when it is put back (undo), so a

@@ -50,6 +50,7 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
         time: None,
         scenario: None,
         replaces: None,
+        filter: None,
     }
 }
 

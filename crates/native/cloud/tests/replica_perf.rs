@@ -122,6 +122,7 @@ fn opened(n: usize) -> Opened {
         time: None,
         scenario: None,
         replaces: None,
+        filter: None,
     }];
     let project = Uuid::now_v7();
     let snapshot = DocumentSnapshotV2 {

@@ -901,6 +901,11 @@ const observe = (mark) =>
       lockedLayers: k.doc.layers.all().filter((n) => n.locked).map((n) => k.doc.layers.path(n.id)),
       // Every layer and group by its path, in tree order (docs/adr/0177 §5).
       layers: k.doc.layers.all().map((n) => k.doc.layers.path(n.id)),
+      // The layer tree's counts as its rows show them, by path: “geçen / bütün” where a filter leaves objects out
+      // (docs/adr/0211 §4). The rows in view (the trace's trees are short).
+      layerCounts: Object.fromEntries(
+        [...document.querySelectorAll('.panel--layers .tree__row')].map((r) => [(r.querySelector('.tree__name')?.title ?? '').split('\\n')[0], r.querySelector('.tree__count')?.textContent ?? '']),
+      ),
       // Genel bakış's extent and Büyüteç's zoom, side and centre (docs/adr/0181).
       overview: k.view.navigationState.overview,
       magnifier: k.view.navigationState.magnifier,
@@ -1053,6 +1058,10 @@ function compare(expect, got, t) {
       // The headers only when the step names them (docs/adr/0199 §4).
       const ok = have && have.count === want.count && same(have.rows, want.rows) && (want.columns === undefined || same(have.columns, want.columns));
       if (!ok) bad.push(`featureTable: ${JSON.stringify(have)}, beklenen ${JSON.stringify(want)}`);
+    } else if (key === 'layerCounts') {
+      // Only the rows the step names, each exactly (docs/adr/0211 §4).
+      for (const [path, count] of Object.entries(want))
+        if (have[path] !== count) bad.push(`layerCounts[${path}]: ${JSON.stringify(have[path] ?? null)}, beklenen ${JSON.stringify(count)}`);
     } else if (key === 'newest') bad.push(...compareShape('newest', have, want, t));
     else if (key === 'objects') for (const w of want) bad.push(...compareShape(`objects[${w.id}]`, have[w.id] ?? null, w, t));
     else if (key === 'trackPoints') {

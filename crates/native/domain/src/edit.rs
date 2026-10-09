@@ -380,6 +380,48 @@ impl Document {
         Ok(true)
     }
 
+    /// Gives a layer its filter (docs/adr/0211 §2), or takes it away, as one
+    /// undo step named `label`. Refused with nothing changed (the web's
+    /// `setLayerFilter`): a filter on a group or on a layer drawn from a
+    /// service, a filter with a problem. Whether its condition compiles is the
+    /// command's. An unknown id changes nothing; returns whether it changed.
+    pub fn set_layer_filter(
+        &mut self,
+        id: &str,
+        next: Option<kentos_contracts::LayerFilter>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(node) = self.layers.get(id) else {
+            return Ok(false);
+        };
+        let name = &node.name;
+        if next.is_some() {
+            if node.kind == LayerNodeType::Group {
+                return Err(Refusal(format!(
+                    "“{name}” bir grup; süzgeç yalnız katmanın olur."
+                )));
+            }
+            if node.service.is_some() {
+                return Err(Refusal(format!(
+                    "“{name}” servisten çizilir; nesnesi olmayan katmanın süzgeci olmaz."
+                )));
+            }
+        }
+        if let Some(problem) = next.as_ref().and_then(|f| f.problem()) {
+            return Err(Refusal(format!("Katmanın süzgeci: {problem}.")));
+        }
+        if node.filter == next {
+            return Ok(false);
+        }
+        let op = Op::LayerFilter {
+            layer: id.to_owned(),
+            before: node.filter.clone().map(Box::new),
+            after: next.map(Box::new),
+        };
+        self.record(vec![op], label);
+        Ok(true)
+    }
+
     /// A layer's time setting (docs/adr/0210 §2) as one undo step `label`,
     /// its scenario fields as they are: [`Document::set_layer_temporal`].
     pub fn set_layer_time(

@@ -890,9 +890,11 @@ impl App {
                 } else {
                     "Aramayla eşleşen katman yok."
                 };
+                // A filtered layer's count is “geçen / bütün” (docs/adr/0211 §4): the column takes the widest.
+                let count_width = self.layer_count_width(doc);
                 let tree = TreeView::new([
                     TreeColumn::new("Ad").width(Fill),
-                    TreeColumn::new("Öğe").width(44).align_right(),
+                    TreeColumn::new("Öğe").width(count_width).align_right(),
                 ])
                 .virtualized(rows.len(), move |index| {
                     let row = &rows[index];
@@ -931,34 +933,76 @@ impl App {
         parent_visible: bool,
     ) -> Node<'a, Message> {
         let active = doc.model.layers().active() == node.id;
-        let count = label::caption(doc.count_below(node).to_string());
-        // A temporal layer's clock before its count, in the count's column (docs/adr/0210 §10).
-        let cells: Vec<Element<'_, Message>> = match &node.time {
-            Some(t) if node.kind == LayerNodeType::Layer => vec![
-                iced::widget::row![
-                    kentos_ui::widget::tip(
-                        kentos_ui::icon::icon(crate::icons::from_web(Some("clock")))
-                            .size(12.0)
-                            .tone(kentos_ui::icon::Tone::Muted),
-                        kentos_ui::widget::Tip::new(format!(
-                            "Zamansal katman: {}{}{}",
-                            t.start,
-                            match (&t.end, t.cumulative) {
-                                (Some(e), _) => format!(" – {e}"),
-                                (None, true) => String::new(),
-                                (None, false) => " (anlık)".to_owned(),
-                            },
-                            if t.cumulative { " (birikimli)" } else { "" }
-                        )),
-                        iced::widget::tooltip::Position::Top,
-                    ),
-                    count
-                ]
-                .spacing(4)
-                .align_y(iced::Center)
-                .into(),
-            ],
-            _ => vec![count.into()],
+        let (shown, total, filtered) = self.layer_counted(doc, node);
+        let count: Element<'_, Message> = if filtered {
+            kentos_ui::widget::tip(
+                label::caption(format!("{shown} / {total}")),
+                kentos_ui::widget::Tip::new(format!(
+                    "Süzgeçten {shown} nesne geçiyor; katmanda {total} nesne var."
+                )),
+                iced::widget::tooltip::Position::Top,
+            )
+        } else {
+            label::caption(total.to_string()).into()
+        };
+        // A filtered layer's funnel and a temporal layer's clock before its count, in the count's column
+        // (docs/adr/0211 §4, 0210 §10).
+        let mut badges: Vec<Element<'_, Message>> = Vec::new();
+        if node.kind == LayerNodeType::Layer
+            && node.service.is_none()
+            && let Some(f) = &node.filter
+        {
+            let error = self.spatial.filter_error(&node.id);
+            let what = crate::layer_filters::filter_text(f);
+            badges.push(kentos_ui::widget::tip(
+                kentos_ui::icon::icon(crate::icons::from_web(Some("funnel")))
+                    .size(12.0)
+                    .tone(if error.is_some() {
+                        kentos_ui::icon::Tone::Warning
+                    } else {
+                        kentos_ui::icon::Tone::Accent
+                    }),
+                kentos_ui::widget::Tip::new(match error {
+                    Some(why) => {
+                        format!("Süzgeç çalışmıyor, hiçbir nesne geçmiyor: {why}\nSüzgeç: {what}")
+                    }
+                    None => format!("Süzgeç: {what}"),
+                }),
+                iced::widget::tooltip::Position::Top,
+            ));
+        }
+        if let Some(t) = node
+            .time
+            .as_ref()
+            .filter(|_| node.kind == LayerNodeType::Layer)
+        {
+            badges.push(kentos_ui::widget::tip(
+                kentos_ui::icon::icon(crate::icons::from_web(Some("clock")))
+                    .size(12.0)
+                    .tone(kentos_ui::icon::Tone::Muted),
+                kentos_ui::widget::Tip::new(format!(
+                    "Zamansal katman: {}{}{}",
+                    t.start,
+                    match (&t.end, t.cumulative) {
+                        (Some(e), _) => format!(" – {e}"),
+                        (None, true) => String::new(),
+                        (None, false) => " (anlık)".to_owned(),
+                    },
+                    if t.cumulative { " (birikimli)" } else { "" }
+                )),
+                iced::widget::tooltip::Position::Top,
+            ));
+        }
+        let cells: Vec<Element<'_, Message>> = if badges.is_empty() {
+            vec![count]
+        } else {
+            badges.push(count);
+            vec![
+                iced::widget::Row::with_children(badges)
+                    .spacing(4)
+                    .align_y(iced::Center)
+                    .into(),
+            ]
         };
         let mut row = Node::new(node.name.as_str())
             // Its place in the tree (the web's name title).
@@ -1612,6 +1656,7 @@ impl App {
             Asking::FindReplace => self.find_replace_view(),
             Asking::LayerMerge => self.layer_merge_view(),
             Asking::LayerFields => self.layer_fields_view(),
+            Asking::LayerFilter => self.layer_filter_view(),
             Asking::Connections => self.connections_view(),
             Asking::ServiceAdd => self.service_window_view(),
             Asking::Feed => self.feed_window_view(),

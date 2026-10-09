@@ -389,7 +389,10 @@
     "scenario.show",
     "scenario.base",
     "scenario.compare",
-    "scenario.apply"
+    "scenario.apply",
+    "layer.filter",
+    "layer.filterFromSelection",
+    "layer.filterClear"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

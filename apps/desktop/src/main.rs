@@ -63,6 +63,7 @@ mod keys;
 mod keytips;
 mod labels;
 mod layer_fields;
+mod layer_filters;
 mod layer_list;
 mod layer_merge;
 mod layer_purge;

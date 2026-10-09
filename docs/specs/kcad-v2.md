@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `34`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-35.kcad`) |
+| `version` | tam sayı | `2`'den `35`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-36.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -263,7 +263,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 34**, şema 33'ün kendisi, zamansal katmanlar ve senaryolardır (ADR 0210): katman düğümünün `time`'ı (katmanın nesnelerinin başlangıç ve bitiş öznitelikleri, kimlik alanı, Birikimli), grubun `scenario`'su (grup bir senaryodur) ve senaryo katmanının `replaces`'i (yerine geçtiği ana katman) (§6.5). Yazıcı `34`'ü **yalnız bir düğümde bunlardan biri varken** yazar. Başka her çizim şema 2–33'tür ve eskisiyle bayt bayt aynıdır. Şema 2–33 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/time-in-schema-33.kcad`). Şema 34 şema 33'ü kapsar. Nesnelerin zamanı özniteliklerinde kalır; dosya biçimi değerleri okumaz ve denetlemez. Örnek dosya `scenarios.kcad`.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 35**, şema 34'ün kendisi ve katman süzgecidir (ADR 0211): katman düğümünün `filter`'ı (katmanın yalnız bir ifadeye ya da nesne listesine uyan nesneleri gösterilir, seçilir ve işlemlere girer) (§6.5). Yazıcı `35`'i **yalnız bir katmanın süzgeci varken** yazar. Başka her çizim şema 2–34'tür ve eskisiyle bayt bayt aynıdır. Şema 2–34 yükünde bu anahtar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/filter-in-schema-34.kcad`). Şema 35 şema 34'ü kapsar. Süzgeç görünümdür: dosya bütün nesneleri yazar; ifadenin derlenmesi dosya biçiminin kuralı değildir. Örnek dosya `filters.kcad`.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: süzgeçli katmanı olan çizim 35, zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -513,6 +515,7 @@ Bilinmeyen anahtar `unknown_field`'dır (`broken/network-unknown-field.kcad`). L
 | `type` | numaralı metin | evet | `group`, `layer` |
 | `style` | katman stili | evet | |
 | `fields` | dizi: alan | | şema 26'da: katmanın nesnelerinin özniteliklerinin şeması (aşağıda); boş değil; yalnız katmanda, grupta `bad_value` |
+| `filter` | süzgeç | | şema 35'te: katmanın süzgeci (aşağıda); yalnız katmanda, grupta ve servisten çizilen katmanda `bad_value` |
 | `locked` | bool | evet | |
 | `service` | servis | | şema 32'de: katman bu harita servisinden çizilir (aşağıda); yalnız katmanda; böyle katman nesne tutmaz |
 | `visible` | bool | evet | |
@@ -533,6 +536,15 @@ Bilinmeyen anahtar `unknown_field`'dır (`broken/network-unknown-field.kcad`). L
 Kurala uymayan ayar, `cumulative: false` ve bilinmeyen anahtar reddedilir (`fixtures/kcad/v2/broken/time-*.kcad`).
 
 **Senaryo** (şema 34; ADR 0210 §9): harita; `note` metni (isteğe bağlı; kırpılmış, 1–500 karakter). **Ağacın kuralları:** senaryo grubu başka bir senaryo grubunun içinde olmaz; `replaces` yalnız bir senaryo grubunun içindeki katmanda olur, boş olmaz ve katmanın kendisini göstermez; gösterdiği düğüm ağaçta varsa senaryo grubu dışında bir katmandır (ana katman) ve bir senaryo içinde bir ana katmanın yerine en çok bir katman geçer. Ağaçta olmayan bir düğümü gösteren `replaces` kural dışı değildir (`fixtures/kcad/v2/broken/scenario-*.kcad`, `replaces-*.kcad`).
+
+**Süzgeç** (şema 35; ADR 0211 §2): harita; ikisinden en az biri (`broken/filter-empty.kcad`).
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `objects` | dizi: dizgi | | nesnelerin kalıcı kimlikleri (16 baytlık dizgi, §6.8): yalnız bunlar geçer; 1–100 000 kimlik, her biri bir kez, sıfır kimlik yok |
+| `expression` | metin | | İfadeyle seç'in dilinde koşul (ADR 0100): doğru olan nesne geçer; kırpılmış, 1–10 000 karakter |
+
+İkisi birden varsa nesne ikisinden de geçmelidir. Boş liste yazılmaz (`broken/filter-objects-empty.kcad`); kimliği 16 bayt olmayan (`broken/filter-object-short.kcad`), sıfır (`broken/filter-object-nil.kcad`) ya da iki kez geçen liste (`broken/filter-objects-twice.kcad`), boş ya da baştan veya sondan boşluklu (`broken/filter-expression-blank.kcad`) ve 10 000 karakterden uzun ifade (`broken/filter-expression-long.kcad`), grubun (`broken/filter-on-group.kcad`) ve servisten çizilen katmanın süzgeci (`broken/filter-on-service-layer.kcad`) ve bilinmeyen anahtar (`broken/filter-unknown-field.kcad`) reddedilir. Çizimde olmayan bir nesnenin kimliği kural dışı değildir (nesne silinmiş olabilir). İfadenin derlenmesi okuyucunun kuralı değildir: derlenmeyen ifadeyi uygulama okur ve hiçbir nesneyi geçirmez, komutlar yazmaz.
 
 **Katman keneti** (şema 10; ADR 0163 §4): iki biçimden **tam biri**.
 

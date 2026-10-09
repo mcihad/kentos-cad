@@ -349,6 +349,18 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{want:?}"),
         );
     }
+    // The layer tree's counts (docs/adr/0211 §4): only the rows the step names, exactly.
+    if let Some(want) = &expect.layer_counts {
+        for (path, count) in want {
+            let have = got.layer_counts.get(path);
+            check(
+                &format!("layerCounts[{path}]"),
+                have == Some(count),
+                format!("{have:?}"),
+                format!("{count:?}"),
+            );
+        }
+    }
     // Every layer and group (docs/adr/0177 §5), exact.
     if let Some(want) = &expect.layers {
         check(

@@ -673,6 +673,20 @@ export class CoreStore {
     return typed(() => this.raw.timeMask(ids));
   }
 
+  /** The objects their layer's filter leaves out (docs/adr/0211 §3): 1 in `out` leaves one out, 0 lets it in again. */
+  setFiltered(ids: Float64Array, out: Uint8Array): void {
+    typed(() => this.raw.setFiltered(ids, out));
+  }
+
+  clearFiltered(): void {
+    typed(() => this.raw.clearFiltered());
+  }
+
+  /** For each id, 1 when the view shows it: it passes its layer's filter and shows at the slider's window. */
+  viewMask(ids: Float64Array): Uint8Array {
+    return typed(() => this.raw.viewMask(ids));
+  }
+
   /** What the overlay draws in the view: eight numbers per record (geometry-core store/labels.rs). */
   labels(minX: number, minY: number, maxX: number, maxY: number, scale: number, editing: number | null): Float64Array {
     return typed(() => this.raw.labels(minX, minY, maxX, maxY, scale, editing !== null, editing ?? 0));

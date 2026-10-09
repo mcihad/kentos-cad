@@ -8,6 +8,7 @@
 
 mod blocks;
 mod crs;
+mod filter;
 mod networks;
 mod objects;
 mod services;
@@ -289,6 +290,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     let active_layer = required(r, active_layer, "activeLayer")?;
     service_links(r, &layers, &settings, &entities)?;
     scenario_tree(r, &layers)?;
+    filter_tree(r, &layers)?;
     Ok(DocumentSnapshotV2 {
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -312,6 +314,18 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
 /// scenario layer standing for one base layer.
 fn scenario_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadError> {
     let Some(problem) = kentos_contracts::scenarios_problem(layers) else {
+        return Ok(());
+    };
+    r.push(Seg::Name("layers"));
+    let e = r.fail(Code::BadValue, &problem);
+    r.pop();
+    Err(e)
+}
+
+/// Schema 35's tree rule (docs/adr/0211 §2), as `filters_problem` says it:
+/// a filter on a layer that holds objects.
+fn filter_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadError> {
+    let Some(problem) = kentos_contracts::filters_problem(layers) else {
         return Ok(());
     };
     r.push(Seg::Name("layers"));
@@ -774,10 +788,12 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut locked, mut visible, mut children, mut expanded) = (None, None, None, None);
     let (mut snap, mut fields, mut service, mut feed) = (None, None, None, None);
     let (mut time, mut scenario, mut replaces) = (None, None, None);
+    let mut filter = None;
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
             "name" => name = Some(text(r)?),
+            "filter" if has.filters => filter = Some(filter::layer_filter(r)?),
             "time" if has.temporal => time = Some(temporal::layer_time(r)?),
             "scenario" if has.temporal => scenario = Some(temporal::scenario(r)?),
             "replaces" if has.temporal => replaces = Some(text(r)?),
@@ -880,6 +896,15 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 ));
             }
             (replaces, _) => replaces,
+        },
+        filter: match (filter, kind) {
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grubun süzgeci olmaz; süzgeç yalnız katmanındır",
+                ));
+            }
+            (filter, _) => filter,
         },
     })
 }

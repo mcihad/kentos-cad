@@ -77,6 +77,8 @@ struct Layer {
     stale: bool,
     /// Its time setting when built (docs/adr/0210 §6): another one gives its objects other times.
     time: Option<kentos_contracts::LayerTime>,
+    /// Its filter when built (docs/adr/0211 §3): another one lets other objects through.
+    filter: Option<kentos_contracts::LayerFilter>,
 }
 
 /// What of a shown layer is built again: all of it, or some of its parts.
@@ -109,7 +111,7 @@ pub struct StyledCache {
     services: HashMap<String, (String, u64, Arc<StyledLayerPart>)>,
     /// What the last rebuild cost, and how many layer parts it built.
     pub last_build: Option<(Duration, usize)>,
-    /// The time slider's window when last built, and the temporal layers' objects it left out
+    /// The time slider's window when last built, and the objects the view left out (by the window or a layer's filter)
     /// (docs/adr/0210 §6): a part whose objects came or went is built again.
     window: Option<kentos_geometry_core::time::Window>,
     time_hidden: SlotSet,
@@ -333,7 +335,7 @@ impl StyledCache {
                     for (place, Slot(id)) in doc.layer_slots(&node.id) {
                         let key = place / PART_PLACES;
                         if last != Some(key)
-                            && store.time_shown(f64::from(id)) == self.time_hidden.contains(&id)
+                            && store.view_shown(f64::from(id)) == self.time_hidden.contains(&id)
                         {
                             dirty_part(&mut dirty, &node.id, key);
                             last = Some(key);
@@ -403,17 +405,19 @@ impl StyledCache {
                         || l.name != node.name
                         || l.split != split
                         || l.time != node.time
+                        || l.filter != node.filter
                 });
             let changed = dirty.get(&node.id);
             if !reset && changed.is_none() {
                 continue;
             }
             // The slider's window over a temporal layer: the objects it shows, the others noted.
-            let timed = node.time.is_some() && window.is_some();
+            // The view's filter over a layer: its own filter, or the slider's window over a temporal layer.
+            let timed = node.filter.is_some() || (node.time.is_some() && window.is_some());
             let hidden = &mut self.time_hidden;
             let mut keep = |e: &&Entity| {
                 let id = e.base().id;
-                let shown = !timed || store.time_shown(f64::from(id));
+                let shown = !timed || store.view_shown(f64::from(id));
                 if shown {
                     hidden.remove(&id);
                 } else {
@@ -547,10 +551,11 @@ impl StyledCache {
             let mut reset = plan.reset;
             // A part reads `$sıra`: the layer is one run, built whole again.
             if split && results.iter().any(|r| r.3) {
-                let timed = plan.node.time.is_some() && window.is_some();
+                let timed =
+                    plan.node.filter.is_some() || (plan.node.time.is_some() && window.is_some());
                 let entities: Vec<&Entity> = doc
                     .by_layer(id)
-                    .filter(|e| !timed || store.time_shown(f64::from(e.base().id)))
+                    .filter(|e| !timed || store.view_shown(f64::from(e.base().id)))
                     .collect();
                 let (layer, _) = build(plan.node, &entities);
                 split = false;
@@ -570,6 +575,7 @@ impl StyledCache {
                     reads_index: true,
                     stale: false,
                     time: plan.node.time.clone(),
+                    filter: plan.node.filter.clone(),
                 });
                 entry.parts.clear();
                 entry.parts.insert(0, new_part(layer, &entities));
@@ -584,6 +590,7 @@ impl StyledCache {
                 reads_index,
                 stale: false,
                 time: plan.node.time.clone(),
+                filter: plan.node.filter.clone(),
             });
             if reset {
                 entry.style = plan.node.style.clone();
@@ -591,6 +598,7 @@ impl StyledCache {
                 entry.split = split;
                 entry.stale = false;
                 entry.time = plan.node.time.clone();
+                entry.filter = plan.node.filter.clone();
                 if !results.is_empty() {
                     entry.parts.clear();
                     entry.reads_index = reads_index;

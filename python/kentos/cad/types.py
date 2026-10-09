@@ -4909,6 +4909,35 @@ class LayerField(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerFilter(_Model):
+    """A layer's filter (docs/adr/0211 §2): an object passes when the condition
+    holds for it and, when there is a list, the list names it.
+    Attributes:
+        expression: The condition (İfadeyle seç's language, docs/adr/0100): an object
+            passes when it is true.
+        objects: Only these objects, by their persistent ids (Seçimden süzgeç); an id
+            the drawing does not hold is not wrong.
+    """
+    expression: str | None | Unset = UNSET
+    objects: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.expression is not UNSET:
+            out["expression"] = self.expression
+        if self.objects is not UNSET:
+            out["objects"] = list(self.objects)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerFilter:
+        return cls(
+            expression=data.get("expression", UNSET),
+            objects=list(data["objects"]) if "objects" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerNode(_Model):
     """A node of the layer tree: a group or a layer.
     Attributes:
@@ -4917,6 +4946,9 @@ class LayerNode(_Model):
         fields: A layer's fields (docs/adr/0199 §1): the schema of its objects'
             attributes, in the order the table and the form show them; empty, no
             schema (and nothing written). Only a layer has them, never a group.
+        filter: The layer's filter (docs/adr/0211 §2): only the objects that pass it
+            are shown, picked and given to its tools. Only a layer has it, never a
+            group or a layer drawn from a service.
         replaces: A scenario's layer: the base layer it stands for (docs/adr/0210 §9).
         scenario: A group made a scenario (docs/adr/0210 §9). Only a group has it.
         service: A layer drawn from a map service (docs/adr/0208 §2): it holds no
@@ -4936,6 +4968,7 @@ class LayerNode(_Model):
     children: list[LayerNode]
     feed: FeatureFeed | None | Unset = UNSET
     fields: list[LayerField] | Unset = UNSET
+    filter: LayerFilter | None | Unset = UNSET
     replaces: str | None | Unset = UNSET
     scenario: ScenarioInfo | None | Unset = UNSET
     service: ServiceLayer | None | Unset = UNSET
@@ -4956,6 +4989,8 @@ class LayerNode(_Model):
             out["feed"] = None if self.feed is None else self.feed.to_json()
         if self.fields is not UNSET:
             out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.filter is not UNSET:
+            out["filter"] = None if self.filter is None else self.filter.to_json()
         if self.replaces is not UNSET:
             out["replaces"] = self.replaces
         if self.scenario is not UNSET:
@@ -4981,6 +5016,7 @@ class LayerNode(_Model):
             children=[LayerNode.from_json(e0) for e0 in data["children"]],
             feed=UNSET if "feed" not in data else None if data["feed"] is None else FeatureFeed.from_json(data["feed"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
+            filter=UNSET if "filter" not in data else None if data["filter"] is None else LayerFilter.from_json(data["filter"]),
             replaces=data.get("replaces", UNSET),
             scenario=UNSET if "scenario" not in data else None if data["scenario"] is None else ScenarioInfo.from_json(data["scenario"]),
             service=UNSET if "service" not in data else None if data["service"] is None else ServiceLayer.from_json(data["service"]),
@@ -5163,6 +5199,114 @@ class LayerTime(_Model):
             cumulative=data.get("cumulative", UNSET),
             end=data.get("end", UNSET),
             key=data.get("key", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersFilter(_Model):
+    """Input of `cad.layers.filter` v1: a layer's filter written, or taken away
+    (`filter` absent or null), as one undo step “Katman süzgeci”. A layer that
+    already has it as given is left as it is (`changed` false, no step).
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_filter`
+    (`LayerFilter::problem`), `invalid_expression` (the condition does not
+    compile, or reads `$sıra` or `$ölçek`; the message says where); then
+    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer drawn
+    from a service: it holds no objects).
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        filter: Its new filter; absent or null takes it away.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    filter: LayerFilter | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.filter is not UNSET:
+            out["filter"] = None if self.filter is None else self.filter.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersFilter:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            filter=UNSET if "filter" not in data else None if data["filter"] is None else LayerFilter.from_json(data["filter"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersFilterPlan(_Model):
+    """What `cad.layers.filter` would write (plan mode); nothing is written.
+    Attributes:
+        node: The layer as execute would leave it.
+        passed: The layer's objects that would pass the filter, and all of them.
+        revision: The document revision the plan was made against.
+    """
+    node: LayerNode
+    changed: bool
+    passed: int
+    total: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["node"] = self.node.to_json()
+        out["changed"] = self.changed
+        out["passed"] = self.passed
+        out["total"] = self.total
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersFilterPlan:
+        return cls(
+            node=LayerNode.from_json(data["node"]),
+            changed=data["changed"],
+            passed=data["passed"],
+            total=data["total"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersFiltered(_Model):
+    """Output of `cad.layers.filter` v1.
+    Attributes:
+        changed: Whether the filter differed (an undo step was written).
+        passed: The layer's objects that pass the filter (all of them without one).
+        total: The layer's objects.
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    changed: bool
+    passed: int
+    total: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["changed"] = self.changed
+        out["passed"] = self.passed
+        out["total"] = self.total
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersFiltered:
+        return cls(
+            layer=data["layer"],
+            changed=data["changed"],
+            passed=data["passed"],
+            total=data["total"],
+            revision=data["revision"],
         )
 
 
@@ -11030,6 +11174,7 @@ __all__ = [
     "LayerField",
     "LayerFieldKind",
     "LayerFieldKindName",
+    "LayerFilter",
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",
@@ -11040,6 +11185,9 @@ __all__ = [
     "LayerStateNode",
     "LayerStyle",
     "LayerTime",
+    "LayersFilter",
+    "LayersFilterPlan",
+    "LayersFiltered",
     "LayersService",
     "LayersServicePlan",
     "LayersServiced",

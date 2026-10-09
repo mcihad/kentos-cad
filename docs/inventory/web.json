@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 462,
-      "implemented": 437,
+      "total": 465,
+      "implemented": 440,
       "partial": 0,
       "pending": 25
     },
@@ -61,14 +61,14 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 691,
-      "implemented": 691,
+      "total": 694,
+      "implemented": 694,
       "partial": 0,
       "pending": 0
     },
     "screens": {
-      "total": 130,
-      "implemented": 130,
+      "total": 131,
+      "implemented": 131,
       "partial": 0,
       "pending": 0
     },
@@ -101,11 +101,11 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 182,
-    "commandsOnDesktop": 390,
+    "commandsOnDesktop": 393,
     "desktop": {
       "commands": {
-        "total": 462,
-        "implemented": 390,
+        "total": 465,
+        "implemented": 393,
         "partial": 0,
         "pending": 12,
         "none": 58,
@@ -160,16 +160,16 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 691,
-        "implemented": 691,
+        "total": 694,
+        "implemented": 694,
         "partial": 0,
         "pending": 0,
         "none": 0,
         "n/a": 0
       },
       "screens": {
-        "total": 130,
-        "implemented": 110,
+        "total": 131,
+        "implemented": 111,
         "partial": 2,
         "pending": 0,
         "none": 17,
@@ -1740,7 +1740,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/feature-table.json"
+        "fixtures/interaction/v1/feature-table.json",
+        "fixtures/interaction/v1/layer-filter.json"
       ]
     },
     {
@@ -3141,6 +3142,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/layer-filter.json",
         "fixtures/interaction/v1/table.json"
       ]
     },
@@ -4589,6 +4591,97 @@
       },
       "tests": [
         "fixtures/interaction/v1/feature-table.json"
+      ]
+    },
+    {
+      "id": "layer.filter",
+      "title": "Katman süzgeci…",
+      "short": "Katman süzgeci",
+      "category": "Katman",
+      "icon": "layerFilter",
+      "description": "Katmanın yalnız bir kısmıyla çalışmak için: ifadeye (İfadeyle seç’in dili) ya da bir nesne listesine uymayan nesneler katmanda yokmuş gibidir; çizilmez, seçilmez, kenetlenmez, Öznitelik tablosunda ve İşlemler’de görünmez. Çizim değişmez; kayıt ve dışa aktarma bütün nesneleri yazar.",
+      "aliases": [
+        "KATMANSUZGECI",
+        "TANIMSORGUSU",
+        "LAYERFILTER"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Veri › Süzgeç"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
+        "fixtures/interaction/v1/layer-filter.json"
+      ]
+    },
+    {
+      "id": "layer.filterClear",
+      "title": "Süzgeci kaldır",
+      "category": "Katman",
+      "icon": "layerFilterClear",
+      "description": "Etkin katmanın (Katmanlar panelinde sağ tıklanan katmanın) süzgecini kaldırır; bütün nesneleri yeniden görünür.",
+      "aliases": [
+        "SUZGECKALDIR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Veri › Süzgeç"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/layer-filter.json"
+      ]
+    },
+    {
+      "id": "layer.filterFromSelection",
+      "title": "Seçimden süzgeç",
+      "category": "Katman",
+      "icon": "layerFilterSelection",
+      "description": "Seçili nesnelerin her katmanına yalnız o katmanın seçili nesnelerini gösteren bir süzgeç yazar; katmanın ifadesi kalır. Tek adımda geri alınır.",
+      "aliases": [
+        "SECIMDENSUZGEC"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Veri › Süzgeç"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/layer-filter.json"
       ]
     },
     {
@@ -11884,6 +11977,7 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts",
         "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/layer-filter.json",
         "fixtures/interaction/v1/rect-options.json"
       ]
     },
@@ -17057,6 +17151,7 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts",
         "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/layer-filter.json",
         "fixtures/interaction/v1/rect-options.json"
       ]
     },
@@ -25486,6 +25581,32 @@
       }
     },
     {
+      "id": "LayerFilter.expression",
+      "contract": "LayerFilter",
+      "rust": "crates/shared/contracts/src/layer_filter.rs",
+      "field": "expression",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerFilter.objects",
+      "contract": "LayerFilter",
+      "rust": "crates/shared/contracts/src/layer_filter.rs",
+      "field": "objects",
+      "type": "Array<EntityId>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LayerNode.children",
       "contract": "LayerNode",
       "rust": "crates/shared/contracts/src/layer.rs",
@@ -25530,6 +25651,19 @@
       "rust": "crates/shared/contracts/src/layer.rs",
       "field": "fields",
       "type": "Array<LayerField>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerNode.filter",
+      "contract": "LayerNode",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "filter",
+      "type": "LayerFilter",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -31258,6 +31392,18 @@
       "desktopWhere": "apps/desktop/src/layer_fields.rs (ADR 0199 §3)"
     },
     {
+      "id": "apps/web/src/ui/layers/LayerFilterDialog.ts#openLayerFilter",
+      "name": "openLayerFilter",
+      "role": "window",
+      "source": "apps/web/src/ui/layers/LayerFilterDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/layer_filters.rs (ADR 0211 §4)"
+    },
+    {
       "id": "apps/web/src/ui/layers/LayerListDialog.ts#openLayerList",
       "name": "openLayerList",
       "role": "window",
@@ -33951,6 +34097,26 @@
               {
                 "command": "data.unmark",
                 "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Süzgeç",
+            "icon": "layerFilter",
+            "items": [
+              {
+                "command": "layer.filter",
+                "size": "small"
+              },
+              {
+                "command": "layer.filterFromSelection",
+                "size": "small"
+              },
+              {
+                "command": "layer.filterClear",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -39128,6 +39294,26 @@
               "keep": false
             },
             {
+              "label": "Süzgeç",
+              "icon": "layerFilter",
+              "items": [
+                {
+                  "command": "layer.filter",
+                  "size": "small"
+                },
+                {
+                  "command": "layer.filterFromSelection",
+                  "size": "small"
+                },
+                {
+                  "command": "layer.filterClear",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
               "label": "Dosya alışverişi",
               "icon": "import",
               "items": [
@@ -41471,6 +41657,10 @@
     "timeLast": "<path d=\"M15 5v10M5.5 5l5 5-5 5\"/>",
     "pause": "<rect x=\"5.5\" y=\"4.5\" width=\"3\" height=\"11\" rx=\".8\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"11.5\" y=\"4.5\" width=\"3\" height=\"11\" rx=\".8\" fill=\"currentColor\" stroke=\"none\"/>",
     "loop": "<path d=\"M3.5 10.5V9a4 4 0 0 1 4-4h7.5\"/><path d=\"M13 2.8 15.2 5 13 7.2\"/><path d=\"M16.5 9.5V11a4 4 0 0 1-4 4H5\"/><path d=\"M7 17.2 4.8 15 7 12.8\"/>",
+    "layerFilter": "<path d=\"M2.5 8.2 8.5 5l6 3.2-6 3.2z\"/><path d=\"m2.5 11.4 6 3.2 2.2-1.2\"/><path d=\"M11 10.5h7.5l-2.9 3.4v3.7l-1.7-.9v-2.8z\"/>",
+    "layerFilterSelection": "<rect x=\"2.5\" y=\"3\" width=\"10\" height=\"9.5\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><rect x=\"4\" y=\"5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"7.699999999999999\" y=\"8\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M11 10.5h7.5l-2.9 3.4v3.7l-1.7-.9v-2.8z\"/>",
+    "layerFilterClear": "<path d=\"M2.5 3.5h12l-4.6 5.4v6.2l-2.8-1.4V8.9z\"/><path d=\"m13 12 4.5 4.5m0-4.5L13 16.5\"/>",
+    "funnel": "<path d=\"M3 4h14l-5.5 6.5V16l-3-1.5v-4z\" fill=\"currentColor\" fill-opacity=\".3\"/>",
     "sheetLayout": "<rect x=\"3.5\" y=\"2.5\" width=\"13\" height=\"15\" rx=\"1\"/><rect x=\"5.5\" y=\"4.5\" width=\"9\" height=\"6.5\"/><path d=\"M5.5 13h9v2.5h-9zM10.5 13v2.5\"/>",
     "sheetNew": "<path d=\"M11 2.5H4.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9\"/><path d=\"M14.5 1.8v5.4M11.8 4.5h5.4\"/>",
     "sheetTemplate": "<rect x=\"6.5\" y=\"2.5\" width=\"10\" height=\"12\" rx=\"1\"/><path d=\"M4 5.5v11a1 1 0 0 0 1 1h8.5\"/><path d=\"M8.7 5.5h5.6M8.7 8h5.6M8.7 10.5h3.4\"/>",

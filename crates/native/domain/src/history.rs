@@ -102,6 +102,12 @@ pub(crate) enum Op {
         before: Box<Temporal>,
         after: Box<Temporal>,
     },
+    /// A layer's filter (docs/adr/0211 §2), before and after.
+    LayerFilter {
+        layer: String,
+        before: Option<Box<kentos_contracts::LayerFilter>>,
+        after: Option<Box<kentos_contracts::LayerFilter>>,
+    },
     /// A layer or a group taken out of the tree with everything under it
     /// (`Document::remove_layer`), and its inverse, which puts it back; a
     /// new one (`Document::add_layer`) is a `LayerAdd`.
@@ -188,6 +194,15 @@ impl Op {
                 before,
                 after,
             } => Op::LayerTemporal {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerFilter {
+                layer,
+                before,
+                after,
+            } => Op::LayerFilter {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
@@ -483,6 +498,7 @@ impl Document {
                 | Op::LayerFields { .. }
                 | Op::LayerService { .. }
                 | Op::LayerTemporal { .. }
+                | Op::LayerFilter { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
                 | Op::LayerActive { .. }
@@ -604,6 +620,10 @@ impl Document {
             }
             Op::LayerTemporal { layer, after, .. } => {
                 self.layers.replace_temporal(layer, after);
+                return;
+            }
+            Op::LayerFilter { layer, after, .. } => {
+                self.layers.replace_filter(layer, after.as_deref());
                 return;
             }
             // A node still holding objects stays: taking it away would leave

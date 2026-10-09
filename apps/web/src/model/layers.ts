@@ -1,5 +1,6 @@
 import type { FeatureFeed } from '../contracts/generated/FeatureFeed';
 import type { LayerField } from '../contracts/generated/LayerField';
+import type { LayerFilter } from '../contracts/generated/LayerFilter';
 import type { LayerTime } from '../contracts/generated/LayerTime';
 import type { ScenarioInfo } from '../contracts/generated/ScenarioInfo';
 import type { ServiceLayer } from '../contracts/generated/ServiceLayer';
@@ -78,6 +79,13 @@ export interface LayerNode {
   scenario?: ScenarioInfo;
   /** In a scenario, the base layer this layer stands for (docs/adr/0210 §9). Never a group's. */
   replaces?: string;
+  /** A layer's filter (docs/adr/0211 §2): only the objects that pass it are shown, picked and given to its tools. Never a group's. */
+  filter?: LayerFilter;
+}
+
+/** A filter as a layer keeps it: a copy, the list only when it names an object. */
+export function filterOf(f: LayerFilter): LayerFilter {
+  return { ...(f.expression != null && { expression: f.expression }), ...(f.objects?.length && { objects: [...f.objects] }) };
 }
 
 /** A node's time setting, scenario and base layer (docs/adr/0210 §2), as the document's undoable `setLayerTemporal` gives them. */
@@ -200,6 +208,8 @@ export class LayerStore {
       ...(n.feed && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { feed: structuredClone(n.feed) }),
       // A layer's time and base layer, a group's scenario (docs/adr/0210 §2); each only on its kind.
       ...temporalOf(n, n.type ?? (n.children ? 'group' : 'layer')),
+      // A layer's filter (docs/adr/0211 §2); a group keeps none.
+      ...(n.filter && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { filter: filterOf(n.filter) }),
     };
     node.children = (n.children ?? []).map((c) => this.make(c));
     return node;
@@ -422,6 +432,15 @@ export class LayerStore {
     delete n.scenario;
     delete n.replaces;
     Object.assign(n, temporalOf(next, n.type));
+    this.changedState(id);
+  }
+
+  /** A layer's filter (docs/adr/0211 §2), as the document's undoable `setLayerFilter` puts it; null takes it away. */
+  replaceFilter(id: string, next: LayerFilter | null): void {
+    const n = this.get(id);
+    if (!n) return;
+    if (next && n.type === 'layer') n.filter = filterOf(next);
+    else delete n.filter;
     this.changedState(id);
   }
 

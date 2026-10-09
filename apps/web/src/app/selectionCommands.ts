@@ -13,7 +13,8 @@ import type { AppContext } from './context';
 export function selectionCommands(ctx: AppContext): Command[] {
   const { doc, selection, settings, log } = ctx;
   const E = 'Düzen';
-  const visible = () => [...doc.all()].filter((e) => doc.layers.isVisible(e.layerId));
+  // What a layer's filter leaves out is not on the layer (docs/adr/0211 §1).
+  const visible = () => [...doc.all()].filter((e) => doc.layers.isVisible(e.layerId) && ctx.view.geometry.filterShown(e.id));
   /** The filter's kinds set at once, and the filter on (as ticking a kind turns it on). */
   const setKinds = (kinds: readonly EntityKind[]) => {
     settings.selectKinds.set(new Set(kinds));

@@ -251,6 +251,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         time: None,
         scenario: None,
         replaces: None,
+        filter: None,
     }];
     doc.entities = vec![Entity::Line(LineEntity {
         base: EntityBase {

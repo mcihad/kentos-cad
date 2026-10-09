@@ -1433,9 +1433,10 @@ export class ViewportController {
         continue;
       }
       let list = doc.byLayer(id);
-      // With the time slider open a temporal layer shows the objects its window shows (docs/adr/0210 §6).
-      if (node.time && this.ctx.time.window.value) {
-        const shown = this.picker.timeShown(list.map((e) => e.id));
+      // A filtered layer shows the objects its filter passes (docs/adr/0211 §3), and with the time slider open a
+      // temporal layer the objects its window shows (docs/adr/0210 §6).
+      if (node.filter || (node.time && this.ctx.time.window.value)) {
+        const shown = this.picker.viewShown(list.map((e) => e.id));
         list = list.filter((_, i) => shown[i]);
       }
       if (list.some(isConstruction)) this.constructionLayers.add(id);

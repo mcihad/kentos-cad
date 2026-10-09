@@ -257,6 +257,7 @@ mod tests {
             time: None,
             scenario: None,
             replaces: None,
+            filter: None,
         }
     }
 

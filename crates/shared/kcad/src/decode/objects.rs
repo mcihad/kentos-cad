@@ -37,7 +37,7 @@ use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 use crate::{
     SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS,
-    SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND,
+    SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND,
     SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_NETWORKS,
@@ -165,6 +165,8 @@ pub(super) struct Features {
     pub(super) networks: bool,
     /// Schema 34: a layer node's `time`, `scenario` and `replaces` (docs/adr/0210 §2).
     pub(super) temporal: bool,
+    /// Schema 35: a layer node's `filter` (docs/adr/0211 §2).
+    pub(super) filters: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -208,6 +210,7 @@ impl Features {
             services: schema >= SCHEMA_WITH_SERVICES,
             networks: schema >= SCHEMA_WITH_NETWORKS,
             temporal: schema >= SCHEMA_WITH_TEMPORAL,
+            filters: schema >= SCHEMA_WITH_FILTERS,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
             uids: true,
         }

@@ -116,6 +116,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             time: None,
             scenario: None,
             replaces: None,
+            filter: None,
         }],
         active_layer: "parsel".into(),
         entities,
