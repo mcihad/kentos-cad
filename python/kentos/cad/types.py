@@ -572,6 +572,22 @@ InvitationStateName = Literal["accepted", "revoked", "pending", "expired"]
 """The names of :class:`InvitationState`, for a plain string."""
 
 
+class JunctionRole(_StrEnum):
+    """What a junction is (docs/adr/0209 §2).
+
+    - ``junction``: Bağlantı: splits the edges it lies on.
+    - ``source``: Kaynak: where the supply comes from (Yalıtım's beslemesiz kalan).
+    - ``valve``: Vana: where Yalıtım stops.
+    """
+    JUNCTION = "junction"
+    SOURCE = "source"
+    VALVE = "valve"
+
+
+JunctionRoleName = Literal["junction", "source", "valve"]
+"""The names of :class:`JunctionRole`, for a plain string."""
+
+
 class LabelInk(_StrEnum):
     FG = "fg"
     FG_DIM = "fg-dim"
@@ -682,6 +698,56 @@ class LineType(_StrEnum):
 
 LineTypeName = Literal["continuous", "dashed", "dashdot", "dotted"]
 """The names of :class:`LineType`, for a plain string."""
+
+
+class NetworkConnect(_StrEnum):
+    """Where edges connect (docs/adr/0209 §3).
+
+    - ``ends``: Uçlarda: at their ends, and an end on another edge splits it there.
+    - ``vertices``: Köşelerde: at every vertex too.
+    """
+    ENDS = "ends"
+    VERTICES = "vertices"
+
+
+NetworkConnectName = Literal["ends", "vertices"]
+"""The names of :class:`NetworkConnect`, for a plain string."""
+
+
+class NetworkCostKind(_StrEnum):
+    """- ``speed``: Süre, minutes: the length over the speed.
+    - ``field``: The field's value for the whole edge, shared by its pieces by their lengths.
+    """
+    SPEED = "speed"
+    FIELD = "field"
+
+
+NetworkCostKindName = Literal["speed", "field"]
+"""The names of :class:`NetworkCostKind`, for a plain string."""
+
+
+class NetworkDefineOperation(_StrEnum):
+    """What `cad.network.define` does.
+
+    - ``set``: The network replaces the project's of its id, or goes last.
+    - ``remove``: The network of `id` goes.
+    """
+    SET = "set"
+    REMOVE = "remove"
+
+
+NetworkDefineOperationName = Literal["set", "remove"]
+"""The names of :class:`NetworkDefineOperation`, for a plain string."""
+
+
+class NetworkKind(_StrEnum):
+    """Yol ağı or Şebeke: what the tools offer first; the graph is the same."""
+    ROAD = "road"
+    UTILITY = "utility"
+
+
+NetworkKindName = Literal["road", "utility"]
+"""The names of :class:`NetworkKind`, for a plain string."""
 
 
 class PointShape(_StrEnum):
@@ -927,6 +993,20 @@ class RegistryDatum(_StrEnum):
 
 RegistryDatumName = Literal["TUREF", "ED50", "WGS84"]
 """The names of :class:`RegistryDatum`, for a plain string."""
+
+
+class ScenarioOperation(_StrEnum):
+    """What `cad.scenarios.edit` does; it names the undo step.
+
+    - ``create``: “Senaryo oluştur”.
+    - ``apply``: “Senaryoyu uygula”.
+    """
+    CREATE = "create"
+    APPLY = "apply"
+
+
+ScenarioOperationName = Literal["create", "apply"]
+"""The names of :class:`ScenarioOperation`, for a plain string."""
 
 
 class ServiceKind(_StrEnum):
@@ -1308,6 +1388,28 @@ class FeatureChange(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> FeatureChange:
         return _variant(_FEATURE_CHANGE, "FeatureChange", "op", data).from_json(data)
+
+
+class NetworkDirection(_Union):
+    """Which way the edges go (docs/adr/0209 §2).
+
+    One of:
+
+    - :class:`BothNetworkDirection` (``kind: both``)
+    - :class:`DigitizedNetworkDirection` (``kind: digitized``)
+    - :class:`FieldNetworkDirection` (``kind: field``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkDirection:
+        return _variant(_NETWORK_DIRECTION, "NetworkDirection", "kind", data).from_json(data)
 
 
 class TableSource(_Union):
@@ -4659,6 +4761,37 @@ class InvitationRevoke(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class JunctionLayer(_Model):
+    """A junction layer: its points' role and, optionally, which of them it takes and which are closed.
+    Attributes:
+        closed: An expression: the junctions it holds for (a closed valve) are passed by no analysis.
+    """
+    layer: str
+    role: JunctionRole | JunctionRoleName
+    closed: str | None | Unset = UNSET
+    filter: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["role"] = _enum_out(self.role)
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
+        if self.filter is not UNSET:
+            out["filter"] = self.filter
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionLayer:
+        return cls(
+            layer=data["layer"],
+            role=_enum_in(JunctionRole, data["role"]),
+            closed=data.get("closed", UNSET),
+            filter=data.get("filter", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LabelStyle(_Model):
     """How entity labels on a layer are drawn; sizes in CSS px.
     Attributes:
@@ -4776,6 +4909,35 @@ class LayerField(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerFilter(_Model):
+    """A layer's filter (docs/adr/0211 §2): an object passes when the condition
+    holds for it and, when there is a list, the list names it.
+    Attributes:
+        expression: The condition (İfadeyle seç's language, docs/adr/0100): an object
+            passes when it is true.
+        objects: Only these objects, by their persistent ids (Seçimden süzgeç); an id
+            the drawing does not hold is not wrong.
+    """
+    expression: str | None | Unset = UNSET
+    objects: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.expression is not UNSET:
+            out["expression"] = self.expression
+        if self.objects is not UNSET:
+            out["objects"] = list(self.objects)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerFilter:
+        return cls(
+            expression=data.get("expression", UNSET),
+            objects=list(data["objects"]) if "objects" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerNode(_Model):
     """A node of the layer tree: a group or a layer.
     Attributes:
@@ -4784,10 +4946,17 @@ class LayerNode(_Model):
         fields: A layer's fields (docs/adr/0199 §1): the schema of its objects'
             attributes, in the order the table and the form show them; empty, no
             schema (and nothing written). Only a layer has them, never a group.
+        filter: The layer's filter (docs/adr/0211 §2): only the objects that pass it
+            are shown, picked and given to its tools. Only a layer has it, never a
+            group or a layer drawn from a service.
+        replaces: A scenario's layer: the base layer it stands for (docs/adr/0210 §9).
+        scenario: A group made a scenario (docs/adr/0210 §9). Only a group has it.
         service: A layer drawn from a map service (docs/adr/0208 §2): it holds no
             objects. Only a layer has it, never a group.
         snap: A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;
             absent, the general kinds. Only a layer has it, never a group.
+        time: A temporal layer's time setting (docs/adr/0210 §2): which attributes
+            hold its objects' start and end. Only a layer has it, never a group.
     """
     id: str
     name: str
@@ -4799,8 +4968,12 @@ class LayerNode(_Model):
     children: list[LayerNode]
     feed: FeatureFeed | None | Unset = UNSET
     fields: list[LayerField] | Unset = UNSET
+    filter: LayerFilter | None | Unset = UNSET
+    replaces: str | None | Unset = UNSET
+    scenario: ScenarioInfo | None | Unset = UNSET
     service: ServiceLayer | None | Unset = UNSET
     snap: LayerSnap | None | Unset = UNSET
+    time: LayerTime | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -4816,10 +4989,18 @@ class LayerNode(_Model):
             out["feed"] = None if self.feed is None else self.feed.to_json()
         if self.fields is not UNSET:
             out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.filter is not UNSET:
+            out["filter"] = None if self.filter is None else self.filter.to_json()
+        if self.replaces is not UNSET:
+            out["replaces"] = self.replaces
+        if self.scenario is not UNSET:
+            out["scenario"] = None if self.scenario is None else self.scenario.to_json()
         if self.service is not UNSET:
             out["service"] = None if self.service is None else self.service.to_json()
         if self.snap is not UNSET:
             out["snap"] = None if self.snap is None else self.snap.to_json()
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else self.time.to_json()
         return out
 
     @classmethod
@@ -4835,8 +5016,12 @@ class LayerNode(_Model):
             children=[LayerNode.from_json(e0) for e0 in data["children"]],
             feed=UNSET if "feed" not in data else None if data["feed"] is None else FeatureFeed.from_json(data["feed"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
+            filter=UNSET if "filter" not in data else None if data["filter"] is None else LayerFilter.from_json(data["filter"]),
+            replaces=data.get("replaces", UNSET),
+            scenario=UNSET if "scenario" not in data else None if data["scenario"] is None else ScenarioInfo.from_json(data["scenario"]),
             service=UNSET if "service" not in data else None if data["service"] is None else ServiceLayer.from_json(data["service"]),
             snap=UNSET if "snap" not in data else None if data["snap"] is None else LayerSnap.from_json(data["snap"]),
+            time=UNSET if "time" not in data else None if data["time"] is None else LayerTime.from_json(data["time"]),
         )
 
 
@@ -4982,6 +5167,150 @@ class LayerStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerTime(_Model):
+    """A layer's time setting (docs/adr/0210 §2): its objects' start (or
+    moment) and end are the values of these attributes.
+    Attributes:
+        start: The attribute holding the start (an instant layer's moment).
+        cumulative: Birikimli: an object shows from its start on, whatever its end; written only as `true`.
+        end: The attribute holding the end; absent, the objects are moments.
+        key: The attribute naming an object across its versions (Zamanı karşılaştır's key).
+    """
+    start: str
+    cumulative: bool | Unset = UNSET
+    end: str | None | Unset = UNSET
+    key: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["start"] = self.start
+        if self.cumulative is not UNSET:
+            out["cumulative"] = self.cumulative
+        if self.end is not UNSET:
+            out["end"] = self.end
+        if self.key is not UNSET:
+            out["key"] = self.key
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerTime:
+        return cls(
+            start=data["start"],
+            cumulative=data.get("cumulative", UNSET),
+            end=data.get("end", UNSET),
+            key=data.get("key", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersFilter(_Model):
+    """Input of `cad.layers.filter` v1: a layer's filter written, or taken away
+    (`filter` absent or null), as one undo step “Katman süzgeci”. A layer that
+    already has it as given is left as it is (`changed` false, no step).
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_filter`
+    (`LayerFilter::problem`), `invalid_expression` (the condition does not
+    compile, or reads `$sıra` or `$ölçek`; the message says where); then
+    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer drawn
+    from a service: it holds no objects).
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        filter: Its new filter; absent or null takes it away.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    filter: LayerFilter | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.filter is not UNSET:
+            out["filter"] = None if self.filter is None else self.filter.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersFilter:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            filter=UNSET if "filter" not in data else None if data["filter"] is None else LayerFilter.from_json(data["filter"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersFilterPlan(_Model):
+    """What `cad.layers.filter` would write (plan mode); nothing is written.
+    Attributes:
+        node: The layer as execute would leave it.
+        passed: The layer's objects that would pass the filter, and all of them.
+        revision: The document revision the plan was made against.
+    """
+    node: LayerNode
+    changed: bool
+    passed: int
+    total: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["node"] = self.node.to_json()
+        out["changed"] = self.changed
+        out["passed"] = self.passed
+        out["total"] = self.total
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersFilterPlan:
+        return cls(
+            node=LayerNode.from_json(data["node"]),
+            changed=data["changed"],
+            passed=data["passed"],
+            total=data["total"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersFiltered(_Model):
+    """Output of `cad.layers.filter` v1.
+    Attributes:
+        changed: Whether the filter differed (an undo step was written).
+        passed: The layer's objects that pass the filter (all of them without one).
+        total: The layer's objects.
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    changed: bool
+    passed: int
+    total: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["changed"] = self.changed
+        out["passed"] = self.passed
+        out["total"] = self.total
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersFiltered:
+        return cls(
+            layer=data["layer"],
+            changed=data["changed"],
+            passed=data["passed"],
+            total=data["total"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayersService(_Model):
     """Input of `cad.layers.service` v1: one change of the layer tree, as one
     undo step named after the operation.
@@ -5117,6 +5446,97 @@ class LayersServiced(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> LayersServiced:
         return cls(
             layer=data["layer"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersTime(_Model):
+    """Input of `cad.layers.time` v1: a layer's time setting written, or taken
+    away (`time` absent or null), as one undo step “Zaman ayarları”. A layer
+    that already has it as given is left as it is (`changed` false, no step).
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_time`
+    (`LayerTime::problem`); then `invalid_revision`, `revision_conflict`
+    (status `conflict`), `layer_not_found`, `not_a_layer` (a group),
+    `service_layer` (a layer drawn from a service: it holds no objects).
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        time: Its new time setting; absent or null takes it away.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    time: LayerTime | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else self.time.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersTime:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            time=UNSET if "time" not in data else None if data["time"] is None else LayerTime.from_json(data["time"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersTimePlan(_Model):
+    """What `cad.layers.time` would write (plan mode); nothing is written.
+    Attributes:
+        node: The layer as execute would leave it.
+        revision: The document revision the plan was made against.
+    """
+    node: LayerNode
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["node"] = self.node.to_json()
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersTimePlan:
+        return cls(
+            node=LayerNode.from_json(data["node"]),
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersTimed(_Model):
+    """Output of `cad.layers.time` v1.
+    Attributes:
+        changed: Whether the setting differed (an undo step was written).
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersTimed:
+        return cls(
+            layer=data["layer"],
+            changed=data["changed"],
             revision=data["revision"],
         )
 
@@ -5426,6 +5846,189 @@ class LocalDefinition(_Model):
         return cls(
             base=CrsBase.from_json(data["base"]),
             plane=CrsPlane.from_json(data["plane"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkCost(_Model):
+    """A cost besides the length (docs/adr/0209 §2).
+    Attributes:
+        field: The attribute it reads: a speed in km/h, or the whole edge's cost.
+        speed: A speed cost's speed (km/h) where the field gives none it can read.
+        unit: A field cost's unit (“TL”, “dk”); a speed cost's is minutes and names none.
+    """
+    name: str
+    kind: NetworkCostKind | NetworkCostKindName
+    field: str
+    speed: float | None | Unset = UNSET
+    unit: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["field"] = self.field
+        if self.speed is not UNSET:
+            out["speed"] = None if self.speed is None else float(self.speed)
+        if self.unit is not UNSET:
+            out["unit"] = self.unit
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkCost:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(NetworkCostKind, data["kind"]),
+            field=data["field"],
+            speed=UNSET if "speed" not in data else None if data["speed"] is None else float(data["speed"]),
+            unit=data.get("unit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkDef(_Model):
+    """A network (docs/adr/0209 §2).
+    Attributes:
+        id: Lower-case letters, digits and hyphens; one of its kind in the project.
+        name: Trimmed; one of its kind in the project.
+        edges: The line layers whose lines, paths and arcs are the edges, in this order.
+        tolerance: Metres, within [`NETWORK_TOLERANCES`].
+        closed: An expression: the edges it holds for are out of service, travelled by nothing.
+        costs: The costs besides the length, in the order the tools offer them.
+        junctions: The point layers whose points are junctions, sources or valves.
+    """
+    id: str
+    name: str
+    kind: NetworkKind | NetworkKindName
+    edges: list[NetworkLayer]
+    connect: NetworkConnect | NetworkConnectName
+    tolerance: float
+    direction: NetworkDirection
+    closed: str | None | Unset = UNSET
+    costs: list[NetworkCost] | Unset = UNSET
+    junctions: list[JunctionLayer] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["edges"] = [e0.to_json() for e0 in self.edges]
+        out["connect"] = _enum_out(self.connect)
+        out["tolerance"] = float(self.tolerance)
+        out["direction"] = self.direction.to_json()
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
+        if self.costs is not UNSET:
+            out["costs"] = [e0.to_json() for e0 in self.costs]
+        if self.junctions is not UNSET:
+            out["junctions"] = [e0.to_json() for e0 in self.junctions]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            kind=_enum_in(NetworkKind, data["kind"]),
+            edges=[NetworkLayer.from_json(e0) for e0 in data["edges"]],
+            connect=_enum_in(NetworkConnect, data["connect"]),
+            tolerance=float(data["tolerance"]),
+            direction=NetworkDirection.from_json(data["direction"]),
+            closed=data.get("closed", UNSET),
+            costs=[NetworkCost.from_json(e0) for e0 in data["costs"]] if "costs" in data else UNSET,
+            junctions=[JunctionLayer.from_json(e0) for e0 in data["junctions"]] if "junctions" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkDefine(_Model):
+    """Input of `cad.network.define` v1.
+
+    - `set`: `network`, which replaces the project's network of its id or goes
+      last;
+    - `remove`: `id`.
+
+    Refusals (`CommandError.code`), checked in this order: `no_network` (set
+    without `network`), `no_id` (remove without `id`), `invalid_network` (the
+    network, or the project's networks with it, by `networks_problem`); then
+    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `unknown_network` (remove: the project has no network of the id). A
+    network naming a layer the drawing does not have is written, with the
+    warning `unknown_layer`.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    operation: NetworkDefineOperation | NetworkDefineOperationName
+    expected_revision: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    network: NetworkDef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.network is not UNSET:
+            out["network"] = None if self.network is None else self.network.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkDefine:
+        return cls(
+            operation=_enum_in(NetworkDefineOperation, data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            id=data.get("id", UNSET),
+            network=UNSET if "network" not in data else None if data["network"] is None else NetworkDef.from_json(data["network"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkDefined(_Model):
+    """Output of `cad.network.define` v1, and its plan: the project's networks as
+    the write leaves them and the revision after it (a plan: before it).
+    """
+    networks: list[NetworkDef]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["networks"] = [e0.to_json() for e0 in self.networks]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkDefined:
+        return cls(
+            networks=[NetworkDef.from_json(e0) for e0 in data["networks"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkLayer(_Model):
+    """An edge layer and, optionally, which of its objects are edges.
+    Attributes:
+        layer: The layer's id. A layer the project no longer has is said when the network is built.
+        filter: An expression: only the objects it holds for; absent: all of them.
+    """
+    layer: str
+    filter: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.filter is not UNSET:
+            out["filter"] = self.filter
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkLayer:
+        return cls(
+            layer=data["layer"],
+            filter=data.get("filter", UNSET),
         )
 
 
@@ -6998,6 +7601,7 @@ class ProjectSettings(_Model):
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
         layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
+        networks: The project's networks (docs/adr/0209 §2).
         second_custom_crs: The second system when it is a definition (instead of `second_srid`).
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
             coordinates are shown beside the project's own; absent: none. Never
@@ -7024,6 +7628,7 @@ class ProjectSettings(_Model):
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     layer_states: list[LayerState] | Unset = UNSET
+    networks: list[NetworkDef] | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
@@ -7055,6 +7660,8 @@ class ProjectSettings(_Model):
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
         if self.layer_states is not UNSET:
             out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
+        if self.networks is not UNSET:
+            out["networks"] = [e0.to_json() for e0 in self.networks]
         if self.second_custom_crs is not UNSET:
             out["secondCustomCrs"] = None if self.second_custom_crs is None else self.second_custom_crs.to_json()
         if self.second_srid is not UNSET:
@@ -7086,6 +7693,7 @@ class ProjectSettings(_Model):
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
+            networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
@@ -7532,6 +8140,194 @@ class RubberLink(_Model):
         return cls(
             from_=Vec2.from_json(data["from"]),
             to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenarioInfo(_Model):
+    """A group made a scenario (docs/adr/0210 §9): its layers are an alternative
+    kept apart from the field state (Mevcut durum).
+    """
+    note: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenarioInfo:
+        return cls(
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenarioPair(_Model):
+    """A base layer and the scenario layer standing for it."""
+    base: str
+    layer: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["base"] = self.base
+        out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenarioPair:
+        return cls(
+            base=data["base"],
+            layer=data["layer"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenariosEdit(_Model):
+    """Input of `cad.scenarios.edit` v1.
+
+    - `create`: `name`; `layers`, the base layers it copies (absent or empty:
+      an empty scenario); `copyObjects` (absent: true), `note`. A group named
+      `name` goes on top of the tree, marked a scenario; in it, for each
+      source in the order given, a layer of the source's name, style, fields,
+      time setting and snapping, standing for it (`replaces`), with copies of
+      its objects under new ids when `copyObjects`.
+    - `apply`: `scenario`, the scenario group. Each of its layers standing for
+      a base layer of the tree replaces that layer's objects with its own (they
+      keep their ids) and goes; the group is a scenario no more: an ordinary
+      group keeping its other layers (new base layers), or gone when it keeps
+      none. The active layer on a scenario layer that goes moves to its base layer.
+
+    Refusals (`CommandError.code`), checked in this order: for `create`,
+    `empty_name` (absent, or empty or only white space), `invalid_name`
+    (longer than 80 characters), `invalid_note` (`ScenarioInfo::problem`),
+    `duplicate_layer` (a layer listed twice); for `apply`, `no_scenario`;
+    then `invalid_revision`, `revision_conflict` (status `conflict`); for
+    `create`, `layer_not_found`, `not_a_base_layer` (a group, a layer in a
+    scenario, or one drawn from a service), `layer_locked` (a source locked,
+    itself or through a group, when its objects are copied: docs/adr/0037);
+    for `apply`, `scenario_not_found` (no such node, or not a scenario group),
+    `layer_locked` (a layer of the scenario or a base layer it replaces, itself
+    or through a group).
+    Attributes:
+        copy_objects: `create`: whether their objects are copied (absent: true).
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        layers: `create`: the base layers it copies, in order.
+        name: `create`: the scenario's name (trimmed).
+        note: `create`: the scenario's note.
+        scenario: `apply`: the scenario group's id.
+    """
+    operation: ScenarioOperation | ScenarioOperationName
+    copy_objects: bool | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    layers: list[str] | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    note: str | None | Unset = UNSET
+    scenario: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.copy_objects is not UNSET:
+            out["copyObjects"] = self.copy_objects
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.note is not UNSET:
+            out["note"] = self.note
+        if self.scenario is not UNSET:
+            out["scenario"] = self.scenario
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenariosEdit:
+        return cls(
+            operation=_enum_in(ScenarioOperation, data["operation"]),
+            copy_objects=data.get("copyObjects", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            name=data.get("name", UNSET),
+            note=data.get("note", UNSET),
+            scenario=data.get("scenario", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenariosEditPlan(_Model):
+    """What `cad.scenarios.edit` would write (plan mode); nothing is written. The
+    same as the output, the ids those execute would give, and the revision
+    the plan was made against.
+    """
+    scenario: str
+    layers: list[ScenarioPair]
+    kept: list[str]
+    objects: int
+    removed: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scenario"] = self.scenario
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["kept"] = list(self.kept)
+        out["objects"] = self.objects
+        out["removed"] = self.removed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenariosEditPlan:
+        return cls(
+            scenario=data["scenario"],
+            layers=[ScenarioPair.from_json(e0) for e0 in data["layers"]],
+            kept=list(data["kept"]),
+            objects=data["objects"],
+            removed=data["removed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenariosEdited(_Model):
+    """Output of `cad.scenarios.edit` v1.
+    Attributes:
+        scenario: The scenario group made, or the one applied (gone now).
+        layers: `create`: each source with its copy; `apply`: each base layer with the scenario layer applied onto it.
+        kept: `apply`: the scenario's other layers, base layers now, in its group (an ordinary group now).
+        objects: Objects copied (`create`) or moved into base layers (`apply`).
+        removed: `apply`: the base layers' objects removed.
+        revision: The document's revision after the write, as decimal text.
+    """
+    scenario: str
+    layers: list[ScenarioPair]
+    kept: list[str]
+    objects: int
+    removed: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scenario"] = self.scenario
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["kept"] = list(self.kept)
+        out["objects"] = self.objects
+        out["removed"] = self.removed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenariosEdited:
+        return cls(
+            scenario=data["scenario"],
+            layers=[ScenarioPair.from_json(e0) for e0 in data["layers"]],
+            kept=list(data["kept"]),
+            objects=data["objects"],
+            removed=data["removed"],
+            revision=data["revision"],
         )
 
 
@@ -9781,6 +10577,63 @@ class DeleteFeatureChange(FeatureChange):
 
 
 @dataclass(kw_only=True, slots=True)
+class BothNetworkDirection(NetworkDirection):
+    """Every edge both ways."""
+    TAG_VALUE: ClassVar[str] = "both"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "both"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BothNetworkDirection:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class DigitizedNetworkDirection(NetworkDirection):
+    """Every edge the way it is drawn (pipes drawn with the flow)."""
+    TAG_VALUE: ClassVar[str] = "digitized"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "digitized"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DigitizedNetworkDirection:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldNetworkDirection(NetworkDirection):
+    """By an attribute's value: `forward` the way the edge is drawn only, `backward` against it only, `closed`
+    neither; any other value, and none, both ways.
+    """
+    TAG_VALUE: ClassVar[str] = "field"
+    field: str
+    backward: list[str] = field(default_factory=list)
+    closed: list[str] = field(default_factory=list)
+    forward: list[str] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "field"}
+        out["field"] = self.field
+        out["backward"] = list(self.backward)
+        out["closed"] = list(self.closed)
+        out["forward"] = list(self.forward)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldNetworkDirection:
+        return cls(
+            field=data["field"],
+            backward=list(data["backward"]) if "backward" in data else list(),
+            closed=list(data["closed"]) if "closed" in data else list(),
+            forward=list(data["forward"]) if "forward" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CoordinatesTableSource(TableSource):
     """Koordinat çizelgesi: the points and vertices of these objects."""
     TAG_VALUE: ClassVar[str] = "coordinates"
@@ -10151,6 +11004,9 @@ _ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometr
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
 
 
+_NETWORK_DIRECTION: dict[str, type[NetworkDirection]] = {"both": BothNetworkDirection, "digitized": DigitizedNetworkDirection, "field": FieldNetworkDirection}
+
+
 _TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource}
 
 
@@ -10195,6 +11051,7 @@ __all__ = [
     "BlocksEdit",
     "BlocksEditPlan",
     "BlocksEdited",
+    "BothNetworkDirection",
     "Bounds",
     "CellRange",
     "Checkpoint",
@@ -10231,6 +11088,7 @@ __all__ = [
     "DatumTransform",
     "DeleteBlockChange",
     "DeleteFeatureChange",
+    "DigitizedNetworkDirection",
     "DimensionArrow",
     "DimensionArrowName",
     "DimensionEntity",
@@ -10276,6 +11134,7 @@ __all__ = [
     "FeedKind",
     "FeedKindName",
     "FieldChoice",
+    "FieldNetworkDirection",
     "FileCommit",
     "FileCommitted",
     "FileTableSource",
@@ -10304,6 +11163,9 @@ __all__ = [
     "InvitationRevoke",
     "InvitationState",
     "InvitationStateName",
+    "JunctionLayer",
+    "JunctionRole",
+    "JunctionRoleName",
     "LabelInk",
     "LabelInkName",
     "LabelPlacement",
@@ -10312,6 +11174,7 @@ __all__ = [
     "LayerField",
     "LayerFieldKind",
     "LayerFieldKindName",
+    "LayerFilter",
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",
@@ -10321,9 +11184,16 @@ __all__ = [
     "LayerState",
     "LayerStateNode",
     "LayerStyle",
+    "LayerTime",
+    "LayersFilter",
+    "LayersFilterPlan",
+    "LayersFiltered",
     "LayersService",
     "LayersServicePlan",
     "LayersServiced",
+    "LayersTime",
+    "LayersTimePlan",
+    "LayersTimed",
     "LeaderArrow",
     "LeaderArrowName",
     "LeaderEntity",
@@ -10339,6 +11209,20 @@ __all__ = [
     "LocalDefinition",
     "MirrorTransform",
     "MoveTransform",
+    "NetworkConnect",
+    "NetworkConnectName",
+    "NetworkCost",
+    "NetworkCostKind",
+    "NetworkCostKindName",
+    "NetworkDef",
+    "NetworkDefine",
+    "NetworkDefineOperation",
+    "NetworkDefineOperationName",
+    "NetworkDefined",
+    "NetworkDirection",
+    "NetworkKind",
+    "NetworkKindName",
+    "NetworkLayer",
     "NewObject",
     "PathArrayLayout",
     "PathEntity",
@@ -10433,6 +11317,13 @@ __all__ = [
     "RubberLink",
     "RubbersheetTransform",
     "ScaleTransform",
+    "ScenarioInfo",
+    "ScenarioOperation",
+    "ScenarioOperationName",
+    "ScenarioPair",
+    "ScenariosEdit",
+    "ScenariosEditPlan",
+    "ScenariosEdited",
     "ServiceConnection",
     "ServiceKind",
     "ServiceKindName",

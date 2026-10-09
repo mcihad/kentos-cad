@@ -1,0 +1,22 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "time-layer",
+  "title": "Zaman ayarları: Yol katmanı açılış tarihinden birikimli zamansal yapılır (tek adım “Zaman ayarları”); sürgü 2024'te yolu gösterir, Başa'da (2010) yol yoktur; geri alınınca yol zamansızdır ve her zaman görünür",
+  "source": "docs/adr/0210",
+  "covers": ["GIS-12"],
+  "document": "temporal.kcad",
+  "view": {"center": [487050, 4420025], "metresPerPixel": 0.25},
+  "clickTolerance": 0.5,
+  "steps": [
+    {"run": "time.layer", "expect": {"dialog": "Zaman ayarları"}},
+    {"dialog": "Zaman ayarları", "fill": {"Katman": "Yol", "Başlangıç alanı": "acilis_tarihi"}, "check": {"Birikimli (başlangıçtan sonra hep görünür)": true}, "press": "Kaydet", "expect": {"dialog": null, "canUndo": true, "logged": ["“Yol” katmanı zamansal: acilis_tarihi (birikimli)."]}},
+    {"run": "time.slider", "expect": {"time": {"label": "01.01.2024", "position": 14, "last": 14}}},
+    {"click": [-40, 11], "note": "yol 01.09.2011'de açıldı", "expect": {"selected": [12]}},
+    {"key": "Esc", "expect": {"selected": []}},
+    {"timebar": "Başa", "expect": {"time": {"label": "01.01.2010", "position": 0, "last": 14}}},
+    {"click": [-40, 11], "expect": {"selected": []}},
+    {"key": "Ctrl+Z", "note": "Zaman ayarları geri alınır: yol zamansız", "expect": {"canUndo": false}},
+    {"click": [-40, 11], "expect": {"selected": [12]}}
+  ]
+}

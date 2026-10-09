@@ -8,9 +8,12 @@
 
 mod blocks;
 mod crs;
+mod filter;
+mod networks;
 mod objects;
 mod services;
 mod styles;
+mod temporal;
 
 use kentos_contracts::{
     AngleUnit, AnnotationHeights, AnnotationKind, AreaUnit, Bounds, DOCUMENT_FORMAT,
@@ -286,6 +289,8 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     let settings = required(r, settings_, "settings")?;
     let active_layer = required(r, active_layer, "activeLayer")?;
     service_links(r, &layers, &settings, &entities)?;
+    scenario_tree(r, &layers)?;
+    filter_tree(r, &layers)?;
     Ok(DocumentSnapshotV2 {
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -302,6 +307,31 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
         project_id,
         migrated_from,
     })
+}
+
+/// Schema 34's tree rules (docs/adr/0210 §2), as `scenarios_problem` says
+/// them: a time on a layer that holds objects, scenarios not nested, a
+/// scenario layer standing for one base layer.
+fn scenario_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadError> {
+    let Some(problem) = kentos_contracts::scenarios_problem(layers) else {
+        return Ok(());
+    };
+    r.push(Seg::Name("layers"));
+    let e = r.fail(Code::BadValue, &problem);
+    r.pop();
+    Err(e)
+}
+
+/// Schema 35's tree rule (docs/adr/0211 §2), as `filters_problem` says it:
+/// a filter on a layer that holds objects.
+fn filter_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadError> {
+    let Some(problem) = kentos_contracts::filters_problem(layers) else {
+        return Ok(());
+    };
+    r.push(Seg::Name("layers"));
+    let e = r.fail(Code::BadValue, &problem);
+    r.pop();
+    Err(e)
 }
 
 /// Schema 32's links (docs/adr/0208 §2), as `service_links` says them: a
@@ -345,6 +375,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut topology = None;
     let mut annotation = None;
     let mut connections = Vec::new();
+    let mut networks = Vec::new();
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
@@ -415,6 +446,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "topology" if has.topology => topology = Some(topology_settings(r)?),
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "connections" if has.services => connections = services::connections(r)?,
+            "networks" if has.networks => networks = networks::networks(r)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
             "dimensionStyles" if has.styles => {
                 dimension_styles = styles::dimension_styles(r, has.annotation)?
@@ -485,6 +517,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         topology,
         annotation,
         connections,
+        networks,
     })
 }
 
@@ -754,10 +787,16 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut id, mut name, mut kind, mut style) = (None, None, None, None);
     let (mut locked, mut visible, mut children, mut expanded) = (None, None, None, None);
     let (mut snap, mut fields, mut service, mut feed) = (None, None, None, None);
+    let (mut time, mut scenario, mut replaces) = (None, None, None);
+    let mut filter = None;
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
             "name" => name = Some(text(r)?),
+            "filter" if has.filters => filter = Some(filter::layer_filter(r)?),
+            "time" if has.temporal => time = Some(temporal::layer_time(r)?),
+            "scenario" if has.temporal => scenario = Some(temporal::scenario(r)?),
+            "replaces" if has.temporal => replaces = Some(text(r)?),
             "snap" if has.layer_snap => snap = Some(layer_snap(r)?),
             "fields" if has.layer_fields => fields = Some(layer_fields(r)?),
             "service" if has.services => service = Some(services::service_layer(r)?),
@@ -830,6 +869,42 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 ));
             }
             (feed, _) => feed,
+        },
+        time: match (time, kind) {
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grubun zamanı olmaz; zaman yalnız katmanındır",
+                ));
+            }
+            (time, _) => time,
+        },
+        scenario: match (scenario, kind) {
+            (Some(_), Some(LayerNodeType::Layer)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "katman senaryo olmaz; yalnız grup senaryodur",
+                ));
+            }
+            (scenario, _) => scenario,
+        },
+        replaces: match (replaces, kind) {
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grup bir katmanın yerine geçmez; yalnız katman geçer",
+                ));
+            }
+            (replaces, _) => replaces,
+        },
+        filter: match (filter, kind) {
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grubun süzgeci olmaz; süzgeç yalnız katmanındır",
+                ));
+            }
+            (filter, _) => filter,
         },
     })
 }

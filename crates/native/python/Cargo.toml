@@ -21,6 +21,10 @@ kentos-headless = { path = "../headless" }
 kentos-services = { path = "../../shared/services" }
 kentos-project = { path = "../project" }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
+# kentos.network (docs/adr/0209 §11): a project's network built from the drawing as the İşlemler tools build it.
+kentos-processing = { path = "../processing" }
+# kentos.temporal (docs/adr/0210 §11): a temporal layer's objects and their persistent ids.
+kentos-domain = { path = "../domain" }
 pyo3 = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

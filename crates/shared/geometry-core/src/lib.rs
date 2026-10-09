@@ -39,6 +39,7 @@ pub mod store;
 pub mod survey;
 pub mod tessellate;
 pub mod text;
+pub mod time;
 pub mod tools;
 pub mod triangulate;
 pub mod vec2;

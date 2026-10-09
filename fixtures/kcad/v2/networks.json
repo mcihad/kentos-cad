@@ -1,0 +1,287 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Ağlar",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis",
+    "networks": [
+      {
+        "id": "ag-1",
+        "name": "Yollar",
+        "kind": "road",
+        "edges": [
+          {
+            "layer": "yol",
+            "filter": "tur <> 'yaya'"
+          }
+        ],
+        "connect": "ends",
+        "tolerance": 0.01,
+        "direction": {
+          "kind": "field",
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ]
+        },
+        "costs": [
+          {
+            "name": "Süre",
+            "kind": "speed",
+            "field": "hiz",
+            "speed": 50.0
+          },
+          {
+            "name": "Ücret",
+            "kind": "field",
+            "field": "ucret",
+            "unit": "TL"
+          }
+        ],
+        "closed": "durum = 'kapalı'"
+      },
+      {
+        "id": "ag-2",
+        "name": "İçme suyu",
+        "kind": "utility",
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "junctions": [
+          {
+            "layer": "su-vana",
+            "role": "valve",
+            "closed": "durum = 'kapalı'"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "layer": "su-vana",
+            "role": "junction",
+            "filter": "tur = 'baglanti'"
+          }
+        ],
+        "connect": "vertices",
+        "tolerance": 0.005,
+        "direction": {
+          "kind": "digitized"
+        }
+      },
+      {
+        "id": "ag-3",
+        "name": "Bisiklet",
+        "kind": "road",
+        "edges": [
+          {
+            "layer": "yol",
+            "filter": "bisiklet = 'evet'"
+          },
+          {
+            "layer": "su-hatti",
+            "filter": "servis_yolu = 'evet'"
+          }
+        ],
+        "connect": "ends",
+        "tolerance": 0.5,
+        "direction": {
+          "kind": "field",
+          "field": "bisiklet_yon",
+          "forward": [
+            "ileri"
+          ],
+          "backward": [],
+          "closed": []
+        }
+      }
+    ]
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "yol",
+      "name": "Yol ekseni",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "su-hatti",
+      "name": "Su hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#0090FF",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "su-vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#12A594",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "su-depo",
+      "name": "Depo",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#8E4EC6",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "yol",
+  "entities": [
+    {
+      "kind": "polyline",
+      "id": 1,
+      "layerId": "yol",
+      "attrs": {
+        "yon": "FT",
+        "hiz": "50",
+        "tur": "cadde"
+      },
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500120.5,
+          "y": 4400000.0
+        },
+        {
+          "x": 500180.0,
+          "y": 4400040.25
+        }
+      ],
+      "bulges": [
+        0.0,
+        0.25,
+        0.0
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "yol",
+      "attrs": {
+        "hiz": "30",
+        "ucret": "2,5",
+        "bisiklet": "evet",
+        "bisiklet_yon": "ileri"
+      },
+      "a": {
+        "x": 500120.5,
+        "y": 4400000.0
+      },
+      "b": {
+        "x": 500120.5,
+        "y": 4399900.0
+      }
+    },
+    {
+      "kind": "polyline",
+      "id": 3,
+      "layerId": "su-hatti",
+      "attrs": {
+        "cap": "110"
+      },
+      "pts": [
+        {
+          "x": 500010.0,
+          "y": 4400050.0
+        },
+        {
+          "x": 500090.0,
+          "y": 4400050.0
+        },
+        {
+          "x": 500090.0,
+          "y": 4400110.0
+        }
+      ]
+    },
+    {
+      "kind": "point",
+      "id": 4,
+      "layerId": "su-vana",
+      "attrs": {
+        "Ad": "V-1",
+        "durum": "açık"
+      },
+      "p": {
+        "x": 500090.0,
+        "y": 4400050.0
+      }
+    },
+    {
+      "kind": "point",
+      "id": 5,
+      "layerId": "su-depo",
+      "attrs": {
+        "Ad": "Depo"
+      },
+      "p": {
+        "x": 500010.0,
+        "y": 4400050.0
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a1-6666-7000-8000-000000000401",
+    "0192f5a1-6666-7000-8000-000000000402",
+    "0192f5a1-6666-7000-8000-000000000403",
+    "0192f5a1-6666-7000-8000-000000000404",
+    "0192f5a1-6666-7000-8000-000000000405"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

@@ -69,6 +69,7 @@ interface CaseFile {
 const CASES = JSON.parse(file('cases.json')) as CaseFile;
 const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
+const NETWORK = JSON.parse(file('network.json')) as CaseFile;
 const SURFACE = JSON.parse(file('surface.json')) as CaseFile & { rasters: Record<string, string> };
 const INTERPOLATION = JSON.parse(file('interpolation.json')) as CaseFile;
 const RASTER_VECTOR = JSON.parse(file('raster-vector.json')) as CaseFile & { rasters: Record<string, string> };
@@ -310,7 +311,17 @@ describe('processing cases (fixtures/processing/v1)', () => {
   });
 
   // Each drawing's defaults (DefaultsContext) and each tool's default values on it, as the desktop must read them.
-  for (const [name, d] of [...Object.entries(CASES.documents), ...Object.entries(GEOMETRY.documents), ...Object.entries(SURFACE.documents), ...Object.entries(INTERPOLATION.documents), ...Object.entries(RASTER_OPS.documents), ...Object.entries(RASTER_VECTOR.documents), ...Object.entries(HYDROLOGY.documents), ...Object.entries(DISTANCE.documents)]) {
+  for (const [name, d] of [
+    ...Object.entries(CASES.documents),
+    ...Object.entries(GEOMETRY.documents),
+    ...Object.entries(NETWORK.documents),
+    ...Object.entries(SURFACE.documents),
+    ...Object.entries(INTERPOLATION.documents),
+    ...Object.entries(RASTER_OPS.documents),
+    ...Object.entries(RASTER_VECTOR.documents),
+    ...Object.entries(HYDROLOGY.documents),
+    ...Object.entries(DISTANCE.documents),
+  ]) {
     it(`${name}: the defaults the tools take from the drawing`, () => {
       const runner = new ProcessingRunner({ doc: load(name), selectedIds: () => [], visibleBounds: () => null });
       expect(runner.defaults()).toEqual(d.defaults);
@@ -658,6 +669,19 @@ describe.skipIf(!surfaceModulesBuilt)('distance and cost cases (fixtures/process
       } finally {
         setRasterRunHost(null);
       }
+    });
+  }
+});
+
+describe('network cases (fixtures/processing/v1/network.json, docs/adr/0209)', () => {
+  it('is a v1 case file', () => {
+    expect([NETWORK.format, NETWORK.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of NETWORK.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      check(c, await play(NETWORK, c, 'client'), NETWORK.tolerance, NETWORK.measureTolerance);
+      check(c, await play(NETWORK, c, 'worker'), NETWORK.tolerance, NETWORK.measureTolerance);
     });
   }
 });

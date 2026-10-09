@@ -135,6 +135,9 @@ pub struct Step {
     pub(super) overview: Option<[f64; 2]>,
     /// Büyüteç's zoom button, by its words (`8×`).
     pub(super) magnifier: Option<String>,
+    /// Zaman sürgüsü's bar (docs/adr/0210 §10): a button by its words (`Başa`, `Geri`, `Oynat`, `İleri`,
+    /// `Sona`, `Kapat`) or the window's (`Anlık`, `Aralık`).
+    pub(super) timebar: Option<String>,
     /// The paragraph editor (docs/adr/0182 §4): its text typed, letters
     /// chosen and formatted, then kept or dropped.
     pub(super) paragraph: Option<ParagraphStep>,
@@ -223,6 +226,9 @@ pub struct Expect {
     pub(super) locked_layers: Option<Vec<String>>,
     /// Every layer and group by its path, in tree order (docs/adr/0177 §5).
     pub(super) layers: Option<Vec<String>>,
+    /// The layer tree's counts as its rows show them, by path (“Kadastro / Parsel”): “geçen / bütün” where a
+    /// filter leaves objects out (docs/adr/0211 §4); only the rows named, each exactly.
+    pub(super) layer_counts: Option<std::collections::BTreeMap<String, String>>,
     /// The colour and line weight new objects take now (the ribbon's
     /// Renk and Kalınlık); `null` the layer's, and absent differ.
     #[serde(default, deserialize_with = "present")]
@@ -237,6 +243,18 @@ pub struct Expect {
     /// `null` when it is closed.
     #[serde(default, deserialize_with = "present")]
     pub(super) magnifier: Option<Option<MagnifierExpect>>,
+    /// Zaman sürgüsü (docs/adr/0210 §5): what its position shows, its position and its last, exact; `null`
+    /// when it is closed, and absent differ.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) time: Option<Option<TimeExpect>>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TimeExpect {
+    pub(super) label: String,
+    pub(super) position: i64,
+    pub(super) last: i64,
 }
 
 #[derive(Debug, Deserialize)]

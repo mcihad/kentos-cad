@@ -160,6 +160,57 @@ pub fn layer_param(name: &str, color: &str) -> crate::types::ParamDef {
     .describe("Bu adda katman yoksa oluşturulur.")
 }
 
+/// A result's geometry as a new object on the output layer, with its attributes (Ağ analizi's ways and lines).
+pub fn edit_object(
+    geometry: &kentos_contracts::EntityGeometry,
+    layer_id: &str,
+    attrs: BTreeMap<String, String>,
+) -> Option<Entity> {
+    Some(entity_of(
+        geometry,
+        EntityBase {
+            id: 0,
+            layer_id: layer_id.to_owned(),
+            color: None,
+            attrs,
+            label: None,
+            symbol: None,
+            line_weight: None,
+        },
+    ))
+}
+
+/// A layer parameter whose new layer has its own look: `color`, `weight` mm and an area `fill` (Ağ analizi's).
+pub fn layer_param_styled(
+    name: &str,
+    label: &str,
+    new_name: &str,
+    color: &str,
+    weight: f64,
+    fill: Option<&str>,
+    description: Option<&str>,
+) -> crate::types::ParamDef {
+    let p = crate::types::ParamDef::new(
+        name,
+        label,
+        crate::types::ParamKind::Layer {
+            new_layer_style: NewLayerStyle {
+                color: Some(color.to_owned()),
+                line_weight: Some(weight),
+                fill: fill.map(str::to_owned),
+                ..NewLayerStyle::default()
+            },
+            above: None,
+            below: None,
+        },
+    )
+    .default_value(serde_json::json!({ "newName": new_name }));
+    match description {
+        Some(d) => p.describe(d),
+        None => p,
+    }
+}
+
 /// A features parameter of the geometry tools.
 pub fn features_param(
     name: &str,

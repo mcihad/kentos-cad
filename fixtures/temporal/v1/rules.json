@@ -1,0 +1,1178 @@
+{
+  "format": "kentos.temporal-rules",
+  "note": "The rules of a layer's time setting, a scenario and the layer tree's scenarios (docs/adr/0210 §2), each case with the contract's words; null where the value is one. scripts/fixtures/temporal_rules_cases.py writes the values from the ADR and checks the verdicts with tools/kcad/kcad.py's own copy of the rules; Rust (crates/shared/contracts/tests/all/temporal_rules.rs, KENTOS_WRITE_TEMPORAL_RULES=1 writes the words) and TypeScript (apps/web/src/model/temporalRules.test.ts) give the same words.",
+  "scenarios": [
+    {
+      "name": "notsuz",
+      "problem": null,
+      "value": {}
+    },
+    {
+      "name": "notlu",
+      "problem": null,
+      "value": {
+        "note": "12 m'lik yol önerisi"
+      }
+    },
+    {
+      "name": "500 karakter",
+      "problem": null,
+      "value": {
+        "note": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+      }
+    },
+    {
+      "name": "501 karakter",
+      "problem": "senaryonun notu 500 karakterden uzun",
+      "value": {
+        "note": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+      }
+    },
+    {
+      "name": "boş not",
+      "problem": "senaryonun notu boş ya da başında veya sonunda boşluk var",
+      "value": {
+        "note": ""
+      }
+    },
+    {
+      "name": "boşluklu not",
+      "problem": "senaryonun notu boş ya da başında veya sonunda boşluk var",
+      "value": {
+        "note": " öneri"
+      }
+    }
+  ],
+  "times": [
+    {
+      "name": "aralıklı",
+      "problem": null,
+      "value": {
+        "end": "gecerlilik_bitis",
+        "start": "gecerlilik_baslangic"
+      }
+    },
+    {
+      "name": "anlık",
+      "problem": null,
+      "value": {
+        "start": "gecerlilik_baslangic"
+      }
+    },
+    {
+      "name": "anahtarlı ve birikimli",
+      "problem": null,
+      "value": {
+        "cumulative": true,
+        "end": "gecerlilik_bitis",
+        "key": "parsel_no",
+        "start": "gecerlilik_baslangic"
+      }
+    },
+    {
+      "name": "Türkçe adlar",
+      "problem": null,
+      "value": {
+        "end": "geçerlilik bitişi",
+        "start": "geçerlilik başlangıcı"
+      }
+    },
+    {
+      "name": "64 karakter",
+      "problem": null,
+      "value": {
+        "end": "gecerlilik_bitis",
+        "start": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    },
+    {
+      "name": "65 karakter",
+      "problem": "başlangıç alanının adı 64 karakterden uzun",
+      "value": {
+        "end": "gecerlilik_bitis",
+        "start": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    },
+    {
+      "name": "kimlik 65 karakter",
+      "problem": "kimlik alanının adı 64 karakterden uzun",
+      "value": {
+        "end": "gecerlilik_bitis",
+        "key": "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+        "start": "gecerlilik_baslangic"
+      }
+    },
+    {
+      "name": "boş başlangıç",
+      "problem": "başlangıç alanının adı boş",
+      "value": {
+        "end": "gecerlilik_bitis",
+        "start": ""
+      }
+    },
+    {
+      "name": "boşluklu başlangıç",
+      "problem": "başlangıç alanının adının başında ya da sonunda boşluk var",
+      "value": {
+        "end": "gecerlilik_bitis",
+        "start": " baslangic"
+      }
+    },
+    {
+      "name": "boşluklu bitiş",
+      "problem": "bitiş alanının adının başında ya da sonunda boşluk var",
+      "value": {
+        "end": "bitis ",
+        "start": "gecerlilik_baslangic"
+      }
+    },
+    {
+      "name": "boş bitiş",
+      "problem": "bitiş alanının adı boş",
+      "value": {
+        "end": "",
+        "start": "gecerlilik_baslangic"
+      }
+    },
+    {
+      "name": "boş kimlik",
+      "problem": "kimlik alanının adı boş",
+      "value": {
+        "end": "gecerlilik_bitis",
+        "key": "",
+        "start": "gecerlilik_baslangic"
+      }
+    },
+    {
+      "name": "aynı alan",
+      "problem": "başlangıç ve bitiş aynı alan olamaz",
+      "value": {
+        "end": "gecerlilik_baslangic",
+        "start": "gecerlilik_baslangic"
+      }
+    },
+    {
+      "name": "kimlik başlangıçla aynı",
+      "problem": null,
+      "value": {
+        "end": "gecerlilik_bitis",
+        "key": "gecerlilik_baslangic",
+        "start": "gecerlilik_baslangic"
+      }
+    }
+  ],
+  "trees": [
+    {
+      "name": "boş ağaç",
+      "problem": null,
+      "value": []
+    },
+    {
+      "name": "zamanlı katman",
+      "problem": null,
+      "value": [
+        {
+          "children": [],
+          "expanded": true,
+          "id": "parsel",
+          "locked": false,
+          "name": "Parsel",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "time": {
+            "end": "gecerlilik_bitis",
+            "start": "gecerlilik_baslangic"
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "grupta zaman",
+      "problem": "“Grup” bir grup; grubun zamanı olmaz, zaman katmanındır",
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "parsel",
+              "locked": false,
+              "name": "Parsel",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "grup",
+          "locked": false,
+          "name": "Grup",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "time": {
+            "end": "gecerlilik_bitis",
+            "start": "gecerlilik_baslangic"
+          },
+          "type": "group",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "servis katmanında zaman",
+      "problem": "“Altlik” servisten çizilir; nesnesi olmayan katmanın zamanı olmaz",
+      "value": [
+        {
+          "children": [],
+          "expanded": true,
+          "id": "altlik",
+          "locked": false,
+          "name": "Altlik",
+          "service": {
+            "kind": "xyz",
+            "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          },
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "time": {
+            "end": "gecerlilik_bitis",
+            "start": "gecerlilik_baslangic"
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "bozuk zaman",
+      "problem": "“Parsel” katmanının zamanı: başlangıç ve bitiş aynı alan olamaz",
+      "value": [
+        {
+          "children": [],
+          "expanded": true,
+          "id": "parsel",
+          "locked": false,
+          "name": "Parsel",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "time": {
+            "end": "gecerlilik_baslangic",
+            "start": "gecerlilik_baslangic"
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "senaryo ve ana katman",
+      "problem": null,
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-a",
+              "locked": false,
+              "name": "Yol A",
+              "replaces": "yol",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            },
+            {
+              "children": [],
+              "expanded": true,
+              "id": "park",
+              "locked": false,
+              "name": "Park",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "iki senaryo aynı katmanın yerine",
+      "problem": null,
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-a",
+              "locked": false,
+              "name": "Yol A",
+              "replaces": "yol",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-b",
+              "locked": false,
+              "name": "Yol B",
+              "replaces": "yol",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-b",
+          "locked": false,
+          "name": "Alt B",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "katman senaryo",
+      "problem": "“Yol” bir katman; yalnız grup senaryo olur",
+      "value": [
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "iç içe senaryo",
+      "problem": "“Alt B” senaryosu “Alt A” senaryosunun içinde; senaryo iç içe olmaz",
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "alt-b",
+              "locked": false,
+              "name": "Alt B",
+              "scenario": {},
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "group",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "bozuk not",
+      "problem": "“Alt A” senaryosu: senaryonun notu boş ya da başında veya sonunda boşluk var",
+      "value": [
+        {
+          "children": [],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {
+            "note": ""
+          },
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "senaryo dışında yerine geçen",
+      "problem": "“Yol A” bir senaryonun içinde değil; yalnız senaryo katmanı bir katmanın yerine geçer",
+      "value": [
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol-a",
+          "locked": false,
+          "name": "Yol A",
+          "replaces": "yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        },
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "grup yerine geçiyor",
+      "problem": "“Grup” bir grup; yalnız katman bir katmanın yerine geçer",
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "grup",
+              "locked": false,
+              "name": "Grup",
+              "replaces": "yol",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "group",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "boş yerine geçen",
+      "problem": "“Yol A” katmanının yerine geçtiği katman boş",
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-a",
+              "locked": false,
+              "name": "Yol A",
+              "replaces": "",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "kendi yerine",
+      "problem": "“Yol A” katmanı kendi yerine geçemez",
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-a",
+              "locked": false,
+              "name": "Yol A",
+              "replaces": "yol-a",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "senaryo katmanının yerine",
+      "problem": "“Yol A” katmanı “Yol B” düğümünün yerine geçiyor; yalnız bir ana katmanın (senaryo dışındaki katmanın) yerine geçilir",
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-a",
+              "locked": false,
+              "name": "Yol A",
+              "replaces": "yol-b",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            },
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-b",
+              "locked": false,
+              "name": "Yol B",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "başka senaryonun katmanının yerine",
+      "problem": "“Yol A” katmanı “Yol B” düğümünün yerine geçiyor; yalnız bir ana katmanın (senaryo dışındaki katmanın) yerine geçilir",
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-a",
+              "locked": false,
+              "name": "Yol A",
+              "replaces": "yol-b",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-b",
+              "locked": false,
+              "name": "Yol B",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-b",
+          "locked": false,
+          "name": "Alt B",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "grubun yerine",
+      "problem": "“Yol A” katmanı “Grup” düğümünün yerine geçiyor; yalnız bir ana katmanın (senaryo dışındaki katmanın) yerine geçilir",
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-a",
+              "locked": false,
+              "name": "Yol A",
+              "replaces": "grup",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol",
+              "locked": false,
+              "name": "Yol",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "grup",
+          "locked": false,
+          "name": "Grup",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "aynı senaryoda iki kez",
+      "problem": "“Alt A” senaryosunda “Yol” katmanının yerine iki katman geçiyor",
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-a",
+              "locked": false,
+              "name": "Yol A",
+              "replaces": "yol",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            },
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-b",
+              "locked": false,
+              "name": "Yol B",
+              "replaces": "yol",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "ağaçta olmayan katman",
+      "problem": null,
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-a",
+              "locked": false,
+              "name": "Yol A",
+              "replaces": "silinmis",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "grubun içindeki ana katman",
+      "problem": null,
+      "value": [
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol-a",
+              "locked": false,
+              "name": "Yol A",
+              "replaces": "yol",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "expanded": true,
+              "id": "yol",
+              "locked": false,
+              "name": "Yol",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "layer",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "grup",
+          "locked": false,
+          "name": "Grup",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "senaryonun alt grubunda",
+      "problem": null,
+      "value": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "expanded": true,
+                  "id": "yol-a",
+                  "locked": false,
+                  "name": "Yol A",
+                  "replaces": "yol",
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "type": "layer",
+                  "visible": true
+                }
+              ],
+              "expanded": true,
+              "id": "ic",
+              "locked": false,
+              "name": "Ic",
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              },
+              "type": "group",
+              "visible": true
+            }
+          ],
+          "expanded": true,
+          "id": "alt-a",
+          "locked": false,
+          "name": "Alt A",
+          "scenario": {},
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "group",
+          "visible": true
+        },
+        {
+          "children": [],
+          "expanded": true,
+          "id": "yol",
+          "locked": false,
+          "name": "Yol",
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "type": "layer",
+          "visible": true
+        }
+      ]
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,29 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "network-trace",
+  "title": "Şebeke izleme: içme suyunun kuzey kolunda bağlı olan 526 m (kapalı V-5 durdurur); Engel (E) güney kolunu keser (496 m), Esc geri alır; Tür (T) akış aşağı kolun ucuna 84 m, akış yukarı depoya 134 m, yalıtım: V-1, V-2 ve V-4 kapatılır, 174 m ve beslemesiz kalan 296 m; Enter boruları ve vanaları seçer, söyler, araç çıkar; bellek başladığı gibi bırakılır",
+  "source": "docs/adr/0209 §8, §10; web tools/networkTraceTool.ts, masaüstü kentos_interaction::network::trace; başvuru scripts/fixtures/network_cases.py",
+  "covers": ["GIS-11"],
+  "document": "networks.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.75 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "clickTolerance": 0.75,
+  "steps": [
+    {"run": "tool.netTrace", "note": "Şebeke izleme önce şebeke ağını alır.", "expect": {"tool": "netTrace", "points": 0, "prompt": "Şebeke izleme: izlemenin başlayacağı yere tıklayın ya da Y,X yazın [Ağ (A): İçme suyu / Engel (E) / Tür (T): bağlı]"}},
+    {"click": [66, 30], "note": "Kırık boru kuzey kolunda, kavşakla V-4 arasında.", "expect": {"points": 1, "prompt": "Şebeke izleme: 526.000 m, 5 nesne; başka başlangıca tıklayın ya da Enter ile seçin [Ağ (A): İçme suyu / Engel (E) / Tür (T): bağlı / Seç (Enter)]"}},
+    {"key": "E", "expect": {"prompt": "Şebeke izleme: 526.000 m, 5 nesne; başka başlangıca tıklayın ya da Enter ile seçin [Ağ (A): İçme suyu / Engel (E): sonraki tıklama / Tür (T): bağlı / Seç (Enter)]"}},
+    {"click": [-54, -30], "note": "Engel güney kolunda: V-5'e 30 m kalır.", "expect": {"points": 2, "prompt": "Şebeke izleme: 496.000 m, 5 nesne; başka başlangıca tıklayın ya da Enter ile seçin [Ağ (A): İçme suyu / Engel (E) / Tür (T): bağlı / Seç (Enter)]"}},
+    {"key": "Esc", "expect": {"points": 1, "prompt": "Şebeke izleme: 526.000 m, 5 nesne; başka başlangıca tıklayın ya da Enter ile seçin [Ağ (A): İçme suyu / Engel (E) / Tür (T): bağlı / Seç (Enter)]"}},
+    {"key": "T", "note": "Borular depodan çizildi: akış aşağı kolun ucuna.", "expect": {"prompt": "Şebeke izleme: 84.000 m, 1 nesne; başka başlangıca tıklayın ya da Enter ile seçin [Ağ (A): İçme suyu / Engel (E) / Tür (T): akış aşağı / Seç (Enter)]"}},
+    {"key": "T", "note": "Akış yukarı kavşaktan depoya; batı kolu akış aşağıdadır.", "expect": {"prompt": "Şebeke izleme: 134.000 m, 2 nesne; başka başlangıca tıklayın ya da Enter ile seçin [Ağ (A): İçme suyu / Engel (E) / Tür (T): akış yukarı / Seç (Enter)]"}},
+    {"key": "T", "note": "Yalıtım: en yakın açık vanalar; batısı ve kuzey kolu beslemesiz kalır.", "expect": {"prompt": "Şebeke izleme: 174.000 m, 3 nesne; 3 vana kapatılır; beslemesiz kalan 296.000 m, 4 nesne; başka başlangıca tıklayın ya da Enter ile seçin [Ağ (A): İçme suyu / Engel (E) / Tür (T): yalıtım / Seç (Enter)]"}},
+    {"shot": "yalitim"},
+    {"key": "Enter", "expect": {"tool": "select", "selected": [22, 23, 25, 28, 29, 31], "log": "success", "logged": ["Şebeke izleme (yalıtım): 174.000 m, 3 nesne; 3 vana kapatılır; beslemesiz kalan 296.000 m, 4 nesne; kapatılacak vanalar: V-1, V-2, V-4."]}},
+    {"shot": "yalitim-secili"},
+    {"key": "Esc", "expect": {"selected": []}},
+    {"run": "tool.netTrace", "expect": {"tool": "netTrace", "prompt": "Şebeke izleme: izlemenin başlayacağı yere tıklayın ya da Y,X yazın [Ağ (A): İçme suyu / Engel (E) / Tür (T): yalıtım]"}},
+    {"key": "T", "note": "Bellek başladığı gibi.", "expect": {"prompt": "Şebeke izleme: izlemenin başlayacağı yere tıklayın ya da Y,X yazın [Ağ (A): İçme suyu / Engel (E) / Tür (T): bağlı]"}},
+    {"key": "Esc", "expect": {"tool": "select"}}
+  ]
+}

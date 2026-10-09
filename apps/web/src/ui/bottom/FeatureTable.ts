@@ -218,7 +218,8 @@ export class FeatureTable extends Component {
     const { layers } = this.ctx.doc;
     const current = this.layerId();
     return layers.leaves().map((l) => ({
-      label: `${layers.path(l.id)} (${this.ctx.doc.byLayer(l.id).length})`,
+      // A filtered layer counts what passes its filter (docs/adr/0211 §1).
+      label: `${layers.path(l.id)} (${this.ctx.view.geometry.filterCounts(l.id)?.passed ?? this.ctx.doc.byLayer(l.id).length})`,
       radio: true,
       checked: l.id === current,
       run: () => {
@@ -264,7 +265,7 @@ export class FeatureTable extends Component {
     const { doc, selection, view } = this.ctx;
     const layer = this.layerId();
     const node = layer ? doc.layers.get(layer) : undefined;
-    const entities = layer ? doc.byLayer(layer) : [];
+    const entities = layer ? doc.byLayer(layer).filter((e) => this.ctx.view.geometry.filterShown(e.id)) : [];
     const visible = kept.show === 'inView' ? new Set(view.inBox(view.camera.visibleBounds())) : null;
     this.model = featureTableModel(node?.fields ?? [], entities, (id) => selection.has(id), (e) => !visible || visible.has(e.id), this.passes(entities));
     const { columns } = this.model;

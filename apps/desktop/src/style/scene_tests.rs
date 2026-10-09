@@ -47,6 +47,10 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
         fields: Vec::new(),
         service: None,
         feed: None,
+        time: None,
+        scenario: None,
+        replaces: None,
+        filter: None,
     }
 }
 
@@ -126,6 +130,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             annotation: None,
             text_styles: Vec::new(),
             connections: Vec::new(),
+            networks: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,

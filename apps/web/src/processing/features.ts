@@ -1,6 +1,7 @@
 import type { CadDocument } from '../model/document';
 import { ENTITY_KIND_LABEL, type Entity, type EntityKind, type RasterEntity } from '../model/entities';
 import type { Bounds } from '../model/geometry';
+import { leftOut } from '../model/layerFilter';
 import { withObjects, type DocumentGeometry } from './geometry';
 import type { FeatureSet, FeaturesParam, FeaturesValue } from './types';
 
@@ -35,8 +36,18 @@ export const SCOPE_LABEL: Record<FeaturesValue['scope'], string> = {
   ids: 'Önceki adımın çıktısı',
 };
 
-/** Objects in scope, before the kind filter. */
+/**
+ * Objects in scope, before the kind filter: a layer's filter leaves out what it does not pass (docs/adr/0211 §1), in
+ * every scope but a model's own step outputs.
+ */
 function inScope(value: FeaturesValue, host: FeatureHost): Entity[] {
+  const list = scoped(value, host);
+  if (value.scope === 'ids') return list;
+  const out = leftOut(host.doc);
+  return out.size ? list.filter((e) => !out.has(e.id)) : list;
+}
+
+function scoped(value: FeaturesValue, host: FeatureHost): Entity[] {
   const { doc } = host;
   const shown = (e: Entity) => doc.layers.isVisible(e.layerId);
   switch (value.scope) {

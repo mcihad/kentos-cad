@@ -46,6 +46,15 @@ pub struct NewLayer {
     /// (docs/adr/0208 §2); a group keeps neither.
     pub service: Option<ServiceLayer>,
     pub feed: Option<FeatureFeed>,
+    /// A layer's time setting, a group's scenario and a scenario layer's
+    /// base layer (docs/adr/0210 §2): Senaryo oluştur's copies keep their
+    /// source's time and stand for it; a group keeps only `scenario`.
+    pub time: Option<kentos_contracts::LayerTime>,
+    pub scenario: Option<kentos_contracts::ScenarioInfo>,
+    pub replaces: Option<String>,
+    /// A layer's filter (docs/adr/0211 §2), kept by the node it makes
+    /// (Başka çizimden al's layers); a group keeps none.
+    pub filter: Option<kentos_contracts::LayerFilter>,
 }
 
 impl NewLayer {
@@ -62,6 +71,10 @@ impl NewLayer {
             fields: Vec::new(),
             service: None,
             feed: None,
+            time: None,
+            scenario: None,
+            replaces: None,
+            filter: None,
         }
     }
 
@@ -380,6 +393,39 @@ impl LayerTree {
     }
 
     /// A layer's name, map service and source (docs/adr/0208 §2, §10), as an undo or a redo puts them.
+    /// A node's time setting, scenario and base layer as they are now.
+    pub fn temporal_of(&self, id: &str) -> Option<crate::history::Temporal> {
+        self.get(id).map(|n| crate::history::Temporal {
+            time: n.time.clone(),
+            scenario: n.scenario.clone(),
+            replaces: n.replaces.clone(),
+        })
+    }
+
+    pub(crate) fn replace_temporal(&mut self, id: &str, t: &crate::history::Temporal) {
+        if let Some(node) = self.node_mut(id) {
+            node.time.clone_from(&t.time);
+            node.scenario.clone_from(&t.scenario);
+            node.replaces.clone_from(&t.replaces);
+        }
+    }
+
+    /// A layer's filter as it is now (docs/adr/0211 §2); None for an unknown id.
+    pub fn filter_of(&self, id: &str) -> Option<Option<kentos_contracts::LayerFilter>> {
+        self.get(id).map(|n| n.filter.clone())
+    }
+
+    /// A layer's filter, as an undo or a redo puts it.
+    pub(crate) fn replace_filter(
+        &mut self,
+        id: &str,
+        filter: Option<&kentos_contracts::LayerFilter>,
+    ) {
+        if let Some(node) = self.node_mut(id) {
+            node.filter = filter.cloned();
+        }
+    }
+
     pub(crate) fn replace_service(&mut self, id: &str, served: &crate::history::Served) {
         if let Some(node) = self.node_mut(id) {
             node.name.clone_from(&served.name);
@@ -414,6 +460,10 @@ impl LayerTree {
             },
             service: new.service.filter(|_| new.kind == LayerNodeType::Layer),
             feed: new.feed.filter(|_| new.kind == LayerNodeType::Layer),
+            time: new.time.filter(|_| new.kind == LayerNodeType::Layer),
+            scenario: new.scenario.filter(|_| new.kind == LayerNodeType::Group),
+            replaces: new.replaces.filter(|_| new.kind == LayerNodeType::Layer),
+            filter: new.filter.filter(|_| new.kind == LayerNodeType::Layer),
             style: new.style,
             children: Vec::new(),
         }
@@ -430,6 +480,19 @@ impl LayerTree {
             counter: self.counter,
         };
         copy.make(new)
+    }
+
+    /// The ids the next `n` nodes added without an id of their own would get
+    /// (`layer-N` in turn), the counter left as it is: a command's plan that
+    /// adds several (Senaryo oluştur, docs/adr/0210 §11).
+    pub fn next_ids(&self, n: usize) -> Vec<String> {
+        let mut copy = Self {
+            roots: Vec::new(),
+            active: String::new(),
+            paths: self.paths.clone(),
+            counter: self.counter,
+        };
+        (0..n).map(|_| copy.next_id()).collect()
     }
 
     /// The group a node added beside or into `parent` goes into: `parent`

@@ -1,0 +1,1032 @@
+{
+ "format": "kentos.network-form",
+ "version": 1,
+ "note": "scripts/fixtures/network_form_cases.py yazar; Ağlar penceresinin form kuralları (docs/adr/0209 §10), KentOS kodu olmadan.",
+ "cases": [
+  {
+   "name": "en yalın yol ağı",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": ""
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "both"
+    }
+   }
+  },
+  {
+   "name": "virgüllü tolerans, adı ve alanları kırpılır",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "  Ana yollar ",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": "  tur = 'cadde'  "
+     },
+     {
+      "layer": "sokak",
+      "filter": "   "
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0,05",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": ""
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Ana yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": "tur = 'cadde'"
+     },
+     {
+      "layer": "sokak"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.05,
+    "direction": {
+     "kind": "both"
+    }
+   }
+  },
+  {
+   "name": "milimetrelik projede tolerans metreye çevrilir",
+   "unit": "mm",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "10",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": ""
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "both"
+    }
+   }
+  },
+  {
+   "name": "santimetrelik projede",
+   "unit": "cm",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "2,5",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": ""
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.025,
+    "direction": {
+     "kind": "both"
+    }
+   }
+  },
+  {
+   "name": "yön alandan: virgül ve noktalı virgülle listeler, boşlar düşer",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "field",
+    "field": " yon ",
+    "forward": "FT, ileri ,",
+    "backward": "TF; geri",
+    "shut": "N;; kapalı",
+    "costs": [],
+    "closed": ""
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "field",
+     "field": "yon",
+     "forward": [
+      "FT",
+      "ileri"
+     ],
+     "backward": [
+      "TF",
+      "geri"
+     ],
+     "closed": [
+      "N",
+      "kapalı"
+     ]
+    }
+   }
+  },
+  {
+   "name": "süre maliyeti: boş hız 50, alan kırpılır",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": " hiz ",
+      "unit": "",
+      "speed": ""
+     }
+    ],
+    "closed": ""
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "both"
+    },
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "speed": 50.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "süre maliyeti: virgüllü hız",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "unit": "",
+      "speed": "32,5"
+     }
+    ],
+    "closed": ""
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "both"
+    },
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "speed": 32.5
+     }
+    ]
+   }
+  },
+  {
+   "name": "alan maliyeti: birim kırpılır, boş birim yazılmaz",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Ücret",
+      "kind": "field",
+      "field": "ucret",
+      "unit": " TL ",
+      "speed": ""
+     },
+     {
+      "name": "Puan",
+      "kind": "field",
+      "field": "puan",
+      "unit": "  ",
+      "speed": "9"
+     }
+    ],
+    "closed": ""
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "both"
+    },
+    "costs": [
+     {
+      "name": "Ücret",
+      "kind": "field",
+      "field": "ucret",
+      "unit": "TL"
+     },
+     {
+      "name": "Puan",
+      "kind": "field",
+      "field": "puan"
+     }
+    ]
+   }
+  },
+  {
+   "name": "şebeke: düğüm katmanları, roller, süzgeç ve kapalı ifadesi; kapalı kenarlar",
+   "unit": "m",
+   "form": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve",
+      "filter": "",
+      "closed": " durum = 'kapalı' "
+     },
+     {
+      "layer": "depo",
+      "role": "source",
+      "filter": "tip = 'depo'",
+      "closed": ""
+     }
+    ],
+    "connect": "vertices",
+    "tolerance": "0.005",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "durum = 'arızalı'"
+   },
+   "network": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve",
+      "closed": "durum = 'kapalı'"
+     },
+     {
+      "layer": "depo",
+      "role": "source",
+      "filter": "tip = 'depo'"
+     }
+    ],
+    "connect": "vertices",
+    "tolerance": 0.005,
+    "direction": {
+     "kind": "digitized"
+    },
+    "closed": "durum = 'arızalı'"
+   }
+  },
+  {
+   "name": "tolerans sayı değil",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "bir santim",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": ""
+   },
+   "problem": "“Yollar” ağının toleransı bir sayı olmalı (ör. 0,01)."
+  },
+  {
+   "name": "tolerans boş",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": " ",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": ""
+   },
+   "problem": "“Yollar” ağının toleransı bir sayı olmalı (ör. 0,01)."
+  },
+  {
+   "name": "hız sayı değil",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "unit": "",
+      "speed": "hızlı"
+     }
+    ],
+    "closed": ""
+   },
+   "problem": "“Yollar” ağının “Süre” maliyetinin hızı bir sayı olmalı (km/sa)."
+  },
+  {
+   "name": "adsız ağın toleransı sayı değil",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "  ",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "x",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": ""
+   },
+   "problem": "Ağın toleransı bir sayı olmalı (ör. 0,01)."
+  }
+ ],
+ "retype": [
+  {
+   "name": "yeni yol ağı şebeke olur: çizim yönü, süre gider",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "unit": "",
+      "speed": "50"
+     }
+    ],
+    "closed": ""
+   },
+   "kind": "utility",
+   "expect": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": ""
+   }
+  },
+  {
+   "name": "değiştirilmiş yön ve maliyet kalır",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "field",
+    "field": "yon",
+    "forward": "FT",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "unit": "",
+      "speed": "40"
+     }
+    ],
+    "closed": ""
+   },
+   "kind": "utility",
+   "expect": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "field",
+    "field": "yon",
+    "forward": "FT",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "unit": "",
+      "speed": "40"
+     }
+    ],
+    "closed": ""
+   }
+  },
+  {
+   "name": "şebeke yol ağı olur: iki yön, süre gelir",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": ""
+   },
+   "kind": "road",
+   "expect": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "unit": "",
+      "speed": "50"
+     }
+    ],
+    "closed": ""
+   }
+  },
+  {
+   "name": "şebekenin kendi maliyeti kalır",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Boy",
+      "kind": "field",
+      "field": "boy",
+      "unit": "m",
+      "speed": ""
+     }
+    ],
+    "closed": ""
+   },
+   "kind": "road",
+   "expect": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Boy",
+      "kind": "field",
+      "field": "boy",
+      "unit": "m",
+      "speed": ""
+     }
+    ],
+    "closed": ""
+   }
+  },
+  {
+   "name": "aynı tür",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": ""
+   },
+   "kind": "road",
+   "expect": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": ""
+   }
+  }
+ ],
+ "roundTrip": [
+  {
+   "id": "ag-1",
+   "name": "Yollar",
+   "kind": "road",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "both"
+   }
+  },
+  {
+   "id": "ag-1",
+   "name": "Ana yollar",
+   "kind": "road",
+   "edges": [
+    {
+     "layer": "yol",
+     "filter": "tur = 'cadde'"
+    },
+    {
+     "layer": "sokak"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.05,
+   "direction": {
+    "kind": "both"
+   }
+  },
+  {
+   "id": "ag-1",
+   "name": "Yollar",
+   "kind": "road",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "field",
+    "field": "yon",
+    "forward": [
+     "FT",
+     "ileri"
+    ],
+    "backward": [
+     "TF",
+     "geri"
+    ],
+    "closed": [
+     "N",
+     "kapalı"
+    ]
+   }
+  },
+  {
+   "id": "ag-1",
+   "name": "Yollar",
+   "kind": "road",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "both"
+   },
+   "costs": [
+    {
+     "name": "Süre",
+     "kind": "speed",
+     "field": "hiz",
+     "speed": 50.0
+    }
+   ]
+  },
+  {
+   "id": "ag-1",
+   "name": "Yollar",
+   "kind": "road",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "both"
+   },
+   "costs": [
+    {
+     "name": "Süre",
+     "kind": "speed",
+     "field": "hiz",
+     "speed": 32.5
+    }
+   ]
+  },
+  {
+   "id": "ag-1",
+   "name": "Yollar",
+   "kind": "road",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "both"
+   },
+   "costs": [
+    {
+     "name": "Ücret",
+     "kind": "field",
+     "field": "ucret",
+     "unit": "TL"
+    },
+    {
+     "name": "Puan",
+     "kind": "field",
+     "field": "puan"
+    }
+   ]
+  },
+  {
+   "id": "ag-2",
+   "name": "İçme suyu",
+   "kind": "utility",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "junctions": [
+    {
+     "layer": "vana",
+     "role": "valve",
+     "closed": "durum = 'kapalı'"
+    },
+    {
+     "layer": "depo",
+     "role": "source",
+     "filter": "tip = 'depo'"
+    }
+   ],
+   "connect": "vertices",
+   "tolerance": 0.005,
+   "direction": {
+    "kind": "digitized"
+   },
+   "closed": "durum = 'arızalı'"
+  }
+ ]
+}

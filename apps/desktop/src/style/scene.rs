@@ -75,6 +75,10 @@ struct Layer {
     reads_index: bool,
     /// Its objects changed while it was hidden.
     stale: bool,
+    /// Its time setting when built (docs/adr/0210 §6): another one gives its objects other times.
+    time: Option<kentos_contracts::LayerTime>,
+    /// Its filter when built (docs/adr/0211 §3): another one lets other objects through.
+    filter: Option<kentos_contracts::LayerFilter>,
 }
 
 /// What of a shown layer is built again: all of it, or some of its parts.
@@ -107,7 +111,14 @@ pub struct StyledCache {
     services: HashMap<String, (String, u64, Arc<StyledLayerPart>)>,
     /// What the last rebuild cost, and how many layer parts it built.
     pub last_build: Option<(Duration, usize)>,
+    /// The time slider's window when last built, and the objects the view left out (by the window or a layer's filter)
+    /// (docs/adr/0210 §6): a part whose objects came or went is built again.
+    window: Option<kentos_geometry_core::time::Window>,
+    time_hidden: SlotSet,
 }
+
+/// Slots with the quick hash (a temporal layer's hundred thousand objects are asked each step).
+type SlotSet = HashSet<u32, std::hash::BuildHasherDefault<kentos_domain::SlotHasher>>;
 
 /// The definitions made, changed or removed between two lists of the
 /// document's (an unchanged definition keeps its `Arc`).
@@ -249,6 +260,7 @@ impl StyledCache {
             && self.library == library.version()
             && self.scene.under == under
             && self.clip.is_some_and(|c| !clip_stale(view, &c))
+            && self.window == store.time_window()
         {
             return self.scene.clone();
         }
@@ -257,6 +269,7 @@ impl StyledCache {
         if self.drawing != Some(drawing) {
             self.layers.clear();
             self.slot_part.clear();
+            self.time_hidden.clear();
             self.mark = None;
             self.drawing = Some(drawing);
             all = true;
@@ -305,6 +318,31 @@ impl StyledCache {
         }
         if !changed.is_empty() {
             self.blocks = doc.blocks().to_vec();
+        }
+        // Zaman sürgüsü (docs/adr/0210 §6): a temporal layer shows the objects the slider's window
+        // shows; when the window moves, the parts whose objects come or go are built again.
+        let window = store.time_window();
+        if window != self.window {
+            self.window = window;
+            if !all {
+                for node in doc.layers().leaves() {
+                    if node.time.is_none() || !self.layers.contains_key(node.id.as_str()) {
+                        continue;
+                    }
+                    // Who is where is enough: the objects themselves are not read. An object
+                    // shown now and noted hidden (or the reverse) came or went.
+                    let mut last = None;
+                    for (place, Slot(id)) in doc.layer_slots(&node.id) {
+                        let key = place / PART_PLACES;
+                        if last != Some(key)
+                            && store.view_shown(f64::from(id)) == self.time_hidden.contains(&id)
+                        {
+                            dirty_part(&mut dirty, &node.id, key);
+                            last = Some(key);
+                        }
+                    }
+                }
+            }
         }
         let clip = match self.clip {
             Some(c) if !clip_stale(view, &c) => c,
@@ -362,22 +400,47 @@ impl StyledCache {
                 };
             let reset = all
                 || cached.is_none_or(|l| {
-                    l.stale || l.style != node.style || l.name != node.name || l.split != split
+                    l.stale
+                        || l.style != node.style
+                        || l.name != node.name
+                        || l.split != split
+                        || l.time != node.time
+                        || l.filter != node.filter
                 });
             let changed = dirty.get(&node.id);
             if !reset && changed.is_none() {
                 continue;
             }
+            // The slider's window over a temporal layer: the objects it shows, the others noted.
+            // The view's filter over a layer: its own filter, or the slider's window over a temporal layer.
+            let timed = node.filter.is_some() || (node.time.is_some() && window.is_some());
+            let hidden = &mut self.time_hidden;
+            let mut keep = |e: &&Entity| {
+                let id = e.base().id;
+                let shown = !timed || store.view_shown(f64::from(id));
+                if shown {
+                    hidden.remove(&id);
+                } else {
+                    hidden.insert(id);
+                }
+                shown
+            };
             let parts = if !split {
-                vec![(0, doc.by_layer(&node.id).collect())]
+                vec![(0, doc.by_layer(&node.id).filter(&mut keep).collect())]
             } else if reset {
                 // Every part: the layer's objects by run of places.
                 let mut parts: Vec<(u64, Vec<&Entity>)> = Vec::new();
                 for (place, e) in doc.by_layer_placed(&node.id, 0..u64::MAX) {
                     let key = place / PART_PLACES;
+                    // A part all of whose objects the window leaves out is still a part (an empty one).
+                    let shown = keep(&e);
                     match parts.last_mut() {
-                        Some((k, list)) if *k == key => list.push(e),
-                        _ => parts.push((key, vec![e])),
+                        Some((k, list)) if *k == key => {
+                            if shown {
+                                list.push(e);
+                            }
+                        }
+                        _ => parts.push((key, if shown { vec![e] } else { Vec::new() })),
                     }
                 }
                 parts
@@ -392,6 +455,7 @@ impl StyledCache {
                             key,
                             doc.by_layer_placed(&node.id, places)
                                 .map(|(_, e)| e)
+                                .filter(&mut keep)
                                 .collect(),
                         )
                     })
@@ -487,7 +551,12 @@ impl StyledCache {
             let mut reset = plan.reset;
             // A part reads `$sıra`: the layer is one run, built whole again.
             if split && results.iter().any(|r| r.3) {
-                let entities: Vec<&Entity> = doc.by_layer(id).collect();
+                let timed =
+                    plan.node.filter.is_some() || (plan.node.time.is_some() && window.is_some());
+                let entities: Vec<&Entity> = doc
+                    .by_layer(id)
+                    .filter(|e| !timed || store.view_shown(f64::from(e.base().id)))
+                    .collect();
                 let (layer, _) = build(plan.node, &entities);
                 split = false;
                 reset = true;
@@ -505,6 +574,8 @@ impl StyledCache {
                     split: false,
                     reads_index: true,
                     stale: false,
+                    time: plan.node.time.clone(),
+                    filter: plan.node.filter.clone(),
                 });
                 entry.parts.clear();
                 entry.parts.insert(0, new_part(layer, &entities));
@@ -518,12 +589,16 @@ impl StyledCache {
                 split,
                 reads_index,
                 stale: false,
+                time: plan.node.time.clone(),
+                filter: plan.node.filter.clone(),
             });
             if reset {
                 entry.style = plan.node.style.clone();
                 entry.name = plan.node.name.clone();
                 entry.split = split;
                 entry.stale = false;
+                entry.time = plan.node.time.clone();
+                entry.filter = plan.node.filter.clone();
                 if !results.is_empty() {
                     entry.parts.clear();
                     entry.reads_index = reads_index;
@@ -534,8 +609,15 @@ impl StyledCache {
                 .reserve(results.iter().map(|r| r.1.len()).sum());
             for (key, entities, layer, _) in results {
                 for e in entities {
-                    self.slot_part
-                        .insert(Slot(e.base().id), (Arc::clone(&shared), key));
+                    // Most objects of a part built again were there before: their entry stays.
+                    match self.slot_part.get_mut(&Slot(e.base().id)) {
+                        Some((layer, at)) if *at == key && **layer == *shared => {}
+                        Some(entry) => *entry = (Arc::clone(&shared), key),
+                        None => {
+                            self.slot_part
+                                .insert(Slot(e.base().id), (Arc::clone(&shared), key));
+                        }
+                    }
                 }
                 // A part left with no objects goes; a layer built whole keeps its one.
                 if entities.is_empty() && split {

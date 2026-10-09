@@ -208,3 +208,40 @@ pub const LAYER_HAS_OBJECTS: &str = "layer_has_objects";
 pub const UNKNOWN_CONNECTION: &str = "unknown_connection";
 /// The document refused the change (a layer that may not be removed).
 pub const LAYER_REFUSED: &str = "layer_refused";
+
+// ── cad.network.define (docs/adr/0209 §11) ──────────────────────────────
+
+/// `set` without a network.
+pub const NO_NETWORK: &str = "no_network";
+/// `remove` without a network's id.
+pub const NO_ID: &str = "no_id";
+/// The network, or the project's networks with it, against their rules (`networks_problem`).
+pub const INVALID_NETWORK: &str = "invalid_network";
+/// `remove` of a network the project does not have.
+pub const UNKNOWN_NETWORK: &str = "unknown_network";
+/// A warning: a network names a layer the drawing does not have.
+pub const UNKNOWN_LAYER: &str = "unknown_layer";
+
+// ── cad.layers.time and cad.scenarios.edit (docs/adr/0210 §11) ─────────
+
+/// A time setting against its rules (`LayerTime::problem`).
+pub const INVALID_TIME: &str = "invalid_time";
+/// A scenario's name longer than 80 characters.
+pub const INVALID_NAME: &str = "invalid_name";
+/// A scenario's note against its rules (`ScenarioInfo::problem`).
+pub const INVALID_NOTE: &str = "invalid_note";
+/// A layer listed twice.
+pub const DUPLICATE_LAYER: &str = "duplicate_layer";
+/// `apply` without a scenario.
+pub const NO_SCENARIO: &str = "no_scenario";
+/// A layer to copy that is not a base layer: a group, a scenario's layer, one drawn from a service.
+pub const NOT_A_BASE_LAYER: &str = "not_a_base_layer";
+/// `apply` of a node that is not a scenario group.
+pub const SCENARIO_NOT_FOUND: &str = "scenario_not_found";
+
+// ── cad.layers.filter (docs/adr/0211 §5) ───────────────────────────────
+
+/// A filter against its rules (`LayerFilter::problem`).
+pub const INVALID_FILTER: &str = "invalid_filter";
+/// A filter's condition that does not compile, or reads `$sıra` or `$ölçek`.
+pub const INVALID_EXPRESSION: &str = "invalid_expression";

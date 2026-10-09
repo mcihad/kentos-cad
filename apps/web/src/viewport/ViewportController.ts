@@ -760,6 +760,26 @@ export class ViewportController {
         this.requestRender();
       }),
     );
+    // Zaman sürgüsü (docs/adr/0210 §6): the store takes the window, the temporal layers are built again with what it
+    // shows, the labels are found again; the slider's range follows the drawing.
+    d.add(
+      this.ctx.time.window.subscribe((w) => {
+        this.picker.setTimeWindow(w);
+        for (const l of doc.layers.leaves()) if (l.time) this.dirtyLayers.add(l.id);
+        stale();
+        this.requestRender();
+      }),
+    );
+    let timeRefresh: ReturnType<typeof setTimeout> | undefined;
+    const followTime = () => {
+      if (!this.ctx.time.open.value) return;
+      clearTimeout(timeRefresh);
+      timeRefresh = setTimeout(() => this.ctx.time.refresh(), 150);
+    };
+    d.add(doc.events.on('touched', followTime));
+    d.add(doc.events.on('reset', followTime));
+    d.add(doc.layers.events.on('state', followTime));
+    d.add(() => clearTimeout(timeRefresh));
     // A block definition changed (an edit, an undo, another editor's; docs/adr/0144): the layers holding an
     // insert of it, or of one placing it, are drawn again, and their labels found again.
     let blocks = doc.blocks.value;
@@ -1412,7 +1432,13 @@ export class ViewportController {
         backend.upload(serviceSceneLayer(id, serviceKeyOf(doc, node), node.service.opacity ?? 1, doc.origin));
         continue;
       }
-      const list = doc.byLayer(id);
+      let list = doc.byLayer(id);
+      // A filtered layer shows the objects its filter passes (docs/adr/0211 §3), and with the time slider open a
+      // temporal layer the objects its window shows (docs/adr/0210 §6).
+      if (node.filter || (node.time && this.ctx.time.window.value)) {
+        const shown = this.picker.viewShown(list.map((e) => e.id));
+        list = list.filter((_, i) => shown[i]);
+      }
       if (list.some(isConstruction)) this.constructionLayers.add(id);
       else this.constructionLayers.delete(id);
       backend.upload(buildStyledLayer(id, list, node.style, style));

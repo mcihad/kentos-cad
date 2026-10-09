@@ -1,3 +1,5 @@
+import type { NetworkDef } from '../contracts/generated/NetworkDef';
+import type { NetworkKind } from '../contracts/generated/NetworkKind';
 import type { AngleUnit, DrawingFont } from '../model/projectSettings';
 import type { Entity, EntityKind, NewEntity } from '../model/entities';
 import type { CompiledExpression } from '../model/expression/expression';
@@ -51,6 +53,8 @@ export interface DefaultsContext {
    * text height left empty is this one. Absent: 2 mm, the kind's default.
    */
   measureHeightMm?: number;
+  /** The project's networks (docs/adr/0209): a network parameter takes the first of its kind. Absent: none. */
+  networks?: readonly NetworkDef[];
 }
 
 /**
@@ -213,7 +217,24 @@ export interface FileValue {
   readonly path?: string;
 }
 
-export type ParamDef = FeaturesParam | NumberParam | StringParam | BooleanParam | EnumParam | LayerParam | PointParam | ExpressionParam | FieldParam | FileParam;
+/**
+ * A network of the project and the cost a tool asks it with (docs/adr/0209 §10): the network's id and the cost's name
+ * (Uzunluk, or one of the network's). The runner adds the network's definition as the run starts (`def`).
+ */
+export interface NetworkValue {
+  readonly network: string;
+  readonly cost: string;
+  readonly def?: NetworkDef;
+}
+
+/** A network and its cost (Ağ analizi's tools): the network of `prefers` kind first. */
+export interface NetworkParam<N extends string = string> extends ParamBase<N> {
+  readonly type: 'network';
+  readonly default?: Default<NetworkValue | null>;
+  readonly prefers?: NetworkKind;
+}
+
+export type ParamDef = FeaturesParam | NumberParam | StringParam | BooleanParam | EnumParam | LayerParam | PointParam | ExpressionParam | FieldParam | FileParam | NetworkParam;
 export type ParamType = ParamDef['type'];
 
 /** A parameter's value as the dialog and history hold it. */
@@ -235,7 +256,9 @@ export type ValueOf<D> = D extends { type: 'features' }
                 ? string
                 : D extends { type: 'file' }
                   ? FileValue | null
-                  : never;
+                  : D extends { type: 'network' }
+                    ? NetworkValue
+                    : never;
 
 type Maybe<D, T> = D extends { optional: true } ? T | null : T;
 

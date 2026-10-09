@@ -21,8 +21,11 @@ import type { Workspace } from '../model/projectSettings';
  * and where the contextual Seçim tab is defined; no project shows it.
  */
 export type RibbonSource =
-  /** The titled blocks of a main menu, one panel each (optionally only the named ones, or all but those `except` names). */
-  | { readonly menu: string; readonly sections?: readonly string[]; readonly except?: readonly string[] }
+  /**
+   * The titled blocks of a main menu, one panel each (optionally only the named ones, or all but those `except` names);
+   * `omit` leaves out the processing categories (by id) a panel of the tab holds elsewhere.
+   */
+  | { readonly menu: string; readonly sections?: readonly string[]; readonly except?: readonly string[]; readonly omit?: readonly string[] }
   /** A tool group from the catalog, one panel per tool section. */
   | { readonly tools: ToolGroup }
   /**
@@ -334,6 +337,10 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       // The layers' labels as texts (docs/adr/0175 §3), beside the styles that draw them; a name along a creek or a
       // road (docs/adr/0196 §4).
       { pick: 'Etiket', icon: 'labelsToText', commands: ['tool.labelsToText', 'tool.textAlong', 'tool.textCurve'] },
+      // Zaman and Senaryo (docs/adr/0210 §10): ArcGIS Pro's Time tab and QGIS's Temporal Controller; Netcad's
+      // versioned editing; proposals kept apart from the field state.
+      { pick: 'Zaman', icon: 'timeSlider', commands: ['time.slider', 'time.layer', 'tool.timeVersion', 'tool.timeEnd', 'time.compare'] },
+      { pick: 'Senaryo', icon: 'scenarioCreate', commands: ['scenario.create', 'scenario.show', 'scenario.base', 'scenario.compare', 'scenario.apply'] },
     ],
     launchers: { 'Koordinat sistemi': { command: 'crs.set', title: 'Proje ayarları: koordinat sistemi' } },
   },
@@ -346,6 +353,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'layer.fields', 'data.sources'] },
       // Veride ara (docs/adr/0178): a value in the layers' data, and a place by its coordinates.
       { pick: 'Ara', icon: 'dataSearch', commands: ['data.search', 'data.unmark'] },
+      // Katman süzgeci (docs/adr/0211 §4): the CAD ribbon has none (command search and the layer tree do).
+      { pick: 'Süzgeç', icon: 'layerFilter', commands: ['layer.filter', 'layer.filterFromSelection', 'layer.filterClear'] },
       { menu: 'file', sections: ['Dosya alışverişi'] },
       { menu: 'crs', sections: ['Koordinatlar'] },
       { pick: 'Öznitelik', icon: 'fieldCalc', commands: [processingCommandId('attributes.calculate'), processingCommandId('selection.byExpression')] },
@@ -372,12 +381,30 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     id: 'analysis',
     label: 'Analiz',
     sources: [
-      { menu: 'processing', except: RASTER_ANALYSIS },
-      { menu: 'map', sections: ['Arazi'] },
-      { menu: 'analysis', sections: ['Arazi analizi'] },
-      // Topoloji kuralları (docs/adr/0202 §8): the data's checks together, beside Karşılaştırma (Düzenle is full).
-      { pick: 'Topoloji', icon: 'topologyCheck', commands: ['topology.check', 'topology.rules'] },
-      { menu: 'analysis', sections: ['Karşılaştırma'] },
+      // Ağ analizi's İşlemler tools sit in the Ağ analizi panel (docs/adr/0209 §10), the raster analysis's in the Raster
+      // tab (docs/adr/0231 §10).
+      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network'] },
+      // The terrain's work in one panel: Aplikasyon and Kot noktası, profiles and the volume (Arazi and Arazi analizi were
+      // two; docs/adr/0209 §10 made room for Ağ analizi at 1100 pixels). The contours and the slope are Yüzey analizi's
+      // tools in the Raster tab (docs/adr/0231 §10).
+      { pick: 'Arazi', icon: 'contours', commands: ['tool.stakeout', 'tool.spot', 'map.profile', 'analysis.volume'] },
+      // The data's checks together (docs/adr/0202 §8; Düzenle is full): Topoloji kuralları and Veri karşılaştır, one panel
+      // since docs/adr/0209 §10 made room for Ağ analizi at 1100 pixels.
+      { pick: 'Denetim', icon: 'topologyCheck', commands: ['topology.check', 'topology.rules', 'data.compare'] },
+      // Ağ analizi (docs/adr/0209 §10): Ağlar, the three tools and İşlemler's three, one panel.
+      {
+        pick: 'Ağ analizi',
+        icon: 'networks',
+        commands: [
+          'network.manage',
+          'tool.netRoute',
+          'tool.netServiceArea',
+          'tool.netTrace',
+          'processing.run.network.closestFacility',
+          'processing.run.network.odMatrix',
+          'processing.run.network.serviceAreas',
+        ],
+      },
       { menu: 'tools', sections: ['Komut'] },
     ],
   },
@@ -581,7 +608,7 @@ export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[]
         const menu = menuById(src.menu);
         if (!menu || !filter.menu(menu.id)) continue;
         const keep = (label: string) => (!src.sections || src.sections.includes(label)) && !src.except?.includes(label);
-        for (const block of expandBlocks(menuBlocks(menu.items, tools, filter), menu.label, inputs, tools, filter)) {
+        for (const block of expandBlocks(menuBlocks(menu.items, tools, filter), menu.label, inputs, tools, filter, src.omit)) {
           if (!keep(block.label)) continue;
           const d = panel(block.label);
           for (const e of block.entries) {
@@ -676,7 +703,14 @@ function groupSplits(entries: readonly Entry[], toolOf: ReadonlyMap<string, Tool
  * an inline submenu contributes its own blocks, `@models` lists the model
  * library and `@processing` becomes one panel per category.
  */
-function expandBlocks(blocks: readonly MenuBlock[], fallback: string, inputs: RibbonInputs, tools: readonly ToolDescriptor[], filter: WorkspaceFilter): { label: string; entries: Entry[] }[] {
+function expandBlocks(
+  blocks: readonly MenuBlock[],
+  fallback: string,
+  inputs: RibbonInputs,
+  tools: readonly ToolDescriptor[],
+  filter: WorkspaceFilter,
+  omit: readonly string[] = [],
+): { label: string; entries: Entry[] }[] {
   const out: { label: string; entries: Entry[] }[] = [];
   for (const block of blocks) {
     let cur: { label: string; entries: Entry[] } = { label: block.label || fallback, entries: [] };
@@ -687,12 +721,15 @@ function expandBlocks(blocks: readonly MenuBlock[], fallback: string, inputs: Ri
           cur.entries.push({ kind: 'menu', menu: e });
           continue;
         }
-        out.push(...expandBlocks(menuBlocks(e.items, tools, filter), e.label, inputs, tools, filter));
+        out.push(...expandBlocks(menuBlocks(e.items, tools, filter), e.label, inputs, tools, filter, omit));
       } else if (e === '@models') {
         cur.entries.push({ kind: 'command', id: 'processing.newModel' }, ...inputs.models.map((m) => ({ kind: 'command' as const, id: modelCommandId(m.id) })));
         continue;
       } else if (e === '@processing') {
-        for (const node of inputs.processing) out.push({ label: node.category.label, entries: categoryTools(node).map((id) => ({ kind: 'command' as const, id })) });
+        for (const node of inputs.processing) {
+          if (omit.includes(node.category.id)) continue;
+          out.push({ label: node.category.label, entries: categoryTools(node).map((id) => ({ kind: 'command' as const, id })) });
+        }
       } else {
         cur.entries.push({ kind: 'command', id: e });
         continue;

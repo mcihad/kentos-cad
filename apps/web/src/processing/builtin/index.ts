@@ -11,6 +11,9 @@ import { geometryRepair, geometryValidity } from './geometry/validity';
 import { infoFromEnclosing } from './infoFromEnclosing';
 import { infoFromInside } from './infoFromInside';
 import { joinByField } from './joinByField';
+import { networkClosestFacility } from './network/closestFacility';
+import { networkOdMatrix } from './network/odMatrix';
+import { networkServiceAreas } from './network/serviceAreas';
 import { selectByExpression } from './selectByExpression';
 import { selectByLocation } from './selectByLocation';
 import { summaryStatistics } from './summaryStatistics';
@@ -44,6 +47,9 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   geometryRepair,
   geometrySimplify,
   geometryReproject,
+  networkClosestFacility,
+  networkOdMatrix,
+  networkServiceAreas,
   // Yüzey analizi (docs/adr/0231): the raster core's jobs in the page's analysis worker.
   ...SURFACE_TOOLS,
   // İnterpolasyon and Yoğunluk (docs/adr/0232): the raster core's point jobs, in the same worker.

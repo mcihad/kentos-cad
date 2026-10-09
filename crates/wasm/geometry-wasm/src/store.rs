@@ -229,6 +229,18 @@ impl Default for GeometryStore {
     }
 }
 
+impl GeometryStore {
+    /// The store itself, for the crate's other classes (a network built from its objects).
+    pub(crate) fn store(&self) -> &Store {
+        &self.inner
+    }
+
+    /// The store to change, for the crate's other bindings (the objects' times, docs/adr/0210 §6).
+    pub(crate) fn store_mut(&mut self) -> &mut Store {
+        &mut self.inner
+    }
+}
+
 #[wasm_bindgen]
 impl GeometryStore {
     #[wasm_bindgen(constructor)]

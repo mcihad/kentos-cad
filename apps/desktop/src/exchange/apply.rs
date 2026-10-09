@@ -418,6 +418,10 @@ fn make_layers(
             fields: fields.clone(),
             service: None,
             feed: None,
+            time: None,
+            scenario: None,
+            replaces: None,
+            filter: None,
         };
         doc.add_layer(new, parent.as_deref(), false)
             .map_err(|r| r.to_string())?;

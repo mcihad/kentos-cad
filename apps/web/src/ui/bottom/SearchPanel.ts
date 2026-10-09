@@ -340,7 +340,12 @@ export class SearchPanel extends Component {
       // The index is made again only when the drawing, its layers or its blocks changed.
       const key: [number, number, unknown] = [doc.revision, doc.layers.version.value, doc.blocks.value];
       if (!this.builtFor || this.builtFor[0] !== key[0] || this.builtFor[1] !== key[1] || this.builtFor[2] !== key[2]) {
-        this.index = searchIndex(doc);
+        const index = searchIndex(doc);
+        // A layer's filter leaves out what it does not pass (docs/adr/0211 §1).
+        const shown = index.ids.map((id) => this.ctx.view.geometry.filterShown(id));
+        this.index = shown.every(Boolean)
+          ? index
+          : { ids: index.ids.filter((_, i) => shown[i]), layerIds: index.layerIds.filter((_, i) => shown[i]), records: index.records.filter((_, i) => shown[i]) };
         this.builtFor = key;
       }
       // A layer chosen that holds nothing to find any more shows all.

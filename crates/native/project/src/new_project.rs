@@ -75,6 +75,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         annotation: None,
         text_styles: Vec::new(),
         connections: Vec::new(),
+        networks: Vec::new(),
     }
 }
 
@@ -254,6 +255,10 @@ fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
         fields: Vec::new(),
         service: None,
         feed: None,
+        time: None,
+        scenario: None,
+        replaces: None,
+        filter: None,
     }
 }
 

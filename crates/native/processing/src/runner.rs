@@ -15,7 +15,7 @@ use crate::features::{
     Host, InputSummary, Scene, resolve_features, summarize_features, summarize_file,
 };
 use crate::geometry::RunGeometry;
-use crate::parameters::{Issue, file_table, is_visible, validate_values};
+use crate::parameters::{Issue, file_table, is_visible, validate_with};
 use crate::text::{fold_turkish, js_trim};
 use crate::types::{
     ChangeSet, Defaults, FeatureSet, Feedback, NewLayerStyle, ParamKind, Resolved, RunContext,
@@ -283,7 +283,7 @@ impl Runner {
     }
 
     pub fn validate(&self, tool: &Tool, values: &Values, doc: &Document) -> Vec<Issue> {
-        validate_values(tool, values, doc.layers())
+        validate_with(tool, values, doc.layers(), &doc.settings().networks)
     }
 
     /// What each features parameter resolves to now ("12 kapalı alan; seçili

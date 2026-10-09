@@ -15,6 +15,7 @@ import {
 import { layerListCsv, layerListTsv } from '../../app/layerList';
 import { readDrawing } from '../../app/drawingFile';
 import type { LayerInit, LayerNode } from '../../model/layers';
+import { readTime } from '../../model/time';
 import type { CompareRow } from '../../model/ops/compare';
 import { h, replaceChildren } from '../dom';
 import { field, select, summaryLine } from '../io/common';
@@ -24,6 +25,19 @@ import { VirtualRows } from '../widgets/VirtualRows';
 
 /** The window's title, which a trace names it by. */
 export const COMPARE_TITLE = 'Veri karşılaştır';
+
+/** What a window opened for a purpose starts with (Zamanı karşılaştır, Senaryoyu karşılaştır, a revision; docs/adr/0210 §8). */
+export interface ComparePreset {
+  /** Eski veri from another drawing (a revision's). */
+  other?: CompareDrawing;
+  oldNode?: string;
+  newNode?: string;
+  /** The sides' dates as written in the fields. */
+  oldDate?: string;
+  newDate?: string;
+  /** Anahtar alanla, by this field. */
+  key?: string;
+}
 
 /** A file's layer tree as the comparison reads it: ids, names, kinds and children. */
 function treeOf(inits: readonly LayerInit[]): LayerNode[] {
@@ -38,8 +52,22 @@ function treeOf(inits: readonly LayerInit[]): LayerNode[] {
         expanded: true,
         style: { color: 'fg', lineType: 'continuous', lineWeight: 0.18 },
         children: treeOf((n as { children?: LayerInit[] }).children ?? []),
+        // A side at a date sees a temporal layer's objects by its time setting (docs/adr/0210 §8).
+        ...(n.time && { time: n.time }),
       }) as LayerNode,
   );
+}
+
+/**
+ * Revizyonla karşılaştır (docs/adr/0210 §8): a revision's or a checkpoint's file, downloaded, as Eski veri; Yeni the
+ * open drawing; both sides the whole drawing.
+ */
+export async function compareWithFile(ctx: AppContext, name: string, bytes: Uint8Array): Promise<void> {
+  const read = await readDrawing(bytes, { codec: ctx.files.kcad, identities: ctx.files.identities });
+  if (!read.ok) return void ctx.log.warn(`“${name}” okunamadı: ${read.error}`);
+  const s = read.content.settings;
+  const other: CompareDrawing = { name, here: false, tree: treeOf(read.content.layers), entities: read.content.entities, system: s.customCrs ? JSON.stringify(s.customCrs) : String(s.srid) };
+  openDataCompare(ctx, { other, oldNode: '', newNode: '' });
 }
 
 /**
@@ -48,26 +76,34 @@ function treeOf(inits: readonly LayerInit[]): LayerNode[] {
  * search distance and the tolerance, the compared fields; Karşılaştır lists the rows (a row's click selects its object
  * and shows it), Yalnız farklar leaves the same ones out; Panoya kopyala, CSV olarak kaydet…, Farkları çizime yaz.
  */
-export function openDataCompare(ctx: AppContext): void {
+export function openDataCompare(ctx: AppContext, preset: ComparePreset = {}): void {
   const { doc, log } = ctx;
   const here = thisDrawing(ctx);
-  let other: CompareDrawing | null = null;
-  let oldHere = true;
+  let other: CompareDrawing | null = preset.other ?? null;
+  let oldHere = !other;
   const active = doc.layers.active.value;
   const firstOther = doc.layers.all().find((n) => n.type === 'layer' && n.id !== active);
-  let oldNode: string = firstOther?.id ?? '';
-  let newNode: string = active;
-  let matching: 'location' | 'key' = 'location';
-  let key = '';
+  let oldNode: string = preset.oldNode ?? firstOther?.id ?? '';
+  let newNode: string = preset.newNode ?? active;
+  let matching: 'location' | 'key' = preset.key ? 'key' : 'location';
+  let key = preset.key ?? '';
   const ignored = new Set<string>();
   let onlyDiffs = true;
   let result: CompareResult | null = null;
   let shown: CompareRow[] = [];
 
   const oldDrawing = () => (oldHere || !other ? here : other);
+  // Each side's date (docs/adr/0210 §8): empty, every object; a date, the temporal layers' objects shown then.
+  const date = (words: string, value: string) => h('input', { class: 'field compare-date', 'aria-label': words, value, placeholder: 'GG.AA.YYYY', spellcheck: 'false' }) as HTMLInputElement;
+  const oldDate = date('Eski tarih', preset.oldDate ?? '');
+  const newDate = date('Yeni tarih', preset.newDate ?? '');
+  const momentOf = (input: HTMLInputElement): number | undefined | null => {
+    const r = readTime(input.value.trim());
+    return r.kind === 'moment' ? r.t : r.kind === 'empty' ? undefined : null;
+  };
   const sides = (): [CompareSide, CompareSide] => [
-    { drawing: oldDrawing(), node: oldNode || null },
-    { drawing: here, node: newNode || null },
+    { drawing: oldDrawing(), node: oldNode || null, ...(momentOf(oldDate) != null && { at: momentOf(oldDate)! }) },
+    { drawing: here, node: newNode || null, ...(momentOf(newDate) != null && { at: momentOf(newDate)! }) },
   ];
 
   const sourceBox = h('div', { class: 'compare-source' });
@@ -190,6 +226,7 @@ export function openDataCompare(ctx: AppContext): void {
     className: 'dialog--io dialog--compare',
     content: [
       h('div', { class: 'io-row' }, sourceBox, oldBox, newBox),
+      h('div', { class: 'io-row' }, field('Eski tarih', oldDate), field('Yeni tarih', newDate), h('span', { class: 'compare-hint' }, 'Tarih yazılan tarafta zamansal katmanların o anda görünen nesneleri karşılaştırılır.')),
       h('div', { class: 'io-row compare-run' }, matchBox, keyBox, field('Arama uzaklığı (m)', search), field('Tolerans (m)', tolerance), compare),
       h('div', { class: 'io-row' }, field('Karşılaştırılan öznitelikler', fieldsBox, undefined, 'grow'), field('Liste', h('label', { class: 'io-check' }, only, 'Yalnız farklar'))),
       summary,
@@ -201,6 +238,11 @@ export function openDataCompare(ctx: AppContext): void {
   });
 
   compare.addEventListener('click', () => {
+    for (const [input, words] of [
+      [oldDate, 'Eski tarih'],
+      [newDate, 'Yeni tarih'],
+    ] as const)
+      if (momentOf(input) === null) return void log.warn(`${words} okunamadı: “${input.value.trim()}”. Tarihi 05.03.2024 ya da 2024-03-05 gibi yazın ya da boş bırakın.`);
     const [o, n] = sides();
     const number = (input: HTMLInputElement) => Number(input.value.trim().replace(',', '.'));
     const got = runCompare(o, n, { match: matching, key: key || null, search: number(search), tolerance: number(tolerance), ignore: [...ignored] });

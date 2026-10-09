@@ -287,22 +287,20 @@ impl Store {
             PolygonMode::Inside => self
                 .candidates(&q)
                 .into_iter()
-                .filter(|it| {
-                    self.flags(it).visible && it.shapes().all(|s| inside(s, &ring, self.font))
-                })
+                .filter(|it| self.shown(it) && it.shapes().all(|s| inside(s, &ring, self.font)))
                 .map(|it| it.id)
                 .collect(),
             PolygonMode::Crossing => self
                 .candidates(&q)
                 .into_iter()
-                .filter(|it| self.flags(it).visible && touching(it))
+                .filter(|it| self.shown(it) && touching(it))
                 .map(|it| it.id)
                 .collect(),
             PolygonMode::Outside => self
                 .all_items()
                 .into_iter()
                 .filter(|it| {
-                    if !self.flags(it).visible {
+                    if !self.shown(it) {
                         return false;
                     }
                     let b = &it.bounds;

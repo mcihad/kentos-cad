@@ -658,6 +658,25 @@ export const ICONS = {
     '<path d="M5 17.5V2.5" stroke-width="1.5"/><path d="M5 3h10.5l-2.4 3.6 2.4 3.6H5z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M5 3h10.5l-2.4 3.6 2.4 3.6H5z" stroke-width="1.3"/>',
   topologyFix:
     '<path d="M2.5 17.5V8.5h6" stroke-width="1.3"/><path d="M2.5 17.5h9" stroke-width="1.3"/><path d="M17.3 5.6a3 3 0 0 1-3.9 3L7 15l-1.6-1.6 6.4-6.4a3 3 0 0 1 3-3.9l-1.8 1.8.4 1.6 1.6.4z" stroke-width="1.2"/>',
+  // Ağ analizi (docs/adr/0209 §10; chosen without asking, as the owner said): Ağlar, a graph of nodes and edges; En kısa
+  // yol, a street grid with the route along it between its two stops; Hizmet alanı, a facility and the two bands it
+  // reaches; Şebeke izleme, a pipe and its branch traced up to a valve. İşlemler's: En yakın tesis, an incident and two
+  // facilities, the nearer one's way bold; Maliyet matrisi, every origin to every destination; Hizmet alanları, two
+  // facilities' overlapping areas.
+  networks:
+    '<path d="M3.5 15.5 8 4.5l8.5 1.5L13 15.5zM8 4.5l5 11" stroke-width="1.2"/><circle cx="3.5" cy="15.5" r="1.9" fill="currentColor" stroke="none"/><circle cx="8" cy="4.5" r="1.9" fill="currentColor" stroke="none"/><circle cx="16.5" cy="6" r="1.9" fill="currentColor" stroke="none"/><circle cx="13" cy="15.5" r="1.9" fill="currentColor" stroke="none"/>',
+  netRoute:
+    '<path d="M2 6h16M2 14h16M6 2v16M14 2v16" stroke-width=".9" stroke-opacity=".5"/><path d="M3.5 14H14V4.5" stroke-width="2.2"/><circle cx="3.5" cy="14" r="2" fill="currentColor" stroke="none"/><path d="M14 4.5V1.8l3.2 1.3L14 4.4" fill="currentColor" stroke-width="1"/>',
+  netServiceArea:
+    '<path d="M10 2.2 15.6 4.8 18 10.4 14.6 16.9 8.2 18 2.6 13.2 2.8 6.6z" fill="currentColor" fill-opacity=".18" stroke-width="1.1"/><path d="M10 6.2 13.5 8.2 14 11.6 11.4 14.1 7.5 13.6 5.9 10.3 7.2 7.3z" fill="currentColor" fill-opacity=".38" stroke-width="1.1"/><circle cx="10" cy="10.2" r="1.7" fill="currentColor" stroke="none"/>',
+  netTrace:
+    '<path d="M15.5 10H18" stroke-width="1.2"/><path d="M2.5 10H12M7 10v7.5" stroke-width="2.4"/><path d="M12 7.8v4.4l3.5-4.4v4.4z" fill="currentColor" fill-opacity=".28" stroke-width="1.1"/><circle cx="2.8" cy="10" r="1.8" fill="currentColor" stroke="none"/>',
+  closestFacility:
+    '<path d="M4 16h5V5h5.5" stroke-width="2.2"/><path d="M9 16h7.5" stroke-width="1" stroke-dasharray="1.8 1.4"/><circle cx="4" cy="16" r="2" fill="currentColor" stroke="none"/><rect x="14.5" y="2.8" width="4" height="4" fill="currentColor" fill-opacity=".28" stroke-width="1.1"/><rect x="16.5" y="14" width="3" height="3.6" fill="currentColor" fill-opacity=".28" stroke-width="1"/>',
+  odMatrix:
+    '<path d="M4 4 16 6M4 4l12 9M4 10l12-4M4 10l12 3M4 16 16 6M4 16l12-3" stroke-width=".9"/><circle cx="4" cy="4" r="1.8" fill="currentColor" stroke="none"/><circle cx="4" cy="10" r="1.8" fill="currentColor" stroke="none"/><circle cx="4" cy="16" r="1.8" fill="currentColor" stroke="none"/><rect x="14.5" y="4.5" width="3.2" height="3.2" fill="currentColor" fill-opacity=".28" stroke-width="1.1"/><rect x="14.5" y="11.4" width="3.2" height="3.2" fill="currentColor" fill-opacity=".28" stroke-width="1.1"/>',
+  serviceAreas:
+    '<path d="M6.8 3.2 11 5.4 12 10.2 9.4 14.4 4.4 14.6 1.8 10.2 3 5.6z" fill="currentColor" fill-opacity=".22" stroke-width="1.1"/><path d="M13.4 6.6 17.6 8.4 18.4 13.4 15.6 17.4 10.6 17 8.4 12.8 10.2 8.2z" fill="currentColor" fill-opacity=".22" stroke-width="1.1"/><circle cx="6.6" cy="9.4" r="1.5" fill="currentColor" stroke="none"/><circle cx="13.6" cy="12.4" r="1.5" fill="currentColor" stroke="none"/>',
   // Öznitelik tablosu (docs/adr/0199 §4): a table and its layer's object (the owner's choice A).
   featureTable:
     '<rect x="2" y="2.5" width="11.5" height="10" rx="1"/><path d="M2 6h11.5M2 9.25h11.5M6 6v6.5"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z"/>',
@@ -857,6 +876,33 @@ export const ICONS = {
   ...ARROW_ICONS,
   // Map services and the ready basemaps (docs/adr/0208 §14).
   ...SERVICE_ICONS,
+  // Zaman and Senaryo (docs/adr/0210 §10): a slider under a clock; a layer with a clock; a version's old shape dashed beside
+  // its new one; an hourglass; two clocks; a branch with a plus, an eye, its trunk ticked, beside ≠ and merged back.
+  timeSlider: '<circle cx="10" cy="7" r="4.2"/><path d="M10 4.9V7l1.5 1.1"/><path d="M2.5 15h15"/><rect x="11.4" y="13" width="2.6" height="4" rx=".8" fill="currentColor" stroke="none"/>',
+  timeLayer: '<path d="M2.5 8.2 8.5 5l6 3.2-6 3.2z"/><path d="m2.5 11.4 6 3.2 2.2-1.2"/><circle cx="14.6" cy="13.8" r="3.4"/><path d="M14.6 12.1v1.8l1.2.8"/>',
+  timeVersion: '<rect x="2.5" y="5" width="6" height="10" rx="1" stroke-dasharray="2 1.6"/><rect x="11.5" y="5" width="6" height="10" rx="1"/><path d="M8.5 10h3M10.2 8.5l1.3 1.5-1.3 1.5"/>',
+  timeEnd: '<path d="M5.5 3h9M5.5 17h9"/><path d="M6.5 3c0 3.6 3.5 4.6 3.5 7s-3.5 3.4-3.5 7M13.5 3c0 3.6-3.5 4.6-3.5 7s3.5 3.4 3.5 7"/><path d="M8 15.5h4" stroke-width="2"/>',
+  timeCompare: '<circle cx="6.2" cy="10" r="4"/><circle cx="13.8" cy="10" r="4"/><path d="M6.2 8v2H8M13.8 8v2l1.4 1"/>',
+  scenarioCreate: '<circle cx="5" cy="15.5" r="1.8"/><circle cx="5" cy="4.5" r="1.8"/><path d="M5 6.3v7.4M5 11.5c0-2.6 1.8-4.2 4.6-4.2"/><path d="M14.5 3.5v7M11 7h7"/>',
+  scenarioShow: '<circle cx="5" cy="15.5" r="1.8"/><path d="M5 13.7V3.5M5 9.5c0-2.6 1.8-4.2 4.6-4.2h1"/><path d="M9.5 14c1.7-2.4 6.3-2.4 8 0-1.7 2.4-6.3 2.4-8 0z"/><circle cx="13.5" cy="14" r="1.1" fill="currentColor" stroke="none"/>',
+  scenarioBase: '<circle cx="5" cy="15.5" r="1.8"/><circle cx="5" cy="4.5" r="1.8"/><path d="M5 6.3v7.4" stroke-width="2"/><path d="M5 11.5c0-2.6 1.8-4.2 4.6-4.2h1.6" stroke-dasharray="1.6 1.6"/><path d="m11.5 13.5 2 2 4-4.5"/>',
+  scenarioCompare: '<circle cx="5" cy="15.5" r="1.8"/><path d="M5 13.7V3.5M5 9.5c0-2.6 1.8-4.2 4.6-4.2"/><path d="M11 10.5h6.5M11 14h6.5M15.6 8.2l-2.7 8"/>',
+  scenarioApply: '<circle cx="5" cy="16" r="1.8"/><path d="M5 14.2V3.5"/><path d="M15.5 3.5c0 4.4-3.2 6.6-8.8 7.4"/><path d="M8.9 8.8 6.5 11l2.6 1.8"/>',
+  // A scenario group in the layer tree: a branch off the trunk; a temporal layer's badge: a clock.
+  scenario: '<circle cx="5" cy="15.5" r="1.8"/><circle cx="5" cy="4.5" r="1.8"/><circle cx="14.5" cy="6.5" r="1.8"/><path d="M5 6.3v7.4M5 12c0-3.2 2.6-4.8 7.8-5.4"/>',
+  clock: '<circle cx="10" cy="10" r="6.5"/><path d="M10 6.2V10l2.6 1.7"/>',
+  timeFirst: '<path d="M5 5v10M14.5 5l-5 5 5 5"/>',
+  timePrev: '<path d="M12.5 5l-5 5 5 5"/>',
+  timeNext: '<path d="M7.5 5l5 5-5 5"/>',
+  timeLast: '<path d="M15 5v10M5.5 5l5 5-5 5"/>',
+  pause: '<rect x="5.5" y="4.5" width="3" height="11" rx=".8" fill="currentColor" stroke="none"/><rect x="11.5" y="4.5" width="3" height="11" rx=".8" fill="currentColor" stroke="none"/>',
+  loop: '<path d="M3.5 10.5V9a4 4 0 0 1 4-4h7.5"/><path d="M13 2.8 15.2 5 13 7.2"/><path d="M16.5 9.5V11a4 4 0 0 1-4 4H5"/><path d="M7 17.2 4.8 15 7 12.8"/>',
+  // Katman süzgeci (docs/adr/0211 §4): a layer with a funnel; a dashed selection box round two grips with a funnel; a
+  // funnel and a cross. A filtered layer's badge in the tree: a funnel, filled to read at 12 px.
+  layerFilter: '<path d="M2.5 8.2 8.5 5l6 3.2-6 3.2z"/><path d="m2.5 11.4 6 3.2 2.2-1.2"/><path d="M11 10.5h7.5l-2.9 3.4v3.7l-1.7-.9v-2.8z"/>',
+  layerFilterSelection: `<rect x="2.5" y="3" width="10" height="9.5" rx="1" stroke-dasharray="2 1.6"/>${grip(5.5, 6.5)}${grip(9.2, 9.5)}<path d="M11 10.5h7.5l-2.9 3.4v3.7l-1.7-.9v-2.8z"/>`,
+  layerFilterClear: '<path d="M2.5 3.5h12l-4.6 5.4v6.2l-2.8-1.4V8.9z"/><path d="m13 12 4.5 4.5m0-4.5L13 16.5"/>',
+  funnel: '<path d="M3 4h14l-5.5 6.5V16l-3-1.5v-4z" fill="currentColor" fill-opacity=".3"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

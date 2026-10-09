@@ -54,7 +54,9 @@ export type ControlForm =
   | { type: 'field'; control: 'combo' | 'dropdown'; placeholder: string; multiple?: true }
   /** A file chosen with its button (docs/adr/0200 §7); `accept`: the extensions offered. */
   | { type: 'file'; accept: string[] }
-  | { type: 'expression'; returns: 'condition' | 'value'; placeholder?: string };
+  | { type: 'expression'; returns: 'condition' | 'value'; placeholder?: string }
+  /** A network and its cost, two choices beside Ağlar… (docs/adr/0209 §10). */
+  | { type: 'network' };
 
 export interface RowForm {
   name: string;
@@ -95,6 +97,8 @@ export function controlForm(def: ParamDef): ControlForm {
       return { type: 'expression', returns: def.returns, ...(def.placeholder ? { placeholder: def.placeholder } : {}) };
     case 'file':
       return { type: 'file', accept: [...def.accept] };
+    case 'network':
+      return { type: 'network' };
   }
 }
 

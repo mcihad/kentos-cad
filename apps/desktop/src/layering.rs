@@ -70,6 +70,10 @@ pub enum Event {
     MergeInto(String),
     /// Alanlar… (docs/adr/0199 §3): the layer's fields.
     Fields(String),
+    /// Süzgeç…, Seçimden süzgeç and Süzgeci kaldır on this layer (layer_filters.rs, docs/adr/0211 §4).
+    Filter(String),
+    FilterFromSelection(String),
+    FilterClear(String),
     /// Sil: the layer, or the group with everything under it, and their objects.
     Remove(String),
     /// A layer's own snapping, a group's on all its layers (the magnet, Kenet ▸;
@@ -180,6 +184,18 @@ impl App {
             }
             return self.open_layer_fields(&id);
         }
+        match event {
+            Event::Filter(id) => return self.open_layer_filter(Some(id)),
+            Event::FilterFromSelection(id) => {
+                self.filter_from_selection(Some(id));
+                return Task::none();
+            }
+            Event::FilterClear(id) => {
+                self.clear_layer_filter(Some(id));
+                return Task::none();
+            }
+            _ => {}
+        }
         if let Event::ZoomTo(id) = &event {
             self.zoom_to_layer(id);
             return Task::none();
@@ -205,7 +221,12 @@ impl App {
                 model.set_active_layer(&id);
             }
             // Handled above, before the drawing is borrowed.
-            Event::Duplicate(_) | Event::MergeInto(_) | Event::Fields(_) => {}
+            Event::Duplicate(_)
+            | Event::MergeInto(_)
+            | Event::Fields(_)
+            | Event::Filter(_)
+            | Event::FilterFromSelection(_)
+            | Event::FilterClear(_) => {}
             Event::Isolate(id) => model.isolate_layer(&id),
             Event::Snap(id, snap) => model.set_layer_snap(&id, snap),
             Event::SelectObjects(id) => {
@@ -494,6 +515,62 @@ impl App {
                     event(Event::Fields(id.clone())),
                 )
                 .icon(crate::icons::from_web(Some("layerFields")))
+                // Zaman ayarları (docs/adr/0210 §10): its objects' start, end and key fields.
+                .item(
+                    if node.time.is_some() {
+                        "Zaman ayarları… (zamansal)"
+                    } else {
+                        "Zaman ayarları…"
+                    },
+                    Message::Time(crate::temporal::Event::OpenLayer(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("timeLayer")))
+                // Katman süzgeci (docs/adr/0211 §4): the window, the selection's objects, taken away.
+                .item(
+                    if node.filter.is_some() {
+                        "Süzgeç… (süzgeçli)"
+                    } else {
+                        "Süzgeç…"
+                    },
+                    event(Event::Filter(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("layerFilter")))
+                .item(
+                    "Seçimden süzgeç",
+                    self.selected_on_layer(&id)
+                        .then(|| event(Event::FilterFromSelection(id.clone()))),
+                )
+                .icon(crate::icons::from_web(Some("layerFilterSelection")))
+                .item(
+                    "Süzgeci kaldır",
+                    node.filter
+                        .is_some()
+                        .then(|| event(Event::FilterClear(id.clone()))),
+                )
+                .icon(crate::icons::from_web(Some("layerFilterClear")))
+                .separator();
+        }
+        // A scenario group (docs/adr/0210 §10): shown, compared, applied.
+        if node.scenario.is_some() {
+            let time = |e: crate::temporal::Event| Message::Time(e);
+            menu = menu
+                .item(
+                    "Senaryoyu göster",
+                    time(crate::temporal::Event::Show(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("scenarioShow")))
+                .item("Mevcut durum", time(crate::temporal::Event::Base))
+                .icon(crate::icons::from_web(Some("scenarioBase")))
+                .item(
+                    "Senaryoyu karşılaştır…",
+                    time(crate::temporal::Event::Compare(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("scenarioCompare")))
+                .item(
+                    "Senaryoyu uygula…",
+                    time(crate::temporal::Event::AskApply(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("scenarioApply")))
                 .separator();
         }
         let menu = menu
@@ -527,6 +604,62 @@ impl App {
             .icon(crate::icons::from_web(Some("trash")))
             // The web's `formatChord`: Delete is “Del”, Space “Boşluk”.
             .shortcut("Del")
+    }
+
+    /// Whether a selected object is on the layer (Seçimden süzgeç's item).
+    fn selected_on_layer(&self, layer: &str) -> bool {
+        self.document.as_ref().is_some_and(|doc| {
+            self.selection.ids().iter().any(|s| {
+                doc.model
+                    .get(*s)
+                    .is_some_and(|e| e.base().layer_id == layer)
+            })
+        })
+    }
+
+    /// A node's count as the tree shows it (docs/adr/0211 §4): the objects that show and all of them, and
+    /// whether a filter leaves some out (a group: one of its layers'); a group sums its layers.
+    pub(crate) fn layer_counted(
+        &self,
+        doc: &crate::document::Document,
+        node: &LayerNode,
+    ) -> (usize, usize, bool) {
+        match node.kind {
+            LayerNodeType::Layer => {
+                let total = doc.count(&node.id);
+                match node
+                    .filter
+                    .as_ref()
+                    .filter(|_| node.service.is_none())
+                    .and_then(|_| self.spatial.filter_counts(&node.id))
+                {
+                    Some((passed, _)) => (passed, total, true),
+                    None => (total, total, false),
+                }
+            }
+            LayerNodeType::Group => node.children.iter().fold((0, 0, false), |(s, t, f), c| {
+                let (cs, ct, cf) = self.layer_counted(doc, c);
+                (s + cs, t + ct, f || cf)
+            }),
+        }
+    }
+
+    /// The tree's count column: its usual width, or the widest “geçen / bütün” a filter makes (docs/adr/0211 §4).
+    pub(crate) fn layer_count_width(&self, doc: &crate::document::Document) -> iced::Length {
+        let layers = doc.model.layers();
+        let filtered = layers
+            .leaves()
+            .iter()
+            .any(|l| l.filter.is_some() && l.service.is_none());
+        if !filtered {
+            return iced::Length::Fixed(44.0);
+        }
+        // The funnel and the widest text the drawing's object count can make.
+        let total = doc.model.len().to_string().len();
+        let chars = 2 * total + 3;
+        iced::Length::Fixed(
+            kentos_ui::theme::typography::scaled(20.0 + 6.4 * chars as f32).max(44.0),
+        )
     }
 
     /// How many objects a layer, or every layer below a group, holds.

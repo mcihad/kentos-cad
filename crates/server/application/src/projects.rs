@@ -68,6 +68,14 @@ pub fn check_tree(tree: &[LayerNode], active: &str) -> AppResult<()> {
     snaps(tree)?;
     schemas(tree)?;
     services(tree)?;
+    // The layers' time settings and the scenarios (docs/adr/0210 §2), the tree whole.
+    if let Some(problem) = kentos_contracts::scenarios_problem(tree) {
+        return Err(AppError::invalid(format!("Katman ağacı: {problem}.")));
+    }
+    // The layers' filters (docs/adr/0211 §2): on a layer with objects, by their rules.
+    if let Some(problem) = kentos_contracts::filters_problem(tree) {
+        return Err(AppError::invalid(format!("Katman ağacı: {problem}.")));
+    }
     match find_layer(tree, active) {
         Some((n, _)) if n.kind == LayerNodeType::Layer => Ok(()),
         _ => Err(AppError::invalid(format!(
@@ -170,6 +178,19 @@ pub fn check_services(
     }
     match kentos_contracts::service_links(tree, connections, &[]) {
         Some(fault) => Err(AppError::invalid(format!("{}.", fault.words()))),
+        None => Ok(()),
+    }
+}
+
+/// A project's networks by their rules (docs/adr/0209 §2), as the files' readers and
+/// `cad.network.define` check them; a refusal names the field at `path`. The layers a
+/// network names need not exist: a missing one is left out when the network is built.
+pub fn check_networks(networks: &[kentos_contracts::NetworkDef], path: &str) -> AppResult<()> {
+    match kentos_contracts::networks_problem(networks) {
+        Some(problem) => Err(AppError::invalid_at(
+            path,
+            format!("Projenin ağları geçersiz: {problem}."),
+        )),
         None => Ok(()),
     }
 }
@@ -278,6 +299,7 @@ pub async fn create(
     check_name(&input.name)?;
     check_tree(&input.layers, &input.active_layer)?;
     check_services(&input.layers, &input.settings.connections)?;
+    check_networks(&input.settings.networks, "settings.networks")?;
     let description =
         crate::catalog::check_description(input.description.as_deref().unwrap_or(""))?;
     let tags = crate::catalog::normalize_tags(input.tags.as_deref().unwrap_or(&[]))?;
@@ -639,6 +661,10 @@ mod tests {
             fields: Vec::new(),
             service: None,
             feed: None,
+            time: None,
+            scenario: None,
+            replaces: None,
+            filter: None,
         }
     }
 
@@ -681,6 +707,88 @@ mod tests {
         assert!(check_tree(&group, "a").is_err(), "a group keeps none");
     }
 
+    /// A layer's time setting and the scenarios are checked as the files' readers check them (docs/adr/0210 §2).
+    #[test]
+    fn times_and_scenarios_keep_their_rules_in_the_tree() {
+        use kentos_contracts::{LayerTime, ScenarioInfo};
+        let time = |start: &str, end: Option<&str>| LayerTime {
+            start: start.to_owned(),
+            end: end.map(str::to_owned),
+            key: None,
+            cumulative: false,
+        };
+        let mut timed = node("a", LayerNodeType::Layer, None, Vec::new());
+        timed.time = Some(time("baslangic", Some("bitis")));
+        assert!(check_tree(&[timed.clone()], "a").is_ok());
+        let mut same = timed.clone();
+        same.time = Some(time("tarih", Some("tarih")));
+        let refused = check_tree(&[same], "a").unwrap_err();
+        assert!(
+            refused
+                .to_string()
+                .contains("başlangıç ve bitiş aynı alan olamaz"),
+            "{refused}"
+        );
+        // A scenario standing for a base layer, and the same base layer twice in it.
+        let mut copy = node("a2", LayerNodeType::Layer, None, Vec::new());
+        copy.replaces = Some("a".to_owned());
+        let mut group = node("s", LayerNodeType::Group, None, vec![copy.clone()]);
+        group.scenario = Some(ScenarioInfo::default());
+        assert!(check_tree(&[group.clone(), timed.clone()], "a").is_ok());
+        let mut again = copy.clone();
+        again.id = "a3".to_owned();
+        group.children.push(again);
+        assert!(check_tree(&[group, timed.clone()], "a").is_err());
+        // A layer standing for another outside a scenario.
+        assert!(check_tree(&[copy, timed], "a").is_err());
+    }
+
+    /// A layer's filter is checked as the files' readers check it (docs/adr/0211 §2): on a layer,
+    /// by its rules; a group keeps none.
+    #[test]
+    fn a_layers_filter_keeps_its_rules_on_a_layer() {
+        use kentos_contracts::{EntityId, LayerFilter};
+        let with = |kind, filter: LayerFilter| {
+            let mut n = node("a", kind, None, Vec::new());
+            n.filter = Some(filter);
+            n
+        };
+        let arsa = || LayerFilter {
+            expression: Some("Nitelik = 'Arsa'".to_owned()),
+            objects: Vec::new(),
+        };
+        assert!(check_tree(&[with(LayerNodeType::Layer, arsa())], "a").is_ok());
+        let listed = LayerFilter {
+            expression: None,
+            objects: vec![EntityId([7; 16])],
+        };
+        assert!(check_tree(&[with(LayerNodeType::Layer, listed)], "a").is_ok());
+        for (bad, says) in [
+            (LayerFilter::default(), "ne ifade ne nesne listesi"),
+            (
+                LayerFilter {
+                    expression: Some(" Nitelik = 'Arsa'".to_owned()),
+                    objects: Vec::new(),
+                },
+                "boşluk",
+            ),
+            (
+                LayerFilter {
+                    expression: None,
+                    objects: vec![EntityId([7; 16]), EntityId([7; 16])],
+                },
+                "iki kez",
+            ),
+        ] {
+            let e = check_tree(&[with(LayerNodeType::Layer, bad)], "a").expect_err(says);
+            assert!(e.to_string().contains(says), "{e}");
+        }
+        let mut group = with(LayerNodeType::Group, arsa());
+        group.children = vec![node("b", LayerNodeType::Layer, None, Vec::new())];
+        let e = check_tree(&[group], "b").expect_err("a group keeps none");
+        assert!(e.to_string().contains("grubun süzgeci olmaz"), "{e}");
+    }
+
     /// A layer's fields are checked as the files' readers check them (docs/adr/0199 §1).
     #[test]
     fn a_layers_fields_keep_their_rules_on_a_layer() {
@@ -698,5 +806,39 @@ mod tests {
         let mut group = with(LayerNodeType::Group, vec![ada()]);
         group.children = vec![node("b", LayerNodeType::Layer, None, Vec::new())];
         assert!(check_tree(&[group], "b").is_err(), "a group keeps none");
+    }
+
+    /// A project's networks are checked as the files' readers check them (docs/adr/0209 §2).
+    #[test]
+    fn a_projects_networks_keep_their_rules() {
+        use kentos_contracts::{
+            NetworkConnect, NetworkDef, NetworkDirection, NetworkKind, NetworkLayer,
+        };
+        let net = |id: &str, name: &str, tolerance: f64| NetworkDef {
+            id: id.to_owned(),
+            name: name.to_owned(),
+            kind: NetworkKind::Road,
+            edges: vec![NetworkLayer {
+                layer: "yol".to_owned(),
+                filter: None,
+            }],
+            junctions: Vec::new(),
+            connect: NetworkConnect::Ends,
+            tolerance,
+            direction: NetworkDirection::Both,
+            costs: Vec::new(),
+            closed: None,
+        };
+        const AT: &str = "settings.networks";
+        assert!(check_networks(&[], AT).is_ok());
+        assert!(
+            check_networks(&[net("ag-1", "Yollar", 0.01), net("ag-2", "Su", 0.01)], AT).is_ok()
+        );
+        let e =
+            check_networks(&[net("ag-1", "Yollar", 11.0)], AT).expect_err("a tolerance over 10 m");
+        assert!(e.to_string().contains("0,0001 ile 10 m"), "{e}");
+        let twice = [net("ag-1", "Yollar", 0.01), net("ag-2", "YOLLAR", 0.01)];
+        let e = check_networks(&twice, AT).expect_err("a name twice");
+        assert!(e.to_string().contains("adlı ağ iki kez var"), "{e}");
     }
 }

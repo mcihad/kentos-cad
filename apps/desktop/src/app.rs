@@ -168,6 +168,8 @@ pub enum Dialog {
     LayerMerge,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
     LayerFields,
+    /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.
+    LayerFilter,
     /// Bağlantılar (services/connections.rs).
     Connections,
     /// Harita servisi (services/window.rs).
@@ -176,6 +178,12 @@ pub enum Dialog {
     Feed,
     /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6); the window is `App::topology_rules`.
     TopologyRules,
+    /// Ağlar (networks/window.rs, docs/adr/0209 §10); the window is `App::networks.window`.
+    Networks,
+    /// Zaman ayarları (temporal/layer.rs, docs/adr/0210 §10); the window is `App::time.layer`.
+    TimeLayer,
+    /// Senaryo oluştur and Senaryoyu uygula's question (temporal/scenario.rs); the window is `App::time.scenario`.
+    Scenario,
     /// Katman durumları (layer_states.rs, docs/adr/0177 §4); the window is `App::layer_states_window`.
     LayerStates,
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
@@ -324,6 +332,10 @@ pub enum Message {
     Topology(crate::topology::Event),
     /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6).
     TopologyRules(crate::topology::rules::Event),
+    /// Ağ analizi: the networks' answers and Ağlar (networks/, docs/adr/0209).
+    Networks(crate::networks::Event),
+    /// Zaman sürgüsü, Zaman ayarları and the scenarios (temporal/, docs/adr/0210).
+    Time(crate::temporal::Event),
     /// Köşe tablosu in the Koordinat listesi tab (vertices/, docs/adr/0172).
     Vertices(crate::vertices::Event),
     /// The bottom panel's top edge dragged: the open history's new height.
@@ -370,6 +382,8 @@ pub enum Message {
     AttributeValues(crate::attribute_values::Event),
     FindReplace(crate::find_replace::Event),
     LayerMerge(crate::layer_merge::Event),
+    /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
+    LayerFilter(crate::layer_filters::Event),
     /// Katman durumları's window and Katman durumları ▾ (layer_states.rs).
     LayerStates(crate::layer_states::Event),
     AnnotationStyles(crate::annotation_styles::Event),
@@ -580,6 +594,14 @@ pub struct App {
     pub(crate) rasters: crate::rasters::Windows,
     /// XYZ sor's places and reaches whose clouds are to be read (docs/adr/0207 §7).
     pub(crate) cloud_query_wanted: Vec<(kentos_interaction::Vec2, f64)>,
+    /// The network tools' questions, asked after the update (networks/, docs/adr/0209 §12).
+    pub(crate) network_wanted: Vec<kentos_interaction::network::NetworkAsk>,
+    /// The project's networks as built on the network thread, and Ağlar's window.
+    pub(crate) networks: crate::networks::State,
+    /// Zaman sürgüsü and the windows of Zaman and Senaryo (temporal/, docs/adr/0210).
+    pub(crate) time: crate::temporal::State,
+    /// Commands a tool asked the host to run (Ağlar from the network tools).
+    pub(crate) command_wanted: Vec<&'static str>,
     /// Nokta bulutu ekle and Nokta bulutu stili (pointclouds/, docs/adr/0207 §9).
     pub(crate) clouds: crate::pointclouds::Windows,
     /// Resim ekle asked for a picture file (docs/adr/0192 §5).
@@ -736,6 +758,8 @@ pub struct App {
     pub(crate) isolated_layers: Vec<String>,
     /// Katmanları birleştir's window (layer_merge.rs, docs/adr/0177 §3).
     pub(crate) layer_merge: Option<crate::layer_merge::Window>,
+    /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
+    pub(crate) layer_filter: Option<crate::layer_filters::Window>,
     /// Katman durumları's window (layer_states.rs, docs/adr/0177 §4).
     pub(crate) layer_states_window: Option<crate::layer_states::Window>,
     /// Yazı stilleri or Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5).
@@ -917,6 +941,10 @@ impl App {
             raster_values_wanted: Vec::new(),
             rasters: crate::rasters::Windows::default(),
             cloud_query_wanted: Vec::new(),
+            network_wanted: Vec::new(),
+            networks: crate::networks::State::default(),
+            time: crate::temporal::State::default(),
+            command_wanted: Vec::new(),
             clouds: crate::pointclouds::Windows::default(),
             image_file_wanted: false,
             text_field_select: false,
@@ -1004,6 +1032,7 @@ impl App {
             template_names: std::collections::HashMap::new(),
             isolated_layers: Vec::new(),
             layer_merge: None,
+            layer_filter: None,
             layer_states_window: None,
             annotation_styles: None,
             layer_purge: None,
@@ -1172,6 +1201,13 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // Zaman sürgüsü's playback (temporal/, docs/adr/0210 §5): a tick is handled after the
+            // drawing showed the last step; the step itself waits for the speed.
+            if self.time.slider.playing {
+                Subscription::run(crate::temporal::ticks)
+            } else {
+                Subscription::none()
+            },
             // The status bar's message: when it goes, and its fades (message_log.rs).
             self.log_subscription(Instant::now()),
             // The kept layout, written after its last change; the window's size.
@@ -1235,6 +1271,8 @@ impl App {
             self.raster_values_tasks(),
             self.service_info_tasks(),
             self.cloud_query_tasks(),
+            self.network_tasks(),
+            self.command_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
             // The grids the project's datum choices name, read into the core (grids.rs).
@@ -1286,6 +1324,10 @@ impl App {
         self.styles.follow_project(Some(doc.model.styles()));
         let model = &doc.model;
         self.selection.retain(|slot| model.get(slot).is_some());
+        // The slider's range follows the drawing (docs/adr/0210 §5).
+        self.time_refresh();
+        // A new object its layer's filter leaves out is said (docs/adr/0211 §3).
+        self.say_hidden_new();
     }
 
     fn handle(&mut self, message: Message) -> Task<Message> {
@@ -1373,6 +1415,8 @@ impl App {
             Message::Search(event) => return self.data_event(event),
             Message::Topology(event) => return self.topology_event(event),
             Message::TopologyRules(event) => return self.topology_rules_event(event),
+            Message::Networks(event) => return self.networks_event(event),
+            Message::Time(event) => return self.time_event(event),
             Message::Vertices(event) => return self.vertices_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
@@ -1446,6 +1490,7 @@ impl App {
             Message::AttributeValues(event) => self.attribute_values_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
             Message::LayerMerge(event) => return self.layer_merge_event(event),
+            Message::LayerFilter(event) => return self.layer_filter_event(event),
             Message::LayerStates(event) => return self.layer_states_event(event),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
@@ -1817,6 +1862,7 @@ impl App {
         self.memory.forget_heights();
         self.isolated_layers.clear();
         self.selected_layer = None;
+        self.networks_reset();
         self.spatial.reload(&doc.model);
         self.viewport.opened(&doc, self.spatial.extent());
         // The views left belong to the drawing they were left on (docs/adr/0141).
@@ -2067,6 +2113,21 @@ impl App {
             // Topoloji kuralları (topology/, docs/adr/0202 §5, §6).
             "topology.check" => return self.open_topology_check(),
             "topology.rules" => return self.open_topology_rules(),
+            // Ağlar (networks/, docs/adr/0209 §10).
+            "network.manage" => return self.open_networks(),
+            // Zaman and Senaryo (temporal/, docs/adr/0210 §10).
+            "time.slider" => self.time_toggle(),
+            "time.layer" => self.open_time_layer(None),
+            "time.compare" => self.open_time_compare(),
+            "scenario.create" => self.open_scenario_create(),
+            "scenario.show" => {
+                if let Some(id) = self.scenario_at_hand() {
+                    self.show_scenario(&id);
+                }
+            }
+            "scenario.base" => self.show_base(),
+            "scenario.compare" => self.open_scenario_compare(None),
+            "scenario.apply" => self.ask_scenario_apply(None),
             crate::catalog::PYTHON_CONSOLE => self.toggle_python(),
             // The navigation commands keep the view they leave (navigation.rs, docs/adr/0141).
             "view.zoomIn" => self.navigating(Self::zoom_in),
@@ -2092,6 +2153,11 @@ impl App {
             }
             "layer.purge" => self.open_layer_purge(),
             "layer.list" => self.open_layer_list(),
+            // Katman süzgeci (layer_filters.rs, docs/adr/0211 §4): the active layer's; Katmanlar's menu names its
+            // layer (layering.rs).
+            "layer.filter" => return self.open_layer_filter(None),
+            "layer.filterFromSelection" => self.filter_from_selection(None),
+            "layer.filterClear" => self.clear_layer_filter(None),
             // Veri karşılaştır (docs/adr/0179).
             "data.compare" => self.open_data_compare(),
             // Harita servisleri (services/, docs/adr/0208 §14).
@@ -2226,6 +2292,15 @@ impl App {
             "view.overview" => self.overview_shown(),
             "view.magnifier" => self.magnifier_shown(),
             "view.fullscreen" => self.fullscreen,
+            // Zaman sürgüsü and Mevcut durum (docs/adr/0210 §10).
+            "time.slider" => self.time.slider.open,
+            "scenario.base" => {
+                self.has_scenarios()
+                    && self.document.as_ref().is_some_and(|d| {
+                        crate::temporal::shown_scenario(d.model.layers())
+                            == crate::temporal::Shown::Base
+                    })
+            }
             id if id.starts_with("workspace.") => {
                 crate::catalog::mode_command(self.work_mode()) == id
             }
@@ -2268,6 +2343,10 @@ impl App {
             "service.connections" | "service.add" | "service.feed" | "service.info" => {
                 doc.is_some()
             }
+            // The scenarios' commands while the project has one (docs/adr/0210 §10).
+            "scenario.show" | "scenario.base" | "scenario.compare" | "scenario.apply" => {
+                self.has_scenarios()
+            }
             id if crate::clipboard::COMMANDS.contains(&id) => self.clipboard_available(id),
             "server.check" => !self.server_checking,
             id if id.starts_with("cloud.") => self.cloud_available(id),
@@ -2301,6 +2380,11 @@ impl App {
     pub fn why_disabled(&self, id: &str) -> Option<&'static str> {
         match id {
             "layer.new" | "layer.newGroup" => self.tree_locked(),
+            "scenario.show" | "scenario.base" | "scenario.compare" | "scenario.apply"
+                if !self.has_scenarios() =>
+            {
+                Some("Projede senaryo yok; önce Senaryo oluştur ile bir senaryo yapın.")
+            }
             _ => None,
         }
     }

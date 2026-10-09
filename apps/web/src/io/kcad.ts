@@ -265,8 +265,9 @@ export function projectHead(head: DrawingHead): { head: DrawingHead; dropped: Dr
   const layer: Pick = (v, where) =>
     p.fields(
       v,
-      // A layer's fields are schema 26's (docs/adr/0199 §1); its map service and source schema 32's (docs/adr/0208 §2).
-      { id: same, name: same, type: same, visible: same, locked: same, expanded: same, style, children: (c, w) => p.list(layer)(c, w), snap: same, fields: same, service: same, feed: same },
+      // A layer's fields are schema 26's (docs/adr/0199 §1); its map service and source schema 32's (docs/adr/0208 §2);
+      // its time setting, a group's scenario and a scenario layer's base layer schema 34's (docs/adr/0210 §2).
+      { id: same, name: same, type: same, visible: same, locked: same, expanded: same, style, children: (c, w) => p.list(layer)(c, w), snap: same, fields: same, service: same, feed: same, time: same, scenario: same, replaces: same, filter: same },
       where,
     );
   const out = p.fields(
@@ -275,7 +276,7 @@ export function projectHead(head: DrawingHead): { head: DrawingHead; dropped: Dr
       format: same,
       version: same,
       name: same,
-      settings: (x, w) => p.fields(x, { srid: same, lengthDecimals: same, areaDecimals: same, areaUnit: same, angleUnit: same, plotScale: same, workspace: same, drawingFont: same, drawingUnit: same, secondSrid: same, customCrs: same, secondCustomCrs: same, datumTransforms: same, survey: same, layerStates: same, textStyles: same, dimensionStyles: same, topology: same, annotation: same, connections: same }, w),
+      settings: (x, w) => p.fields(x, { srid: same, lengthDecimals: same, areaDecimals: same, areaUnit: same, angleUnit: same, plotScale: same, workspace: same, drawingFont: same, drawingUnit: same, secondSrid: same, customCrs: same, secondCustomCrs: same, datumTransforms: same, survey: same, layerStates: same, textStyles: same, dimensionStyles: same, topology: same, annotation: same, connections: same, networks: same }, w),
       origin: vec,
       homeView: (x, w) => p.fields(x, { minX: same, minY: same, maxX: same, maxY: same }, w),
       layers: p.list(layer),

@@ -105,8 +105,13 @@ mod tests {
     /// is a problem of its own, not the end of the others.
     #[test]
     fn every_trace_passes_in_every_variant() {
-        let traces = Trace::all().expect("the traces read");
+        let mut traces = Trace::all().expect("the traces read");
         assert!(traces.len() >= 4, "the four traces are there");
+        // `KENTOS_TRACES_ONLY=time-slider,scenarios`: only these (while working on them).
+        if let Ok(only) = std::env::var("KENTOS_TRACES_ONLY") {
+            let ids: Vec<&str> = only.split(',').map(str::trim).collect();
+            traces.retain(|t| ids.contains(&t.id.as_str()));
+        }
         let plays: Vec<(Variant, &Trace)> = VARIANTS
             .iter()
             .flat_map(|&variant| traces.iter().map(move |trace| (variant, trace)))
@@ -203,6 +208,7 @@ mod tests {
             edit: None,
             overview: None,
             magnifier: None,
+            timebar: None,
             paragraph: None,
             expect: None,
             note: None,

@@ -312,6 +312,17 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{want:?} (±{} m)", trace.click_tolerance),
         );
     }
+    // Zaman sürgüsü's words, position and last (docs/adr/0210 §5), exact.
+    if let Some(want) = &expect.time {
+        let same = match (&got.time, want) {
+            (None, None) => true,
+            (Some((label, position, last)), Some(w)) => {
+                *label == w.label && *position == w.position && *last == w.last
+            }
+            _ => false,
+        };
+        check("time", same, format!("{:?}", got.time), format!("{want:?}"));
+    }
     // The active layer and the current colour and weight (docs/adr/0176 §3), exact.
     if let Some(want) = &expect.active_layer {
         check(
@@ -337,6 +348,18 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{:?}", got.locked_layers),
             format!("{want:?}"),
         );
+    }
+    // The layer tree's counts (docs/adr/0211 §4): only the rows the step names, exactly.
+    if let Some(want) = &expect.layer_counts {
+        for (path, count) in want {
+            let have = got.layer_counts.get(path);
+            check(
+                &format!("layerCounts[{path}]"),
+                have == Some(count),
+                format!("{have:?}"),
+                format!("{count:?}"),
+            );
+        }
     }
     // Every layer and group (docs/adr/0177 §5), exact.
     if let Some(want) = &expect.layers {

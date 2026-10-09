@@ -1,5 +1,7 @@
 import { compileExpression, expressionError } from '../model/expression/expression';
-import type { DefaultsContext, FeaturesValue, FieldParam, FileValue, LayerValue, ParamDef, ProcessingTool } from './types';
+import type { NetworkDef } from '../contracts/generated/NetworkDef';
+import { costNames as networkCostNames, LENGTH_COST } from '../model/networkRules';
+import type { DefaultsContext, FeaturesValue, FieldParam, FileValue, LayerValue, NetworkValue, ParamDef, ProcessingTool } from './types';
 
 /**
  * Parameter bookkeeping shared by the dialog, the runner and models:
@@ -42,6 +44,11 @@ export function defaultValue(def: ParamDef, ctx: DefaultsContext): unknown {
       return '';
     case 'file':
       return null;
+    case 'network': {
+      const list = ctx.networks ?? [];
+      const n = list.find((x) => x.kind === def.prefers) ?? list[0];
+      return n ? ({ network: n.id, cost: LENGTH_COST } satisfies NetworkValue) : null;
+    }
   }
 }
 
@@ -119,6 +126,10 @@ export function fits(def: ParamDef, v: unknown): boolean {
       const p = v as { x?: unknown; y?: unknown };
       return !!p && typeof p.x === 'number' && typeof p.y === 'number';
     }
+    case 'network': {
+      const n = v as NetworkValue;
+      return !!n && typeof n === 'object' && typeof n.network === 'string' && typeof n.cost === 'string';
+    }
   }
 }
 
@@ -133,6 +144,8 @@ export function restoreValues(tool: ProcessingTool, stored: Values | undefined, 
 export interface ValidationEnv {
   layerExists(id: string): boolean;
   layerLocked(id: string): boolean;
+  /** The project's network of an id (docs/adr/0209); absent: none is known. */
+  network?(id: string): NetworkDef | undefined;
 }
 
 export interface ValidationIssue {
@@ -158,7 +171,12 @@ export function validateValues(tool: ProcessingTool, values: Values, env: Valida
 
 function checkParam(p: ParamDef, v: unknown, env: ValidationEnv): string | null {
   const name = `“${p.label}”`;
-  if (v === null || v === undefined) return p.optional ? null : p.type === 'file' ? `${name}: bir dosya seçin.` : `${name} boş bırakılamaz.`;
+  if (v === null || v === undefined) {
+    if (p.optional) return null;
+    if (p.type === 'file') return `${name}: bir dosya seçin.`;
+    if (p.type === 'network') return `${name}: projede ağ yok; Ağlar penceresinden yol ya da şebeke ağı tanımlayın.`;
+    return `${name} boş bırakılamaz.`;
+  }
   if (!fits(p, v)) return `${name} için geçersiz değer.`;
   switch (p.type) {
     case 'number': {
@@ -196,6 +214,13 @@ function checkParam(p: ParamDef, v: unknown, env: ValidationEnv): string | null 
     case 'file': {
       const f = v as FileValue;
       return f.rows ? (f.rows.length ? null : `${name}: “${f.name}” boş; başlık satırı olan bir dosya seçin.`) : `${name}: “${f.name}” dosyasını yeniden seçin; dosyanın içeriği saklanmaz.`;
+    }
+    case 'network': {
+      const n = v as NetworkValue;
+      const def = env.network?.(n.network);
+      if (!def) return `${name}: “${n.network}” ağı projede yok; Ağlar penceresinden tanımlayın ya da başka ağ seçin.`;
+      if (!networkCostNames(def).includes(n.cost)) return `${name}: “${n.cost}” maliyeti “${def.name}” ağında yok.`;
+      return null;
     }
     case 'layer': {
       const l = v as LayerValue;

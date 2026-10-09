@@ -185,6 +185,51 @@ const ITEMS = [
     open: async (ui) => (await ui.run('crs.transform'), await ui.clickText('.dialog--calc .seg__opt', 'Liste')),
     close: async (ui) => (await ui.clickText('.dialog--calc .seg__opt', 'Tek nokta'), await ui.escapeAll(2)),
   },
+  // Ağlar (docs/adr/0209 §10): the empty list, and a new network's whole form (Sil takes it back, so closing asks nothing);
+  // an İşlemler network tool in a project without networks (its Ağlar… button).
+  { id: 'networks', open: (ui) => ui.run('network.manage'), ready: '.dialog--networks' },
+  {
+    id: 'networks-new',
+    open: async (ui) => (await ui.run('network.manage'), await ui.clickText('.dialog--networks .net-actions .btn', 'Yeni ağ')),
+    close: async (ui) => (await ui.clickText('.dialog--networks .net-actions .btn', 'Sil'), await ui.escapeAll(2)),
+    must: '.dialog--networks .net-line--edge',
+  },
+  { id: 'processing-network', open: (ui) => ui.run('processing.run.network.closestFacility'), ready: '.dialog--ptool' },
+  // Zaman ve senaryolar (docs/adr/0210 §10): Zaman ayarları over the parcels, Senaryo oluştur with the tree's layers,
+  // and the time slider's bar under the drawing (the parcels given years for it; both steps undone on closing).
+  { id: 'time-layer', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('parsel')`), await ui.run('time.layer')), ready: '.dialog--time-layer' },
+  { id: 'scenario-create', open: (ui) => ui.run('scenario.create'), ready: '.dialog--scenario' },
+  {
+    id: 'time-bar',
+    open: async (ui) => {
+      await ui.eval(
+        `(() => { const d = window.kentos.doc; d.updateMany(d.byLayer('parsel').map((e, i) => ({ id: e.id, attrs: { ...e.attrs, tarih: (2001 + (i % 20)) + '-01-01' } })), 'Tarih'); d.setLayerTime('parsel', { start: 'tarih', cumulative: true }, 'Zaman ayarları'); })()`,
+      );
+      await ui.run('time.slider');
+    },
+    close: async (ui) => (await ui.run('time.slider'), await ui.eval('(() => { window.kentos.doc.undo(); window.kentos.doc.undo(); })()')),
+    must: '.timebar:not([hidden])',
+  },
+  // Katman süzgeci (docs/adr/0211 §4): the window over the parcels, with a condition that does not compile (its error
+  // in place), and the layer tree with a filtered layer (its funnel and “geçen / bütün”; the step undone on closing).
+  { id: 'layer-filter', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('parsel')`), await ui.run('layer.filter')), ready: '.dialog--layer-filter' },
+  {
+    id: 'layer-filter-error',
+    open: async (ui) => {
+      await ui.eval(`window.kentos.doc.layers.setActive('parsel')`);
+      await ui.run('layer.filter');
+      await ui.eval(
+        `(() => { const f = document.querySelector('.lfilter__expr'); f.value = "Nitelik = 'Arsa' ve $alan >"; f.dispatchEvent(new Event('input', { bubbles: true })); })()`,
+      );
+    },
+    must: '.lfilter__expr.is-invalid',
+  },
+  {
+    id: 'layer-tree-filtered',
+    open: (ui) => ui.eval(`window.kentos.doc.setLayerFilter('parsel', { expression: '$alan > 400' }, 'Katman süzgeci')`),
+    close: (ui) => ui.eval('window.kentos.doc.undo()'),
+    must: '.tree__filter:not([hidden])',
+  },
   { id: 'style-manager', open: (ui) => ui.run('style.manager'), ready: '.smgr__grid, .dialog' },
   { id: 'symbol-designer', open: async (ui) => (await ui.run('style.manager'), await ui.clickText('.dialog button', 'Yeni sembol'), await ui.clickText('.menu__item', 'Alan sembolü')) },
   { id: 'layer-style', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('ada')`), await ui.run('style.layerStyle')) },

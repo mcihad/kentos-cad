@@ -176,6 +176,14 @@ impl Store {
             .filter_map(|(seq, slot)| self.get(*slot).map(|stored| (*seq, stored)))
     }
 
+    /// The places and slots of a layer's objects in document order, without reading the objects.
+    pub fn layer_slots(&self, layer: &str) -> impl Iterator<Item = (u64, Slot)> {
+        self.layers
+            .get(layer)
+            .into_iter()
+            .flat_map(|list| list.iter().map(|(seq, slot)| (*seq, *slot)))
+    }
+
     /// An object's place in the document.
     pub fn place(&self, slot: Slot) -> Option<u64> {
         self.items.get(&slot).map(|item| item.seq)

@@ -72,15 +72,26 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "cad.polygon.create",
         "cad.entities.set",
         "cad.layers.service",
+        "cad.network.define",
+        "cad.layers.time",
+        "cad.scenarios.edit",
     ] {
         assert!(names.contains(&name), "{name}");
     }
-    // A map service layer's command removes a layer too (docs/adr/0208 §15).
-    let service = tools
-        .iter()
-        .find(|t| t["name"] == "cad.layers.service")
-        .expect("the command");
-    assert_eq!(service["annotations"]["destructiveHint"], true);
+    // A map service layer's command removes a layer too (docs/adr/0208 §15), a network's its definition (0209 §11),
+    // a layer's time its time and a scenario's apply its layers (0210 §11).
+    for name in [
+        "cad.layers.service",
+        "cad.network.define",
+        "cad.layers.time",
+        "cad.scenarios.edit",
+    ] {
+        let tool = tools
+            .iter()
+            .find(|t| t["name"] == name)
+            .expect("the command");
+        assert_eq!(tool["annotations"]["destructiveHint"], true, "{name}");
+    }
     for name in [
         "project.list",
         "project.open",
@@ -212,6 +223,133 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "the same id, the same area"
     );
     let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn a_layers_time_and_a_scenario_go_through_their_tools() {
+    // The traces' scene (docs/adr/0210): parcels, buildings and breakdowns in
+    // time, a road and a hidden scenario widening it.
+    let scene = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/interaction/v1/temporal.kcad"
+    );
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({ "path": scene }));
+    let drawing = opened["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+
+    let timed = call(
+        &mut server,
+        "cad.layers.time",
+        json!({ "drawing": drawing, "layer": "yol", "time": { "start": "acilis_tarihi", "cumulative": true } }),
+    );
+    assert_eq!(timed["isError"], false, "{timed}");
+    assert_eq!(timed["structuredContent"]["output"]["changed"], true);
+    let layers = call(&mut server, "drawing.layers", json!({ "drawing": drawing }));
+    let road = layers["structuredContent"]["layers"]
+        .as_array()
+        .and_then(|l| l.iter().find(|n| n["id"] == "yol"))
+        .expect("the road")
+        .clone();
+    assert_eq!(
+        road["time"],
+        json!({ "start": "acilis_tarihi", "cumulative": true })
+    );
+    let group = call(
+        &mut server,
+        "cad.layers.time",
+        json!({ "drawing": drawing, "layer": "alt-a", "time": { "start": "tarih" } }),
+    );
+    assert_eq!(group["isError"], true);
+    assert_eq!(group["structuredContent"]["error"]["code"], "not_a_layer");
+
+    let made = call(
+        &mut server,
+        "cad.scenarios.edit",
+        json!({ "drawing": drawing, "operation": "create", "name": "Öneri B", "layers": ["parsel"] }),
+    );
+    assert_eq!(made["isError"], false, "{made}");
+    let output = &made["structuredContent"]["output"];
+    assert_eq!(output["objects"], 6);
+    assert_eq!(output["layers"][0]["base"], "parsel");
+    let scenario = output["scenario"].as_str().expect("its group").to_owned();
+    let applied = call(
+        &mut server,
+        "cad.scenarios.edit",
+        json!({ "drawing": drawing, "operation": "apply", "scenario": scenario }),
+    );
+    assert_eq!(applied["isError"], false, "{applied}");
+    assert_eq!(applied["structuredContent"]["output"]["removed"], 6);
+    let undone = call(&mut server, "drawing.undo", json!({ "drawing": drawing }));
+    assert_eq!(undone["isError"], false, "{undone}");
+    assert_eq!(undone["structuredContent"]["step"], "Senaryoyu uygula");
+}
+
+#[test]
+fn a_layers_filter_goes_through_its_tool_and_leaves_the_objects() {
+    // The traces' scene (docs/adr/0211): five parcels and two buildings with attributes.
+    let scene = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/interaction/v1/feature-table.kcad"
+    );
+    let mut server = Server::new();
+    let listed = ask(&mut server, 2, "tools/list", json!({}));
+    let tool = listed["result"]["tools"]
+        .as_array()
+        .and_then(|t| t.iter().find(|t| t["name"] == "cad.layers.filter"))
+        .expect("the command")
+        .clone();
+    // A filter is the layer's view: it takes nothing away.
+    assert_eq!(tool["annotations"]["destructiveHint"], false);
+    let opened = call(&mut server, "drawing.open", json!({ "path": scene }));
+    let drawing = opened["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let filtered = call(
+        &mut server,
+        "cad.layers.filter",
+        json!({ "drawing": drawing, "layer": "parsel", "filter": { "expression": "Ada = '101'" } }),
+    );
+    assert_eq!(filtered["isError"], false, "{filtered}");
+    let output = &filtered["structuredContent"]["output"];
+    assert_eq!(
+        (output["passed"].clone(), output["total"].clone()),
+        (json!(2), json!(5))
+    );
+    let layers = call(&mut server, "drawing.layers", json!({ "drawing": drawing }));
+    let parcels = layers["structuredContent"]["layers"]
+        .as_array()
+        .and_then(|l| l.iter().find(|n| n["id"] == "kadastro"))
+        .and_then(|g| g["children"].as_array())
+        .and_then(|c| c.iter().find(|n| n["id"] == "parsel"))
+        .expect("the parcels")
+        .clone();
+    assert_eq!(parcels["filter"], json!({ "expression": "Ada = '101'" }));
+    // The commands and queries see every object.
+    let page = call(
+        &mut server,
+        "drawing.entities",
+        json!({ "drawing": drawing, "layer": "parsel" }),
+    );
+    assert_eq!(
+        page["structuredContent"]["items"].as_array().map(Vec::len),
+        Some(5)
+    );
+    let refused = call(
+        &mut server,
+        "cad.layers.filter",
+        json!({ "drawing": drawing, "layer": "parsel", "filter": { "expression": "2 >= $sıra" } }),
+    );
+    assert_eq!(refused["isError"], true);
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"],
+        "invalid_expression"
+    );
+    let undone = call(&mut server, "drawing.undo", json!({ "drawing": drawing }));
+    assert_eq!(undone["structuredContent"]["step"], "Katman süzgeci");
 }
 
 #[test]

@@ -49,6 +49,15 @@ pub fn default_value(def: &ParamDef, d: &Defaults) -> Value {
         ParamKind::Choice { options } => options.first().map_or(Value::Null, |o| json!(o.value)),
         ParamKind::Layer { .. } => json!({ "layerId": d.active_layer }),
         ParamKind::Point | ParamKind::File { .. } => Value::Null,
+        ParamKind::Network { prefers } => d
+            .networks
+            .iter()
+            .find(|n| n.kind == *prefers)
+            .or_else(|| d.networks.first())
+            .map_or(
+                Value::Null,
+                |n| json!({ "network": n.id, "cost": kentos_contracts::LENGTH_COST }),
+            ),
     }
 }
 
@@ -186,6 +195,10 @@ pub fn fits(def: &ParamDef, v: &Value) -> bool {
                     .is_none_or(|r| file_rows(v).is_some() && r.is_array())
         }
         ParamKind::SaveFile { .. } => v.is_string(),
+        ParamKind::Network { .. } => {
+            v.get("network").is_some_and(Value::is_string)
+                && v.get("cost").is_some_and(Value::is_string)
+        }
     }
 }
 
@@ -212,16 +225,30 @@ pub struct Issue {
 
 /// Problems with the values, in parameter order; empty when the tool can run.
 pub fn validate_values(tool: &Tool, values: &Values, layers: &LayerTree) -> Vec<Issue> {
+    validate_with(tool, values, layers, &[])
+}
+
+/// `validate_values` with the project's networks, which a network parameter names (docs/adr/0209 §10).
+pub fn validate_with(
+    tool: &Tool,
+    values: &Values,
+    layers: &LayerTree,
+    networks: &[kentos_contracts::NetworkDef],
+) -> Vec<Issue> {
     let mut issues: Vec<Issue> = tool
         .parameters
         .iter()
         .filter(|p| is_visible(p, values))
         .filter_map(|p| {
-            check_param(p, values.get(&p.name).unwrap_or(&Value::Null), layers).map(|message| {
-                Issue {
-                    param: Some(p.name.clone()),
-                    message,
-                }
+            check_param(
+                p,
+                values.get(&p.name).unwrap_or(&Value::Null),
+                layers,
+                networks,
+            )
+            .map(|message| Issue {
+                param: Some(p.name.clone()),
+                message,
             })
         })
         .collect();
@@ -236,11 +263,19 @@ pub fn validate_values(tool: &Tool, values: &Values, layers: &LayerTree) -> Vec<
     issues
 }
 
-fn check_param(p: &ParamDef, v: &Value, layers: &LayerTree) -> Option<String> {
+fn check_param(
+    p: &ParamDef,
+    v: &Value,
+    layers: &LayerTree,
+    networks: &[kentos_contracts::NetworkDef],
+) -> Option<String> {
     let name = format!("“{}”", p.label);
     if v.is_null() {
         return (!p.optional).then(|| match p.kind {
             ParamKind::File { .. } => format!("{name}: bir dosya seçin."),
+            ParamKind::Network { .. } => format!(
+                "{name}: projede ağ yok; Ağlar penceresinden yol ya da şebeke ağı tanımlayın."
+            ),
             _ => format!("{name} boş bırakılamaz."),
         });
     }
@@ -326,6 +361,20 @@ fn check_param(p: &ParamDef, v: &Value, layers: &LayerTree) -> Option<String> {
                 None => Some(format!(
                     "{name}: “{file}” dosyasını yeniden seçin; dosyanın içeriği saklanmaz."
                 )),
+            }
+        }
+        ParamKind::Network { .. } => {
+            let id = v.get("network").and_then(Value::as_str).unwrap_or("");
+            let cost = v.get("cost").and_then(Value::as_str).unwrap_or("");
+            match networks.iter().find(|n| n.id == id) {
+                None => Some(format!(
+                    "{name}: “{id}” ağı projede yok; Ağlar penceresinden tanımlayın ya da başka ağ seçin."
+                )),
+                Some(n) if !n.cost_names().contains(&cost) => Some(format!(
+                    "{name}: “{cost}” maliyeti “{}” ağında yok.",
+                    n.name
+                )),
+                Some(_) => None,
             }
         }
         ParamKind::Layer { .. } => match LayerValue::read(v)? {

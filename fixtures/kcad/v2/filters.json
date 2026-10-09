@@ -1,0 +1,223 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Katman süzgeçleri",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis"
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#0090FF",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "filter": {
+        "objects": [
+          "0192f5a1-7777-7000-8000-000000000601",
+          "0192f5a1-7777-7000-8000-000000000603"
+        ],
+        "expression": "Nitelik = 'Arsa' ve $alan > 500"
+      }
+    },
+    {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#F76B15",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "filter": {
+        "expression": "Kat >= 3"
+      }
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#8C9AAA",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "filter": {
+        "objects": [
+          "0192f5a1-7777-7000-8000-000000000605"
+        ]
+      }
+    },
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#000000",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Nitelik": "Arsa"
+      },
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400030.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400030.0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "Nitelik": "Tarla"
+      },
+      "pts": [
+        {
+          "x": 500040.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500080.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500080.0,
+          "y": 4400030.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400030.0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+        "Nitelik": "Arsa"
+      },
+      "pts": [
+        {
+          "x": 500080.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500090.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500090.0,
+          "y": 4400010.0
+        },
+        {
+          "x": 500080.0,
+          "y": 4400010.0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+        "Kat": "4"
+      },
+      "pts": [
+        {
+          "x": 500005.0,
+          "y": 4400005.0
+        },
+        {
+          "x": 500015.0,
+          "y": 4400005.0
+        },
+        {
+          "x": 500015.0,
+          "y": 4400015.0
+        },
+        {
+          "x": 500005.0,
+          "y": 4400015.0
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 5,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+        "x": 499990.0,
+        "y": 4400035.0
+      },
+      "b": {
+        "x": 500100.0,
+        "y": 4400035.0
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a1-7777-7000-8000-000000000601",
+    "0192f5a1-7777-7000-8000-000000000602",
+    "0192f5a1-7777-7000-8000-000000000603",
+    "0192f5a1-7777-7000-8000-000000000604",
+    "0192f5a1-7777-7000-8000-000000000605"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

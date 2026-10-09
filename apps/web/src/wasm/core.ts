@@ -15,6 +15,7 @@ import {
   StyleProgram,
   hatchLinesXY as wasmHatchLinesXY,
   initSync,
+  NetworkGraph,
   offsetPathXY as wasmOffsetPathXY,
   opId,
   rasterLevelCount as wasmRasterLevelCount,
@@ -26,6 +27,8 @@ import {
   scratchPointInPolygon as wasmScratchPointInPolygon,
   scratchSignedArea as wasmScratchSignedArea,
   TraceGraph,
+  timeLayer as wasmTimeLayer,
+  timeLayerMask as wasmTimeLayerMask,
   transformObjects as wasmTransformObjects,
   triangulateMany as wasmTriangulateMany,
 } from './pkg/kentos_geometry_wasm.js';
@@ -170,6 +173,20 @@ export function callNamed(name: string, args: unknown[]): unknown {
  */
 export function triangulateMany(xy: Float64Array, ringSizes: Uint32Array, polyRings: Uint32Array): Uint32Array {
   return typed(() => wasmTriangulateMany(xy, ringSizes, polyRings));
+}
+
+/**
+ * The times of a temporal layer's objects (docs/adr/0210 §4) in one call: `texts` each object's start and end values
+ * one after another, `lens` their lengths (−1: the object lacks it). Per object `s, e, mode` (−1: timeless), then
+ * `timed, timeless, unreadable, extent start, extent end`.
+ */
+export function coreTimeLayer(ranged: boolean, cumulative: boolean, texts: string, lens: Int32Array): Float64Array {
+  return typed(() => wasmTimeLayer(ranged, cumulative, texts, lens));
+}
+
+/** Which of a temporal layer's objects show in a window (kind 1 the moment `a`, 2 from `a` up to `b`): 1 per object shown, a timeless one always. */
+export function coreTimeLayerMask(ranged: boolean, cumulative: boolean, texts: string, lens: Int32Array, kind: number, a: number, b: number): Uint8Array {
+  return typed(() => wasmTimeLayerMask(ranged, cumulative, texts, lens, kind, a, b));
 }
 
 /**
@@ -627,6 +644,49 @@ export class CoreStore {
     typed(() => this.raw.setTextLabelled(ids));
   }
 
+  /** The objects' times (docs/adr/0210 §6): `s, e, mode` per id, mode −1 takes it away. */
+  setTimes(ids: Float64Array, times: Float64Array): void {
+    typed(() => this.raw.setTimes(ids, times));
+  }
+
+  /** A temporal layer's objects' times read from their values straight into the store (`texts`, `lens` as `coreTimeLayer`'s). */
+  setLayerTimes(ids: Float64Array, ranged: boolean, cumulative: boolean, texts: string, lens: Int32Array): void {
+    typed(() => this.raw.setLayerTimes(ids, ranged, cumulative, texts, lens));
+  }
+
+  clearTimes(): void {
+    typed(() => this.raw.clearTimes());
+  }
+
+  /** The time slider's window: kind 0 none, 1 the moment `a`, 2 from `a` up to `b`; queries leave out what it does not show. */
+  setTimeWindow(kind: number, a: number, b: number): void {
+    typed(() => this.raw.setTimeWindow(kind, a, b));
+  }
+
+  /** How many objects have a time, then the extent of their starts and ends (NaN without one). */
+  timeSummary(): Float64Array {
+    return typed(() => this.raw.timeSummary());
+  }
+
+  /** For each id, 1 when it shows at the slider's window. */
+  timeMask(ids: Float64Array): Uint8Array {
+    return typed(() => this.raw.timeMask(ids));
+  }
+
+  /** The objects their layer's filter leaves out (docs/adr/0211 §3): 1 in `out` leaves one out, 0 lets it in again. */
+  setFiltered(ids: Float64Array, out: Uint8Array): void {
+    typed(() => this.raw.setFiltered(ids, out));
+  }
+
+  clearFiltered(): void {
+    typed(() => this.raw.clearFiltered());
+  }
+
+  /** For each id, 1 when the view shows it: it passes its layer's filter and shows at the slider's window. */
+  viewMask(ids: Float64Array): Uint8Array {
+    return typed(() => this.raw.viewMask(ids));
+  }
+
   /** What the overlay draws in the view: eight numbers per record (geometry-core store/labels.rs). */
   labels(minX: number, minY: number, maxX: number, maxY: number, scale: number, editing: number | null): Float64Array {
     return typed(() => this.raw.labels(minX, minY, maxX, maxY, scale, editing !== null, editing ?? 0));
@@ -916,8 +976,84 @@ export class CoreStore {
     return typed(() => this.raw.edgesIn(minX, minY, maxX, maxY, except !== undefined, except ?? 0));
   }
 
+  /**
+   * Ağ analizi (docs/adr/0209 §3): the network of definition `defJson` over this store's objects: the edges (`ids`) with
+   * their values (`[direction | null, [cost values], closed]` each, JSON) and the junctions with theirs (`[role, closed]`
+   * each). The store must outlive nothing: the network keeps its own copy of what it read.
+   */
+  buildNetwork(defJson: string, edges: Float64Array, edgeValues: string, junctions: Float64Array, junctionValues: string): CoreNetwork {
+    return CoreNetwork.wrap(typed(() => NetworkGraph.build(this.raw, defJson, edges, edgeValues, junctions, junctionValues)));
+  }
+
   /** Frees the Rust side; the store must not be used afterwards. */
   dispose(): void {
     this.raw.free();
+  }
+}
+
+/**
+ * A network kept in the core between questions (docs/adr/0209 §10, §12): built once from a store, then asked for
+ * places, routes, the way to the cursor, service areas, closest facilities, traces and its check. Answers come back as
+ * the core writes them (JSON text, parsed by the caller), but the way to the cursor, which is numbers.
+ */
+export class CoreNetwork {
+  private raw: NetworkGraph | null;
+
+  private constructor(raw: NetworkGraph) {
+    this.raw = raw;
+  }
+
+  /** @internal The store's `buildNetwork`. */
+  static wrap(raw: NetworkGraph): CoreNetwork {
+    return new CoreNetwork(raw);
+  }
+
+  summary(): string {
+    return typed(() => this.get().summary());
+  }
+
+  locate(x: number, y: number, reach: number): string {
+    return typed(() => this.get().locate(x, y, reach));
+  }
+
+  route(stops: string, barriers: string, reach: number, cost: number, reorder: string): string {
+    return typed(() => this.get().route(stops, barriers, reach, cost, reorder));
+  }
+
+  treeFrom(x: number, y: number, reach: number, cost: number, barriers: string): boolean {
+    return typed(() => this.get().treeFrom(x, y, reach, cost, barriers));
+  }
+
+  /** `[cost, n, x0, y0, …, bulge0, …]`; empty when there is no way. */
+  pathTo(x: number, y: number, reach: number): Float64Array {
+    return typed(() => this.get().pathTo(x, y, reach));
+  }
+
+  area(facilities: string, breaks: string, reach: number, cost: number, toward: boolean, separate: boolean, barriers: string, trim: number, rings: boolean, areas: boolean): string {
+    return typed(() => this.get().area(facilities, breaks, reach, cost, toward, separate, barriers, trim, rings, areas));
+  }
+
+  /** `k` below 0: every target; `cutoff` NaN: none. */
+  nearest(origins: string, targets: string, reach: number, k: number, cutoff: number, cost: number, reverse: boolean, barriers: string, paths: boolean): string {
+    return typed(() => this.get().nearest(origins, targets, reach, k, cutoff, cost, reverse, barriers, paths));
+  }
+
+  trace(starts: string, barriers: string, reach: number, kind: string): string {
+    return typed(() => this.get().trace(starts, barriers, reach, kind));
+  }
+
+  check(): string {
+    return typed(() => this.get().check());
+  }
+
+  /** Releases the core's copy now instead of when the object is collected. */
+  free(): void {
+    this.raw?.free();
+    this.raw = null;
+  }
+
+  private get(): NetworkGraph {
+    if (!this.raw) throw new Error('Ağ bırakıldı.');
+    return this.raw;
   }
 }

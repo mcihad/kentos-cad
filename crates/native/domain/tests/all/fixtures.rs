@@ -457,6 +457,27 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
                     Some(v) => serde_json::from_value(v.clone())
                         .or_else(|e| fail(format!("{at}: kaynak okunamadı: {e}")))?,
                 },
+                // A time setting, a scenario and its base layer (docs/adr/0210 §2), as `LayerInit` carries them.
+                time: match layer.get("time") {
+                    None => None,
+                    Some(v) => serde_json::from_value(v.clone())
+                        .or_else(|e| fail(format!("{at}: zaman okunamadı: {e}")))?,
+                },
+                scenario: match layer.get("scenario") {
+                    None => None,
+                    Some(v) => serde_json::from_value(v.clone())
+                        .or_else(|e| fail(format!("{at}: senaryo okunamadı: {e}")))?,
+                },
+                replaces: layer
+                    .get("replaces")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned),
+                // A filter (docs/adr/0211 §2), as `LayerInit` carries it.
+                filter: match layer.get("filter") {
+                    None => None,
+                    Some(v) => serde_json::from_value(v.clone())
+                        .or_else(|e| fail(format!("{at}: süzgeç okunamadı: {e}")))?,
+                },
             };
             let parent = step.get("parent").and_then(Value::as_str);
             let activate = step

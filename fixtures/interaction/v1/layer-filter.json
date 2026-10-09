@@ -1,0 +1,294 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "layer-filter",
+  "title": "Katman süzgeci: Parsel “Ada = '101'” ile süzülür (2 / 5); süzgeçten geçmeyen parsel tıklamayla ve Tümünü seç'le seçilmez; Seçimden süzgeç listeyi ekler (1 / 5), geri alınır; süzgeçten geçmeyen yeni alan söylenir (2 / 6); “$alan > 100” geometriyle süzer (5 / 6), Öznitelik tablosu yalnız geçenleri gösterir; Süzgeci kaldır hepsini gösterir",
+  "source": "docs/adr/0211",
+  "covers": [
+    "GIS-15"
+  ],
+  "document": "feature-table.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.25
+  },
+  "clickTolerance": 0.3,
+  "steps": [
+    {
+      "run": "layer.filter",
+      "note": "Katman süzgeci: etkin katman Parsel; süzgeç yok",
+      "expect": {
+        "dialog": "Katman süzgeci"
+      }
+    },
+    {
+      "dialog": "Katman süzgeci",
+      "fill": {
+        "İfade": "Ada ="
+      },
+      "note": "yarım ifade: hata yerinde, Kaydet kapalı",
+      "expect": {
+        "dialog": "Katman süzgeci"
+      }
+    },
+    {
+      "shot": "suzgec-hata",
+      "note": "Katman süzgeci: ifadenin hatası önizlemede"
+    },
+    {
+      "dialog": "Katman süzgeci",
+      "press": "Kaydet",
+      "note": "kapalı Kaydet bir şey yapmaz",
+      "expect": {
+        "dialog": "Katman süzgeci",
+        "canUndo": false
+      }
+    },
+    {
+      "dialog": "Katman süzgeci",
+      "fill": {
+        "İfade": "Ada = '101'"
+      },
+      "expect": {
+        "dialog": "Katman süzgeci"
+      }
+    },
+    {
+      "shot": "suzgec-pencere",
+      "note": "Katman süzgeci: 2 / 5 nesne süzgeçten geçiyor"
+    },
+    {
+      "dialog": "Katman süzgeci",
+      "press": "Kaydet",
+      "note": "Ada 101 olan iki parsel geçer; tek adım “Katman süzgeci”",
+      "expect": {
+        "dialog": null,
+        "canUndo": true,
+        "logged": [
+          "“Parsel” katmanının süzgeci yazıldı: 2 / 5 nesne görünür."
+        ],
+        "layerCounts": {
+          "Kadastro": "2 / 5",
+          "Kadastro / Parsel": "2 / 5",
+          "Yapı": "2"
+        }
+      }
+    },
+    {
+      "shot": "suzgec-agac",
+      "note": "Katmanlar: Parsel'in hunisi ve 2 / 5; çizimde yalnız 101 adasının parselleri"
+    },
+    {
+      "click": [
+        3.5,
+        0
+      ],
+      "note": "102 adasının 3 parseli süzgeçten geçmez: seçilmez",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "click": [
+        -14.5,
+        0
+      ],
+      "expect": {
+        "selected": [
+          2
+        ]
+      }
+    },
+    {
+      "run": "edit.selectAll",
+      "note": "Tümünü seç süzgeçten geçmeyenleri almaz",
+      "expect": {
+        "selected": [
+          1,
+          2,
+          6,
+          7
+        ]
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "click": [
+        -14.5,
+        0
+      ],
+      "expect": {
+        "selected": [
+          2
+        ]
+      }
+    },
+    {
+      "run": "layer.filterFromSelection",
+      "note": "Seçimden süzgeç: Parsel'e seçili nesnenin listesi, ifade kalır",
+      "expect": {
+        "logged": [
+          "Süzgeç seçimden yazıldı: “Parsel” (1). Yalnız bu nesneler görünür; Süzgeci kaldır ile hepsi döner."
+        ],
+        "layerCounts": {
+          "Kadastro / Parsel": "1 / 5"
+        }
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "click": [
+        -32.5,
+        0
+      ],
+      "note": "101/7 ifadeden geçer ama listede yok",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Seçimden süzgeç geri alınır: yalnız ifade",
+      "expect": {
+        "layerCounts": {
+          "Kadastro / Parsel": "2 / 5"
+        }
+      }
+    },
+    {
+      "click": [
+        -32.5,
+        0
+      ],
+      "expect": {
+        "selected": [
+          1
+        ]
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "run": "tool.rectangle",
+      "note": "Parsel'e özniteliksiz yeni alan: süzgeçten geçmez, söylenir"
+    },
+    {
+      "click": [
+        0,
+        14
+      ]
+    },
+    {
+      "click": [
+        10,
+        19
+      ],
+      "expect": {
+        "entities": 8,
+        "logged": [
+          "“Parsel” katmanının süzgecinden geçmeyen 1 yeni nesne görünmüyor; Süzgeç… ya da Süzgeci kaldır."
+        ],
+        "layerCounts": {
+          "Kadastro / Parsel": "2 / 6"
+        }
+      }
+    },
+    {
+      "shot": "suzgec-yeni-nesne",
+      "note": "süzgeçten geçmeyen yeni alan görünmez; ileti söyler"
+    },
+    {
+      "key": "Esc"
+    },
+    {
+      "run": "layer.filter",
+      "expect": {
+        "dialog": "Katman süzgeci"
+      }
+    },
+    {
+      "dialog": "Katman süzgeci",
+      "fill": {
+        "İfade": "$alan > 100"
+      },
+      "press": "Kaydet",
+      "note": "Geometri değeriyle: 150 m²'lik parseller geçer, 50 m²'lik yeni alan geçmez",
+      "expect": {
+        "dialog": null,
+        "logged": [
+          "“Parsel” katmanının süzgeci yazıldı: 5 / 6 nesne görünür."
+        ],
+        "layerCounts": {
+          "Kadastro / Parsel": "5 / 6"
+        }
+      }
+    },
+    {
+      "click": [
+        5,
+        14
+      ],
+      "note": "yeni alanın alt kenarı",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "run": "data.featureTable",
+      "note": "Öznitelik tablosu yalnız süzgeçten geçenleri gösterir",
+      "expect": {
+        "panel": "Tablo",
+        "featureTable": {
+          "count": "5 / 5",
+          "rows": [
+            "Kapalı alan | 101 | 7 | 400.50 | Konut | Evet | 07.10.2026 | ",
+            "Kapalı alan | 101 | 12 | 98.25 | Ticaret | Hayır | 02.01.2026 | ",
+            "Kapalı alan | 102 | 3 | 1200 | İşyeri |  | 31.12.1999 | ",
+            "Kapalı alan | 102 | 7a | 55.5 |  | Evet |  | ",
+            "Kapalı alan |  | 1 | 12.5 | Konut |  |  | köşe"
+          ]
+        }
+      }
+    },
+    {
+      "run": "layer.filterClear",
+      "expect": {
+        "logged": [
+          "“Parsel” katmanının süzgeci kaldırıldı; 6 nesnesinin hepsi görünür."
+        ],
+        "layerCounts": {
+          "Kadastro": "6",
+          "Kadastro / Parsel": "6"
+        }
+      }
+    },
+    {
+      "click": [
+        5,
+        14
+      ],
+      "expect": {
+        "selected": [
+          8
+        ]
+      }
+    }
+  ]
+}

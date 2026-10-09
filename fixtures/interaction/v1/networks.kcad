@@ -1,0 +1,778 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Etkileşim izi: Ağ analizi",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow",
+  "networks": [
+   {
+    "id": "yollar",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "field",
+     "field": "yon",
+     "forward": [
+      "FT"
+     ],
+     "backward": [
+      "TF"
+     ],
+     "closed": [
+      "N"
+     ]
+    },
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "speed": 50.0
+     }
+    ],
+    "closed": "durum = 'kapalı'"
+   },
+   {
+    "id": "icme-suyu",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "su"
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "depo",
+      "role": "source"
+     },
+     {
+      "layer": "vana",
+      "role": "valve",
+      "closed": "durum = 'kapalı'"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "digitized"
+    }
+   }
+  ]
+ },
+ "origin": {
+  "x": 487000.0,
+  "y": 4420000.0
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol ekseni",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8C9AAA",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  },
+  {
+   "id": "okul",
+   "name": "Okul",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "triangle",
+     "size": 9
+    },
+    "label": {
+     "placement": "beside",
+     "size": 9
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "itfaiye",
+   "name": "İtfaiye",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#F76B15",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "cross",
+     "size": 9
+    },
+    "label": {
+     "placement": "beside",
+     "size": 9
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "su",
+   "name": "Su hattı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#0EA5A0",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  },
+  {
+   "id": "vana",
+   "name": "Vana",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#0EA5A0",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "ring",
+     "size": 7
+    },
+    "label": {
+     "placement": "beside",
+     "size": 9
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "depo",
+   "name": "Depo",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#0B7A75",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "triangle",
+     "size": 10
+    },
+    "label": {
+     "placement": "beside",
+     "size": 9
+    }
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "polyline",
+   "id": 1,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Okul Caddesi",
+    "hiz": "30"
+   },
+   "pts": [
+    {
+     "x": 486820.0,
+     "y": 4419880.0
+    },
+    {
+     "x": 486940.0,
+     "y": 4419880.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 2,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Okul Caddesi",
+    "hiz": "30"
+   },
+   "pts": [
+    {
+     "x": 486940.0,
+     "y": 4419880.0
+    },
+    {
+     "x": 487060.0,
+     "y": 4419880.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 3,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Okul Caddesi",
+    "hiz": "30"
+   },
+   "pts": [
+    {
+     "x": 487060.0,
+     "y": 4419880.0
+    },
+    {
+     "x": 487180.0,
+     "y": 4419880.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 4,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Atatürk Caddesi",
+    "hiz": "50"
+   },
+   "pts": [
+    {
+     "x": 486820.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 486940.0,
+     "y": 4420000.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 5,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Atatürk Caddesi",
+    "hiz": "50"
+   },
+   "pts": [
+    {
+     "x": 486940.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487060.0,
+     "y": 4420000.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 6,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Atatürk Caddesi",
+    "hiz": "50"
+   },
+   "pts": [
+    {
+     "x": 487060.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487180.0,
+     "y": 4420000.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 7,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Bahar Sokağı",
+    "hiz": "30"
+   },
+   "pts": [
+    {
+     "x": 486820.0,
+     "y": 4420120.0
+    },
+    {
+     "x": 486940.0,
+     "y": 4420120.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 8,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Bahar Sokağı",
+    "hiz": "30"
+   },
+   "pts": [
+    {
+     "x": 486940.0,
+     "y": 4420120.0
+    },
+    {
+     "x": 487060.0,
+     "y": 4420120.0
+    }
+   ],
+   "bulges": [
+    0.2
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 9,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Bahar Sokağı",
+    "hiz": "30"
+   },
+   "pts": [
+    {
+     "x": 487060.0,
+     "y": 4420120.0
+    },
+    {
+     "x": 487180.0,
+     "y": 4420120.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 10,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Lale Sokağı",
+    "hiz": "30"
+   },
+   "pts": [
+    {
+     "x": 486820.0,
+     "y": 4419880.0
+    },
+    {
+     "x": 486820.0,
+     "y": 4420000.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 11,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Lale Sokağı",
+    "hiz": "30"
+   },
+   "pts": [
+    {
+     "x": 486820.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 486820.0,
+     "y": 4420120.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 12,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Pazar Sokağı",
+    "hiz": "30",
+    "durum": "kapalı"
+   },
+   "pts": [
+    {
+     "x": 486940.0,
+     "y": 4419880.0
+    },
+    {
+     "x": 486940.0,
+     "y": 4420000.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 13,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Pazar Sokağı",
+    "hiz": "30"
+   },
+   "pts": [
+    {
+     "x": 486940.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 486940.0,
+     "y": 4420120.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 14,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Kışla Sokağı",
+    "hiz": "30"
+   },
+   "pts": [
+    {
+     "x": 487060.0,
+     "y": 4419880.0
+    },
+    {
+     "x": 487060.0,
+     "y": 4420000.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 15,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Kışla Sokağı",
+    "hiz": "30",
+    "yon": "FT"
+   },
+   "pts": [
+    {
+     "x": 487060.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487060.0,
+     "y": 4420120.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 16,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Çınar Sokağı",
+    "hiz": "30"
+   },
+   "pts": [
+    {
+     "x": 487180.0,
+     "y": 4419880.0
+    },
+    {
+     "x": 487180.0,
+     "y": 4420000.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 17,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Çınar Sokağı",
+    "hiz": "30"
+   },
+   "pts": [
+    {
+     "x": 487180.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487180.0,
+     "y": 4420120.0
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 18,
+   "layerId": "okul",
+   "attrs": {
+    "Ad": "Atatürk İlkokulu"
+   },
+   "label": "Atatürk İlkokulu",
+   "p": {
+    "x": 486880.0,
+    "y": 4420124.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 19,
+   "layerId": "okul",
+   "attrs": {
+    "Ad": "Cumhuriyet Ortaokulu"
+   },
+   "label": "Cumhuriyet Ortaokulu",
+   "p": {
+    "x": 487120.0,
+    "y": 4419884.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 20,
+   "layerId": "okul",
+   "attrs": {
+    "Ad": "Fen Lisesi"
+   },
+   "label": "Fen Lisesi",
+   "p": {
+    "x": 487184.0,
+    "y": 4420060.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 21,
+   "layerId": "itfaiye",
+   "attrs": {
+    "Ad": "Merkez İtfaiye"
+   },
+   "label": "Merkez İtfaiye",
+   "p": {
+    "x": 486824.0,
+    "y": 4419940.0
+   }
+  },
+  {
+   "kind": "polyline",
+   "id": 22,
+   "layerId": "su",
+   "attrs": {
+    "Malzeme": "PE100",
+    "Çap": "110"
+   },
+   "pts": [
+    {
+     "x": 487176.0,
+     "y": 4420006.0
+    },
+    {
+     "x": 487066.0,
+     "y": 4420006.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 23,
+   "layerId": "su",
+   "attrs": {
+    "Malzeme": "PE100",
+    "Çap": "110"
+   },
+   "pts": [
+    {
+     "x": 487066.0,
+     "y": 4420006.0
+    },
+    {
+     "x": 486946.0,
+     "y": 4420006.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 24,
+   "layerId": "su",
+   "attrs": {
+    "Malzeme": "PE100",
+    "Çap": "110"
+   },
+   "pts": [
+    {
+     "x": 486946.0,
+     "y": 4420006.0
+    },
+    {
+     "x": 486824.0,
+     "y": 4420006.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 25,
+   "layerId": "su",
+   "attrs": {
+    "Malzeme": "PE100",
+    "Çap": "110"
+   },
+   "pts": [
+    {
+     "x": 487066.0,
+     "y": 4420006.0
+    },
+    {
+     "x": 487066.0,
+     "y": 4420114.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 26,
+   "layerId": "su",
+   "attrs": {
+    "Malzeme": "PE100",
+    "Çap": "110"
+   },
+   "pts": [
+    {
+     "x": 486946.0,
+     "y": 4420006.0
+    },
+    {
+     "x": 486946.0,
+     "y": 4419886.0
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 27,
+   "layerId": "depo",
+   "attrs": {
+    "Ad": "Doğu Deposu"
+   },
+   "label": "Doğu Deposu",
+   "p": {
+    "x": 487176.0,
+    "y": 4420006.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 28,
+   "layerId": "vana",
+   "attrs": {
+    "Ad": "V-1",
+    "durum": "açık"
+   },
+   "label": "V-1",
+   "p": {
+    "x": 487120.0,
+    "y": 4420006.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 29,
+   "layerId": "vana",
+   "attrs": {
+    "Ad": "V-2",
+    "durum": "açık"
+   },
+   "label": "V-2",
+   "p": {
+    "x": 487000.0,
+    "y": 4420006.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 30,
+   "layerId": "vana",
+   "attrs": {
+    "Ad": "V-3",
+    "durum": "açık"
+   },
+   "label": "V-3",
+   "p": {
+    "x": 486880.0,
+    "y": 4420006.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 31,
+   "layerId": "vana",
+   "attrs": {
+    "Ad": "V-4",
+    "durum": "açık"
+   },
+   "label": "V-4",
+   "p": {
+    "x": 487066.0,
+    "y": 4420060.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 32,
+   "layerId": "vana",
+   "attrs": {
+    "Ad": "V-5",
+    "durum": "kapalı"
+   },
+   "label": "V-5",
+   "p": {
+    "x": 486946.0,
+    "y": 4419940.0
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

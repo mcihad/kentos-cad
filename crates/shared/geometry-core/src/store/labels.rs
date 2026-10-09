@@ -270,7 +270,7 @@ impl Store {
         let mut out = Vec::new();
         for it in self.candidates(&super::padded(*view, 0.0)) {
             let flags = self.flags(it);
-            if !flags.visible {
+            if !flags.visible || !self.view_shown(it.id) {
                 continue;
             }
             let b = &it.bounds;

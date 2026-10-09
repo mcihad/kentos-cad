@@ -1,5 +1,8 @@
 import { ReadableTool, TextTool } from './annotateTools';
 import { CenterlineTool } from './centerlineTool';
+import { NetworkAreaTool } from './networkAreaTool';
+import { NetworkRouteTool } from './networkRouteTool';
+import { NetworkTraceTool } from './networkTraceTool';
 import { EdgeShiftTool } from './edgeShiftTool';
 import { ImageClipTool, ImageInsertTool } from './imageTools';
 import { PlaceTextFileTool } from './textFileTool';
@@ -59,6 +62,7 @@ import { AreaIntersectTool, AreaSplitTool, AreaSubtractTool, AreaUnionTool, Boun
 import { ContinueTool } from './continueTool';
 import { ReshapeTool } from './reshapeTool';
 import { HoleAddTool, HoleClickTool } from './holeTools';
+import { TimeVersionTool } from './timeVersionTool';
 import { PanTool, SelectTool, ZoomWindowTool } from './SelectTool';
 import type { ToolDescriptor } from './Tool';
 import { arcCreate } from '../product/arcCreate';
@@ -449,6 +453,83 @@ const defs: Def[] = [
   { id: 'area', label: 'Alan hesapla', icon: 'area', group: 'map', section: 'measure', shortcut: 'Alt+H', aliases: ['AA', 'AREA', 'ALANSOR'], description: 'Tıklanan köşelerden ya da içine tıklanan bölgeden alan ve çevre hesaplar; ölçülen alan istenirse alan olarak çizilir. Projenin ikinci koordinat sistemi projeksiyonluysa alan ve çevre onun düzleminde de verilir.', steps: ['Alanın köşelerine tıklayın.', 'İlk köşeye ya da sağ tıklayın: alan ve çevre mesaj satırına yazılır.', '“İçine tıkla” açıkken çizgilerle çevrili bölgenin içine tıklamak yeter; içteki kapalı şekiller delik sayılır.', '“Alan olarak çiz” son ölçülen alanı, delikleriyle, etkin katmana kapalı alan olarak yazar (tek adım).'], productCommand: polygonCreate.id, create: (c) => new AreaMeasureTool(c) },
   { id: 'measureAngle', label: 'Açı ölç', icon: 'measureAngle', group: 'map', section: 'measure', aliases: ['ACIOLC', 'ANGLE', 'ACI'], description: 'Bir tepe noktası ve iki koldan açıyı ölçer; projenin açı biriminde ve dış açısıyla yazar.', steps: ['Açının tepe noktasına tıklayın.', 'Birinci ve ikinci kolun bir noktasına tıklayın; açı ve dış açısı canlı yazılır.', 'Sonuç iletiye gider; araç yeniden sorar. Çizime bir şey yazılmaz.'], create: (c) => new MeasureAngleTool(c) },
   { id: 'stationOffset', label: 'Dik ayak ölç', icon: 'stationOffset', group: 'map', section: 'measure', aliases: ['PRIZMA', 'DIKAYAKOLC', 'STATIONOFFSET'], description: 'Noktaların bir hatta göre dik ayağını ve dik boyunu ölçer (sağa artı); çizime yazmaz, iletiye yazar.', steps: ['Hattın başına (A), sonra sonuna (B) tıklayın.', 'Ölçülecek noktalara tıklayın: dik ayak ve dik boy imleç yanında görünür, her tık iletiye yazılır.', '“Başka hat” yeni hat seçtirir; sağ tık ya da Enter bitirir.'], create: (c) => new StationOffsetTool(c) },
+  // Zaman (docs/adr/0210 §7): versions of the objects of a ranged temporal layer.
+  {
+    id: 'timeVersion',
+    label: 'Yeni sürüm oluştur',
+    icon: 'timeVersion',
+    group: 'map',
+    section: 'time',
+    aliases: ['YENISURUM', 'SURUMOLUSTUR', 'NEWVERSION'],
+    description: 'Seçili nesneleri bir tarihte sona erdirir ve yanlarına o tarihte başlayan yeni sürümlerini yazar: geometri, öznitelik, etiket ve sembol aynı; eski hâli geçmişte kalır.',
+    steps: [
+      'Nesneleri seçin (önceden seçiliyse bu adım atlanır), sağ tıklayın ya da Enter’a basın. Nesneler başlangıç ve bitiş alanı olan zamansal katmanda olmalı.',
+      'Tarih sürgünün anıdır (sürgü kapalıysa bugün); Enter yazar ya da başka bir tarih yazın (05.03.2024).',
+      'Tek adımda: nesnelerin bitişi o tarih olur, yeni sürümleri o tarihte başlar ve seçilir. Tarihi kapsamayan nesne varsa hiçbiri yazılmaz.',
+    ],
+    productCommand: entitiesCreate.id,
+    create: (c) => new TimeVersionTool(c, 'timeVersion'),
+  },
+  {
+    id: 'timeEnd',
+    label: 'Sona erdir',
+    icon: 'timeEnd',
+    group: 'map',
+    section: 'time',
+    aliases: ['SONAERDIR', 'SURUMBITIR', 'RETIRE'],
+    description: 'Seçili nesnelerin bitişini bir tarih yapar: o tarihten sonra zaman sürgüsünde görünmezler, silinmezler.',
+    steps: [
+      'Nesneleri seçin (önceden seçiliyse bu adım atlanır), sağ tıklayın ya da Enter’a basın. Nesneler başlangıç ve bitiş alanı olan zamansal katmanda olmalı.',
+      'Tarih sürgünün anıdır (sürgü kapalıysa bugün); Enter yazar ya da başka bir tarih yazın (05.03.2024).',
+    ],
+    productCommand: entitiesSet.id,
+    create: (c) => new TimeVersionTool(c, 'timeEnd'),
+  },
+  // Ağ analizi (docs/adr/0209 §10): the networks the project defines (Ağlar), asked in the network worker.
+  {
+    id: 'netRoute',
+    label: 'En kısa yol',
+    icon: 'netRoute',
+    group: 'network',
+    aliases: ['ENKISAYOL', 'ROTA', 'ROUTE', 'SHORTESTPATH'],
+    description: 'Projenin yol ya da şebeke ağında duraklar arası en kısa (en ucuz) yolu bulur: uzunlukla ya da ağın süre ve maliyetleriyle, tek yönler ve kapalı yollar gözetilerek; istenirse durakların en iyi sırasıyla.',
+    steps: [
+      'Durakları sırayla tıklayın ya da Y,X yazın; ikinci duraktan sonra rota görünür, son duraktan imlece kadar yol canlı izlenir.',
+      'Ağ (A) ve Maliyet (M) seçilir; Engel (E) sonraki tıklamayı engel yapar; Sıra (S) durakları en iyi sıraya koyar (ilk ya da ilk ve son sabit).',
+      'Enter rotayı “Rota” katmanına (yoksa açılır) tek adımda yazar: ağı, maliyeti, durakları, sırası, uzunluğu ve maliyetleriyle. Esc son noktayı geri alır.',
+    ],
+    productCommand: entitiesCreate.id,
+    create: (c) => new NetworkRouteTool(c),
+  },
+  {
+    id: 'netServiceArea',
+    label: 'Hizmet alanı',
+    icon: 'netServiceArea',
+    group: 'network',
+    aliases: ['HIZMETALANI', 'ERISIMALANI', 'SERVICEAREA', 'ISOCHRONE'],
+    description: 'Tesislerden (itfaiye, okul, sağlık ocağı) ağ boyunca verilen uzaklık ya da sürede ulaşılan yerleri bulur: ulaşılan yolları ve aralık başına alanları.',
+    steps: [
+      'Tesisleri tıklayın ya da Y,X yazın: ulaşılan yollar hemen, aralıkların alanları ardından görünür.',
+      'Aralıklar (R) maliyetin biriminde artan sayılar (5 10 15); Yön (Y) tesisten ya da tesise; Biçim (B) disk ya da halka; Birleşik (İ) bütün tesislere tek alan; Kenar payı (K) alanın yollardan uzaklığı; Çizgiler (Ç) ulaşılan yolları da yazar.',
+      'Enter alanları “Hizmet alanı” katmanına (yoksa açılır) tek adımda yazar. Esc son noktayı geri alır.',
+    ],
+    productCommand: entitiesCreate.id,
+    create: (c) => new NetworkAreaTool(c),
+  },
+  {
+    id: 'netTrace',
+    label: 'Şebeke izleme',
+    icon: 'netTrace',
+    group: 'network',
+    aliases: ['SEBEKEIZLEME', 'SEBEKEIZLE', 'NETWORKTRACE', 'TRACENETWORK'],
+    description: 'Şebekede bir noktadan bağlı olanı, akış aşağısını ya da yukarısını izler; Yalıtım bir arızada kapatılacak vanaları ve suyu kesilecek hatları bulur.',
+    steps: [
+      'Başlangıç noktalarına (kırık boru, besleme) tıklayın: izlenen hatlar hemen görünür.',
+      'Tür (T): bağlı, akış aşağı, akış yukarı ya da yalıtım; Engel (E) sonraki tıklamayı engel yapar.',
+      'Enter izlenen nesneleri (yalıtımda vanaları da) seçer ve uzunluklarını, sayılarını, vanaların adlarını söyler.',
+    ],
+    create: (c) => new NetworkTraceTool(c),
+  },
 ];
 
 export const TOOL_CATALOG: ToolDescriptor[] = defs.map((d) => ({

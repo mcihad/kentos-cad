@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 18] = [
+pub const CATEGORIES: [Category; 19] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -63,6 +63,12 @@ pub const CATEGORIES: [Category; 18] = [
         "Analiz",
         "measure",
         "Ölçüm, istatistik ve raporlar",
+    ),
+    category(
+        "network",
+        "Ağ analizi",
+        "networks",
+        "En yakın tesis, maliyet matrisi ve hizmet alanları",
     ),
     category(
         "conversion",

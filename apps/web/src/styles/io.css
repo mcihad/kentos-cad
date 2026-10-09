@@ -374,6 +374,15 @@
 .compare-run {
   align-items: flex-end;
 }
+.compare-date {
+  width: calc(150px * var(--ui-scale));
+}
+.compare-hint {
+  align-self: end;
+  padding-bottom: 6px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
 .compare-num {
   width: calc(110px * var(--ui-scale));
 }
@@ -875,4 +884,46 @@
 .raster-pick > select {
   flex: 1;
   min-width: 0;
+}
+
+/* Katman süzgeci (docs/adr/0211 §4): the layer, the condition with its ε, the list's row. */
+.lfilter__layer {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.lfilter__layer .io-field {
+  flex: 1 1 auto;
+}
+.lfilter__layer select {
+  width: 100%;
+}
+.lfilter__exprbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.lfilter__expr {
+  flex: 1;
+  min-width: 0;
+}
+.lfilter__expr.is-invalid {
+  border-color: var(--c-danger);
+}
+.lfilter__list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.lfilter__count {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
 }

@@ -84,7 +84,10 @@ impl Store {
         self.ordered
             .iter()
             .filter_map(|&e| self.ordered_item(e))
-            .filter(|it| self.flags.get(it.layer as usize).is_none_or(|f| f.visible))
+            .filter(|it| {
+                self.flags.get(it.layer as usize).is_none_or(|f| f.visible)
+                    && self.view_shown(it.id)
+            })
             .filter(|it| !matches!(look(&it.shape), Look::Never) && finite(&it.bounds))
     }
 

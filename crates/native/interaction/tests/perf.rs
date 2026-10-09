@@ -8,7 +8,8 @@
 use std::time::{Duration, Instant};
 
 use kentos_contracts::{
-    DocumentSnapshotV1, Entity, EntityBase, LineEntity, PathEntity, Vec2 as Wire,
+    DocumentSnapshotV1, Entity, EntityBase, EntityId, LayerFilter, LineEntity, PathEntity,
+    Vec2 as Wire,
 };
 use kentos_domain::{Document, Slot};
 use kentos_interaction::{Spatial, Vec2, default_snap_kinds};
@@ -224,4 +225,115 @@ fn store_sync_and_queries_on_a_large_drawing() {
             ms(crossing_time)
         );
     }
+}
+
+/// The kinds of land a parcel of the filter's drawing is, one after another.
+const KINDS: [&str; 3] = ["Arsa", "Tarla", "Bağ"];
+
+/// Katman süzgeci on a large layer (docs/adr/0211 §6): the parcels of [`drawing`] with a
+/// `Nitelik` each, the filter set on their layer and the store following it whole
+/// (compiled, asked of every object, marked, counted), then one parcel's attribute
+/// changed (only it asked again). Beside it the command's count, the core alone.
+///
+/// `cargo test --release -p kentos-interaction --test perf layer_filter -- --ignored --nocapture`
+#[test]
+#[ignore = "a measurement: run by hand in release"]
+fn layer_filter_on_a_large_layer() {
+    let mut doc = drawing(316);
+    let slots: Vec<Slot> = doc
+        .entities()
+        .filter(|e| e.base().layer_id == "parsel")
+        .map(|e| Slot(e.base().id))
+        .collect();
+    for (i, slot) in slots.iter().enumerate() {
+        let mut e = doc.get(*slot).expect("a parcel").clone();
+        e.base_mut()
+            .attrs
+            .insert("Nitelik".into(), KINDS[i % KINDS.len()].into());
+        doc.update(*slot, e);
+    }
+    let parcels = slots.len();
+    let mut spatial = Spatial::of(&doc);
+    let uids: Vec<EntityId> = slots
+        .iter()
+        .step_by(2)
+        .map(|s| EntityId(*doc.uid(*s).expect("a persistent id").as_bytes()))
+        .collect();
+    let filters = [
+        (
+            "öznitelik ifadesi (Nitelik = 'Arsa')",
+            LayerFilter {
+                expression: Some("Nitelik = 'Arsa'".into()),
+                objects: Vec::new(),
+            },
+            50.0,
+        ),
+        (
+            "geometri ifadesi ($alan > 310)",
+            LayerFilter {
+                expression: Some("$alan > 310".into()),
+                objects: Vec::new(),
+            },
+            150.0,
+        ),
+        (
+            "nesne listesi (her ikinci parsel)",
+            LayerFilter {
+                expression: None,
+                objects: uids,
+            },
+            10.0,
+        ),
+    ];
+    println!("\nKatman süzgeci, {parcels} parsel:");
+    for (name, filter, budget) in filters {
+        let mut store = Vec::new();
+        let mut core = Vec::new();
+        let mut passed = (0, 0);
+        for _ in 0..7 {
+            doc.set_layer_filter("parsel", None, "Katman süzgeci")
+                .expect("taken away");
+            spatial.sync(&doc);
+            doc.set_layer_filter("parsel", Some(filter.clone()), "Katman süzgeci")
+                .expect("written");
+            let t = Instant::now();
+            spatial.sync(&doc);
+            store.push(ms(t.elapsed()));
+            passed = spatial.filter_counts("parsel").expect("counted");
+            let compiled =
+                kentos_native_application::layer_filter::compile_filter(&filter).expect("compiles");
+            let t = Instant::now();
+            let counted =
+                kentos_native_application::layers_filter::count(&doc, "parsel", Some(&compiled));
+            core.push(ms(t.elapsed()));
+            assert_eq!((counted.0 as usize, counted.1 as usize), passed);
+        }
+        store.sort_by(f64::total_cmp);
+        core.sort_by(f64::total_cmp);
+        println!(
+            "  {name:<38} geçen {}/{}: depo {:.1} ms (en yavaşı {:.1}), çekirdek {:.1} ms; bütçe {budget} ms",
+            passed.0, passed.1, store[3], store[6], core[3]
+        );
+    }
+    // One parcel's attribute changed under the attribute filter: only it is asked again.
+    doc.set_layer_filter(
+        "parsel",
+        Some(LayerFilter {
+            expression: Some("Nitelik = 'Arsa'".into()),
+            objects: Vec::new(),
+        }),
+        "Katman süzgeci",
+    )
+    .expect("written");
+    spatial.sync(&doc);
+    let (edit, worst) = each(200, |i| {
+        let slot = slots[i * 37 % slots.len()];
+        let mut e = doc.get(slot).expect("a parcel").clone();
+        e.base_mut()
+            .attrs
+            .insert("Nitelik".into(), KINDS[(i + 1) % KINDS.len()].into());
+        doc.update(slot, e);
+        spatial.sync(&doc);
+    });
+    println!("  bir parselin özniteliği değişince: ortalama {edit:.0} µs, en yavaşı {worst:.0} µs");
 }

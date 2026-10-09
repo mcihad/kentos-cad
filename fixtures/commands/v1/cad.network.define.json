@@ -1,0 +1,2434 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.network.define",
+  "commandVersion": 1,
+  "title": "Ağ tanımı: projenin ağını yaz ya da sil (ADR 0209 §11)",
+  "note": "scripts/fixtures/network_define_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/contracts/src/cad_networks.rs) KentOS kodu olmadan kurulur, kuralı bozan ağların sözleri fixtures/network/v1/rules.json'dan. `expect.networks` projenin ağlarıdır. Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı yazmaz.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ağlar",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow",
+      "networks": [
+        {
+          "id": "ag-1",
+          "name": "Yollar",
+          "kind": "road",
+          "edges": [
+            {
+              "layer": "yol"
+            }
+          ],
+          "connect": "ends",
+          "tolerance": 0.01,
+          "direction": {
+            "kind": "field",
+            "field": "yon",
+            "forward": [
+              "FT"
+            ],
+            "backward": [
+              "TF"
+            ],
+            "closed": [
+              "N"
+            ]
+          },
+          "costs": [
+            {
+              "name": "Süre",
+              "kind": "speed",
+              "field": "hiz",
+              "speed": 50.0
+            }
+          ]
+        }
+      ]
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "yol",
+        "name": "Yol ekseni",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "su",
+        "name": "Su hattı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "vana",
+        "name": "Vana",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "yol",
+        "attrs": {
+          "yon": "FT"
+        },
+        "a": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "b": {
+          "x": 500100,
+          "y": 4400000
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Ekle: yeni ağ sona; proje ayarıdır, geri alma adımı yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "id": "ag-2",
+              "name": "İçme suyu",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "su"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.005,
+              "direction": {
+                "kind": "digitized"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "networks": [
+                {
+                  "id": "ag-1",
+                  "name": "Yollar",
+                  "kind": "road",
+                  "edges": [
+                    {
+                      "layer": "yol"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.01,
+                  "direction": {
+                    "kind": "field",
+                    "field": "yon",
+                    "forward": [
+                      "FT"
+                    ],
+                    "backward": [
+                      "TF"
+                    ],
+                    "closed": [
+                      "N"
+                    ]
+                  },
+                  "costs": [
+                    {
+                      "name": "Süre",
+                      "kind": "speed",
+                      "field": "hiz",
+                      "speed": 50.0
+                    }
+                  ]
+                },
+                {
+                  "id": "ag-2",
+                  "name": "İçme suyu",
+                  "kind": "utility",
+                  "edges": [
+                    {
+                      "layer": "su"
+                    }
+                  ],
+                  "junctions": [
+                    {
+                      "layer": "vana",
+                      "role": "valve",
+                      "closed": "durum = 'kapalı'"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.005,
+                  "direction": {
+                    "kind": "digitized"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              },
+              {
+                "id": "ag-2",
+                "name": "İçme suyu",
+                "kind": "utility",
+                "edges": [
+                  {
+                    "layer": "su"
+                  }
+                ],
+                "junctions": [
+                  {
+                    "layer": "vana",
+                    "role": "valve",
+                    "closed": "durum = 'kapalı'"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.005,
+                "direction": {
+                  "kind": "digitized"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: aynı kimlikli ağ yerinde değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "id": "ag-2",
+              "name": "İçme suyu",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "su"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.005,
+              "direction": {
+                "kind": "digitized"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "networks": [
+                {
+                  "id": "ag-1",
+                  "name": "Yollar",
+                  "kind": "road",
+                  "edges": [
+                    {
+                      "layer": "yol"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.01,
+                  "direction": {
+                    "kind": "field",
+                    "field": "yon",
+                    "forward": [
+                      "FT"
+                    ],
+                    "backward": [
+                      "TF"
+                    ],
+                    "closed": [
+                      "N"
+                    ]
+                  },
+                  "costs": [
+                    {
+                      "name": "Süre",
+                      "kind": "speed",
+                      "field": "hiz",
+                      "speed": 50.0
+                    }
+                  ]
+                },
+                {
+                  "id": "ag-2",
+                  "name": "İçme suyu",
+                  "kind": "utility",
+                  "edges": [
+                    {
+                      "layer": "su"
+                    }
+                  ],
+                  "junctions": [
+                    {
+                      "layer": "vana",
+                      "role": "valve",
+                      "closed": "durum = 'kapalı'"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.005,
+                  "direction": {
+                    "kind": "digitized"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "id": "ag-1",
+              "name": "Yollar",
+              "kind": "road",
+              "edges": [
+                {
+                  "layer": "yol"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.05,
+              "direction": {
+                "kind": "field",
+                "field": "yon",
+                "forward": [
+                  "FT"
+                ],
+                "backward": [
+                  "TF"
+                ],
+                "closed": [
+                  "N"
+                ]
+              },
+              "costs": [
+                {
+                  "name": "Süre",
+                  "kind": "speed",
+                  "field": "hiz",
+                  "speed": 50.0
+                }
+              ],
+              "closed": "durum = 'kapalı'"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "networks": [
+                {
+                  "id": "ag-1",
+                  "name": "Yollar",
+                  "kind": "road",
+                  "edges": [
+                    {
+                      "layer": "yol"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.05,
+                  "direction": {
+                    "kind": "field",
+                    "field": "yon",
+                    "forward": [
+                      "FT"
+                    ],
+                    "backward": [
+                      "TF"
+                    ],
+                    "closed": [
+                      "N"
+                    ]
+                  },
+                  "costs": [
+                    {
+                      "name": "Süre",
+                      "kind": "speed",
+                      "field": "hiz",
+                      "speed": 50.0
+                    }
+                  ],
+                  "closed": "durum = 'kapalı'"
+                },
+                {
+                  "id": "ag-2",
+                  "name": "İçme suyu",
+                  "kind": "utility",
+                  "edges": [
+                    {
+                      "layer": "su"
+                    }
+                  ],
+                  "junctions": [
+                    {
+                      "layer": "vana",
+                      "role": "valve",
+                      "closed": "durum = 'kapalı'"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.005,
+                  "direction": {
+                    "kind": "digitized"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.05,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ],
+                "closed": "durum = 'kapalı'"
+              },
+              {
+                "id": "ag-2",
+                "name": "İçme suyu",
+                "kind": "utility",
+                "edges": [
+                  {
+                    "layer": "su"
+                  }
+                ],
+                "junctions": [
+                  {
+                    "layer": "vana",
+                    "role": "valve",
+                    "closed": "durum = 'kapalı'"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.005,
+                "direction": {
+                  "kind": "digitized"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "id": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "networks": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "networks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimde olmayan katmanlar: ağ yazılır, her katman bir uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "id": "ag-2",
+              "name": "İçme suyu",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "yok"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "vana",
+                  "role": "valve"
+                },
+                {
+                  "layer": "eski",
+                  "role": "source"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.005,
+              "direction": {
+                "kind": "digitized"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "networks": [
+                {
+                  "id": "ag-1",
+                  "name": "Yollar",
+                  "kind": "road",
+                  "edges": [
+                    {
+                      "layer": "yol"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.01,
+                  "direction": {
+                    "kind": "field",
+                    "field": "yon",
+                    "forward": [
+                      "FT"
+                    ],
+                    "backward": [
+                      "TF"
+                    ],
+                    "closed": [
+                      "N"
+                    ]
+                  },
+                  "costs": [
+                    {
+                      "name": "Süre",
+                      "kind": "speed",
+                      "field": "hiz",
+                      "speed": 50.0
+                    }
+                  ]
+                },
+                {
+                  "id": "ag-2",
+                  "name": "İçme suyu",
+                  "kind": "utility",
+                  "edges": [
+                    {
+                      "layer": "yok"
+                    }
+                  ],
+                  "junctions": [
+                    {
+                      "layer": "vana",
+                      "role": "valve"
+                    },
+                    {
+                      "layer": "eski",
+                      "role": "source"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.005,
+                  "direction": {
+                    "kind": "digitized"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "unknown_layer",
+                "message": "“yok” kimlikli katman çizimde yok; ağ kurulurken bu katman atlanır.",
+                "path": "network"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“eski” kimlikli katman çizimde yok; ağ kurulurken bu katman atlanır.",
+                "path": "network"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              },
+              {
+                "id": "ag-2",
+                "name": "İçme suyu",
+                "kind": "utility",
+                "edges": [
+                  {
+                    "layer": "yok"
+                  }
+                ],
+                "junctions": [
+                  {
+                    "layer": "vana",
+                    "role": "valve"
+                  },
+                  {
+                    "layer": "eski",
+                    "role": "source"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.005,
+                "direction": {
+                  "kind": "digitized"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrula: hiçbir şey yazılmaz, uyarılar söylenir",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "operation": "set",
+            "network": {
+              "id": "ag-2",
+              "name": "İçme suyu",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "yok"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "vana",
+                  "role": "valve"
+                },
+                {
+                  "layer": "eski",
+                  "role": "source"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.005,
+              "direction": {
+                "kind": "digitized"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": [
+              {
+                "code": "unknown_layer",
+                "message": "“yok” kimlikli katman çizimde yok; ağ kurulurken bu katman atlanır.",
+                "path": "network"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“eski” kimlikli katman çizimde yok; ağ kurulurken bu katman atlanır.",
+                "path": "network"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: yazılacak liste ve şimdiki sürüm; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "set",
+            "network": {
+              "id": "ag-2",
+              "name": "İçme suyu",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "su"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.005,
+              "direction": {
+                "kind": "digitized"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "networks": [
+                {
+                  "id": "ag-1",
+                  "name": "Yollar",
+                  "kind": "road",
+                  "edges": [
+                    {
+                      "layer": "yol"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.01,
+                  "direction": {
+                    "kind": "field",
+                    "field": "yon",
+                    "forward": [
+                      "FT"
+                    ],
+                    "backward": [
+                      "TF"
+                    ],
+                    "closed": [
+                      "N"
+                    ]
+                  },
+                  "costs": [
+                    {
+                      "name": "Süre",
+                      "kind": "speed",
+                      "field": "hiz",
+                      "speed": 50.0
+                    }
+                  ]
+                },
+                {
+                  "id": "ag-2",
+                  "name": "İçme suyu",
+                  "kind": "utility",
+                  "edges": [
+                    {
+                      "layer": "su"
+                    }
+                  ],
+                  "junctions": [
+                    {
+                      "layer": "vana",
+                      "role": "valve",
+                      "closed": "durum = 'kapalı'"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.005,
+                  "direction": {
+                    "kind": "digitized"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: bütün alanlarıyla (süzgeçler, düğüm katmanı, köşelerde bağlanma, boş yön listeleri, iki maliyet, kapalı kenarlar)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "id": "ag-3",
+              "name": "Bisiklet ve servis yolları",
+              "kind": "road",
+              "edges": [
+                {
+                  "layer": "yol",
+                  "filter": "bisiklet = 'evet'"
+                },
+                {
+                  "layer": "su",
+                  "filter": "servis_yolu = 'evet'"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "vana",
+                  "role": "junction",
+                  "filter": "tur = 'kavsak'"
+                }
+              ],
+              "connect": "vertices",
+              "tolerance": 0.5,
+              "direction": {
+                "kind": "field",
+                "field": "bisiklet_yon",
+                "forward": [
+                  "ileri"
+                ],
+                "backward": [],
+                "closed": []
+              },
+              "costs": [
+                {
+                  "name": "Süre",
+                  "kind": "speed",
+                  "field": "hiz",
+                  "speed": 15.0
+                },
+                {
+                  "name": "Eğim",
+                  "kind": "field",
+                  "field": "egim_cezasi",
+                  "unit": "puan"
+                }
+              ],
+              "closed": "durum = 'kapalı'"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "networks": [
+                {
+                  "id": "ag-1",
+                  "name": "Yollar",
+                  "kind": "road",
+                  "edges": [
+                    {
+                      "layer": "yol"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.01,
+                  "direction": {
+                    "kind": "field",
+                    "field": "yon",
+                    "forward": [
+                      "FT"
+                    ],
+                    "backward": [
+                      "TF"
+                    ],
+                    "closed": [
+                      "N"
+                    ]
+                  },
+                  "costs": [
+                    {
+                      "name": "Süre",
+                      "kind": "speed",
+                      "field": "hiz",
+                      "speed": 50.0
+                    }
+                  ]
+                },
+                {
+                  "id": "ag-3",
+                  "name": "Bisiklet ve servis yolları",
+                  "kind": "road",
+                  "edges": [
+                    {
+                      "layer": "yol",
+                      "filter": "bisiklet = 'evet'"
+                    },
+                    {
+                      "layer": "su",
+                      "filter": "servis_yolu = 'evet'"
+                    }
+                  ],
+                  "junctions": [
+                    {
+                      "layer": "vana",
+                      "role": "junction",
+                      "filter": "tur = 'kavsak'"
+                    }
+                  ],
+                  "connect": "vertices",
+                  "tolerance": 0.5,
+                  "direction": {
+                    "kind": "field",
+                    "field": "bisiklet_yon",
+                    "forward": [
+                      "ileri"
+                    ],
+                    "backward": [],
+                    "closed": []
+                  },
+                  "costs": [
+                    {
+                      "name": "Süre",
+                      "kind": "speed",
+                      "field": "hiz",
+                      "speed": 15.0
+                    },
+                    {
+                      "name": "Eğim",
+                      "kind": "field",
+                      "field": "egim_cezasi",
+                      "unit": "puan"
+                    }
+                  ],
+                  "closed": "durum = 'kapalı'"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              },
+              {
+                "id": "ag-3",
+                "name": "Bisiklet ve servis yolları",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol",
+                    "filter": "bisiklet = 'evet'"
+                  },
+                  {
+                    "layer": "su",
+                    "filter": "servis_yolu = 'evet'"
+                  }
+                ],
+                "junctions": [
+                  {
+                    "layer": "vana",
+                    "role": "junction",
+                    "filter": "tur = 'kavsak'"
+                  }
+                ],
+                "connect": "vertices",
+                "tolerance": 0.5,
+                "direction": {
+                  "kind": "field",
+                  "field": "bisiklet_yon",
+                  "forward": [
+                    "ileri"
+                  ],
+                  "backward": [],
+                  "closed": []
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 15.0
+                  },
+                  {
+                    "name": "Eğim",
+                    "kind": "field",
+                    "field": "egim_cezasi",
+                    "unit": "puan"
+                  }
+                ],
+                "closed": "durum = 'kapalı'"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: silmenin listesi; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "remove",
+            "id": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "networks": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ağsız yazma",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_network",
+              "message": "Yazılacak ağ (network) verilmedi; ağın tanımını verin.",
+              "path": "network"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kimliksiz silme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_id",
+              "message": "Silinecek ağın kimliğini (id) verin.",
+              "path": "id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş kimlikle silme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "id": ""
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_id",
+              "message": "Silinecek ağın kimliğini (id) verin.",
+              "path": "id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan ağ: kimlik büyük harf",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "connect": "ends",
+              "direction": {
+                "kind": "both"
+              },
+              "edges": [
+                {
+                  "layer": "0"
+                }
+              ],
+              "id": "Ag-1",
+              "kind": "road",
+              "name": "A",
+              "tolerance": 0.0001
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_network",
+              "message": "ağın kimliği “Ag-1”; 1–40 küçük harf, rakam ya da tire olmalı",
+              "path": "network"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan ağ: tolerans 10 m'den büyük",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "connect": "ends",
+              "direction": {
+                "kind": "both"
+              },
+              "edges": [
+                {
+                  "layer": "0"
+                }
+              ],
+              "id": "a",
+              "kind": "road",
+              "name": "A",
+              "tolerance": 10.0001
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_network",
+              "message": "“A” ağının toleransı 10.0001 m; 0,0001 ile 10 m arasında olmalı",
+              "path": "network"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan ağ: yön değeri yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "connect": "ends",
+              "direction": {
+                "backward": [],
+                "closed": [],
+                "field": "yon",
+                "forward": [],
+                "kind": "field"
+              },
+              "edges": [
+                {
+                  "layer": "0"
+                }
+              ],
+              "id": "a",
+              "kind": "road",
+              "name": "A",
+              "tolerance": 0.0001
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_network",
+              "message": "“A” ağının yön alanının değeri yok; ileri, geri ya da kapalı en az bir değer olmalı",
+              "path": "network"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan ağ: yön değeri iki listede",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "connect": "ends",
+              "direction": {
+                "backward": [],
+                "closed": [
+                  "ft"
+                ],
+                "field": "yon",
+                "forward": [
+                  "FT"
+                ],
+                "kind": "field"
+              },
+              "edges": [
+                {
+                  "layer": "0"
+                }
+              ],
+              "id": "a",
+              "kind": "road",
+              "name": "A",
+              "tolerance": 0.0001
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_network",
+              "message": "“A” ağının yön değeri “ft” iki kez var",
+              "path": "network"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan ağ: maliyetin adı UZUNLUK",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "connect": "ends",
+              "costs": [
+                {
+                  "field": "ucret",
+                  "kind": "field",
+                  "name": "UZUNLUK"
+                }
+              ],
+              "direction": {
+                "kind": "both"
+              },
+              "edges": [
+                {
+                  "layer": "0"
+                }
+              ],
+              "id": "a",
+              "kind": "road",
+              "name": "A",
+              "tolerance": 0.0001
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_network",
+              "message": "“A” ağının maliyeti “UZUNLUK”: bu ad ağın uzunluğunundur",
+              "path": "network"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan ağ: süre maliyetinin birimi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "connect": "ends",
+              "costs": [
+                {
+                  "field": "hiz",
+                  "kind": "speed",
+                  "name": "Süre",
+                  "speed": 50.0,
+                  "unit": "dk"
+                }
+              ],
+              "direction": {
+                "kind": "both"
+              },
+              "edges": [
+                {
+                  "layer": "0"
+                }
+              ],
+              "id": "a",
+              "kind": "road",
+              "name": "A",
+              "tolerance": 0.0001
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_network",
+              "message": "“A” ağının “Süre” maliyeti süredir (dakika); birim yazılmaz",
+              "path": "network"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynı adlı ikinci ağ (büyük küçük harf ayrımı yok)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "id": "ag-2",
+              "name": "YOLLAR",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "su"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.005,
+              "direction": {
+                "kind": "digitized"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_network",
+              "message": "“YOLLAR” adlı ağ iki kez var",
+              "path": "network"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "id": "ag-2",
+              "name": "İçme suyu",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "su"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.005,
+              "direction": {
+                "kind": "digitized"
+              }
+            },
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm çakışması: plan edilen sürümden sonra çizim değişmişse hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "once"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "network": {
+              "id": "ag-2",
+              "name": "İçme suyu",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "su"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.005,
+              "direction": {
+                "kind": "digitized"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "networks": [
+                {
+                  "id": "ag-1",
+                  "name": "Yollar",
+                  "kind": "road",
+                  "edges": [
+                    {
+                      "layer": "yol"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.01,
+                  "direction": {
+                    "kind": "field",
+                    "field": "yon",
+                    "forward": [
+                      "FT"
+                    ],
+                    "backward": [
+                      "TF"
+                    ],
+                    "closed": [
+                      "N"
+                    ]
+                  },
+                  "costs": [
+                    {
+                      "name": "Süre",
+                      "kind": "speed",
+                      "field": "hiz",
+                      "speed": 50.0
+                    }
+                  ]
+                },
+                {
+                  "id": "ag-2",
+                  "name": "İçme suyu",
+                  "kind": "utility",
+                  "edges": [
+                    {
+                      "layer": "su"
+                    }
+                  ],
+                  "junctions": [
+                    {
+                      "layer": "vana",
+                      "role": "valve",
+                      "closed": "durum = 'kapalı'"
+                    }
+                  ],
+                  "connect": "ends",
+                  "tolerance": 0.005,
+                  "direction": {
+                    "kind": "digitized"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "id": "ag-1",
+            "expectedRevision": "$once"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              },
+              {
+                "id": "ag-2",
+                "name": "İçme suyu",
+                "kind": "utility",
+                "edges": [
+                  {
+                    "layer": "su"
+                  }
+                ],
+                "junctions": [
+                  {
+                    "layer": "vana",
+                    "role": "valve",
+                    "closed": "durum = 'kapalı'"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.005,
+                "direction": {
+                  "kind": "digitized"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "projede olmayan ağı silme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "id": "ag-9"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_network",
+              "message": "“ag-9” kimlikli ağ projede yok. Var olan bir ağın kimliğini verin.",
+              "path": "id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "networks": [
+              {
+                "id": "ag-1",
+                "name": "Yollar",
+                "kind": "road",
+                "edges": [
+                  {
+                    "layer": "yol"
+                  }
+                ],
+                "connect": "ends",
+                "tolerance": 0.01,
+                "direction": {
+                  "kind": "field",
+                  "field": "yon",
+                  "forward": [
+                    "FT"
+                  ],
+                  "backward": [
+                    "TF"
+                  ],
+                  "closed": [
+                    "N"
+                  ]
+                },
+                "costs": [
+                  {
+                    "name": "Süre",
+                    "kind": "speed",
+                    "field": "hiz",
+                    "speed": 50.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

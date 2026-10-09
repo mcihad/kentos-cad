@@ -19,20 +19,20 @@
   },
   "summary": {
     "commands": {
-      "total": 488,
-      "implemented": 465,
+      "total": 508,
+      "implemented": 485,
       "partial": 0,
       "pending": 23
     },
     "tools": {
-      "total": 121,
-      "implemented": 119,
+      "total": 126,
+      "implemented": 124,
       "partial": 0,
       "pending": 2
     },
     "processing": {
-      "total": 63,
-      "implemented": 63,
+      "total": 66,
+      "implemented": 66,
       "partial": 0,
       "pending": 0
     },
@@ -61,14 +61,14 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 652,
-      "implemented": 652,
+      "total": 694,
+      "implemented": 694,
       "partial": 0,
       "pending": 0
     },
     "screens": {
-      "total": 126,
-      "implemented": 126,
+      "total": 131,
+      "implemented": 131,
       "partial": 0,
       "pending": 0
     },
@@ -102,28 +102,28 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 223,
-    "commandsOnDesktop": 418,
+    "commandsWithoutTests": 225,
+    "commandsOnDesktop": 438,
     "desktop": {
       "commands": {
-        "total": 488,
-        "implemented": 418,
+        "total": 508,
+        "implemented": 438,
         "partial": 0,
         "pending": 10,
         "none": 58,
         "n/a": 2
       },
       "tools": {
-        "total": 121,
-        "implemented": 119,
+        "total": 126,
+        "implemented": 124,
         "partial": 0,
         "pending": 2,
         "none": 0,
         "n/a": 0
       },
       "processing": {
-        "total": 63,
-        "implemented": 63,
+        "total": 66,
+        "implemented": 66,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -162,16 +162,16 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 652,
-        "implemented": 652,
+        "total": 694,
+        "implemented": 694,
         "partial": 0,
         "pending": 0,
         "none": 0,
         "n/a": 0
       },
       "screens": {
-        "total": 126,
-        "implemented": 106,
+        "total": 131,
+        "implemented": 111,
         "partial": 2,
         "pending": 0,
         "none": 17,
@@ -220,7 +220,7 @@
         "Analiz › Arazi analizi"
       ],
       "ribbon": [
-        "CBS › Analiz › Arazi analizi"
+        "CBS › Analiz › Arazi"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -1692,7 +1692,7 @@
       ],
       "ribbon": [
         "CAD › Yönet › Karşılaştırma",
-        "CBS › Analiz › Karşılaştırma"
+        "CBS › Analiz › Denetim"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1737,7 +1737,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/feature-table.json"
+        "fixtures/interaction/v1/feature-table.json",
+        "fixtures/interaction/v1/layer-filter.json"
       ]
     },
     {
@@ -3138,6 +3139,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/layer-filter.json",
         "fixtures/interaction/v1/table.json"
       ]
     },
@@ -4589,6 +4591,97 @@
       ]
     },
     {
+      "id": "layer.filter",
+      "title": "Katman süzgeci…",
+      "short": "Katman süzgeci",
+      "category": "Katman",
+      "icon": "layerFilter",
+      "description": "Katmanın yalnız bir kısmıyla çalışmak için: ifadeye (İfadeyle seç’in dili) ya da bir nesne listesine uymayan nesneler katmanda yokmuş gibidir; çizilmez, seçilmez, kenetlenmez, Öznitelik tablosunda ve İşlemler’de görünmez. Çizim değişmez; kayıt ve dışa aktarma bütün nesneleri yazar.",
+      "aliases": [
+        "KATMANSUZGECI",
+        "TANIMSORGUSU",
+        "LAYERFILTER"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Veri › Süzgeç"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
+        "fixtures/interaction/v1/layer-filter.json"
+      ]
+    },
+    {
+      "id": "layer.filterClear",
+      "title": "Süzgeci kaldır",
+      "category": "Katman",
+      "icon": "layerFilterClear",
+      "description": "Etkin katmanın (Katmanlar panelinde sağ tıklanan katmanın) süzgecini kaldırır; bütün nesneleri yeniden görünür.",
+      "aliases": [
+        "SUZGECKALDIR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Veri › Süzgeç"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/layer-filter.json"
+      ]
+    },
+    {
+      "id": "layer.filterFromSelection",
+      "title": "Seçimden süzgeç",
+      "category": "Katman",
+      "icon": "layerFilterSelection",
+      "description": "Seçili nesnelerin her katmanına yalnız o katmanın seçili nesnelerini gösteren bir süzgeç yazar; katmanın ifadesi kalır. Tek adımda geri alınır.",
+      "aliases": [
+        "SECIMDENSUZGEC"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Veri › Süzgeç"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/layer-filter.json"
+      ]
+    },
+    {
       "id": "layer.list",
       "title": "Katman listesi…",
       "category": "Katman",
@@ -4997,6 +5090,43 @@
       },
       "tests": [],
       "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
+    },
+    {
+      "id": "network.manage",
+      "title": "Ağlar…",
+      "short": "Ağlar",
+      "category": "Analiz",
+      "icon": "networks",
+      "description": "Projenin yol ve şebeke ağlarını tanımlar: kenar ve düğüm katmanları (süzgeçleriyle), bağlanma kuralı ve toleransı, yön, süre ve maliyetler, kapalı kenarlar. Denetle ağın düğüm, parça ve uzunluğunu, kopuk parçaları ve sorunları gösterir.",
+      "aliases": [
+        "AGLAR",
+        "AĞLAR",
+        "AGTANIMI",
+        "NETWORKS"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Analiz › Ağ"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "cad"
+      ],
+      "uiSources": [
+        "apps/web/src/ui/processing/paramFields.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
     },
     {
       "id": "point.editor",
@@ -6226,6 +6356,93 @@
       "tests": []
     },
     {
+      "id": "processing.run.network.closestFacility",
+      "title": "En yakın tesis…",
+      "category": "İşlemler",
+      "icon": "closestFacility",
+      "description": "Her olay noktası için ağ boyunca en yakın tesisleri (okul, sağlık ocağı, itfaiye) bulur; yollarını ve maliyetlerini yazar.",
+      "aliases": [
+        "ENYAKINTESIS",
+        "CLOSESTFACILITY"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
+    },
+    {
+      "id": "processing.run.network.odMatrix",
+      "title": "Maliyet matrisi…",
+      "category": "İşlemler",
+      "icon": "odMatrix",
+      "description": "Başlangıç noktalarından varış noktalarına ağ boyunca maliyetleri tablo olarak çıkarır; isteğe bağlı düz çizgilerle.",
+      "aliases": [
+        "MALIYETMATRISI",
+        "ODMATRIX",
+        "ODCOSTMATRIX"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.network.serviceAreas",
+      "title": "Hizmet alanları…",
+      "category": "İşlemler",
+      "icon": "serviceAreas",
+      "description": "Tesislerden ağ boyunca verilen uzaklık ya da sürelerde ulaşılan alanları çizer: aralık başına alan, isteğe bağlı ulaşılan yollarla.",
+      "aliases": [
+        "HIZMETALANLARI",
+        "SERVICEAREAS"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "processing.run.pointcloud.areaStats",
       "title": "Nokta bulutu alan sorgusu…",
       "category": "Nokta bulutu",
@@ -7397,6 +7614,158 @@
         "desktop": "implemented"
       },
       "tests": []
+    },
+    {
+      "id": "scenario.apply",
+      "title": "Senaryoyu uygula…",
+      "short": "Senaryoyu uygula",
+      "category": "Harita",
+      "icon": "scenarioApply",
+      "description": "Senaryonun katmanlarını ana katmanlara yazar: ana katmanların nesneleri senaryodakilerle değişir, senaryo grubu sıradan gruba döner. Tek adımda geri alınır.",
+      "aliases": [
+        "SENARYOUYGULA"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Senaryo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts",
+        "apps/web/src/ui/statusbar/StatusBar.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/scenarios.json"
+      ]
+    },
+    {
+      "id": "scenario.base",
+      "title": "Mevcut durum",
+      "category": "Harita",
+      "icon": "scenarioBase",
+      "description": "Senaryoları gizler, yerine geçtikleri ana katmanları gösterir.",
+      "aliases": [
+        "MEVCUTDURUM"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Senaryo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/scenarios.json"
+      ]
+    },
+    {
+      "id": "scenario.compare",
+      "title": "Senaryoyu karşılaştır…",
+      "short": "Senaryoyu karşılaştır",
+      "category": "Harita",
+      "icon": "scenarioCompare",
+      "description": "Ana katmanı senaryodaki karşılığıyla Veri karşılaştır ile karşılaştırır.",
+      "aliases": [
+        "SENARYOKARSILASTIR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Senaryo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts",
+        "apps/web/src/ui/statusbar/StatusBar.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/scenarios.json"
+      ]
+    },
+    {
+      "id": "scenario.create",
+      "title": "Senaryo oluştur…",
+      "short": "Senaryo oluştur",
+      "category": "Harita",
+      "icon": "scenarioCreate",
+      "description": "Seçilen ana katmanların kopyalarıyla bir senaryo grubu yapar: öneriler Mevcut durum’dan ayrı çizilir, gösterilir ve karşılaştırılır.",
+      "aliases": [
+        "SENARYO",
+        "SENARYOOLUSTUR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Senaryo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/statusbar/StatusBar.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
+        "fixtures/interaction/v1/scenarios.json"
+      ]
+    },
+    {
+      "id": "scenario.show",
+      "title": "Senaryoyu göster",
+      "category": "Harita",
+      "icon": "scenarioShow",
+      "description": "Seçili ya da etkin katmanın senaryosunu gösterir: senaryonun katmanları görünür, yerine geçtiği ana katmanlar gizlenir.",
+      "aliases": [
+        "SENARYOGOSTER"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Senaryo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/scenarios.json"
+      ]
     },
     {
       "id": "server.check",
@@ -9526,6 +9895,98 @@
       },
       "tests": [
         "fixtures/interaction/v1/find-replace.json"
+      ]
+    },
+    {
+      "id": "time.compare",
+      "title": "Zamanı karşılaştır…",
+      "short": "Zamanı karşılaştır",
+      "category": "Harita",
+      "icon": "timeCompare",
+      "description": "Zamansal bir katmanın iki tarihteki hâlini Veri karşılaştır ile karşılaştırır: eklenen, silinen ve değişen nesneler.",
+      "aliases": [
+        "ZAMANKARSILASTIR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Zaman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/time-slider.json"
+      ]
+    },
+    {
+      "id": "time.layer",
+      "title": "Zaman ayarları…",
+      "short": "Zaman ayarları",
+      "category": "Harita",
+      "icon": "timeLayer",
+      "description": "Katmanın nesnelerinin başlangıç, bitiş ve kimlik alanlarını seçer; katmanı zamansal yapar ya da zamanını kaldırır.",
+      "aliases": [
+        "ZAMANAYARLARI",
+        "ZAMANAYAR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Zaman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
+        "fixtures/interaction/v1/time-layer.json"
+      ]
+    },
+    {
+      "id": "time.slider",
+      "title": "Zaman sürgüsü",
+      "category": "Harita",
+      "icon": "timeSlider",
+      "description": "Zamansal katmanları bir anda ya da aralıkta gösterir: çizim alanının altındaki sürgüyle adım adım ilerler, oynatır. Çizim değişmez.",
+      "aliases": [
+        "ZAMAN",
+        "ZAMANSURGUSU",
+        "TIMESLIDER"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Zaman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
+        "fixtures/interaction/v1/time-layer.json",
+        "fixtures/interaction/v1/time-slider.json",
+        "fixtures/interaction/v1/time-version.json"
       ]
     },
     {
@@ -11891,6 +12352,108 @@
       ]
     },
     {
+      "id": "tool.netRoute",
+      "title": "En kısa yol",
+      "category": "Ağ",
+      "icon": "netRoute",
+      "description": "Projenin yol ya da şebeke ağında duraklar arası en kısa (en ucuz) yolu bulur: uzunlukla ya da ağın süre ve maliyetleriyle, tek yönler ve kapalı yollar gözetilerek; istenirse durakların en iyi sırasıyla.",
+      "aliases": [
+        "ENKISAYOL",
+        "ROTA",
+        "ROUTE",
+        "SHORTESTPATH"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Analiz › Ağ"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "cad"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/network-route.json"
+      ]
+    },
+    {
+      "id": "tool.netServiceArea",
+      "title": "Hizmet alanı",
+      "category": "Ağ",
+      "icon": "netServiceArea",
+      "description": "Tesislerden (itfaiye, okul, sağlık ocağı) ağ boyunca verilen uzaklık ya da sürede ulaşılan yerleri bulur: ulaşılan yolları ve aralık başına alanları.",
+      "aliases": [
+        "HIZMETALANI",
+        "ERISIMALANI",
+        "SERVICEAREA",
+        "ISOCHRONE"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Analiz › Ağ"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "cad"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/network-service-area.json"
+      ]
+    },
+    {
+      "id": "tool.netTrace",
+      "title": "Şebeke izleme",
+      "category": "Ağ",
+      "icon": "netTrace",
+      "description": "Şebekede bir noktadan bağlı olanı, akış aşağısını ya da yukarısını izler; Yalıtım bir arızada kapatılacak vanaları ve suyu kesilecek hatları bulur.",
+      "aliases": [
+        "SEBEKEIZLEME",
+        "SEBEKEIZLE",
+        "NETWORKTRACE",
+        "TRACENETWORK"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Analiz › Ağ"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "cad"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/network-trace.json"
+      ]
+    },
+    {
       "id": "tool.offset",
       "title": "Ötele",
       "category": "Düzenle",
@@ -12619,6 +13182,7 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts",
         "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/layer-filter.json",
         "fixtures/interaction/v1/rect-options.json"
       ]
     },
@@ -13625,6 +14189,72 @@
       ]
     },
     {
+      "id": "tool.timeEnd",
+      "title": "Sona erdir",
+      "category": "Harita",
+      "icon": "timeEnd",
+      "description": "Seçili nesnelerin bitişini bir tarih yapar: o tarihten sonra zaman sürgüsünde görünmezler, silinmezler.",
+      "aliases": [
+        "SONAERDIR",
+        "SURUMBITIR",
+        "RETIRE"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Harita › Zaman"
+      ],
+      "ribbon": [
+        "CBS › Harita › Zaman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "cad"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/time-version.json"
+      ]
+    },
+    {
+      "id": "tool.timeVersion",
+      "title": "Yeni sürüm oluştur",
+      "category": "Harita",
+      "icon": "timeVersion",
+      "description": "Seçili nesneleri bir tarihte sona erdirir ve yanlarına o tarihte başlayan yeni sürümlerini yazar: geometri, öznitelik, etiket ve sembol aynı; eski hâli geçmişte kalır.",
+      "aliases": [
+        "YENISURUM",
+        "SURUMOLUSTUR",
+        "NEWVERSION"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Harita › Zaman"
+      ],
+      "ribbon": [
+        "CBS › Harita › Zaman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "cad"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/time-version.json"
+      ]
+    },
+    {
       "id": "tool.toArea",
       "title": "Alana çevir",
       "category": "Alan",
@@ -13970,7 +14600,7 @@
       "menus": [],
       "ribbon": [
         "CAD › Yönet › Topoloji",
-        "CBS › Analiz › Topoloji"
+        "CBS › Analiz › Denetim"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -14002,7 +14632,7 @@
       "menus": [],
       "ribbon": [
         "CAD › Yönet › Topoloji",
-        "CBS › Analiz › Topoloji"
+        "CBS › Analiz › Denetim"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -17076,6 +17706,83 @@
       ]
     },
     {
+      "id": "netRoute",
+      "label": "En kısa yol",
+      "icon": "netRoute",
+      "group": "network",
+      "aliases": [
+        "ENKISAYOL",
+        "ROTA",
+        "ROUTE",
+        "SHORTESTPATH"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Projenin yol ya da şebeke ağında duraklar arası en kısa (en ucuz) yolu bulur: uzunlukla ya da ağın süre ve maliyetleriyle, tek yönler ve kapalı yollar gözetilerek; istenirse durakların en iyi sırasıyla.",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/network-route.json"
+      ]
+    },
+    {
+      "id": "netServiceArea",
+      "label": "Hizmet alanı",
+      "icon": "netServiceArea",
+      "group": "network",
+      "aliases": [
+        "HIZMETALANI",
+        "ERISIMALANI",
+        "SERVICEAREA",
+        "ISOCHRONE"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Tesislerden (itfaiye, okul, sağlık ocağı) ağ boyunca verilen uzaklık ya da sürede ulaşılan yerleri bulur: ulaşılan yolları ve aralık başına alanları.",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/network-service-area.json"
+      ]
+    },
+    {
+      "id": "netTrace",
+      "label": "Şebeke izleme",
+      "icon": "netTrace",
+      "group": "network",
+      "aliases": [
+        "SEBEKEIZLEME",
+        "SEBEKEIZLE",
+        "NETWORKTRACE",
+        "TRACENETWORK"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Şebekede bir noktadan bağlı olanı, akış aşağısını ya da yukarısını izler; Yalıtım bir arızada kapatılacak vanaları ve suyu kesilecek hatları bulur.",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/network-trace.json"
+      ]
+    },
+    {
       "id": "offset",
       "label": "Ötele",
       "icon": "offset",
@@ -17649,6 +18356,7 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/ribbon.test.ts",
         "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/layer-filter.json",
         "fixtures/interaction/v1/rect-options.json"
       ]
     },
@@ -18426,6 +19134,58 @@
       },
       "tests": [
         "fixtures/interaction/v1/text-along.json"
+      ]
+    },
+    {
+      "id": "timeEnd",
+      "label": "Sona erdir",
+      "icon": "timeEnd",
+      "group": "map",
+      "section": "time",
+      "aliases": [
+        "SONAERDIR",
+        "SURUMBITIR",
+        "RETIRE"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 2,
+      "description": "Seçili nesnelerin bitişini bir tarih yapar: o tarihten sonra zaman sürgüsünde görünmezler, silinmezler.",
+      "productCommand": "cad.entities.set",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/time-version.json"
+      ]
+    },
+    {
+      "id": "timeVersion",
+      "label": "Yeni sürüm oluştur",
+      "icon": "timeVersion",
+      "group": "map",
+      "section": "time",
+      "aliases": [
+        "YENISURUM",
+        "SURUMOLUSTUR",
+        "NEWVERSION"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Seçili nesneleri bir tarihte sona erdirir ve yanlarına o tarihte başlayan yeni sürümlerini yazar: geometri, öznitelik, etiket ve sembol aynı; eski hâli geçmişte kalır.",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/time-version.json"
       ]
     },
     {
@@ -21419,6 +22179,274 @@
       "tests": []
     },
     {
+      "id": "network.closestFacility",
+      "label": "En yakın tesis",
+      "category": "Ağ analizi",
+      "description": "Her olay noktası için ağ boyunca en yakın tesisleri (okul, sağlık ocağı, itfaiye) bulur; yollarını ve maliyetlerini yazar.",
+      "aliases": [
+        "ENYAKINTESIS",
+        "CLOSESTFACILITY"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "network",
+          "type": "network",
+          "label": "Ağ",
+          "optional": false
+        },
+        {
+          "name": "incidents",
+          "type": "features",
+          "label": "Olaylar",
+          "optional": false
+        },
+        {
+          "name": "facilities",
+          "type": "features",
+          "label": "Tesisler",
+          "optional": false
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "label": "Tesis sayısı",
+          "optional": false
+        },
+        {
+          "name": "cutoff",
+          "type": "number",
+          "label": "Üst sınır",
+          "optional": true
+        },
+        {
+          "name": "direction",
+          "type": "enum",
+          "label": "Yön",
+          "optional": false
+        },
+        {
+          "name": "reach",
+          "type": "number",
+          "label": "Arama uzaklığı",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "routes",
+          "type": "features"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.network.closestFacility",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
+    },
+    {
+      "id": "network.odMatrix",
+      "label": "Maliyet matrisi",
+      "category": "Ağ analizi",
+      "description": "Başlangıç noktalarından varış noktalarına ağ boyunca maliyetleri tablo olarak çıkarır; isteğe bağlı düz çizgilerle.",
+      "aliases": [
+        "MALIYETMATRISI",
+        "ODMATRIX",
+        "ODCOSTMATRIX"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "network",
+          "type": "network",
+          "label": "Ağ",
+          "optional": false
+        },
+        {
+          "name": "origins",
+          "type": "features",
+          "label": "Başlangıçlar",
+          "optional": false
+        },
+        {
+          "name": "destinations",
+          "type": "features",
+          "label": "Varışlar",
+          "optional": false
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "label": "En yakın",
+          "optional": true
+        },
+        {
+          "name": "cutoff",
+          "type": "number",
+          "label": "Üst sınır",
+          "optional": true
+        },
+        {
+          "name": "reach",
+          "type": "number",
+          "label": "Arama uzaklığı",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "lines",
+          "type": "boolean",
+          "label": "Düz çizgiler",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çizgilerin katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "table",
+          "type": "table"
+        },
+        {
+          "name": "lines",
+          "type": "features"
+        }
+      ],
+      "command": "processing.run.network.odMatrix",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "network.serviceAreas",
+      "label": "Hizmet alanları",
+      "category": "Ağ analizi",
+      "description": "Tesislerden ağ boyunca verilen uzaklık ya da sürelerde ulaşılan alanları çizer: aralık başına alan, isteğe bağlı ulaşılan yollarla.",
+      "aliases": [
+        "HIZMETALANLARI",
+        "SERVICEAREAS"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "network",
+          "type": "network",
+          "label": "Ağ",
+          "optional": false
+        },
+        {
+          "name": "facilities",
+          "type": "features",
+          "label": "Tesisler",
+          "optional": false
+        },
+        {
+          "name": "breaks",
+          "type": "string",
+          "label": "Aralıklar",
+          "optional": false
+        },
+        {
+          "name": "direction",
+          "type": "enum",
+          "label": "Yön",
+          "optional": false
+        },
+        {
+          "name": "shape",
+          "type": "enum",
+          "label": "Biçim",
+          "optional": false
+        },
+        {
+          "name": "merged",
+          "type": "boolean",
+          "label": "Birleşik",
+          "optional": false
+        },
+        {
+          "name": "trim",
+          "type": "number",
+          "label": "Kenar payı",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "reach",
+          "type": "number",
+          "label": "Arama uzaklığı",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        },
+        {
+          "name": "lines",
+          "type": "boolean",
+          "label": "Ulaşılan yollar",
+          "optional": false
+        },
+        {
+          "name": "linesLayer",
+          "type": "layer",
+          "label": "Yolların katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "areas",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.network.serviceAreas",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "points.numberVertices",
       "label": "Köşe noktalarını numarala",
       "category": "Nokta işlemleri",
@@ -23603,10 +24631,13 @@
         ],
         "tools": [
           "map/parcel",
-          "map/field"
+          "map/field",
+          "map/time",
+          "network"
         ],
         "commands": [
-          "analysis.volume"
+          "analysis.volume",
+          "network.manage"
         ]
       },
       "status": "implemented",
@@ -28976,6 +30007,73 @@
       }
     },
     {
+      "id": "JunctionLayer.closed",
+      "contract": "JunctionLayer",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "closed",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "JunctionLayer.filter",
+      "contract": "JunctionLayer",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "filter",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "JunctionLayer.layer",
+      "contract": "JunctionLayer",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "layer",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "JunctionLayer.role",
+      "contract": "JunctionLayer",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "role",
+      "type": "JunctionRole",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "JunctionRole",
+      "contract": "JunctionRole",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "values": [
+        "junction",
+        "source",
+        "valve"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LabelInk",
       "contract": "LabelInk",
       "rust": "crates/shared/contracts/src/layer.rs",
@@ -29284,6 +30382,32 @@
       }
     },
     {
+      "id": "LayerFilter.expression",
+      "contract": "LayerFilter",
+      "rust": "crates/shared/contracts/src/layer_filter.rs",
+      "field": "expression",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerFilter.objects",
+      "contract": "LayerFilter",
+      "rust": "crates/shared/contracts/src/layer_filter.rs",
+      "field": "objects",
+      "type": "Array<EntityId>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LayerNode.children",
       "contract": "LayerNode",
       "rust": "crates/shared/contracts/src/layer.rs",
@@ -29336,6 +30460,19 @@
       }
     },
     {
+      "id": "LayerNode.filter",
+      "contract": "LayerNode",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "filter",
+      "type": "LayerFilter",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LayerNode.id",
       "contract": "LayerNode",
       "rust": "crates/shared/contracts/src/layer.rs",
@@ -29375,6 +30512,32 @@
       }
     },
     {
+      "id": "LayerNode.replaces",
+      "contract": "LayerNode",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "replaces",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerNode.scenario",
+      "contract": "LayerNode",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "scenario",
+      "type": "ScenarioInfo",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LayerNode.service",
       "contract": "LayerNode",
       "rust": "crates/shared/contracts/src/layer.rs",
@@ -29407,6 +30570,19 @@
       "field": "style",
       "type": "LayerStyle",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerNode.time",
+      "contract": "LayerNode",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "time",
+      "type": "LayerTime",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -29668,6 +30844,58 @@
       "field": "renderer",
       "type": "unknown",
       "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerTime.cumulative",
+      "contract": "LayerTime",
+      "rust": "crates/shared/contracts/src/temporal.rs",
+      "field": "cumulative",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerTime.end",
+      "contract": "LayerTime",
+      "rust": "crates/shared/contracts/src/temporal.rs",
+      "field": "end",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerTime.key",
+      "contract": "LayerTime",
+      "rust": "crates/shared/contracts/src/temporal.rs",
+      "field": "key",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerTime.start",
+      "contract": "LayerTime",
+      "rust": "crates/shared/contracts/src/temporal.rs",
+      "field": "start",
+      "type": "string",
+      "optional": false,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -30098,6 +31326,334 @@
       "rust": "crates/shared/contracts/src/document.rs",
       "field": "version",
       "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkConnect",
+      "contract": "NetworkConnect",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "values": [
+        "ends",
+        "vertices"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkCost.field",
+      "contract": "NetworkCost",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "field",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkCost.kind",
+      "contract": "NetworkCost",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "kind",
+      "type": "NetworkCostKind",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkCost.name",
+      "contract": "NetworkCost",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "name",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkCost.speed",
+      "contract": "NetworkCost",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "speed",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkCost.unit",
+      "contract": "NetworkCost",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "unit",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkCostKind",
+      "contract": "NetworkCostKind",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "values": [
+        "speed",
+        "field"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDef.closed",
+      "contract": "NetworkDef",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "closed",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDef.connect",
+      "contract": "NetworkDef",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "connect",
+      "type": "NetworkConnect",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDef.costs",
+      "contract": "NetworkDef",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "costs",
+      "type": "Array<NetworkCost>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDef.direction",
+      "contract": "NetworkDef",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "direction",
+      "type": "NetworkDirection",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDef.edges",
+      "contract": "NetworkDef",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "edges",
+      "type": "Array<NetworkLayer>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDef.id",
+      "contract": "NetworkDef",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "id",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDef.junctions",
+      "contract": "NetworkDef",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "junctions",
+      "type": "Array<JunctionLayer>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDef.kind",
+      "contract": "NetworkDef",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "kind",
+      "type": "NetworkKind",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDef.name",
+      "contract": "NetworkDef",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "name",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDef.tolerance",
+      "contract": "NetworkDef",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "tolerance",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDirection.backward",
+      "contract": "NetworkDirection",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "backward",
+      "type": "Array<string>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDirection.closed",
+      "contract": "NetworkDirection",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "closed",
+      "type": "Array<string>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDirection.field",
+      "contract": "NetworkDirection",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "field",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDirection.forward",
+      "contract": "NetworkDirection",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "forward",
+      "type": "Array<string>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkDirection.kind",
+      "contract": "NetworkDirection",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "kind",
+      "type": "\"both\" } | { \"kind\": \"digitized\" } | { \"kind\": \"field\"",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkKind",
+      "contract": "NetworkKind",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "values": [
+        "road",
+        "utility"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkLayer.filter",
+      "contract": "NetworkLayer",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "filter",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "NetworkLayer.layer",
+      "contract": "NetworkLayer",
+      "rust": "crates/shared/contracts/src/network.rs",
+      "field": "layer",
+      "type": "string",
       "optional": false,
       "status": "implemented",
       "platforms": {
@@ -31005,6 +32561,19 @@
       }
     },
     {
+      "id": "ProjectSettings.networks",
+      "contract": "ProjectSettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "networks",
+      "type": "Array<NetworkDef>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "ProjectSettings.plotScale",
       "contract": "ProjectSettings",
       "rust": "crates/shared/contracts/src/document.rs",
@@ -31639,6 +33208,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "zs",
       "type": "Array<number | null>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "ScenarioInfo.note",
+      "contract": "ScenarioInfo",
+      "rust": "crates/shared/contracts/src/temporal.rs",
+      "field": "note",
+      "type": "string",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -34611,6 +36193,18 @@
       "desktopWhere": "apps/desktop/src/layer_fields.rs (ADR 0199 §3)"
     },
     {
+      "id": "apps/web/src/ui/layers/LayerFilterDialog.ts#openLayerFilter",
+      "name": "openLayerFilter",
+      "role": "window",
+      "source": "apps/web/src/ui/layers/LayerFilterDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/layer_filters.rs (ADR 0211 §4)"
+    },
+    {
       "id": "apps/web/src/ui/layers/LayerListDialog.ts#openLayerList",
       "name": "openLayerList",
       "role": "window",
@@ -34669,6 +36263,18 @@
         "desktop": "implemented"
       },
       "desktopWhere": "apps/desktop/src/layer_purge.rs (ADR 0177 §5)"
+    },
+    {
+      "id": "apps/web/src/ui/networks/NetworksDialog.ts#openNetworksDialog",
+      "name": "openNetworksDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/networks/NetworksDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/networks/window.rs (ADR 0209 §10)"
     },
     {
       "id": "apps/web/src/ui/processing/ProcessingPanel.ts#ProcessingPanel",
@@ -35331,6 +36937,42 @@
       "desktopWhere": "apps/desktop/src/find_replace.rs (ADR 0145 §6)"
     },
     {
+      "id": "apps/web/src/ui/time/ScenarioDialog.ts#openScenarioCreate",
+      "name": "openScenarioCreate",
+      "role": "window",
+      "source": "apps/web/src/ui/time/ScenarioDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/temporal/scenario.rs (ADR 0210 §10)"
+    },
+    {
+      "id": "apps/web/src/ui/time/TimeBar.ts#TimeBar",
+      "name": "TimeBar",
+      "role": "panel",
+      "source": "apps/web/src/ui/time/TimeBar.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/temporal/bar.rs (ADR 0210 §10)"
+    },
+    {
+      "id": "apps/web/src/ui/time/TimeLayerDialog.ts#openTimeLayer",
+      "name": "openTimeLayer",
+      "role": "window",
+      "source": "apps/web/src/ui/time/TimeLayerDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/temporal/layer.rs (ADR 0210 §10)"
+    },
+    {
       "id": "apps/web/src/ui/topology/TopologyRulesDialog.ts#openTopologyRules",
       "name": "openTopologyRules",
       "role": "window",
@@ -35930,6 +37572,13 @@
             ]
           },
           {
+            "label": "Zaman",
+            "items": [
+              "tool.timeVersion",
+              "tool.timeEnd"
+            ]
+          },
+          {
             "label": "Altlık",
             "items": [
               {
@@ -36095,6 +37744,15 @@
             ]
           },
           {
+            "label": "Ağ",
+            "items": [
+              "network.manage",
+              "tool.netRoute",
+              "tool.netServiceArea",
+              "tool.netTrace"
+            ]
+          },
+          {
             "label": "Karşılaştırma",
             "items": [
               "data.compare"
@@ -36138,6 +37796,9 @@
               "processing.run.geometry.repair",
               "processing.run.geometry.simplify",
               "processing.run.geometry.reproject",
+              "processing.run.network.closestFacility",
+              "processing.run.network.odMatrix",
+              "processing.run.network.serviceAreas",
               "processing.run.surface.slope",
               "processing.run.surface.aspect",
               "processing.run.surface.hillshade",
@@ -37164,6 +38825,62 @@
             ],
             "overflow": [],
             "keep": false
+          },
+          {
+            "label": "Zaman",
+            "icon": "timeSlider",
+            "items": [
+              {
+                "command": "time.slider",
+                "size": "small"
+              },
+              {
+                "command": "time.layer",
+                "size": "small"
+              },
+              {
+                "command": "tool.timeVersion",
+                "size": "small"
+              },
+              {
+                "command": "tool.timeEnd",
+                "size": "small"
+              },
+              {
+                "command": "time.compare",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Senaryo",
+            "icon": "scenarioCreate",
+            "items": [
+              {
+                "command": "scenario.create",
+                "size": "small"
+              },
+              {
+                "command": "scenario.show",
+                "size": "small"
+              },
+              {
+                "command": "scenario.base",
+                "size": "small"
+              },
+              {
+                "command": "scenario.compare",
+                "size": "small"
+              },
+              {
+                "command": "scenario.apply",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
           }
         ]
       },
@@ -37222,6 +38939,26 @@
               {
                 "command": "data.unmark",
                 "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Süzgeç",
+            "icon": "layerFilter",
+            "items": [
+              {
+                "command": "layer.filter",
+                "size": "small"
+              },
+              {
+                "command": "layer.filterFromSelection",
+                "size": "small"
+              },
+              {
+                "command": "layer.filterClear",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -38179,7 +39916,7 @@
           },
           {
             "label": "Arazi",
-            "icon": "stakeout",
+            "icon": "contours",
             "items": [
               {
                 "command": "tool.stakeout",
@@ -38192,46 +39929,66 @@
               {
                 "command": "map.profile",
                 "size": "small"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          },
-          {
-            "label": "Arazi analizi",
-            "icon": "volume",
-            "items": [
+              },
               {
                 "command": "analysis.volume",
-                "size": "large"
+                "size": "small"
               }
             ],
             "overflow": [],
             "keep": false
           },
           {
-            "label": "Topoloji",
+            "label": "Denetim",
             "icon": "topologyCheck",
             "items": [
               {
                 "command": "topology.check",
-                "size": "large"
+                "size": "small"
               },
               {
                 "command": "topology.rules",
-                "size": "large"
+                "size": "small"
+              },
+              {
+                "command": "data.compare",
+                "size": "small"
               }
             ],
             "overflow": [],
             "keep": false
           },
           {
-            "label": "Karşılaştırma",
-            "icon": "dataCompare",
+            "label": "Ağ analizi",
+            "icon": "networks",
             "items": [
               {
-                "command": "data.compare",
-                "size": "large"
+                "command": "network.manage",
+                "size": "small"
+              },
+              {
+                "command": "tool.netRoute",
+                "size": "small"
+              },
+              {
+                "command": "tool.netServiceArea",
+                "size": "small"
+              },
+              {
+                "command": "tool.netTrace",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.network.closestFacility",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.network.odMatrix",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.network.serviceAreas",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -42521,6 +44278,62 @@
               ],
               "overflow": [],
               "keep": false
+            },
+            {
+              "label": "Zaman",
+              "icon": "timeSlider",
+              "items": [
+                {
+                  "command": "time.slider",
+                  "size": "small"
+                },
+                {
+                  "command": "time.layer",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.timeVersion",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.timeEnd",
+                  "size": "small"
+                },
+                {
+                  "command": "time.compare",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Senaryo",
+              "icon": "scenarioCreate",
+              "items": [
+                {
+                  "command": "scenario.create",
+                  "size": "small"
+                },
+                {
+                  "command": "scenario.show",
+                  "size": "small"
+                },
+                {
+                  "command": "scenario.base",
+                  "size": "small"
+                },
+                {
+                  "command": "scenario.compare",
+                  "size": "small"
+                },
+                {
+                  "command": "scenario.apply",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
             }
           ]
         },
@@ -42579,6 +44392,26 @@
                 {
                   "command": "data.unmark",
                   "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Süzgeç",
+              "icon": "layerFilter",
+              "items": [
+                {
+                  "command": "layer.filter",
+                  "size": "small"
+                },
+                {
+                  "command": "layer.filterFromSelection",
+                  "size": "small"
+                },
+                {
+                  "command": "layer.filterClear",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -43536,7 +45369,7 @@
             },
             {
               "label": "Arazi",
-              "icon": "stakeout",
+              "icon": "contours",
               "items": [
                 {
                   "command": "tool.stakeout",
@@ -43549,46 +45382,66 @@
                 {
                   "command": "map.profile",
                   "size": "small"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Arazi analizi",
-              "icon": "volume",
-              "items": [
+                },
                 {
                   "command": "analysis.volume",
-                  "size": "large"
+                  "size": "small"
                 }
               ],
               "overflow": [],
               "keep": false
             },
             {
-              "label": "Topoloji",
+              "label": "Denetim",
               "icon": "topologyCheck",
               "items": [
                 {
                   "command": "topology.check",
-                  "size": "large"
+                  "size": "small"
                 },
                 {
                   "command": "topology.rules",
-                  "size": "large"
+                  "size": "small"
+                },
+                {
+                  "command": "data.compare",
+                  "size": "small"
                 }
               ],
               "overflow": [],
               "keep": false
             },
             {
-              "label": "Karşılaştırma",
-              "icon": "dataCompare",
+              "label": "Ağ analizi",
+              "icon": "networks",
               "items": [
                 {
-                  "command": "data.compare",
-                  "size": "large"
+                  "command": "network.manage",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.netRoute",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.netServiceArea",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.netTrace",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.network.closestFacility",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.network.odMatrix",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.network.serviceAreas",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -44963,6 +46816,13 @@
     "topologyRules": "<path d=\"M2.5 2.5h7v6h-7zM6 2.5v6\" stroke-width=\"1.2\"/><path d=\"M8 12h9.5M8 15.5h9.5M2.5 12h2M2.5 15.5h2\" stroke-width=\"1.3\"/><path d=\"M12 5.5h5.5\" stroke-width=\"1.3\"/>",
     "topologyException": "<path d=\"M5 17.5V2.5\" stroke-width=\"1.5\"/><path d=\"M5 3h10.5l-2.4 3.6 2.4 3.6H5z\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><path d=\"M5 3h10.5l-2.4 3.6 2.4 3.6H5z\" stroke-width=\"1.3\"/>",
     "topologyFix": "<path d=\"M2.5 17.5V8.5h6\" stroke-width=\"1.3\"/><path d=\"M2.5 17.5h9\" stroke-width=\"1.3\"/><path d=\"M17.3 5.6a3 3 0 0 1-3.9 3L7 15l-1.6-1.6 6.4-6.4a3 3 0 0 1 3-3.9l-1.8 1.8.4 1.6 1.6.4z\" stroke-width=\"1.2\"/>",
+    "networks": "<path d=\"M3.5 15.5 8 4.5l8.5 1.5L13 15.5zM8 4.5l5 11\" stroke-width=\"1.2\"/><circle cx=\"3.5\" cy=\"15.5\" r=\"1.9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"8\" cy=\"4.5\" r=\"1.9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"16.5\" cy=\"6\" r=\"1.9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13\" cy=\"15.5\" r=\"1.9\" fill=\"currentColor\" stroke=\"none\"/>",
+    "netRoute": "<path d=\"M2 6h16M2 14h16M6 2v16M14 2v16\" stroke-width=\".9\" stroke-opacity=\".5\"/><path d=\"M3.5 14H14V4.5\" stroke-width=\"2.2\"/><circle cx=\"3.5\" cy=\"14\" r=\"2\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M14 4.5V1.8l3.2 1.3L14 4.4\" fill=\"currentColor\" stroke-width=\"1\"/>",
+    "netServiceArea": "<path d=\"M10 2.2 15.6 4.8 18 10.4 14.6 16.9 8.2 18 2.6 13.2 2.8 6.6z\" fill=\"currentColor\" fill-opacity=\".18\" stroke-width=\"1.1\"/><path d=\"M10 6.2 13.5 8.2 14 11.6 11.4 14.1 7.5 13.6 5.9 10.3 7.2 7.3z\" fill=\"currentColor\" fill-opacity=\".38\" stroke-width=\"1.1\"/><circle cx=\"10\" cy=\"10.2\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/>",
+    "netTrace": "<path d=\"M15.5 10H18\" stroke-width=\"1.2\"/><path d=\"M2.5 10H12M7 10v7.5\" stroke-width=\"2.4\"/><path d=\"M12 7.8v4.4l3.5-4.4v4.4z\" fill=\"currentColor\" fill-opacity=\".28\" stroke-width=\"1.1\"/><circle cx=\"2.8\" cy=\"10\" r=\"1.8\" fill=\"currentColor\" stroke=\"none\"/>",
+    "closestFacility": "<path d=\"M4 16h5V5h5.5\" stroke-width=\"2.2\"/><path d=\"M9 16h7.5\" stroke-width=\"1\" stroke-dasharray=\"1.8 1.4\"/><circle cx=\"4\" cy=\"16\" r=\"2\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.5\" y=\"2.8\" width=\"4\" height=\"4\" fill=\"currentColor\" fill-opacity=\".28\" stroke-width=\"1.1\"/><rect x=\"16.5\" y=\"14\" width=\"3\" height=\"3.6\" fill=\"currentColor\" fill-opacity=\".28\" stroke-width=\"1\"/>",
+    "odMatrix": "<path d=\"M4 4 16 6M4 4l12 9M4 10l12-4M4 10l12 3M4 16 16 6M4 16l12-3\" stroke-width=\".9\"/><circle cx=\"4\" cy=\"4\" r=\"1.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"4\" cy=\"10\" r=\"1.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"4\" cy=\"16\" r=\"1.8\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.5\" y=\"4.5\" width=\"3.2\" height=\"3.2\" fill=\"currentColor\" fill-opacity=\".28\" stroke-width=\"1.1\"/><rect x=\"14.5\" y=\"11.4\" width=\"3.2\" height=\"3.2\" fill=\"currentColor\" fill-opacity=\".28\" stroke-width=\"1.1\"/>",
+    "serviceAreas": "<path d=\"M6.8 3.2 11 5.4 12 10.2 9.4 14.4 4.4 14.6 1.8 10.2 3 5.6z\" fill=\"currentColor\" fill-opacity=\".22\" stroke-width=\"1.1\"/><path d=\"M13.4 6.6 17.6 8.4 18.4 13.4 15.6 17.4 10.6 17 8.4 12.8 10.2 8.2z\" fill=\"currentColor\" fill-opacity=\".22\" stroke-width=\"1.1\"/><circle cx=\"6.6\" cy=\"9.4\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.6\" cy=\"12.4\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/>",
     "featureTable": "<rect x=\"2\" y=\"2.5\" width=\"11.5\" height=\"10\" rx=\"1\"/><path d=\"M2 6h11.5M2 9.25h11.5M6 6v6.5\"/><path d=\"m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><path d=\"m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z\"/>",
     "layerFields": "<path d=\"M2.5 4h4M2.5 9h4M2.5 14h4\" stroke-width=\"1.2\"/><rect x=\"8.5\" y=\"2.5\" width=\"9\" height=\"3\" rx=\".8\"/><rect x=\"8.5\" y=\"7.5\" width=\"9\" height=\"3\" rx=\".8\"/><rect x=\"8.5\" y=\"12.5\" width=\"9\" height=\"3\" rx=\".8\"/><path d=\"m15 13.5.9.9.9-.9\" stroke-width=\"1\"/>",
     "fieldsFromData": "<rect x=\"2.5\" y=\"3\" width=\"15\" height=\"4\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><rect x=\"2.5\" y=\"3\" width=\"15\" height=\"14\" rx=\"1\"/><path d=\"M2.5 7h15M5 11h3M5 14.5h3\"/><path d=\"M13 15.5v-6M10.8 11.6 13 9.4l2.2 2.2\" stroke-width=\"1.3\"/>",
@@ -45186,6 +47046,28 @@
     "basemapGoogleHybrid": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1.4\" stroke-width=\"1.2\"/><path d=\"M6.5 11.2C4.8 9.3 4 8 4 6.9a2.5 2.5 0 0 1 5 0c0 1.1-.8 2.4-2.5 4.3z\" fill=\"currentColor\" fill-opacity=\".25\" stroke-width=\"1.1\"/><path d=\"M2.5 14 6 12l3 2 3.5-4 5 4.5v3h-15z\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><path d=\"M11.5 17.5 13.2 8.5M17.5 11.5l-8 2.6\" stroke-width=\"1.3\"/>",
     "basemapMaptiler": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1.4\" stroke-width=\"1.2\"/><path d=\"M2.5 8.5h15M8.5 2.5v15\" stroke-width=\"1\"/><path d=\"M4.5 6.5 6.7 4.6M10.5 5.8l4.5-1.6M4.2 14 6.5 11\" stroke-width=\"1.2\"/><circle cx=\"14.3\" cy=\"14.3\" r=\"1.7\" stroke-width=\"1.1\"/><path d=\"M15.5 15.5 18 18M17 17l1-1\" stroke-width=\"1.1\"/>",
     "basemapMaptilerSatellite": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1.4\" stroke-width=\"1.2\"/><path d=\"M2.5 12 6 9l2.8 2.4 3-3.4 5.7 5.5\" stroke-width=\"1.1\"/><path d=\"M2.5 12 6 9l2.8 2.4 3-3.4 5.7 5.5V17.5h-15z\" fill=\"currentColor\" fill-opacity=\".25\" stroke=\"none\"/><circle cx=\"14.3\" cy=\"14.3\" r=\"1.7\" stroke-width=\"1.1\"/><path d=\"M15.5 15.5 18 18M17 17l1-1\" stroke-width=\"1.1\"/>",
+    "timeSlider": "<circle cx=\"10\" cy=\"7\" r=\"4.2\"/><path d=\"M10 4.9V7l1.5 1.1\"/><path d=\"M2.5 15h15\"/><rect x=\"11.4\" y=\"13\" width=\"2.6\" height=\"4\" rx=\".8\" fill=\"currentColor\" stroke=\"none\"/>",
+    "timeLayer": "<path d=\"M2.5 8.2 8.5 5l6 3.2-6 3.2z\"/><path d=\"m2.5 11.4 6 3.2 2.2-1.2\"/><circle cx=\"14.6\" cy=\"13.8\" r=\"3.4\"/><path d=\"M14.6 12.1v1.8l1.2.8\"/>",
+    "timeVersion": "<rect x=\"2.5\" y=\"5\" width=\"6\" height=\"10\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><rect x=\"11.5\" y=\"5\" width=\"6\" height=\"10\" rx=\"1\"/><path d=\"M8.5 10h3M10.2 8.5l1.3 1.5-1.3 1.5\"/>",
+    "timeEnd": "<path d=\"M5.5 3h9M5.5 17h9\"/><path d=\"M6.5 3c0 3.6 3.5 4.6 3.5 7s-3.5 3.4-3.5 7M13.5 3c0 3.6-3.5 4.6-3.5 7s3.5 3.4 3.5 7\"/><path d=\"M8 15.5h4\" stroke-width=\"2\"/>",
+    "timeCompare": "<circle cx=\"6.2\" cy=\"10\" r=\"4\"/><circle cx=\"13.8\" cy=\"10\" r=\"4\"/><path d=\"M6.2 8v2H8M13.8 8v2l1.4 1\"/>",
+    "scenarioCreate": "<circle cx=\"5\" cy=\"15.5\" r=\"1.8\"/><circle cx=\"5\" cy=\"4.5\" r=\"1.8\"/><path d=\"M5 6.3v7.4M5 11.5c0-2.6 1.8-4.2 4.6-4.2\"/><path d=\"M14.5 3.5v7M11 7h7\"/>",
+    "scenarioShow": "<circle cx=\"5\" cy=\"15.5\" r=\"1.8\"/><path d=\"M5 13.7V3.5M5 9.5c0-2.6 1.8-4.2 4.6-4.2h1\"/><path d=\"M9.5 14c1.7-2.4 6.3-2.4 8 0-1.7 2.4-6.3 2.4-8 0z\"/><circle cx=\"13.5\" cy=\"14\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/>",
+    "scenarioBase": "<circle cx=\"5\" cy=\"15.5\" r=\"1.8\"/><circle cx=\"5\" cy=\"4.5\" r=\"1.8\"/><path d=\"M5 6.3v7.4\" stroke-width=\"2\"/><path d=\"M5 11.5c0-2.6 1.8-4.2 4.6-4.2h1.6\" stroke-dasharray=\"1.6 1.6\"/><path d=\"m11.5 13.5 2 2 4-4.5\"/>",
+    "scenarioCompare": "<circle cx=\"5\" cy=\"15.5\" r=\"1.8\"/><path d=\"M5 13.7V3.5M5 9.5c0-2.6 1.8-4.2 4.6-4.2\"/><path d=\"M11 10.5h6.5M11 14h6.5M15.6 8.2l-2.7 8\"/>",
+    "scenarioApply": "<circle cx=\"5\" cy=\"16\" r=\"1.8\"/><path d=\"M5 14.2V3.5\"/><path d=\"M15.5 3.5c0 4.4-3.2 6.6-8.8 7.4\"/><path d=\"M8.9 8.8 6.5 11l2.6 1.8\"/>",
+    "scenario": "<circle cx=\"5\" cy=\"15.5\" r=\"1.8\"/><circle cx=\"5\" cy=\"4.5\" r=\"1.8\"/><circle cx=\"14.5\" cy=\"6.5\" r=\"1.8\"/><path d=\"M5 6.3v7.4M5 12c0-3.2 2.6-4.8 7.8-5.4\"/>",
+    "clock": "<circle cx=\"10\" cy=\"10\" r=\"6.5\"/><path d=\"M10 6.2V10l2.6 1.7\"/>",
+    "timeFirst": "<path d=\"M5 5v10M14.5 5l-5 5 5 5\"/>",
+    "timePrev": "<path d=\"M12.5 5l-5 5 5 5\"/>",
+    "timeNext": "<path d=\"M7.5 5l5 5-5 5\"/>",
+    "timeLast": "<path d=\"M15 5v10M5.5 5l5 5-5 5\"/>",
+    "pause": "<rect x=\"5.5\" y=\"4.5\" width=\"3\" height=\"11\" rx=\".8\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"11.5\" y=\"4.5\" width=\"3\" height=\"11\" rx=\".8\" fill=\"currentColor\" stroke=\"none\"/>",
+    "loop": "<path d=\"M3.5 10.5V9a4 4 0 0 1 4-4h7.5\"/><path d=\"M13 2.8 15.2 5 13 7.2\"/><path d=\"M16.5 9.5V11a4 4 0 0 1-4 4H5\"/><path d=\"M7 17.2 4.8 15 7 12.8\"/>",
+    "layerFilter": "<path d=\"M2.5 8.2 8.5 5l6 3.2-6 3.2z\"/><path d=\"m2.5 11.4 6 3.2 2.2-1.2\"/><path d=\"M11 10.5h7.5l-2.9 3.4v3.7l-1.7-.9v-2.8z\"/>",
+    "layerFilterSelection": "<rect x=\"2.5\" y=\"3\" width=\"10\" height=\"9.5\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><rect x=\"4\" y=\"5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"7.699999999999999\" y=\"8\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M11 10.5h7.5l-2.9 3.4v3.7l-1.7-.9v-2.8z\"/>",
+    "layerFilterClear": "<path d=\"M2.5 3.5h12l-4.6 5.4v6.2l-2.8-1.4V8.9z\"/><path d=\"m13 12 4.5 4.5m0-4.5L13 16.5\"/>",
+    "funnel": "<path d=\"M3 4h14l-5.5 6.5V16l-3-1.5v-4z\" fill=\"currentColor\" fill-opacity=\".3\"/>",
     "sheetLayout": "<rect x=\"3.5\" y=\"2.5\" width=\"13\" height=\"15\" rx=\"1\"/><rect x=\"5.5\" y=\"4.5\" width=\"9\" height=\"6.5\"/><path d=\"M5.5 13h9v2.5h-9zM10.5 13v2.5\"/>",
     "sheetNew": "<path d=\"M11 2.5H4.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9\"/><path d=\"M14.5 1.8v5.4M11.8 4.5h5.4\"/>",
     "sheetTemplate": "<rect x=\"6.5\" y=\"2.5\" width=\"10\" height=\"12\" rx=\"1\"/><path d=\"M4 5.5v11a1 1 0 0 0 1 1h8.5\"/><path d=\"M8.7 5.5h5.6M8.7 8h5.6M8.7 10.5h3.4\"/>",

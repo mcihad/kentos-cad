@@ -183,6 +183,9 @@ pub const TOOLS: &[&str] = &[
     select_similar::ID,
     // docs/adr/0142: Kot ver.
     set_elevation::ID,
+    // Yeni sürüm oluştur and Sona erdir (docs/adr/0210 §7).
+    crate::time_version::VERSION_ID,
+    crate::time_version::END_ID,
     // docs/adr/0148: Topolojik temizlik.
     topology::ID,
     // docs/adr/0151: Toplu alan.
@@ -219,6 +222,10 @@ pub const TOOLS: &[&str] = &[
     // docs/adr/0192: Resim ekle and Resmi kırp.
     crate::image_insert::ID,
     crate::image_clip::ID,
+    // docs/adr/0209: En kısa yol, Hizmet alanı and Şebeke izleme.
+    crate::network::route::ID,
+    crate::network::area::ID,
+    crate::network::trace::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -396,6 +403,9 @@ impl Session {
             angle::ID => Box::new(crate::angle::MeasureAngle::new()),
             coordinate::ID => Box::new(crate::coordinate::CrsQuery::new()),
             cloud_query::ID => Box::new(crate::cloud_query::CloudQuery::new()),
+            crate::network::route::ID => Box::new(crate::network::route::NetRoute::new()),
+            crate::network::area::ID => Box::new(crate::network::area::NetArea::new()),
+            crate::network::trace::ID => Box::new(crate::network::trace::NetTrace::new()),
             dimension_chain::CONTINUE_ID => {
                 Box::new(crate::dimension_chain::DimensionChain::continued())
             }
@@ -411,6 +421,11 @@ impl Session {
             select_polygon::ID => Box::new(select_polygon::SelectPolygon::new()),
             select_similar::ID => Box::new(select_similar::SelectSimilar::new()),
             set_elevation::ID => Box::new(set_elevation::SetElevation::tool()),
+            // Yeni sürüm oluştur and Sona erdir (docs/adr/0210 §7).
+            crate::time_version::VERSION_ID => {
+                Box::new(crate::time_version::TimeVersion::tool(true))
+            }
+            crate::time_version::END_ID => Box::new(crate::time_version::TimeVersion::tool(false)),
             topology::ID => Box::new(crate::topology::Topology::new()),
             labels_to_text::ID => Box::new(crate::labels_to_text::LabelsToText::new()),
             polygonize::ID => Box::new(crate::polygonize::Polygonize::new()),
@@ -1141,6 +1156,14 @@ impl Session {
     pub fn cloud_found(&mut self, found: Option<[f64; 3]>, cx: &mut Context<'_>) {
         if let Some(tool) = self.tool.as_mut() {
             tool.cloud_found(found, cx);
+        }
+        self.settle(cx);
+    }
+
+    /// A network's answer goes to the running tool (Ağ analizi, docs/adr/0209 §12).
+    pub fn network_answered(&mut self, reply: crate::network::NetworkReply, cx: &mut Context<'_>) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.network_answered(reply, cx);
         }
         self.settle(cx);
     }

@@ -37,6 +37,8 @@ interface Expect {
   layers?: Json[];
   /** The project's connections (docs/adr/0208 §2). */
   connections?: Json[];
+  /** The project's networks (docs/adr/0209 §2). */
+  networks?: Json[];
 }
 
 interface Step {
@@ -69,7 +71,7 @@ interface Fixture {
 }
 
 const STEP_KEYS: readonly string[] = ['op', 'input', 'nonFinite', 'result', 'returns', 'as', 'id', 'name', 'expect', 'note'];
-const EXPECT_KEYS: readonly string[] = ['ids', 'entities', 'canUndo', 'canRedo', 'dirty', 'revision', 'uids', 'blocks', 'blockIds', 'layers', 'connections'];
+const EXPECT_KEYS: readonly string[] = ['ids', 'entities', 'canUndo', 'canRedo', 'dirty', 'revision', 'uids', 'blocks', 'blockIds', 'layers', 'connections', 'networks'];
 const NON_FINITE = { NaN: Number.NaN, Infinity: Number.POSITIVE_INFINITY, '-Infinity': Number.NEGATIVE_INFINITY } as const;
 
 const files = import.meta.glob<string>('../../../../fixtures/commands/v1/*.json', { query: '?raw', import: 'default', eager: true });
@@ -94,6 +96,8 @@ class Run {
   private readonly setupBlocks: readonly string[];
   /** The layer the last command added or would add (`$layer`, docs/adr/0208 §15). */
   private layer: string | null = null;
+  /** The layers the last command that added any added or would add, by their number (`$layer:1` …, docs/adr/0210 §11). */
+  private fresh: string[] = [];
 
   constructor(setup: Json, command: ProductCommand<unknown, unknown, unknown>) {
     this.command = command;
@@ -126,6 +130,12 @@ class Run {
       if (uid === undefined) throw new Error(`${where}: ${value}: o yuvada nesne yok`);
       return uid;
     }
+    if (typeof value === 'string' && value.startsWith('$layer:')) {
+      const k = Number(value.slice('$layer:'.length));
+      const id = Number.isInteger(k) && k >= 1 ? this.fresh[k - 1] : undefined;
+      if (id === undefined) throw new Error(`${where}: ${value}: son komut ${this.fresh.length} katman ekledi`);
+      return id;
+    }
     if (value === '$layer') {
       if (this.layer === null) throw new Error(`${where}: $layer: bir komut katman eklemedi`);
       return this.layer;
@@ -154,7 +164,7 @@ class Run {
    * a placeholder.
    */
   private blockIds(value: Json, where: string): Json {
-    if (typeof value === 'string') return /^\$(blockOf|block|uidOf):/.test(value) ? this.fill(value, where) : value;
+    if (typeof value === 'string') return /^\$(blockOf|block|uidOf|layer):/.test(value) ? this.fill(value, where) : value;
     if (Array.isArray(value)) return value.map((v) => this.blockIds(v, where));
     if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, this.blockIds(v, where)]));
     return value;
@@ -226,6 +236,14 @@ class Run {
       expect(uid, `${where}: output.uid yuvadaki nesnenin kimliği olmalı`).toBe(this.doc.uidOf(got.output?.id ?? -1));
       want.output.uid = uid;
     }
+    // “$layer:K”: the layers the command added (execute) or would add (plan), ids the tree did not have, by their number
+    // (docs/adr/0210 §11); a command that adds none leaves the last ones.
+    const fresh = [...new Set(strings(got).filter((x) => /^layer-\d+$/.test(x) && !before.has(x)))].sort((a, b) => Number(a.slice(6)) - Number(b.slice(6)));
+    if (fresh.length) {
+      const wrong = fresh.filter((id) => (this.doc.layers.get(id) !== undefined) !== (s.op === 'execute'));
+      expect(wrong, `${where}: yeni katmanlar ağaçta ${s.op === 'execute' ? 'yok' : 'var'}`).toEqual([]);
+      this.fresh = fresh;
+    }
     // “$layer”: the layer the command added (execute) or would add (plan): an id the tree did not have (docs/adr/0208 §15).
     const out = (got as { output?: { layer?: string; node?: { id?: string } } }).output;
     const wanted = (want as { output?: { layer?: string; node?: { id?: string } } }).output;
@@ -271,6 +289,7 @@ class Run {
     }
     if (e.layers) expect(JSON.parse(JSON.stringify(doc.layers.tree)), `${where}: katmanlar`).toEqual(this.fill(e.layers, where));
     if (e.connections) expect(JSON.parse(JSON.stringify(doc.settings.connections.value)), `${where}: bağlantılar`).toEqual(e.connections);
+    if (e.networks) expect(JSON.parse(JSON.stringify(doc.settings.networks.value)), `${where}: ağlar`).toEqual(e.networks);
     for (const [id, name] of Object.entries(e.uids ?? {})) {
       const uid = doc.uidOf(Number(id));
       expect(isUuid(uid), `${where}: ${id} nesnesinin kalıcı kimliği`).toBe(true);
@@ -282,6 +301,10 @@ class Run {
     }
   }
 }
+
+/** Every string in a JSON value. */
+const strings = (value: unknown): string[] =>
+  typeof value === 'string' ? [value] : Array.isArray(value) ? value.flatMap(strings) : value && typeof value === 'object' ? Object.values(value).flatMap(strings) : [];
 
 describe('product command cases (fixtures/commands/v1)', () => {
   it('finds a case file for every command the web runs', () => {

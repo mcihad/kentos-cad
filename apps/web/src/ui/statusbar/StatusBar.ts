@@ -23,6 +23,7 @@ import { offeredScales, typedScale } from './scaleSelector';
 import { projectCrsName, projectCrsTitle } from '../../model/projectCrs';
 import { cursorUnreached, SecondCrs } from '../../model/secondCrs';
 import { crsMenu, secondMenu } from './secondMenu';
+import { scenarioGroups, showBase, showScenario, shownScenario } from '../../app/scenarios';
 
 const fmtScale = (n: number) => n.toLocaleString('tr-TR');
 
@@ -186,6 +187,44 @@ export class StatusBar extends Component {
       }, 'top'),
     );
 
+    // Senaryo (docs/adr/0210 §10): while the project has scenarios, which one the drawing shows; its menu shows another.
+    const scenarioName = h('span', { class: 'status__scenario-name' });
+    const scenario = h('button', { class: 'status__cell status__btn status__scenario', type: 'button', 'aria-haspopup': 'menu', hidden: true }, icon('scenario', 14), scenarioName);
+    scenario.addEventListener('click', () => {
+      const layers = ctx.doc.layers;
+      const now = shownScenario(layers);
+      PopupMenu.open(
+        [
+          { kind: 'header', label: 'Gösterilen' },
+          { label: 'Mevcut durum', icon: 'scenarioBase', radio: true, checked: now.kind === 'base', run: () => showBase(ctx) },
+          ...scenarioGroups(layers).map((g): MenuItem => ({ label: g.name, radio: true, checked: now.kind === 'scenario' && now.id === g.id, ...(g.scenario?.note && { detail: g.scenario.note }), run: () => showScenario(ctx, g.id) })),
+          { kind: 'separator' },
+          commandItem(ctx, 'scenario.create'),
+          commandItem(ctx, 'scenario.compare'),
+          commandItem(ctx, 'scenario.apply'),
+        ],
+        scenario.getBoundingClientRect(),
+        { placement: 'below', owner: scenario },
+      );
+    });
+    const showScenarioCell = () => {
+      const layers = ctx.doc.layers;
+      const groups = scenarioGroups(layers);
+      const was = scenario.hidden;
+      scenario.hidden = !groups.length;
+      if (groups.length) {
+        const now = shownScenario(layers);
+        scenarioName.textContent = `Senaryo: ${now.kind === 'base' ? 'Mevcut durum' : now.kind === 'mixed' ? 'Karışık' : (layers.get(now.id)?.name ?? '')}`;
+        scenario.dataset.shown = now.kind;
+      }
+      if (was !== scenario.hidden || groups.length) this.refit();
+    };
+    this.d.add(ctx.doc.layers.version.subscribe(showScenarioCell));
+    showScenarioCell();
+    this.d.add(
+      tooltip(scenario, () => ({ title: 'Senaryo', description: 'Çizimin gösterdiği: Mevcut durum, bir senaryo ya da karışık görünürlük. Başkasını göstermek ya da senaryo oluşturmak için tıklayın.' }), 'top'),
+    );
+
     const serverText = h('span', { class: 'status__server-text' });
     const server = h('button', { class: 'status__cell status__btn status__server', type: 'button' }, h('span', { class: 'status__lamp', 'aria-hidden': 'true' }), serverText);
     server.addEventListener('click', () => accountMenu(ctx, server));
@@ -194,7 +233,7 @@ export class StatusBar extends Component {
     // The second system's values and the message share the room after the coordinates (docs/adr/0167 §2): the values
     // show while there is no message, or there is room for both; a message too long for both takes it for its seconds.
     const slot = h('div', { class: 'status__slot' }, second, flash);
-    this.el = h('footer', { class: 'status' }, coords, slot, selCount, toggles, zoom, scaleEdit, mode, crs, save, server, renderer);
+    this.el = h('footer', { class: 'status' }, coords, slot, selCount, toggles, zoom, scaleEdit, scenario, mode, crs, save, server, renderer);
 
     // A short message's room: 15 times its type size.
     const least = () => 15 * parseFloat(getComputedStyle(flash).fontSize);
@@ -215,7 +254,7 @@ export class StatusBar extends Component {
 
     // Narrower windows (DESIGN.md §7.7): the least needed cell gives way first, until the message has
     // room. Every name stays in the cell's tooltip; the CRS is also in the title bar.
-    const STEPS = ['renderer', 'crs', 'zoom', 'cloud', 'mode', 'toggles'] as const;
+    const STEPS = ['renderer', 'crs', 'zoom', 'cloud', 'scenario', 'mode', 'toggles'] as const;
     const fit = fitBar(
       this.el,
       STEPS.length,

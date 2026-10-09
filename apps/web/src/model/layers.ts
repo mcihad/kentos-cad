@@ -1,5 +1,8 @@
 import type { FeatureFeed } from '../contracts/generated/FeatureFeed';
 import type { LayerField } from '../contracts/generated/LayerField';
+import type { LayerFilter } from '../contracts/generated/LayerFilter';
+import type { LayerTime } from '../contracts/generated/LayerTime';
+import type { ScenarioInfo } from '../contracts/generated/ScenarioInfo';
 import type { ServiceLayer } from '../contracts/generated/ServiceLayer';
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
@@ -70,6 +73,26 @@ export interface LayerNode {
   service?: ServiceLayer;
   /** Where a layer's objects came from, to take them again (docs/adr/0208 §10). Never a group's, never with `service`. */
   feed?: FeatureFeed;
+  /** A layer's time setting (docs/adr/0210 §2): the attributes holding its objects' start (or moment) and end. Never a group's. */
+  time?: LayerTime;
+  /** A group made a scenario (docs/adr/0210 §9): its layers are an alternative kept apart from the field state. Never a layer's. */
+  scenario?: ScenarioInfo;
+  /** In a scenario, the base layer this layer stands for (docs/adr/0210 §9). Never a group's. */
+  replaces?: string;
+  /** A layer's filter (docs/adr/0211 §2): only the objects that pass it are shown, picked and given to its tools. Never a group's. */
+  filter?: LayerFilter;
+}
+
+/** A filter as a layer keeps it: a copy, the list only when it names an object. */
+export function filterOf(f: LayerFilter): LayerFilter {
+  return { ...(f.expression != null && { expression: f.expression }), ...(f.objects?.length && { objects: [...f.objects] }) };
+}
+
+/** A node's time setting, scenario and base layer (docs/adr/0210 §2), as the document's undoable `setLayerTemporal` gives them. */
+export interface Temporal {
+  time?: LayerTime;
+  scenario?: ScenarioInfo;
+  replaces?: string;
 }
 
 /** A layer's own snapping: `{ off: true }` or `{ kinds: [...] }` (contracts' `LayerSnap`, exactly one of the two). */
@@ -101,6 +124,19 @@ interface LayerEvents {
   state: { ids: string[] };
   /** A group was opened or closed in the tree: a view change, not an edit. */
   expanded: { id: string };
+}
+
+/** The time setting, scenario and base layer a node of `kind` keeps (docs/adr/0210 §2), copies; `cumulative` only when true. */
+export function temporalOf(t: Temporal, kind: 'group' | 'layer'): Temporal {
+  const time = t.time;
+  return {
+    ...(time &&
+      kind === 'layer' && {
+        time: { start: time.start, ...(time.end != null && { end: time.end }), ...(time.key != null && { key: time.key }), ...(time.cumulative && { cumulative: true }) },
+      }),
+    ...(t.scenario && kind === 'group' && { scenario: t.scenario.note != null ? { note: t.scenario.note } : {} }),
+    ...(t.replaces != null && kind === 'layer' && { replaces: t.replaces }),
+  };
 }
 
 let uid = 0;
@@ -143,6 +179,11 @@ export class LayerStore {
     return `layer-${uid + 1}`;
   }
 
+  /** The ids the next `n` nodes made without one would get, the counter left as it is (Senaryo oluştur's plan, docs/adr/0210 §11). */
+  peekIds(n: number): string[] {
+    return Array.from({ length: n }, (_, i) => `layer-${uid + 1 + i}`);
+  }
+
   /** What `make` would give, the counter left as it is: a node without an id gets `peekId`'s. */
   preview(n: LayerInit): LayerNode {
     return this.shape(n, n.id ?? this.peekId());
@@ -165,6 +206,10 @@ export class LayerStore {
       // A layer's map service or source (docs/adr/0208 §2, §10); a group keeps neither.
       ...(n.service && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { service: structuredClone(n.service) }),
       ...(n.feed && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { feed: structuredClone(n.feed) }),
+      // A layer's time and base layer, a group's scenario (docs/adr/0210 §2); each only on its kind.
+      ...temporalOf(n, n.type ?? (n.children ? 'group' : 'layer')),
+      // A layer's filter (docs/adr/0211 §2); a group keeps none.
+      ...(n.filter && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { filter: filterOf(n.filter) }),
     };
     node.children = (n.children ?? []).map((c) => this.make(c));
     return node;
@@ -376,6 +421,26 @@ export class LayerStore {
     else delete n.service;
     if (feed) n.feed = structuredClone(feed);
     else delete n.feed;
+    this.changedState(id);
+  }
+
+  /** A node's time setting, scenario and base layer (docs/adr/0210 §2), as the document's undoable `setLayerTemporal` puts them. */
+  replaceTemporal(id: string, next: Temporal): void {
+    const n = this.get(id);
+    if (!n) return;
+    delete n.time;
+    delete n.scenario;
+    delete n.replaces;
+    Object.assign(n, temporalOf(next, n.type));
+    this.changedState(id);
+  }
+
+  /** A layer's filter (docs/adr/0211 §2), as the document's undoable `setLayerFilter` puts it; null takes it away. */
+  replaceFilter(id: string, next: LayerFilter | null): void {
+    const n = this.get(id);
+    if (!n) return;
+    if (next && n.type === 'layer') n.filter = filterOf(next);
+    else delete n.filter;
     this.changedState(id);
   }
 

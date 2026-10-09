@@ -269,13 +269,21 @@ impl App {
                 (
                     n.id.clone(),
                     model.layers().path(&n.id),
-                    model.by_layer(&n.id).count(),
+                    // A filtered layer counts what passes its filter (docs/adr/0211 §1).
+                    self.spatial
+                        .filter_counts(&n.id)
+                        .map_or_else(|| model.by_layer(&n.id).count(), |(passed, _)| passed),
                 )
             })
             .collect();
         let entities: Vec<&Entity> = layer
             .as_deref()
-            .map(|l| model.by_layer(l).collect())
+            .map(|l| {
+                model
+                    .by_layer(l)
+                    .filter(|e| self.spatial.filter_shown(Slot(e.base().id)))
+                    .collect()
+            })
             .unwrap_or_default();
         let slots: Vec<Slot> = entities.iter().map(|e| Slot(e.base().id)).collect();
         let in_view: std::collections::HashSet<Slot> = if panel.show == Show::InView {

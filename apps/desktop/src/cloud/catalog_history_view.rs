@@ -250,6 +250,13 @@ impl App {
                 false,
             ))
             .push(act(
+                "Karşılaştır",
+                web("dataCompare"),
+                cloud(Event::HistoryCompare(Point::Checkpoint(c.clone()))),
+                off(why_not_take(perms, "indirme")),
+                false,
+            ))
+            .push(act(
                 "Yeni proje olarak geri yükle…",
                 web("history"),
                 cloud(Event::HistoryRestore(Point::Checkpoint(c.clone()))),
@@ -515,6 +522,13 @@ fn revision_row<'a>(
             "İndir",
             web("export"),
             cloud(Event::HistoryDownloadRevision(r.clone())),
+            off(why_not_download(perms)),
+            false,
+        ))
+        .push(act(
+            "Karşılaştır",
+            web("dataCompare"),
+            cloud(Event::HistoryCompare(Point::Revision(r.clone()))),
             off(why_not_download(perms)),
             false,
         ))

@@ -811,6 +811,8 @@ impl Viewport {
             | ViewChange::OpenImageFile
             | ViewChange::RasterValues(_)
             | ViewChange::CloudQuery { .. }
+            | ViewChange::Network(_)
+            | ViewChange::Command(_)
             | ViewChange::PlaceTable(..) => {}
         }
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));

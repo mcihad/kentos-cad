@@ -30,6 +30,7 @@ pub mod image;
 pub mod join;
 pub mod label_text;
 pub mod lengthen;
+pub mod network;
 pub mod offset;
 pub mod parts;
 pub mod path;

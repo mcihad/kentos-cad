@@ -166,6 +166,8 @@ fn build<'a>(
         .hash(&mut key);
     // How the text is sized on screen (docs/adr/0205 §5).
     format!("{size:?}").hash(&mut key);
+    // The time slider's window: its temporal layers' labels come and go (docs/adr/0210 §6).
+    format!("{:?}", spatial.store().time_window()).hash(&mut key);
     let spots = kept.get(key.finish(), || {
         let view = camera.visible_bounds();
         let mut spots = spatial.labels_shown(

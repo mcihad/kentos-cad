@@ -100,6 +100,109 @@ pub fn edge_pieces(e: &Edge, d: f64, out: &mut Vec<Area>) {
     }
 }
 
+/// The pieces of the buffer within `d` of `cores` for their union (`union_buffers`), fewer than each core's own
+/// buffer gives where the cores meet: a straight core is a rectangle, its ends split where the core ends (so each
+/// half can lie within one neighbour's buffer and be left out before the overlay), with a half circle at an end only
+/// when the other straight cores ending exactly there, at least `d` long, do not cover it (straight on, a
+/// crossing; a dead end or a corner keeps it); an arc core is its band and two discs. The same union as every core's
+/// own buffer: a covered half circle lies within the neighbours' rectangles, the angles it spans each within a
+/// quarter turn of a neighbour's direction.
+pub fn union_pieces(cores: &[Edge], d: f64) -> Vec<Area> {
+    use std::collections::HashMap;
+    /// A straight core at an end: which core, its direction away from there, its length.
+    struct End {
+        core: usize,
+        dir: f64,
+        len: f64,
+    }
+    // The straight cores' ends by their exact place.
+    let mut ends: HashMap<(u64, u64), Vec<End>> = HashMap::new();
+    for (i, e) in cores.iter().enumerate() {
+        if let Edge::Seg { a, b } = *e {
+            let len = js_hypot(b.x - a.x, b.y - a.y);
+            if len <= TOL {
+                continue;
+            }
+            for (p, q) in [(a, b), (b, a)] {
+                ends.entry((p.x.to_bits(), p.y.to_bits()))
+                    .or_default()
+                    .push(End {
+                        core: i,
+                        dir: atan2(q.y - p.y, q.x - p.x),
+                        len,
+                    });
+            }
+        }
+    }
+    // Whether the half circle of core `i` at an end (away from it: directions within a quarter turn of `away`) is
+    // covered by the others there: every direction of it within a quarter turn of one at least `d` long.
+    let covered = |list: &[End], i: usize, away: f64| -> bool {
+        let quarter = std::f64::consts::FRAC_PI_2;
+        let mut spans: Vec<(f64, f64)> = Vec::new();
+        for &End { core, dir, len } in list {
+            if core == i || len < d {
+                continue;
+            }
+            // The other's covered directions, from the half circle's first one (away − a quarter), unrolled.
+            let mut lo = crate::geom::arc::norm_angle(dir - quarter - (away - quarter));
+            if lo > std::f64::consts::PI {
+                lo -= std::f64::consts::TAU;
+            }
+            spans.push((lo, lo + std::f64::consts::PI));
+        }
+        spans.sort_by(|x, y| x.0.total_cmp(&y.0));
+        // From 0 to π (the half circle) without a gap wider than a hair.
+        let hair = 1e-12;
+        let mut reach = 0.0;
+        for (lo, hi) in spans {
+            if lo > reach + hair {
+                break;
+            }
+            reach = js_max(reach, hi);
+        }
+        reach >= std::f64::consts::PI - hair
+    };
+    let mut out = Vec::new();
+    for (i, e) in cores.iter().enumerate() {
+        match *e {
+            Edge::Seg { a, b } => {
+                let len = js_hypot(b.x - a.x, b.y - a.y);
+                if len <= TOL {
+                    out.push(disc(a, d));
+                    continue;
+                }
+                let (nx, ny) = (-(b.y - a.y) / len * d, (b.x - a.x) / len * d);
+                out.push(piece(
+                    vec![
+                        Vec2::new(a.x - nx, a.y - ny),
+                        Vec2::new(b.x - nx, b.y - ny),
+                        b,
+                        Vec2::new(b.x + nx, b.y + ny),
+                        Vec2::new(a.x + nx, a.y + ny),
+                        a,
+                    ],
+                    vec![0.0; 6],
+                ));
+                let empty = Vec::new();
+                for (p, q) in [(a, b), (b, a)] {
+                    let list = ends.get(&(p.x.to_bits(), p.y.to_bits())).unwrap_or(&empty);
+                    let away = atan2(p.y - q.y, p.x - q.x);
+                    if !covered(list, i, away) {
+                        // The half circle beyond `p`: from its right of the core round to its left.
+                        let (ux, uy) = ((p.x - q.x) / len * d, (p.y - q.y) / len * d);
+                        out.push(piece(
+                            vec![Vec2::new(p.x + uy, p.y - ux), Vec2::new(p.x - uy, p.y + ux)],
+                            vec![1.0, 0.0],
+                        ));
+                    }
+                }
+            }
+            Edge::Arc { .. } => edge_pieces(e, d, &mut out),
+        }
+    }
+    out
+}
+
 /// The edge's unit direction at its start (`t` 0) or end (`t` 1).
 fn tangent(e: &Edge, t: f64) -> Vec2 {
     match *e {

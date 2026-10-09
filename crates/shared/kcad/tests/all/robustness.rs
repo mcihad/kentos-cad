@@ -334,6 +334,10 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
         fields: Vec::new(),
         service: None,
         feed: None,
+        time: None,
+        scenario: None,
+        replaces: None,
+        filter: None,
     }
 }
 
@@ -366,6 +370,10 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             fields: Vec::new(),
             service: None,
             feed: None,
+            time: None,
+            scenario: None,
+            replaces: None,
+            filter: None,
         });
     }
     let mut entities = Vec::new();
@@ -462,6 +470,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             annotation: None,
             text_styles: Vec::new(),
             connections: Vec::new(),
+            networks: Vec::new(),
         },
         origin: point(rng),
         home_view: rng.chance(50).then(|| Bounds {

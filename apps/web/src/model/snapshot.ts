@@ -6,6 +6,7 @@ import { rasterProblem, type RasterShape } from './rasterRules';
 import { pointCloudProblem } from './pointCloudRules';
 import { readConnections, readFeed, readService } from './serviceRead';
 import { linkFaultWords, serviceLinks } from './serviceRules';
+import { readNetworks } from './networkRead';
 import type { PointCloudFields } from '../contracts/generated/PointCloudFields';
 import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
@@ -40,7 +41,12 @@ import {
 } from './entities';
 import { annotationHeightsProblem, ANNOTATION_KINDS, type AnnotationHeights } from './annotationScale';
 import { assocProblem, patternProblem } from './hatchRules';
-import type { LayerInit, LayerSnap } from './layers';
+import type { LayerInit, LayerNode, LayerSnap } from './layers';
+import { filtersProblem } from './layerFilterRules';
+import { scenariosProblem } from './temporalRules';
+import type { LayerFilter } from '../contracts/generated/LayerFilter';
+import type { LayerTime } from '../contracts/generated/LayerTime';
+import type { ScenarioInfo } from '../contracts/generated/ScenarioInfo';
 import { DRAWING_FONT_IDS, DRAWING_UNIT_IDS, LEGACY_HYBRID, WORKSPACE_IDS } from './projectSettings';
 
 /**
@@ -413,6 +419,12 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
     });
   walk(layers);
   if (!leaves.size) fail('Katmanlar', 'en az bir katman olmalı');
+  // The layers' time settings and scenarios (docs/adr/0210 §2), the tree whole.
+  const scenarioFault = scenariosProblem(layers as unknown as LayerNode[]);
+  if (scenarioFault) fail('Katmanlar', scenarioFault);
+  // Schema 35's tree rule (docs/adr/0211 §2): filters on layers that hold objects, each by its rule.
+  const filterFault = filtersProblem(layers as unknown as LayerNode[]);
+  if (filterFault) fail('Katmanlar', filterFault);
   // The project's connections (docs/adr/0208 §2), and the links of its layers' services: a connection named is one of
   // them, no layer has both; an object on a service layer is refused as it is read (`entity`).
   const connections = settings.connections === undefined ? undefined : readConnections(settings.connections, 'Proje ayarları › bağlantılar', fail);
@@ -483,6 +495,8 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
         // The project's annotation heights (docs/adr/0205 §1): numbers by kind, kept as a project keeps them.
         ...(settings.annotation === undefined ? {} : { annotation: annotationOf(settings.annotation) }),
         ...(connections === undefined ? {} : { connections }),
+        // The project's networks (docs/adr/0209 §2): checked whole by the contract's rules, kept as they are.
+        ...(settings.networks === undefined ? {} : { networks: readNetworks(settings.networks, 'Proje ayarları › ağlar', fail) }),
       },
       origin: vec(data.origin, 'Yerel orijin'),
       homeView: isObj(hv) ? { minX: num(hv.minX, 'Başlangıç görünümü'), minY: num(hv.minY, 'Başlangıç görünümü'), maxX: num(hv.maxX, 'Başlangıç görünümü'), maxY: num(hv.maxY, 'Başlangıç görünümü') } : null,
@@ -585,7 +599,44 @@ function layer(v: unknown, where: string): LayerInit {
     // A layer's map service and source (docs/adr/0208 §2, §10), by the contract's rules.
     ...(v.service !== undefined && { service: readService(v.service, type, `${w} › servis`, fail) }),
     ...(v.feed !== undefined && { feed: readFeed(v.feed, type, `${w} › veri kaynağı`, fail) }),
+    // A layer's time setting and base layer, a group's scenario (docs/adr/0210 §2): their fields here, their rules and
+    // the tree's scenarios whole in `head` (`scenariosProblem`).
+    ...(v.time !== undefined && { time: layerTimeAt(v.time, `${w} › zaman`) }),
+    ...(v.scenario !== undefined && { scenario: scenarioAt(v.scenario, `${w} › senaryo`) }),
+    ...(v.replaces !== undefined && { replaces: str(v.replaces, `${w} › yerine geçtiği katman`) }),
+    ...(v.filter !== undefined && { filter: layerFilterAt(v.filter, `${w} › süzgeç`) }),
   };
+}
+
+/** A layer's time setting (docs/adr/0210 §2) as the KCAD readers read it: the start's field, the end's and the key's when given, birikimli only true. */
+function layerTimeAt(v: unknown, where: string): LayerTime {
+  if (!isObj(v)) return fail(where, 'nesne olmalı');
+  if (Object.keys(v).some((k) => !['start', 'end', 'key', 'cumulative'].includes(k))) return fail(where, 'yalnız start, end, key ve cumulative olabilir');
+  if (v.cumulative !== undefined && v.cumulative !== true) return fail(`${where} › birikimli`, 'yalnız true olabilir');
+  return {
+    start: str(v.start, `${where} › başlangıç`),
+    ...(v.end !== undefined && { end: str(v.end, `${where} › bitiş`) }),
+    ...(v.key !== undefined && { key: str(v.key, `${where} › kimlik`) }),
+    ...(v.cumulative === true && { cumulative: true }),
+  };
+}
+
+/** A layer's filter (docs/adr/0211 §2): its condition and its objects' ids, each when it has them; the rule whole in `head`. */
+function layerFilterAt(v: unknown, where: string): LayerFilter {
+  if (!isObj(v)) return fail(where, 'nesne olmalı');
+  if (Object.keys(v).some((k) => k !== 'expression' && k !== 'objects')) return fail(where, 'yalnız expression ve objects olabilir');
+  if (v.objects !== undefined && !Array.isArray(v.objects)) return fail(`${where} › nesneler`, 'liste olmalı');
+  return {
+    ...(v.expression !== undefined && { expression: str(v.expression, `${where} › ifade`) }),
+    ...(Array.isArray(v.objects) && { objects: v.objects.map((x, i) => str(x, `${where} › nesneler › ${i + 1}`)) }),
+  };
+}
+
+/** A group's scenario (docs/adr/0210 §9): its note when it has one. */
+function scenarioAt(v: unknown, where: string): ScenarioInfo {
+  if (!isObj(v)) return fail(where, 'nesne olmalı');
+  if (Object.keys(v).some((k) => k !== 'note')) return fail(where, 'yalnız note olabilir');
+  return v.note === undefined ? {} : { note: str(v.note, `${where} › not`) };
 }
 
 /**

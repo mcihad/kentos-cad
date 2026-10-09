@@ -2645,6 +2645,485 @@
     ]
    }
   },
+  "network.closestFacility": {
+   "title": "En yakın tesis",
+   "rows": [
+    {
+     "name": "network",
+     "label": "Ağ",
+     "description": "Yolların bulunacağı ağ ve maliyet.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "network"
+     }
+    },
+    {
+     "name": "incidents",
+     "label": "Olaylar",
+     "description": "Tesislerin aranacağı noktalar (adres, olay yeri).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "facilities",
+     "label": "Tesisler",
+     "description": "Okul, sağlık ocağı, itfaiye istasyonu gibi noktalar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "count",
+     "label": "Tesis sayısı",
+     "description": "Her olay için en yakın kaç tesis.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "cutoff",
+     "label": "Üst sınır",
+     "description": "Maliyeti bundan büyük tesis alınmaz (maliyetin biriminde: m, dk ya da alanın birimi).",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "placeholder": "Yok"
+     }
+    },
+    {
+     "name": "direction",
+     "label": "Yön",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "toFacility",
+        "label": "Olaydan tesise",
+        "hint": "Olaydan çıkılır (hasta tesise gider)"
+       },
+       {
+        "value": "fromFacility",
+        "label": "Tesisten olaya",
+        "hint": "Tesisten çıkılır (itfaiye olaya gider)"
+       }
+      ]
+     }
+    },
+    {
+     "name": "reach",
+     "label": "Arama uzaklığı",
+     "description": "Noktalar ağa bu uzaklıktan yakınsa ağın en yakın yerine oturur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "networks",
+     "text": "Ağ analizi"
+    },
+    "icon": "closestFacility",
+    "about": "Her olay noktası için ağ boyunca en yakın tesisleri (okul, sağlık ocağı, itfaiye) bulur; yollarını ve maliyetlerini yazar.",
+    "help": [
+     "Ağ projenin yol ya da şebeke ağıdır (Ağlar); maliyet uzunluk ya da ağın süresi ve maliyetleridir. Tek yönler ve kapalı yollar gözetilir.",
+     "Olaylar ve tesisler noktalardır; ağa Arama uzaklığından uzak olan nokta alınmaz ve söylenir.",
+     "Her olayın en yakın tesisleri Tesis sayısı kadar, maliyeti küçükten büyüğe yazılır; Üst sınır verilirse ondan pahalı tesis alınmaz. Eşit maliyette listede önce gelen tesis önce gelir.",
+     "Her yol çıktı katmanına çoklu çizgi olarak yazılır: Olay, Tesis, Sıra, Ağ, Maliyet ve her maliyetin toplamıyla; aynı satırlar tabloda."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": true,
+    "aliases": [
+     "ENYAKINTESIS",
+     "CLOSESTFACILITY"
+    ]
+   }
+  },
+  "network.odMatrix": {
+   "title": "Maliyet matrisi",
+   "rows": [
+    {
+     "name": "network",
+     "label": "Ağ",
+     "description": "Maliyetlerin bulunacağı ağ ve maliyet.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "network"
+     }
+    },
+    {
+     "name": "origins",
+     "label": "Başlangıçlar",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "destinations",
+     "label": "Varışlar",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "count",
+     "label": "En yakın",
+     "description": "Her başlangıç için en yakın kaç varış; boş: hepsi.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "placeholder": "Hepsi"
+     }
+    },
+    {
+     "name": "cutoff",
+     "label": "Üst sınır",
+     "description": "Maliyeti bundan büyük varış yazılmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "placeholder": "Yok"
+     }
+    },
+    {
+     "name": "reach",
+     "label": "Arama uzaklığı",
+     "description": "Noktalar ağa bu uzaklıktan yakınsa ağın en yakın yerine oturur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "lines",
+     "label": "Düz çizgiler",
+     "description": "Her satır için başlangıçtan varışa düz çizgi yazılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çizgilerin katmanı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "networks",
+     "text": "Ağ analizi"
+    },
+    "icon": "odMatrix",
+    "about": "Başlangıç noktalarından varış noktalarına ağ boyunca maliyetleri tablo olarak çıkarır; isteğe bağlı düz çizgilerle.",
+    "help": [
+     "Ağ projenin yol ya da şebeke ağıdır (Ağlar); maliyet uzunluk ya da ağın süresi ve maliyetleridir. Tek yönler ve kapalı yollar gözetilir.",
+     "Her başlangıçtan her varışa maliyet, ucuzdan pahalıya sıralanır; En yakın verilirse yalnız o kadar varış, Üst sınır verilirse ondan ucuzlar yazılır. Ulaşılamayan varış yazılmaz.",
+     "Tablo Başlangıç, Varış, Sıra ve maliyet sütunlarıdır; panoya ya da CSV’ye alınır. Düz çizgiler açıkken her satır başlangıçtan varışa bir çizgidir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "MALIYETMATRISI",
+     "ODMATRIX",
+     "ODCOSTMATRIX"
+    ]
+   }
+  },
+  "network.serviceAreas": {
+   "title": "Hizmet alanları",
+   "rows": [
+    {
+     "name": "network",
+     "label": "Ağ",
+     "description": "Alanların bulunacağı ağ ve maliyet.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "network"
+     }
+    },
+    {
+     "name": "facilities",
+     "label": "Tesisler",
+     "description": "Okul, sağlık ocağı, itfaiye istasyonu gibi noktalar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "breaks",
+     "label": "Aralıklar",
+     "description": "Maliyetin biriminde artan sayılar, aralarında boşluk; en çok 10.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "5 10 15"
+     }
+    },
+    {
+     "name": "direction",
+     "label": "Yön",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "from",
+        "label": "Tesisten",
+        "hint": "Tesisten çıkılarak ulaşılan yerler"
+       },
+       {
+        "value": "to",
+        "label": "Tesise",
+        "hint": "Tesise bu sürede varılan yerler"
+       }
+      ]
+     }
+    },
+    {
+     "name": "shape",
+     "label": "Biçim",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "disc",
+        "label": "Disk",
+        "hint": "Her aralığın bütün ulaşılanı"
+       },
+       {
+        "value": "ring",
+        "label": "Halka",
+        "hint": "Bir önceki aralıktan farkı"
+       }
+      ]
+     }
+    },
+    {
+     "name": "merged",
+     "label": "Birleşik",
+     "description": "Bütün tesislere aralık başına tek alan; kapalıyken her tesise ayrı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "trim",
+     "label": "Kenar payı",
+     "description": "Alanın ulaşılan yollardan uzaklığı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "reach",
+     "label": "Arama uzaklığı",
+     "description": "Tesisler ağa bu uzaklıktan yakınsa ağın en yakın yerine oturur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    },
+    {
+     "name": "lines",
+     "label": "Ulaşılan yollar",
+     "description": "Aralıklarda ulaşılan yollar da yazılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "linesLayer",
+     "label": "Yolların katmanı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "networks",
+     "text": "Ağ analizi"
+    },
+    "icon": "serviceAreas",
+    "about": "Tesislerden ağ boyunca verilen uzaklık ya da sürelerde ulaşılan alanları çizer: aralık başına alan, isteğe bağlı ulaşılan yollarla.",
+    "help": [
+     "Ağ projenin yol ya da şebeke ağıdır (Ağlar); Aralıklar maliyetin biriminde artan sayılardır (Uzunluk’ta metre, Süre’de dakika): “5 10 15”.",
+     "Alan, ulaşılan yolların Kenar payı kadar tamponudur; Disk her aralığın bütün ulaşılanını, Halka bir öncekinden farkını yazar. Birleşik açıkken bütün tesislere aralık başına tek alan, kapalıyken her tesise ayrı alan yazılır.",
+     "Yön Tesisten (tesisten çıkış) ya da Tesise (tesise varış; tek yönlü yollarda farklıdır).",
+     "Alanlara Ağ, Maliyet, Tesis, Başlangıç ve Bitiş; çizgilere Aralık (“0–5”) yazılır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "HIZMETALANLARI",
+     "SERVICEAREAS"
+    ]
+   }
+  },
   "surface.slope": {
    "title": "Eğim",
    "rows": [

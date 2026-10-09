@@ -104,7 +104,7 @@ describe('project types (docs/adr/0165)', () => {
     expect(tabs.filter((t) => !t.contextual).map((t) => t.label)).toEqual(['Dosya', 'Giriş', 'Harita', 'Veri', 'Düzenle', 'Analiz', 'Raster', 'Ölçme', 'Görünüm', 'Çıktı']);
     const panels = (id: string) => tabs.find((t) => t.id === id)!.panels.map((p) => p.label);
     expect(panels('survey')).toEqual(expect.arrayContaining(['Poligon', 'Nokta alımı', 'Kestirme', 'Noktalar']));
-    expect(panels('analysis')).toEqual(expect.arrayContaining(['İşlemler', 'Modeller', 'Arazi analizi']));
+    expect(panels('analysis')).toEqual(expect.arrayContaining(['İşlemler', 'Modeller', 'Arazi', 'Denetim', 'Ağ analizi', 'Komut']));
     // İşlemler's raster analysis has a tab of its own, with the rasters (docs/adr/0231 §10): Analiz fits 1100 px.
     expect(panels('analysis')).not.toContain('Yüzey analizi');
     expect(panels('raster')).toEqual(['Raster', 'Yüzey analizi', 'İnterpolasyon', 'Yoğunluk', 'Raster işlemleri', 'Raster istatistiği', 'Raster ve vektör', 'Taranmış harita', 'Hidroloji', 'Uzaklık ve maliyet']);
@@ -113,8 +113,8 @@ describe('project types (docs/adr/0165)', () => {
     // creating and changing objects.
     // Öznitelik tablosu, Alanlar and Kaynaklar beside the layers (docs/adr/0199).
     // Raster katmanları beside the pictures (docs/adr/0204 §8), point clouds after them (docs/adr/0207 §9: on the
-    // web its buttons wait with a note).
-    expect(panels('data')).toEqual(['Katman', 'Tablo', 'Ara', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Blok', 'Resim', 'Raster', 'Nokta bulutu']);
+    // web its buttons wait with a note). Katman süzgeci after Ara (docs/adr/0211 §4).
+    expect(panels('data')).toEqual(['Katman', 'Tablo', 'Ara', 'Süzgeç', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Blok', 'Resim', 'Raster', 'Nokta bulutu']);
     expect(panels('edit')).not.toContain('Blok');
     expect(panels('edit')).not.toContain('Resim');
   });

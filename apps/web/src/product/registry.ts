@@ -10,10 +10,14 @@ import { entitiesEdit } from './entitiesEdit';
 import { entitiesSet } from './entitiesSet';
 import { entitiesTransform } from './entitiesTransform';
 import { layersService } from './layersService';
+import { layersFilter } from './layersFilter';
+import { layersTime } from './layersTime';
 import { lineCreate } from './lineCreate';
+import { networkDefine } from './networkDefine';
 import { pointCreate } from './pointCreate';
 import { polygonCreate } from './polygonCreate';
 import { polylineCreate } from './polylineCreate';
+import { scenariosEdit } from './scenariosEdit';
 
 /**
  * The product commands the web runs (docs/adr/0013, 0022, 0027, 0029, 0032, 0037, 0047, 0057).
@@ -40,6 +44,13 @@ export const WEB_COMMANDS: readonly ProductCommand<never, unknown, unknown>[] = 
   blocksEdit,
   // Harita servisi and the service layers' menus (docs/adr/0208 §15).
   layersService,
+  // Ağlar (docs/adr/0209 §11).
+  networkDefine,
+  // Zaman ayarları and the scenarios (docs/adr/0210 §11).
+  layersTime,
+  scenariosEdit,
+  // Katman süzgeci (docs/adr/0211 §5).
+  layersFilter,
 ];
 
 /** The handler of a command id and version; undefined for one the web does not run (never guessed). */

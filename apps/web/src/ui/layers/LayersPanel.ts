@@ -21,6 +21,8 @@ import { treeLocked } from './treeRights';
 import { fixed } from '../../core/displayNumber';
 import { applyLayerState, partsOf, partsText, quickSaveLayerState, stateMatches, statesLocked } from '../../app/layerStates';
 import { tooltip } from '../widgets/tooltip';
+import { filterText } from '../../app/layerFilterCommands';
+import type { LayerFilter } from '../../contracts/generated/LayerFilter';
 
 /**
  * A row on screen: the cells that edits and layer state change, and what
@@ -41,7 +43,24 @@ interface Row {
   readonly swatch: HTMLElement | null;
   /** A map service layer's badge: why its service shows nothing, when it failed (docs/adr/0208 §14). */
   readonly fail: HTMLElement | null;
-  readonly shown: { count?: number; visible?: boolean; locked?: boolean; hidden?: boolean; active?: boolean; color?: string; snap?: SnapState; fail?: string | null };
+  /** A temporal layer's clock (docs/adr/0210 §10); a group's lead, which a scenario's own icon takes. */
+  readonly clock: HTMLElement;
+  /** A filtered layer's funnel (docs/adr/0211 §4), in the warning colour when its condition does not compile. */
+  readonly funnel: HTMLElement;
+  readonly lead: HTMLElement;
+  readonly shown: {
+    count?: string;
+    visible?: boolean;
+    locked?: boolean;
+    hidden?: boolean;
+    active?: boolean;
+    color?: string;
+    snap?: SnapState;
+    fail?: string | null;
+    time?: string;
+    scenario?: boolean;
+    filter?: string;
+  };
 }
 
 /**
@@ -70,7 +89,10 @@ export class LayersPanel extends Panel {
   private readonly rows = new Map<string, Row>();
   /** Object count of every node; a group's is the sum over all its layers. */
   private totals = new Map<string, number>();
+  /** Where a filter leaves objects out (docs/adr/0211 §4): how many show; a group's sums its layers'. */
+  private passing = new Map<string, number>();
   private rebuildQueued = false;
+  private countsQueued = false;
 
   constructor(ctx: AppContext) {
     super({ title: 'Katmanlar', className: 'panel--layers', actions: [] });
@@ -141,9 +163,17 @@ export class LayersPanel extends Panel {
 
     this.d.add(layers.events.on('structure', () => this.scheduleRebuild()));
     this.d.add(layers.events.on('expanded', () => this.scheduleRebuild()));
-    this.d.add(layers.events.on('state', () => this.writeStates()));
+    this.d.add(
+      layers.events.on('state', () => {
+        this.writeStates();
+        this.scheduleCounts();
+      }),
+    );
     this.d.add(watchAll([layers.active, ctx.prefs.theme], () => this.writeStates()));
-    this.d.add(ctx.doc.events.on('changed', () => this.writeCounts()));
+    // Counted once the change is all in: a filtered layer's count asks the geometry store, which takes the change's
+    // objects after this event (docs/adr/0211 §4); an attribute edit or a filter can change it too.
+    this.d.add(ctx.doc.events.on('changed', () => this.scheduleCounts()));
+    this.d.add(ctx.doc.events.on('touched', () => this.scheduleCounts()));
     this.d.add(ctx.selection.ids.subscribe(() => this.followSelection()));
     this.d.add(ctx.doc.events.on('reset', () => chosenLayer.set(null)));
     // A service that failed or came back: its row's badge, once a frame at most.
@@ -238,10 +268,19 @@ export class LayersPanel extends Panel {
     });
   }
 
+  /** Counts again once, at the end of the current task. */
+  private scheduleCounts(): void {
+    if (this.countsQueued) return;
+    this.countsQueued = true;
+    queueMicrotask(() => {
+      if (this.countsQueued) this.writeCounts();
+    });
+  }
+
   /** Renders the whole tree again: its shape changed. */
   private rebuild(): void {
     this.rebuildQueued = false;
-    this.totals = this.countTotals();
+    this.countTotals();
     this.rows.clear();
     this.tree.render(this.ctx.doc.layers.tree);
     this.setMeta(`${this.ctx.doc.layers.leaves().length} katman`);
@@ -249,34 +288,54 @@ export class LayersPanel extends Panel {
 
   /**
    * Object counts of every node, from the document's per-layer index (it
-   * does not walk the drawing). A group sums all its layers, also those a
-   * filter leaves out.
+   * does not walk the drawing). A group sums all its layers. A filtered
+   * layer's objects that pass come from the geometry store, which keeps them
+   * (docs/adr/0211 §4); a group with one under it sums what shows of each.
    */
-  private countTotals(): Map<string, number> {
+  private countTotals(): void {
     const counts = this.ctx.doc.countByLayer();
+    const geometry = this.ctx.view.geometry;
     const totals = new Map<string, number>();
-    const walk = (n: LayerNode): number => {
+    const passing = new Map<string, number>();
+    const walk = (n: LayerNode): [total: number, shown: number] => {
       let sum = 0;
-      if (n.type === 'layer') sum = counts.get(n.id) ?? 0;
-      else for (const child of n.children) sum += walk(child);
+      let shown = 0;
+      if (n.type === 'layer') {
+        sum = counts.get(n.id) ?? 0;
+        const f = n.filter && !n.service ? geometry.filterCounts(n.id) : null;
+        shown = f ? f.passed : sum;
+        if (f) passing.set(n.id, shown);
+      } else {
+        for (const child of n.children) {
+          const [t, p] = walk(child);
+          sum += t;
+          shown += p;
+        }
+        if (shown !== sum || n.children.some((c) => passing.has(c.id))) passing.set(n.id, shown);
+      }
       totals.set(n.id, sum);
-      return sum;
+      return [sum, shown];
     };
     for (const n of this.ctx.doc.layers.tree) walk(n);
-    return totals;
+    this.totals = totals;
+    this.passing = passing;
   }
 
-  /** Objects were added, removed or moved between layers: only the counts can differ. */
+  /** Objects were added, removed, moved between layers or edited, or a filter changed: only the counts can differ. */
   private writeCounts(): void {
-    this.totals = this.countTotals();
+    this.countsQueued = false;
+    this.countTotals();
     for (const r of this.rows.values()) this.writeCount(r);
   }
 
   private writeCount(r: Row): void {
-    const count = this.totals.get(r.node.id) ?? 0;
+    const total = this.totals.get(r.node.id) ?? 0;
+    const passed = this.passing.get(r.node.id);
+    const count = passed === undefined ? String(total) : `${passed} / ${total}`;
     if (r.shown.count === count) return;
     r.shown.count = count;
-    r.count.textContent = String(count);
+    r.count.textContent = count;
+    r.count.title = passed === undefined ? '' : `Süzgeçten ${passed} nesne geçiyor; katmanda ${total} nesne var.`;
   }
 
   /** Layer state, the active layer or the theme changed. */
@@ -319,6 +378,27 @@ export class LayersPanel extends Panel {
       r.item.toggleAttribute('data-active', active);
     }
     this.writeFailure(r);
+    // A temporal layer's clock and a scenario group's icon (docs/adr/0210 §10).
+    const time = n.time ? `Zamansal katman: ${n.time.start}${n.time.end ? ` – ${n.time.end}` : n.time.cumulative ? '' : ' (anlık)'}${n.time.cumulative ? ' (birikimli)' : ''}` : '';
+    if (shown.time !== time) {
+      shown.time = time;
+      r.clock.hidden = !time;
+      r.clock.title = time;
+    }
+    // A filtered layer's funnel (docs/adr/0211 §4): its condition and list in its tip, warning when it does not compile.
+    const filter = n.filter && !n.service ? filterTip(n.filter, this.ctx.view.geometry.filterError(n.id)) : '';
+    if (shown.filter !== filter) {
+      shown.filter = filter;
+      r.funnel.hidden = !filter;
+      r.funnel.title = filter;
+      r.funnel.toggleAttribute('data-error', !!n.filter && !!this.ctx.view.geometry.filterError(n.id));
+    }
+    const scenario = !!n.scenario;
+    if (n.type === 'group' && shown.scenario !== scenario) {
+      shown.scenario = scenario;
+      r.lead.replaceChildren(icon(scenario ? 'scenario' : 'folder', 15));
+      r.lead.title = scenario ? `Senaryo${n.scenario?.note ? `: ${n.scenario.note}` : ''}` : '';
+    }
     if (r.swatch) {
       const color = layerSwatch(n, this.ctx.view.palette);
       if (shown.color !== color) {
@@ -348,9 +428,11 @@ export class LayersPanel extends Panel {
     const count = h('span', { class: 'tree__count num' });
     const fail = n.service ? h('span', { class: 'tree__fail', hidden: true }, icon('warning', 12)) : null;
     const lead = swatch ?? h('span', { class: 'tree__folder' }, icon(n.service ? serviceIcon(n.service) : 'folder', 15));
-    content.append(lead, name, ...(fail ? [fail] : []), count, eye, lock, magnet);
+    const clock = h('span', { class: 'tree__clock', hidden: true }, icon('clock', 12));
+    const funnel = h('span', { class: 'tree__filter', hidden: true }, icon('funnel', 12));
+    content.append(lead, name, funnel, clock, ...(fail ? [fail] : []), count, eye, lock, magnet);
 
-    const row: Row = { node: n, item, name, count, eye, lock, magnet, swatch, fail, shown: {} };
+    const row: Row = { node: n, item, name, count, eye, lock, magnet, swatch, fail, clock, funnel, lead, shown: {} };
     this.rows.set(n.id, row);
     this.writeCount(row);
     this.writeState(row);
@@ -444,9 +526,24 @@ export class LayersPanel extends Panel {
         },
         // Alanlar (docs/adr/0199 §3): the schema of its objects' attributes.
         { label: n.fields?.length ? `Alanlar… (${n.fields.length})` : 'Alanlar…', icon: 'layerFields', run: () => void this.ctx.commands.execute('layer.fields', n.id) },
+        // Zaman ayarları (docs/adr/0210 §10): its objects' start, end and key fields.
+        { label: n.time ? 'Zaman ayarları… (zamansal)' : 'Zaman ayarları…', icon: 'timeLayer', run: () => void this.ctx.commands.execute('time.layer', n.id) },
+        // Katman süzgeci (docs/adr/0211 §4): the window, the selection's objects, taken away.
+        { label: n.filter ? 'Süzgeç… (süzgeçli)' : 'Süzgeç…', icon: 'layerFilter', run: () => void this.ctx.commands.execute('layer.filter', n.id) },
+        { label: 'Seçimden süzgeç', icon: 'layerFilterSelection', disabled: !this.selectedOn(n.id), run: () => void this.ctx.commands.execute('layer.filterFromSelection', n.id) },
+        { label: 'Süzgeci kaldır', icon: 'layerFilterClear', disabled: !n.filter, run: () => void this.ctx.commands.execute('layer.filterClear', n.id) },
         { kind: 'separator' },
       );
     }
+    // A scenario group (docs/adr/0210 §10): shown, compared, applied.
+    if (n.scenario)
+      items.push(
+        { label: 'Senaryoyu göster', icon: 'scenarioShow', run: () => void this.ctx.commands.execute('scenario.show', n.id) },
+        { label: 'Mevcut durum', icon: 'scenarioBase', run: () => void this.ctx.commands.execute('scenario.base') },
+        { label: 'Senaryoyu karşılaştır…', icon: 'scenarioCompare', run: () => void this.ctx.commands.execute('scenario.compare', n.id) },
+        { label: 'Senaryoyu uygula…', icon: 'scenarioApply', run: () => void this.ctx.commands.execute('scenario.apply', n.id) },
+        { kind: 'separator' },
+      );
     items.push(
       { label: 'Yeniden adlandır', icon: 'edit', shortcut: 'F2', run: () => this.rename(n) },
       {
@@ -471,6 +568,12 @@ export class LayersPanel extends Panel {
       { label: 'Sil', icon: 'trash', shortcut: 'Delete', run: () => void this.remove(n) },
     );
     return items;
+  }
+
+  /** Whether a selected object is on the layer (Seçimden süzgeç's item). */
+  private selectedOn(layerId: string): boolean {
+    for (const id of this.ctx.selection.ids.value) if (this.ctx.doc.get(id)?.layerId === layerId) return true;
+    return false;
   }
 
   /**
@@ -541,6 +644,12 @@ export class LayersPanel extends Panel {
  * (the tree or the drawing): the row outlives the click now, and a focused
  * button in it would take the next Enter or Space away from the drawing.
  */
+/** A filtered layer's funnel's tip: what it keeps, or why it lets nothing through. */
+function filterTip(f: LayerFilter, error: string | null): string {
+  const what = filterText(f);
+  return error ? `Süzgeç çalışmıyor, hiçbir nesne geçmiyor: ${error}\nSüzgeç: ${what}` : `Süzgeç: ${what}`;
+}
+
 function rowButton(className: string, run: () => void): HTMLButtonElement {
   const b = h('button', { class: className, type: 'button' });
   b.addEventListener('pointerdown', (e) => e.button === 0 && e.preventDefault());

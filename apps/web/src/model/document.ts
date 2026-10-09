@@ -1,4 +1,6 @@
 import type { FeatureFeed } from '../contracts/generated/FeatureFeed';
+import type { LayerFilter } from '../contracts/generated/LayerFilter';
+import type { LayerTime } from '../contracts/generated/LayerTime';
 import type { MigrationSource } from '../contracts/generated/MigrationSource';
 import type { ServiceLayer } from '../contracts/generated/ServiceLayer';
 import { Emitter } from '../core/emitter';
@@ -9,13 +11,15 @@ import { entityBounds, type DrawingEntity, type Entity, type NewEntity } from '.
 import type { CrsDef } from '../geo/crs';
 import { ProjectSettings, type ProjectSettingsData } from './projectSettings';
 import { emptyBounds, isEmptyBounds, type Bounds, type Vec2 } from './geometry';
-import type { LayerInit, LayerNode, LayerStyle } from './layers';
+import type { LayerInit, LayerNode, LayerStyle, Temporal } from './layers';
 import { fieldsProblem, type LayerField } from './layerFields';
-import { LayerStore } from './layers';
+import { filterOf, LayerStore, temporalOf } from './layers';
+import { layerFilterProblem } from './layerFilterRules';
 import { followHatches, tiesOf } from './hatchTies';
 import { followLinks } from './linkedTexts';
 import { sameJson } from './sameJson';
 import { canonical, feedProblem, serviceProblem } from './serviceRules';
+import { layerTimeProblem, scenarioProblem, scenariosProblem } from './temporalRules';
 import type { ProjectStyles } from './style';
 
 type Op =
@@ -28,6 +32,9 @@ type Op =
   | { type: 'layerFields'; layerId: string; before: LayerField[]; after: LayerField[] }
   /** A layer's name, map service and source (docs/adr/0208 §2, §10): undoable like its look. */
   | { type: 'layerService'; layerId: string; before: Served; after: Served }
+  /** A node's time setting, scenario and base layer (docs/adr/0210 §2): undoable like its look. */
+  | { type: 'layerTemporal'; layerId: string; before: Temporal; after: Temporal }
+  | { type: 'layerFilter'; layerId: string; before: LayerFilter | null; after: LayerFilter | null }
   /**
    * A layer or a group taken out of the tree with everything under it
    * (`removeLayer`), and its inverse: `node` is a copy as it was (children,
@@ -69,8 +76,14 @@ interface LayerPlace {
 const isLayerTreeOp = (o: Op): o is Extract<Op, { type: 'layerRemove' | 'layerAdd' }> => o.type === 'layerRemove' || o.type === 'layerAdd';
 
 /** Whether an op is about layers (their tree, style or the active one) rather than an object. */
-const isLayerOp = (o: Op): o is Extract<Op, { type: 'layerStyle' | 'layerFields' | 'layerService' | 'layerRemove' | 'layerAdd' | 'layerActive' }> =>
-  o.type === 'layerStyle' || o.type === 'layerFields' || o.type === 'layerService' || o.type === 'layerActive' || isLayerTreeOp(o);
+const isLayerOp = (o: Op): o is Extract<Op, { type: 'layerStyle' | 'layerFields' | 'layerService' | 'layerTemporal' | 'layerFilter' | 'layerRemove' | 'layerAdd' | 'layerActive' }> =>
+  o.type === 'layerStyle' ||
+  o.type === 'layerFields' ||
+  o.type === 'layerService' ||
+  o.type === 'layerTemporal' ||
+  o.type === 'layerFilter' ||
+  o.type === 'layerActive' ||
+  isLayerTreeOp(o);
 
 /** Whether an op changes the block definitions. */
 const isBlockOp = (o: Op): o is Extract<Op, { type: 'blockAdd' | 'blockRemove' | 'blockUpdate' }> =>
@@ -105,9 +118,10 @@ interface DocumentEvents {
    * persistent ids in the same order (a removed object can no longer be asked
    * for its own). Cloud sync (app/cloud/sync.ts) diffs exactly these, by
    * persistent id; `external` marks changes that came from the server and
-   * must not be sent back.
+   * must not be sent back. `added` are those of them that came into the
+   * drawing (a new object, or one an undo brought back).
    */
-  touched: { ids: number[]; uids: string[]; layerStyles: boolean; external: boolean };
+  touched: { ids: number[]; uids: string[]; added: number[]; layerStyles: boolean; external: boolean };
   /**
    * Objects were bulk-loaded or the whole drawing replaced (`load`,
    * `replaceWith`); no `touched` follows. Copies of the objects (the
@@ -552,6 +566,75 @@ export class CadDocument {
   }
 
   /**
+   * Gives a node its time setting, scenario and base layer (docs/adr/0210 §2) as one undo step named `label`. Refused
+   * with nothing changed (`Refusal`, the desktop's `set_layer_temporal`): a time or a base layer on a group, a scenario
+   * on a layer, a time on a layer drawn from a service, a setting or a note with a problem, a tree the change would
+   * break (`scenariosProblem`). An unknown id changes nothing; returns whether it changed.
+   */
+  setLayerTemporal(layerId: string, next: Temporal, label: string): boolean {
+    const node = this.layers.get(layerId);
+    if (!node) return false;
+    const group = node.type === 'group';
+    if (group && next.time) throw new Refusal(`“${node.name}” bir grup; zaman yalnız katmanın olur.`);
+    if (group && next.replaces != null) throw new Refusal(`“${node.name}” bir grup; yalnız katman bir katmanın yerine geçer.`);
+    if (!group && next.scenario) throw new Refusal(`“${node.name}” bir katman; yalnız grup senaryo olur.`);
+    if (next.time && node.service) throw new Refusal(`“${node.name}” servisten çizilir; nesnesi olmayan katmanın zamanı olmaz.`);
+    const timeProblem = next.time && layerTimeProblem(next.time);
+    if (timeProblem) throw new Refusal(`Katmanın zamanı: ${timeProblem}.`);
+    const noteProblem = next.scenario && scenarioProblem(next.scenario);
+    if (noteProblem) throw new Refusal(`Senaryo: ${noteProblem}.`);
+    const before = temporalOf(node, node.type);
+    const after = temporalOf(next, node.type);
+    if (sameJson(before, after)) return false;
+    // The tree as the change would leave it keeps its rules.
+    const tree = structuredClone(this.layers.tree) as LayerNode[];
+    const walk = (nodes: LayerNode[]): boolean =>
+      nodes.some((n) => {
+        if (n.id !== layerId) return walk(n.children);
+        delete n.time;
+        delete n.scenario;
+        delete n.replaces;
+        Object.assign(n, structuredClone(after));
+        return true;
+      });
+    walk(tree);
+    const problem = scenariosProblem(tree);
+    if (problem) throw new Refusal(`Katman ağacı: ${problem}.`);
+    this.record({ type: 'layerTemporal', layerId, before, after }, label);
+    return true;
+  }
+
+  /**
+   * Gives a layer its filter (docs/adr/0211 §2), or takes it away (null), as one undo step named `label`. Refused with
+   * nothing changed (the desktop's `set_layer_filter`): a filter on a group or on a layer drawn from a service, a filter
+   * with a problem. Whether its condition compiles is the command's. An unknown id changes nothing; returns whether it
+   * changed.
+   */
+  setLayerFilter(layerId: string, next: LayerFilter | null | undefined, label: string): boolean {
+    const node = this.layers.get(layerId);
+    if (!node) return false;
+    if (next) {
+      if (node.type === 'group') throw new Refusal(`“${node.name}” bir grup; süzgeç yalnız katmanın olur.`);
+      if (node.service) throw new Refusal(`“${node.name}” servisten çizilir; nesnesi olmayan katmanın süzgeci olmaz.`);
+      const problem = layerFilterProblem(next);
+      if (problem) throw new Refusal(`Katmanın süzgeci: ${problem}.`);
+    }
+    const before = node.filter ? filterOf(node.filter) : null;
+    const after = next ? filterOf(next) : null;
+    if (sameJson(before, after)) return false;
+    this.record({ type: 'layerFilter', layerId, before, after }, label);
+    return true;
+  }
+
+  /** A layer's time setting (docs/adr/0210 §2) as one undo step `label`, its scenario fields as they are: `setLayerTemporal`. */
+  setLayerTime(layerId: string, time: LayerTime | null | undefined, label: string): boolean {
+    const node = this.layers.get(layerId);
+    if (!node) return false;
+    const now = temporalOf(node, node.type);
+    return this.setLayerTemporal(layerId, { ...(now.scenario && { scenario: now.scenario }), ...(now.replaces != null && { replaces: now.replaces }), ...(time && { time }) }, label);
+  }
+
+  /**
    * Adds a layer, or a group, as one undo step “Katman ekle” / “Grup ekle”
    * (into the open transaction or group, if one is, under its name): where
    * `LayerStore.add` puts it (into a group given as `parentId`, else that
@@ -915,6 +998,7 @@ export class CadDocument {
           topology: m.settings.topology ?? null,
           annotation: m.settings.annotation ?? null,
           connections: m.settings.connections ?? [],
+          networks: m.settings.networks ?? [],
         });
       if (m?.name !== undefined) this.name.set(m.name);
       if (m?.styles) this.styles.set(m.styles);
@@ -1100,6 +1184,7 @@ export class CadDocument {
     const attrIds: number[] = [];
     const touched: number[] = [];
     const uids: string[] = [];
+    const added: number[] = [];
     let layerStyles = false;
     let blocks: readonly BlockDefinition[] | null = null;
     for (const op of ops) {
@@ -1117,6 +1202,8 @@ export class CadDocument {
           if (op.type === 'layerStyle') this.layers.replaceStyle(op.layerId, op.after);
           else if (op.type === 'layerFields') this.layers.replaceFields(op.layerId, op.after);
           else if (op.type === 'layerService') this.layers.replaceService(op.layerId, op.after.name, op.after.service, op.after.feed);
+          else if (op.type === 'layerTemporal') this.layers.replaceTemporal(op.layerId, op.after);
+          else if (op.type === 'layerFilter') this.layers.replaceFilter(op.layerId, op.after);
           else if (op.type === 'layerActive') {
             if (this.layers.active.value === op.before) this.layers.setActive(op.after);
           }
@@ -1137,6 +1224,7 @@ export class CadDocument {
       if (op.type === 'add') {
         this.put(op.entity);
         layerIds.add(op.entity.layerId);
+        added.push(op.entity.id);
       } else if (op.type === 'remove') {
         this.drop(op.entity.id);
         layerIds.add(op.entity.layerId);
@@ -1152,7 +1240,7 @@ export class CadDocument {
     if (blocks) this.blocks.set(blocks);
     if (layerIds.size) this.events.emit('changed', { layerIds });
     if (attrIds.length) this.events.emit('attrs', { ids: attrIds });
-    if (touched.length || layerStyles) this.events.emit('touched', { ids: touched, uids, layerStyles, external: this.external });
+    if (touched.length || layerStyles) this.events.emit('touched', { ids: touched, uids, added, layerStyles, external: this.external });
   }
 
   /** Sets an object in the drawing, its persistent id's slot and its layer's index. */
@@ -1274,6 +1362,8 @@ function invert(op: Op): Op {
   if (op.type === 'layerStyle') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerFields') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerService') return { ...op, before: op.after, after: op.before };
+  if (op.type === 'layerTemporal') return { ...op, before: op.after, after: op.before };
+  if (op.type === 'layerFilter') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerActive') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerRemove') return { ...op, type: 'layerAdd' };
   if (op.type === 'layerAdd') return { ...op, type: 'layerRemove' };

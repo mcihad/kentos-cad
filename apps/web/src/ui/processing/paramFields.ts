@@ -3,7 +3,8 @@ import type { Vec2 } from '../../model/geometry';
 import { attributeFields, type BuilderObjects } from '../../model/expression/builderObjects';
 import { exprCatalog } from '../../model/expression/expressionLib';
 import type { InputSummary } from '../../processing/runner';
-import type { FeaturesValue, FileValue, LayerValue, ParamDef } from '../../processing/types';
+import type { FeaturesValue, FileValue, LayerValue, NetworkValue, ParamDef } from '../../processing/types';
+import { costNames, NETWORK_KIND_LABELS } from '../../model/networkRules';
 import { h } from '../dom';
 import { builderButton } from '../expression/builderApi';
 import { icon } from '../icons';
@@ -96,7 +97,36 @@ export function paramControl(def: ParamDef, value: unknown, set: Setter, env: Fi
       return expressionField(def, String(value ?? ''), set, env);
     case 'file':
       return fileField(def, value as FileValue | null, env);
+    case 'network':
+      return networkField(def, value as NetworkValue | null, set, env);
   }
+}
+
+/**
+ * A network and its cost (docs/adr/0209 §10): the project's networks and the chosen one's costs (Uzunluk first), with
+ * Ağlar… beside them; a project without one says so and offers Ağlar….
+ */
+function networkField(def: Extract<ParamDef, { type: 'network' }>, value: NetworkValue | null, set: Setter, env: FieldEnv): HTMLElement {
+  const networks = env.ctx.networks.list();
+  const manage = h('button', { class: 'btn pfield__pick', type: 'button' }, icon('networks', 14), 'Ağlar…');
+  manage.addEventListener('click', () => env.ctx.commands.execute('network.manage'));
+  if (!networks.length) return h('div', { class: 'pfield__point' }, h('span', { class: 'pfield__coord', 'data-muted': '' }, 'Projede ağ yok.'), manage);
+  const chosen = networks.find((n) => n.id === value?.network) ?? networks[0];
+  const costs = costNames(chosen);
+  const cost = value && costs.includes(value.cost) ? value.cost : costs[0];
+  const pick = new Dropdown({
+    ariaLabel: def.label,
+    className: 'pfield__dropdown',
+    items: () => networks.map((n): MenuItem => ({ label: n.name, detail: NETWORK_KIND_LABELS[n.kind], radio: true, checked: n.id === chosen.id, run: () => set({ network: n.id, cost: costNames(n).includes(cost) ? cost : costNames(n)[0] }, true) })),
+  });
+  pick.set(h('span', { class: 'dropdown__text' }, chosen.name));
+  const costPick = new Dropdown({
+    ariaLabel: 'Maliyet',
+    className: 'pfield__dropdown',
+    items: () => costs.map((c): MenuItem => ({ label: c, radio: true, checked: c === cost, run: () => set({ network: chosen.id, cost: c }, true) })),
+  });
+  costPick.set(h('span', { class: 'dropdown__text' }, cost));
+  return h('div', { class: 'pfield__pickrow pfield__network' }, pick.el, costPick.el, manage);
 }
 
 /** A file: its button, its name and what it holds (or that it must be chosen again). */

@@ -10,6 +10,11 @@ import { transformedFrom } from '../model/ops/transform';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
 import type { ExprTable } from '../model/expression/expression';
 import type { LabelTexts, LabelWanted } from '../model/ops/labelText';
+import type { LayerTime } from '../contracts/generated/LayerTime';
+import type { LayerFilter } from '../contracts/generated/LayerFilter';
+import { IdMarks } from '../model/idMarks';
+import { compileFilter, filterPasses, filterPassesIn, type CompiledFilter } from '../model/layerFilter';
+import type { TimeWindow } from '../model/time';
 import { CoreStore, op, type CoreStyleProgram, type ExprColumnData } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
 import { DEFAULT_LABELS, labelRule, readGrips, type GripSet } from './storeRecords';
@@ -126,6 +131,13 @@ export function layerSnapMask(snap: LayerSnap): number {
 }
 
 /** Every layer node with its flags resolved through its ancestors, as the store reads them. */
+/** The objects' ids as the store takes them: a loop (`Float64Array.from` with a mapping is several times slower). */
+function idsOf(list: readonly Entity[]): Float64Array {
+  const out = new Float64Array(list.length);
+  for (let i = 0; i < list.length; i++) out[i] = list[i].id;
+  return out;
+}
+
 export function layerTable(layers: LayerStore): LayerRow[] {
   const out: LayerRow[] = [];
   const walk = (nodes: readonly LayerNode[]) => {
@@ -175,6 +187,23 @@ export class PickIndex {
   /** The document's `linksVersion` the store's text-labelled objects were sent at (-1: not since a reload). */
   private sentLinks = -1;
   private timer: ReturnType<typeof setTimeout> | undefined;
+  /** The temporal layers' time settings the objects' times were made with (docs/adr/0210 §6), as JSON by layer id. */
+  private sentRules = new Map<string, string>();
+  private rules = new Map<string, LayerTime>();
+  /** Whether an object has had a time since the store was emptied: a put object off a temporal layer loses its own. */
+  private timed = false;
+  /**
+   * The layers' filters the objects' marks were made with (docs/adr/0211 §3), by layer id: the object last seen and,
+   * once it was asked, its JSON (an undo gives back a copy of the same filter); compiled.
+   */
+  private sentFilters = new Map<string, { filter: LayerFilter; key?: string }>();
+  private filters = new Map<string, { compiled: CompiledFilter | null; error: string | null }>();
+  /** The objects their layer's filter leaves out (the store holds the same marks for its queries). */
+  private readonly left = new IdMarks();
+  /** Each filtered layer's objects that pass, and all of them (Katmanlar's counts). */
+  private readonly counts = new Map<string, { passed: number; total: number }>();
+  /** Objects went since the counts were made. */
+  private recount = false;
 
   constructor(doc: CadDocument) {
     this.doc = doc;
@@ -224,9 +253,13 @@ export class PickIndex {
       else {
         this.pending.delete(id);
         gone.push(id);
+        this.left.delete(id);
       }
     }
-    if (gone.length) this.store.remove(Float64Array.from(gone));
+    if (gone.length) {
+      this.store.remove(Float64Array.from(gone));
+      if (this.filters.size) this.recount = true;
+    }
   }
 
   /** Brings the store up to date before a query. */
@@ -236,32 +269,254 @@ export class PickIndex {
       this.blocksDirty = false;
       this.store.setBlocks(JSON.stringify(this.doc.blocks.value));
     }
+    let put: Entity[] = [];
+    const reloaded = this.reload;
     if (this.reload) {
       this.reload = false;
       this.pending.clear();
       this.store.clear();
       this.sentLinks = -1;
+      this.sentRules.clear();
+      this.timed = false;
+      this.sentFilters.clear();
+      this.filters.clear();
+      this.left.clear();
+      this.counts.clear();
       const p = packEntities(this.doc.all());
       this.store.putPacked(p.nums, p.strings);
     } else if (this.pending.size) {
-      const list: Entity[] = [];
       for (const id of this.pending) {
         const e = this.doc.get(id);
-        if (e) list.push(e);
+        if (e) put.push(e);
       }
       this.pending.clear();
-      const p = packEntities(list);
+      const p = packEntities(put);
       this.store.putPacked(p.nums, p.strings);
     }
+    const layersChanged = this.layersDirty || reloaded;
     if (this.layersDirty) {
       this.layersDirty = false;
       this.store.setLayers(JSON.stringify(layerTable(this.doc.layers)));
     }
+    if (layersChanged || put.length) this.syncTimes(put, layersChanged);
+    if (layersChanged || put.length || this.recount) this.syncFilters(put, layersChanged);
     // The objects whose label a text writes show none of their own (docs/adr/0175 §4).
     if (this.sentLinks !== this.doc.linksVersion) {
       this.sentLinks = this.doc.linksVersion;
       this.store.setTextLabelled(Float64Array.from(this.doc.textLabelled()));
     }
+  }
+
+  /**
+   * The temporal layers' objects' times (docs/adr/0210 §6): a layer whose time setting changed (or that has one since
+   * the store was emptied) whole, then the objects just put that are on a temporal layer, each from its start and end
+   * attributes; an object put off a temporal layer loses its time.
+   */
+  private syncTimes(put: readonly Entity[], layersChanged: boolean): void {
+    const whole: string[] = [];
+    if (layersChanged) {
+      const next = new Map<string, LayerTime>();
+      for (const l of this.doc.layers.leaves()) if (l.time && !l.service) next.set(l.id, l.time);
+      const keys = new Map([...next].map(([id, t]) => [id, JSON.stringify(t)]));
+      for (const [id, key] of keys) if (this.sentRules.get(id) !== key) whole.push(id);
+      // A setting taken away: the layer's objects lose their times.
+      for (const id of this.sentRules.keys()) if (!next.has(id)) this.untime(this.doc.byLayer(id));
+      this.rules = next;
+      this.sentRules = keys;
+    }
+    for (const id of whole) this.time(this.doc.byLayer(id), this.rules.get(id)!);
+    if (!put.length) return;
+    const done = new Set(whole);
+    const byLayer = new Map<string, Entity[]>();
+    const off: Entity[] = [];
+    for (const e of put) {
+      if (done.has(e.layerId)) continue;
+      if (this.rules.has(e.layerId)) {
+        const list = byLayer.get(e.layerId);
+        if (list) list.push(e);
+        else byLayer.set(e.layerId, [e]);
+      } else if (this.timed) off.push(e);
+    }
+    for (const [id, list] of byLayer) this.time(list, this.rules.get(id)!);
+    this.untime(off);
+  }
+
+  /**
+   * The layers' filters' marks (docs/adr/0211 §3): a layer whose filter changed (or that has one since the store was
+   * emptied) whole, then the objects just put that are on a filtered layer; an object put off one is let in again.
+   * The counts follow when anything moved.
+   */
+  private syncFilters(put: readonly Entity[], layersChanged: boolean): void {
+    const whole: string[] = [];
+    if (layersChanged) {
+      const next = new Map<string, LayerFilter>();
+      for (const l of this.doc.layers.leaves()) if (l.filter && !l.service) next.set(l.id, l.filter);
+      for (const [id, f] of next) {
+        const was = this.sentFilters.get(id);
+        if (was?.filter === f) continue;
+        if (!was) {
+          whole.push(id);
+          this.sentFilters.set(id, { filter: f });
+          continue;
+        }
+        const key = JSON.stringify(f);
+        if ((was.key ??= JSON.stringify(was.filter)) !== key) whole.push(id);
+        this.sentFilters.set(id, { filter: f, key });
+      }
+      // A filter taken away: the layer's objects come in again.
+      for (const id of [...this.sentFilters.keys()])
+        if (!next.has(id)) {
+          this.letIn(this.doc.byLayer(id));
+          this.filters.delete(id);
+          this.counts.delete(id);
+          this.sentFilters.delete(id);
+        }
+      for (const id of whole) {
+        const r = compileFilter(next.get(id)!);
+        this.filters.set(id, r.ok ? { compiled: r.filter, error: null } : { compiled: null, error: r.error });
+      }
+    }
+    for (const id of whole) this.markWhole(id);
+    if (put.length) {
+      const done = new Set(whole);
+      const byLayer = new Map<string, Entity[]>();
+      const off: Entity[] = [];
+      for (const e of put) {
+        if (done.has(e.layerId)) continue;
+        if (this.filters.has(e.layerId)) {
+          const list = byLayer.get(e.layerId);
+          if (list) list.push(e);
+          else byLayer.set(e.layerId, [e]);
+        } else if (this.left.has(e.id)) off.push(e);
+      }
+      for (const [id, list] of byLayer) this.mark(list, id);
+      this.letIn(off);
+    }
+    // A whole layer asked counted itself; objects put or gone count the filtered layers again.
+    if (put.length || this.recount) {
+      this.recount = false;
+      for (const id of this.filters.keys()) {
+        const list = this.doc.byLayer(id);
+        let n = 0;
+        for (const e of list) if (!this.left.has(e.id)) n++;
+        this.counts.set(id, { passed: n, total: list.length });
+      }
+    }
+  }
+
+  /**
+   * A filtered layer's objects marked whole, and counted (docs/adr/0211 §6): a list is turned into the objects' ids
+   * once (the document's index of persistent ids) and the condition is asked only of the objects it names; a condition
+   * that does not compile lets none through.
+   */
+  private markWhole(layerId: string): void {
+    const f = this.filters.get(layerId);
+    if (!f) return;
+    const list = this.doc.byLayer(layerId);
+    const pass = f.compiled ? filterPassesIn(this.doc, f.compiled, list, (id) => this.doc.layers.get(id)?.name ?? id, this.store) : null;
+    const out = new Uint8Array(list.length);
+    let n = 0;
+    for (let i = 0; i < list.length; i++)
+      if (pass?.[i]) {
+        this.left.delete(list[i].id);
+        n++;
+      } else {
+        out[i] = 1;
+        this.left.add(list[i].id);
+      }
+    this.store.setFiltered(idsOf(list), out);
+    this.counts.set(layerId, { passed: n, total: list.length });
+  }
+
+  /** The marks of `list`, objects of filtered layer `layerId` just put, into the store; a condition that does not compile lets none through. */
+  private mark(list: readonly Entity[], layerId: string): void {
+    const f = this.filters.get(layerId);
+    if (!f || !list.length) return;
+    const pass = f.compiled ? filterPasses(f.compiled, list, (id) => this.doc.layers.get(id)?.name ?? id, this.store) : list.map(() => false);
+    const out = new Uint8Array(list.length);
+    for (let i = 0; i < list.length; i++) {
+      out[i] = pass[i] ? 0 : 1;
+      if (pass[i]) this.left.delete(list[i].id);
+      else this.left.add(list[i].id);
+    }
+    this.store.setFiltered(idsOf(list), out);
+  }
+
+  private letIn(list: readonly Entity[]): void {
+    if (!list.length) return;
+    for (const e of list) this.left.delete(e.id);
+    this.store.setFiltered(idsOf(list), new Uint8Array(list.length));
+  }
+
+  /** Whether the object passes its layer's filter (always without one, docs/adr/0211 §3). */
+  filterShown(id: number): boolean {
+    this.sync();
+    return !this.left.has(id);
+  }
+
+  /** A filtered layer's objects that pass its filter, and all of them; null without a filter. */
+  filterCounts(layerId: string): { passed: number; total: number } | null {
+    this.sync();
+    return this.counts.get(layerId) ?? null;
+  }
+
+  /** Why a layer's filter lets nothing through: its condition does not compile. */
+  filterError(layerId: string): string | null {
+    this.sync();
+    return this.filters.get(layerId)?.error ?? null;
+  }
+
+  /** For each of `ids`, whether the view shows it: it passes its layer's filter and shows at the slider's window. */
+  viewShown(ids: readonly number[]): Uint8Array {
+    this.sync();
+    return this.store.viewMask(new Float64Array(ids));
+  }
+
+  /** The objects' times read from their values straight into the store, in one call: nothing crosses back. */
+  private time(list: readonly Entity[], rule: LayerTime): void {
+    if (!list.length) return;
+    const end = rule.end ?? null;
+    const lens = new Int32Array(list.length * 2);
+    const ids = new Float64Array(list.length);
+    const texts: string[] = [];
+    for (let i = 0; i < list.length; i++) {
+      const { id, attrs } = list[i];
+      const s = attrs[rule.start];
+      const e = end === null ? undefined : attrs[end];
+      ids[i] = id;
+      lens[2 * i] = s === undefined ? -1 : s.length;
+      lens[2 * i + 1] = e === undefined ? -1 : e.length;
+      if (s !== undefined) texts.push(s);
+      if (e !== undefined) texts.push(e);
+    }
+    this.store.setLayerTimes(ids, end !== null, !!rule.cumulative, texts.join(''), lens);
+    this.timed = true;
+  }
+
+  private untime(list: readonly Entity[]): void {
+    if (!list.length) return;
+    const times = new Float64Array(list.length * 3).fill(-1);
+    this.store.setTimes(idsOf(list), times);
+  }
+
+  /** The time slider's window (docs/adr/0210 §5): queries leave out the objects it does not show; null ends the filter. */
+  setTimeWindow(w: TimeWindow | null): void {
+    if (!w) this.store.setTimeWindow(0, 0, 0);
+    else if (w.kind === 'instant') this.store.setTimeWindow(1, w.a, w.a);
+    else this.store.setTimeWindow(2, w.a, w.b);
+  }
+
+  /** For each of `ids`, whether it shows at the slider's window (the layer builder's filter). */
+  timeShown(ids: readonly number[]): Uint8Array {
+    this.sync();
+    return this.store.timeMask(Float64Array.from(ids));
+  }
+
+  /** How many objects have a time and the extent of their starts and ends (the slider's range). */
+  timeSummary(): { count: number; extent: [number, number] | null } {
+    this.sync();
+    const [count, lo, hi] = this.store.timeSummary();
+    return { count, extent: Number.isNaN(lo) ? null : [lo, hi] };
   }
 
   private entities(ids: Float64Array): Entity[] {

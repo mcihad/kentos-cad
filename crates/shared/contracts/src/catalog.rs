@@ -1673,6 +1673,207 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // Ağlar (docs/adr/0209 §11), held together by fixtures/commands/v1/cad.network.define.json.
+        CommandDescriptor {
+            id: crate::CAD_NETWORK_DEFINE.into(),
+            version: crate::CAD_NETWORK_DEFINE_VERSION,
+            title: "Ağ tanımı".into(),
+            summary: "Projenin ağlarına bir ağ tanımı yazar (set: aynı kimlikli ağın yerini alır, yoksa sona eklenir) ya da birini siler (remove). \
+                      Ağ, katmanlardan her analizde kurulan grafın tanımıdır: kenar katmanları (çizgi, çoklu çizgi ve yaylar; isteğe bağlı süzgeç ifadesi), düğüm katmanları (bağlantı, kaynak ya da vana; süzgeç ve kapalı ifadesi), bağlanma (ends: uçlarda, bir uç başka kenara değiyorsa orada; vertices: bütün köşelerde de) ve tolerans (m), yön (both, digitized ya da field: alanın ileri, geri ve kapalı değerleri), uzunluktan başka maliyetler (speed: hız alanından dakika, varsayılan hızla; field: kenarın bütününün maliyeti) ve kapalı kenarların ifadesi. \
+                      Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. Çizimde olmayan katmanı adlandıran ağ yazılır, unknown_layer uyarısıyla. \
+                      Analizler (en kısa yol, hizmet alanı, en yakın tesis, maliyet matrisi, şebeke izleme) çizimi değiştirmez; sonuçları cad.entities.create ile yazılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::NetworkDefine>(),
+            output: schema::<crate::NetworkDefined>(),
+            plan: Some(schema::<crate::NetworkDefined>()),
+            examples: vec![
+                CommandExample {
+                    title: "Yol ağı: tek yönlü sokaklar ve hızla süre".into(),
+                    input: json!({
+                        "operation": "set",
+                        "network": {
+                            "id": "ag-1",
+                            "name": "Yollar",
+                            "kind": "road",
+                            "edges": [{ "layer": "yol-ekseni" }],
+                            "connect": "ends",
+                            "tolerance": 0.01,
+                            "direction": { "kind": "field", "field": "yon", "forward": ["FT"], "backward": ["TF"], "closed": ["N"] },
+                            "costs": [{ "name": "Süre", "kind": "speed", "field": "hiz", "speed": 50.0 }]
+                        }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Su şebekesi: akışla çizilmiş borular, vanalar ve depo".into(),
+                    input: json!({
+                        "operation": "set",
+                        "network": {
+                            "id": "ag-2",
+                            "name": "İçme suyu",
+                            "kind": "utility",
+                            "edges": [{ "layer": "su-hatti" }],
+                            "junctions": [
+                                { "layer": "su-vana", "role": "valve", "closed": "durum = 'kapalı'" },
+                                { "layer": "su-depo", "role": "source" }
+                            ],
+                            "connect": "ends",
+                            "tolerance": 0.01,
+                            "direction": { "kind": "digitized" }
+                        }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Ağı sil".into(),
+                    input: json!({ "operation": "remove", "id": "ag-2" }),
+                    output: Some(json!({ "networks": [], "revision": "12" })),
+                },
+            ],
+        },
+        // Zaman ayarları (docs/adr/0210 §11), held together by fixtures/commands/v1/cad.layers.time.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_TIME.into(),
+            version: crate::CAD_LAYERS_TIME_VERSION,
+            title: "Katmanın zamanı".into(),
+            summary: "Katmanın zaman ayarını yazar ya da kaldırır (time verilmezse ya da null ise): nesnelerin başlangıcı (anlık katmanda anı) ve bitişi hangi özniteliklerdedir, kimlik alanı (iki zamanı karşılaştırmanın anahtarı) ve Birikimli (nesne başlangıcından sonra hep görünür). \
+                      Değerler öznitelik metnidir: YYYY-AA-GG ya da GG.AA.YYYY, isteğe bağlı saat (T ya da boşlukla SS:DD[:ss[.kesir]]) ve saat dilimi (Z, +SS:DD …); boş başlangıç ya da bitiş açık uçtur. \
+                      Zaman sürgüsü, Yeni sürüm oluştur ve Sona erdir bu ayarı kullanır; sürgü bir görünümdür, çizimi değiştirmez. \
+                      Katman ağacının değişikliğidir: tek geri alma adımı “Zaman ayarları”; ayar aynıysa hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersTime>(),
+            output: schema::<crate::LayersTimed>(),
+            plan: Some(schema::<crate::LayersTimePlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Parsellerin geçerlilik aralığı, parsel numarası anahtar".into(),
+                    input: json!({
+                        "layer": "parsel",
+                        "time": { "start": "gecerlilik_baslangic", "end": "gecerlilik_bitis", "key": "parsel_no" }
+                    }),
+                    output: Some(json!({ "layer": "parsel", "changed": true, "revision": "27" })),
+                },
+                CommandExample {
+                    title: "Olaylar: yalnız tarih, birikimli".into(),
+                    input: json!({ "layer": "ariza", "time": { "start": "tarih", "cumulative": true } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Zamanı kaldır".into(),
+                    input: json!({ "layer": "parsel" }),
+                    output: None,
+                },
+            ],
+        },
+        // Senaryo oluştur and Senaryoyu uygula (docs/adr/0210 §9, §11), held together by
+        // fixtures/commands/v1/cad.scenarios.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_SCENARIOS_EDIT.into(),
+            version: crate::CAD_SCENARIOS_EDIT_VERSION,
+            title: "Senaryo".into(),
+            summary: "Bir senaryo oluşturur (create) ya da birini mevcut duruma uygular (apply); tek geri alma adımı, adı işlemin. \
+                      Senaryo ağacın en üstünde, senaryo olarak işaretli bir gruptur: verilen ana katmanların (senaryo dışındaki katmanların) her biri için aynı adlı, aynı stil, alanlar, zaman ayarı ve kenetle bir katman açılır, kaynağının yerine geçer (replaces); copyObjects açıksa (varsayılan) nesneleri yeni kimliklerle kopyalanır. Kilitli kaynağın nesneleri kopyalanmaz (layer_locked). \
+                      apply: senaryonun bir ana katmanın yerine geçen her katmanı, o katmanın nesnelerini kendi nesneleriyle değiştirir (nesneler kimliklerini korur) ve silinir; grup senaryo olmaktan çıkar, öbür katmanlarıyla sıradan bir grup olarak kalır (katmanı kalmazsa silinir). \
+                      Bir senaryoyu göstermek (grubunu görünür, yerine geçtiği ana katmanları gizli yapmak) bir görünümdür, komut değildir. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ScenariosEdit>(),
+            output: schema::<crate::ScenariosEdited>(),
+            plan: Some(schema::<crate::ScenariosEditPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Yol genişletme önerisi: yollar ve parseller kopyalanır".into(),
+                    input: json!({
+                        "operation": "create",
+                        "name": "Yol genişletme A",
+                        "layers": ["yol", "parsel"],
+                        "note": "12 m'lik yol önerisi"
+                    }),
+                    output: Some(json!({
+                        "scenario": "layer-21",
+                        "layers": [{ "base": "yol", "layer": "layer-22" }, { "base": "parsel", "layer": "layer-23" }],
+                        "kept": [],
+                        "objects": 48,
+                        "removed": 0,
+                        "revision": "31"
+                    })),
+                },
+                CommandExample {
+                    title: "Seçilen öneriyi mevcut duruma uygula".into(),
+                    input: json!({ "operation": "apply", "scenario": "layer-21" }),
+                    output: None,
+                },
+            ],
+        },
+        // Katman süzgeci (docs/adr/0211 §5), held together by fixtures/commands/v1/cad.layers.filter.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_FILTER.into(),
+            version: crate::CAD_LAYERS_FILTER_VERSION,
+            title: "Katman süzgeci".into(),
+            summary: "Katmanın süzgecini yazar ya da kaldırır (filter verilmezse ya da null ise): yalnız süzgeçten geçen nesneler çizilir, seçilir, kenetlenir, Öznitelik tablosunda, İşlemler'de ve Veride ara'da görünür. \
+                      Süzgeç bir ifadedir (İfadeyle seç'in dili: Nitelik = 'Arsa' ve $alan > 500; doğru olan geçer, yanlış, boş ya da hatalı olan geçmez; $sıra ve $ölçek kullanılamaz) ya da nesnelerin kalıcı kimlik listesidir (Seçimden süzgeç) ya da ikisi birden (ikisinden de geçmeli). \
+                      Süzgeç görünümdür: nesneler silinmez, dosya alışverişi ve komutlar bütün nesnelerle çalışır. \
+                      Sonuç süzgeçten geçen ve katmanın bütün nesne sayısıdır. Katman ağacının değişikliğidir: tek geri alma adımı “Katman süzgeci”; süzgeç aynıysa hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersFilter>(),
+            output: schema::<crate::LayersFiltered>(),
+            plan: Some(schema::<crate::LayersFilterPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Yalnız büyük arsalar".into(),
+                    input: json!({ "layer": "parsel", "filter": { "expression": "Nitelik = 'Arsa' ve $alan > 500" } }),
+                    output: Some(json!({ "layer": "parsel", "changed": true, "passed": 12, "total": 68, "revision": "28" })),
+                },
+                CommandExample {
+                    title: "Yalnız bu iki nesne (seçimden)".into(),
+                    input: json!({
+                        "layer": "parsel",
+                        "filter": { "objects": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2002"] }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Süzgeci kaldır".into(),
+                    input: json!({ "layer": "parsel" }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -1851,6 +2052,18 @@ mod tests {
                     crate::CAD_LAYERS_SERVICE => {
                         serde_json::from_value::<crate::LayersService>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_NETWORK_DEFINE => {
+                        serde_json::from_value::<crate::NetworkDefine>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_LAYERS_TIME => {
+                        serde_json::from_value::<crate::LayersTime>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SCENARIOS_EDIT => {
+                        serde_json::from_value::<crate::ScenariosEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_LAYERS_FILTER => {
+                        serde_json::from_value::<crate::LayersFilter>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -1910,6 +2123,21 @@ mod tests {
                         }
                         crate::CAD_LAYERS_SERVICE => {
                             serde_json::from_value::<crate::LayersServiced>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_NETWORK_DEFINE => {
+                            serde_json::from_value::<crate::NetworkDefined>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_TIME => {
+                            serde_json::from_value::<crate::LayersTimed>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_SCENARIOS_EDIT => {
+                            serde_json::from_value::<crate::ScenariosEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_FILTER => {
+                            serde_json::from_value::<crate::LayersFiltered>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

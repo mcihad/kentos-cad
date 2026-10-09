@@ -126,6 +126,7 @@ pub(super) fn control<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, M
         } => field(def, of, *allow_new, *multiple, env),
         ParamKind::File { .. } => file(def, env),
         ParamKind::SaveFile { suffix, .. } => save_file(def, suffix, env),
+        ParamKind::Network { .. } => network(def, env),
         ParamKind::Expression {
             of, placeholder, ..
         } => expression(def, of.as_deref(), placeholder.as_deref(), env),
@@ -752,6 +753,102 @@ fn file<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
         out = out.push(label::caption(note).style(style::text::muted));
     }
     out.into()
+}
+
+/// A network and its cost (docs/adr/0209 §10): the project's networks and the chosen one's costs (Uzunluk first),
+/// with Ağlar… beside them; a project without one says so and offers Ağlar….
+fn network<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
+    let ev = env.send;
+    let networks = &env.doc.settings().networks;
+    let manage = button(
+        row![
+            icon(crate::icons::from_web(Some("networks"))).size(14.0),
+            label::body("Ağlar…")
+        ]
+        .spacing(6)
+        .align_y(Center),
+    )
+    .padding([5, 10])
+    .style(style::button::secondary)
+    .on_press(ev(Event::Command("network.manage")));
+    if networks.is_empty() {
+        return row![
+            container(label::body("Projede ağ yok.").style(style::text::muted)).width(Fill),
+            manage
+        ]
+        .spacing(10)
+        .align_y(Center)
+        .into();
+    }
+    let v = env.value(&def.name);
+    let id = v.get("network").and_then(Value::as_str).unwrap_or("");
+    let at = networks.iter().position(|n| n.id == id).unwrap_or(0);
+    let chosen = &networks[at];
+    let costs: Vec<String> = chosen.cost_names().into_iter().map(str::to_owned).collect();
+    let cost = v
+        .get("cost")
+        .and_then(Value::as_str)
+        .filter(|c| costs.iter().any(|x| x == c))
+        .unwrap_or(&costs[0])
+        .to_owned();
+    let name = def.name.clone();
+    let ids: Vec<(String, Vec<String>)> = networks
+        .iter()
+        .map(|n| {
+            (
+                n.id.clone(),
+                n.cost_names().into_iter().map(str::to_owned).collect(),
+            )
+        })
+        .collect();
+    let kept = cost.clone();
+    let pick = Select::new(
+        networks.iter().map(|n| {
+            Choice::new(n.name.clone()).detail(if n.kind == kentos_contracts::NetworkKind::Road {
+                "Yol ağı"
+            } else {
+                "Şebeke"
+            })
+        }),
+        Some(at),
+        move |i| {
+            let (id, names) = ids.get(i).cloned().unwrap_or_default();
+            let c = if names.contains(&kept) {
+                kept.clone()
+            } else {
+                names.first().cloned().unwrap_or_default()
+            };
+            ev(Event::Value(
+                name.clone(),
+                json!({ "network": id, "cost": c }),
+            ))
+        },
+    )
+    .searchable(false);
+    let name = def.name.clone();
+    let network_id = chosen.id.clone();
+    let cost_at = costs.iter().position(|c| *c == cost);
+    let names = costs.clone();
+    let cost_pick = Select::new(
+        costs.iter().map(|c| Choice::new(c.clone())),
+        cost_at,
+        move |i| {
+            ev(Event::Value(
+                name.clone(),
+                json!({ "network": network_id, "cost": names.get(i).cloned().unwrap_or_default() }),
+            ))
+        },
+    )
+    .searchable(false);
+    // The network's name and the cost share what the button leaves, the name more (“Yollar”, “İçme suyu”; “Süre”).
+    row![
+        container(pick).width(Length::FillPortion(3)),
+        container(cost_pick).width(Length::FillPortion(2)),
+        manage
+    ]
+    .spacing(8)
+    .align_y(Center)
+    .into()
 }
 
 /// Fields shown as chips; the rest sit behind a “+n” menu.

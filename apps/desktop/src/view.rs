@@ -89,6 +89,8 @@ impl App {
             stack![
                 column![
                     self.drawing_area(),
+                    // Zaman sürgüsü's bar while it is open (temporal/bar.rs, docs/adr/0210 §10).
+                    self.time_bar(self.window_size.width),
                     self.sheets.tabs().map(Message::Sheet),
                     self.bottom()
                 ],
@@ -672,7 +674,7 @@ impl App {
                     hot: self.session.active_grip(),
                     marked: self.vertex_marks(),
                     found: self.data_mark_label(),
-                    problem: self.topology_problem(),
+                    problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
                     tracking: self.tracking_marks(&format),
                     crosshair: self.crosshair_mark(),
                     locks: self.lock_marks(&format),
@@ -813,7 +815,9 @@ impl App {
             hot: self.session.active_grip(),
             marked: self.vertex_marks(),
             found: self.data_mark_label(),
-            problem: self.topology_problem(),
+            problem: self
+                .topology_problem()
+                .or_else(|| self.networks.mark.clone()),
             tracking: None,
             crosshair: None,
             locks: None,
@@ -886,9 +890,11 @@ impl App {
                 } else {
                     "Aramayla eşleşen katman yok."
                 };
+                // A filtered layer's count is “geçen / bütün” (docs/adr/0211 §4): the column takes the widest.
+                let count_width = self.layer_count_width(doc);
                 let tree = TreeView::new([
                     TreeColumn::new("Ad").width(Fill),
-                    TreeColumn::new("Öğe").width(44).align_right(),
+                    TreeColumn::new("Öğe").width(count_width).align_right(),
                 ])
                 .virtualized(rows.len(), move |index| {
                     let row = &rows[index];
@@ -927,12 +933,83 @@ impl App {
         parent_visible: bool,
     ) -> Node<'a, Message> {
         let active = doc.model.layers().active() == node.id;
+        let (shown, total, filtered) = self.layer_counted(doc, node);
+        let count: Element<'_, Message> = if filtered {
+            kentos_ui::widget::tip(
+                label::caption(format!("{shown} / {total}")),
+                kentos_ui::widget::Tip::new(format!(
+                    "Süzgeçten {shown} nesne geçiyor; katmanda {total} nesne var."
+                )),
+                iced::widget::tooltip::Position::Top,
+            )
+        } else {
+            label::caption(total.to_string()).into()
+        };
+        // A filtered layer's funnel and a temporal layer's clock before its count, in the count's column
+        // (docs/adr/0211 §4, 0210 §10).
+        let mut badges: Vec<Element<'_, Message>> = Vec::new();
+        if node.kind == LayerNodeType::Layer
+            && node.service.is_none()
+            && let Some(f) = &node.filter
+        {
+            let error = self.spatial.filter_error(&node.id);
+            let what = crate::layer_filters::filter_text(f);
+            badges.push(kentos_ui::widget::tip(
+                kentos_ui::icon::icon(crate::icons::from_web(Some("funnel")))
+                    .size(12.0)
+                    .tone(if error.is_some() {
+                        kentos_ui::icon::Tone::Warning
+                    } else {
+                        kentos_ui::icon::Tone::Accent
+                    }),
+                kentos_ui::widget::Tip::new(match error {
+                    Some(why) => {
+                        format!("Süzgeç çalışmıyor, hiçbir nesne geçmiyor: {why}\nSüzgeç: {what}")
+                    }
+                    None => format!("Süzgeç: {what}"),
+                }),
+                iced::widget::tooltip::Position::Top,
+            ));
+        }
+        if let Some(t) = node
+            .time
+            .as_ref()
+            .filter(|_| node.kind == LayerNodeType::Layer)
+        {
+            badges.push(kentos_ui::widget::tip(
+                kentos_ui::icon::icon(crate::icons::from_web(Some("clock")))
+                    .size(12.0)
+                    .tone(kentos_ui::icon::Tone::Muted),
+                kentos_ui::widget::Tip::new(format!(
+                    "Zamansal katman: {}{}{}",
+                    t.start,
+                    match (&t.end, t.cumulative) {
+                        (Some(e), _) => format!(" – {e}"),
+                        (None, true) => String::new(),
+                        (None, false) => " (anlık)".to_owned(),
+                    },
+                    if t.cumulative { " (birikimli)" } else { "" }
+                )),
+                iced::widget::tooltip::Position::Top,
+            ));
+        }
+        let cells: Vec<Element<'_, Message>> = if badges.is_empty() {
+            vec![count]
+        } else {
+            badges.push(count);
+            vec![
+                iced::widget::Row::with_children(badges)
+                    .spacing(4)
+                    .align_y(iced::Center)
+                    .into(),
+            ]
+        };
         let mut row = Node::new(node.name.as_str())
             // Its place in the tree (the web's name title).
             .tip(kentos_ui::widget::Tip::new(
                 doc.model.layers().path(&node.id),
             ))
-            .cells([label::caption(doc.count_below(node).to_string()).into()])
+            .cells(cells)
             .on_press(Message::LayerSelected(node.id.clone()))
             .selected(self.layer_row_selected(&node.id))
             .active(active)
@@ -960,6 +1037,20 @@ impl App {
             ));
         }
         match node.kind {
+            // A scenario's own icon, its note in the tip (docs/adr/0210 §10).
+            LayerNodeType::Group if node.scenario.is_some() => {
+                let note = node.scenario.as_ref().and_then(|s| s.note.clone());
+                row.folder()
+                    .icon(
+                        kentos_ui::icon::icon(crate::icons::from_web(Some("scenario"))).size(14.0),
+                    )
+                    .tip(kentos_ui::widget::Tip::new(format!(
+                        "{}\nSenaryo{}",
+                        doc.model.layers().path(&node.id),
+                        note.map_or_else(String::new, |n| format!(": {n}"))
+                    )))
+                    .expanded(node.expanded, Message::LayerExpanded(node.id.clone()))
+            }
             LayerNodeType::Group => row
                 .folder()
                 .icon(kentos_ui::icon::icon(Icon::Folder).size(14.0))
@@ -1238,7 +1329,7 @@ impl App {
         // The drafting aids (the web's `status__toggles`): a lamp each, lit while on.
         bar = bar.separator();
         for (id, name) in STATUS_AIDS {
-            bar = bar.push(self.status_aid(id, name, fit >= 6));
+            bar = bar.push(self.status_aid(id, name, fit >= 7));
         }
         if let Some(doc) = &self.document {
             let settings = doc.settings();
@@ -1258,7 +1349,11 @@ impl App {
                 };
                 bar = bar.separator().push(cell);
             }
-            bar = bar.separator().push(self.mode_cell(fit < 5));
+            // Senaryo (docs/adr/0210 §10): while the project has scenarios, which one the drawing shows.
+            if let Some(cell) = self.scenario_cell(fit < 5) {
+                bar = bar.separator().push(cell);
+            }
+            bar = bar.separator().push(self.mode_cell(fit < 6));
             if fit < 2 {
                 // Clicked, Proje ayarları on its coordinate system page (the web's cell); the second
                 // system on its right-click menu (docs/adr/0167 §1).
@@ -1420,7 +1515,7 @@ impl App {
         }
         // A lamp, its gap and the row's spacing (14, measured on the pictures),
         // and the padding (less once the bar is tight).
-        let pad = if fit >= 6 { 12.0 } else { 18.0 };
+        let pad = if fit >= 7 { 12.0 } else { 18.0 };
         width += SEPARATOR
             + STATUS_AIDS
                 .iter()
@@ -1431,9 +1526,13 @@ impl App {
                 let zoom = format!("Ekran 1:{}", thousands(self.viewport.camera.screen_scale()));
                 width += SEPARATOR + cell(&zoom, false);
             }
+            if let Some(words) = self.scenario_words() {
+                // Its icon and its words; the icon alone once tight.
+                width += SEPARATOR + if fit < 5 { cell(&words, true) } else { 35.0 };
+            }
             let mode = crate::catalog::effective_mode(Some(self.work_mode())).label;
             // Its icon, its name and the menu's chevron.
-            width += SEPARATOR + if fit < 5 { text(mode) + 50.0 } else { 51.0 };
+            width += SEPARATOR + if fit < 6 { text(mode) + 50.0 } else { 51.0 };
             if fit < 2 {
                 width += SEPARATOR + cell(&crate::crs::project_name(doc.settings()), true);
             }
@@ -1557,10 +1656,14 @@ impl App {
             Asking::FindReplace => self.find_replace_view(),
             Asking::LayerMerge => self.layer_merge_view(),
             Asking::LayerFields => self.layer_fields_view(),
+            Asking::LayerFilter => self.layer_filter_view(),
             Asking::Connections => self.connections_view(),
             Asking::ServiceAdd => self.service_window_view(),
             Asking::Feed => self.feed_window_view(),
             Asking::TopologyRules => self.topology_rules_view(),
+            Asking::Networks => self.networks_view(),
+            Asking::TimeLayer => self.time_layer_view(),
+            Asking::Scenario => self.scenario_view(),
             Asking::LayerStates => self.layer_states_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::LayerPurge => self.layer_purge_view(),
@@ -1712,7 +1815,7 @@ const STATUS_AIDS: [(&str, &str); 10] = [
 /// name, the coordinate system, the screen scale, the cloud cells' words,
 /// the mode's name, the aids' padding. The second system's values share
 /// the message's room.
-const STATUS_STEPS: u8 = 6;
+const STATUS_STEPS: u8 = 7;
 
 /// A launcher's message: another tab, or a command the desktop runs.
 pub(crate) fn launch(launcher: &Launcher) -> Option<Message> {

@@ -2698,6 +2698,7 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-native-application",
  "kentos-project",
+ "serde",
  "serde_json",
 ]
 
@@ -2728,6 +2729,7 @@ version = "0.1.0"
 dependencies = [
  "kentos-contracts",
  "kentos-domain",
+ "kentos-expression",
  "kentos-geometry-core",
  "serde_json",
 ]
@@ -2837,8 +2839,10 @@ name = "kentos-python"
 version = "0.1.0"
 dependencies = [
  "kentos-contracts",
+ "kentos-domain",
  "kentos-geometry-core",
  "kentos-headless",
+ "kentos-processing",
  "kentos-project",
  "kentos-services",
  "pyo3",

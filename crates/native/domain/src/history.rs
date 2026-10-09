@@ -53,6 +53,15 @@ pub struct ServedBy {
     pub feed: Option<FeatureFeed>,
 }
 
+/// A node's time setting, scenario and base layer (docs/adr/0210 §2), as
+/// their undo step keeps them (the web's `Temporal`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Temporal {
+    pub time: Option<kentos_contracts::LayerTime>,
+    pub scenario: Option<kentos_contracts::ScenarioInfo>,
+    pub replaces: Option<String>,
+}
+
 /// A service layer as its undo step keeps it: its name too.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Served {
@@ -86,6 +95,18 @@ pub(crate) enum Op {
         layer: String,
         before: Box<Served>,
         after: Box<Served>,
+    },
+    /// A node's time setting, scenario and base layer (docs/adr/0210 §2), before and after.
+    LayerTemporal {
+        layer: String,
+        before: Box<Temporal>,
+        after: Box<Temporal>,
+    },
+    /// A layer's filter (docs/adr/0211 §2), before and after.
+    LayerFilter {
+        layer: String,
+        before: Option<Box<kentos_contracts::LayerFilter>>,
+        after: Option<Box<kentos_contracts::LayerFilter>>,
     },
     /// A layer or a group taken out of the tree with everything under it
     /// (`Document::remove_layer`), and its inverse, which puts it back; a
@@ -164,6 +185,24 @@ impl Op {
                 before,
                 after,
             } => Op::LayerService {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerTemporal {
+                layer,
+                before,
+                after,
+            } => Op::LayerTemporal {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerFilter {
+                layer,
+                before,
+                after,
+            } => Op::LayerFilter {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
@@ -458,6 +497,8 @@ impl Document {
                 Op::LayerStyle { .. }
                 | Op::LayerFields { .. }
                 | Op::LayerService { .. }
+                | Op::LayerTemporal { .. }
+                | Op::LayerFilter { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
                 | Op::LayerActive { .. }
@@ -575,6 +616,14 @@ impl Document {
             }
             Op::LayerService { layer, after, .. } => {
                 self.layers.replace_service(layer, after);
+                return;
+            }
+            Op::LayerTemporal { layer, after, .. } => {
+                self.layers.replace_temporal(layer, after);
+                return;
+            }
+            Op::LayerFilter { layer, after, .. } => {
+                self.layers.replace_filter(layer, after.as_deref());
                 return;
             }
             // A node still holding objects stays: taking it away would leave

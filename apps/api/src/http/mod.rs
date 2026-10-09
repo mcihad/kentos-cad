@@ -11,6 +11,8 @@ pub mod error;
 pub mod files;
 #[cfg(test)]
 mod files_tests;
+#[cfg(test)]
+mod filter_tests;
 pub mod invitations;
 #[cfg(test)]
 mod invitations_tests;
@@ -18,8 +20,12 @@ pub mod limit;
 #[cfg(test)]
 mod native_tests;
 #[cfg(test)]
+mod networks_tests;
+#[cfg(test)]
 mod people_tests;
 pub mod projects;
+#[cfg(test)]
+mod temporal_tests;
 // The map services' proxy (docs/adr/0208 §13).
 pub mod proxy;
 #[cfg(test)]

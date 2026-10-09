@@ -40,6 +40,8 @@ const COPY: &str = "Panoya kopyala";
 const SAVE: &str = "CSV olarak kaydet…";
 const WRITE: &str = "Farkları çizime yaz";
 const CLOSE: &str = "Kapat";
+const OLD_DATE: &str = "Eski tarih";
+const NEW_DATE: &str = "Yeni tarih";
 
 /// A finding's words.
 pub fn status_words(s: Status) -> &'static str {
@@ -88,6 +90,8 @@ struct Side<'a> {
     name: String,
     /// A layer's or a group's id; none, the whole drawing.
     node: Option<&'a str>,
+    /// The moment its temporal layers are seen at (docs/adr/0210 §8).
+    at: Option<f64>,
 }
 
 /// The comparison's rows with the two sides' objects they index.
@@ -116,6 +120,23 @@ pub struct Window {
     ignored: BTreeSet<String>,
     only_diffs: bool,
     outcome: Option<Outcome>,
+    /// The sides' dates as written (docs/adr/0210 §8): empty, every object.
+    old_date: String,
+    new_date: String,
+}
+
+/// What a window opened for a purpose starts with (Zamanı karşılaştır,
+/// Senaryoyu karşılaştır, a revision; docs/adr/0210 §8).
+#[derive(Debug, Clone, Default)]
+pub struct Preset {
+    /// Eski veri from another drawing (a revision's).
+    pub other: Option<Other>,
+    pub old_node: Option<String>,
+    pub new_node: Option<String>,
+    pub old_date: String,
+    pub new_date: String,
+    /// Anahtar alanla, by this field.
+    pub key: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -130,6 +151,8 @@ pub enum Event {
     Key(String),
     Search(String),
     Tolerance(String),
+    OldDate(String),
+    NewDate(String),
     /// A field compared (true) or left out.
     Field(String, bool),
     OnlyDiffs(bool),
@@ -189,12 +212,67 @@ fn layers_of(tree: &[LayerNode], node: Option<&str>) -> HashSet<String> {
     out
 }
 
-/// The objects on the layers under a node (none: the whole drawing), in their order.
-fn objects_under<'e>(tree: &[LayerNode], all: Vec<&'e Entity>, node: &str) -> Vec<&'e Entity> {
+/// The objects on the layers under a node (none: the whole drawing), in their
+/// order; at a moment, its temporal layers' objects shown then (docs/adr/0210 §8).
+fn objects_under<'e>(
+    tree: &[LayerNode],
+    all: Vec<&'e Entity>,
+    node: &str,
+    at: Option<f64>,
+) -> Vec<&'e Entity> {
     let layers = layers_of(tree, (!node.is_empty()).then_some(node));
-    all.into_iter()
+    let list: Vec<&Entity> = all
+        .into_iter()
         .filter(|e| layers.contains(&e.base().layer_id))
+        .collect();
+    let Some(at) = at else {
+        return list;
+    };
+    let mut nodes = Vec::new();
+    walk(tree, &[], &mut nodes);
+    let rules: std::collections::HashMap<&str, &kentos_contracts::LayerTime> = nodes
+        .iter()
+        .filter(|(n, _)| n.kind == LayerNodeType::Layer && layers.contains(&n.id))
+        .filter_map(|(n, _)| n.time.as_ref().map(|t| (n.id.as_str(), t)))
+        .collect();
+    let window = kentos_geometry_core::time::Window::Instant(at);
+    list.into_iter()
+        .filter(|e| {
+            let Some(rule) = rules.get(e.base().layer_id.as_str()) else {
+                return true;
+            };
+            let a = &e.base().attrs;
+            let core = kentos_geometry_core::time::Rule {
+                ranged: rule.end.is_some(),
+                cumulative: rule.cumulative,
+            };
+            let read = |k: Option<&String>| {
+                k.and_then(|k| a.get(k))
+                    .map_or(kentos_geometry_core::time::Read::Empty, |v| {
+                        kentos_geometry_core::time::read(v)
+                    })
+            };
+            let end = if core.ranged {
+                read(rule.end.as_ref())
+            } else {
+                kentos_geometry_core::time::Read::Empty
+            };
+            kentos_geometry_core::time::object_time(core, read(Some(&rule.start)), end)
+                .is_none_or(|t| kentos_geometry_core::time::shows(&t, &window))
+        })
         .collect()
+}
+
+/// A date field's moment: none when empty, an error when it does not read.
+fn date_of(words: &str, field: &str) -> Result<Option<f64>, String> {
+    match kentos_geometry_core::time::read(words.trim()) {
+        kentos_geometry_core::time::Read::Empty => Ok(None),
+        kentos_geometry_core::time::Read::Moment(t) => Ok(Some(t)),
+        kentos_geometry_core::time::Read::Unreadable => Err(format!(
+            "{field} okunamadı: “{}”. Tarihi 05.03.2024 ya da 2024-03-05 gibi yazın ya da boş bırakın.",
+            words.trim()
+        )),
+    }
 }
 
 /// A layer's path in a tree.
@@ -301,6 +379,38 @@ impl App {
     /// Veri karşılaştır (`data.compare`): the window, Eski the first layer
     /// that is not the active one, Yeni the active layer.
     pub(crate) fn open_data_compare(&mut self) {
+        self.open_data_compare_with(Preset::default());
+    }
+
+    /// Revizyonla karşılaştır (docs/adr/0210 §8): a revision's or a
+    /// checkpoint's drawing, downloaded to `path`, as Eski veri; Yeni the open
+    /// drawing; both sides the whole drawing. The file is read, then removed.
+    pub(crate) fn compare_with_file(&mut self, name: &str, path: &std::path::Path) {
+        let read = crate::document::Document::read(path);
+        let _ = std::fs::remove_file(path);
+        match read {
+            Ok(read) => {
+                let model = &read.model;
+                let other = Other {
+                    name: name.to_owned(),
+                    tree: model.layers().nodes().to_vec(),
+                    entities: model.entities().cloned().collect(),
+                    system: system_of(model.settings()),
+                };
+                self.open_data_compare_with(Preset {
+                    other: Some(other),
+                    old_node: Some(String::new()),
+                    new_node: Some(String::new()),
+                    ..Preset::default()
+                });
+            }
+            Err(why) => self.warn(why),
+        }
+    }
+
+    /// The window as a purpose opens it (Zamanı karşılaştır, Senaryoyu
+    /// karşılaştır, a revision; docs/adr/0210 §8): what the preset gives, the rest as Veri karşılaştır's.
+    pub(crate) fn open_data_compare_with(&mut self, preset: Preset) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -314,18 +424,25 @@ impl App {
             .find(|(n, _)| n.kind == LayerNodeType::Layer && n.id != active)
             .map(|(n, _)| n.id.clone())
             .unwrap_or_default();
+        let old_here = preset.other.is_none();
         self.data_compare = Some(Window {
-            other: None,
-            old_here: true,
-            old_node: first,
-            new_node: active,
-            pairing: Pairing::Location,
-            key: String::new(),
+            other: preset.other,
+            old_here,
+            old_node: preset.old_node.unwrap_or(first),
+            new_node: preset.new_node.unwrap_or(active),
+            pairing: if preset.key.is_some() {
+                Pairing::Key
+            } else {
+                Pairing::Location
+            },
+            key: preset.key.unwrap_or_default(),
             search: "1".to_owned(),
             tolerance: "0.001".to_owned(),
             ignored: BTreeSet::new(),
             only_diffs: true,
             outcome: None,
+            old_date: preset.old_date,
+            new_date: preset.new_date,
         });
         self.dialog = Some(Dialog::DataCompare);
     }
@@ -357,33 +474,39 @@ impl App {
                 "Bu çizim".to_owned(),
             ),
         };
+        let old_at = date_of(&w.old_date, OLD_DATE).ok().flatten();
+        let new_at = date_of(&w.new_date, NEW_DATE).ok().flatten();
         let old = Side {
             tree: old_tree,
-            entities: objects_under(old_tree, old_all, &w.old_node),
+            entities: objects_under(old_tree, old_all, &w.old_node, old_at),
             system: old_system,
             here: w.old_here || w.other.is_none(),
             name: old_name,
             node: (!w.old_node.is_empty()).then_some(w.old_node.as_str()),
+            at: old_at,
         };
         let new = Side {
             tree: here_tree,
-            entities: objects_under(here_tree, model.entities().collect(), &w.new_node),
+            entities: objects_under(here_tree, model.entities().collect(), &w.new_node, new_at),
             system: here_system,
             here: true,
             name: "Bu çizim".to_owned(),
             node: (!w.new_node.is_empty()).then_some(w.new_node.as_str()),
+            at: new_at,
         };
         Some((old, new))
     }
 
     /// Why the sides cannot be compared, or none.
     fn compare_refused(old: &Side<'_>, new: &Side<'_>) -> Option<String> {
-        if old.here && new.here {
+        // The same layers at two different dates are two states of them (docs/adr/0210 §8).
+        let dated = matches!((old.at, new.at), (Some(a), Some(b)) if a != b);
+        if old.here && new.here && !dated {
             let a = layers_of(old.tree, old.node);
             let b = layers_of(new.tree, new.node);
             if a.iter().any(|id| b.contains(id)) {
                 return Some(
-                    "Eski ve Yeni aynı katmanları içeriyor; ayrı katmanlar ya da gruplar seçin."
+                    "Eski ve Yeni aynı katmanları içeriyor; ayrı katmanlar ya da gruplar seçin ya da iki tarafa farklı tarihler yazın."
                         .to_owned(),
                 );
             }
@@ -401,6 +524,8 @@ impl App {
         let Some(w) = &self.data_compare else {
             return Err("Açık çizim yok.".to_owned());
         };
+        date_of(&w.old_date, OLD_DATE)?;
+        date_of(&w.new_date, NEW_DATE)?;
         let Some((old, new)) = self.compare_sides() else {
             return Err("Açık çizim yok.".to_owned());
         };
@@ -737,6 +862,16 @@ impl App {
                     w.tolerance = t;
                 }
             }
+            Event::OldDate(t) => {
+                if let Some(w) = self.data_compare.as_mut() {
+                    w.old_date = t;
+                }
+            }
+            Event::NewDate(t) => {
+                if let Some(w) = self.data_compare.as_mut() {
+                    w.new_date = t;
+                }
+            }
             Event::Field(name, on) => {
                 if let Some(w) = self.data_compare.as_mut() {
                     if on {
@@ -1048,9 +1183,31 @@ impl App {
             .style(style::container::field_box)
             .width(Fill);
         let any = w.outcome.is_some();
+        // Each side's date (docs/adr/0210 §8): empty, every object; a date, the temporal layers' objects shown then.
+        let date = |value: &str, on: fn(String) -> Event| {
+            focus_ring(
+                text_input("GG.AA.YYYY", value)
+                    .on_input(move |t| msg(on(t)))
+                    .padding([5, 8])
+                    .width(150)
+                    .style(style::field::input),
+            )
+        };
+        let dates = row![
+            words::field(OLD_DATE, date(&w.old_date, Event::OldDate), None),
+            words::field(NEW_DATE, date(&w.new_date, Event::NewDate), None),
+            column_bottom(
+                label::caption("Tarih yazılan tarafta zamansal katmanların o anda görünen nesneleri karşılaştırılır.")
+                    .style(kentos_ui::style::text::muted)
+                    .into()
+            ),
+        ]
+        .spacing(18)
+        .align_y(iced::Alignment::End);
         let content = Column::new()
             .spacing(12)
             .push(first)
+            .push(dates)
             .push(second)
             .push(third)
             .push(summary)
@@ -1079,6 +1236,8 @@ impl App {
         Ok(match control {
             Control::Fill(SEARCH, t) => Some(msg(Event::Search(t.to_owned()))),
             Control::Fill(TOLERANCE, t) => Some(msg(Event::Tolerance(t.to_owned()))),
+            Control::Fill(OLD_DATE, t) => Some(msg(Event::OldDate(t.to_owned()))),
+            Control::Fill(NEW_DATE, t) => Some(msg(Event::NewDate(t.to_owned()))),
             Control::Check(ONLY, on) => (w.only_diffs != on).then(|| msg(Event::OnlyDiffs(on))),
             Control::Press(COMPARE) => Some(msg(Event::Compare)),
             Control::Press(COPY) => any.then(|| msg(Event::Copy)),

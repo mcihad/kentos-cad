@@ -34,6 +34,11 @@ import { GridLibrary, indexedGridStore } from './gridLibrary';
 import { ServerStatus } from './server';
 import { registerDefaultKeybindings } from './keybindings';
 import { createProcessing, registerProcessingCommands } from './processing';
+import { NetworkService, type NetworkWorkerLike } from './networks';
+import { TimeSlider } from './timeSlider';
+import { registerTimeCommands } from './timeCommands';
+import { registerLayerFilterCommands } from './layerFilterCommands';
+import { registerNetworkCommands } from './networkCommands';
 import { createStyles, registerStyleCommands } from './styles';
 import { Formatter } from './format';
 import { applyAccent, applyDrawingFont, applyShape, applyTextSize, applyUiFont } from './appearance';
@@ -110,6 +115,14 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
     server: new ServerStatus(),
     grids: new GridLibrary(indexedGridStore()),
     secrets: browserSecrets(),
+    // Ağ analizi (docs/adr/0209 §12): the networks are built and asked off the page's thread.
+    networks: new NetworkService(
+      doc,
+      typeof Worker === 'undefined' ? null : () => new Worker(new URL('../io/network/worker.ts', import.meta.url), { type: 'module', name: 'KentOS ağları' }) as unknown as NetworkWorkerLike,
+      (text) => ctx.log.warn(text),
+    ),
+    // Zaman sürgüsü (docs/adr/0210 §5): its range is read from the geometry store, which the viewport holds.
+    time: new TimeSlider(doc, () => ctx.view.geometry.timeSummary()),
   } as AppContext & { tools: ToolManager; view: ViewportController; files: DocumentFiles; cloud: CloudSession; recovery: RecoveryCopies };
   ctx.tools = new ToolManager(ctx);
   ctx.view = new ViewportController(ctx);
@@ -174,6 +187,9 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   registerRasterCommands(ctx);
   installRasterAnalysis(ctx);
   registerServiceCommands(ctx);
+  registerNetworkCommands(ctx);
+  registerTimeCommands(ctx);
+  registerLayerFilterCommands(ctx);
   registerPointCloudCommands(ctx);
   // The open cloud project as the rename and delete dialogs name it.
   const openTarget = () => {

@@ -1,0 +1,1198 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-06,
+ "measureTolerance": 0.05,
+ "documents": {
+  "network.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "drawingFont": "barlow",
+    "activeLayer": "cizim",
+    "measureHeightMm": 2,
+    "networks": [
+     {
+      "id": "yollar",
+      "name": "Yollar",
+      "kind": "road",
+      "edges": [
+       {
+        "layer": "yol"
+       }
+      ],
+      "connect": "ends",
+      "tolerance": 0.01,
+      "direction": {
+       "kind": "field",
+       "field": "yon",
+       "forward": [
+        "FT",
+        "1"
+       ],
+       "backward": [
+        "TF"
+       ],
+       "closed": [
+        "N"
+       ]
+      },
+      "costs": [
+       {
+        "name": "Süre",
+        "kind": "speed",
+        "field": "hiz",
+        "speed": 50.0
+       },
+       {
+        "name": "Ücret",
+        "kind": "field",
+        "field": "ucret",
+        "unit": "TL"
+       }
+      ],
+      "closed": "kapali = 'evet'"
+     }
+    ]
+   },
+   "tools": {
+    "network.closestFacility": {
+     "network": {
+      "network": "yollar",
+      "cost": "Uzunluk"
+     },
+     "incidents": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "facilities": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "count": 1,
+     "cutoff": null,
+     "direction": "toFacility",
+     "reach": 100,
+     "layer": {
+      "newName": "En yakın tesis"
+     }
+    },
+    "network.odMatrix": {
+     "network": {
+      "network": "yollar",
+      "cost": "Uzunluk"
+     },
+     "origins": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "destinations": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "count": null,
+     "cutoff": null,
+     "reach": 100,
+     "lines": false,
+     "layer": {
+      "newName": "Maliyet matrisi"
+     }
+    },
+    "network.serviceAreas": {
+     "network": {
+      "network": "yollar",
+      "cost": "Uzunluk"
+     },
+     "facilities": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "breaks": "500 1000 1500",
+     "direction": "from",
+     "shape": "disc",
+     "merged": true,
+     "trim": 50,
+     "reach": 100,
+     "layer": {
+      "newName": "Hizmet alanı"
+     },
+     "lines": false,
+     "linesLayer": {
+      "newName": "Hizmet alanı çizgileri"
+     }
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "closest-time",
+   "title": "En yakın tesis: her adrese en yakın iki okul süreyle; uzak adres söylenir",
+   "document": "network.kcad",
+   "run": {
+    "tool": "network.closestFacility"
+   },
+   "values": {
+    "network": {
+     "network": "yollar",
+     "cost": "Süre"
+    },
+    "incidents": {
+     "scope": "layer",
+     "layerId": "adres"
+    },
+    "facilities": {
+     "scope": "layer",
+     "layerId": "okul"
+    },
+    "count": 2
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 olay için 6 tesis bulundu; 6 yol “Yollar” ağında Süre ile yazıldı.",
+    "undo": "En yakın tesis",
+    "layers": [
+     {
+      "id": "islem-en-yakin-tesis",
+      "name": "En yakın tesis",
+      "style": {
+       "color": "#7B1FA2",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-yakin-tesis",
+      "attrs": {
+       "Olay": "Adres 1",
+       "Tesis": "Okul B",
+       "Sıra": "1",
+       "Ağ": "Yollar",
+       "Maliyet": "Süre",
+       "Uzunluk": "384.996",
+       "Süre": "0.77",
+       "Ücret": "3.05"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 384.99600000027567
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-yakin-tesis",
+      "attrs": {
+       "Olay": "Adres 1",
+       "Tesis": "Okul A",
+       "Sıra": "2",
+       "Ağ": "Yollar",
+       "Maliyet": "Süre",
+       "Uzunluk": "511.965",
+       "Süre": "0.81",
+       "Ücret": "5.03"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 511.9646363264005
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-yakin-tesis",
+      "attrs": {
+       "Olay": "Adres 2",
+       "Tesis": "Okul C",
+       "Sıra": "1",
+       "Ağ": "Yollar",
+       "Maliyet": "Süre",
+       "Uzunluk": "95.000",
+       "Süre": "0.11",
+       "Ücret": "0.95"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 95.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-yakin-tesis",
+      "attrs": {
+       "Olay": "Adres 2",
+       "Tesis": "Okul A",
+       "Sıra": "2",
+       "Ağ": "Yollar",
+       "Maliyet": "Süre",
+       "Uzunluk": "250.000",
+       "Süre": "0.30",
+       "Ücret": "2.50"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 250.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-yakin-tesis",
+      "attrs": {
+       "Olay": "Adres 3",
+       "Tesis": "Okul A",
+       "Sıra": "1",
+       "Ağ": "Yollar",
+       "Maliyet": "Süre",
+       "Uzunluk": "125.000",
+       "Süre": "0.15",
+       "Ücret": "1.00"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 125.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-yakin-tesis",
+      "attrs": {
+       "Olay": "Adres 3",
+       "Tesis": "Okul C",
+       "Sıra": "2",
+       "Ağ": "Yollar",
+       "Maliyet": "Süre",
+       "Uzunluk": "470.000",
+       "Süre": "0.56",
+       "Ücret": "4.45"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 470.0
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 olay ağa 100.00 m içinde değil (ya da nokta değil); alınmadı."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Olay",
+       "Tesis",
+       "Sıra",
+       "Uzunluk",
+       "Süre",
+       "Ücret"
+      ],
+      "rows": [
+       [
+        "Adres 1",
+        "Okul B",
+        "1",
+        "384.996",
+        "0.77",
+        "3.05"
+       ],
+       [
+        "Adres 1",
+        "Okul A",
+        "2",
+        "511.965",
+        "0.81",
+        "5.03"
+       ],
+       [
+        "Adres 2",
+        "Okul C",
+        "1",
+        "95.000",
+        "0.11",
+        "0.95"
+       ],
+       [
+        "Adres 2",
+        "Okul A",
+        "2",
+        "250.000",
+        "0.30",
+        "2.50"
+       ],
+       [
+        "Adres 3",
+        "Okul A",
+        "1",
+        "125.000",
+        "0.15",
+        "1.00"
+       ],
+       [
+        "Adres 3",
+        "Okul C",
+        "2",
+        "470.000",
+        "0.56",
+        "4.45"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "closest-reverse",
+   "title": "En yakın tesis: okullardan adreslere, 300 m içinde, uzunlukla",
+   "document": "network.kcad",
+   "run": {
+    "tool": "network.closestFacility"
+   },
+   "values": {
+    "network": {
+     "network": "yollar",
+     "cost": "Uzunluk"
+    },
+    "incidents": {
+     "scope": "layer",
+     "layerId": "adres"
+    },
+    "facilities": {
+     "scope": "layer",
+     "layerId": "okul"
+    },
+    "count": 3,
+    "cutoff": 300,
+    "direction": "fromFacility"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 olay için 4 tesis bulundu; 4 yol “Yollar” ağında Uzunluk ile yazıldı.",
+    "undo": "En yakın tesis",
+    "layers": [
+     {
+      "id": "islem-en-yakin-tesis",
+      "name": "En yakın tesis",
+      "style": {
+       "color": "#7B1FA2",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-yakin-tesis",
+      "attrs": {
+       "Olay": "Adres 1",
+       "Tesis": "Okul A",
+       "Sıra": "1",
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Uzunluk": "220.000",
+       "Süre": "0.28",
+       "Ücret": "1.65"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 220.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-yakin-tesis",
+      "attrs": {
+       "Olay": "Adres 2",
+       "Tesis": "Okul C",
+       "Sıra": "1",
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Uzunluk": "95.000",
+       "Süre": "0.11",
+       "Ücret": "0.95"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 95.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-yakin-tesis",
+      "attrs": {
+       "Olay": "Adres 2",
+       "Tesis": "Okul A",
+       "Sıra": "2",
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Uzunluk": "250.000",
+       "Süre": "0.30",
+       "Ücret": "2.50"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 250.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-yakin-tesis",
+      "attrs": {
+       "Olay": "Adres 3",
+       "Tesis": "Okul A",
+       "Sıra": "1",
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Uzunluk": "125.000",
+       "Süre": "0.15",
+       "Ücret": "1.00"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 125.0
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 olay ağa 100.00 m içinde değil (ya da nokta değil); alınmadı."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Olay",
+       "Tesis",
+       "Sıra",
+       "Uzunluk",
+       "Süre",
+       "Ücret"
+      ],
+      "rows": [
+       [
+        "Adres 1",
+        "Okul A",
+        "1",
+        "220.000",
+        "0.28",
+        "1.65"
+       ],
+       [
+        "Adres 2",
+        "Okul C",
+        "1",
+        "95.000",
+        "0.11",
+        "0.95"
+       ],
+       [
+        "Adres 2",
+        "Okul A",
+        "2",
+        "250.000",
+        "0.30",
+        "2.50"
+       ],
+       [
+        "Adres 3",
+        "Okul A",
+        "1",
+        "125.000",
+        "0.15",
+        "1.00"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "matrix",
+   "title": "Maliyet matrisi: okullardan adreslere uzunlukla; tablo, çizgi yok",
+   "document": "network.kcad",
+   "run": {
+    "tool": "network.odMatrix"
+   },
+   "values": {
+    "network": {
+     "network": "yollar",
+     "cost": "Uzunluk"
+    },
+    "origins": {
+     "scope": "layer",
+     "layerId": "okul"
+    },
+    "destinations": {
+     "scope": "layer",
+     "layerId": "adres"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 başlangıçtan 3 varışa 9 satır (“Yollar” ağında Uzunluk).",
+    "undo": null,
+    "layers": [],
+    "addedShapes": [],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 varış ağa 100.00 m içinde değil (ya da nokta değil); alınmadı."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Başlangıç",
+       "Varış",
+       "Sıra",
+       "Uzunluk"
+      ],
+      "rows": [
+       [
+        "Okul A",
+        "Adres 3",
+        "1",
+        "125.000"
+       ],
+       [
+        "Okul A",
+        "Adres 1",
+        "2",
+        "220.000"
+       ],
+       [
+        "Okul A",
+        "Adres 2",
+        "3",
+        "250.000"
+       ],
+       [
+        "Okul B",
+        "Adres 2",
+        "1",
+        "454.996"
+       ],
+       [
+        "Okul B",
+        "Adres 3",
+        "2",
+        "829.996"
+       ],
+       [
+        "Okul B",
+        "Adres 1",
+        "3",
+        "924.996"
+       ],
+       [
+        "Okul C",
+        "Adres 2",
+        "1",
+        "95.000"
+       ],
+       [
+        "Okul C",
+        "Adres 3",
+        "2",
+        "470.000"
+       ],
+       [
+        "Okul C",
+        "Adres 1",
+        "3",
+        "565.000"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "matrix-lines",
+   "title": "Maliyet matrisi: her okula en yakın adres, düz çizgilerle",
+   "document": "network.kcad",
+   "run": {
+    "tool": "network.odMatrix"
+   },
+   "values": {
+    "network": {
+     "network": "yollar",
+     "cost": "Uzunluk"
+    },
+    "origins": {
+     "scope": "layer",
+     "layerId": "okul"
+    },
+    "destinations": {
+     "scope": "layer",
+     "layerId": "adres"
+    },
+    "count": 1,
+    "lines": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 başlangıçtan 3 varışa 3 satır (“Yollar” ağında Uzunluk).",
+    "undo": "Maliyet matrisi",
+    "layers": [
+     {
+      "id": "islem-maliyet-matrisi",
+      "name": "Maliyet matrisi",
+      "style": {
+       "color": "#00897B",
+       "lineType": "continuous",
+       "lineWeight": 0.18
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "line",
+      "layerId": "islem-maliyet-matrisi",
+      "attrs": {
+       "Başlangıç": "Okul A",
+       "Varış": "Adres 3",
+       "Sıra": "1",
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Uzunluk": "125.000"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 87.13208364316786
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-maliyet-matrisi",
+      "attrs": {
+       "Başlangıç": "Okul B",
+       "Varış": "Adres 2",
+       "Sıra": "1",
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Uzunluk": "454.996"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 254.5
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-maliyet-matrisi",
+      "attrs": {
+       "Başlangıç": "Okul C",
+       "Varış": "Adres 2",
+       "Sıra": "1",
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Uzunluk": "95.000"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 95.0013157803617
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 varış ağa 100.00 m içinde değil (ya da nokta değil); alınmadı."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Başlangıç",
+       "Varış",
+       "Sıra",
+       "Uzunluk"
+      ],
+      "rows": [
+       [
+        "Okul A",
+        "Adres 3",
+        "1",
+        "125.000"
+       ],
+       [
+        "Okul B",
+        "Adres 2",
+        "1",
+        "454.996"
+       ],
+       [
+        "Okul C",
+        "Adres 2",
+        "1",
+        "95.000"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "areas-discs",
+   "title": "Hizmet alanları: Okul A'dan 150 ve 300 m, diskler",
+   "document": "network.kcad",
+   "run": {
+    "tool": "network.serviceAreas"
+   },
+   "values": {
+    "network": {
+     "network": "yollar",
+     "cost": "Uzunluk"
+    },
+    "facilities": {
+     "scope": "selection"
+    },
+    "breaks": "150 300",
+    "shape": "disc",
+    "merged": true,
+    "trim": 20,
+    "lines": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 tesisin 2 aralıkta 2 hizmet alanı yazıldı; “Yollar” ağında Uzunluk.",
+    "undo": "Hizmet alanları",
+    "layers": [
+     {
+      "id": "islem-hizmet-alani",
+      "name": "Hizmet alanı",
+      "style": {
+       "color": "#1976D2",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#1976D233"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-hizmet-alani",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Başlangıç": "0.000",
+       "Bitiş": "150.000"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 13170.793862638593
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-hizmet-alani",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Başlangıç": "0.000",
+       "Bitiş": "300.000"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 30362.071908781563
+     }
+    ],
+    "log": [],
+    "outputs": {
+     "count": 2
+    }
+   },
+   "selection": [
+    11
+   ]
+  },
+  {
+   "id": "areas-rings",
+   "title": "Hizmet alanları: aynı aralıklar halka olarak",
+   "document": "network.kcad",
+   "run": {
+    "tool": "network.serviceAreas"
+   },
+   "values": {
+    "network": {
+     "network": "yollar",
+     "cost": "Uzunluk"
+    },
+    "facilities": {
+     "scope": "selection"
+    },
+    "breaks": "150 300",
+    "shape": "ring",
+    "merged": true,
+    "trim": 20,
+    "lines": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 tesisin 2 aralıkta 2 hizmet alanı yazıldı; “Yollar” ağında Uzunluk.",
+    "undo": "Hizmet alanları",
+    "layers": [
+     {
+      "id": "islem-hizmet-alani",
+      "name": "Hizmet alanı",
+      "style": {
+       "color": "#1976D2",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#1976D233"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-hizmet-alani",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Başlangıç": "0.000",
+       "Bitiş": "150.000"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 13170.793862638593
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-hizmet-alani",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Başlangıç": "150.000",
+       "Bitiş": "300.000"
+      },
+      "parts": 2,
+      "holes": 0,
+      "area": 17191.27804614293
+     }
+    ],
+    "log": [],
+    "outputs": {
+     "count": 2
+    }
+   },
+   "selection": [
+    11
+   ]
+  },
+  {
+   "id": "areas-apart",
+   "title": "Hizmet alanları: iki okul ayrı, 200 m; ulaşılan yollarla",
+   "document": "network.kcad",
+   "run": {
+    "tool": "network.serviceAreas"
+   },
+   "values": {
+    "network": {
+     "network": "yollar",
+     "cost": "Uzunluk"
+    },
+    "facilities": {
+     "scope": "selection"
+    },
+    "breaks": "200",
+    "shape": "disc",
+    "merged": false,
+    "trim": 20,
+    "lines": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 tesisin 1 aralıkta 2 hizmet alanı yazıldı (9 yol); “Yollar” ağında Uzunluk.",
+    "undo": "Hizmet alanları",
+    "layers": [
+     {
+      "id": "islem-hizmet-alani",
+      "name": "Hizmet alanı",
+      "style": {
+       "color": "#1976D2",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#1976D233"
+      }
+     },
+     {
+      "id": "islem-hizmet-alani-cizgileri",
+      "name": "Hizmet alanı çizgileri",
+      "style": {
+       "color": "#1565C0",
+       "lineType": "continuous",
+       "lineWeight": 0.35
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-hizmet-alani",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Başlangıç": "0.000",
+       "Bitiş": "200.000"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 18447.91499928298
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-hizmet-alani",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul B",
+       "Başlangıç": "0.000",
+       "Bitiş": "200.000"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 9370.953862621398
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "0–200"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 50.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "0–200"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 50.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "0–200"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 110.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "0–200"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 40.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "0–200"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 40.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "0–200"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 150.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul B",
+       "Aralık": "0–200"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 95.00399999972433
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul B",
+       "Aralık": "0–200"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 5.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul B",
+       "Aralık": "0–200"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 104.99600000027567
+     }
+    ],
+    "log": [],
+    "outputs": {
+     "count": 2
+    }
+   },
+   "selection": [
+    11,
+    12
+   ]
+  },
+  {
+   "id": "refuse-network",
+   "title": "Projede olmayan ağ adı verilirse çalışmaz",
+   "document": "network.kcad",
+   "run": {
+    "tool": "network.closestFacility"
+   },
+   "values": {
+    "network": {
+     "network": "ag-9",
+     "cost": "Uzunluk"
+    },
+    "incidents": {
+     "scope": "layer",
+     "layerId": "adres"
+    },
+    "facilities": {
+     "scope": "layer",
+     "layerId": "okul"
+    }
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "param": "network",
+      "message": "“Ağ”: “ag-9” ağı projede yok; Ağlar penceresinden tanımlayın ya da başka ağ seçin."
+     }
+    ]
+   }
+  },
+  {
+   "id": "refuse-cost",
+   "title": "Ağda olmayan maliyet verilirse çalışmaz",
+   "document": "network.kcad",
+   "run": {
+    "tool": "network.odMatrix"
+   },
+   "values": {
+    "network": {
+     "network": "yollar",
+     "cost": "Yakıt"
+    },
+    "origins": {
+     "scope": "layer",
+     "layerId": "okul"
+    },
+    "destinations": {
+     "scope": "layer",
+     "layerId": "adres"
+    }
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "param": "network",
+      "message": "“Ağ”: “Yakıt” maliyeti “Yollar” ağında yok."
+     }
+    ]
+   }
+  },
+  {
+   "id": "refuse-breaks",
+   "title": "Aralıklar artan olmazsa çalışmaz",
+   "document": "network.kcad",
+   "run": {
+    "tool": "network.serviceAreas"
+   },
+   "values": {
+    "network": {
+     "network": "yollar",
+     "cost": "Uzunluk"
+    },
+    "facilities": {
+     "scope": "layer",
+     "layerId": "okul"
+    },
+    "breaks": "300 150"
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "message": "“Aralıklar” artan, sıfırdan büyük sayılar olmalı (en çok 10), aralarında boşluk: 5 10 15."
+     }
+    ]
+   }
+  },
+  {
+   "id": "refuse-off-network",
+   "title": "Ağın üstünde tesis yoksa çalışmaz",
+   "document": "network.kcad",
+   "run": {
+    "tool": "network.serviceAreas"
+   },
+   "values": {
+    "network": {
+     "network": "yollar",
+     "cost": "Uzunluk"
+    },
+    "facilities": {
+     "scope": "selection"
+    },
+    "breaks": "100"
+   },
+   "expect": {
+    "status": "error",
+    "message": "Ağın üstünde tesis yok; noktaların ağa yakın olduğunu ya da Arama uzaklığını denetleyin."
+   },
+   "selection": [
+    24
+   ]
+  }
+ ]
+}

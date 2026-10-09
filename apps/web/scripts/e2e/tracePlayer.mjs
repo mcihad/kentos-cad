@@ -309,6 +309,8 @@ async function setUp(t) {
     k.ui.overview.set(false);
     k.ui.magnifier.set(false);
     k.ui.magnifierZoom.set(4);
+    // Zaman sürgüsü starts closed (docs/adr/0210 §5).
+    k.time.close();
     // Veride ara's choices and the place it marked start over too (docs/adr/0178).
     (await import('/src/ui/bottom/SearchPanel.ts')).resetSearchPanel();
     k.selection.mark.set(null);
@@ -409,6 +411,23 @@ async function answer(step) {
   }
   const missing = (what) => new Error(`“${step.dialog}” penceresinde ${what} yok`);
   for (const [label, text] of Object.entries(step.fill ?? {})) {
+    // A list (Zaman ayarları' fields, docs/adr/0210 §10): its item by its words, chosen as the keyboard chooses it.
+    const listed = await b.eval(`(() => {
+      const d = [...document.querySelectorAll('.dialog-backdrop .dialog')].at(-1);
+      const el = d && [...d.querySelectorAll('select')].find((el) => (el.getAttribute('aria-label') ?? '').trim() === ${JSON.stringify(label)});
+      if (!el) return null;
+      const o = [...el.options].find((o) => o.textContent.trim() === ${JSON.stringify(text)});
+      if (!o) return 'missing';
+      el.focus();
+      el.value = o.value;
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      return 'chosen';
+    })()`);
+    if (listed === 'missing') throw missing(`“${label}” listesinde “${text}”`);
+    if (listed === 'chosen') {
+      await sleep(40);
+      continue;
+    }
     const at = await control('input, textarea', label);
     if (!at) throw missing(`“${label}” alanı`);
     await clickAt(at);
@@ -562,12 +581,22 @@ async function panelAnswer(step) {
   await mouse('mouseMoved', -5, -5);
 }
 
+/**
+ * Two frames: a command or a button may change the drawing area's size (the time slider's bar under it, a panel), and
+ * the view follows on the next frame (its resize observer); a point the next step names waits for both, else it is
+ * turned into a pixel with the old size and lands where the new view puts another place.
+ */
+const settled = () => b.eval('new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => done(true))))');
+
 async function act(step) {
   // A picture is asked for (`shot`): no action, no expectation.
   if (step.shot !== undefined) return;
   if (step.panel !== undefined) return panelAnswer(step);
   if (step.dialog !== undefined) return answer(step);
-  if (step.run) return void (await b.eval(`window.kentos.commands.execute(${JSON.stringify(step.run)})`));
+  if (step.run) {
+    await b.eval(`window.kentos.commands.execute(${JSON.stringify(step.run)})`);
+    return settled();
+  }
   // An object template, as choosing it does (docs/adr/0176 §3).
   if (step.template) return void (await b.eval(`window.kentos.commands.execute('template.draw', ${JSON.stringify(step.template)})`));
   // Şablonu uygula (docs/adr/0176 §6), as the Şablonlar panel's Seçili nesnelere uygula does.
@@ -657,6 +686,26 @@ async function act(step) {
     await mouse('mousePressed', at.x, at.y, { button: 'left', clickCount: 1 });
     await mouse('mouseReleased', at.x, at.y, { button: 'left', clickCount: 1 });
     return sleep(60);
+  }
+  // Zaman sürgüsü's bar (docs/adr/0210 §10): a button by its words, or the window's Anlık and Aralık.
+  if (step.timebar) {
+    const at = await b.eval(`(() => {
+      const bar = document.querySelector('.timebar');
+      if (!bar || bar.hidden) return 'closed';
+      const words = ${JSON.stringify(step.timebar)};
+      const el = [...bar.querySelectorAll('button')].find((el) => {
+        const label = (el.getAttribute('aria-label') ?? '').split(' (')[0];
+        return label === words || el.textContent.trim() === words || (words === 'Kapat' && label === 'Zaman sürgüsünü kapat') || (words === 'Durdur' && label === 'Durdur');
+      });
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    })()`);
+    if (at === 'closed') throw new Error('Zaman sürgüsü açık değil');
+    if (!at) throw new Error(`Zaman sürgüsünde “${step.timebar}” düğmesi yok`);
+    await clickAt(at);
+    await sleep(120);
+    return settled();
   }
   // Büyüteç's zoom buttons by their words (docs/adr/0181 §2).
   if (step.magnifier) {
@@ -852,9 +901,16 @@ const observe = (mark) =>
       lockedLayers: k.doc.layers.all().filter((n) => n.locked).map((n) => k.doc.layers.path(n.id)),
       // Every layer and group by its path, in tree order (docs/adr/0177 §5).
       layers: k.doc.layers.all().map((n) => k.doc.layers.path(n.id)),
+      // The layer tree's counts as its rows show them, by path: “geçen / bütün” where a filter leaves objects out
+      // (docs/adr/0211 §4). The rows in view (the trace's trees are short).
+      layerCounts: Object.fromEntries(
+        [...document.querySelectorAll('.panel--layers .tree__row')].map((r) => [(r.querySelector('.tree__name')?.title ?? '').split('\\n')[0], r.querySelector('.tree__count')?.textContent ?? '']),
+      ),
       // Genel bakış's extent and Büyüteç's zoom, side and centre (docs/adr/0181).
       overview: k.view.navigationState.overview,
       magnifier: k.view.navigationState.magnifier,
+      // Zaman sürgüsü's words, position and last while it is open (docs/adr/0210 §5).
+      time: k.time.open.value ? { label: k.time.label(), position: k.time.position.value, last: k.time.last.value } : null,
     };
   })()`);
 
@@ -1002,6 +1058,10 @@ function compare(expect, got, t) {
       // The headers only when the step names them (docs/adr/0199 §4).
       const ok = have && have.count === want.count && same(have.rows, want.rows) && (want.columns === undefined || same(have.columns, want.columns));
       if (!ok) bad.push(`featureTable: ${JSON.stringify(have)}, beklenen ${JSON.stringify(want)}`);
+    } else if (key === 'layerCounts') {
+      // Only the rows the step names, each exactly (docs/adr/0211 §4).
+      for (const [path, count] of Object.entries(want))
+        if (have[path] !== count) bad.push(`layerCounts[${path}]: ${JSON.stringify(have[path] ?? null)}, beklenen ${JSON.stringify(count)}`);
     } else if (key === 'newest') bad.push(...compareShape('newest', have, want, t));
     else if (key === 'objects') for (const w of want) bad.push(...compareShape(`objects[${w.id}]`, have[w.id] ?? null, w, t));
     else if (key === 'trackPoints') {
@@ -1041,6 +1101,9 @@ export async function play(t, { onShot } = {}) {
       problems.push(`${label}: ${e instanceof Error ? e.message : e}`);
       break;
     }
+    // The network tools ask the network worker (docs/adr/0209 §12): a step waits for its answers, as the desktop's
+    // player runs a step's tasks to their end.
+    await b.waitFor('!window.kentos.networks.busy.value', 8000).catch(() => {});
     if (!step.expect) continue;
     // A window opens once its module has loaded (CLAUDE.md §20) and closes at once: the step waits for it.
     if ('dialog' in step.expect) await b.waitFor(`${TOP_TITLE} === ${JSON.stringify(step.expect.dialog)}`, 8000).catch(() => {});

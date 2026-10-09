@@ -1,0 +1,226 @@
+/* Ağlar (ui/networks/NetworksDialog.ts, docs/adr/0209 §10): the project's networks on the left, the chosen one's
+   definition and Denetle on the right. Loaded with the window, not at start-up (CLAUDE.md §20). Colours, sizes and
+   radii are the tokens'. The window fits 1100×650. */
+
+.dialog--networks .dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 18px 18px;
+}
+
+.net-panes {
+  display: grid;
+  grid-template-columns: calc(200px * var(--ui-scale)) minmax(0, 1fr);
+  gap: 14px;
+  /* What the title, the summary and the buttons leave of the window's own height (`.dialog`: min(80vh, 760px)), so the
+     body does not scroll in a 650 px high window (docs/adr/0209 §10). */
+  height: min(calc(560px * var(--ui-scale)), calc(80vh - 180px), 580px);
+  min-height: 0;
+}
+.net-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.net-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  padding: 4px;
+  overflow: auto;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+}
+.net-item {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  padding: 6px 8px;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.net-item:hover {
+  background: var(--c-hover);
+}
+.net-item.is-selected {
+  background: var(--c-accent-soft);
+  box-shadow: inset 2px 0 0 var(--c-accent);
+}
+.net-item__name,
+.net-item__meta {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.net-item__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.net-item__meta {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.net-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.net-empty {
+  margin: 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-sm);
+}
+
+.net-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding-right: 4px;
+  overflow: auto;
+}
+.net-form > * {
+  flex-shrink: 0;
+}
+.net-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  padding-bottom: 4px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  border-bottom: 1px solid var(--c-line);
+}
+.net-row {
+  display: grid;
+  grid-template-columns: calc(96px * var(--ui-scale)) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+.net-row__label {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.net-row__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.net-row__controls > .field,
+.net-row__controls > select,
+.net-row__controls > .net-exprbox {
+  flex: 1;
+  min-width: 0;
+}
+.net-row__controls > .net-num {
+  flex: 0 0 calc(84px * var(--ui-scale));
+}
+.net-unit {
+  flex: none;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+
+/* A layer's or a cost's line: its controls side by side, the expressions taking the room. */
+.net-line {
+  display: grid;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.net-line--edge {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+}
+.net-line--junction {
+  grid-template-columns: minmax(0, 1fr) calc(96px * var(--ui-scale)) minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+.net-line--cost {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.9fr) auto;
+}
+.net-line .field,
+.net-line select {
+  width: 100%;
+  min-width: 0;
+}
+.net-exprbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.net-exprbox > .field {
+  flex: 1;
+  min-width: 0;
+}
+.net-exprbox > .net-num {
+  flex: 1 1 auto;
+}
+
+.net-check {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.net-counts {
+  margin: 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.net-problems {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: calc(200px * var(--ui-scale));
+  padding: 3px;
+  overflow: auto;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+}
+.net-problem {
+  display: grid;
+  grid-template-columns: calc(170px * var(--ui-scale)) minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 8px;
+  color: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.net-problem:hover {
+  background: var(--c-hover);
+}
+.net-problem > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.net-problem__at,
+.net-problem__ids {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}

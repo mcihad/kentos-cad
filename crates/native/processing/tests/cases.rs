@@ -747,12 +747,61 @@ fn the_geometry_cases_do_what_they_say() {
     );
 }
 
+/// Ağ analizi's tools' cases (docs/adr/0209 §6, §7): the same run here and on the drawing's reading copy; new
+/// objects measured (the areas within the file's tolerance: shapely's against the core's exact arcs).
+#[test]
+fn the_network_cases_do_what_they_say() {
+    let file = case_file("network.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let measure_tol = file["measureTolerance"]
+        .as_f64()
+        .expect("a measure tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check_measured(c, play(c, &registry, false, &json!({})), tol, measure_tol);
+        found.extend(check_measured(
+            c,
+            play(c, &registry, true, &json!({})),
+            tol,
+            measure_tol,
+        ));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 9, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
 /// Each drawing's defaults and each tool's default values on it, as the web reads them.
 #[test]
 fn the_defaults_the_tools_take_from_the_drawing() {
-    let (file, geometry, surface, interpolation, raster_ops, raster_vector, hydrology, distance) = (
+    let (
+        file,
+        geometry,
+        network,
+        surface,
+        interpolation,
+        raster_ops,
+        raster_vector,
+        hydrology,
+        distance,
+    ) = (
         cases(),
         case_file("geometry.json"),
+        case_file("network.json"),
         case_file("surface.json"),
         case_file("interpolation.json"),
         case_file("raster-ops.json"),
@@ -767,6 +816,7 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         .expect("documents")
         .iter()
         .chain(geometry["documents"].as_object().expect("documents"))
+        .chain(network["documents"].as_object().expect("documents"))
         .chain(surface["documents"].as_object().expect("documents"))
         .chain(interpolation["documents"].as_object().expect("documents"))
         .chain(raster_ops["documents"].as_object().expect("documents"))
@@ -854,3 +904,103 @@ fn every_case_does_what_it_says() {
 // Yüzey analizi's cases (docs/adr/0231): the raster tools over the host's files.
 #[path = "cases/surface.rs"]
 mod surface;
+
+/// A network built from a drawing of a synthetic grid city (225 × 225 crossings 50 m apart, every block its own
+/// polyline with its speed and a tenth one way): what reading the drawing costs (the definition's layers and
+/// expressions; the desktop does this part on its interface's thread, docs/adr/0209 §12) and the whole build as the
+/// İşlemler tools and Python do it. Release, by hand:
+/// `cargo test --release -p kentos-processing --test cases network_timing -- --ignored --nocapture`.
+#[test]
+#[ignore = "timings, run by hand in release"]
+fn network_timing() {
+    use kentos_processing::network::{Source, from_document, network_input};
+    use std::time::Instant;
+    const N: usize = 225;
+    let (e0, n0) = (487_000.0, 4_420_000.0);
+    let mut entities = Vec::new();
+    let mut street = |a: (f64, f64), b: (f64, f64), k: usize| {
+        let one_way = if k.is_multiple_of(20) {
+            r#","yon":"FT""#
+        } else if k % 20 == 1 {
+            r#","yon":"TF""#
+        } else {
+            ""
+        };
+        entities.push(format!(
+            r#"{{"kind":"polyline","id":{},"layerId":"yol","attrs":{{"hiz":"{}"{one_way}}},"pts":[{{"x":{},"y":{}}},{{"x":{},"y":{}}}]}}"#,
+            entities.len() + 1,
+            [30, 50, 70][k % 3],
+            a.0,
+            a.1,
+            b.0,
+            b.1
+        ));
+    };
+    let at = |i: usize, j: usize| (e0 + i as f64 * 50.0, n0 + j as f64 * 50.0);
+    let mut k = 0;
+    for i in 0..N {
+        for j in 0..N {
+            if i + 1 < N {
+                street(at(i, j), at(i + 1, j), k);
+                k += 1;
+            }
+            if j + 1 < N {
+                street(at(i, j), at(i, j + 1), k);
+                k += 1;
+            }
+        }
+    }
+    let json = format!(
+        r#"{{"format":"kentos.document","version":1,"name":"Izgara","settings":{{"srid":5254,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000,"workspace":"gis","drawingFont":"barlow",
+            "networks":[{{"id":"yollar","name":"Yollar","kind":"road","edges":[{{"layer":"yol"}}],"connect":"ends","tolerance":0.01,
+            "direction":{{"kind":"field","field":"yon","forward":["FT"],"backward":["TF"],"closed":["N"]}},
+            "costs":[{{"name":"Süre","kind":"speed","field":"hiz","speed":50}}],"closed":"durum = 'kapalı'"}}]}},
+            "origin":{{"x":{e0},"y":{n0}}},"layers":[{{"id":"yol","name":"Yol","type":"layer","visible":true,"locked":false,"expanded":true,
+            "style":{{"color":"fg","lineType":"continuous","lineWeight":0.25}},"children":[]}}],"activeLayer":"yol","entities":[{}],"styles":{{"items":[],"categories":[]}}}}"#,
+        entities.join(",")
+    );
+    let doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&json).expect("the drawing reads"))
+            .expect("the drawing opens");
+    let def = doc.settings().networks[0].clone();
+    let by = |l: &str| doc.by_layer(l).collect::<Vec<_>>();
+    let name = |l: &str| l.to_owned();
+    let measures = |_: &[&Entity]| Vec::new();
+    let t = Instant::now();
+    let input = network_input(
+        &def,
+        &Source {
+            by_layer: &by,
+            layer_name: &name,
+            measures: &measures,
+        },
+    );
+    println!(
+        "çizimi okuma ({} kenar, ifadeler ve alanlar)   {:.1} ms (masaüstünde arayüzün iş parçacığında)",
+        input.edges.len(),
+        t.elapsed().as_secs_f64() * 1e3
+    );
+    let mut store = kentos_geometry_core::store::Store::new();
+    store.put_many(
+        doc.by_layer("yol")
+            .map(kentos_processing::geometry::record),
+    );
+    let t = Instant::now();
+    let (edges, _, _) = kentos_geometry_core::ops::network::input::from_store(
+        &store,
+        &input.edges,
+        &input.junctions,
+    );
+    println!(
+        "kenarların yolları depodan ({})   {:.1} ms (masaüstünde arayüzün iş parçacığında)",
+        edges.len(),
+        t.elapsed().as_secs_f64() * 1e3
+    );
+    let t = Instant::now();
+    let built = from_document(&doc, "yollar").expect("the network builds");
+    println!(
+        "çizimden bütün kurma (depo, okuma, graf; {} parça)   {:.1} ms (İşlemler ve Python)",
+        built.session.graph.pieces.len(),
+        t.elapsed().as_secs_f64() * 1e3
+    );
+}
