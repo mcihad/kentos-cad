@@ -4,15 +4,19 @@
 //! with what the case says. The web plays the same files
 //! (apps/web/src/processing/cases.test.ts): cases.json, queries.json
 //! (docs/adr/0200), whose file values name files beside it, read through the
-//! formats core as the dialog reads a chosen file, and geometry.json
-//! (docs/adr/0201), whose new objects are measured (`addedShapes`).
+//! formats core as the dialog reads a chosen file, geometry.json
+//! (docs/adr/0201), whose new objects are measured (`addedShapes`), and
+//! surface.json (docs/adr/0231; cases/surface.rs), the raster tools run
+//! with files that read the cases' rasters.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex, PoisonError};
 
 use kentos_contracts::{DocumentSnapshotV1, Entity};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::Bounds;
+use kentos_processing::files::Files;
 use kentos_processing::model_runner::{model_as_tool, record_model, replay_model, run_model};
 use kentos_processing::parameters::default_values;
 use kentos_processing::types::ParamKind;
@@ -255,12 +259,17 @@ fn with_values(tool: &Tool, doc: &Document, over: Option<&Value>, files: &Value)
     values
 }
 
-/// A tool's messages when it is computed apart from its host (the desktop's background runs).
+/// A tool's messages when it is computed apart from its host (the desktop's background runs), and the host's files.
 struct Apart<'a> {
     log: &'a mut Vec<LogLine>,
+    files: Option<Arc<dyn Files>>,
 }
 
 impl Feedback for Apart<'_> {
+    fn files(&self) -> Option<Arc<dyn Files>> {
+        self.files.clone()
+    }
+
     fn progress(&mut self, _fraction: f64, _label: &str) {}
 
     fn info(&mut self, message: String) {
@@ -284,6 +293,17 @@ impl Feedback for Apart<'_> {
 /// drawing's reading copy and finished on the host; a model runs on the
 /// copy, recorded, and is replayed on the host.
 fn play(c: &Value, registry: &Registry, on_copy: bool, files: &Value) -> Seen {
+    play_with(c, registry, on_copy, files, None)
+}
+
+/// [`play`] with the host's files (the raster tools', docs/adr/0231): given to the run computed apart.
+fn play_with(
+    c: &Value,
+    registry: &Registry,
+    on_copy: bool,
+    files: &Value,
+    host_files: Option<Arc<dyn Files>>,
+) -> Seen {
     let doc = load(c["document"].as_str().expect("a document"));
     let view = c.get("view").and_then(Value::as_array).map(|v| {
         let n = |i: usize| v[i].as_f64().expect("a number");
@@ -312,7 +332,14 @@ fn play(c: &Value, registry: &Registry, on_copy: bool, files: &Value) -> Seen {
             match runner.prepare(&host, &tool, &values, false, &mut log) {
                 Prepared::Ready(job) => {
                     let copy = host.doc.reading_copy();
-                    let result = Runner::compute(&job, &copy, &mut Apart { log: &mut log });
+                    let result = Runner::compute(
+                        &job,
+                        &copy,
+                        &mut Apart {
+                            log: &mut log,
+                            files: host_files.clone(),
+                        },
+                    );
                     runner.finish(&mut host, job, result, false, &mut log)
                 }
                 Prepared::Done(outcome) => outcome,
@@ -339,7 +366,10 @@ fn play(c: &Value, registry: &Registry, on_copy: bool, files: &Value) -> Seen {
                 &values,
                 &mut copy,
                 &lookup,
-                &mut Apart { log: &mut unheard },
+                &mut Apart {
+                    log: &mut unheard,
+                    files: None,
+                },
                 &mut log,
             );
             assert!(unheard.is_empty(), "the steps' messages are the log's");
@@ -699,14 +729,19 @@ fn the_geometry_cases_do_what_they_say() {
 /// Each drawing's defaults and each tool's default values on it, as the web reads them.
 #[test]
 fn the_defaults_the_tools_take_from_the_drawing() {
-    let (file, geometry) = (cases(), case_file("geometry.json"));
+    let (file, geometry, surface) = (
+        cases(),
+        case_file("geometry.json"),
+        case_file("surface.json"),
+    );
     let registry = Registry::builtin();
     let lookup = |id: &str| registry.tool(id);
     let documents = file["documents"]
         .as_object()
         .expect("documents")
         .iter()
-        .chain(geometry["documents"].as_object().expect("documents"));
+        .chain(geometry["documents"].as_object().expect("documents"))
+        .chain(surface["documents"].as_object().expect("documents"));
     for (name, d) in documents {
         let doc = load(name);
         let defaults = Defaults::of(&doc);
@@ -784,3 +819,7 @@ fn every_case_does_what_it_says() {
         problems.join("\n")
     );
 }
+
+// Yüzey analizi's cases (docs/adr/0231): the raster tools over the host's files.
+#[path = "cases/surface.rs"]
+mod surface;

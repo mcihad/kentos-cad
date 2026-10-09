@@ -1,0 +1,23 @@
+[package]
+name = "kentos-raster"
+description = "Raster analysis of KentOS (docs/adr/0231–0236): a raster worked out cell by cell into a new raster or lines, one core for the web's analysis worker (WASM) and the desktop's processing thread"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure dependencies only, like the formats core (CLAUDE.md §14): this crate
+# builds for every target and never reaches for the file system or the
+# network. The raster is read through the formats core's reader, whose
+# blocks the host hands over (a file, embedded bytes, HTTP ranges, a
+# browser file's slices); the result is the formats core's tiled GeoTIFF,
+# whose bytes the host appends. The coordinate systems (a row's latitude)
+# are the geometry core's; libm gives both targets the same transcendental
+# functions, so the web and the desktop write the same samples (§23.4).
+[dependencies]
+kentos-contracts = { path = "../contracts", default-features = false }
+kentos-formats = { path = "../formats" }
+kentos-geometry-core = { path = "../geometry-core" }
+libm = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

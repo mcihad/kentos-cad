@@ -152,6 +152,7 @@ pub fn layer_param(name: &str, color: &str) -> crate::types::ParamDef {
         "Çıktı katmanı",
         crate::types::ParamKind::Layer {
             new_layer_style: output_style(color),
+            above: None,
         },
     )
     .default_value(serde_json::json!({ "newName": name }))

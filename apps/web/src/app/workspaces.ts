@@ -54,7 +54,7 @@ export const WORKSPACES: readonly WorkspaceSpec[] = [
     hide: {
       menus: ['map', 'crs', 'processing'],
       tools: ['map/parcel', 'map/field'],
-      commands: ['analysis.volume', 'analysis.slope'],
+      commands: ['analysis.volume'],
     },
   },
   {

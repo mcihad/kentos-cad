@@ -52,7 +52,7 @@ SAMPLES = {
 # the selection tab is contextual.
 TABS = {
     'cad': [('file', 'Dosya'), ('home', 'Giriş'), ('insert', 'Ekle'), ('annotate', 'Açıklama'), ('modify', 'Değiştir'), ('view', 'Görünüm'), ('manage', 'Yönet'), ('output', 'Çıktı'), ('selection', 'Seçim')],
-    'gis': [('file', 'Dosya'), ('home', 'Giriş'), ('map', 'Harita'), ('data', 'Veri'), ('edit', 'Düzenle'), ('analysis', 'Analiz'), ('survey', 'Ölçme'), ('view', 'Görünüm'), ('output', 'Çıktı'), ('selection', 'Seçim')],
+    'gis': [('file', 'Dosya'), ('home', 'Giriş'), ('map', 'Harita'), ('data', 'Veri'), ('edit', 'Düzenle'), ('analysis', 'Analiz'), ('raster', 'Raster'), ('survey', 'Ölçme'), ('view', 'Görünüm'), ('output', 'Çıktı'), ('selection', 'Seçim')],
 }
 
 # ── Answers ─────────────────────────────────────────────────────────

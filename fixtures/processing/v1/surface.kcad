@@ -1,0 +1,156 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: yüzey analizi",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 500000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "dem",
+   "name": "DEM",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "dem",
+ "entities": [
+  {
+   "kind": "raster",
+   "id": 1,
+   "layerId": "dem",
+   "attrs": {},
+   "affine": [
+    500100.0,
+    10.0,
+    0.0,
+    4420330.0,
+    0.0,
+    -10.0
+   ],
+   "width": 41,
+   "height": 33,
+   "bands": 1,
+   "sample": "f32",
+   "file": "tepe.tif",
+   "srid": 5254,
+   "style": {
+    "render": "rampShade",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   }
+  },
+  {
+   "kind": "raster",
+   "id": 2,
+   "layerId": "dem",
+   "attrs": {},
+   "affine": [
+    501000.0,
+    4.330127018922193,
+    2.5,
+    4421000.0,
+    2.5,
+    -4.330127018922193
+   ],
+   "width": 23,
+   "height": 19,
+   "bands": 1,
+   "sample": "f32",
+   "file": "donuk.tif",
+   "srid": 5254,
+   "style": {
+    "render": "rampShade",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   }
+  },
+  {
+   "kind": "polyline",
+   "id": 3,
+   "layerId": "cizim",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 500150,
+     "y": 4420150
+    },
+    {
+     "x": 500300,
+     "y": 4420250
+    }
+   ]
+  },
+  {
+   "kind": "raster",
+   "id": 4,
+   "layerId": "dem",
+   "attrs": {},
+   "affine": [
+    500100.0,
+    10.0,
+    3.0,
+    4420330.0,
+    0.0,
+    -10.0
+   ],
+   "width": 41,
+   "height": 33,
+   "bands": 1,
+   "sample": "f32",
+   "file": "tepe.tif",
+   "srid": 5254,
+   "style": {
+    "render": "rampShade",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

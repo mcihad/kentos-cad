@@ -629,7 +629,7 @@ impl App {
                         .collect();
                     let fields = kentos_contracts::fields::infer_fields(
                         rows.iter().map(Vec::as_slice),
-                        |a, b| kentos_geometry_core::text::natural::natural_cmp(a, b),
+                        kentos_geometry_core::text::natural::natural_cmp,
                     );
                     let input = LayersService {
                         operation: LayerServiceOperation::AddFeed,

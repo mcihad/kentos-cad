@@ -703,6 +703,22 @@ export const ICONS = {
   crsSecond: '<circle cx="8.5" cy="11.5" r="5.5"/><path d="M3 11.5h11M8.5 6c-2 1.6-2 9.4 0 11M8.5 6c2 1.6 2 9.4 0 11"/><path d="M13.8 4.5a1.9 1.9 0 0 1 3.7.4c0 1.2-1.2 1.9-3.7 3.4h3.9"/>',
   volume: '<path d="m10 2.8 6.8 3.7v7L10 17.2l-6.8-3.7v-7z"/><path d="m3.2 6.5 6.8 3.7 6.8-3.7M10 10.2v7"/><path d="m10 10.2 6.8-3.7v7L10 17.2z" fill="currentColor" fill-opacity=".18" stroke="none"/>',
   slope: '<path d="M2.5 16.5h15L17.5 5.5z" fill="currentColor" fill-opacity=".14"/><path d="M2.5 16.5h15V5.5z"/><path d="M8 16.5a5.6 5.6 0 0 0-.9-3.1"/>',
+  // Yüzey analizi (docs/adr/0231 §10): Bakı a compass rose, north marked, the way down; Gölgeli kabartma a hill lit from
+  // the north-west, its far side in shade; Renkli kabartma a hill in colour bands; Eğrilik a convex and a concave
+  // section over its datum, the hump's circle; Pürüzlülük broken ground over its datum; Güneşlenme the sun's rays on a
+  // sloping face.
+  aspect:
+    '<circle cx="10" cy="10.5" r="7"/><path d="m10 1.6 1.5 3h-3z" fill="currentColor" stroke="none"/><path d="M17 10.5h1.6M1.4 10.5H3M10 17.5v1.6" stroke-width="1.1"/><path d="M10 10.5l3.4 3.4" stroke-width="1.5"/><path d="m15.5 16-4.6-1.1 3.5-3.5z" fill="currentColor" stroke="none"/><circle cx="10" cy="10.5" r="1" fill="currentColor" stroke="none"/>',
+  hillshade:
+    '<path d="M1.5 17 9.5 5.5 18.5 17z"/><path d="M9.5 5.5 18.5 17h-6.8l-1.4-5.2z" fill="currentColor" fill-opacity=".5" stroke="none"/><circle cx="3.6" cy="3.6" r="1.5" stroke-width="1.1"/><path d="M5.6 5.6l1.3 1.3" stroke-width="1.1" stroke-dasharray="1 .9"/>',
+  colorRelief:
+    '<path d="M2 16.5h16l-2.65-4.3H4.65z" fill="currentColor" fill-opacity=".2" stroke="none"/><path d="M4.65 12.2h10.7l-2.64-4.3H7.29z" fill="currentColor" fill-opacity=".5" stroke="none"/><path d="M7.29 7.9h5.42L10 3.5z" fill="currentColor" fill-opacity=".85" stroke="none"/><path d="M2 16.5 10 3.5l8 13z"/><path d="M4.65 12.2h10.7M7.29 7.9h5.42" stroke-width=".9"/>',
+  curvature:
+    '<path d="M1.5 12.5c2.4-7.4 6.4-7.4 8.5-2.6s6.1 4.8 8.5-2.6"/><circle cx="6.2" cy="9.9" r="2.6" stroke-width="1" stroke-dasharray="1.3 1.1"/><circle cx="13.9" cy="11.1" r="2.3" stroke-width="1" stroke-dasharray="1.3 1.1"/><path d="M1.5 17.5h17" stroke-width="1"/>',
+  ruggedness:
+    '<path d="M1.5 14.5 3.8 8l2.1 4.2L8.4 4.5l2.2 7.3 2.1-4.4 2.3 6.1 1.6-3.4 1.9 2.4"/><path d="M1.5 17.5h17" stroke-width="1"/><path d="M1.5 14.5 3.8 8l2.1 4.2L8.4 4.5l2.2 7.3 2.1-4.4 2.3 6.1 1.6-3.4 1.9 2.4v3.4h-17z" fill="currentColor" fill-opacity=".16" stroke="none"/>',
+  insolation:
+    '<circle cx="5" cy="5" r="2.3"/><path d="M5 .9v1.2M5 7.9v1.2M.9 5h1.2M7.9 5h1.2M2.1 2.1l.8.8M7.1 7.1l.8.8M7.9 2.1l-.8.8M2.9 7.1l-.8.8" stroke-width="1.1"/><path d="M3 17.5h15.5V9z" fill="currentColor" fill-opacity=".22"/><path d="M8.6 8.6l3.6 3.6M12.2 6.6l3.1 3.1" stroke-width="1.1" stroke-dasharray="1.5 1.1"/>',
   server: '<rect x="3" y="3" width="14" height="5.5" rx="1"/><rect x="3" y="11.5" width="14" height="5.5" rx="1"/><path d="M6 5.75h.01M6 14.25h.01" stroke-width="2"/><path d="M9.5 5.75h4.5M9.5 14.25h4.5"/>',
   cloud: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 9v4.6M7.9 11.6 10 13.7l2.1-2.1"/>',
   cloudUpload: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 13.8V9.2M7.9 11.1 10 9l2.1 2.1"/>',

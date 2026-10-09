@@ -13,6 +13,7 @@ pub mod queries;
 pub mod select_by_expression;
 pub mod select_by_location;
 pub mod summary_statistics;
+pub mod surface;
 pub mod vertex_numbering;
 
 use crate::model::Model;
@@ -51,6 +52,15 @@ pub fn tools() -> Vec<Tool> {
         pointcloud::tile::tool(),
         pointcloud::rasterize::tool(),
         pointcloud::boundary::tool(),
+        // Yüzey analizi (docs/adr/0231): both platforms.
+        surface::slope(),
+        surface::aspect(),
+        surface::hillshade(),
+        surface::color_relief(),
+        surface::curvature(),
+        surface::ruggedness(),
+        surface::insolation(),
+        surface::contours(),
     ]
 }
 

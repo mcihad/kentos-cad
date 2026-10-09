@@ -19,10 +19,10 @@
   },
   "summary": {
     "commands": {
-      "total": 445,
-      "implemented": 420,
+      "total": 453,
+      "implemented": 430,
       "partial": 0,
-      "pending": 25
+      "pending": 23
     },
     "tools": {
       "total": 121,
@@ -31,8 +31,8 @@
       "pending": 2
     },
     "processing": {
-      "total": 20,
-      "implemented": 20,
+      "total": 28,
+      "implemented": 28,
       "partial": 0,
       "pending": 0
     },
@@ -73,6 +73,8 @@
       "pending": 0
     },
     "commandsWithoutPlace": [
+      "analysis.slope",
+      "map.contours",
       "sheet.align.bottom",
       "sheet.align.center",
       "sheet.align.left",
@@ -100,14 +102,14 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 180,
-    "commandsOnDesktop": 373,
+    "commandsWithoutTests": 188,
+    "commandsOnDesktop": 383,
     "desktop": {
       "commands": {
-        "total": 445,
-        "implemented": 373,
+        "total": 453,
+        "implemented": 383,
         "partial": 0,
-        "pending": 12,
+        "pending": 10,
         "none": 58,
         "n/a": 2
       },
@@ -120,8 +122,8 @@
         "n/a": 0
       },
       "processing": {
-        "total": 20,
-        "implemented": 20,
+        "total": 28,
+        "implemented": 28,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -187,29 +189,24 @@
     {
       "id": "analysis.slope",
       "title": "Eğim analizi…",
+      "short": "Eğim",
       "category": "Analiz",
       "icon": "slope",
+      "description": "Yükseklik rasterinin eğimini derece ya da yüzde olarak yazar (işlem aracı).",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
-      "menus": [
-        "Analiz › Arazi analizi"
-      ],
-      "ribbon": [
-        "CBS › Analiz › Arazi analizi"
-      ],
+      "menus": [],
+      "ribbon": [],
       "quickAccess": false,
-      "hiddenIn": [
-        "cad"
-      ],
+      "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "pending"
+        "web": "implemented",
+        "desktop": "implemented"
       },
-      "tests": [],
-      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
+      "tests": []
     },
     {
       "id": "analysis.volume",
@@ -4872,27 +4869,24 @@
     {
       "id": "map.contours",
       "title": "Eşyükselti üret…",
+      "short": "Eşyükselti",
       "category": "Harita",
       "icon": "contours",
+      "description": "Yükseklik rasterinden kotlu eş yükselti eğrileri çıkarır (işlem aracı).",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
-      "menus": [
-        "Harita › Arazi"
-      ],
-      "ribbon": [
-        "CBS › Analiz › Arazi"
-      ],
+      "menus": [],
+      "ribbon": [],
       "quickAccess": false,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "pending"
+        "web": "implemented",
+        "desktop": "implemented"
       },
-      "tests": [],
-      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
+      "tests": []
     },
     {
       "id": "map.edgeLengths",
@@ -6067,6 +6061,231 @@
       "tests": []
     },
     {
+      "id": "processing.run.surface.aspect",
+      "title": "Bakı…",
+      "category": "İşlemler",
+      "icon": "aspect",
+      "description": "Her hücrenin baktığı yönü, en dik inişin kuzeyden saat yönündeki açısı olarak yazar; düzlük −1.",
+      "aliases": [
+        "BAKI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.colorRelief",
+      "title": "Renkli kabartma…",
+      "category": "İşlemler",
+      "icon": "colorRelief",
+      "description": "Yükseklikleri bir rampayla ya da renk tablosuyla renklendirip RGBA raster yazar.",
+      "aliases": [
+        "RENKLIKABARTMA",
+        "HIPSOMETRI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.contours",
+      "title": "Eş yükselti eğrileri…",
+      "category": "İşlemler",
+      "icon": "contours",
+      "description": "Yükseklik rasterinden kotlu eş yükselti eğrileri (ana ve ara) çıkarır.",
+      "aliases": [
+        "ESYUKSELTI",
+        "KONTUR",
+        "EGRIURET"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.curvature",
+      "title": "Eğrilik…",
+      "category": "İşlemler",
+      "icon": "curvature",
+      "description": "Yüzeyin toplam, profil ya da plan eğriliğini (ArcGIS'teki gibi 1/100 m⁻¹) yazar.",
+      "aliases": [
+        "EGRILIK",
+        "EGRISELLIK"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.hillshade",
+      "title": "Gölgeli kabartma…",
+      "category": "İşlemler",
+      "icon": "hillshade",
+      "description": "Arazinin verilen yönden ışıklandırılmış gri görüntüsünü yazar (1–255, boş hücre 0).",
+      "aliases": [
+        "GOLGEURET",
+        "KABARTMAURET"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.insolation",
+      "title": "Güneşlenme…",
+      "category": "İşlemler",
+      "icon": "insolation",
+      "description": "Dönemde eğimli yüzeye gelen doğrudan güneş enerjisini (açık gök, kWh/m²) yazar.",
+      "aliases": [
+        "GUNESLENME",
+        "GUNESRADYASYONU"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.ruggedness",
+      "title": "Pürüzlülük…",
+      "category": "İşlemler",
+      "icon": "ruggedness",
+      "description": "Arazinin pürüzlülüğünü TRI (Riley ya da Wilson), TPI ya da engebe olarak yazar.",
+      "aliases": [
+        "PURUZLULUK",
+        "TRI",
+        "TPI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.slope",
+      "title": "Eğim…",
+      "category": "İşlemler",
+      "icon": "slope",
+      "description": "Yükseklik rasterinin her hücresinin eğimini derece ya da yüzde olarak yazar.",
+      "aliases": [
+        "EGIMANALIZI",
+        "EGIMHARITASI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "processing.toolbox",
       "title": "İşlem araç kutusu",
       "category": "İşlemler",
@@ -6116,7 +6335,8 @@
       "menus": [],
       "ribbon": [
         "CAD › Ekle › Raster",
-        "CBS › Veri › Raster"
+        "CBS › Veri › Raster",
+        "CBS › Raster › Raster"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6147,7 +6367,8 @@
       "menus": [],
       "ribbon": [
         "CAD › Ekle › Raster",
-        "CBS › Veri › Raster"
+        "CBS › Veri › Raster",
+        "CBS › Raster › Raster"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6179,7 +6400,8 @@
       "menus": [],
       "ribbon": [
         "CAD › Ekle › Raster",
-        "CBS › Veri › Raster"
+        "CBS › Veri › Raster",
+        "CBS › Raster › Raster"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -18747,6 +18969,663 @@
       "tests": [
         "apps/web/scripts/fixtures/record-processing-dialog.test.ts"
       ]
+    },
+    {
+      "id": "surface.aspect",
+      "label": "Bakı",
+      "category": "Yüzey analizi",
+      "description": "Her hücrenin baktığı yönü, en dik inişin kuzeyden saat yönündeki açısı olarak yazar; düzlük −1.",
+      "aliases": [
+        "BAKI"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "enum",
+          "label": "Yöntem",
+          "optional": false
+        },
+        {
+          "name": "zFactor",
+          "type": "number",
+          "label": "Z çarpanı",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.aspect",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.colorRelief",
+      "label": "Renkli kabartma",
+      "category": "Yüzey analizi",
+      "description": "Yükseklikleri bir rampayla ya da renk tablosuyla renklendirip RGBA raster yazar.",
+      "aliases": [
+        "RENKLIKABARTMA",
+        "HIPSOMETRI"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "colors",
+          "type": "enum",
+          "label": "Renkler",
+          "optional": false
+        },
+        {
+          "name": "ramp",
+          "type": "enum",
+          "label": "Rampa",
+          "optional": false
+        },
+        {
+          "name": "invert",
+          "type": "boolean",
+          "label": "Ters",
+          "optional": false
+        },
+        {
+          "name": "range",
+          "type": "enum",
+          "label": "Değer aralığı",
+          "optional": false
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "label": "En küçük",
+          "optional": false
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "label": "En büyük",
+          "optional": false
+        },
+        {
+          "name": "table",
+          "type": "string",
+          "label": "Renk tablosu",
+          "optional": false
+        },
+        {
+          "name": "interp",
+          "type": "enum",
+          "label": "Ara renkler",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.colorRelief",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.contours",
+      "label": "Eş yükselti eğrileri",
+      "category": "Yüzey analizi",
+      "description": "Yükseklik rasterinden kotlu eş yükselti eğrileri (ana ve ara) çıkarır.",
+      "aliases": [
+        "ESYUKSELTI",
+        "KONTUR",
+        "EGRIURET"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "interval",
+          "type": "number",
+          "label": "Aralık",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "base",
+          "type": "number",
+          "label": "Taban",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "indexEvery",
+          "type": "number",
+          "label": "Ana eğri her",
+          "optional": false
+        },
+        {
+          "name": "simplify",
+          "type": "number",
+          "label": "Sadeleştir",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "lines",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.surface.contours",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.curvature",
+      "label": "Eğrilik",
+      "category": "Yüzey analizi",
+      "description": "Yüzeyin toplam, profil ya da plan eğriliğini (ArcGIS'teki gibi 1/100 m⁻¹) yazar.",
+      "aliases": [
+        "EGRILIK",
+        "EGRISELLIK"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "curvature",
+          "type": "enum",
+          "label": "Eğrilik",
+          "optional": false
+        },
+        {
+          "name": "zFactor",
+          "type": "number",
+          "label": "Z çarpanı",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.curvature",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.hillshade",
+      "label": "Gölgeli kabartma",
+      "category": "Yüzey analizi",
+      "description": "Arazinin verilen yönden ışıklandırılmış gri görüntüsünü yazar (1–255, boş hücre 0).",
+      "aliases": [
+        "GOLGEURET",
+        "KABARTMAURET"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "azimuth",
+          "type": "number",
+          "label": "Işığın açısı",
+          "optional": false,
+          "unit": "°"
+        },
+        {
+          "name": "altitude",
+          "type": "number",
+          "label": "Işığın yüksekliği",
+          "optional": false,
+          "unit": "°"
+        },
+        {
+          "name": "zFactor",
+          "type": "number",
+          "label": "Z çarpanı",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.hillshade",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.insolation",
+      "label": "Güneşlenme",
+      "category": "Yüzey analizi",
+      "description": "Dönemde eğimli yüzeye gelen doğrudan güneş enerjisini (açık gök, kWh/m²) yazar.",
+      "aliases": [
+        "GUNESLENME",
+        "GUNESRADYASYONU"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "period",
+          "type": "enum",
+          "label": "Dönem",
+          "optional": false
+        },
+        {
+          "name": "startDay",
+          "type": "number",
+          "label": "Başlangıç günü",
+          "optional": false
+        },
+        {
+          "name": "startMonth",
+          "type": "enum",
+          "label": "Başlangıç ayı",
+          "optional": false
+        },
+        {
+          "name": "endDay",
+          "type": "number",
+          "label": "Bitiş günü",
+          "optional": false
+        },
+        {
+          "name": "endMonth",
+          "type": "enum",
+          "label": "Bitiş ayı",
+          "optional": false
+        },
+        {
+          "name": "dayStep",
+          "type": "number",
+          "label": "Gün aralığı",
+          "optional": false
+        },
+        {
+          "name": "hourStep",
+          "type": "enum",
+          "label": "Saat aralığı",
+          "optional": false
+        },
+        {
+          "name": "transmissivity",
+          "type": "number",
+          "label": "Geçirgenlik",
+          "optional": false
+        },
+        {
+          "name": "latitude",
+          "type": "number",
+          "label": "Enlem",
+          "optional": true,
+          "unit": "°"
+        },
+        {
+          "name": "zFactor",
+          "type": "number",
+          "label": "Z çarpanı",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.insolation",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.ruggedness",
+      "label": "Pürüzlülük",
+      "category": "Yüzey analizi",
+      "description": "Arazinin pürüzlülüğünü TRI (Riley ya da Wilson), TPI ya da engebe olarak yazar.",
+      "aliases": [
+        "PURUZLULUK",
+        "TRI",
+        "TPI"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "enum",
+          "label": "Ölçü",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.ruggedness",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.slope",
+      "label": "Eğim",
+      "category": "Yüzey analizi",
+      "description": "Yükseklik rasterinin her hücresinin eğimini derece ya da yüzde olarak yazar.",
+      "aliases": [
+        "EGIMANALIZI",
+        "EGIMHARITASI"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "enum",
+          "label": "Yöntem",
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": "enum",
+          "label": "Birim",
+          "optional": false
+        },
+        {
+          "name": "zFactor",
+          "type": "number",
+          "label": "Z çarpanı",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.slope",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
     }
   ],
   "models": [
@@ -18804,8 +19683,7 @@
           "map/field"
         ],
         "commands": [
-          "analysis.volume",
-          "analysis.slope"
+          "analysis.volume"
         ]
       },
       "status": "implemented",
@@ -31116,7 +31994,6 @@
             "items": [
               "tool.stakeout",
               "tool.spot",
-              "map.contours",
               "map.profile"
             ]
           },
@@ -31291,8 +32168,7 @@
           {
             "label": "Arazi analizi",
             "items": [
-              "analysis.volume",
-              "analysis.slope"
+              "analysis.volume"
             ]
           },
           {
@@ -31338,7 +32214,15 @@
               "processing.run.geometry.validity",
               "processing.run.geometry.repair",
               "processing.run.geometry.simplify",
-              "processing.run.geometry.reproject"
+              "processing.run.geometry.reproject",
+              "processing.run.surface.slope",
+              "processing.run.surface.aspect",
+              "processing.run.surface.hillshade",
+              "processing.run.surface.colorRelief",
+              "processing.run.surface.curvature",
+              "processing.run.surface.ruggedness",
+              "processing.run.surface.insolation",
+              "processing.run.surface.contours"
             ]
           }
         ]
@@ -33348,10 +34232,6 @@
                 "size": "large"
               },
               {
-                "command": "map.contours",
-                "size": "small"
-              },
-              {
                 "command": "map.profile",
                 "size": "small"
               }
@@ -33365,10 +34245,6 @@
             "items": [
               {
                 "command": "analysis.volume",
-                "size": "large"
-              },
-              {
-                "command": "analysis.slope",
                 "size": "large"
               }
             ],
@@ -33424,6 +34300,72 @@
                     ]
                   }
                 ]
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          }
+        ]
+      },
+      {
+        "id": "raster",
+        "label": "Raster",
+        "panels": [
+          {
+            "label": "Raster",
+            "icon": "rasterAdd",
+            "items": [
+              {
+                "command": "raster.add",
+                "size": "small"
+              },
+              {
+                "command": "raster.style",
+                "size": "small"
+              },
+              {
+                "command": "raster.georef",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Yüzey analizi",
+            "icon": "aspect",
+            "items": [
+              {
+                "command": "processing.run.surface.aspect",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.slope",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.curvature",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.contours",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.hillshade",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.insolation",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.ruggedness",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.colorRelief",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -38443,10 +39385,6 @@
                   "size": "large"
                 },
                 {
-                  "command": "map.contours",
-                  "size": "small"
-                },
-                {
                   "command": "map.profile",
                   "size": "small"
                 }
@@ -38460,10 +39398,6 @@
               "items": [
                 {
                   "command": "analysis.volume",
-                  "size": "large"
-                },
-                {
-                  "command": "analysis.slope",
                   "size": "large"
                 }
               ],
@@ -38519,6 +39453,72 @@
                       ]
                     }
                   ]
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "raster",
+          "label": "Raster",
+          "panels": [
+            {
+              "label": "Raster",
+              "icon": "rasterAdd",
+              "items": [
+                {
+                  "command": "raster.add",
+                  "size": "small"
+                },
+                {
+                  "command": "raster.style",
+                  "size": "small"
+                },
+                {
+                  "command": "raster.georef",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Yüzey analizi",
+              "icon": "aspect",
+              "items": [
+                {
+                  "command": "processing.run.surface.aspect",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.slope",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.curvature",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.contours",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.hillshade",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.insolation",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.ruggedness",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.colorRelief",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -39630,6 +40630,12 @@
     "crsSecond": "<circle cx=\"8.5\" cy=\"11.5\" r=\"5.5\"/><path d=\"M3 11.5h11M8.5 6c-2 1.6-2 9.4 0 11M8.5 6c2 1.6 2 9.4 0 11\"/><path d=\"M13.8 4.5a1.9 1.9 0 0 1 3.7.4c0 1.2-1.2 1.9-3.7 3.4h3.9\"/>",
     "volume": "<path d=\"m10 2.8 6.8 3.7v7L10 17.2l-6.8-3.7v-7z\"/><path d=\"m3.2 6.5 6.8 3.7 6.8-3.7M10 10.2v7\"/><path d=\"m10 10.2 6.8-3.7v7L10 17.2z\" fill=\"currentColor\" fill-opacity=\".18\" stroke=\"none\"/>",
     "slope": "<path d=\"M2.5 16.5h15L17.5 5.5z\" fill=\"currentColor\" fill-opacity=\".14\"/><path d=\"M2.5 16.5h15V5.5z\"/><path d=\"M8 16.5a5.6 5.6 0 0 0-.9-3.1\"/>",
+    "aspect": "<circle cx=\"10\" cy=\"10.5\" r=\"7\"/><path d=\"m10 1.6 1.5 3h-3z\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M17 10.5h1.6M1.4 10.5H3M10 17.5v1.6\" stroke-width=\"1.1\"/><path d=\"M10 10.5l3.4 3.4\" stroke-width=\"1.5\"/><path d=\"m15.5 16-4.6-1.1 3.5-3.5z\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10\" cy=\"10.5\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>",
+    "hillshade": "<path d=\"M1.5 17 9.5 5.5 18.5 17z\"/><path d=\"M9.5 5.5 18.5 17h-6.8l-1.4-5.2z\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><circle cx=\"3.6\" cy=\"3.6\" r=\"1.5\" stroke-width=\"1.1\"/><path d=\"M5.6 5.6l1.3 1.3\" stroke-width=\"1.1\" stroke-dasharray=\"1 .9\"/>",
+    "colorRelief": "<path d=\"M2 16.5h16l-2.65-4.3H4.65z\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><path d=\"M4.65 12.2h10.7l-2.64-4.3H7.29z\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><path d=\"M7.29 7.9h5.42L10 3.5z\" fill=\"currentColor\" fill-opacity=\".85\" stroke=\"none\"/><path d=\"M2 16.5 10 3.5l8 13z\"/><path d=\"M4.65 12.2h10.7M7.29 7.9h5.42\" stroke-width=\".9\"/>",
+    "curvature": "<path d=\"M1.5 12.5c2.4-7.4 6.4-7.4 8.5-2.6s6.1 4.8 8.5-2.6\"/><circle cx=\"6.2\" cy=\"9.9\" r=\"2.6\" stroke-width=\"1\" stroke-dasharray=\"1.3 1.1\"/><circle cx=\"13.9\" cy=\"11.1\" r=\"2.3\" stroke-width=\"1\" stroke-dasharray=\"1.3 1.1\"/><path d=\"M1.5 17.5h17\" stroke-width=\"1\"/>",
+    "ruggedness": "<path d=\"M1.5 14.5 3.8 8l2.1 4.2L8.4 4.5l2.2 7.3 2.1-4.4 2.3 6.1 1.6-3.4 1.9 2.4\"/><path d=\"M1.5 17.5h17\" stroke-width=\"1\"/><path d=\"M1.5 14.5 3.8 8l2.1 4.2L8.4 4.5l2.2 7.3 2.1-4.4 2.3 6.1 1.6-3.4 1.9 2.4v3.4h-17z\" fill=\"currentColor\" fill-opacity=\".16\" stroke=\"none\"/>",
+    "insolation": "<circle cx=\"5\" cy=\"5\" r=\"2.3\"/><path d=\"M5 .9v1.2M5 7.9v1.2M.9 5h1.2M7.9 5h1.2M2.1 2.1l.8.8M7.1 7.1l.8.8M7.9 2.1l-.8.8M2.9 7.1l-.8.8\" stroke-width=\"1.1\"/><path d=\"M3 17.5h15.5V9z\" fill=\"currentColor\" fill-opacity=\".22\"/><path d=\"M8.6 8.6l3.6 3.6M12.2 6.6l3.1 3.1\" stroke-width=\"1.1\" stroke-dasharray=\"1.5 1.1\"/>",
     "server": "<rect x=\"3\" y=\"3\" width=\"14\" height=\"5.5\" rx=\"1\"/><rect x=\"3\" y=\"11.5\" width=\"14\" height=\"5.5\" rx=\"1\"/><path d=\"M6 5.75h.01M6 14.25h.01\" stroke-width=\"2\"/><path d=\"M9.5 5.75h4.5M9.5 14.25h4.5\"/>",
     "cloud": "<path d=\"M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z\"/><path d=\"M10 9v4.6M7.9 11.6 10 13.7l2.1-2.1\"/>",
     "cloudUpload": "<path d=\"M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z\"/><path d=\"M10 13.8V9.2M7.9 11.1 10 9l2.1 2.1\"/>",

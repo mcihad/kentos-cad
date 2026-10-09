@@ -166,6 +166,8 @@ mod style;
 #[cfg(test)]
 mod style_scenes;
 #[cfg(test)]
+mod surface_scenes;
+#[cfg(test)]
 mod table_scenes;
 mod tables;
 mod template_editor;

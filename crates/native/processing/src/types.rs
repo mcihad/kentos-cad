@@ -191,9 +191,13 @@ pub enum ParamKind {
     Choice {
         options: Vec<EnumOption>,
     },
-    /// Where the tool writes: an existing layer, or a new one made when the tool writes to it.
+    /// Where the tool writes: an existing layer, or a new one made when the
+    /// tool writes to it. `above`: a features parameter; a new layer goes
+    /// right above the layer of its first object (a raster result over its
+    /// source, docs/adr/0231 §2), else last, drawn under the rest.
     Layer {
         new_layer_style: NewLayerStyle,
+        above: Option<String>,
     },
     Point,
     /// An expression over each object (`of`: the features parameter it reads).

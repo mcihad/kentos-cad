@@ -114,9 +114,19 @@ pub struct Job {
     started: (u64, Instant),
     inputs: BTreeMap<String, (Vec<Slot>, String)>,
     layers: BTreeMap<String, TargetLayer>,
-    new_layers: BTreeMap<String, (String, NewLayerStyle)>,
+    /// Layers the run writes to that do not exist yet: their names, looks and
+    /// the layer each goes right above (none: last).
+    new_layers: BTreeMap<String, NewLayerPlan>,
     selection: Vec<Slot>,
     run: RunFn,
+}
+
+/// A layer the run creates on apply: its name, its look and the layer it goes right above.
+#[derive(Clone, Debug)]
+struct NewLayerPlan {
+    name: String,
+    style: NewLayerStyle,
+    above: Option<String>,
 }
 
 impl Job {
@@ -455,7 +465,7 @@ impl Runner {
         // target (new layers are made only on apply).
         let mut inputs: BTreeMap<String, (Vec<Slot>, String)> = BTreeMap::new();
         let mut layers: BTreeMap<String, TargetLayer> = BTreeMap::new();
-        let mut new_layers: BTreeMap<String, (String, NewLayerStyle)> = BTreeMap::new();
+        let mut new_layers: BTreeMap<String, NewLayerPlan> = BTreeMap::new();
         // What resolving the inputs left out, said once the run starts.
         let mut notes: Vec<String> = Vec::new();
         {
@@ -518,14 +528,24 @@ impl Runner {
                             ),
                         );
                     }
-                    ParamKind::Layer { new_layer_style } => {
+                    ParamKind::Layer {
+                        new_layer_style,
+                        above,
+                    } => {
                         let Some(lv) = LayerValue::read(v) else {
                             continue;
                         };
                         let t = resolve_layer(doc, &lv);
                         if t.is_new {
-                            new_layers
-                                .insert(t.id.clone(), (t.name.clone(), new_layer_style.clone()));
+                            new_layers.insert(
+                                t.id.clone(),
+                                NewLayerPlan {
+                                    name: t.name.clone(),
+                                    style: new_layer_style.clone(),
+                                    // The features parameter's name for now; its first object's layer below.
+                                    above: above.clone(),
+                                },
+                            );
                         }
                         layers.insert(p.name.clone(), t);
                     }
@@ -563,6 +583,13 @@ impl Runner {
                 record,
             });
         };
+        // A new layer named to go above a features input: the layer of that input's first object.
+        for plan in new_layers.values_mut() {
+            plan.above = plan.above.take().and_then(|param| {
+                let first = *inputs.get(&param)?.0.first()?;
+                Some(host.doc().get(first)?.base().layer_id.clone())
+            });
+        }
         self.canceled = false;
         for note in notes {
             log.push(LogLine::warn(note));
@@ -808,7 +835,7 @@ fn apply(
     doc: &mut Document,
     tool: &Tool,
     ch: ChangeSet,
-    new_layers: &BTreeMap<String, (String, NewLayerStyle)>,
+    new_layers: &BTreeMap<String, NewLayerPlan>,
     log: &mut Vec<LogLine>,
 ) -> Result<Vec<Slot>, String> {
     let mut skipped = 0usize;
@@ -823,16 +850,26 @@ fn apply(
                 continue;
             }
             asked = Some(id.as_str());
-            let Some((name, style)) = new_layers.get(id) else {
+            let Some(plan) = new_layers.get(id) else {
                 continue;
             };
             if doc.layers().get(id).is_some() {
                 continue;
             }
-            let mut layer = NewLayer::layer(name.clone());
+            let mut layer = NewLayer::layer(plan.name.clone());
             layer.id = Some(id.clone());
-            layer.style = style.over(default_style());
-            doc.add_layer(layer, None, false).map_err(|r| r.0)?;
+            layer.style = plan.style.over(default_style());
+            // Right above the layer its plan names (its group, its place), else last.
+            match plan
+                .above
+                .as_deref()
+                .and_then(|over| doc.layers().place_of(over))
+            {
+                Some((group, index)) => doc
+                    .add_layer_at(layer, group.as_deref(), Some(index), None, false)
+                    .map_err(|r| r.0)?,
+                None => doc.add_layer(layer, None, false).map_err(|r| r.0)?,
+            };
         }
         let locked = |doc: &Document, layer: &str| doc.layers().is_locked(layer);
         let mut gone = Vec::new();

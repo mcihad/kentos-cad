@@ -550,6 +550,18 @@ pub const PORTED: &[&str] = &[
     "service.add",
     "service.feed",
     "service.info",
+    // docs/adr/0231: Yüzey analizi, İşlemler's tools on both platforms; Eşyükselti üret and Eğim
+    // analizi open two of them.
+    "processing.run.surface.slope",
+    "processing.run.surface.aspect",
+    "processing.run.surface.hillshade",
+    "processing.run.surface.colorRelief",
+    "processing.run.surface.curvature",
+    "processing.run.surface.ruggedness",
+    "processing.run.surface.insolation",
+    "processing.run.surface.contours",
+    "map.contours",
+    "analysis.slope",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

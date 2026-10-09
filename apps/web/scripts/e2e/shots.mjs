@@ -4677,7 +4677,7 @@ SCENES.convert = [
 // tabs and a CBS project's map work's (the desktop's are ribbon_tests::screens, serit-cad-* and serit-cbs-*).
 const TYPE_TABS = {
   cad: ['file', 'home', 'insert', 'annotate', 'modify', 'view', 'manage', 'output'],
-  gis: ['file', 'home', 'map', 'data', 'edit', 'analysis', 'survey', 'view', 'output'],
+  gis: ['file', 'home', 'map', 'data', 'edit', 'analysis', 'raster', 'survey', 'view', 'output'],
 };
 SCENES.types = Object.entries(TYPE_TABS).flatMap(([type, tabs]) =>
   tabs.map((tab) => ({
@@ -5743,6 +5743,79 @@ function rasterScenes() {
       },
       close,
     },
+  ];
+}
+
+// Yüzey analizi (docs/adr/0231 §10) over the shared valley (fixtures/interaction/v1/rasters.kcad, its elevation model
+// 480 × 324 cells of 1.6 m): a CBS project's Analiz tab with its Yüzey analizi panel, Eğim's, Renkli kabartma's and
+// Güneşlenme's windows, and each tool's result drawn over the valley, the photograph's layer hidden. Each job runs in a
+// worker of its own (io/rasterAnalysisWorker.ts); a result under 32 MB is embedded. The desktop's are `tools_screens`'
+// yuzey-* (apps/desktop/src/surface_scenes.rs).
+SCENES.surface = surfaceScenes();
+
+function surfaceScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const file = (n) => `new File([Uint8Array.from(atob(${JSON.stringify(RASTER_FILES[n])}), (c) => c.charCodeAt(0))], ${JSON.stringify(n)})`;
+  /** Draws while the raster workers make the view's tiles. */
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  /** The valley open, its rasters' files the session's, the view on its elevation model, the Raster tab on. */
+  const opened = async (ui) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const files = { 'dem.tif': ${file('dem.tif')}, 'orto.tif': ${file('orto.tif')}, 'tarama.png': ${file('tarama.png')} };
+      for (const [n, f] of Object.entries(files)) rasterService().setFile('rasters/' + n, f);
+      if (!(await k.files.load(${JSON.stringify(RASTERS)}, null))) throw new Error('rasters.kcad did not load');
+      k.selection.clear();
+      for (const id of ['orto', 'tarama']) k.doc.layers.setVisible(id, false);
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${X0}, minY: ${Y0 - 518.4}, maxX: ${X0 + 768}, maxY: ${Y0} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** A tool's window on the elevation model, with `values`. */
+  const windowOf = (tool, values = {}) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, { input: QUERY_LAYER('dem'), ...values }));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  /** A tool run on the elevation model in its worker, its window closed, its result drawn. */
+  const drawn = (tool, values = {}) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, { input: QUERY_LAYER('dem'), ...values }));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    await ui.escapeAll(2);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  return [
+    { id: 'yuzey-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'yuzey-egim', open: windowOf('surface.slope'), close },
+    { id: 'yuzey-egim-cizim', open: drawn('surface.slope'), close },
+    { id: 'yuzey-baki-cizim', open: drawn('surface.aspect'), close },
+    { id: 'yuzey-golge-cizim', open: drawn('surface.hillshade'), close },
+    { id: 'yuzey-renkli', open: windowOf('surface.colorRelief', { colors: 'table', table: '1010 #2E7D32; 1040 #9CCC65; 1070 #FFF59D; 1100 #A1887F; 1130 #FAFAFA' }), close },
+    { id: 'yuzey-renkli-cizim', open: drawn('surface.colorRelief'), close },
+    { id: 'yuzey-egrilik-cizim', open: drawn('surface.curvature', { curvature: 'profile' }), close },
+    { id: 'yuzey-puruzluluk-cizim', open: drawn('surface.ruggedness'), close },
+    { id: 'yuzey-gunes', open: windowOf('surface.insolation', { period: 'range' }), close },
+    { id: 'yuzey-gunes-cizim', open: drawn('surface.insolation'), close },
+    { id: 'yuzey-esyukselti-cizim', open: drawn('surface.contours', { interval: 2 }), close },
   ];
 }
 

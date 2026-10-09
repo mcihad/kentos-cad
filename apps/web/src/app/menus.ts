@@ -218,7 +218,7 @@ export const MAIN_MENU: TopMenu[] = [
       'map.parcelReport',
       'map.edgeLengths',
       sec('Arazi'),
-      'map.contours',
+      // Eşyükselti üret (map.contours) opens Eş yükselti eğrileri, which Analiz's Yüzey analizi panel holds (docs/adr/0231 §10).
       'map.profile',
       sec('Pafta'),
       'map.sheet',
@@ -237,7 +237,8 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'analysis',
     label: 'Analiz',
-    items: ['@tools:map/measure', sec('Arazi analizi'), 'analysis.volume', 'analysis.slope', sec('Karşılaştırma'), 'data.compare'],
+    // Eğim analizi (analysis.slope) opens Eğim, which the Yüzey analizi panel holds (docs/adr/0231 §10).
+    items: ['@tools:map/measure', sec('Arazi analizi'), 'analysis.volume', sec('Karşılaştırma'), 'data.compare'],
   },
   {
     id: 'processing',

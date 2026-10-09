@@ -23,6 +23,7 @@ import { pendingInvitation } from './cloud/invitationLink';
 import { registerCalcCommands } from './calc';
 import { registerPointCloudCommands } from './pointCloudCommands';
 import { registerRasterCommands } from './rasterCommands';
+import { installRasterAnalysis } from './rasterAnalysis';
 import { registerServiceCommands } from './serviceCommands';
 import { browserSecrets } from './connectionSecrets';
 import { mountRasterJobs } from '../ui/raster/RasterJobs';
@@ -171,6 +172,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   registerFileExchangeCommands(ctx);
   registerCalcCommands(ctx);
   registerRasterCommands(ctx);
+  installRasterAnalysis(ctx);
   registerServiceCommands(ctx);
   registerPointCloudCommands(ctx);
   // The open cloud project as the rename and delete dialogs name it.

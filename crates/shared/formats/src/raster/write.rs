@@ -32,6 +32,12 @@ pub struct Geo {
     pub geographic: bool,
 }
 
+/// A tile's little-endian sample bytes as the file holds them: zlib-wrapped
+/// Deflate at `level` (1 fast … 9 small).
+pub fn code(bytes: &[u8], level: u8) -> Vec<u8> {
+    miniz_oxide::deflate::compress_to_vec_zlib(bytes, level)
+}
+
 /// The writer's state between the pieces it gives.
 #[derive(Debug)]
 pub struct Writer {
@@ -105,8 +111,25 @@ impl Writer {
         if samples.len() != want || samples.kind() != img.sample {
             return Err(RasterError::new("Karonun örnekleri görüntüye uymuyor."));
         }
+        let coded = code(&samples.to_bytes(true), self.level);
+        self.coded(image, tx, ty, coded)
+    }
+
+    /// The bytes to append for tile (`tx`, `ty`) of image `image` already
+    /// coded by [`code`] (a host codes a band's tiles on its threads, then
+    /// hands them over in order; docs/adr/0231 §11).
+    pub fn coded(
+        &mut self,
+        image: usize,
+        tx: u32,
+        ty: u32,
+        coded: Vec<u8>,
+    ) -> Result<Vec<u8>, RasterError> {
+        let img = self
+            .images
+            .get(image)
+            .ok_or_else(|| RasterError::new("Böyle bir görüntü yok."))?;
         let index = (ty * tiles_across(img.width) + tx) as usize;
-        let coded = miniz_oxide::deflate::compress_to_vec_zlib(&samples.to_bytes(true), self.level);
         let (Some(o), Some(c)) = (
             self.offsets[image].get_mut(index),
             self.counts[image].get_mut(index),

@@ -5,8 +5,10 @@
 // Netcad NCZ (apps/web/src/io/dxf/pkg, io/ncz/pkg), loaded only for such a file,
 // the SVG editor's geometry
 // (apps/web/src/style/svg/pkg), loaded with the editor, the sheet core
-// (apps/web/src/product/sheet/pkg), loaded when the sheet mode opens, and the map
-// services (apps/web/src/io/services/pkg), loaded when a drawing shows one (CLAUDE.md §20). `pnpm dev`,
+// (apps/web/src/product/sheet/pkg), loaded when the sheet mode opens, the map
+// services (apps/web/src/io/services/pkg), loaded when a drawing shows one, and the
+// raster analyses (apps/web/src/io/raster/pkg), loaded in their worker when a job
+// starts (CLAUDE.md §20). `pnpm dev`,
 // `test`, `build`, `e2e` and the perf scripts run this first. Each package
 // has its own digest (the crates it is built from, the toolchain pins and the
 // profile) and stamp, so an edit to the formats never rebuilds the core and
@@ -38,6 +40,8 @@ const PACKAGES = [
   // Map services (docs/adr/0208), loaded when a drawing shows a service or a services window opens: requests,
   // capabilities, tiles and their meshes, vector tiles into the style engine's batches, labels and features.
   { label: 'Harita servisleri', script: 'rust:wasm:services', out: 'apps/web/src/io/services/pkg', lib: 'kentos_services_wasm', sources: ['crates/shared/services', 'crates/wasm/services-wasm', 'crates/shared/formats', 'crates/shared/style-core', 'crates/shared/geometry-core', 'crates/shared/expression', 'crates/shared/contracts', 'fixtures/services/v1/presets.json', 'fixtures/crs/v1/registry.json', ...PINS] },
+  // Raster analyses (docs/adr/0231), loaded in their worker when a job starts: the raster core's jobs over the formats' reader.
+  { label: 'Raster çözümleme', script: 'rust:wasm:raster', out: 'apps/web/src/io/raster/pkg', lib: 'kentos_raster_wasm', sources: ['crates/shared/raster', 'crates/wasm/raster-wasm', 'crates/shared/formats', 'crates/shared/geometry-core', 'crates/shared/contracts', ...PINS] },
 ];
 
 function files(path) {

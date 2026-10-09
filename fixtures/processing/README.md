@@ -13,6 +13,7 @@
 | `v1/cases.json` | Durumlar |
 | `v1/queries.kcad`, `v1/queries.json`, `v1/malikler.csv` | Mekânsal ve öznitelik sorgusunun durumları (ADR 0200): Konuma göre seç, İçindekinden ve Çevreleyenden bilgi al, Özet istatistik, Anahtarla birleştir, katmanın alanlarının kuralıyla yazma. Çizim, durumlar ve CSV `scripts/fixtures/spatial_query_cases.py`'nin bağımsız başvurusundan yazılır (`--check` farkı arar): parseller (Parsel katmanının alanları: Ada metin, Parsel ve Ağaç sayısı tam sayı, Taban toplamı 2, Taban ortalaması 1 basamaklı ondalık), biri delikli; yapılar, ağaçlar, iki yol, tapu kayıtları, kilitli katmanda bir parsel |
 | `v1/geometry.kcad`, `v1/geometry.json` | Geometri işlemlerinin durumları (ADR 0201): Tampon, Kırp, Gruplayarak birleştir, Kesişim, Fark, Simetrik fark, Birleşim, Geçerliliği denetle, Onar, Sadeleştir, Koordinat sistemine dönüştür. Çizim ve durumlar `scripts/fixtures/geoprocess_cases.py`'nin bağımsız başvurusundan yazılır (`--check` farkı arar): parseller ve imar adaları, yollar, kotlu bir ağaç, hatalı geometriler (papyon, yinelenen köşe, taşan delik, kendini kesen yol), sadeleşecek sınırlar, ED50 / TM30 koordinatlı eski pafta; çizimin sistemi TUREF / TM30. Yeni nesneler ölçüleriyle beklenir (`addedShapes`) |
+| `v1/surface.kcad`, `v1/surface.json` | Yüzey analizinin durumları (ADR 0231): Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük, Güneşlenme, Eş yükselti eğrileri ve retler. Çizim ve durumlar `scripts/fixtures/surface_processing_cases.py`'den yazılır (`--check` farkı arar): yüzey analizinin örnek DEM'leri (`fixtures/terrain/v1`) bağlı raster olarak, biri eğik pikselli; sistem TUREF / TM30. Oynatıcılar aracı ev sahibinin dosyalarıyla çalıştırır (`rasters`), yazılanı bellekte toplar |
 | `v1/dialog.json` | İşlem penceresinin davranışı: formlar, oturumlar ve saf kuralların tabloları ([aşağıda](#pencere-kentosprocessing-dialog-sürüm-1)) |
 | `v1/designer.json` | Model tasarımcısı: modelin düzenlemeleri adım adım ve her adımdan sonraki denetim, tasarımcının bir modelden okudukları, sözleri ve diyagramın geometrisi ([aşağıda](#model-tasarımcısı-kentosmodeldesigner-sürüm-1)) |
 
@@ -25,6 +26,7 @@
 | `measureTolerance` | İsteğe bağlı (`geometry.json`): `addedShapes`'in alan (m²) ve uzunluk (m) payı |
 | `documents` | Çizim başına `defaults`: araçların çizimden aldığı varsayılanlar (`DefaultsContext`: uzunluk ve alan ondalığı, açı birimi, çizim ölçeği, çizim yazı tipi, etkin katman) ve `tools`: her aracın ve modelin o çizimdeki varsayılan değerleri, pencerenin açtığı gibi |
 | `files` | İsteğe bağlı: dosya parametresinin (ADR 0200 §7) değerinde yazılan ad → bu klasördeki dosya. Oynatıcı dosyayı pencerenin okuduğu gibi Tablo ekle'nin okuyucusuyla okur (ilk sayfa) ve değeri `{ name, rows }` yapar |
+| `rasters` | İsteğe bağlı (`surface.json`): bağlı rasterin dosya adı → bu klasöre göre dosya. Oynatıcının ev sahibi rasteri oradan okur (masaüstünde `Files::open_raster`, web'de `RasterRunHost`), çıktının yolu yalnız addır, yazılanı bellekte tutar |
 | `cases` | Durumlar |
 
 Bir durum:
@@ -56,6 +58,9 @@ Beklentiler:
 | `removed` | Silinen nesnelerin kimlikleri |
 | `selection` | Çalıştırmadan sonraki seçim |
 | `outputs` | Aracın çıktılarından yazılanlar: sayılar, kimlik listeleri ve tablolar (`{ columns, rows }`, metinler) tam |
+| `rasterOf` | Yazılan raster dosyaları (yüzey analizi, ADR 0231): ad → yüzey analizinin bağımsız başvurusunda (`fixtures/terrain/v1/cases.json`, tepe) bir durumun adı; dosyanın 0. katı o durumun değerleridir (32 bitte en çok bir birim son basamakta, baytta tam) ve başka dosya yazılmamıştır |
+| `contoursOf` | Eklenen nesneler eğri başvurusunun (`fixtures/contours/v1/cases.json`) bu sıradaki durumunun eğrileridir, sırasıyla: çoklu çizgi, köşeleri `tolerance` içinde, her köşenin kotu düzey, `Kot` durumun yazısı, `Tür` Ana ya da Ara, ana eğride `lineWeight` 0,35 (`added`'in yerine) |
+| `layerAbove` | Yeni katman → katman: yeni katman o katmanın hemen üstündedir (aynı grup, bir önceki yer) |
 
 ## Karşılaştırma kuralları
 

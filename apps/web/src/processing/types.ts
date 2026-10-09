@@ -146,6 +146,11 @@ export interface LayerParam<N extends string = string> extends ParamBase<N> {
   readonly default?: Default<LayerValue>;
   /** Style of a layer created for the output. */
   readonly newLayerStyle?: Partial<LayerStyle>;
+  /**
+   * A features parameter: a layer created for the output goes right above the layer of its first object (a raster
+   * result over its source, docs/adr/0231 §2); otherwise last, drawn under the rest.
+   */
+  readonly above?: string;
 }
 
 export interface PointParam<N extends string = string> extends ParamBase<N> {

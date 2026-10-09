@@ -14,6 +14,7 @@ import { joinByField } from './joinByField';
 import { selectByExpression } from './selectByExpression';
 import { selectByLocation } from './selectByLocation';
 import { summaryStatistics } from './summaryStatistics';
+import { SURFACE_TOOLS } from './surface/tools';
 import { vertexNumbering } from './vertexNumbering';
 
 /** Tools that ship with KentOS, registered at start-up (app/createApp). */
@@ -38,4 +39,6 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   geometryRepair,
   geometrySimplify,
   geometryReproject,
+  // Yüzey analizi (docs/adr/0231): the raster core's jobs in the page's analysis worker.
+  ...SURFACE_TOOLS,
 ];

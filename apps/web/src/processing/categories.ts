@@ -21,4 +21,6 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   { id: 'analysis', label: 'Analiz', icon: 'measure', description: 'Ölçüm, istatistik ve raporlar' },
   { id: 'conversion', label: 'Dönüştürme', icon: 'explode', description: 'Nesne türleri arasında dönüşüm' },
   { id: 'selection', label: 'Seçim', icon: 'select', description: 'Özniteliğe ve konuma göre seçim' },
+  // docs/adr/0231: the DEM's surface (the desktop's `pointcloud` category is its own, docs/adr/0207 §7).
+  { id: 'surface', label: 'Yüzey analizi', icon: 'hillshade', description: 'Eğim, bakı, kabartma, eğrilik, güneşlenme ve eş yükselti eğrileri' },
 ];

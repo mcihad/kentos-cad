@@ -23,6 +23,8 @@ kentos-pointcloud = { path = "../../shared/pointcloud" }
 kentos-formats = { path = "../../shared/formats" }
 # The project's coordinate systems (Koordinat sistemine dönüştür, docs/adr/0201 §8).
 kentos-project = { path = "../project" }
+# Yüzey analizi and the raster tools (docs/adr/0231–0236): the jobs are the raster core's.
+kentos-raster = { path = "../../shared/raster" }
 kentos-style-core = { path = "../../shared/style-core" }
 # Parameter values are JSON, as the web's dialog, history and models hold them;
 # a model's steps keep their values in the order written (serde's map visitor).

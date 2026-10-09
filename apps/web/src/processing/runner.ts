@@ -268,7 +268,7 @@ export class ProcessingRunner {
     };
     // Resolve what depends on the host: features to ids, layers to a target (new layers are made only on apply).
     const jobValues: Record<string, unknown> = { ...values };
-    const newLayers = new Map<string, { name: string; def: LayerParam }>();
+    const newLayers = new Map<string, { name: string; def: LayerParam; above?: string }>();
     /** What resolving the inputs left out, said once the run starts. */
     const notes: string[] = [];
     let size = 0;
@@ -298,6 +298,12 @@ export class ProcessingRunner {
         if (t.isNew) newLayers.set(t.id, { name: t.name, def: p });
         jobValues[p.name] = t;
       }
+    }
+    // A new layer named to go above a features input: the layer of that input's first object.
+    for (const plan of newLayers.values()) {
+      const ref = plan.def.above ? (jobValues[plan.def.above] as FeatureRef | undefined) : undefined;
+      const first = ref?.ids[0];
+      plan.above = first === undefined ? undefined : this.host.doc.get(first)?.layerId;
     }
     const executor = this.executorFor(tool, choice, size);
     if (!executor) {
@@ -384,7 +390,7 @@ export class ProcessingRunner {
   }
 
   /** Applies the ChangeSet in one undo step; locked layers are left alone and counted. */
-  private apply(tool: ProcessingTool, result: RunResult, newLayers: Map<string, { name: string; def: LayerParam }>, log?: (level: 'info' | 'warn', message: string) => void): number[] {
+  private apply(tool: ProcessingTool, result: RunResult, newLayers: Map<string, { name: string; def: LayerParam; above?: string }>, log?: (level: 'info' | 'warn', message: string) => void): number[] {
     const { doc } = this.host;
     const ch = result.changes;
     if (!ch) return [];
@@ -397,7 +403,11 @@ export class ProcessingRunner {
       for (const e of ch.add ?? []) {
         const pending = newLayers.get(e.layerId);
         if (!pending || doc.layers.get(e.layerId)) continue;
-        doc.addLayer({ id: e.layerId, name: pending.name, style: pending.def.newLayerStyle }, null);
+        // Right above the layer its plan names (its group, its place), else last.
+        const over = pending.above && doc.layers.get(pending.above) ? pending.above : null;
+        const group = over ? doc.layers.parentOf(over) : null;
+        const index = over ? (group ? group.children : doc.layers.tree).findIndex((n) => n.id === over) : -1;
+        doc.addLayer({ id: e.layerId, name: pending.name, style: pending.def.newLayerStyle }, group?.id ?? null, index >= 0 ? { index } : {});
       }
       const gone: number[] = [];
       for (const id of ch.remove ?? []) {

@@ -2645,6 +2645,1272 @@
     ]
    }
   },
+  "surface.slope": {
+   "title": "Eğim",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Çözümlenecek yükseklik rasteri (DEM): tek bir raster nesnesi.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "method",
+     "label": "Yöntem",
+     "description": "Horn: sekiz komşu, gdaldem'in ve ArcGIS'in varsayılanı; Zevenbergen-Thorne: dört komşu.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "horn",
+        "label": "Horn"
+       },
+       {
+        "value": "zevenbergenThorne",
+        "label": "Zevenbergen-Thorne"
+       }
+      ]
+     }
+    },
+    {
+     "name": "unit",
+     "label": "Birim",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "degrees",
+        "label": "Derece"
+       },
+       {
+        "value": "percent",
+        "label": "Yüzde"
+       }
+      ]
+     }
+    },
+    {
+     "name": "zFactor",
+     "label": "Z çarpanı",
+     "description": "Yükseklikler bununla çarpılır: yüksekliklerin birimi metre değilse ya da düşey abartı için.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa kaynağın adının sonuna “-egim” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-egim.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "hillshade",
+     "text": "Yüzey analizi"
+    },
+    "icon": "slope",
+    "about": "Yükseklik rasterinin her hücresinin eğimini derece ya da yüzde olarak yazar.",
+    "help": [
+     "Eğim, hücrenin 3 × 3 komşuluğundan bulunan yüzey eğiminin büyüklüğüdür: derece atan|g|, yüzde 100·|g|.",
+     "Raster tek bir yükseklik rasteridir (DEM); bandın nodata'sı ve NaN boş sayılır. Pencerenin dışında kalan komşu kenar hücresinin, boş komşu merkezin değerini alır; boş hücrenin sonucu boştur. Coğrafi (derece) rasterde türevler satırın enleminde metreye çevrilir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa kaynağın adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster yeni katmana eklenir; görünüşü Raster stili ile değişir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "EGIMANALIZI",
+     "EGIMHARITASI"
+    ]
+   }
+  },
+  "surface.aspect": {
+   "title": "Bakı",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Çözümlenecek yükseklik rasteri (DEM): tek bir raster nesnesi.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "method",
+     "label": "Yöntem",
+     "description": "Horn: sekiz komşu, gdaldem'in ve ArcGIS'in varsayılanı; Zevenbergen-Thorne: dört komşu.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "horn",
+        "label": "Horn"
+       },
+       {
+        "value": "zevenbergenThorne",
+        "label": "Zevenbergen-Thorne"
+       }
+      ]
+     }
+    },
+    {
+     "name": "zFactor",
+     "label": "Z çarpanı",
+     "description": "Yükseklikler bununla çarpılır: yüksekliklerin birimi metre değilse ya da düşey abartı için.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa kaynağın adının sonuna “-baki” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-baki.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "hillshade",
+     "text": "Yüzey analizi"
+    },
+    "icon": "aspect",
+    "about": "Her hücrenin baktığı yönü, en dik inişin kuzeyden saat yönündeki açısı olarak yazar; düzlük −1.",
+    "help": [
+     "Bakı 0–360 derecedir: 0 kuzey, 90 doğu, 180 güney, 270 batı. Eğimi sıfır olan hücre −1 alır.",
+     "Raster tek bir yükseklik rasteridir (DEM); bandın nodata'sı ve NaN boş sayılır. Pencerenin dışında kalan komşu kenar hücresinin, boş komşu merkezin değerini alır; boş hücrenin sonucu boştur. Coğrafi (derece) rasterde türevler satırın enleminde metreye çevrilir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa kaynağın adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster yeni katmana eklenir; görünüşü Raster stili ile değişir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "BAKI"
+    ]
+   }
+  },
+  "surface.hillshade": {
+   "title": "Gölgeli kabartma",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Çözümlenecek yükseklik rasteri (DEM): tek bir raster nesnesi.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "azimuth",
+     "label": "Işığın açısı",
+     "description": "Işığın geldiği yön, kuzeyden saat yönünde (315: kuzeybatı).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "°"
+     }
+    },
+    {
+     "name": "altitude",
+     "label": "Işığın yüksekliği",
+     "description": "Işığın ufuktan yüksekliği.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "°"
+     }
+    },
+    {
+     "name": "zFactor",
+     "label": "Z çarpanı",
+     "description": "Yükseklikler bununla çarpılır: yüksekliklerin birimi metre değilse ya da düşey abartı için.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa kaynağın adının sonuna “-golge” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-golge.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "hillshade",
+     "text": "Yüzey analizi"
+    },
+    "icon": "hillshade",
+    "about": "Arazinin verilen yönden ışıklandırılmış gri görüntüsünü yazar (1–255, boş hücre 0).",
+    "help": [
+     "Değer, yüzeyin ışığa dönüklüğüdür (gdaldem hillshade'in formülü): ışığa tam dönük yüzey 255, gölgede kalan 1.",
+     "Raster tek bir yükseklik rasteridir (DEM); bandın nodata'sı ve NaN boş sayılır. Pencerenin dışında kalan komşu kenar hücresinin, boş komşu merkezin değerini alır; boş hücrenin sonucu boştur. Coğrafi (derece) rasterde türevler satırın enleminde metreye çevrilir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa kaynağın adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster yeni katmana eklenir; görünüşü Raster stili ile değişir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "GOLGEURET",
+     "KABARTMAURET"
+    ]
+   }
+  },
+  "surface.colorRelief": {
+   "title": "Renkli kabartma",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Çözümlenecek yükseklik rasteri (DEM): tek bir raster nesnesi.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "colors",
+     "label": "Renkler",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "ramp",
+        "label": "Rampa"
+       },
+       {
+        "value": "table",
+        "label": "Renk tablosu"
+       }
+      ]
+     }
+    },
+    {
+     "name": "ramp",
+     "label": "Rampa",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "Gri",
+        "label": "Gri"
+       },
+       {
+        "value": "Arazi",
+        "label": "Arazi"
+       },
+       {
+        "value": "Spektral",
+        "label": "Spektral"
+       },
+       {
+        "value": "Viridis",
+        "label": "Viridis"
+       },
+       {
+        "value": "Mavi-kırmızı",
+        "label": "Mavi-kırmızı"
+       },
+       {
+        "value": "Sıcaklık",
+        "label": "Sıcaklık"
+       }
+      ]
+     }
+    },
+    {
+     "name": "invert",
+     "label": "Ters",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "range",
+     "label": "Değer aralığı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "auto",
+        "label": "Bandın en küçüğü–en büyüğü"
+       },
+       {
+        "value": "manual",
+        "label": "Elle"
+       }
+      ]
+     }
+    },
+    {
+     "name": "min",
+     "label": "En küçük",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "max",
+     "label": "En büyük",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "table",
+     "label": "Renk tablosu",
+     "description": "Satırlar “değer #RRGGBB” ya da “değer #RRGGBBAA”, satır başına ya da noktalı virgülle ayrılarak (gdaldem color-relief'in metni gibi).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "maxLength": 20000,
+      "placeholder": "100 #2E7D32; 500 #FFF59D; 1000 #FAFAFA"
+     }
+    },
+    {
+     "name": "interp",
+     "label": "Ara renkler",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "linear",
+        "label": "Doğrusal"
+       },
+       {
+        "value": "nearest",
+        "label": "En yakın"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa kaynağın adının sonuna “-renkli” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-renkli.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "hillshade",
+     "text": "Yüzey analizi"
+    },
+    "icon": "colorRelief",
+    "about": "Yükseklikleri bir rampayla ya da renk tablosuyla renklendirip RGBA raster yazar.",
+    "help": [
+     "Rampa bandın en küçüğünden en büyüğüne (ya da elle verilen aralığa) yayılır. Renk tablosu “değer #RRGGBB” satırlarıdır; tablonun ilk değerinden küçük hücre ilk rengi, son değerinden büyüğü son rengi alır. Boş hücre saydamdır.",
+     "Raster tek bir yükseklik rasteridir (DEM); bandın nodata'sı ve NaN boş sayılır. Pencerenin dışında kalan komşu kenar hücresinin, boş komşu merkezin değerini alır; boş hücrenin sonucu boştur. Coğrafi (derece) rasterde türevler satırın enleminde metreye çevrilir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa kaynağın adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster yeni katmana eklenir; görünüşü Raster stili ile değişir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "RENKLIKABARTMA",
+     "HIPSOMETRI"
+    ]
+   }
+  },
+  "surface.curvature": {
+   "title": "Eğrilik",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Çözümlenecek yükseklik rasteri (DEM): tek bir raster nesnesi.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "curvature",
+     "label": "Eğrilik",
+     "description": "Toplam: yüzeyin eğriliği; profil: eğim yönünde; plan: eğriler boyunca.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "total",
+        "label": "Toplam"
+       },
+       {
+        "value": "profile",
+        "label": "Profil"
+       },
+       {
+        "value": "plan",
+        "label": "Plan"
+       }
+      ]
+     }
+    },
+    {
+     "name": "zFactor",
+     "label": "Z çarpanı",
+     "description": "Yükseklikler bununla çarpılır: yüksekliklerin birimi metre değilse ya da düşey abartı için.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa kaynağın adının sonuna “-egrilik” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-egrilik.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "hillshade",
+     "text": "Yüzey analizi"
+    },
+    "icon": "curvature",
+    "about": "Yüzeyin toplam, profil ya da plan eğriliğini (ArcGIS'teki gibi 1/100 m⁻¹) yazar.",
+    "help": [
+     "Zevenbergen ve Thorne'un yüzeyinden: toplamda artı tepe, eksi çukur; profilde eksi dışbükey (akış yavaşlar), artı içbükey; planda artı sırt, eksi dere.",
+     "Eğrilik dik pikselli raster ister (afinin eksenleri dik).",
+     "Raster tek bir yükseklik rasteridir (DEM); bandın nodata'sı ve NaN boş sayılır. Pencerenin dışında kalan komşu kenar hücresinin, boş komşu merkezin değerini alır; boş hücrenin sonucu boştur. Coğrafi (derece) rasterde türevler satırın enleminde metreye çevrilir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa kaynağın adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster yeni katmana eklenir; görünüşü Raster stili ile değişir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "EGRILIK",
+     "EGRISELLIK"
+    ]
+   }
+  },
+  "surface.ruggedness": {
+   "title": "Pürüzlülük",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Çözümlenecek yükseklik rasteri (DEM): tek bir raster nesnesi.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "index",
+     "label": "Ölçü",
+     "description": "TRI: komşuların merkezden farkı; TPI: merkezin komşuların ortalamasından farkı; Engebe: penceredeki en büyük ile en küçüğün farkı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "triRiley",
+        "label": "TRI (Riley)"
+       },
+       {
+        "value": "triWilson",
+        "label": "TRI (Wilson)"
+       },
+       {
+        "value": "tpi",
+        "label": "TPI"
+       },
+       {
+        "value": "roughness",
+        "label": "Engebe"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa kaynağın adının sonuna “-puruzluluk” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-puruzluluk.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "hillshade",
+     "text": "Yüzey analizi"
+    },
+    "icon": "ruggedness",
+    "about": "Arazinin pürüzlülüğünü TRI (Riley ya da Wilson), TPI ya da engebe olarak yazar.",
+    "help": [
+     "TRI (Riley): komşuların merkezden farklarının karelerinin toplamının karekökü; TRI (Wilson): farkların mutlak değerlerinin ortalaması; TPI: merkez eksi komşuların ortalaması; Engebe: 3 × 3 pencerenin en büyüğü eksi en küçüğü. Yükseklikler z çarpanıyla çarpılmaz (gdaldem gibi).",
+     "Raster tek bir yükseklik rasteridir (DEM); bandın nodata'sı ve NaN boş sayılır. Pencerenin dışında kalan komşu kenar hücresinin, boş komşu merkezin değerini alır; boş hücrenin sonucu boştur. Coğrafi (derece) rasterde türevler satırın enleminde metreye çevrilir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa kaynağın adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster yeni katmana eklenir; görünüşü Raster stili ile değişir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "PURUZLULUK",
+     "TRI",
+     "TPI"
+    ]
+   }
+  },
+  "surface.insolation": {
+   "title": "Güneşlenme",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Çözümlenecek yükseklik rasteri (DEM): tek bir raster nesnesi.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "period",
+     "label": "Dönem",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "year",
+        "label": "Yıl"
+       },
+       {
+        "value": "range",
+        "label": "Tarih aralığı"
+       },
+       {
+        "value": "day",
+        "label": "Tek gün"
+       }
+      ]
+     }
+    },
+    {
+     "name": "startDay",
+     "label": "Başlangıç günü",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "startMonth",
+     "label": "Başlangıç ayı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "1",
+        "label": "Ocak"
+       },
+       {
+        "value": "2",
+        "label": "Şubat"
+       },
+       {
+        "value": "3",
+        "label": "Mart"
+       },
+       {
+        "value": "4",
+        "label": "Nisan"
+       },
+       {
+        "value": "5",
+        "label": "Mayıs"
+       },
+       {
+        "value": "6",
+        "label": "Haziran"
+       },
+       {
+        "value": "7",
+        "label": "Temmuz"
+       },
+       {
+        "value": "8",
+        "label": "Ağustos"
+       },
+       {
+        "value": "9",
+        "label": "Eylül"
+       },
+       {
+        "value": "10",
+        "label": "Ekim"
+       },
+       {
+        "value": "11",
+        "label": "Kasım"
+       },
+       {
+        "value": "12",
+        "label": "Aralık"
+       }
+      ]
+     }
+    },
+    {
+     "name": "endDay",
+     "label": "Bitiş günü",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "endMonth",
+     "label": "Bitiş ayı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "1",
+        "label": "Ocak"
+       },
+       {
+        "value": "2",
+        "label": "Şubat"
+       },
+       {
+        "value": "3",
+        "label": "Mart"
+       },
+       {
+        "value": "4",
+        "label": "Nisan"
+       },
+       {
+        "value": "5",
+        "label": "Mayıs"
+       },
+       {
+        "value": "6",
+        "label": "Haziran"
+       },
+       {
+        "value": "7",
+        "label": "Temmuz"
+       },
+       {
+        "value": "8",
+        "label": "Ağustos"
+       },
+       {
+        "value": "9",
+        "label": "Eylül"
+       },
+       {
+        "value": "10",
+        "label": "Ekim"
+       },
+       {
+        "value": "11",
+        "label": "Kasım"
+       },
+       {
+        "value": "12",
+        "label": "Aralık"
+       }
+      ]
+     }
+    },
+    {
+     "name": "dayStep",
+     "label": "Gün aralığı",
+     "description": "Dönem bu kadar günlük parçalara bölünür; her parçayı ortasındaki gün temsil eder.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "hourStep",
+     "label": "Saat aralığı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "0.25",
+        "label": "15 dakika"
+       },
+       {
+        "value": "0.5",
+        "label": "30 dakika"
+       },
+       {
+        "value": "1",
+        "label": "1 saat"
+       },
+       {
+        "value": "2",
+        "label": "2 saat"
+       }
+      ]
+     }
+    },
+    {
+     "name": "transmissivity",
+     "label": "Geçirgenlik",
+     "description": "Atmosferin dik gelen ışığı geçirme oranı (açık gök 0,5–0,7).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "latitude",
+     "label": "Enlem",
+     "description": "Yalnız koordinat sistemi olmayan (yerel) projede gerekir; sistemi olan projede her satırın kendi enlemi kullanılır.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "°",
+      "placeholder": "Projenin sisteminden"
+     }
+    },
+    {
+     "name": "zFactor",
+     "label": "Z çarpanı",
+     "description": "Yükseklikler bununla çarpılır: yüksekliklerin birimi metre değilse ya da düşey abartı için.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa kaynağın adının sonuna “-gunes” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-gunes.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "hillshade",
+     "text": "Yüzey analizi"
+    },
+    "icon": "insolation",
+    "about": "Dönemde eğimli yüzeye gelen doğrudan güneş enerjisini (açık gök, kWh/m²) yazar.",
+    "help": [
+     "Güneşin yeri Spencer'ın formülleriyle, hava kütlesi Kasten ve Young'ınkiyle bulunur; ışınım 1367 W/m²·E₀·τ^m·max(0, n·s). Yalnız yüzeyin kendi gölgesi vardır; arazinin gölgesi ve dağınık ışınım hesaba girmez.",
+     "Dönem 365 günlük yıldır; Gün aralığı ve Saat aralığı hesabın sıklığıdır.",
+     "Raster tek bir yükseklik rasteridir (DEM); bandın nodata'sı ve NaN boş sayılır. Pencerenin dışında kalan komşu kenar hücresinin, boş komşu merkezin değerini alır; boş hücrenin sonucu boştur. Coğrafi (derece) rasterde türevler satırın enleminde metreye çevrilir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa kaynağın adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster yeni katmana eklenir; görünüşü Raster stili ile değişir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "GUNESLENME",
+     "GUNESRADYASYONU"
+    ]
+   }
+  },
+  "surface.contours": {
+   "title": "Eş yükselti eğrileri",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Çözümlenecek yükseklik rasteri (DEM): tek bir raster nesnesi.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "interval",
+     "label": "Aralık",
+     "description": "İki eğri arasındaki yükseklik farkı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "base",
+     "label": "Taban",
+     "description": "Düzeyler tabandan aralık aralık sayılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "indexEvery",
+     "label": "Ana eğri her",
+     "description": "Bu kadar eğride bir ana eğri (kalın çizilir).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "simplify",
+     "label": "Sadeleştir",
+     "description": "Douglas-Peucker toleransı; 0 sadeleştirmez.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "hillshade",
+     "text": "Yüzey analizi"
+    },
+    "icon": "contours",
+    "about": "Yükseklik rasterinden kotlu eş yükselti eğrileri (ana ve ara) çıkarır.",
+    "help": [
+     "Eğriler hücre merkezlerinin karelerinden (marching squares) çıkar; eyerde karenin ortası karar verir. Yüksek taraf eğrinin solundadır; boş hücrede eğri kesilir.",
+     "Her eğri çoklu çizgidir: köşelerinin kotu düzeydir, öznitelikleri Kot ve Tür (Ana ya da Ara); ana eğri 0,35 mm kalınlıktadır.",
+     "Raster tek bir yükseklik rasteridir (DEM); bandın nodata'sı ve NaN boş sayılır. 10 000'den çok düzey ya da 5 milyondan çok köşe reddedilir: aralığı büyütün."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ESYUKSELTI",
+     "KONTUR",
+     "EGRIURET"
+    ]
+   }
+  },
   "model:builtin.parcelSheet": {
    "title": "Parsel ölçü yazıları",
    "rows": [

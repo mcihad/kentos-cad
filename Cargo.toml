@@ -18,6 +18,9 @@ members = [
     "crates/shared/kcad",
     # Map services (docs/adr/0208): requests, capabilities, vector tiles and their styles.
     "crates/shared/services",
+    # Raster analysis (docs/adr/0231–0236): surface analysis, contours and the rest of the raster
+    # tools, one core for the web's analysis worker and the desktop's processing thread.
+    "crates/shared/raster",
     # The expression language (docs/adr/0100): processing tools, styles and filters.
     "crates/shared/expression",
     # Sheet layouts, pafta düzeni (docs/sheet/design.md): one core for the web and the desktop.
@@ -36,6 +39,8 @@ members = [
     "crates/wasm/sheet-wasm",
     # Map services (docs/adr/0208) in a module of their own, loaded when a drawing shows a service.
     "crates/wasm/services-wasm",
+    # Raster analysis (docs/adr/0231) in a module of its own, loaded in its worker when a job starts.
+    "crates/wasm/raster-wasm",
     "crates/wasm/svg-wasm",
     # Native libraries (desktop, later the server; never the browser): the drawing
     # document, the counterpart of the web's TypeScript one (docs/adr/0020), the
@@ -85,6 +90,7 @@ default-members = [
     "crates/shared/ncz",
     "crates/shared/kcad",
     "crates/shared/services",
+    "crates/shared/raster",
     "crates/shared/expression",
     "crates/shared/sheet",
     "crates/shared/style-core",
@@ -96,6 +102,7 @@ default-members = [
     "crates/wasm/ncz-wasm",
     "crates/wasm/sheet-wasm",
     "crates/wasm/services-wasm",
+    "crates/wasm/raster-wasm",
     "crates/wasm/svg-wasm",
     "crates/native/domain",
     "crates/native/application",

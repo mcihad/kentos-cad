@@ -34,6 +34,8 @@ mod geometry_tests;
 #[cfg(test)]
 mod query_tests;
 #[cfg(test)]
+pub(crate) mod surface_tests;
+#[cfg(test)]
 mod tests;
 mod window;
 
@@ -67,13 +69,19 @@ pub(crate) fn is_answer(message: &Message) -> bool {
     )
 }
 
-/// Whether İşlemler answers a command: a tool, a model, or Harita's Kenar ölçülerini yaz.
+/// Whether İşlemler answers a command: a tool, a model, Harita's Kenar ölçülerini yaz, Eşyükselti
+/// üret and Eğim analizi (docs/adr/0231 §10).
 pub fn answers(id: &str) -> bool {
     id.starts_with("processing.run.")
         || id.starts_with("processing.model.")
         || matches!(
             id,
-            "map.edgeLengths" | "processing.toolbox" | "processing.history" | "processing.newModel"
+            "map.edgeLengths"
+                | "map.contours"
+                | "analysis.slope"
+                | "processing.toolbox"
+                | "processing.history"
+                | "processing.newModel"
         )
 }
 
@@ -279,6 +287,10 @@ impl App {
         }
         let tool = if id == "map.edgeLengths" {
             "annotation.edgeLengths".to_owned()
+        } else if id == "map.contours" {
+            "surface.contours".to_owned()
+        } else if id == "analysis.slope" {
+            "surface.slope".to_owned()
         } else if let Some(tool) = id.strip_prefix("processing.run.") {
             tool.to_owned()
         } else if let Some(model) = id.strip_prefix("processing.model.") {

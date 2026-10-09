@@ -15,6 +15,8 @@ import { workerExecutor, type WorkerLike } from './worker/workerExecutor';
 import type { FileValue, ProcessingTool } from './types';
 import type { TableFileRead } from '../contracts/generated/TableFileRead';
 import { geoMeasure } from '../model/ops/geoprocess';
+import { setRasterRunHost } from './rasterHost';
+import { contourObjects, fixtureRasterHost, level0, surfaceModulesBuilt, ulps } from './surfaceTesting';
 
 /**
  * The shared processing cases (fixtures/processing/v1, format in
@@ -23,9 +25,12 @@ import { geoMeasure } from '../model/ops/geoprocess';
  * (handleJob), and what the run did is compared with what the case says.
  * The desktop's kentos-processing plays the same files: cases.json,
  * queries.json (docs/adr/0200), whose file values name files beside it,
- * read through the formats module as the dialog reads a chosen file, and
+ * read through the formats module as the dialog reads a chosen file,
  * geometry.json (docs/adr/0201), whose new objects are measured
- * (`addedShapes`).
+ * (`addedShapes`), and surface.json (docs/adr/0231), the raster tools run
+ * with a host whose rasters are the cases' files: a written raster's level 0
+ * is the independent surface reference's (fixtures/terrain/v1), the contour
+ * lines the contour reference's (fixtures/contours/v1).
  */
 
 const files = import.meta.glob<string>('../../../../fixtures/processing/v1/*', { query: '?raw', import: 'default', eager: true });
@@ -61,6 +66,7 @@ interface CaseFile {
 const CASES = JSON.parse(file('cases.json')) as CaseFile;
 const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
+const SURFACE = JSON.parse(file('surface.json')) as CaseFile & { rasters: Record<string, string> };
 
 interface Formats {
   initSync(o: { module: BufferSource }): unknown;
@@ -287,7 +293,7 @@ describe('processing cases (fixtures/processing/v1)', () => {
   });
 
   // Each drawing's defaults (DefaultsContext) and each tool's default values on it, as the desktop must read them.
-  for (const [name, d] of [...Object.entries(CASES.documents), ...Object.entries(GEOMETRY.documents)]) {
+  for (const [name, d] of [...Object.entries(CASES.documents), ...Object.entries(GEOMETRY.documents), ...Object.entries(SURFACE.documents)]) {
     it(`${name}: the defaults the tools take from the drawing`, () => {
       const runner = new ProcessingRunner({ doc: load(name), selectedIds: () => [], visibleBounds: () => null });
       expect(runner.defaults()).toEqual(d.defaults);
@@ -332,4 +338,54 @@ describe('geometry cases (fixtures/processing/v1/geometry.json, docs/adr/0201)',
       check(c, await play(GEOMETRY, c, 'worker'), GEOMETRY.tolerance, GEOMETRY.measureTolerance);
     });
   }
+});
+
+describe.skipIf(!surfaceModulesBuilt)('surface cases (fixtures/processing/v1/surface.json, docs/adr/0231)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const rasters = new Map(Object.entries(SURFACE.rasters).map(([name, rel]) => [name, read(rel)]));
+  const terrain = JSON.parse(new TextDecoder().decode(read('../../terrain/v1/cases.json'))) as { cases: { dem: string; name: string; sample: string; values: (number | null)[] }[] };
+  const contours = JSON.parse(new TextDecoder().decode(read('../../contours/v1/cases.json')));
+
+  it('is a v1 case file', () => {
+    expect([SURFACE.format, SURFACE.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of SURFACE.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(rasters);
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { contoursOf?: number; rasterOf?: Record<string, string>; layers?: { id: string }[]; layerAbove?: Record<string, string> };
+        // The contour lines are the contour reference's, in its order.
+        const expected: Case = want.contoursOf === undefined ? c : { ...c, expect: { ...want, added: contourObjects(contours, want.contoursOf, want.layers![0].id) } };
+        const seen = await play(SURFACE, c, 'client');
+        // Each new layer right above the layer it names (its group, the place before it).
+        for (const [id, over] of Object.entries((want.layerAbove ?? {}) as Record<string, string>)) {
+          const layers = seen.doc.layers;
+          const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(over)?.id ?? null);
+          expect(siblings(id).findIndex((n) => n.id === id) + 1, `${c.id}: ${id} above ${over}`).toBe(siblings(over).findIndex((n) => n.id === over));
+        }
+        check(expected, seen, SURFACE.tolerance);
+        // Each written raster's level 0 is the surface reference's case of that name.
+        const of = want.rasterOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, caseName] of Object.entries(of)) {
+          const ref = terrain.cases.find((t) => t.dem === 'tepe' && t.name === caseName)!;
+          const got = await level0(written.get(name)!);
+          expect(got.length, `${c.id}: ${name}`).toBe(ref.values.length);
+          const off = got.findIndex((g, k) => (ref.sample === 'u8' ? g !== ref.values[k] : ulps(g, ref.values[k] ?? NaN) > 1));
+          expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${ref.values[off]}`).toBe(-1);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
+    });
+  }
+
+  it('a raster tool refuses where there is no host', async () => {
+    setRasterRunHost(null);
+    const s = await play(SURFACE, SURFACE.cases[0], 'client');
+    expect(observed(s)).toMatchObject({ status: 'error', message: 'Bu araç rasterin dosyasını okuyup sonucu dosyaya yazar; bu ortamda dosya erişimi yok.' });
+  });
 });

@@ -102,7 +102,7 @@ fn go(
     let layout = plan.spec.layout();
     let (scale, offset) = (plan.spec.scale, plan.spec.offset);
     // Where the tiles go: the chosen file's folder and name, or beside the source with its name.
-    let base = files.output_path(r.text("output"), Some(&sources[0]), "", "")?;
+    let base = files.output_path(r.text("output"), Some((&sources[0]).into()), "", "")?;
     let (folder, stem) = match base.rfind(['/', '\\']) {
         Some(i) => (base[..=i].to_owned(), base[i + 1..].to_owned()),
         None => (String::new(), base.clone()),

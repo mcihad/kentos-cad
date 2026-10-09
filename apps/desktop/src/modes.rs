@@ -236,6 +236,7 @@ mod tests {
                 "Veri",
                 "Düzenle",
                 "Analiz",
+                "Raster",
                 "Ölçme",
                 "Görünüm",
                 "Çıktı"

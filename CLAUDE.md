@@ -126,6 +126,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   şema 32; karolar projenin sistemine ağla, vektör karonun noktaları da aynı ağla; Altlık ▾ (hazır altlıklar), Harita servisi, Servisten veri al,
   Servis bilgisi, Bağlantılar (CBS'de Harita, CAD'de Ekle); katmanın menüsü, rozeti ve Öznitelikler'deki bölümü; atıf şeridi ve kartı;
   `cad.layers.service`; web vekili `kentosd`'nin `/v1/proxy`'si; Python `kentos.services` (ADR 0208);
+  yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
+  engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
+  yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
+  başına bir çözümleme işçisinde (`raster-wasm`; sonuç gömülür ya da indirilir); `analysis.slope` ve `map.contours` araçları açar; CBS
+  şeridinde Raster sekmesi (rasterler ve raster çözümleme kategorileri); çekirdek `kentos-raster`, GIS-32–36'nın da altyapısı (ADR 0231);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -388,6 +393,12 @@ python3 scripts/fixtures/layer_service_command_cases.py --check   # cad.layers.s
 KENTOS_SHOTS_ONLY=servis-osm,servis-vektor,servis-pencere,servis-wms,servis-veri,servis-oznitelik,servis-bilgi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # harita servislerinin masaüstü resimleri (ağ gerekir), .run/shots/arac-servis-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs services); ADR 0208)
 cargo test --release -p kentos-desktop perf::services -- --ignored --nocapture --test-threads=1   # görünen karolar, karo ağı, PNG çözümü, şehir karosunun MVT'si ve stili, önbellekten tam görünüm ve iki altlıklı kareler; gerçek karolar bir kez .run/perf/'e (ADR 0208 §16)
 cargo test -p kentos-api proxy   # kentosd'nin servis vekili: adres kuralları, başlıklar, yerel sunucuyla yönlendirme, 32 MB, POST ve iç ağ reddi (ADR 0208 §13)
+python3 scripts/fixtures/terrain_cases.py --check   # yüzey analizinin (eğim, bakı, gölgeli ve renkli kabartma, eğrilik, pürüzlülük, güneşlenme) durumlarını numpy ve GDAL'la, KentOS kodu olmadan denetle; tanımlar gdaldem'le çapraz denetlenir; durumlar ve DEM'ler fixtures/terrain/v1 (ADR 0231)
+python3 scripts/fixtures/contour_cases.py --check   # eş yükselti eğrilerini (kareler, eyer, zincirleme, Douglas-Peucker, Kot yazısı) KentOS kodu olmadan denetle; gdal_contour'la çapraz denetim; durumlar fixtures/contours/v1 (ADR 0231 §9)
+python3 scripts/fixtures/surface_processing_cases.py --check   # yüzey araçlarının İşlemler durumlarını (adlar, özetler, katmanlar, nesneler; yazılan dosyanın değerleri ve eğriler yüzey ve eğri başvurularına bağlı) denetle; durumlar fixtures/processing/v1/surface.json ve surface.kcad (ADR 0231 §10)
+cargo test --release -p kentos-raster --test all timing -- --ignored --nocapture --test-threads=1   # yüzey analizinin süreleri 4096² DEM'de, 8 ve 1 iş parçacığıyla (ADR 0231 §11)
+(cd apps/web && node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs)   # aynı işler tarayıcının çözümleme işçisinde, release WASM'la; DEM'leri GDAL bir kez .run/perf'e yazar (ADR 0231 §11)
+KENTOS_SHOTS_ONLY=yuzey-serit,yuzey-egim,yuzey-egim-cizim,yuzey-esyukselti-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # yüzey analizinin resimleri, .run/shots/arac-yuzey-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs surface); ADR 0231)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
 cargo test --release -p kentos-pointcloud --test all timing -- --ignored --nocapture   # aynı bulutta düğümün görünüşe göre çözülmesi (katman katman) ve LAZ yazma, tek ve dört iş parçacığıyla (önce perf::clouds dosyayı yazar; ADR 0207 §12)
@@ -1246,7 +1257,14 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `crates/wasm/services-wasm`; masaüstünde `services/` (hub, `net`, `cache`, `secrets`, `window`, `feed_window`, `connections`, `info`,
   `overlay`), çizim hattında `styled/service_tiles.rs`; web'de `io/services/` (`worker.ts`, `feedWorker.ts`, `fetch.ts`),
   `render/serviceHub.ts`, `render/servicePass.ts`, `ui/services/`, `ui/bottom/ServiceInfoPanel.ts`; sunucuda `http/proxy.rs`; Python
-  `python/kentos/services.py`; süreler `perf::services`. Sıradaki `GIS-11`.
+  `python/kentos/services.py`; süreler `perf::services`. Sıradaki `GIS-11`. Paralel dal `gis-31-36-raster-analysis` (sahibin sözü, 9 Ekim:
+  “yeni bir branch açarak GIS-31 ve GIS-36 aralığını yapacağız”, “yüksek performans ilk önceliğimiz”; ADR numaraları 0231–0236 bu aralığa
+  ayrıldı): `GIS-31` yüzey analizi ([ADR 0231](docs/adr/0231-raster-analysis-and-surface.md)) tek parçada bitti (9 Ekim): çekirdek
+  `kentos-raster` (`job`, `terrain`, `relief`, `insolation`, `contours`, `out`, `par`; bağımsız başvurular `terrain_cases.py` gdaldem'le,
+  `contour_cases.py` gdal_contour'la), WASM `crates/wasm/raster-wasm`; İşlemler'in `builtin/surface/`'u iki platformda, ev sahibinin
+  `Files::open_raster`'ı, katman parametresinin `above`'u; masaüstünde `DesktopFiles::open_raster`, `rasters/tiles.rs`'in `open_reader`'ı; web'de
+  `io/rasterAnalysis*.ts`, `processing/rasterHost.ts`, `app/rasterAnalysis.ts`; ortak durumlar `fixtures/processing/v1/surface.json`
+  (`surface_processing_cases.py`); süreler ADR'nin Doğrulama'sında. Dalda sıradaki `GIS-32`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
@@ -1289,7 +1307,7 @@ crates/ui/             KentOS UI bileşen kütüphanesi (kentos-ui)
 crates/native/         native belge (domain), ürün komutları (application), araç oturumu (interaction), işlem araçları (processing), proje modeli (project), başsız komut sunucusu (headless), Python eklentisi (python), MCP sunucusu (mcp) ve bulut istemcisi (cloud); web'e derlenmez
 crates/render/wgpu/    native wgpu çizim hattı (Iced bilmez)
 shaders/wgsl/          paylaşılabilir WGSL ve sürümlü düzen sözleşmesi
-crates/shared/         contracts, geometry-core, expression, style-core, svg-core, formats, kcad
+crates/shared/         contracts, geometry-core, expression, style-core, svg-core, formats, kcad, raster
 crates/wasm/           yalnız hesap/codec bağlayıcıları
 crates/server/         application ve postgres
 fixtures/              sürümlü ortak test verisi

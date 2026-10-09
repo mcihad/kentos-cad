@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 9] = [
+pub const CATEGORIES: [Category; 10] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -82,5 +82,12 @@ pub const CATEGORIES: [Category; 9] = [
         "Nokta bulutu",
         "pointCloudAdd",
         "Seyreltme, zemin, sınıflama, kırpma, karolama, raster ve sınır",
+    ),
+    // docs/adr/0231: the DEM's surface.
+    category(
+        "surface",
+        "Yüzey analizi",
+        "hillshade",
+        "Eğim, bakı, kabartma, eğrilik, güneşlenme ve eş yükselti eğrileri",
     ),
 ];

@@ -21,8 +21,8 @@ import type { Workspace } from '../model/projectSettings';
  * and where the contextual Seçim tab is defined; no project shows it.
  */
 export type RibbonSource =
-  /** The titled blocks of a main menu, one panel each (optionally only the named ones). */
-  | { readonly menu: string; readonly sections?: readonly string[] }
+  /** The titled blocks of a main menu, one panel each (optionally only the named ones, or all but those `except` names). */
+  | { readonly menu: string; readonly sections?: readonly string[]; readonly except?: readonly string[] }
   /** A tool group from the catalog, one panel per tool section. */
   | { readonly tools: ToolGroup }
   /**
@@ -184,8 +184,13 @@ const EXPORTS = ['file.export.dxf', 'file.export.pdf', 'file.export.geojson', 'f
 const SHEET_LAYOUTS = ['sheet.new', 'sheet.fromTemplate'];
 const SELECTION_TAB: RibbonTabSpec = RIBBON_TABS.find((t) => t.contextual === 'selection')!;
 
-/** Raster katmanları (docs/adr/0204 §8): CAD's Ekle › Raster and CBS's Veri › Raster. */
+/** Raster katmanları (docs/adr/0204 §8): CAD's Ekle › Raster, CBS's Veri › Raster and its Raster tab (docs/adr/0231 §10). */
 const RASTERS = ['raster.add', 'raster.style', 'raster.georef'];
+/**
+ * İşlemler's categories of raster analysis (docs/adr/0231 §10): CBS's Raster tab rather than Analiz, which they would
+ * crowd past 1100 px; GIS-32 to GIS-36 add theirs here.
+ */
+const RASTER_ANALYSIS = ['Yüzey analizi'];
 /** Nokta bulutu (docs/adr/0207 §9), the desktop's for now: CAD's Ekle and CBS's Veri, İşlemler's tools under ▾. */
 const POINT_CLOUD_PANEL = { pick: 'Nokta bulutu', icon: 'pointCloudAdd', commands: POINT_CLOUDS, under: POINT_CLOUD_TOOLS } as const;
 
@@ -292,7 +297,8 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
  * coordinate system, measuring, parcels and styles; Veri with layers, imports and exports, coordinates, attributes and
  * blocks;
  * Düzenle with creating and modifying objects and the editing aids; Analiz with the processing tools, models, terrain
- * analysis and the command line; Ölçme with the survey computations and points; Çıktı with sheets, the legend and exports.
+ * analysis and the command line; Raster with the rasters and İşlemler's raster analysis; Ölçme with the survey
+ * computations and points; Çıktı with sheets, the legend and exports.
  */
 export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
   { id: 'file', label: 'Dosya', sources: [{ menu: 'file' }] },
@@ -366,7 +372,7 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     id: 'analysis',
     label: 'Analiz',
     sources: [
-      { menu: 'processing' },
+      { menu: 'processing', except: RASTER_ANALYSIS },
       { menu: 'map', sections: ['Arazi'] },
       { menu: 'analysis', sections: ['Arazi analizi'] },
       // Topoloji kuralları (docs/adr/0202 §8): the data's checks together, beside Karşılaştırma (Düzenle is full).
@@ -374,6 +380,13 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { menu: 'analysis', sections: ['Karşılaştırma'] },
       { menu: 'tools', sections: ['Komut'] },
     ],
+  },
+  {
+    // Raster (docs/adr/0231 §10), QGIS's Raster menu: the rasters, then İşlemler's raster analysis, a panel a category;
+    // Eşyükselti üret and Eğim analizi open two of Yüzey analizi's tools.
+    id: 'raster',
+    label: 'Raster',
+    sources: [{ pick: 'Raster', icon: 'rasterAdd', commands: RASTERS }, { menu: 'processing', sections: RASTER_ANALYSIS }],
   },
   {
     id: 'survey',
@@ -567,7 +580,7 @@ export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[]
       } else {
         const menu = menuById(src.menu);
         if (!menu || !filter.menu(menu.id)) continue;
-        const keep = (label: string) => !src.sections || src.sections.includes(label);
+        const keep = (label: string) => (!src.sections || src.sections.includes(label)) && !src.except?.includes(label);
         for (const block of expandBlocks(menuBlocks(menu.items, tools, filter), menu.label, inputs, tools, filter)) {
           if (!keep(block.label)) continue;
           const d = panel(block.label);

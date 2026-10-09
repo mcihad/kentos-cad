@@ -822,7 +822,6 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     ...lockCommands(ctx),
 
     // Harita / Koordinat / Analiz
-    pending(ctx, 'map.contours', 'Eşyükselti üret…', M, 'contours'),
     pending(ctx, 'map.profile', 'Boy kesit al…', M, 'profile'),
     pending(ctx, 'map.sheet', 'Pafta bölümlemesi…', M, 'sheet'),
     { ...pending(ctx, 'map.parcelReport', 'Parsel alan çizelgesi', M, 'parcelReport'), short: 'Alan çizelgesi' },
@@ -839,7 +838,6 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       run: () => tools.run(new CoordinateReadTool(ctx), 'Koordinat oku'),
     },
     pending(ctx, 'analysis.volume', 'Hacim hesabı…', A, 'volume'),
-    pending(ctx, 'analysis.slope', 'Eğim analizi…', A, 'slope'),
 
     // Katmanlar
     {
