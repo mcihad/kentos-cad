@@ -127,6 +127,7 @@ async function points(job: PointRequest): Promise<void> {
       bytes,
       grid: Array.from(a.grid()),
       bands: a.bands(),
+      sample: a.sample(),
       styles: [a.style(1), a.style(2)] as [string, string],
       notes: a.notes(),
       crossPoint: a.crossPoint(),
@@ -215,6 +216,21 @@ async function ops(job: OpsRequest): Promise<void> {
       const out = new Uint8Array(await new Blob(parts as unknown as BlobPart[]).arrayBuffer());
       out.set(a.head(), 0);
       scope.postMessage({ type: 'done', ops: { ...result, bytes: out } }, [out.buffer]);
+      return;
+    }
+    const kind = a.featureKind();
+    if (kind) {
+      const features = {
+        kind: kind as 'polygons' | 'lines' | 'points',
+        values: a.featureValues(),
+        texts: a.featureTexts(),
+        tags: a.featureTags(),
+        rings: a.featureRings(),
+        sizes: a.featureSizes(),
+        xy: a.featureXy(),
+      };
+      const moved = [features.values.buffer, features.tags.buffer, features.rings.buffer, features.sizes.buffer, features.xy.buffer];
+      scope.postMessage({ type: 'done', ops: { ...result, features } }, moved);
       return;
     }
     const zones = a.zones();

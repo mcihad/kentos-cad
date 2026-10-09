@@ -17,6 +17,7 @@ import type { TableFileRead } from '../contracts/generated/TableFileRead';
 import { geoMeasure } from '../model/ops/geoprocess';
 import { setRasterRunHost } from './rasterHost';
 import { contourObjects, fixtureRasterHost, level0, surfaceModulesBuilt, ulps } from './surfaceTesting';
+import { elevatedPaths } from '../product/elevation';
 
 /**
  * The shared processing cases (fixtures/processing/v1, format in
@@ -70,6 +71,7 @@ const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
 const SURFACE = JSON.parse(file('surface.json')) as CaseFile & { rasters: Record<string, string> };
 const INTERPOLATION = JSON.parse(file('interpolation.json')) as CaseFile;
+const RASTER_VECTOR = JSON.parse(file('raster-vector.json')) as CaseFile & { rasters: Record<string, string> };
 const RASTER_OPS = JSON.parse(file('raster-ops.json')) as CaseFile & {
   rasters: Record<string, string>;
   /** The names an expression field offers on an input (docs/adr/0233 §3). */
@@ -280,6 +282,11 @@ function check(c: Case, s: Seen, tol: number, measureTol = tol): void {
     wantAdded.forEach((w, i) => expect(sameObject(added[i], w, tol), `${c.id}: added[${i}] ${JSON.stringify(added[i])}`).toBe(true));
   }
   expect(got.updated, where).toEqual(want.updated ?? []);
+  // The vertices' elevations of the objects a run changed (Eğrilere kot ver), each path's in `elevatedPaths`' order.
+  for (const [id, zs] of Object.entries((want.elevations ?? {}) as Record<string, (number | null)[][]>)) {
+    const e = s.doc.get(Number(id));
+    expect(e && elevatedPaths(e).map((p) => p.zs), `${c.id}: elevations of ${id}`).toEqual(zs);
+  }
   expect(got.removed, where).toEqual(want.removed ?? []);
   if (want.selection) expect(got.selection, where).toEqual(want.selection);
   const outputs = got.outputs as Json;
@@ -301,7 +308,7 @@ describe('processing cases (fixtures/processing/v1)', () => {
   });
 
   // Each drawing's defaults (DefaultsContext) and each tool's default values on it, as the desktop must read them.
-  for (const [name, d] of [...Object.entries(CASES.documents), ...Object.entries(GEOMETRY.documents), ...Object.entries(SURFACE.documents), ...Object.entries(INTERPOLATION.documents), ...Object.entries(RASTER_OPS.documents)]) {
+  for (const [name, d] of [...Object.entries(CASES.documents), ...Object.entries(GEOMETRY.documents), ...Object.entries(SURFACE.documents), ...Object.entries(INTERPOLATION.documents), ...Object.entries(RASTER_OPS.documents), ...Object.entries(RASTER_VECTOR.documents)]) {
     it(`${name}: the defaults the tools take from the drawing`, () => {
       const runner = new ProcessingRunner({ doc: load(name), selectedIds: () => [], visibleBounds: () => null });
       expect(runner.defaults()).toEqual(d.defaults);
@@ -490,6 +497,57 @@ describe.skipIf(!surfaceModulesBuilt)('raster operations cases (fixtures/process
             const w = ref.values[k] ?? NaN;
             if (Number.isNaN(g) || Number.isNaN(w)) return !(Number.isNaN(g) && Number.isNaN(w));
             return ref.rule === 'exact' ? g !== w : ulps(g, w) > 1;
+          });
+          expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${ref.values[off]}`).toBe(-1);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
+    });
+  }
+});
+
+describe.skipIf(!surfaceModulesBuilt)('raster and vector cases (fixtures/processing/v1/raster-vector.json, docs/adr/0234)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const rasters = new Map(Object.entries(RASTER_VECTOR.rasters).map(([name, rel]) => [name, read(rel)]));
+  const reference = JSON.parse(new TextDecoder().decode(read('../../raster-vector/v1/cases.json'))) as {
+    cases: { name: string; expect: { raster?: { values: (number | null)[] } } }[];
+  };
+
+  it('is a v1 case file', () => {
+    expect([RASTER_VECTOR.format, RASTER_VECTOR.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of RASTER_VECTOR.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(rasters);
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { rasterVectorOf?: Record<string, string>; layerAbove?: Record<string, string>; layerBelow?: Record<string, string> };
+        const seen = await play(RASTER_VECTOR, c, 'client');
+        // Each new layer right above (below) the layer it names: its group, the place before (after) it.
+        const layers = seen.doc.layers;
+        const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+        const at = (id: string) => siblings(id).findIndex((n) => n.id === id);
+        for (const [id, over] of Object.entries(want.layerAbove ?? {})) {
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(over)?.id ?? null);
+          expect(at(id) + 1, `${c.id}: ${id} above ${over}`).toBe(at(over));
+        }
+        for (const [id, under] of Object.entries(want.layerBelow ?? {})) {
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(under)?.id ?? null);
+          expect(at(id), `${c.id}: ${id} below ${under}`).toBe(at(under) + 1);
+        }
+        check(c, seen, RASTER_VECTOR.tolerance);
+        // Each written raster's level 0 is the reference's case of that name, sample for sample.
+        const of = want.rasterVectorOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, caseName] of Object.entries(of)) {
+          const ref = reference.cases.find((t) => t.name === caseName)!.expect.raster!;
+          const got = await level0(written.get(name)!);
+          expect(got.length, `${c.id}: ${name}`).toBe(ref.values.length);
+          const off = got.findIndex((g, k) => {
+            const w = ref.values[k] ?? NaN;
+            return Number.isNaN(g) || Number.isNaN(w) ? !(Number.isNaN(g) && Number.isNaN(w)) : g !== w;
           });
           expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${ref.values[off]}`).toBe(-1);
         }

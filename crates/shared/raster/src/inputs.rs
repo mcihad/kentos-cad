@@ -251,7 +251,109 @@ pub fn region_for(
     (x0 < x1 && y0 < y1).then(|| (x0, y0, (x1 - x0) as u32, (y1 - y0) as u32))
 }
 
+/// An input's region as the file holds it, bands interleaved: read a cell
+/// at a time, its value bands turned into float64 only as they are read
+/// (the vectorizing tools read each cell once; docs/adr/0234 §11).
+pub struct Raw {
+    pub x: i64,
+    pub y: i64,
+    pub w: u32,
+    pub h: u32,
+    samples: Samples,
+    all: usize,
+    alpha: bool,
+    nodata: Option<f64>,
+}
+
+impl Raw {
+    /// A region of no cells (every read NaN).
+    pub fn empty() -> Raw {
+        Raw {
+            x: 0,
+            y: 0,
+            w: 0,
+            h: 0,
+            samples: Samples::F64(Vec::new()),
+            all: 1,
+            alpha: false,
+            nodata: None,
+        }
+    }
+
+    /// Input cells `i …` of row `j`, `out.len() / bands.len()` of them: each
+    /// cell's value bands `bands` (indices) in turn as float64, NaN without
+    /// a value (nodata, NaN, alpha 0) and outside the region.
+    pub fn cells(&self, j: i64, i: i64, bands: &[usize], out: &mut [f64]) {
+        let k = bands.len();
+        if k == 0 {
+            return;
+        }
+        let dj = j - self.y;
+        if dj < 0 || dj >= i64::from(self.h) {
+            out.fill(f64::NAN);
+            return;
+        }
+        let (all, alpha, nodata) = (self.all, self.alpha, self.nodata);
+        let row = dj as usize * self.w as usize;
+        macro_rules! fill {
+            ($v:expr) => {{
+                let v = $v;
+                for (c, o) in out.chunks_exact_mut(k).enumerate() {
+                    let di = i + c as i64 - self.x;
+                    if di < 0 || di >= i64::from(self.w) {
+                        o.fill(f64::NAN);
+                        continue;
+                    }
+                    let at = (row + di as usize) * all;
+                    let px = &v[at..at + all];
+                    if alpha && f64::from(px[all - 1]) == 0.0 {
+                        o.fill(f64::NAN);
+                        continue;
+                    }
+                    for (slot, &b) in o.iter_mut().zip(bands) {
+                        let s = f64::from(px[b]);
+                        *slot = if s.is_nan() || nodata.is_some_and(|d| s == d) {
+                            f64::NAN
+                        } else {
+                            s
+                        };
+                    }
+                }
+            }};
+        }
+        match &self.samples {
+            Samples::U8(v) => fill!(v),
+            Samples::I8(v) => fill!(v),
+            Samples::U16(v) => fill!(v),
+            Samples::I16(v) => fill!(v),
+            Samples::U32(v) => fill!(v),
+            Samples::I32(v) => fill!(v),
+            Samples::F32(v) => fill!(v),
+            Samples::F64(v) => fill!(v),
+        }
+    }
+}
+
 impl Input {
+    /// The region's samples as the file holds them (its blocks given).
+    pub fn raw(&mut self, r: (i64, i64, u32, u32)) -> Result<Raw, String> {
+        let (x, y, w, h) = r;
+        let region = self
+            .reader
+            .region(0, x, y, w, h)
+            .ok_or_else(|| "Rasterin blokları eksik verildi.".to_owned())?;
+        Ok(Raw {
+            x,
+            y,
+            w,
+            h,
+            all: region.bands as usize,
+            samples: region.samples,
+            alpha: self.alpha,
+            nodata: self.nodata,
+        })
+    }
+
     /// The blocks a region wants that the reader does not hold.
     pub fn needs(&mut self, r: (i64, i64, u32, u32)) -> Vec<BlockNeed> {
         self.reader.needs(0, r.0, r.1, r.2, r.3)

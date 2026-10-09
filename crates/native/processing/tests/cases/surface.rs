@@ -166,12 +166,12 @@ fn contour_objects(k: usize, layer: &str) -> Vec<Value> {
 }
 
 /// Plays a file of raster cases (surface.json, interpolation.json,
-/// raster-ops.json): besides
+/// raster-ops.json, raster-vector.json): besides
 /// the usual checks, each new layer's place (`layerAbove`, `layerBelow`) and
 /// each written raster's level 0 against its reference (`rasterOf`: the
 /// surface reference; `interpolationOf`: the interpolation reference, a
 /// second band its `error`; `rasterOpsOf`: the raster operations' reference,
-/// by its case's rule).
+/// by its case's rule; `rasterVectorOf`: Rasterleştir's reference, exact).
 fn raster_cases(name: &str, least: usize) {
     let file = case_file(name);
     let tol = file["tolerance"].as_f64().expect("a tolerance");
@@ -183,6 +183,9 @@ fn raster_cases(name: &str, least: usize) {
     let raster_ops: Value =
         serde_json::from_slice(&surface_fixture("../../raster-ops/v1/cases.json"))
             .expect("the raster operations' reference reads");
+    let raster_vector: Value =
+        serde_json::from_slice(&surface_fixture("../../raster-vector/v1/cases.json"))
+            .expect("the raster and vector reference reads");
     let rasters: BTreeMap<String, Vec<u8>> = file["rasters"]
         .as_object()
         .map(|m| {
@@ -235,6 +238,7 @@ fn raster_cases(name: &str, least: usize) {
             ("rasterOf", "terrain"),
             ("interpolationOf", "interpolation"),
             ("rasterOpsOf", "ops"),
+            ("rasterVectorOf", "vector"),
         ] {
             for (name, of) in c["expect"][key].as_object().cloned().unwrap_or_default() {
                 wanted.push((name, of, kind));
@@ -254,6 +258,37 @@ fn raster_cases(name: &str, least: usize) {
                 continue;
             };
             let got = level0(bytes);
+            if *kind == "vector" {
+                // Rasterleştir's reference: every sample exact.
+                let reference = raster_vector["cases"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .find(|t| t["name"] == *of)
+                    .unwrap_or_else(|| panic!("{id}: no raster and vector case {of}"));
+                let values = reference["expect"]["raster"]["values"]
+                    .as_array()
+                    .expect("the values whole");
+                if got.len() != values.len() {
+                    found.push(format!("{id}: {} samples for {}", got.len(), values.len()));
+                    continue;
+                }
+                let off = got.iter().zip(values).position(|(g, w)| {
+                    let w = w.as_f64().unwrap_or(f64::NAN);
+                    if g.is_nan() || w.is_nan() {
+                        !(g.is_nan() && w.is_nan())
+                    } else {
+                        *g != w
+                    }
+                });
+                if let Some(k) = off {
+                    found.push(format!(
+                        "{id}: “{name}” sample {k}: {} for {}",
+                        got[k], values[k]
+                    ));
+                }
+                continue;
+            }
             if *kind == "ops" {
                 // The raster operations' reference: its samples by its case's rule.
                 let reference = raster_ops["cases"]
@@ -372,6 +407,13 @@ fn the_surface_cases_do_what_they_say() {
 #[test]
 fn the_raster_operations_cases_do_what_they_say() {
     raster_cases("raster-ops.json", 15);
+}
+
+/// Raster ve vektör and Taranmış harita's shared cases (fixtures/processing/v1/raster-vector.json,
+/// scripts/fixtures/raster_vector_processing_cases.py; docs/adr/0234).
+#[test]
+fn the_raster_and_vector_cases_do_what_they_say() {
+    raster_cases("raster-vector.json", 13);
 }
 
 /// The names an expression field offers on rasters (docs/adr/0233 §3): the

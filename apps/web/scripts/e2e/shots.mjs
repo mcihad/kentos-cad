@@ -5963,6 +5963,115 @@ function rasterOpsScenes() {
   ];
 }
 
+// Raster ve vektör and Taranmış harita (docs/adr/0234): Rasterleştir, Rasterden alan and Rasterden nokta over the valley
+// (fixtures/interaction/v1/rasters.kcad); Rasterden çizgi, Çizgi yakala, Alan kapat and Eğrilere kot ver over a scanned
+// topographic sheet (fixtures/interaction/v1/scanned.kcad, scripts/fixtures/scanned_scene.py): brown contours, a blue
+// stream, a road and six parcels in black. The desktop's are `tools_screens`' vek-* (apps/desktop/src/raster_vector_scenes.rs).
+const SCANNED = readFileSync(new URL('../../../../fixtures/interaction/v1/scanned.kcad', import.meta.url), 'utf8');
+const SCANNED_SHEET = readFileSync(new URL('../../../../fixtures/interaction/v1/scanned/pafta.tif', import.meta.url)).toString('base64');
+SCENES.rastervector = rasterVectorScenes();
+
+function rasterVectorScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const file = (n) => `new File([Uint8Array.from(atob(${JSON.stringify(RASTER_FILES[n])}), (c) => c.charCodeAt(0))], ${JSON.stringify(n)})`;
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const VALLEY = [X0, Y0 - 518.4, X0 + 768, Y0];
+  const PARCELS = [487310, 4420360, 487642, 4420462];
+  const SHEET = [486900, 4420850, 487500, 4421300];
+  const HILL = [487120, 4421040, 487290, 4421160];
+  /** The valley open (the scanned sheet and the photograph hidden), or the scanned sheet; the view on `b`. */
+  const opened = async (ui, scanned, b) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      ${
+        scanned
+          ? `rasterService().setFile('scanned/pafta.tif', new File([Uint8Array.from(atob(${JSON.stringify(SCANNED_SHEET)}), (c) => c.charCodeAt(0))], 'pafta.tif'));
+      if (!(await k.files.load(${JSON.stringify(SCANNED)}, null))) throw new Error('scanned.kcad did not load');`
+          : `const files = { 'dem.tif': ${file('dem.tif')}, 'orto.tif': ${file('orto.tif')}, 'tarama.png': ${file('tarama.png')} };
+      for (const [n, f] of Object.entries(files)) rasterService().setFile('rasters/' + n, f);
+      if (!(await k.files.load(${JSON.stringify(RASTERS)}, null))) throw new Error('rasters.kcad did not load');
+      k.doc.layers.setVisible('tarama', false);
+      k.doc.layers.setVisible('orto', false);`
+      }
+      k.selection.clear();
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** Runs `tool` with `values` to its end and closes its window. */
+  const runTool = async (ui, tool, values) => {
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    await ui.escapeAll(2);
+  };
+  /** The runs in turn over the opened drawing, the layers `hide` hidden. */
+  const drawn = (scanned, view, runs, hide = []) => async (ui) => {
+    await opened(ui, scanned, view);
+    for (const [tool, values] of runs) await runTool(ui, tool, values);
+    await ui.eval(`(() => { for (const id of ${JSON.stringify(hide)}) window.kentos.doc.layers.setVisible(id, false); })()`);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  /** `tool`'s window with `values` over the opened drawing, after the runs `before`. */
+  const windowOf = (scanned, view, tool, values, before = []) => async (ui) => {
+    await opened(ui, scanned, view);
+    for (const [t, v] of before) await runTool(ui, t, v);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const SHEET_IN = { input: QUERY_LAYER('pafta') };
+  // On the third ring round the hill top (pixel 626, 350), clicked two pixels short of it.
+  const ON_RING = { x: 487212.25, y: 4421124.75 };
+  // Inside the north-west parcel: the contours and the stream within 300 of the paper even with the scan's noise, the black lines not.
+  const IN_PARCEL = { x: 487262, y: 4421025 };
+  const CONTOURS = ['raster.toLines', { ...SHEET_IN, select: 'color', color: '#9C5C2C', tolerance: 60, spur: 5, simplify: 1 }];
+  const CUT = { start: { x: 487187.75, y: 4421049.75 }, end: { x: 487187.75, y: 4421123.75 }, first: 980, step: 5 };
+  return [
+    { id: 'vek-serit', open: async (ui) => (await opened(ui, false, VALLEY), await tiles(ui)), close },
+    {
+      id: 'vek-rasterlestir-cizim',
+      open: drawn(false, PARCELS, [['raster.rasterize', { input: QUERY_LAYER('parsel'), valueFrom: 'field', field: 'Parsel', cellSize: 2 }]], ['dem']),
+      close,
+    },
+    {
+      id: 'vek-alan-cizim',
+      open: drawn(
+        false,
+        VALLEY,
+        [
+          ['raster.reclassify', { input: QUERY_LAYER('dem'), table: '* 905 1; 905 920 2; 920 935 3; 935 950 4; 950 * 5', sample: 'u8' }],
+          ['raster.toPolygons', { input: QUERY_LAYER('islem-siniflar') }],
+        ],
+        ['dem'],
+      ),
+      close,
+    },
+    { id: 'vek-nokta-cizim', open: drawn(false, VALLEY, [['raster.toPoints', { input: QUERY_LAYER('dem'), mode: 'extrema', radius: 12 }]]), close },
+    { id: 'vek-yakala', open: windowOf(true, HILL, 'scan.captureLine', { ...SHEET_IN, at: ON_RING, z: 1000 }), close },
+    { id: 'vek-yakala-cizim', open: drawn(true, HILL, [['scan.captureLine', { ...SHEET_IN, at: ON_RING, z: 1000 }]]), close },
+    { id: 'vek-kapat-cizim', open: drawn(true, SHEET, [['scan.closeArea', { ...SHEET_IN, at: IN_PARCEL, tolerance: 300 }]]), close },
+    { id: 'vek-cizgi-cizim', open: drawn(true, HILL, [CONTOURS], ['pafta']), close },
+    { id: 'vek-kot', open: windowOf(true, HILL, 'scan.contourElevations', { curves: QUERY_LAYER('islem-cizgiler'), ...CUT }, [CONTOURS]), close },
+  ];
+}
+
 // Harita servisleri (docs/adr/0208) over a CBS project in TUREF / TM33 at Ankara's Kızılay: parcels and a building over
 // a ready basemap, its tiles from the service itself (the network is needed), in the project's system. The desktop's
 // are `tools_screens`' servis-* (apps/desktop/src/service_scenes.rs), the same drawing.

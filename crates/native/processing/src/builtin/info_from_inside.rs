@@ -194,6 +194,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                 id: Slot(t.base().id),
                 attrs: Some(attrs),
                 label: None,
+                zs: None,
             });
         }
     }

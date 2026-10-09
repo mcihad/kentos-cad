@@ -43,15 +43,17 @@ export interface PointRequest {
 }
 
 /**
- * A point job's result: the GeoTIFF, its grid (the affine's six numbers, width, height), its bands and each band's
- * look (`RasterStyle` JSON), what the run met (JSON: taken, merged, unread, noElevation, empty, radius, variogram,
- * cross), and the cross-validation's rows (each point's place among the points, its object, and five numbers a row:
+ * A point job's result: the GeoTIFF, its grid (the affine's six numbers, width, height), its bands, samples and each
+ * band's look (`RasterStyle` JSON), what the run met (JSON: taken, merged, unread, noElevation, empty, outside, radius,
+ * variogram, cross), and the cross-validation's rows (each point's place among the points, its object, and five numbers a row:
  * x, y, measured, predicted, standard error; NaN for none).
  */
 export interface PointResult {
   bytes: Uint8Array;
   grid: number[];
   bands: number;
+  /** The samples as the contract names them: `f32`, Rasterleştir's its own (docs/adr/0234 §3). */
+  sample: string;
   styles: [string, string];
   notes: string;
   crossPoint: Uint32Array;
@@ -74,7 +76,8 @@ export interface OpsRequest {
 /**
  * A raster operation's result: a raster (the GeoTIFF's bytes, its grid, bands, samples and look), or a table's figures
  * (each zone's seven numbers: cells with a value, the statistic asked for, sum, mean, least, largest, standard
- * deviation; NaN for none), or the histogram (JSON); what the run met (JSON: cells, emptyCells).
+ * deviation; NaN for none), or the histogram (JSON), or a vectorizing run's features; what the run met (JSON: cells,
+ * emptyCells).
  */
 export interface OpsResult {
   /** The inputs the run read (`opsReads`): Raster hesaplayıcı's those its expression names, the first the grid's. */
@@ -87,6 +90,22 @@ export interface OpsResult {
   notes: string;
   zones?: Float64Array;
   histogram?: string;
+  features?: AnalysisFeatures;
+}
+
+/**
+ * A vectorizing run's features (docs/adr/0234): `polygons`, `lines` or `points`; each one's value (NaN: none), text and
+ * tag (a point: 1 a peak, 2 a pit; Alan kapat's area: 1 written unsimplified), each area's ring count, each ring's,
+ * line's or point's vertex count, and every vertex's x, y in order.
+ */
+export interface AnalysisFeatures {
+  kind: 'polygons' | 'lines' | 'points';
+  values: Float64Array;
+  texts: string[];
+  tags: Uint8Array;
+  rings: Uint32Array;
+  sizes: Uint32Array;
+  xy: Float64Array;
 }
 
 export type AnalysisReply =

@@ -366,6 +366,7 @@ pub struct PointAnalysis {
     header: Vec<u8>,
     grid: Vec<f64>,
     bands: u32,
+    sample: String,
     styles: [String; 2],
     head: Vec<u8>,
     notes: String,
@@ -421,6 +422,10 @@ impl PointAnalysis {
                 .chain([f64::from(g.width), f64::from(g.height)])
                 .collect(),
             bands: job.bands(),
+            sample: serde_json::to_value(job.sample())
+                .ok()
+                .and_then(|v| v.as_str().map(str::to_owned))
+                .unwrap_or_default(),
             styles: [style(1), style(2)],
             job: Some(job),
             header,
@@ -442,6 +447,11 @@ impl PointAnalysis {
 
     pub fn bands(&self) -> u32 {
         self.bands
+    }
+
+    /// The result's samples as the contract names them (`f32`; Rasterleştir's its own).
+    pub fn sample(&self) -> String {
+        self.sample.clone()
     }
 
     /// Band `band`'s look (`RasterStyle` JSON).
@@ -478,6 +488,7 @@ impl PointAnalysis {
         let n = &done.notes;
         let mut notes = serde_json::json!({
             "taken": n.taken, "merged": n.merged, "unread": n.unread, "noElevation": n.no_elevation, "empty": n.empty,
+            "outside": n.outside,
         });
         if let Some(r) = n.radius {
             notes["radius"] = serde_json::json!(r);
@@ -503,7 +514,7 @@ impl PointAnalysis {
         self.head.clone()
     }
 
-    /// What the run met (JSON): taken, merged, unread, noElevation, empty, radius, variogram, cross (its sums).
+    /// What the run met (JSON): taken, merged, unread, noElevation, empty, outside, radius, variogram, cross (its sums).
     pub fn notes(&self) -> String {
         self.notes.clone()
     }
@@ -637,6 +648,7 @@ impl OpsOpening {
             notes: String::new(),
             zones: Vec::new(),
             histogram: String::new(),
+            features: None,
         })
     }
 }
@@ -670,6 +682,7 @@ pub struct OpsAnalysis {
     notes: String,
     zones: Vec<f64>,
     histogram: String,
+    features: Option<kentos_raster::vector::Features>,
 }
 
 impl OpsAnalysis {
@@ -790,6 +803,10 @@ impl OpsAnalysis {
                 .to_string();
                 Ok(Vec::new())
             }
+            OpsFinished::Features(f) => {
+                self.features = Some(f);
+                Ok(Vec::new())
+            }
         }
     }
 
@@ -837,5 +854,67 @@ impl OpsAnalysis {
     /// The histogram (JSON: lo, hi, counts, below, above, valid, empty).
     pub fn histogram(&self) -> String {
         self.histogram.clone()
+    }
+
+    /// A vectorizing run's features (docs/adr/0234): `polygons`, `lines` or
+    /// `points`; empty for any other run.
+    #[wasm_bindgen(js_name = featureKind)]
+    pub fn feature_kind(&self) -> String {
+        use kentos_raster::vector::FeatureKind;
+        match self.features.as_ref().map(|f| f.kind) {
+            Some(FeatureKind::Polygons) => "polygons",
+            Some(FeatureKind::Lines) => "lines",
+            Some(FeatureKind::Points) => "points",
+            None => "",
+        }
+        .to_owned()
+    }
+
+    /// Each feature's value (NaN: none).
+    #[wasm_bindgen(js_name = featureValues)]
+    pub fn feature_values(&self) -> Vec<f64> {
+        self.features
+            .as_ref()
+            .map_or_else(Vec::new, |f| f.values.clone())
+    }
+
+    /// Each feature's value as its text.
+    #[wasm_bindgen(js_name = featureTexts)]
+    pub fn feature_texts(&self) -> Vec<String> {
+        self.features
+            .as_ref()
+            .map_or_else(Vec::new, |f| f.texts.clone())
+    }
+
+    /// Each feature's tag (a point: 1 a peak, 2 a pit; an area: 1 written unsimplified).
+    #[wasm_bindgen(js_name = featureTags)]
+    pub fn feature_tags(&self) -> Vec<u8> {
+        self.features
+            .as_ref()
+            .map_or_else(Vec::new, |f| f.tags.clone())
+    }
+
+    /// Each area's ring count (empty for lines and points).
+    #[wasm_bindgen(js_name = featureRings)]
+    pub fn feature_rings(&self) -> Vec<u32> {
+        self.features
+            .as_ref()
+            .map_or_else(Vec::new, |f| f.rings.clone())
+    }
+
+    /// Each ring's, line's or point's vertex count.
+    #[wasm_bindgen(js_name = featureSizes)]
+    pub fn feature_sizes(&self) -> Vec<u32> {
+        self.features
+            .as_ref()
+            .map_or_else(Vec::new, |f| f.sizes.clone())
+    }
+
+    /// Every vertex's x, y in order.
+    #[wasm_bindgen(js_name = featureXy)]
+    pub fn feature_xy(&self) -> Vec<f64> {
+        self.features
+            .as_ref()
+            .map_or_else(Vec::new, |f| f.xy.clone())
     }
 }

@@ -151,6 +151,8 @@ mod interpolation_scenes;
 #[cfg(test)]
 mod raster_ops_scenes;
 #[cfg(test)]
+mod raster_vector_scenes;
+#[cfg(test)]
 mod service_scenes;
 mod services;
 mod sheet_inputs;

@@ -398,7 +398,14 @@
     "processing.run.raster.zonalStatistics",
     "processing.run.raster.histogram",
     "processing.run.raster.focalStatistics",
-    "processing.run.raster.cellStatistics"
+    "processing.run.raster.cellStatistics",
+    "processing.run.raster.rasterize",
+    "processing.run.raster.toPolygons",
+    "processing.run.raster.toLines",
+    "processing.run.raster.toPoints",
+    "processing.run.scan.captureLine",
+    "processing.run.scan.closeArea",
+    "processing.run.scan.contourElevations"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

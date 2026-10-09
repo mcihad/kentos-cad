@@ -122,13 +122,13 @@ export function specOf(tool: Record<string, unknown>, list: readonly RasterEntit
 const NO_HOST = 'Bu araç rasterin dosyasını okuyup sonucu dosyaya yazar; bu ortamda dosya erişimi yok.';
 
 /** A job's end: its result and the host that keeps it, or the run's end. */
-type Ran = { ok: true; host: RasterRunHost; result: OpsResult } | { ok: false; end: RunResult };
+export type Ran = { ok: true; host: RasterRunHost; result: OpsResult } | { ok: false; end: RunResult };
 
 /**
  * Runs the job over the rasters (and the areas' objects). A raster whose file cannot be read is said only when the run
  * reads it (Raster hesaplayıcı reads the rasters its expression names).
  */
-async function analyze(list: readonly RasterEntity[], spec: string, shapes: readonly Entity[], feedback: Feedback, label: string): Promise<Ran> {
+export async function analyze(list: readonly RasterEntity[], spec: string, shapes: readonly Entity[], feedback: Feedback, label: string): Promise<Ran> {
   const host = rasterRunHost();
   if (!host) return { ok: false, end: { refused: NO_HOST } };
   const sources = list.map((r) => {
@@ -151,7 +151,7 @@ async function analyze(list: readonly RasterEntity[], spec: string, shapes: read
 }
 
 /** The rasters of the input and their names, or why the tool does not run. */
-function rastersFor(input: FeatureSet | null | undefined, ctx: RunContext, one: boolean): { list: RasterEntity[]; names: string[] } | { refused: string } {
+export function rastersFor(input: FeatureSet | null | undefined, ctx: RunContext, one: boolean): { list: RasterEntity[]; names: string[] } | { refused: string } {
   const r = rastersOf(input, ctx);
   if (!r.list.length) return { refused: 'Raster seçin: bu araç raster ister.' };
   if (one && r.list.length > 1) return { refused: `${r.list.length} raster seçili; bu araç tek raster ister.` };

@@ -95,7 +95,7 @@ fn similarity(affine: &[f64; 6]) -> Option<(f64, f64)> {
 
 /// Points along an arc (centre `c`, radius `r`, from angle `a0` by `sweep`)
 /// whose chords stay within the tolerance; the ends left to the caller.
-fn arc_inner_points(c: Vec2, r: f64, a0: f64, sweep: f64) -> Vec<Vec2> {
+pub(crate) fn arc_inner_points(c: Vec2, r: f64, a0: f64, sweep: f64) -> Vec<Vec2> {
     let step = if r > CHORD_TOLERANCE {
         2.0 * libm::acos(1.0 - CHORD_TOLERANCE / r)
     } else {

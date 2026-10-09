@@ -272,6 +272,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                 id: Slot(t.base().id),
                 attrs: Some(current.base().attrs.clone()),
                 label: None,
+                zs: None,
             });
         }
     }

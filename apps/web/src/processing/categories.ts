@@ -29,4 +29,7 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   // docs/adr/0233: map algebra, masks, mosaics, statistics.
   { id: 'rasterOps', label: 'Raster işlemleri', icon: 'rasterCalculator', description: 'Hesaplayıcı, sınıflandırma, maskeyle kırpma, mozaik, yeniden örnekleme' },
   { id: 'rasterStats', label: 'Raster istatistiği', icon: 'zonalStats', description: 'Bölgesel, komşuluk ve hücre istatistikleri, histogram' },
+  // docs/adr/0234: vectors burnt into cells, regions, lines and points out of them; scanned sheets digitized.
+  { id: 'rasterVector', label: 'Raster ve vektör', icon: 'rasterize', description: 'Rasterleştirme; rasterden alan, çizgi ve nokta' },
+  { id: 'scannedMap', label: 'Taranmış harita', icon: 'captureLine', description: 'Çizgi yakalama, alan kapatma, eğrilere kot verme' },
 ];

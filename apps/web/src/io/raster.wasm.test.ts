@@ -9,8 +9,9 @@ import { analyzeHere, analyzeOpsHere, analyzePointsHere, level0, surfaceModulesB
  * contours' (scripts/fixtures/contour_cases.py; the points bit for bit, the Kot texts), and the interpolations' and
  * densities' (scripts/fixtures/interpolation_cases.py, docs/adr/0232: a 32-bit cell within one unit in the last place,
  * each point's cross-validation within the method's bound), and the raster operations' (scripts/fixtures/raster_ops_cases.py,
- * docs/adr/0233: each sample by its case's rule, the zones' figures, the histograms, the refusals). Skipped only when the
- * packages have not been built.
+ * docs/adr/0233: each sample by its case's rule, the zones' figures, the histograms, the refusals), and raster and vector's
+ * (scripts/fixtures/raster_vector_cases.py, docs/adr/0234: the features bit for bit, Rasterleştir's every sample and its
+ * notes, the refusals). Skipped only when the packages have not been built.
  */
 
 type Bytes = Uint8Array<ArrayBuffer>;
@@ -164,22 +165,25 @@ interface OpsCase {
 }
 
 /**
- * A reference input as an uncompressed TIFF in one strip: a 32-bit float band (its nodata the GDAL_NODATA tag) or bytes
- * (three bands RGB). The core reads its own tiled files (crates/shared/raster/tests/all/raster_ops.rs) and these alike;
- * the place is the run's, from the settings.
+ * A reference input as an uncompressed TIFF in one strip: a 32-bit float band or a 16-bit signed one (its nodata the
+ * GDAL_NODATA tag) or bytes (three bands RGB). The core reads its own tiled files (crates/shared/raster/tests/all/raster_ops.rs)
+ * and these alike; the place is the run's, from the settings.
  */
 function tiffOf(r: OpsInput): Uint8Array {
-  if (r.alpha || !((r.sample === 'f32' && r.bands === 1) || (r.sample === 'u8' && (r.bands === 1 || r.bands === 3)))) throw new Error(`${r.name}: not an input this writer makes`);
+  const one = r.bands === 1;
+  if (r.alpha || !((r.sample === 'f32' && one) || (r.sample === 'i16' && one) || (r.sample === 'u8' && (one || r.bands === 3)))) throw new Error(`${r.name}: not an input this writer makes`);
   const float = r.sample === 'f32';
-  const strip = new Uint8Array(r.width * r.height * r.bands * (float ? 4 : 1));
+  const size = float ? 4 : r.sample === 'i16' ? 2 : 1;
+  const strip = new Uint8Array(r.width * r.height * r.bands * size);
   const sv = new DataView(strip.buffer);
-  r.values.forEach((v, k) => (float ? sv.setFloat32(4 * k, v ?? NaN, true) : (strip[k] = v ?? 0)));
+  const empty = typeof r.nodata === 'number' ? r.nodata : 0;
+  r.values.forEach((v, k) => (float ? sv.setFloat32(4 * k, v ?? NaN, true) : size === 2 ? sv.setInt16(2 * k, v ?? empty, true) : (strip[k] = v ?? empty)));
   const nodata = r.nodata === null ? null : String(r.nodata);
   // [tag, type (2 ASCII, 3 SHORT, 4 LONG), values]; the strip's offset is filled in below.
   const tags: [number, 2 | 3 | 4, number[] | string][] = [
     [256, 4, [r.width]],
     [257, 4, [r.height]],
-    [258, 3, Array<number>(r.bands).fill(float ? 32 : 8)],
+    [258, 3, Array<number>(r.bands).fill(8 * size)],
     [259, 3, [1]],
     [262, 3, [r.bands === 3 ? 2 : 1]],
     [273, 4, [0]],
@@ -187,7 +191,7 @@ function tiffOf(r: OpsInput): Uint8Array {
     [278, 4, [r.height]],
     [279, 4, [strip.length]],
     [284, 3, [1]],
-    [339, 3, Array<number>(r.bands).fill(float ? 3 : 1)],
+    [339, 3, Array<number>(r.bands).fill(float ? 3 : size === 2 ? 2 : 1)],
     ...(nodata === null ? [] : [[42113, 2, `${nodata}\0`] as [number, 2, string]]),
   ];
   const width = (t: 2 | 3 | 4) => (t === 2 ? 1 : t === 3 ? 2 : 4);
@@ -274,6 +278,81 @@ describe.skipIf(!surfaceModulesBuilt)('raster operations in the module (crates/w
         });
       }
       if (c.expect.histogram) expect(JSON.parse(out.histogram!)).toMatchObject(c.expect.histogram);
+    });
+  }
+});
+
+interface VectorFeatures {
+  kind: string;
+  values: (number | null)[];
+  texts: string[];
+  tags: number[];
+  rings: number[];
+  sizes: number[];
+  xy: number[];
+}
+interface VectorCase {
+  name: string;
+  tool: { kind: string };
+  inputs?: OpsInput[];
+  shapes?: unknown[];
+  values?: (string | null)[] | null;
+  cell?: number;
+  grid?: unknown;
+  expect: {
+    refused?: string;
+    features?: VectorFeatures;
+    raster?: { width: number; height: number; values: (number | null)[] };
+    notes?: { taken: number; unread: number; outside: number; empty: number };
+  };
+}
+
+/** Two lists of numbers alike bit for bit, NaN only where the case says none. */
+const alike = (got: ArrayLike<number>, want: (number | null)[]) =>
+  got.length === want.length && Array.from(got).every((g, k) => (want[k] === null ? Number.isNaN(g) : Object.is(g, want[k]) || g === want[k]));
+
+describe.skipIf(!surfaceModulesBuilt)('raster and vector in the module (crates/wasm/raster-wasm, docs/adr/0234)', () => {
+  const vector = json<{ cases: VectorCase[] }>('raster-vector/v1/cases.json');
+
+  it('reads every case', () => {
+    expect(vector.cases.length).toBeGreaterThanOrEqual(39);
+  });
+
+  for (const c of vector.cases) {
+    it(`raster and vector: ${c.name}`, async () => {
+      if (c.tool.kind === 'rasterize') {
+        const spec = JSON.stringify({ tool: c.tool, cell: c.cell ?? 0, grid: c.grid ?? null });
+        const run = analyzePointsHere(JSON.stringify(c.shapes), JSON.stringify(c.values ?? null), spec, true);
+        if (c.expect.refused) {
+          await expect(run).rejects.toThrow(c.expect.refused);
+          return;
+        }
+        const out = await run;
+        const raster = c.expect.raster!;
+        expect([out.grid[6], out.grid[7]]).toEqual([raster.width, raster.height]);
+        const got = await level0(out.bytes);
+        const off = got.findIndex((g, k) => !alike([g], [raster.values[k]]));
+        expect(got.length).toBe(raster.values.length);
+        expect(off, `sample ${off}: ${got[off]} for ${raster.values[off]}`).toBe(-1);
+        expect(JSON.parse(out.notes)).toMatchObject(c.expect.notes!);
+        return;
+      }
+      const inputs = c.inputs!.map((r) => ({ ...r, name: 'A' }));
+      const spec = JSON.stringify({ tool: c.tool, inputs: inputs.map((r) => ({ affine: r.affine, name: r.name })) });
+      const run = analyzeOpsHere(inputs.map(tiffOf), spec, '[]');
+      if (c.expect.refused) {
+        await expect(run).rejects.toThrow(c.expect.refused);
+        return;
+      }
+      const f = (await run).features!;
+      const want = c.expect.features!;
+      expect(f.kind).toBe(want.kind);
+      expect(alike(f.values, want.values), `values ${Array.from(f.values)}`).toBe(true);
+      expect(f.texts).toEqual(want.texts);
+      expect(Array.from(f.tags)).toEqual(want.tags);
+      expect(Array.from(f.rings)).toEqual(want.rings);
+      expect(Array.from(f.sizes)).toEqual(want.sizes);
+      expect(alike(f.xy, want.xy), `xy ${Array.from(f.xy).slice(0, 16)}`).toBe(true);
     });
   }
 });

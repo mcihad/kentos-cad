@@ -12,6 +12,7 @@ pub mod numbering;
 pub mod pointcloud;
 pub mod queries;
 pub mod raster_ops;
+pub mod raster_vector;
 pub mod select_by_expression;
 pub mod select_by_location;
 pub mod summary_statistics;
@@ -81,6 +82,14 @@ pub fn tools() -> Vec<Tool> {
         raster_ops::histogram(),
         raster_ops::focal_statistics(),
         raster_ops::cell_statistics(),
+        // Raster ve vektör and Taranmış harita (docs/adr/0234): both platforms.
+        raster_vector::rasterize(),
+        raster_vector::to_polygons(),
+        raster_vector::to_lines(),
+        raster_vector::to_points(),
+        raster_vector::capture_line(),
+        raster_vector::close_area(),
+        raster_vector::contour_elevations_tool(),
     ]
 }
 

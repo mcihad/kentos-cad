@@ -6649,6 +6649,907 @@
     ]
    }
   },
+  "raster.rasterize": {
+   "title": "Rasterleştir",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Yakılacak alanlar, çizgiler ve noktalar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "valueFrom",
+     "label": "Değer",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "constant",
+        "label": "Sabit"
+       },
+       {
+        "value": "field",
+        "label": "Alandan"
+       }
+      ]
+     }
+    },
+    {
+     "name": "value",
+     "label": "Sabit değer",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "field",
+     "label": "Değer alanı",
+     "description": "Nesnenin bu alandaki sayısı; sayı olmayan nesne alınmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "overlap",
+     "label": "Çakışanlar",
+     "description": "Bir hücreyi birden çok nesne yakarsa kalan değer; Sayı nesne sayısıdır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "last",
+        "label": "Son çizilen"
+       },
+       {
+        "value": "first",
+        "label": "İlk çizilen"
+       },
+       {
+        "value": "max",
+        "label": "En büyük"
+       },
+       {
+        "value": "min",
+        "label": "En küçük"
+       },
+       {
+        "value": "sum",
+        "label": "Toplam"
+       },
+       {
+        "value": "count",
+        "label": "Sayı"
+       }
+      ]
+     }
+    },
+    {
+     "name": "sample",
+     "label": "Sonuç türü",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "f32",
+        "label": "Ondalık 32 bit"
+       },
+       {
+        "value": "f64",
+        "label": "Ondalık 64 bit"
+       },
+       {
+        "value": "i32",
+        "label": "Tam sayı 32 bit"
+       },
+       {
+        "value": "u8",
+        "label": "Bayt (0–254)"
+       }
+      ]
+     }
+    },
+    {
+     "name": "cellSize",
+     "label": "Hücre boyu",
+     "description": "0: kendiliğinden, kutunun kısa kenarının 250'de biri yuvarlanarak (1, 2, 2,5, 5 × 10ᵏ); ızgara bu boyun katlarına oturur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "extent",
+     "label": "Kapsam",
+     "description": "Rasterin ızgarası: sonuç seçilen rasterle hücre hücre üst üste gelir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "points",
+        "label": "Girdinin kutusu"
+       },
+       {
+        "value": "raster",
+        "label": "Rasterin ızgarası"
+       }
+      ]
+     }
+    },
+    {
+     "name": "grid",
+     "label": "Izgara rasteri",
+     "description": "Izgarası (yeri, hücre boyu, boyu) alınan raster.",
+     "optional": true,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa girdinin katmanının adının sonuna “-raster” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<katman>-raster.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "rasterize",
+     "text": "Raster ve vektör"
+    },
+    "icon": "rasterize",
+    "about": "Nesneleri rasterin hücrelerine yakar: alanlar merkezlerini, çizgiler geçtikleri hücreleri, noktalar içinde oldukları hücreyi.",
+    "help": [
+     "Kapalı şekil (kapalı alan, daire, tam elips, kapalı eğri, tarama) merkezi içinde olan hücreleri, açık şekil (çizgi, çoklu çizgi, yay, elips yayı, açık eğri) bir noktası yarı açık karesine düşen bütün hücreleri yakar; yaylar 0,1 mm kirişlerle izlenir. Nokta içinde olduğu hücreyi yakar. Bir nesne bir hücreyi bir kez sayar.",
+     "Değer: Sabit değer ya da seçilen alandaki sayı (ondalık nokta ya da virgül); sayı olmayan nesne alınmaz, söylenir. Çakışanlar: girdinin sırasında sonraki (Son çizilen), önceki, en büyük, en küçük, toplam ya da nesne sayısı.",
+     "Tam sayıda yarımlar sıfırdan uzağa yuvarlanır; türe sığmayan değer reddedilir (Tam sayı 32 bit'te −2 147 483 648, Bayt'ta 255 değersizdir). Yanmayan hücre değersizdir.",
+     "Hücre boyu 0 ise nesnelerin kutusunun kısa kenarının 250'de biri, 1, 2, 2,5 ya da 5 × 10ᵏ'ye yuvarlanır; ızgara bu boyun katlarına oturur. Rasterin ızgarası seçilirse sonuç o rasterle hücre hücre üst üste gelir.",
+     "Sonuç karolu, Deflate'li GeoTIFF'tir; Çizime ekle açıksa girdinin katmanının hemen altındaki yeni katmana eklenir (nesneler üstte kalır)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "RASTERIZE",
+     "VEKTORRASTER"
+    ]
+   }
+  },
+  "raster.toPolygons": {
+   "title": "Rasterden alan",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Bölgeleri alan yapılacak raster (genellikle sınıflandırılmış).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "connect",
+     "label": "Komşuluk",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "four",
+        "label": "4 komşu (kenar)"
+       },
+       {
+        "value": "eight",
+        "label": "8 komşu (kenar ve köşe)"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur; rasterin katmanının hemen üstünde.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "rasterize",
+     "text": "Raster ve vektör"
+    },
+    "icon": "toPolygons",
+    "about": "Rasterin değeri eşit komşu hücrelerini alan yapar; her alanın Değer özniteliği bölgenin değeridir.",
+    "help": [
+     "Bölge, değeri tam eşit ve komşu (4 komşu: kenarla; 8 komşu: kenar ya da köşeyle) hücrelerin bağlı kümesidir; değersiz hücre bölge değildir.",
+     "Halkalar hücre kenarlarındandır: dış halka saat yönünün tersine, delikler saat yönünde; bölgeyi bir noktadan dokunarak saran boşluk o noktada dış halkaya değen delik olur. Alanlar bölgelerin ilk hücresinin sırasıyla.",
+     "En çok 8192 × 8192 hücre, 1 000 000 alan: çok değerli raster için önce Yeniden sınıflandır'la sınıflara ayırın.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Köşeler hücre uzayında (hücre köşeleri ya da merkezleri) bulunur, rasterin yeriyle (afin) çizime geçer."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "RASTERDENALAN",
+     "RASTERALAN"
+    ]
+   }
+  },
+  "raster.toLines": {
+   "title": "Rasterden çizgi",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Çizgileri alınacak raster.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "select",
+     "label": "Çizgi hücreleri",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "nonZero",
+        "label": "0 ve değersiz dışındakiler"
+       },
+       {
+        "value": "range",
+        "label": "Değer aralığı"
+       },
+       {
+        "value": "color",
+        "label": "Renk"
+       }
+      ]
+     }
+    },
+    {
+     "name": "min",
+     "label": "En küçük",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "max",
+     "label": "En büyük",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "color",
+     "label": "Renk",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "#RRGGBB"
+     }
+    },
+    {
+     "name": "tolerance",
+     "label": "Renk toleransı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "spur",
+     "label": "Kısa parçaları at",
+     "description": "Hücre cinsinden; 0 hiçbirini atmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "simplify",
+     "label": "Sadeleştirme",
+     "description": "Douglas–Peucker toleransı, hücre cinsinden; 0 yalnız doğrultudaki köşeleri atar.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur; rasterin katmanının hemen üstünde.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "rasterize",
+     "text": "Raster ve vektör"
+    },
+    "icon": "toLines",
+    "about": "Rasterdeki ince çizgileri inceltip çoklu çizgi yapar: sıfır dışındaki hücreler, bir değer aralığı ya da bir renk.",
+    "help": [
+     "Çizgi hücreleri: 0 ve değersiz dışındakiler, en küçük ile en büyük arasındaki değerler ya da üç bantlı rasterde #RRGGBB'ye Renk toleransı içindeki renkler ((ΔR² + ΔG² + ΔB²) ≤ tolerans²).",
+     "Çizgi hücreleri Zhang–Suen inceltmesiyle (Lü–Wang düzeltmesi: iki piksel kalınlığındaki çapraz çizgi kalır) tek piksele indirilir; iskeletin kavşaktan kavşağa yolları birer çoklu çizgidir. Kısa parçaları at: ucu boşta, kavşağa bağlı ve bu kadar adımdan kısa dallar, sonra bütün kısa yollar atılır. Sadeleştirme hücre cinsinden Douglas–Peucker toleransıdır.",
+     "Kapalı halka çoklu çizgisi ilk noktasını sonda yineler. En çok 8192 × 8192 hücre.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Köşeler hücre uzayında (hücre köşeleri ya da merkezleri) bulunur, rasterin yeriyle (afin) çizime geçer."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "RASTERDENCIZGI"
+    ]
+   }
+  },
+  "raster.toPoints": {
+   "title": "Rasterden nokta",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Değerleri nokta yapılacak raster.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Yüksekliklerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "mode",
+     "label": "Biçim",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "step",
+        "label": "Adımla"
+       },
+       {
+        "value": "all",
+        "label": "Her hücre"
+       },
+       {
+        "value": "extrema",
+        "label": "Tepeler ve çukurlar"
+       }
+      ]
+     }
+    },
+    {
+     "name": "step",
+     "label": "Adım",
+     "description": "Hücre cinsinden: k hücrede bir nokta.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "radius",
+     "label": "Pencere yarıçapı",
+     "description": "Hücre cinsinden: (2r + 1)² pencere.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "elevation",
+     "label": "Kot olarak yaz",
+     "description": "Noktanın kotu hücrenin değeri.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur; rasterin katmanının hemen üstünde.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "rasterize",
+     "text": "Raster ve vektör"
+    },
+    "icon": "toPoints",
+    "about": "Hücre merkezlerinde nokta yazar: adım adım, her hücrede ya da yalnız tepe ve çukurlarda; kotu hücrenin değeri.",
+    "help": [
+     "Adımla: k hücrede bir (i mod k = ⌊k/2⌋ ve j mod k = ⌊k/2⌋ olan hücreler). Tepeler ve çukurlar: (2r + 1)² pencerede, değeri olan bütün komşularından kesin büyük olan tepe, kesin küçük olan çukur.",
+     "Noktalar satır satır; öznitelikleri Değer (ve Tür: Tepe ya da Çukur). En çok 2 000 000 nokta.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "RASTERDENNOKTA",
+     "YUKSEKLIKNOKTALARI"
+    ]
+   }
+  },
+  "scan.captureLine": {
+   "title": "Çizgi yakala",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Taranmış pafta ya da harita rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "at",
+     "label": "Çizgi üzerinde nokta",
+     "description": "Çizginin üstüne ya da yanına tıklayın.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "point"
+     }
+    },
+    {
+     "name": "tolerance",
+     "label": "Renk toleransı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "spur",
+     "label": "Kısa parçaları at",
+     "description": "Hücre cinsinden; 0 hiçbirini atmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "simplify",
+     "label": "Sadeleştirme",
+     "description": "Douglas–Peucker toleransı, hücre cinsinden; 0 yalnız doğrultudaki köşeleri atar.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "z",
+     "label": "Kot",
+     "description": "Verilirse çizgilerin bütün köşelerinin kotu.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m",
+      "placeholder": "Yok"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur; rasterin katmanının hemen üstünde.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "captureLine",
+     "text": "Taranmış harita"
+    },
+    "icon": "captureLine",
+    "about": "Taranmış paftada tıklanan çizgiyi (ve ona bağlı aynı renkteki çizgileri) yakalayıp çoklu çizgi yapar; isterseniz kotuyla.",
+    "help": [
+     "Noktanın çevresindeki 7 × 7 hücrenin en koyusu tohumdur; hedef renk onun rengidir. Hedefe Renk toleransı içindeki, tohuma köşe ya da kenarla bağlı hücreler çizgidir. Tıklanan çizgiye bağlı aynı renkteki bütün çizgiler yakalanır: yalnız bir eğri için toleransı daraltın.",
+     "Çizgi hücreleri Zhang–Suen inceltmesiyle (Lü–Wang düzeltmesi: iki piksel kalınlığındaki çapraz çizgi kalır) tek piksele indirilir; iskeletin kavşaktan kavşağa yolları birer çoklu çizgidir. Kısa parçaları at: ucu boşta, kavşağa bağlı ve bu kadar adımdan kısa dallar, sonra bütün kısa yollar atılır. Sadeleştirme hücre cinsinden Douglas–Peucker toleransıdır.",
+     "Okuma tohumun çevresindeki 1024 × 1024 hücreyle başlar, çizgi pencerenin kenarına değdikçe genişler (en çok 8192 × 8192). 4 194 304 hücreden büyük yakalama reddedilir. Kot verilirse çizgilerin bütün köşelerinin kotu odur (eş yükselti eğrisi)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "RASTERDENHATYAKALA",
+     "HATYAKALA",
+     "RASTERDENEGRIYAKALA"
+    ]
+   }
+  },
+  "scan.closeArea": {
+   "title": "Alan kapat",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Taranmış pafta ya da harita rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "at",
+     "label": "Alanın içinde nokta",
+     "description": "Kapatılacak alanın içine tıklayın.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "point"
+     }
+    },
+    {
+     "name": "tolerance",
+     "label": "Renk toleransı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "holes",
+     "label": "Delikler",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "fill",
+        "label": "Doldur"
+       },
+       {
+        "value": "keep",
+        "label": "Koru"
+       }
+      ]
+     }
+    },
+    {
+     "name": "simplify",
+     "label": "Sadeleştirme",
+     "description": "Douglas–Peucker toleransı, hücre cinsinden; 0 yalnız doğrultudaki köşeleri atar.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur; rasterin katmanının hemen üstünde.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "captureLine",
+     "text": "Taranmış harita"
+    },
+    "icon": "closeArea",
+    "about": "Taranmış paftada tıklanan noktanın çevresindeki çizgilerin kapattığı alanı bulup alan yapar.",
+    "help": [
+     "Alan, noktanın hücresinin rengine Renk toleransı içindeki hücrelerin o hücreye kenarla bağlı kümesidir (çizgiler köşeyle bağlı olduğu için çapraz boşluktan sızmaz). Küme rasterin kenarına ulaşırsa alan kapanmıyordur: reddedilir.",
+     "Halkalar hücre kenarlarındandır; Doldur'da delikler atılır. Halkalar Douglas–Peucker'la sadeleşir; sadeleşen halkalar kendine ya da birbirine değerse alan sadeleştirilmeden yazılır ve söylenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "RASTERDENALANKAPAT",
+     "PAFTAALANKAPAT"
+    ]
+   }
+  },
+  "scan.contourElevations": {
+   "title": "Eğrilere kot ver",
+   "rows": [
+    {
+     "name": "curves",
+     "label": "Eğriler",
+     "description": "Kot verilecek eğriler; kilitli katmandakiler alınmaz.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "start",
+     "label": "Başlangıç",
+     "description": "Kesen çizginin ilk eğriden önceki ucu.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "point"
+     }
+    },
+    {
+     "name": "end",
+     "label": "Bitiş",
+     "description": "Kesen çizginin öbür ucu.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "point"
+     }
+    },
+    {
+     "name": "first",
+     "label": "İlk kot",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "step",
+     "label": "Aralık",
+     "description": "0 olamaz; eksi aralık kotları azaltır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "captureLine",
+     "text": "Taranmış harita"
+    },
+    "icon": "contourElevations",
+    "about": "Kesen bir çizginin geçtiği eğrilere sırayla kot verir: ilk kot, sonra her eğride bir aralık.",
+    "help": [
+     "Her eğrinin yeri, kesen çizgiyle kesişimlerinden başlangıca en yakınıdır; eğriler bu yerlere göre (eşitse girdinin sırasıyla) sıralanır ve k. eğrinin kotu İlk kot + k · Aralık olur. Kesmeyen eğri değişmez, söylenir.",
+     "Kot eğrinin bütün köşelerine (deliklerin ve parçaların dahil) yazılır; tek adımda. Eksi aralık kotları azaltır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "EGRILEREKOTVER"
+    ]
+   }
+  },
   "model:builtin.parcelSheet": {
    "title": "Parsel ölçü yazıları",
    "rows": [

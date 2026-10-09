@@ -38,12 +38,14 @@ pub mod ops;
 pub mod out;
 pub mod par;
 pub mod points;
+pub mod rasterize;
 pub mod reclass;
 pub mod relief;
 pub mod resample;
 pub mod solve;
 pub mod stats;
 pub mod terrain;
+pub mod vector;
 
 pub use from_points::{PointInput, PointJob, PointSpec, PointTool};
 pub use job::{Finished, Job, Spec, Tool};

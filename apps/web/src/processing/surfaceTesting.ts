@@ -2,8 +2,8 @@ import type { AnalysisResult, OpsResult, PointResult } from '../io/rasterAnalysi
 import type { RasterRunHost } from './rasterHost';
 
 /**
- * What the raster cases need in a test (processing/cases.test.ts, fixtures/processing/v1/surface.json, interpolation.json
- * and raster-ops.json; docs/adr/0231, 0232, 0233):
+ * What the raster cases need in a test (processing/cases.test.ts, fixtures/processing/v1/surface.json, interpolation.json,
+ * raster-ops.json and raster-vector.json; docs/adr/0231–0234):
  * the raster analysis module run in process (crates/wasm/raster-wasm, `pnpm wasm`), a raster host whose rasters are
  * the cases' files and which keeps what a run writes, and the formats module reading a written GeoTIFF's level 0.
  * Test code only.
@@ -38,6 +38,7 @@ interface PointApi {
   head(): Bytes;
   grid(): Float64Array;
   bands(): number;
+  sample(): string;
   style(band: number): string;
   notes(): string;
   crossPoint(): Uint32Array;
@@ -60,6 +61,13 @@ interface OpsApi {
   notes(): string;
   zones(): Float64Array;
   histogram(): string;
+  featureKind(): string;
+  featureValues(): Float64Array;
+  featureTexts(): string[];
+  featureTags(): Uint8Array;
+  featureRings(): Uint32Array;
+  featureSizes(): Uint32Array;
+  featureXy(): Float64Array;
   free(): void;
 }
 type HeaderOpening = { need(): Float64Array; put(offset: number, bytes: Uint8Array): void; analysis(spec: string): AnalysisApi; free(): void };
@@ -154,6 +162,7 @@ export async function analyzePointsHere(objects: string, values: string, spec: s
       bytes,
       grid: Array.from(a.grid()),
       bands: a.bands(),
+      sample: a.sample(),
       styles: [a.style(1), a.style(2)],
       notes: a.notes(),
       crossPoint: a.crossPoint(),
@@ -215,6 +224,21 @@ export async function analyzeOpsHere(sources: (Uint8Array | string)[], spec: str
       for (const p of parts) (out.set(p, at), (at += p.length));
       out.set(a.head(), 0);
       return { ...result, bytes: out };
+    }
+    const kind = a.featureKind();
+    if (kind) {
+      return {
+        ...result,
+        features: {
+          kind: kind as 'polygons' | 'lines' | 'points',
+          values: a.featureValues(),
+          texts: a.featureTexts(),
+          tags: a.featureTags(),
+          rings: a.featureRings(),
+          sizes: a.featureSizes(),
+          xy: a.featureXy(),
+        },
+      };
     }
     return { ...result, zones: a.zones(), histogram: a.histogram() };
   } finally {

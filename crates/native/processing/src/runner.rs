@@ -928,6 +928,9 @@ fn apply(
             if let Some(label) = &u.label {
                 next.base_mut().label.clone_from(label);
             }
+            if let Some(zs) = &u.zs {
+                kentos_native_application::elevation::assign(&mut next, zs);
+            }
             patches.push((u.id, next));
         }
         doc.update_many(patches, &tool.label);

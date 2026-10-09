@@ -579,6 +579,26 @@ fn check_measured(c: &Value, mut s: Seen, tol: f64, measure_tol: f64) -> Vec<Str
         &got["updated"],
         &want["updated"],
     );
+    // The vertices' elevations of the objects a run changed (Eğrilere kot ver), each path's in `elevation::paths`' order.
+    for (key, zs) in want["elevations"].as_object().cloned().unwrap_or_default() {
+        let got_zs = key
+            .parse::<u32>()
+            .ok()
+            .and_then(|k| s.host.doc.get(Slot(k)))
+            .map(|e| {
+                kentos_native_application::elevation::paths(e)
+                    .iter()
+                    .map(|p| p.zs.clone())
+                    .collect::<Vec<_>>()
+            });
+        let want_zs: Option<Vec<Vec<Option<f64>>>> = serde_json::from_value(zs.clone()).ok();
+        expect(
+            got_zs.is_some() && got_zs == want_zs,
+            &format!("kotlar {key}"),
+            &json!(got_zs),
+            &zs,
+        );
+    }
     expect(
         same(&got["removed"], &or_empty(&want["removed"])),
         "silinen",
@@ -730,12 +750,13 @@ fn the_geometry_cases_do_what_they_say() {
 /// Each drawing's defaults and each tool's default values on it, as the web reads them.
 #[test]
 fn the_defaults_the_tools_take_from_the_drawing() {
-    let (file, geometry, surface, interpolation, raster_ops) = (
+    let (file, geometry, surface, interpolation, raster_ops, raster_vector) = (
         cases(),
         case_file("geometry.json"),
         case_file("surface.json"),
         case_file("interpolation.json"),
         case_file("raster-ops.json"),
+        case_file("raster-vector.json"),
     );
     let registry = Registry::builtin();
     let lookup = |id: &str| registry.tool(id);
@@ -746,7 +767,8 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         .chain(geometry["documents"].as_object().expect("documents"))
         .chain(surface["documents"].as_object().expect("documents"))
         .chain(interpolation["documents"].as_object().expect("documents"))
-        .chain(raster_ops["documents"].as_object().expect("documents"));
+        .chain(raster_ops["documents"].as_object().expect("documents"))
+        .chain(raster_vector["documents"].as_object().expect("documents"));
     for (name, d) in documents {
         let doc = load(name);
         let defaults = Defaults::of(&doc);

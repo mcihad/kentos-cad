@@ -756,6 +756,20 @@ export const ICONS = {
     '<path d="M2 5.5h16M2 9h16M2 12.5h16M2 16h16M5.5 2v16M9 2v16M12.5 2v16M16 2v16" stroke-width=".6" stroke-opacity=".4"/><rect x="5.5" y="5.5" width="10.5" height="10.5" fill="currentColor" fill-opacity=".14" stroke-width="1.6"/><rect x="9" y="9" width="3.5" height="3.5" fill="currentColor" stroke="none"/>',
   cellStats:
     '<path d="M2 13.5 8 16.8l10-4.3-6-3.3z" fill="currentColor" fill-opacity=".12"/><path d="M2 9.5 8 12.8l10-4.3-6-3.3z" fill="currentColor" fill-opacity=".12"/><path d="M2 5.5 8 8.8l10-4.3-6-3.3z" fill="currentColor" fill-opacity=".12"/><path d="M10.2 3.8v11" stroke-width="1.6"/><circle cx="10.2" cy="3.8" r="1.2" fill="currentColor" stroke="none"/><circle cx="10.2" cy="7.8" r="1.2" fill="currentColor" stroke="none"/><circle cx="10.2" cy="11.8" r="1.2" fill="currentColor" stroke="none"/>',
+  rasterize:
+    '<path d="M2 6h16M2 10h16M2 14h16M6 2v16M10 2v16M14 2v16" stroke-width=".8" stroke-opacity=".35"/><rect x="2" y="2" width="16" height="16" rx="1" stroke-width="1" stroke-opacity=".35"/><path d="M6 6h4v4h4v4H6z" fill="currentColor" fill-opacity=".5" stroke="none"/><path d="M4.4 4.4 15.6 9 8.6 16.4z" stroke-width="1.5"/>',
+  toPolygons:
+    '<path d="M2 6h16M2 10h16M2 14h16M6 2v16M10 2v16M14 2v16" stroke-width=".8" stroke-opacity=".35"/><rect x="2" y="2" width="16" height="16" rx="1" stroke-width="1" stroke-opacity=".35"/><path d="M2 2h8v4h4v8H6v4H2z" fill="currentColor" fill-opacity=".28" stroke-width="1.6"/><rect x="14" y="14" width="4" height="4" fill="currentColor" fill-opacity=".6" stroke="none"/>',
+  toLines:
+    '<path d="M2 12.5h3.5V16H2zM5.5 9.5H9V13H5.5zM9 9.5h3.5V13H9zM12.5 6h3.5v3.5h-3.5zM14.5 2.5H18V6h-3.5z" fill="currentColor" fill-opacity=".25" stroke="none"/><path d="M3.7 14.2 7.2 11.2h3.6l3.4-3.4 2-3.5" stroke-width="1.5"/>',
+  toPoints:
+    '<path d="M2 6h16M2 10h16M2 14h16M6 2v16M10 2v16M14 2v16" stroke-width=".8" stroke-opacity=".35"/><rect x="2" y="2" width="16" height="16" rx="1" stroke-width="1" stroke-opacity=".35"/><circle cx="4" cy="4" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="4" r="1.3" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none"/><path d="M16 13.6 18.2 17.6H13.8z" fill="currentColor" stroke="none"/>',
+  captureLine:
+    '<path d="M2 12.5c3-1 5-6 9-6s4.5 3 7 1.5" stroke-width="4.2" stroke-opacity=".25"/><path d="M2 12.5c3-1 5-6 9-6s4.5 3 7 1.5" stroke-width="1.3"/><path d="M10.2 10.6v6.2l1.6-1.5 1.1 2.5 1.2-.5-1.1-2.5h2.2z" fill="currentColor" stroke="none"/>',
+  closeArea:
+    '<path d="M3 5.5 9 2.5l8 3.5-1.5 9.5-9.5 2z" stroke-width="3.6" stroke-opacity=".25"/><path d="M3 5.5 9 2.5l8 3.5-1.5 9.5-9.5 2z" fill="currentColor" fill-opacity=".18" stroke-width="1.3"/><path d="M8.6 7.4v6.2l1.6-1.5 1.1 2.5 1.2-.5-1.1-2.5h2.2z" fill="currentColor" stroke="none"/>',
+  contourElevations:
+    '<path d="M2 5.2c3-2 6 1 9-.5s5-2 7-.5M2 10c3-2 6 1 9-.5s5-2 7-.5M2 14.8c3-2 6 1 9-.5s5-2 7-.5" stroke-width="1.2"/><path d="M6.4 18.2 13.6 1.8" stroke-width="1.2" stroke-dasharray="1.6 1.3"/><circle cx="12.3" cy="4.8" r="1.3" fill="currentColor" stroke="none"/><circle cx="10.2" cy="9.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.1" cy="14.3" r="1.3" fill="currentColor" stroke="none"/>',
   server: '<rect x="3" y="3" width="14" height="5.5" rx="1"/><rect x="3" y="11.5" width="14" height="5.5" rx="1"/><path d="M6 5.75h.01M6 14.25h.01" stroke-width="2"/><path d="M9.5 5.75h4.5M9.5 14.25h4.5"/>',
   cloud: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 9v4.6M7.9 11.6 10 13.7l2.1-2.1"/>',
   cloudUpload: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 13.8V9.2M7.9 11.1 10 9l2.1 2.1"/>',

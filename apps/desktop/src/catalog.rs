@@ -580,6 +580,14 @@ pub const PORTED: &[&str] = &[
     "processing.run.raster.histogram",
     "processing.run.raster.focalStatistics",
     "processing.run.raster.cellStatistics",
+    // Raster ve vektör and Taranmış harita (docs/adr/0234).
+    "processing.run.raster.rasterize",
+    "processing.run.raster.toPolygons",
+    "processing.run.raster.toLines",
+    "processing.run.raster.toPoints",
+    "processing.run.scan.captureLine",
+    "processing.run.scan.closeArea",
+    "processing.run.scan.contourElevations",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

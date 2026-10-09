@@ -1,0 +1,97 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Taranmış pafta",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 2,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "gis"
+ },
+ "origin": {
+  "x": 486900.0,
+  "y": 4420850.0
+ },
+ "layers": [
+  {
+   "id": "pafta",
+   "name": "Taranmış pafta",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#6B5B7F",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "egriler",
+   "name": "Eğriler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#A0522D",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#FFFFFF",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "0",
+ "entities": [
+  {
+   "kind": "raster",
+   "id": 1,
+   "layerId": "pafta",
+   "attrs": {},
+   "affine": [
+    486900.0,
+    0.5,
+    0.0,
+    4421300.0,
+    0.0,
+    -0.5
+   ],
+   "width": 1200,
+   "height": 900,
+   "bands": 3,
+   "sample": "u8",
+   "file": "scanned/pafta.tif",
+   "srid": 5256,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     1,
+     2,
+     3
+    ]
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

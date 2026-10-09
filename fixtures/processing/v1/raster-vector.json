@@ -1,0 +1,1578 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "rasters": {
+  "siniflar.tif": "raster-vector/siniflar.tif",
+  "cizgiler.tif": "raster-vector/cizgiler.tif",
+  "yukseklik.tif": "raster-vector/yukseklik.tif",
+  "tarama.tif": "raster-vector/tarama.tif",
+  "pafta.tif": "raster-vector/pafta.tif",
+  "pafta2.tif": "raster-vector/pafta2.tif"
+ },
+ "documents": {
+  "raster-vector.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "drawingFont": "barlow",
+    "activeLayer": "siniflar",
+    "measureHeightMm": 2
+   },
+   "tools": {
+    "raster.rasterize": {
+     "input": {
+      "scope": "layer",
+      "layerId": "siniflar"
+     },
+     "valueFrom": "constant",
+     "value": 1,
+     "field": "",
+     "overlap": "last",
+     "sample": "f32",
+     "cellSize": 0,
+     "extent": "points",
+     "grid": {
+      "scope": "selection"
+     },
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Rasterleştirilmiş"
+     }
+    },
+    "raster.toPolygons": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "connect": "four",
+     "layer": {
+      "newName": "Bölgeler"
+     }
+    },
+    "raster.toLines": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "select": "nonZero",
+     "min": 1,
+     "max": 1,
+     "color": "#000000",
+     "tolerance": 60,
+     "spur": 0,
+     "simplify": 1,
+     "layer": {
+      "newName": "Çizgiler"
+     }
+    },
+    "raster.toPoints": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "mode": "step",
+     "step": 10,
+     "radius": 1,
+     "elevation": true,
+     "layer": {
+      "newName": "Noktalar"
+     }
+    },
+    "scan.captureLine": {
+     "input": {
+      "scope": "selection"
+     },
+     "at": null,
+     "tolerance": 60,
+     "spur": 5,
+     "simplify": 1,
+     "z": null,
+     "layer": {
+      "newName": "Yakalanan çizgiler"
+     }
+    },
+    "scan.closeArea": {
+     "input": {
+      "scope": "selection"
+     },
+     "at": null,
+     "tolerance": 60,
+     "holes": "fill",
+     "simplify": 1,
+     "layer": {
+      "newName": "Kapatılan alanlar"
+     }
+    },
+    "scan.contourElevations": {
+     "curves": {
+      "scope": "selection"
+     },
+     "start": null,
+     "end": null,
+     "first": 0,
+     "step": 5
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "rasterize",
+   "title": "Rasterleştir, Alandan, Son çizilen, 0,5 m: parseller (biri delikli), daire, yol, eğri yollar, yay ve çok noktalı kuyu; değeri okunmayan nesne söylenir",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "nesneler"
+    },
+    "valueFrom": "field",
+    "field": "Değer",
+    "overlap": "last",
+    "cellSize": 0.5
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterleştir",
+    "summary": "6 nesneden 38 × 22 hücrelik raster; “Nesneler-raster.tif” yazıldı. Değersiz 359 hücre.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin değeri sayı olarak okunamadığı için alınmadı."
+     }
+    ],
+    "outputs": {
+     "file": "Nesneler-raster.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-rasterlestirilmis",
+      "name": "Rasterleştirilmiş",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-rasterlestirilmis",
+      "attrs": {},
+      "affine": [
+       500.0,
+       0.5,
+       0.0,
+       311.0,
+       0.0,
+       -0.5
+      ],
+      "width": 38,
+      "height": 22,
+      "bands": 1,
+      "sample": "f32",
+      "file": "Nesneler-raster.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerBelow": {
+     "islem-rasterlestirilmis": "nesneler"
+    },
+    "rasterVectorOf": {
+     "Nesneler-raster.tif": "rasterlestir-last"
+    }
+   }
+  },
+  {
+   "id": "rasterize-grid",
+   "title": "Rasterleştir, En büyük, Ondalık 64 bit, rasterin ızgarasında: ızgaranın dışında kalan nesne söylenir",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "nesneler"
+    },
+    "valueFrom": "field",
+    "field": "Değer",
+    "overlap": "max",
+    "sample": "f64",
+    "extent": "raster",
+    "grid": {
+     "scope": "layer",
+     "layerId": "izgara"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterleştir",
+    "summary": "6 nesneden 9 × 7 hücrelik raster; “Nesneler-raster.tif” yazıldı. Değersiz 27 hücre.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin değeri sayı olarak okunamadığı için alınmadı."
+     },
+     {
+      "level": "warn",
+      "text": "1 nesne ızgaranın dışında kaldı."
+     }
+    ],
+    "outputs": {
+     "file": "Nesneler-raster.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-rasterlestirilmis",
+      "name": "Rasterleştirilmiş",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-rasterlestirilmis",
+      "attrs": {},
+      "affine": [
+       502.0,
+       1.0,
+       0.0,
+       312.0,
+       0.0,
+       -1.0
+      ],
+      "width": 9,
+      "height": 7,
+      "bands": 1,
+      "sample": "f64",
+      "file": "Nesneler-raster.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerBelow": {
+     "islem-rasterlestirilmis": "nesneler"
+    },
+    "rasterVectorOf": {
+     "Nesneler-raster.tif": "rasterlestir-raster-izgarasi"
+    }
+   }
+  },
+  {
+   "id": "polygons",
+   "title": "Rasterden alan, 4 komşu: bölgeler ilk hücrelerinin sırasıyla, delikli olanlar; Değer özniteliği",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.toPolygons"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "siniflar"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterden alan",
+    "summary": "8 değerden 11 alan yazıldı.",
+    "outputs": {
+     "count": 11
+    },
+    "layers": [
+     {
+      "id": "islem-bolgeler",
+      "name": "Bölgeler",
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#3E63DD26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "1"
+      },
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1000.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1996.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1996.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1002.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1002.0,
+        "y": 1998.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1998.0
+       },
+       {
+        "x": 1004.0,
+        "y": 2000.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "2"
+      },
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1998.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1998.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1996.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1996.0
+       },
+       {
+        "x": 1010.0,
+        "y": 2000.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "3"
+      },
+      "pts": [
+       {
+        "x": 1010.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1018.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1018.0,
+        "y": 2000.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 1012.0,
+          "y": 1998.0
+         },
+         {
+          "x": 1016.0,
+          "y": 1998.0
+         },
+         {
+          "x": 1016.0,
+          "y": 1994.0
+         },
+         {
+          "x": 1012.0,
+          "y": 1994.0
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "4"
+      },
+      "pts": [
+       {
+        "x": 1002.0,
+        "y": 1998.0
+       },
+       {
+        "x": 1002.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1998.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "5"
+      },
+      "pts": [
+       {
+        "x": 1014.0,
+        "y": 1996.0
+       },
+       {
+        "x": 1014.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1016.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1016.0,
+        "y": 1996.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "2"
+      },
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1000.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1992.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 1002.0,
+          "y": 1990.0
+         },
+         {
+          "x": 1004.0,
+          "y": 1990.0
+         },
+         {
+          "x": 1004.0,
+          "y": 1988.0
+         },
+         {
+          "x": 1002.0,
+          "y": 1988.0
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "6"
+      },
+      "pts": [
+       {
+        "x": 1006.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1012.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1012.0,
+        "y": 1992.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 1008.0,
+          "y": 1990.0
+         },
+         {
+          "x": 1010.0,
+          "y": 1990.0
+         },
+         {
+          "x": 1010.0,
+          "y": 1988.0
+         },
+         {
+          "x": 1008.0,
+          "y": 1988.0
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "1"
+      },
+      "pts": [
+       {
+        "x": 1012.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1012.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1018.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1018.0,
+        "y": 1992.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 1014.0,
+          "y": 1990.0
+         },
+         {
+          "x": 1016.0,
+          "y": 1990.0
+         },
+         {
+          "x": 1016.0,
+          "y": 1988.0
+         },
+         {
+          "x": 1014.0,
+          "y": 1988.0
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "1"
+      },
+      "pts": [
+       {
+        "x": 1002.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1002.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1990.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "7"
+      },
+      "pts": [
+       {
+        "x": 1008.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1990.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "8"
+      },
+      "pts": [
+       {
+        "x": 1014.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1014.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1016.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1016.0,
+        "y": 1990.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-bolgeler": "siniflar"
+    }
+   }
+  },
+  {
+   "id": "lines",
+   "title": "Rasterden çizgi, Kısa parçaları at 3, Sadeleştirme 1: inceltilmiş çubuk, çapraz ve dal",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.toLines"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "cizgiler"
+    },
+    "spur": 3
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterden çizgi",
+    "summary": "3 çizgi yazıldı.",
+    "outputs": {
+     "count": 3
+    },
+    "layers": [
+     {
+      "id": "islem-cizgiler",
+      "name": "Çizgiler",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-cizgiler",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1003.0,
+        "y": 1993.0
+       },
+       {
+        "x": 1013.0,
+        "y": 1993.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-cizgiler",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1013.0,
+        "y": 1993.0
+       },
+       {
+        "x": 1025.0,
+        "y": 1993.0
+       },
+       {
+        "x": 1025.0,
+        "y": 1979.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-cizgiler",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1013.0,
+        "y": 1993.0
+       },
+       {
+        "x": 1013.0,
+        "y": 1987.0
+       },
+       {
+        "x": 1021.0,
+        "y": 1979.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-cizgiler": "cizgiler"
+    }
+   }
+  },
+  {
+   "id": "points",
+   "title": "Rasterden nokta, Tepeler ve çukurlar, pencere 1: kotlu, Değer ve Tür",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.toPoints"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yukseklik"
+    },
+    "mode": "extrema"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterden nokta",
+    "summary": "4 tepe, 4 çukur yazıldı.",
+    "outputs": {
+     "count": 8
+    },
+    "layers": [
+     {
+      "id": "islem-noktalar",
+      "name": "Noktalar",
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#30A46C26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "17.854",
+       "Tür": "Tepe"
+      },
+      "p": {
+       "x": 1005.0,
+       "y": 1999.0
+      },
+      "z": 17.854000091552734
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "22.382",
+       "Tür": "Tepe"
+      },
+      "p": {
+       "x": 1023.0,
+       "y": 1999.0
+      },
+      "z": 22.381999969482422
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-6.329",
+       "Tür": "Çukur"
+      },
+      "p": {
+       "x": 1001.0,
+       "y": 1993.0
+      },
+      "z": -6.328999996185303
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-12.653",
+       "Tür": "Çukur"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1993.0
+      },
+      "z": -12.652999877929688
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "17.854",
+       "Tür": "Tepe"
+      },
+      "p": {
+       "x": 1005.0,
+       "y": 1985.0
+      },
+      "z": 17.854000091552734
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "22.381",
+       "Tür": "Tepe"
+      },
+      "p": {
+       "x": 1023.0,
+       "y": 1985.0
+      },
+      "z": 22.381000518798828
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "4.258",
+       "Tür": "Çukur"
+      },
+      "p": {
+       "x": 1001.0,
+       "y": 1983.0
+      },
+      "z": 4.257999897003174
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-2.066",
+       "Tür": "Çukur"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1983.0
+      },
+      "z": -2.065999984741211
+     }
+    ],
+    "layerAbove": {
+     "islem-noktalar": "yukseklik"
+    }
+   }
+  },
+  {
+   "id": "capture",
+   "title": "Çizgi yakala, kot 120: tıklamanın yanındaki eğik çizgi yakalanır, bütün köşeleri 120",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "scan.captureLine"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "tarama"
+    },
+    "at": {
+     "x": 1025.0,
+     "y": 1985.0
+    },
+    "z": 120
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Çizgi yakala",
+    "summary": "4 çizgi yakalandı.",
+    "outputs": {
+     "count": 4
+    },
+    "layers": [
+     {
+      "id": "islem-yakalanan-cizgiler",
+      "name": "Yakalanan çizgiler",
+      "style": {
+       "color": "#D6409F",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#D6409F26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-yakalanan-cizgiler",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1001.0,
+        "y": 1991.0
+       },
+       {
+        "x": 1033.0,
+        "y": 1979.0
+       },
+       {
+        "x": 1061.0,
+        "y": 1973.0
+       }
+      ],
+      "zs": [
+       120,
+       120,
+       120
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-yakalanan-cizgiler",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1061.0,
+        "y": 1983.0
+       },
+       {
+        "x": 1061.0,
+        "y": 1973.0
+       }
+      ],
+      "zs": [
+       120,
+       120
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-yakalanan-cizgiler",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1061.0,
+        "y": 1971.0
+       },
+       {
+        "x": 1077.0,
+        "y": 1967.0
+       }
+      ],
+      "zs": [
+       120,
+       120
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-yakalanan-cizgiler",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1061.0,
+        "y": 1971.0
+       },
+       {
+        "x": 1061.0,
+        "y": 1959.0
+       }
+      ],
+      "zs": [
+       120,
+       120
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-yakalanan-cizgiler": "tarama"
+    }
+   }
+  },
+  {
+   "id": "close",
+   "title": "Alan kapat, Delikler Koru: merdivenli duvarın yanındaki parsel, duvara köşeden değen delik",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "scan.closeArea"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "pafta"
+    },
+    "at": {
+     "x": 1019.0,
+     "y": 1977.0
+    },
+    "holes": "keep"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Alan kapat",
+    "summary": "Alan kapatıldı: 7 köşe, 1 delik.",
+    "outputs": {
+     "count": 1
+    },
+    "layers": [
+     {
+      "id": "islem-kapatilan-alanlar",
+      "name": "Kapatılan alanlar",
+      "style": {
+       "color": "#6E56CF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#6E56CF26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-kapatilan-alanlar",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1020.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1974.0
+       },
+       {
+        "x": 1022.0,
+        "y": 1974.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 1016.0,
+          "y": 1982.0
+         },
+         {
+          "x": 1018.0,
+          "y": 1982.0
+         },
+         {
+          "x": 1018.0,
+          "y": 1980.0
+         },
+         {
+          "x": 1016.0,
+          "y": 1980.0
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-kapatilan-alanlar": "pafta"
+    }
+   }
+  },
+  {
+   "id": "close-crossing",
+   "title": "Alan kapat, sadeleşen halkalar birbirine değer: alan sadeleştirilmeden yazılır, söylenir",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "scan.closeArea"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "pafta2"
+    },
+    "at": {
+     "x": 1015.0,
+     "y": 1975.0
+    },
+    "holes": "keep",
+    "simplify": 1.5
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Alan kapat",
+    "summary": "Alan kapatıldı: 22 köşe, 1 delik.",
+    "outputs": {
+     "count": 1
+    },
+    "layers": [
+     {
+      "id": "islem-kapatilan-alanlar",
+      "name": "Kapatılan alanlar",
+      "style": {
+       "color": "#6E56CF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#6E56CF26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-kapatilan-alanlar",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1020.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1020.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1018.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1018.0,
+        "y": 1984.0
+       },
+       {
+        "x": 1016.0,
+        "y": 1984.0
+       },
+       {
+        "x": 1016.0,
+        "y": 1982.0
+       },
+       {
+        "x": 1014.0,
+        "y": 1982.0
+       },
+       {
+        "x": 1014.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1012.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1012.0,
+        "y": 1978.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1978.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1976.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1976.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1974.0
+       },
+       {
+        "x": 1020.0,
+        "y": 1974.0
+       },
+       {
+        "x": 1020.0,
+        "y": 1978.0
+       },
+       {
+        "x": 1022.0,
+        "y": 1978.0
+       },
+       {
+        "x": 1022.0,
+        "y": 1988.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 1018.0,
+          "y": 1982.0
+         },
+         {
+          "x": 1020.0,
+          "y": 1982.0
+         },
+         {
+          "x": 1020.0,
+          "y": 1980.0
+         },
+         {
+          "x": 1018.0,
+          "y": 1980.0
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-kapatilan-alanlar": "pafta2"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "Sadeleşen halkalar birbirine değdiği için alan sadeleştirilmeden yazıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "contour-elevations",
+   "title": "Eğrilere kot ver: kesen çizgi altı eğriden beşini keser (biri delikli alan, biri dışarıda); ilk kot 100, aralık 2,5",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "scan.contourElevations"
+   },
+   "values": {
+    "curves": {
+     "scope": "layer",
+     "layerId": "egriler"
+    },
+    "start": {
+     "x": 3.3,
+     "y": 0.2
+    },
+    "end": {
+     "x": 5.9,
+     "y": 12.1
+    },
+    "first": 100.0,
+    "step": 2.5
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Eğrilere kot ver",
+    "summary": "5 eğriye kot verildi: 100 ile 110 arası.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 eğri kesen çizgiyle kesişmediği için değişmedi."
+     }
+    ],
+    "outputs": {
+     "changed": [
+      15,
+      16,
+      17,
+      18,
+      20
+     ],
+     "count": 5
+    },
+    "layers": [],
+    "added": [],
+    "updated": [
+     {
+      "id": 15,
+      "attrs": {
+       "Ad": "E1"
+      }
+     },
+     {
+      "id": 16,
+      "attrs": {
+       "Ad": "E2"
+      }
+     },
+     {
+      "id": 17,
+      "attrs": {
+       "Ad": "E3"
+      }
+     },
+     {
+      "id": 18,
+      "attrs": {
+       "Ad": "E4"
+      }
+     },
+     {
+      "id": 20,
+      "attrs": {
+       "Ad": "E6"
+      }
+     }
+    ],
+    "elevations": {
+     "15": [
+      [
+       100.0,
+       100.0,
+       100.0
+      ]
+     ],
+     "16": [
+      [
+       102.5,
+       102.5
+      ]
+     ],
+     "17": [
+      [
+       107.5,
+       107.5,
+       107.5
+      ]
+     ],
+     "18": [
+      [
+       110.0,
+       110.0,
+       110.0,
+       110.0
+      ],
+      [
+       110.0,
+       110.0,
+       110.0,
+       110.0
+      ]
+     ],
+     "20": [
+      [
+       105.0,
+       105.0
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "close-open",
+   "title": "Alan kapat, paftanın dışındaki beyaz: kenara ulaşır",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "scan.closeArea"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "pafta"
+    },
+    "at": {
+     "x": 1001.0,
+     "y": 1999.0
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Alan kapanmıyor: dolgu rasterin kenarına ulaştı. Boşluğu kapatın ya da Renk toleransı'nı küçültün."
+   }
+  },
+  {
+   "id": "rasterize-fit",
+   "title": "Rasterleştir, Bayt'a sığmayan sabit değer",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "nesneler"
+    },
+    "value": 300,
+    "sample": "u8"
+   },
+   "expect": {
+    "status": "error",
+    "message": "Değer 300 sonucun türüne sığmıyor: Tam sayı 32 bit ±2 147 483 647'yi, Bayt 0–254'ü alır. Türü Ondalık 32 bit ya da Ondalık 64 bit yapın."
+   }
+  },
+  {
+   "id": "contour-step",
+   "title": "Eğrilere kot ver, aralık 0",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "scan.contourElevations"
+   },
+   "values": {
+    "curves": {
+     "scope": "layer",
+     "layerId": "egriler"
+    },
+    "start": {
+     "x": 3.3,
+     "y": 0.2
+    },
+    "end": {
+     "x": 5.9,
+     "y": 12.1
+    },
+    "first": 100,
+    "step": 0
+   },
+   "expect": {
+    "status": "error",
+    "message": "Aralık 0 olamaz: eksi bir aralık kotları azaltır."
+   }
+  },
+  {
+   "id": "lines-color",
+   "title": "Rasterden çizgi, Renk tek bantlı rasterde",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.toLines"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "cizgiler"
+    },
+    "select": "color",
+    "color": "#000000"
+   },
+   "expect": {
+    "status": "error",
+    "message": "Renkle seçmek üç bantlı (RGB) bir raster ister; bu rasterde Değer aralığı'nı kullanın."
+   }
+  }
+ ]
+}

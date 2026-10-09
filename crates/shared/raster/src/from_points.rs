@@ -22,6 +22,7 @@ use crate::interp::{MOST_NEIGHBOURS, Method, Prepared, Scratch};
 use crate::out::{Out, OutSpec, Rows};
 use crate::par;
 use crate::points::{Lines, Source, bounds_of, gather, gather_lines, gather_weighted};
+use crate::rasterize::{Burn, BurnSample, Objects, Overlap};
 
 /// What the host asks for.
 #[derive(Clone, Debug, Deserialize, PartialEq)]
@@ -164,6 +165,13 @@ pub enum PointTool {
         radius: f64,
         unit: DensityUnit,
     },
+    /// Rasterleştir (docs/adr/0234 §3): the objects' constant value, or
+    /// their field's when the host gives the texts.
+    Rasterize {
+        value: f64,
+        overlap: Overlap,
+        sample: BurnSample,
+    },
 }
 
 fn one() -> u32 {
@@ -196,6 +204,8 @@ pub struct Notes {
     pub radius: Option<f64>,
     /// Kriging's variogram (fitted or given).
     pub variogram: Option<Variogram>,
+    /// Rasterleştir: objects without a cell on the grid.
+    pub outside: usize,
 }
 
 /// One point's cross-validation: its place among the points, the object it came from, its place and values.
@@ -262,6 +272,9 @@ enum Work {
     Interp(Box<Prepared>),
     Kernel(Box<KernelDensity>),
     Lines(Box<LineDensity>),
+    /// Rasterleştir's objects until the grid is known, then their burn.
+    Objects(Box<(Objects, Overlap, BurnSample)>),
+    Burn(Box<Burn>),
 }
 
 /// The run's state.
@@ -514,7 +527,9 @@ impl PointJob {
                             radius: finite(*radius, "Arama yarıçapı")?.max(0.0),
                         }
                     }
-                    PointTool::Kernel { .. } | PointTool::LineDensity { .. } => {
+                    PointTool::Kernel { .. }
+                    | PointTool::LineDensity { .. }
+                    | PointTool::Rasterize { .. } => {
                         return Err("Yoğunluğun girdisi bu araca uymuyor.".into());
                     }
                 };
@@ -532,13 +547,52 @@ impl PointJob {
                     bands,
                 )
             }
+            (
+                PointTool::Rasterize {
+                    value,
+                    overlap,
+                    sample,
+                },
+                PointInput::Lines { shapes, weights },
+            ) => {
+                let objects = Objects::new(shapes, weights.as_deref(), *value)?;
+                notes.unread = objects.unread;
+                notes.taken = objects.len();
+                if objects.is_empty() {
+                    return Err(if objects.unread > 0 {
+                        "Değeri okunan nesne yok: Değer alanındaki değerler sayı değil.".into()
+                    } else {
+                        "Rasterleştirilecek nesne yok: Nesneler'de alan, çizgi ya da nokta seçin."
+                            .into()
+                    });
+                }
+                let b = objects.bounds().ok_or("Nesnelerin yeri okunamadı.")?;
+                (
+                    Work::Objects(Box::new((objects, *overlap, *sample))),
+                    b,
+                    "Viridis",
+                    false,
+                    1,
+                )
+            }
             (_, PointInput::Lines { .. }) => {
-                return Err("Çizgiler yalnız Çizgi yoğunluğu'na girer.".into());
+                return Err("Çizgiler yalnız Çizgi yoğunluğu'na ve Rasterleştir'e girer.".into());
             }
         };
         let grid = match &spec.grid {
             Some(g) => Grid::of(g.affine, g.width, g.height)?,
             None => Grid::of_box(box_of, spec.cell)?,
+        };
+        let work = match work {
+            Work::Objects(o) => {
+                let (objects, overlap, sample) = *o;
+                Work::Burn(Box::new(Burn::new(objects, &grid, overlap, sample)?))
+            }
+            w => w,
+        };
+        let (sample, nodata) = match &work {
+            Work::Burn(b) => (b.sample(), b.nodata()),
+            _ => (RasterSample::F32, f64::NAN),
         };
         let cross = spec.cross && matches!(work, Work::Interp(_));
         let geographic = match &spec.system {
@@ -553,9 +607,9 @@ impl PointJob {
                 width: grid.width,
                 height: grid.height,
                 bands,
-                sample: RasterSample::F32,
+                sample,
                 alpha: false,
-                nodata: Some(f64::NAN),
+                nodata: Some(nodata),
                 geo: Geo {
                     affine: grid.affine,
                     epsg: spec.epsg,
@@ -593,6 +647,14 @@ impl PointJob {
         self.bands
     }
 
+    /// The result's samples: 32-bit floats, Rasterleştir's its own.
+    pub fn sample(&self) -> RasterSample {
+        match &self.work {
+            Work::Burn(b) => b.sample(),
+            _ => RasterSample::F32,
+        }
+    }
+
     pub fn notes(&self) -> &Notes {
         &self.notes
     }
@@ -603,6 +665,8 @@ impl PointJob {
             Work::Interp(p) => p.at(q, &mut Scratch::default()),
             Work::Kernel(d) => (d.at(q), f64::NAN),
             Work::Lines(d) => (d.at(q, &mut d.stamps()), f64::NAN),
+            // A burn's values come row by row.
+            Work::Objects(_) | Work::Burn(_) => (f64::NAN, f64::NAN),
         }
     }
 
@@ -668,6 +732,13 @@ impl PointJob {
     fn strip(&mut self) -> Result<Vec<u8>, String> {
         let y0 = self.next;
         let n = TILE.min(self.grid.height - y0);
+        if let Work::Burn(b) = &mut self.work {
+            let (samples, empty) = b.strip(y0, n, self.threads)?;
+            self.notes.empty += empty;
+            let bytes = self.out.push(Rows::Any(&samples), n)?;
+            self.next += n;
+            return Ok(bytes);
+        }
         let width = self.grid.width as usize;
         let bands = self.bands as usize;
         let row = width * bands;
@@ -700,6 +771,9 @@ impl PointJob {
                         }
                     }
                 });
+            }
+            Work::Objects(_) | Work::Burn(_) => {
+                return Err("Rasterleştirmenin nesneleri ızgaraya yerleşmedi.".into());
             }
             Work::Lines(d) => {
                 let d = &**d;
@@ -760,12 +834,16 @@ impl PointJob {
         if !self.done() {
             return Err("Çözümleme bitmeden bırakıldı.".into());
         }
+        let mut notes = self.notes;
+        if let Work::Burn(b) = &self.work {
+            notes.outside = b.outside();
+        }
         let (tail, header) = self.out.finish()?;
         Ok(PointFinished {
             tail,
             header,
             rows: self.rows,
-            notes: self.notes,
+            notes,
         })
     }
 }

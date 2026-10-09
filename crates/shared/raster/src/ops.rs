@@ -27,13 +27,17 @@ use crate::calc::{Calc, Empty};
 use crate::focal::{Focal, Region, Window};
 use crate::grid::Grid;
 use crate::inputs::{
-    Input, Mapping, Sampling, View, empty_of, mapping, place_in, point_of, region_for, sample_row,
+    Input, Mapping, Raw, Sampling, View, empty_of, mapping, place_in, point_of, region_for,
+    sample_row,
 };
 use crate::out::{Out, OutSpec, Rows};
 use crate::par;
 use crate::reclass::{self, Bounds, Rule};
 use crate::resample::{self, Method};
 use crate::stats::{Moments, Stat, order_stat};
+use crate::vector::Features;
+use crate::vector::capture::Colour;
+use crate::vector::work::{PointMode, Select, VectorTool, VectorWork};
 
 /// The widest block of columns a step works out.
 pub const BLOCK_COLUMNS: u32 = 4096;
@@ -233,6 +237,108 @@ pub enum OpsTool {
         stat: Stat,
         ignore: bool,
     },
+    /// Rasterden alan (docs/adr/0234 §4).
+    ToPolygons {
+        band: u32,
+        connect: Connect,
+    },
+    /// Rasterden çizgi (§5): the line cells, the short pieces dropped, the simplification.
+    ToLines {
+        band: u32,
+        select: LineSelect,
+        #[serde(default)]
+        min: f64,
+        #[serde(default)]
+        max: f64,
+        /// #RRGGBB.
+        #[serde(default)]
+        color: String,
+        #[serde(default)]
+        tolerance: f64,
+        spur: u32,
+        simplify: f64,
+    },
+    /// Rasterden nokta (§6).
+    ToPoints {
+        band: u32,
+        mode: PointsMode,
+        #[serde(default)]
+        step: u32,
+        #[serde(default)]
+        radius: u32,
+    },
+    /// Çizgi yakala (§7): the point picked (drawing coordinates).
+    CaptureLine {
+        x: f64,
+        y: f64,
+        tolerance: f64,
+        spur: u32,
+        simplify: f64,
+    },
+    /// Alan kapat (§8).
+    CloseArea {
+        x: f64,
+        y: f64,
+        tolerance: f64,
+        holes: HolesName,
+        simplify: f64,
+    },
+}
+
+/// Rasterden alan's neighbours.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum Connect {
+    Four,
+    Eight,
+}
+
+/// Rasterden çizgi's line cells.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum LineSelect {
+    NonZero,
+    Range,
+    Color,
+}
+
+/// Rasterden nokta's cells.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum PointsMode {
+    Step,
+    All,
+    Extrema,
+}
+
+/// Alan kapat's holes.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum HolesName {
+    Fill,
+    Keep,
+}
+
+/// A colour written #RRGGBB.
+pub fn colour_of(text: &str) -> Result<Colour, String> {
+    let t = text.trim();
+    let hex = t.strip_prefix('#').unwrap_or(t);
+    let byte = |k: usize| {
+        hex.get(k..k + 2)
+            .and_then(|h| u8::from_str_radix(h, 16).ok())
+    };
+    match (hex.len(), byte(0), byte(2), byte(4)) {
+        (6, Some(r), Some(g), Some(b)) => Ok([f64::from(r), f64::from(g), f64::from(b)]),
+        _ => Err(format!("Renk #RRGGBB biçiminde olmalı; “{t}” okunamadı.")),
+    }
+}
+
+/// A count or a size the tools take: a number ≥ `least` and ≤ `most`.
+fn within(v: f64, least: f64, most: f64, what: &str) -> Result<f64, String> {
+    if !(v >= least && v <= most) {
+        return Err(format!("{what} {least} ile {most} arasında olmalı."));
+    }
+    Ok(v)
 }
 
 /// A zone's figures (Bölgesel istatistik): its sums and the chosen statistic.
@@ -268,6 +374,8 @@ pub enum OpsFinished {
     /// Each zone's figures, in the zones' order.
     Zones(Vec<ZoneFigures>),
     Histogram(Histogram),
+    /// Areas, polylines or points (docs/adr/0234).
+    Features(Features),
 }
 
 /// What a run met, for the host's summary and warnings.
@@ -336,6 +444,7 @@ enum Work {
         ignore: bool,
         maps: Vec<Mapping>,
     },
+    Vector(Box<VectorWork>),
 }
 
 /// The result raster's samples: type, bands (alpha included), nodata.
@@ -464,6 +573,102 @@ fn kept_style(source: Option<&RasterStyle>, kind: &Kind) -> RasterStyle {
         s.bands.push(kind.bands());
     }
     s
+}
+
+/// A vectorizing tool's settings, checked.
+fn vector_tool(tool: &OpsTool, first: &Input) -> Result<VectorTool, String> {
+    let eps = |v: f64| within(v, 0.0, 1e6, "Sadeleştirme");
+    let tol = |v: f64| within(v, 0.0, 1e9, "Renk toleransı");
+    let place = |x: f64, y: f64| {
+        if x.is_finite() && y.is_finite() {
+            Ok((x, y))
+        } else {
+            Err("Çizimde bir nokta seçin.".to_owned())
+        }
+    };
+    Ok(match tool {
+        OpsTool::ToPolygons { band, connect } => VectorTool::Polygons {
+            band: band_index(first, *band)?,
+            eight: *connect == Connect::Eight,
+        },
+        OpsTool::ToLines {
+            band,
+            select,
+            min,
+            max,
+            color,
+            tolerance,
+            spur,
+            simplify,
+        } => VectorTool::Lines {
+            band: band_index(first, *band)?,
+            select: match select {
+                LineSelect::NonZero => Select::NonZero,
+                LineSelect::Range => {
+                    if !(min.is_finite() && max.is_finite()) {
+                        return Err("En küçük ve en büyük değer sayı olmalı.".into());
+                    }
+                    if min > max {
+                        return Err("En küçük değer en büyükten büyük olamaz.".into());
+                    }
+                    Select::Range {
+                        min: *min,
+                        max: *max,
+                    }
+                }
+                LineSelect::Color => Select::Colour {
+                    colour: colour_of(color)?,
+                    tol: tol(*tolerance)?,
+                },
+            },
+            spur: *spur,
+            eps: eps(*simplify)?,
+        },
+        OpsTool::ToPoints {
+            band,
+            mode,
+            step,
+            radius,
+        } => VectorTool::Points {
+            band: band_index(first, *band)?,
+            mode: match mode {
+                PointsMode::All => PointMode::All,
+                PointsMode::Step => {
+                    PointMode::Step(within(f64::from(*step), 1.0, 100_000.0, "Adım")? as u32)
+                }
+                PointsMode::Extrema => {
+                    PointMode::Extrema(
+                        within(f64::from(*radius), 1.0, 50.0, "Pencere yarıçapı")? as u32
+                    )
+                }
+            },
+        },
+        OpsTool::CaptureLine {
+            x,
+            y,
+            tolerance,
+            spur,
+            simplify,
+        } => VectorTool::CaptureLine {
+            at: place(*x, *y)?,
+            tol: tol(*tolerance)?,
+            spur: *spur,
+            eps: eps(*simplify)?,
+        },
+        OpsTool::CloseArea {
+            x,
+            y,
+            tolerance,
+            holes,
+            simplify,
+        } => VectorTool::CloseArea {
+            at: place(*x, *y)?,
+            tol: tol(*tolerance)?,
+            keep_holes: *holes == HolesName::Keep,
+            eps: eps(*simplify)?,
+        },
+        _ => return Err("Bu araç vektörleştirme değil.".into()),
+    })
 }
 
 impl OpsJob {
@@ -777,6 +982,15 @@ impl OpsJob {
                     Some(ramp_style("Viridis")),
                 )
             }
+            OpsTool::ToPolygons { .. }
+            | OpsTool::ToLines { .. }
+            | OpsTool::ToPoints { .. }
+            | OpsTool::CaptureLine { .. }
+            | OpsTool::CloseArea { .. } => {
+                let tool = vector_tool(&spec.tool, first)?;
+                let (work, grid) = VectorWork::new(tool, first, threads)?;
+                (grid, Work::Vector(Box::new(work)), None, None)
+            }
             OpsTool::CellStatistics { band, stat, ignore } => {
                 if inputs.len() < 2 {
                     return Err("Hücre istatistiği en az iki raster ister.".into());
@@ -896,6 +1110,7 @@ impl OpsJob {
                 (0..self.inputs.len()).for_each(|k| add(k, sampling.margin()))
             }
             Work::Cells { .. } => (0..self.inputs.len()).for_each(|k| add(k, 0)),
+            Work::Vector(v) => add(0, v.margin()),
             Work::Resample { method, ru, rv } => match method {
                 Method::Point(s) => add(0, s.margin()),
                 _ => {
@@ -1016,6 +1231,7 @@ impl OpsJob {
             / h;
         let f = f.min(1.0);
         match &self.work {
+            Work::Vector(v) => v.share(f),
             Work::Histogram(h) if h.bounds_pass => f / 3.0,
             Work::Histogram(h) if h.two_pass => 1.0 / 3.0 + 2.0 * f / 3.0,
             _ => f,
@@ -1051,11 +1267,21 @@ impl OpsJob {
         let n = y1 - y0;
         let bw = (c1 - c0) as usize;
         let regions = self.regions(rect);
-        let mut views: Vec<Option<View>> = vec![None; self.inputs.len()];
-        for (k, r) in regions {
-            views[k] = Some(self.inputs[k].view(r, self.threads)?);
-        }
-        if let Some(kind) = self.kind {
+        if matches!(self.work, Work::Vector(_)) {
+            // The vectorizing tools read the file's samples a cell at a time.
+            let raw = match regions.first() {
+                Some(&(k, r)) => self.inputs[k].raw(r)?,
+                None => Raw::empty(),
+            };
+            let Work::Vector(v) = &mut self.work else {
+                unreachable!()
+            };
+            v.block(rect, &raw)?;
+        } else if let Some(kind) = self.kind {
+            let mut views: Vec<Option<View>> = vec![None; self.inputs.len()];
+            for (k, r) in regions {
+                views[k] = Some(self.inputs[k].view(r, self.threads)?);
+            }
             let b = kind.bands() as usize;
             let mut vals = vec![f64::NAN; n as usize * bw * b];
             self.raster_block(rect, &views, &mut vals)?;
@@ -1066,6 +1292,10 @@ impl OpsJob {
             self.notes.empty_cells +=
                 put_block(strip, &vals, (c0 as usize, bw, w, b), &kind, self.threads);
         } else {
+            let mut views: Vec<Option<View>> = vec![None; self.inputs.len()];
+            for (k, r) in regions {
+                views[k] = Some(self.inputs[k].view(r, self.threads)?);
+            }
             self.table_block(rect, &views);
         }
         self.block += 1;
@@ -1073,7 +1303,19 @@ impl OpsJob {
             return Ok(Vec::new());
         }
         self.block = 0;
+        if let Work::Vector(v) = &mut self.work {
+            v.strip_done(y0, n)?;
+        }
         self.next += n;
+        if self.next >= self.grid.height
+            && let Work::Vector(v) = &mut self.work
+            && let Some(g) = v.pass_done()?
+        {
+            // A capture's next pass: a wider window.
+            self.grid = g;
+            self.next = 0;
+            self.blocks = self.plan();
+        }
         let bytes = match (self.strip.take(), self.out.as_mut()) {
             (Some(strip), Some(out)) => out.push(Rows::Any(&strip), n)?,
             _ => Vec::new(),
@@ -1372,7 +1614,7 @@ impl OpsJob {
                     }
                 });
             }
-            Work::Zonal { .. } | Work::Histogram(_) => {}
+            Work::Zonal { .. } | Work::Histogram(_) | Work::Vector(_) => {}
         }
         Ok(())
     }
@@ -1560,6 +1802,7 @@ impl OpsJob {
                 ))
             }
             Work::Histogram(h) => Ok(OpsFinished::Histogram(h.out)),
+            Work::Vector(v) => Ok(OpsFinished::Features(v.finish()?)),
             _ => {
                 let out = self.out.ok_or("Sonuç rasteri yok.")?;
                 let (tail, header) = out.finish()?;

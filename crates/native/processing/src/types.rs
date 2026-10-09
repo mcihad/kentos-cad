@@ -554,12 +554,15 @@ pub trait Feedback {
     }
 }
 
-/// A change to one object: its whole attribute table and, when it changes, its label.
+/// A change to one object: its whole attribute table and, when it changes,
+/// its label; or its vertices' elevations (Eğrilere kot ver, docs/adr/0234
+/// §9), each path's in `kentos_native_application::elevation::paths`' order.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Patch {
     pub id: Slot,
     pub attrs: Option<BTreeMap<String, String>>,
     pub label: Option<Option<String>>,
+    pub zs: Option<Vec<Vec<Option<f64>>>>,
 }
 
 /// The document edits a run asks for, applied by the runner in one transaction.

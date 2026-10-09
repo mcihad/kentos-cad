@@ -425,7 +425,7 @@ fn a_calculator_reads_only_the_rasters_it_names() {
     assert_eq!(names, ["DEM (2)", "DEM"]);
 }
 
-fn sample_of(name: &str) -> RasterSample {
+pub fn sample_of(name: &str) -> RasterSample {
     match name {
         "u8" => RasterSample::U8,
         "i8" => RasterSample::I8,
@@ -438,7 +438,7 @@ fn sample_of(name: &str) -> RasterSample {
     }
 }
 
-fn number(v: &Value) -> f64 {
+pub fn number(v: &Value) -> f64 {
     v.as_f64().unwrap_or(f64::NAN)
 }
 

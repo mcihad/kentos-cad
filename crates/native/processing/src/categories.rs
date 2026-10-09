@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 14] = [
+pub const CATEGORIES: [Category; 16] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -115,5 +115,18 @@ pub const CATEGORIES: [Category; 14] = [
         "Raster istatistiği",
         "zonalStats",
         "Bölgesel, komşuluk ve hücre istatistikleri, histogram",
+    ),
+    // docs/adr/0234: vectors burnt into cells, regions, lines and points out of them; scanned sheets digitized.
+    category(
+        "rasterVector",
+        "Raster ve vektör",
+        "rasterize",
+        "Rasterleştirme; rasterden alan, çizgi ve nokta",
+    ),
+    category(
+        "scannedMap",
+        "Taranmış harita",
+        "captureLine",
+        "Çizgi yakalama, alan kapatma, eğrilere kot verme",
     ),
 ];

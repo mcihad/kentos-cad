@@ -4,12 +4,15 @@
 // (5 m, about 100 levels), and Güneşlenme over a 2048 × 2048 one (a year, 14 days, half an hour); then a raster from
 // points (docs/adr/0232 §14): IDW, Doğal komşu and Kriging, 100 000 points onto a 2048 × 2048 grid; then the raster
 // operations (docs/adr/0233 §15) over the 4096 × 4096 DEM: Raster hesaplayıcı, Yeniden sınıflandır, Yeniden örnekle
-// (Ortalama, 2×), Komşuluk istatistiği (5 × 5 Ortalama), Histogram and Bölgesel istatistik (10 000 parcels). Starts its own Vite dev
+// (Ortalama, 2×), Komşuluk istatistiği (5 × 5 Ortalama), Histogram and Bölgesel istatistik (10 000 parcels); then raster and
+// vector (docs/adr/0234 §11, vector_timing.rs's work): Rasterleştir (10 000 parcels onto 4096²), Rasterden alan (a 4096²
+// class raster of some 50 000 regions), Rasterden çizgi (4096², about 3 % line cells), Rasterden nokta (Adım 10), Çizgi
+// yakala and Alan kapat on an 8192² scanned sheet, Eğrilere kot ver over 10 000 curves (in the page). Starts its own Vite dev
 // server and one headless Chrome; the DEMs are written once by GDAL into .run/perf (python3 with numpy and osgeo) and
 // fetched by the page as a file the user gave. The worker's whole run is timed: its start, the module, reading the
 // file's blocks, the job and the result's coding. Nothing else heavy may run meanwhile (docs/adr/0005).
 //
-//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops]
+//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector]
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { cpus } from 'node:os';
@@ -40,6 +43,28 @@ d = gdal.GetDriverByName('GTiff').Create(${JSON.stringify(path)}, n, n, 1, gdal.
 d.SetGeoTransform([500000.0, 5.0, 0.0, 4420000.0, 0.0, -5.0])
 s = osr.SpatialReference(); s.ImportFromEPSG(5254); d.SetProjection(s.ExportToWkt())
 d.GetRasterBand(1).WriteArray(z)
+d = None
+`;
+  execFileSync('python3', ['-c', script], { stdio: 'inherit' });
+  return path;
+}
+
+/** A raster of n × n cells of 2 m written by `body` (numpy: `img`, uint8, `n`), tiled 256, Deflate, at `path`, unless it is there. */
+function made(name, n, bands, body) {
+  const path = `${dir}${name}-${n}.tif`;
+  if (existsSync(path)) return path;
+  const script = `
+import numpy as np
+from osgeo import gdal
+gdal.UseExceptions()
+n = ${n}
+j = np.arange(n, dtype=np.int64)[:, None]
+i = np.arange(n, dtype=np.int64)[None, :]
+${body}
+d = gdal.GetDriverByName('GTiff').Create(${JSON.stringify(path)}, n, n, ${bands}, gdal.GDT_Byte, ['TILED=YES', 'BLOCKXSIZE=256', 'BLOCKYSIZE=256', 'COMPRESS=DEFLATE', 'ZLEVEL=1'])
+d.SetGeoTransform([500000.0, 2.0, 0.0, 4420000.0, 0.0, -2.0])
+for k in range(${bands}):
+    d.GetRasterBand(k + 1).WriteArray(img if ${bands} == 1 else img[:, :, k])
 d = None
 `;
   execFileSync('python3', ['-c', script], { stdio: 'inherit' });
@@ -151,6 +176,89 @@ try {
     }
     times.sort((a, c) => a - c);
     console.log(`${job.name.padEnd(22)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s`);
+  }
+  // Raster ve vektör (docs/adr/0234 §11): vector_timing.rs's work on the same sizes.
+  if (part('vector')) {
+    const classes = made('siniflar', 4096, 1, `h = ((i // 18) * 2654435761 ^ (j // 18) * 2246822507) & 0xffffffff
+h ^= h >> 15
+img = (h % 50).astype(np.uint8)`);
+    const lines = made('cizgiler', 4096, 1, `k = np.round(j / 100.0) * 100.0
+centre = k + 20.0 * np.sin(i / 180.0 + k / 100.0)
+img = (np.abs(j - centre) <= 1.0).astype(np.uint8)`);
+    const sheet = made('pafta', 8192, 3, `grid = (i % 400 < 3) | (j % 400 < 3)
+contour = np.abs(j - 4100.0 - 900.0 * np.sin(i / 1300.0)) <= 1.5
+img = np.empty((n, n, 3), dtype=np.uint8)
+img[...] = 250
+img[np.broadcast_to(grid, (n, n))] = (25, 25, 25)
+img[np.broadcast_to(contour, (n, n))] = (150, 80, 30)`);
+    const opsRun = (file, tool, cell) => `(async () => {
+      const { analyzeOps } = await import('/src/io/rasterAnalysis.ts');
+      const blob = await (await fetch('/@fs${file}')).blob();
+      const spec = JSON.stringify({ tool: ${JSON.stringify(tool)}, inputs: [{ affine: [500000, ${cell}, 0, 4420000, 0, -${cell}], name: 'A' }], epsg: 5254 });
+      const t0 = performance.now();
+      const out = await analyzeOps([blob], spec, '[]', { progress() {}, canceled: false });
+      const ms = performance.now() - t0;
+      if (!out.features) throw new Error('no features');
+      return ms;
+    })()`;
+    const at = (i, j) => ({ x: 500000 + 2 * i + 1, y: 4420000 - 2 * j - 1 });
+    const vectorJobs = [
+      { name: 'Rasterden alan', size: '4096²', budget: 8, run: opsRun(classes, { kind: 'toPolygons', band: 1, connect: 'four' }, 2) },
+      { name: 'Rasterden çizgi', size: '4096²', budget: 8, run: opsRun(lines, { kind: 'toLines', band: 1, select: 'nonZero', spur: 3, simplify: 1 }, 2) },
+      { name: 'Rasterden nokta (Adım 10)', size: '4096²', budget: 2, run: opsRun(path, { kind: 'toPoints', band: 1, mode: 'step', step: 10 }, 5) },
+      {
+        name: 'Çizgi yakala (eğri)',
+        size: '8192²',
+        budget: 1.5,
+        run: opsRun(sheet, { kind: 'captureLine', ...at(3000, 4100 + 900 * Math.sin(3000 / 1300)), tolerance: 60, spur: 5, simplify: 1 }, 2),
+      },
+      { name: 'Alan kapat', size: '8192²', budget: 1.5, run: opsRun(sheet, { kind: 'closeArea', ...at(1810, 1190), tolerance: 60, holes: 'fill', simplify: 1 }, 2) },
+      {
+        name: 'Rasterleştir (10⁴ parsel)',
+        size: '4096²',
+        budget: 4,
+        run: `(async () => {
+          const { analyzePoints } = await import('/src/io/rasterAnalysis.ts');
+          const shapes = [], values = [];
+          for (let j = 0; j < 100; j++) for (let i = 0; i < 100; i++) {
+            const [x0, y0] = [500000 + i * 81.92 + 3, 4420000 - 8192 + j * 81.92 + 3];
+            shapes.push({ kind: 'polygon', pts: [{ x: x0, y: y0 }, { x: x0 + 70, y: y0 + 5 }, { x: x0 + 75, y: y0 + 72 }, { x: x0 - 2, y: y0 + 66 }] });
+            values.push(String(shapes.length - 1));
+          }
+          const spec = JSON.stringify({ tool: { kind: 'rasterize', value: 1, overlap: 'last', sample: 'i32' }, grid: { affine: [500000, 2, 0, 4420000, 0, -2], width: 4096, height: 4096 }, epsg: 5254 });
+          const t0 = performance.now();
+          const out = await analyzePoints(JSON.stringify(shapes), JSON.stringify(values), spec, true, { progress() {}, canceled: false });
+          const ms = performance.now() - t0;
+          if (!out.bytes.length) throw new Error('no result');
+          return ms;
+        })()`,
+      },
+      {
+        name: 'Eğrilere kot ver (10⁴ eğri)',
+        size: 'sayfada',
+        budget: 0.5,
+        run: `(async () => {
+          const { contourElevations } = await import('/src/model/ops/contourElevations.ts');
+          const curves = [];
+          for (let k = 0; k < 10000; k++) {
+            const pts = [];
+            for (let q = 0; q < 60; q++) pts.push({ x: 500000 + q * 50, y: 4420000 + k * 2 + 0.6 * Math.sin(q * 50 / 300 + k * 0.01) });
+            curves.push({ kind: 'polyline', pts });
+          }
+          const t0 = performance.now();
+          const z = contourElevations(curves, { x: 501234, y: 4419995 }, { x: 501500, y: 4440010 }, 100, 1);
+          const ms = performance.now() - t0;
+          if (z.filter((v) => v !== null).length !== 10000) throw new Error('not every curve');
+          return ms;
+        })()`,
+      },
+    ];
+    for (const job of vectorJobs) {
+      const times = [];
+      for (let r = 0; r < runs; r++) times.push((await b.eval(job.run)) / 1000);
+      times.sort((a, c) => a - c);
+      console.log(`${job.name.padEnd(26)} ${job.size}  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
+    }
   }
 } finally {
   b.close();

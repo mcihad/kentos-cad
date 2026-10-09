@@ -139,6 +139,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `log`, `üstel`, trigonometri, `derece`, `radyan`), Yeniden sınıflandır, Maskeyle kırp, Mozaik, Yeniden örnekle, Bölgesel istatistik
   (alana yazar, tablo), Histogram, Komşuluk istatistiği, Hücre istatistiği; sayıların kuralı `kentos.rasterstats/1` (çift-çift
   toplamlar); rasterlerin girdisinde ifadenin alanları bantların adları (ADR 0233);
+  raster ve vektör: İşlemler'in Raster ve vektör kategorisinde Rasterleştir (alanlar, çizgiler, noktalar; sabit ya da alandan değer, altı
+  çakışma kuralı, sonuç girdinin katmanının altında), Rasterden alan, Rasterden çizgi (Lü–Wang'lı inceltme), Rasterden nokta (adımla, her
+  hücre, tepeler ve çukurlar); Taranmış harita kategorisinde Çizgi yakala (renge göre, tıklanan çizgi ve ona bağlılar, isteğe bağlı kot),
+  Alan kapat ve Eğrilere kot ver (kesen çizginin sırasıyla); vektör sonuçlar rasterin hemen üstündeki yeni katmanda (ADR 0234);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -417,6 +421,11 @@ python3 scripts/fixtures/raster_ops_cases.py --check   # raster işlemlerini (he
 python3 scripts/fixtures/raster_ops_processing_cases.py --check   # raster işlemlerinin İşlemler durumlarını ve girdinin adlarını denetle; rasterleri GDAL yazar, yazılan dosyalar başvuruya bağlı; durumlar fixtures/processing/v1/raster-ops.json, raster-ops.kcad ve raster-ops/ (ADR 0233)
 cargo test --release -p kentos-raster --test all ops_timing -- --ignored --nocapture --test-threads=1   # 4096² rasterlerde dokuz aracın on iki işinin süreleri, 10 000 parselle kırpma ve bölgesel istatistik (ADR 0233 §15)
 KENTOS_SHOTS_ONLY=ops-serit,ops-hesap,ops-hesap-cizim,ops-bolge cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # raster işlemlerinin resimleri, .run/shots/arac-ops-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs rasterops); ADR 0233)
+python3 scripts/fixtures/raster_vector_cases.py --check   # raster ve vektör araçlarını (yakma, bölgelerin halkaları, inceltme ve yollar, noktalar, Çizgi yakala, Alan kapat, Eğrilere kot ver) ADR'den, KentOS kodu olmadan denetle; GDAL'ın Polygonize ve RasterizeLayer'ıyla çapraz denetim; durumlar fixtures/raster-vector/v1/cases.json (ADR 0234)
+python3 scripts/fixtures/raster_vector_processing_cases.py --check   # raster ve vektör araçlarının İşlemler durumlarını denetle; rasterleri GDAL yazar; durumlar fixtures/processing/v1/raster-vector.json, raster-vector.kcad ve raster-vector/ (ADR 0234)
+python3 scripts/fixtures/scanned_scene.py --check   # taranmış paftanın sahnesini (fixtures/interaction/v1/scanned.kcad ve scanned/pafta.tif) GDAL'la yeniden üretip karşılaştır (ADR 0234)
+cargo test --release -p kentos-raster --test all vector_timing -- --ignored --nocapture --test-threads=1   # 4096² ve 8192² rasterlerde yedi aracın süreleri; KENTOS_PHASES=1 Çizgi yakala'nın aşamalarını da yazar (ADR 0234 §11)
+KENTOS_SHOTS_ONLY=vek-serit,vek-yakala-cizim,vek-kapat-cizim,vek-kot cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # raster ve vektör araçlarının resimleri, .run/shots/arac-vek-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs rastervector); ADR 0234)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
 cargo test --release -p kentos-pointcloud --test all timing -- --ignored --nocapture   # aynı bulutta düğümün görünüşe göre çözülmesi (katman katman) ve LAZ yazma, tek ve dört iş parçacığıyla (önce perf::clouds dosyayı yazar; ADR 0207 §12)
@@ -1293,7 +1302,12 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   örnek türü (bağımsız başvuru `raster_ops_cases.py`, gdalwarp'la çapraz denetim); ifade dilinin matematik işlevleri; WASM `OpsOpening`,
   `OpsAnalysis`, `opsReads`; İşlemler'in `builtin/raster_ops/`'u ve `rasterOps/`'u iki platformda, girdinin özetinde raster adları
   (`features::raster_order`, `rasterRun`), `RunResult.above`; ortak durumlar `fixtures/processing/v1/raster-ops.json`
-  (`raster_ops_processing_cases.py`). Dalda sıradaki `GIS-34`.
+  (`raster_ops_processing_cases.py`). `GIS-34` raster ve vektör dönüşümü
+  ([ADR 0234](docs/adr/0234-raster-vector-conversion.md)) tek parçada bitti (9 Ekim): raster çekirdeğinde `vector` (`label`, `rings`,
+  `thin`, `simplify`, `capture`, `work`), `rasterize`, `inputs`'un `Raw`'ı; geometri çekirdeğinde `ops::contour_elevations` (bağımsız
+  başvuru `raster_vector_cases.py`, GDAL'la çapraz denetim); WASM `OpsAnalysis`'in nesneleri; İşlemler'in `builtin/raster_vector/`'u ve
+  `rasterVector/`'u iki platformda, `Patch.zs`; ortak durumlar `fixtures/processing/v1/raster-vector.json`
+  (`raster_vector_processing_cases.py`), taranmış paftanın sahnesi `scanned.kcad` (`scanned_scene.py`). Dalda sıradaki `GIS-35`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

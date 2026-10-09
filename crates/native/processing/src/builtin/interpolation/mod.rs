@@ -138,7 +138,7 @@ pub fn options(name: &str, label: &str, opts: &[(&str, &str)]) -> ParamDef {
 pub const RASTER_LAYER: &str = "#7A6B5B";
 
 /// The grid of the raster chosen for Kapsam, or why not.
-fn grid_of(r: &Resolved<'_>) -> Result<Option<GridOf>, String> {
+pub(crate) fn grid_of(r: &Resolved<'_>) -> Result<Option<GridOf>, String> {
     if r.text("extent") != "raster" {
         return Ok(None);
     }

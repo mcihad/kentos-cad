@@ -69,6 +69,8 @@ pub struct Ran {
     )>,
     pub zones: Vec<ZoneFigures>,
     pub histogram: Option<Histogram>,
+    /// A vectorizing run's features (docs/adr/0234).
+    pub features: Option<kentos_raster::vector::Features>,
     pub notes: Notes,
 }
 
@@ -156,6 +158,7 @@ pub fn drive(
         raster,
         zones: Vec::new(),
         histogram: None,
+        features: None,
         notes,
     };
     match (job.finish()?, sink) {
@@ -166,6 +169,7 @@ pub fn drive(
         }
         (OpsFinished::Zones(z), _) => ran.zones = z,
         (OpsFinished::Histogram(h), _) => ran.histogram = Some(h),
+        (OpsFinished::Features(f), _) => ran.features = Some(f),
         _ => return Err("Çözümlemenin sonucu beklenen türde değil.".into()),
     }
     Ok(ran)
@@ -177,7 +181,7 @@ fn shapes_of(r: &Resolved<'_>, name: &str) -> Vec<kentos_geometry_core::entity::
 }
 
 /// The rasters of the input, or why the tool does not run.
-fn rasters_for<'a>(
+pub(crate) fn rasters_for<'a>(
     r: &Resolved<'a>,
     ctx: &RunContext<'_>,
     one: bool,
@@ -304,6 +308,11 @@ fn spec_kind(spec: &OpsSpec) -> &'static str {
         OpsTool::Histogram { .. } => "histogram",
         OpsTool::FocalStatistics { .. } => "focalStatistics",
         OpsTool::CellStatistics { .. } => "cellStatistics",
+        OpsTool::ToPolygons { .. } => "toPolygons",
+        OpsTool::ToLines { .. } => "toLines",
+        OpsTool::ToPoints { .. } => "toPoints",
+        OpsTool::CaptureLine { .. } => "captureLine",
+        OpsTool::CloseArea { .. } => "closeArea",
     }
 }
 
@@ -359,6 +368,7 @@ pub fn run_zonal(r: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feed
                     id: Slot(z.base().id),
                     attrs: Some(attrs),
                     label: None,
+                    zs: None,
                 });
             }
             let m = &f.moments;
