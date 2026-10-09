@@ -873,6 +873,8 @@ ile birlikte yapılır.
 Tek ayrıntılı yol haritası [TODOS.md](TODOS.md)'dir. Buraya ikinci checkbox
 listesi, eski Faz A–F sırası veya her tamamlanan commit'in dökümünü eklemeyin.
 Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde saklayın.
+Bir maddenin baştan sona nasıl yapıldığı (sıra, denetimler, resimler, commit, paralel ajanların
+numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.md).
 
 ### 10.1 Devir notu (3 Ekim 2026)
 
