@@ -1,0 +1,829 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: raster işlemleri",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 500000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "kot",
+   "name": "Kot",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "fark",
+   "name": "Fark",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "egim",
+   "name": "Eğim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "buyuk",
+   "name": "Büyük",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "pafta1",
+   "name": "Pafta 1",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "pafta2",
+   "name": "Pafta 2",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "pafta3",
+   "name": "Pafta 3",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "dem",
+   "name": "DEM",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "bolge",
+   "name": "Bölge rasteri",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "arazi",
+   "name": "Arazi",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yil1",
+   "name": "Yıl 1",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yil2",
+   "name": "Yıl 2",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yil3",
+   "name": "Yıl 3",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "orto",
+   "name": "Ortofoto",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "maske",
+   "name": "Maske",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "bolgeler",
+   "name": "Bölgeler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#1565C0",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "uzak",
+   "name": "Uzak maske",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "kot",
+ "entities": [
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 9,
+   "height": 7,
+   "bands": 1,
+   "sample": "f32",
+   "file": "kot.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 1,
+   "layerId": "kot",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 9,
+   "height": 7,
+   "bands": 1,
+   "sample": "f32",
+   "file": "fark.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 2,
+   "layerId": "fark",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 8,
+   "height": 6,
+   "bands": 1,
+   "sample": "f32",
+   "file": "egim.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 3,
+   "layerId": "egim",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 14,
+   "height": 11,
+   "bands": 1,
+   "sample": "f32",
+   "file": "buyuk.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 4,
+   "layerId": "buyuk",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 7,
+   "height": 6,
+   "bands": 1,
+   "sample": "f32",
+   "file": "pafta1.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 5,
+   "layerId": "pafta1",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500006.0,
+    2.0,
+    0.0,
+    4419996.0,
+    0.0,
+    -2.0
+   ],
+   "width": 7,
+   "height": 6,
+   "bands": 1,
+   "sample": "f32",
+   "file": "pafta2.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 6,
+   "layerId": "pafta2",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    499997.0,
+    3.0,
+    0.0,
+    4420003.0,
+    0.0,
+    -3.0
+   ],
+   "width": 5,
+   "height": 4,
+   "bands": 1,
+   "sample": "f32",
+   "file": "pafta3.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 7,
+   "layerId": "pafta3",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 10,
+   "height": 9,
+   "bands": 1,
+   "sample": "f32",
+   "file": "dem.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 8,
+   "layerId": "dem",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 12,
+   "height": 10,
+   "bands": 1,
+   "sample": "f32",
+   "file": "bolge.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 9,
+   "layerId": "bolge",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 13,
+   "height": 11,
+   "bands": 1,
+   "sample": "f32",
+   "file": "arazi.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 10,
+   "layerId": "arazi",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 8,
+   "height": 7,
+   "bands": 1,
+   "sample": "f32",
+   "file": "yil1.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 11,
+   "layerId": "yil1",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 8,
+   "height": 7,
+   "bands": 1,
+   "sample": "f32",
+   "file": "yil2.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 12,
+   "layerId": "yil2",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500004.0,
+    2.0,
+    0.0,
+    4419998.0,
+    0.0,
+    -2.0
+   ],
+   "width": 8,
+   "height": 7,
+   "bands": 1,
+   "sample": "f32",
+   "file": "yil3.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 13,
+   "layerId": "yil3",
+   "attrs": {}
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500004.3,
+     "y": 4419984.3
+    },
+    {
+     "x": 500013.9,
+     "y": 4419984.3
+    },
+    {
+     "x": 500013.9,
+     "y": 4419994.9
+    },
+    {
+     "x": 500004.3,
+     "y": 4419994.9
+    }
+   ],
+   "id": 14,
+   "layerId": "maske",
+   "attrs": {}
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500001.1,
+     "y": 4419986.8
+    },
+    {
+     "x": 500011.7,
+     "y": 4419986.8
+    },
+    {
+     "x": 500011.7,
+     "y": 4419997.6
+    },
+    {
+     "x": 500001.1,
+     "y": 4419997.6
+    }
+   ],
+   "id": 15,
+   "layerId": "bolgeler",
+   "attrs": {
+    "Ad": "Bölge 1"
+   },
+   "label": "B1"
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500008.4,
+     "y": 4419980.4
+    },
+    {
+     "x": 500022.9,
+     "y": 4419980.4
+    },
+    {
+     "x": 500022.9,
+     "y": 4419990.9
+    },
+    {
+     "x": 500008.4,
+     "y": 4419990.9
+    }
+   ],
+   "id": 16,
+   "layerId": "bolgeler",
+   "attrs": {
+    "Ad": "Bölge 2"
+   },
+   "label": "B2"
+  },
+  {
+   "kind": "circle",
+   "c": {
+    "x": 500013.0,
+    "y": 4419991.0
+   },
+   "r": 6.0,
+   "id": 17,
+   "layerId": "bolgeler",
+   "attrs": {
+    "Ad": "Bölge 3"
+   },
+   "label": "B3"
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500900.0,
+     "y": 4420900.0
+    },
+    {
+     "x": 500910.0,
+     "y": 4420900.0
+    },
+    {
+     "x": 500910.0,
+     "y": 4420910.0
+    },
+    {
+     "x": 500900.0,
+     "y": 4420910.0
+    }
+   ],
+   "id": 18,
+   "layerId": "bolgeler",
+   "attrs": {
+    "Ad": "Bölge 4"
+   },
+   "label": "B4"
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 501000.0,
+     "y": 4421000.0
+    },
+    {
+     "x": 501010.0,
+     "y": 4421000.0
+    },
+    {
+     "x": 501010.0,
+     "y": 4421010.0
+    },
+    {
+     "x": 501000.0,
+     "y": 4421010.0
+    }
+   ],
+   "id": 19,
+   "layerId": "uzak",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500100.0,
+    0.5,
+    0.0,
+    4420100.0,
+    0.0,
+    -0.5
+   ],
+   "width": 4,
+   "height": 4,
+   "bands": 4,
+   "sample": "u8",
+   "file": "orto1.tif",
+   "srid": 5254,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     1,
+     2,
+     3
+    ]
+   },
+   "id": 20,
+   "layerId": "orto",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500100.0,
+    0.5,
+    0.0,
+    4420100.0,
+    0.0,
+    -0.5
+   ],
+   "width": 4,
+   "height": 4,
+   "bands": 3,
+   "sample": "u8",
+   "file": "orto2.tif",
+   "srid": 5254,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     1,
+     2,
+     3
+    ]
+   },
+   "id": 21,
+   "layerId": "orto",
+   "attrs": {}
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

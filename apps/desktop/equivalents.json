@@ -9,11 +9,9 @@
     }
   },
   "commands": {
-    "analysis.slope": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "analysis.volume": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "file.export.pdf": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "file.print": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
-    "map.contours": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "map.parcelReport": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "map.profile": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "map.sheet": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },

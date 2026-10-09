@@ -214,7 +214,7 @@ fn go(
     )?;
     let values = grid.values();
     let filled = values.iter().filter(|v| **v != NODATA).count();
-    let path = files.output_path(r.text("output"), Some(&sources[0]), "-dem", ".tif")?;
+    let path = files.output_path(r.text("output"), Some((&sources[0]).into()), "-dem", ".tif")?;
     feedback.progress(0.85, "GeoTIFF yazılıyor");
     write_tiff(files, &path, &frame, &values, c.srid)?;
     let (lo, hi) = values

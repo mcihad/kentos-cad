@@ -1,19 +1,25 @@
 //! The tools and models that ship with KentOS (the web's `builtin/`).
 
 pub mod calculate_field;
+pub mod distance;
 pub mod edge_lengths;
 pub mod geometry;
+pub mod hydrology;
 pub mod info_from_enclosing;
 pub mod info_from_inside;
+pub mod interpolation;
 pub mod join_by_field;
 pub mod models;
 pub mod network;
 pub mod numbering;
 pub mod pointcloud;
 pub mod queries;
+pub mod raster_ops;
+pub mod raster_vector;
 pub mod select_by_expression;
 pub mod select_by_location;
 pub mod summary_statistics;
+pub mod surface;
 pub mod vertex_numbering;
 
 use crate::model::Model;
@@ -56,6 +62,55 @@ pub fn tools() -> Vec<Tool> {
         pointcloud::tile::tool(),
         pointcloud::rasterize::tool(),
         pointcloud::boundary::tool(),
+        // Yüzey analizi (docs/adr/0231): both platforms.
+        surface::slope(),
+        surface::aspect(),
+        surface::hillshade(),
+        surface::color_relief(),
+        surface::curvature(),
+        surface::ruggedness(),
+        surface::insolation(),
+        surface::contours(),
+        // İnterpolasyon and Yoğunluk (docs/adr/0232): both platforms.
+        interpolation::idw(),
+        interpolation::natural_neighbor(),
+        interpolation::spline(),
+        interpolation::kriging(),
+        interpolation::tin(),
+        interpolation::kernel_density(),
+        interpolation::line_density(),
+        // Raster işlemleri and Raster istatistiği (docs/adr/0233): both platforms.
+        raster_ops::calculator(),
+        raster_ops::reclassify(),
+        raster_ops::clip_by_mask(),
+        raster_ops::mosaic(),
+        raster_ops::resample(),
+        raster_ops::zonal_statistics(),
+        raster_ops::histogram(),
+        raster_ops::focal_statistics(),
+        raster_ops::cell_statistics(),
+        // Raster ve vektör and Taranmış harita (docs/adr/0234): both platforms.
+        raster_vector::rasterize(),
+        raster_vector::to_polygons(),
+        raster_vector::to_lines(),
+        raster_vector::to_points(),
+        raster_vector::capture_line(),
+        raster_vector::close_area(),
+        raster_vector::contour_elevations_tool(),
+        // Hidroloji (docs/adr/0235): both platforms.
+        hydrology::fill(),
+        hydrology::flow_direction(),
+        hydrology::accumulation(),
+        hydrology::wetness(),
+        hydrology::pour_point(),
+        hydrology::watershed(),
+        hydrology::basins(),
+        hydrology::streams(),
+        // Uzaklık ve maliyet (docs/adr/0236): both platforms.
+        distance::euclidean(),
+        distance::cost(),
+        distance::path(),
+        distance::corridor(),
     ]
 }
 

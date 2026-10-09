@@ -5,7 +5,8 @@
 //! once on worker threads and handed out in the file's order; a text cloud
 //! scanned once (its plan kept for the run's next passes); results written
 //! beside their place (`.yaziliyor`) and renamed when whole, a COPC made
-//! from its LAZ by the index's builder.
+//! from its LAZ by the index's builder. The analyses' rasters (docs/adr/0231
+//! §2) are opened the same ways, each with its own reader.
 
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
@@ -13,14 +14,17 @@ use std::io::{BufWriter, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use kentos_contracts::{CloudFormat, CloudSource};
+use kentos_contracts::{CloudFormat, CloudSource, RasterFields};
 use kentos_pointcloud::ops::convert::Input;
 use kentos_pointcloud::source::{Cloud, Opening, Run};
 use kentos_pointcloud::{Step, text};
 use kentos_processing::Feedback;
-use kentos_processing::files::{CloudRead, Files, Sink};
+use kentos_processing::files::{
+    Beside, CloudRead, Files, RASTER_READER_BUDGET, RasterOpen, Sink, with_extension,
+};
 
 use super::bytes::{Bytes, Remote};
+use crate::rasters::tiles::{Origin, jpeg_pixels, open_reader};
 
 /// A text cloud is read in pieces of this size.
 const PIECE: u64 = 4 * 1024 * 1024;
@@ -51,31 +55,38 @@ impl DesktopFiles {
         }
     }
 
+    /// An embedded file's bytes from the library (`what`: “nokta bulutu”, “raster”), decoded once a run.
+    fn asset_bytes(&self, id: &str, what: &str) -> Result<Arc<Vec<u8>>, String> {
+        if let Some(b) = self
+            .decoded
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .get(id)
+        {
+            return Ok(b.clone());
+        }
+        let url = self
+            .assets
+            .get(id)
+            .ok_or_else(|| format!("“{id}” kimlikli {what} projenin kitaplığında yok."))?;
+        let data = url
+            .split_once(";base64,")
+            .and_then(|(_, d)| kentos_sheet::template::base64_decode(d))
+            .ok_or_else(|| format!("“{id}” kimlikli gömülü {what} okunamadı."))?;
+        let data = Arc::new(data);
+        self.decoded
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .insert(id.to_owned(), data.clone());
+        Ok(data)
+    }
+
     fn bytes_of(&self, s: &CloudSource) -> Result<(Bytes, String), String> {
         match (&s.asset, &s.file, &s.url) {
-            (Some(id), _, _) => {
-                if let Some(b) = self
-                    .decoded
-                    .lock()
-                    .unwrap_or_else(PoisonError::into_inner)
-                    .get(id)
-                {
-                    return Ok((Bytes::Memory(b.clone()), format!("asset:{id}")));
-                }
-                let url = self.assets.get(id).ok_or_else(|| {
-                    format!("“{id}” kimlikli nokta bulutu projenin kitaplığında yok.")
-                })?;
-                let data = url
-                    .split_once(";base64,")
-                    .and_then(|(_, d)| kentos_sheet::template::base64_decode(d))
-                    .ok_or_else(|| format!("“{id}” kimlikli gömülü bulut okunamadı."))?;
-                let data = Arc::new(data);
-                self.decoded
-                    .lock()
-                    .unwrap_or_else(PoisonError::into_inner)
-                    .insert(id.clone(), data.clone());
-                Ok((Bytes::Memory(data), format!("asset:{id}")))
-            }
+            (Some(id), _, _) => Ok((
+                Bytes::Memory(self.asset_bytes(id, "nokta bulutu")?),
+                format!("asset:{id}"),
+            )),
             (None, Some(f), _) => {
                 let path = crate::pictures::resolve(f, self.folder.as_deref());
                 let b = Bytes::file(&path)?;
@@ -253,19 +264,6 @@ impl Drop for FileSink {
     }
 }
 
-/// `path` with its cloud or raster extension made `ext` (kept as it is when `ext` is empty).
-fn with_extension(path: &str, ext: &str) -> String {
-    if ext.is_empty() {
-        return path.to_owned();
-    }
-    let lower = path.to_ascii_lowercase();
-    let cut = [".copc.laz", ".laz", ".las", ".tif", ".tiff", ".vpc"]
-        .iter()
-        .find(|e| lower.ends_with(*e))
-        .map_or(path.len(), |e| path.len() - e.len());
-    format!("{}{ext}", &path[..cut])
-}
-
 impl Files for DesktopFiles {
     fn open_cloud(&self, source: &CloudSource) -> Result<Box<dyn CloudRead + '_>, String> {
         let (bytes, key) = self.bytes_of(source)?;
@@ -310,7 +308,7 @@ impl Files for DesktopFiles {
     fn output_path(
         &self,
         asked: &str,
-        beside: Option<&CloudSource>,
+        beside: Option<Beside<'_>>,
         suffix: &str,
         ext: &str,
     ) -> Result<String, String> {
@@ -319,8 +317,8 @@ impl Files for DesktopFiles {
             return Ok(with_extension(asked, ext));
         }
         let source = beside.ok_or("Çıktının yeri yok: bir çıktı dosyası seçin.")?;
-        let stem = kentos_processing::builtin::pointcloud::stem(source);
-        let folder = match &source.file {
+        let stem = source.stem();
+        let folder = match source.file {
             Some(f) => crate::pictures::resolve(f, self.folder.as_deref())
                 .parent()
                 .map(Path::to_path_buf),
@@ -371,20 +369,41 @@ impl Files for DesktopFiles {
     fn remove(&self, path: &str) {
         let _ = std::fs::remove_file(path);
     }
+
+    fn open_raster(&self, raster: &RasterFields) -> Result<RasterOpen<'_>, String> {
+        let origin = match (&raster.asset, &raster.file, &raster.url) {
+            (Some(id), _, _) => Origin::Bytes(self.asset_bytes(id, "raster")?),
+            (None, Some(f), _) => Origin::File(crate::pictures::resolve(f, self.folder.as_deref())),
+            (None, None, Some(u)) => Origin::Url(u.clone()),
+            (None, None, None) => return Err("Rasterin dosyası yok.".to_owned()),
+        };
+        let open = open_reader(&origin, RASTER_READER_BUDGET)?;
+        let source = open.source;
+        Ok(RasterOpen {
+            reader: open.reader,
+            block: Box::new(move |need| match &source {
+                Some(b) if need.file == 0 => b.read(need.offset, need.len),
+                _ => Err("Rasterin bu bloğu okunamadı.".to_owned()),
+            }),
+            jpeg: Box::new(jpeg_pixels),
+        })
+    }
 }
 
 /// The run's files for the open drawing: its folder, its library's embedded clouds.
 pub fn for_drawing(model: &kentos_domain::Document, path: Option<&Path>) -> Arc<dyn Files> {
     let mut assets = HashMap::new();
     for it in &model.styles().items {
-        let is_cloud = it.get("kind").and_then(serde_json::Value::as_str) == Some("asset")
-            && matches!(
+        let id = it.get("id").and_then(serde_json::Value::as_str);
+        // The clouds' files, and the rasters' the analyses read (docs/adr/0231 §2; a raster's id is `raster-…`).
+        let wanted = it.get("kind").and_then(serde_json::Value::as_str) == Some("asset")
+            && (matches!(
                 it.get("format").and_then(serde_json::Value::as_str),
                 Some("las" | "laz" | "copc" | "xyz")
-            );
+            ) || id.is_some_and(|id| id.starts_with("raster-")));
         if let (true, Some(id), Some(data)) = (
-            is_cloud,
-            it.get("id").and_then(serde_json::Value::as_str),
+            wanted,
+            id,
             it.get("data").and_then(serde_json::Value::as_str),
         ) {
             assets.insert(id.to_owned(), Arc::new(data.to_owned()));

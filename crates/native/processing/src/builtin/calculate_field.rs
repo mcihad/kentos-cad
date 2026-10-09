@@ -160,6 +160,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             id: Slot(base.id),
             attrs: Some(attrs),
             label,
+            zs: None,
         });
         if i % 2000 == 1999 {
             feedback.progress(i as f64 / list.len() as f64, "Değerler hesaplanıyor");

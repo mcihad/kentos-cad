@@ -113,6 +113,8 @@ pub fn result_layer_param(name: &str, color: &str) -> ParamDef {
                 line_weight: Some(0.25),
                 ..NewLayerStyle::default()
             },
+            above: None,
+            below: None,
         },
     )
     .default_value(json!({ "newName": name }))
@@ -150,29 +152,6 @@ pub fn one_cloud<'a>(r: &Resolved<'a>) -> Result<&'a PointCloudEntity, Box<RunRe
             "{} nokta bulutu seçildi; bu araç bir bulutu işler. Bir bulut seçin (birden çok dosyayı Bulutları birleştir tek dosyada toplar).",
             many.len()
         )))),
-    }
-}
-
-/// A file's stem as the result names take it.
-pub fn stem(s: &CloudSource) -> String {
-    let full = s
-        .file
-        .as_deref()
-        .or(s.url.as_deref())
-        .or(s.asset.as_deref())
-        .unwrap_or("bulut");
-    let base = full.rsplit(['/', '\\']).next().unwrap_or(full);
-    let base = base.split(['?', '#']).next().unwrap_or(base);
-    let lower = base.to_ascii_lowercase();
-    let cut = [".copc.laz", ".laz", ".las", ".xyz", ".pts", ".txt", ".csv"]
-        .iter()
-        .find(|e| lower.ends_with(*e))
-        .map_or(base.len(), |e| base.len() - e.len());
-    let s = &base[..cut];
-    if s.is_empty() {
-        "bulut".to_owned()
-    } else {
-        s.to_owned()
     }
 }
 
@@ -338,7 +317,12 @@ pub fn place(
         "copc" => CloudFormat::Copc,
         _ => CloudFormat::Laz,
     };
-    let path = files.output_path(r.text("output"), Some(beside), suffix, extension(format))?;
+    let path = files.output_path(
+        r.text("output"),
+        Some(beside.into()),
+        suffix,
+        extension(format),
+    )?;
     let written = if format == CloudFormat::Copc {
         format!("{path}.yaziliyor.laz")
     } else {

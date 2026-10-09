@@ -4,9 +4,9 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 465 | 440 | 0 | 25 |
+| Komutlar | 508 | 485 | 0 | 23 |
 | Araçlar | 126 | 124 | 0 | 2 |
-| İşlem araçları | 23 | 23 | 0 | 0 |
+| İşlem araçları | 66 | 66 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
 | Ayarlar | 93 | 93 | 0 | 0 |
@@ -18,13 +18,11 @@
 
 Yok.
 
-## Bekleyen (29)
+## Bekleyen (27)
 
-- Komutlar: `analysis.slope` Eğim analizi…
 - Komutlar: `analysis.volume` Hacim hesabı…
 - Komutlar: `file.export.pdf` PDF pafta…
 - Komutlar: `file.print` Yazdır ve pafta çıktısı…
-- Komutlar: `map.contours` Eşyükselti üret…
 - Komutlar: `map.parcelReport` Parsel alan çizelgesi
 - Komutlar: `map.profile` Boy kesit al…
 - Komutlar: `map.sheet` Pafta bölümlemesi…
@@ -50,11 +48,11 @@ Yok.
 - Proje türleri: `disaster` Afet ve risk analizi
 - Proje türleri: `plan3d` İmar planından 3D kent tasarımı
 
-## Arayüzde yeri görünmeyen komutlar (26)
+## Arayüzde yeri görünmeyen komutlar (28)
 
 Menüde ve şeritte yoklar; kimlikleri `src/ui` altındaki hiçbir dosyada geçmiyor. Kısayolla, komut satırından ya da başka bir yoldan çalışıyor olabilirler. Her biri fareyle bulunabilirlik açısından gözden geçirilir.
 
-`sheet.align.bottom`, `sheet.align.center`, `sheet.align.left`, `sheet.align.middle`, `sheet.align.right`, `sheet.align.top`, `sheet.alignTo.margins`, `sheet.alignTo.page`, `sheet.alignTo.selection`, `sheet.distribute.hCenters`, `sheet.distribute.hGaps`, `sheet.distribute.vCenters`, `sheet.distribute.vGaps`, `sheet.escape`, `sheet.export.kpafta`, `sheet.export.pdf`, `sheet.export.png`, `sheet.export.svg`, `sheet.matchSize.height`, `sheet.matchSize.width`, `sheet.nudge`, `sheet.print`, `sheet.redo`, `sheet.tool.hand`, `sheet.tool.select`, `sheet.undo`
+`analysis.slope`, `map.contours`, `sheet.align.bottom`, `sheet.align.center`, `sheet.align.left`, `sheet.align.middle`, `sheet.align.right`, `sheet.align.top`, `sheet.alignTo.margins`, `sheet.alignTo.page`, `sheet.alignTo.selection`, `sheet.distribute.hCenters`, `sheet.distribute.hGaps`, `sheet.distribute.vCenters`, `sheet.distribute.vGaps`, `sheet.escape`, `sheet.export.kpafta`, `sheet.export.pdf`, `sheet.export.png`, `sheet.export.svg`, `sheet.matchSize.height`, `sheet.matchSize.width`, `sheet.nudge`, `sheet.print`, `sheet.redo`, `sheet.tool.hand`, `sheet.tool.select`, `sheet.undo`
 
 ## Masaüstü
 
@@ -62,9 +60,9 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 393 | 0 | 58 | 12 | 2 | 465 |
+| Komutlar | 438 | 0 | 58 | 10 | 2 | 508 |
 | Araçlar | 124 | 0 | 0 | 2 | 0 | 126 |
-| İşlem araçları | 23 | 0 | 0 | 0 | 0 | 23 |
+| İşlem araçları | 66 | 0 | 0 | 0 | 0 | 66 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
 | Ayarlar | 89 | 0 | 3 | 0 | 1 | 93 |
@@ -89,7 +87,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 465; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 508; ayrıca 10 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -149,11 +147,9 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `sheet.zoomPage` Sayfayı sığdır
 - `sheet.zoomReal` Gerçek boyut
 - `sheet.zoomSelection` Seçime yakınlaş
-- `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `file.export.pdf` PDF pafta… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `file.print` Yazdır ve pafta çıktısı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `map.contours` Eşyükselti üret… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `map.parcelReport` Parsel alan çizelgesi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `map.profile` Boy kesit al… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `map.sheet` Pafta bölümlemesi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -167,7 +163,7 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - `subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 
-#### İşlem araçları (0 / 23)
+#### İşlem araçları (0 / 66)
 
 Yok.
 
@@ -218,4 +214,4 @@ Yok.
 
 ## Test başvurusu
 
-182 / 465 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+225 / 508 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

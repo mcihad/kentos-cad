@@ -598,10 +598,13 @@ impl App {
                 let kinds = kinds.as_deref();
                 let summary = features::summarize_features(&fv, kinds, &look);
                 let set = features::resolve_features(&fv, kinds, &look);
-                (
-                    summary.fields,
-                    set.entities.iter().map(|e| Slot(e.base().id)).collect(),
-                )
+                // A raster's bands are named, not previewed on objects (docs/adr/0233 §3).
+                let slots = if kentos_processing::runner::only_rasters(&set.entities) {
+                    Vec::new()
+                } else {
+                    set.entities.iter().map(|e| Slot(e.base().id)).collect()
+                };
+                (summary.fields, slots)
             }
             _ => (Vec::new(), Vec::new()),
         };

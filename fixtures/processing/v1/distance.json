@@ -1,0 +1,1822 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "rasters": {
+  "kaynak-raster.tif": "distance/kaynak-raster.tif",
+  "izgara.tif": "distance/izgara.tif",
+  "maliyet.tif": "distance/maliyet.tif",
+  "engel.tif": "distance/engel.tif",
+  "yukseklik.tif": "distance/yukseklik.tif",
+  "sifir.tif": "distance/sifir.tif"
+ },
+ "documents": {
+  "distance.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "drawingFont": "barlow",
+    "activeLayer": "kaynaklar",
+    "measureHeightMm": 2
+   },
+   "tools": {
+    "distance.euclidean": {
+     "from": "objects",
+     "sources": {
+      "scope": "layer",
+      "layerId": "kaynaklar"
+     },
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "max": 0,
+     "result": "distance",
+     "margin": 100,
+     "cellSize": 0,
+     "extent": "objects",
+     "grid": {
+      "scope": "selection"
+     },
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Uzaklık"
+     }
+    },
+    "distance.cost": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "sources": {
+      "scope": "layer",
+      "layerId": "kaynaklar"
+     },
+     "neighbours": "16",
+     "useSurface": false,
+     "surface": {
+      "scope": "selection"
+     },
+     "surfaceLength": false,
+     "slope": 0,
+     "max": 0,
+     "result": "cost",
+     "sample": "f32",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Birikimli maliyet"
+     }
+    },
+    "distance.path": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "sources": {
+      "scope": "layer",
+      "layerId": "kaynaklar"
+     },
+     "targets": {
+      "scope": "layer",
+      "layerId": "kaynaklar"
+     },
+     "neighbours": "16",
+     "useSurface": false,
+     "surface": {
+      "scope": "selection"
+     },
+     "surfaceLength": false,
+     "slope": 0,
+     "simplify": 0,
+     "layer": {
+      "newName": "En düşük maliyetli yol"
+     }
+    },
+    "distance.corridor": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "sources": {
+      "scope": "layer",
+      "layerId": "kaynaklar"
+     },
+     "targets": {
+      "scope": "layer",
+      "layerId": "kaynaklar"
+     },
+     "neighbours": "16",
+     "useSurface": false,
+     "surface": {
+      "scope": "selection"
+     },
+     "surfaceLength": false,
+     "slope": 0,
+     "threshold": "none",
+     "percent": 10,
+     "value": 0,
+     "sample": "f32",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Maliyet koridoru"
+     }
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "euclid-objects",
+   "title": "Uzaklık yüzeyi, nesnelerden: nokta, çizgi ve alanın kutusu 23 m paylı, 5 m hücre; katman nesnelerin hemen altında",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.euclidean"
+   },
+   "values": {
+    "sources": {
+     "scope": "layer",
+     "layerId": "nesneler"
+    },
+    "margin": 23,
+    "cellSize": 5
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Uzaklık yüzeyi",
+    "summary": "3 kaynaktan 31 × 21 hücrelik raster; “Nesneler-uzaklik.tif” yazıldı.",
+    "outputs": {
+     "file": "Nesneler-uzaklik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-uzaklik",
+      "name": "Uzaklık",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-uzaklik",
+      "attrs": {},
+      "affine": [
+       499990.0,
+       5.0,
+       0.0,
+       4420085.0,
+       0.0,
+       -5.0
+      ],
+      "width": 31,
+      "height": 21,
+      "bands": 1,
+      "sample": "f32",
+      "file": "Nesneler-uzaklik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerBelow": {
+     "islem-uzaklik": "nesneler"
+    },
+    "distanceOf": {
+     "Nesneler-uzaklik.tif": "uzaklik-nesneler-uzaklik"
+    }
+   }
+  },
+  {
+   "id": "euclid-objects-allocation",
+   "title": "Uzaklık yüzeyi, nesnelerden, En yakın kaynak: nesnenin girdideki sırası",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.euclidean"
+   },
+   "values": {
+    "sources": {
+     "scope": "layer",
+     "layerId": "nesneler"
+    },
+    "margin": 23,
+    "cellSize": 5,
+    "result": "allocation"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Uzaklık yüzeyi",
+    "summary": "3 kaynaktan 31 × 21 hücrelik raster; “Nesneler-uzaklik.tif” yazıldı.",
+    "outputs": {
+     "file": "Nesneler-uzaklik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-uzaklik",
+      "name": "Uzaklık",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-uzaklik",
+      "attrs": {},
+      "affine": [
+       499990.0,
+       5.0,
+       0.0,
+       4420085.0,
+       0.0,
+       -5.0
+      ],
+      "width": 31,
+      "height": 21,
+      "bands": 1,
+      "sample": "f32",
+      "file": "Nesneler-uzaklik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Spektral",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerBelow": {
+     "islem-uzaklik": "nesneler"
+    },
+    "distanceOf": {
+     "Nesneler-uzaklik.tif": "uzaklik-nesneler-tahsis"
+    }
+   }
+  },
+  {
+   "id": "euclid-objects-grid",
+   "title": "Uzaklık yüzeyi, rasterin ızgarasında (10 × 6 m hücre), en büyük uzaklık 60 m",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.euclidean"
+   },
+   "values": {
+    "sources": {
+     "scope": "layer",
+     "layerId": "nesneler"
+    },
+    "extent": "raster",
+    "grid": {
+     "scope": "layer",
+     "layerId": "izgara"
+    },
+    "max": 60
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Uzaklık yüzeyi",
+    "summary": "3 kaynaktan 16 × 17 hücrelik raster; “Nesneler-uzaklik.tif” yazıldı. En büyük uzaklığın ötesinde 3 hücre değersiz.",
+    "outputs": {
+     "file": "Nesneler-uzaklik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-uzaklik",
+      "name": "Uzaklık",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-uzaklik",
+      "attrs": {},
+      "affine": [
+       499990.0,
+       10.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -6.0
+      ],
+      "width": 16,
+      "height": 17,
+      "bands": 1,
+      "sample": "f32",
+      "file": "Nesneler-uzaklik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerBelow": {
+     "islem-uzaklik": "nesneler"
+    },
+    "distanceOf": {
+     "Nesneler-uzaklik.tif": "uzaklik-nesneler-izgara"
+    }
+   }
+  },
+  {
+   "id": "euclid-raster",
+   "title": "Uzaklık yüzeyi, rasterden: değerli hücreler kaynak; katman rasterin hemen üstünde",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.euclidean"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaynak-raster"
+    },
+    "from": "raster"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Uzaklık yüzeyi",
+    "summary": "23 × 17 hücrelik raster; “kaynak-raster-uzaklik.tif” yazıldı. 6 kaynak hücre; en uzak hücre 120.416 m.",
+    "outputs": {
+     "file": "kaynak-raster-uzaklik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-uzaklik",
+      "name": "Uzaklık",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-uzaklik",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 23,
+      "height": 17,
+      "bands": 1,
+      "sample": "f32",
+      "file": "kaynak-raster-uzaklik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-uzaklik": "kaynak-raster"
+    },
+    "distanceOf": {
+     "kaynak-raster-uzaklik.tif": "uzaklik-raster-kare"
+    }
+   }
+  },
+  {
+   "id": "euclid-raster-allocation",
+   "title": "Uzaklık yüzeyi, rasterden, En yakın kaynak: hücrenin değeri",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.euclidean"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaynak-raster"
+    },
+    "from": "raster",
+    "result": "allocation"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Uzaklık yüzeyi",
+    "summary": "23 × 17 hücrelik raster; “kaynak-raster-uzaklik.tif” yazıldı. 6 kaynak hücre.",
+    "outputs": {
+     "file": "kaynak-raster-uzaklik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-uzaklik",
+      "name": "Uzaklık",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-uzaklik",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 23,
+      "height": 17,
+      "bands": 1,
+      "sample": "f32",
+      "file": "kaynak-raster-uzaklik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Spektral",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-uzaklik": "kaynak-raster"
+    },
+    "distanceOf": {
+     "kaynak-raster-uzaklik.tif": "uzaklik-raster-tahsis"
+    }
+   }
+  },
+  {
+   "id": "cost",
+   "title": "Birikimli maliyet, 16 komşu: bir nokta ve bir çizgiden",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.cost"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "kaynaklar"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Birikimli maliyet",
+    "summary": "31 × 23 hücrelik raster; “maliyet-maliyet.tif” yazıldı. 7 kaynak hücre; en büyük birikimli maliyet 1047.067.",
+    "outputs": {
+     "file": "maliyet-maliyet.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-birikimli-maliyet",
+      "name": "Birikimli maliyet",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-birikimli-maliyet",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 31,
+      "height": 23,
+      "bands": 1,
+      "sample": "f32",
+      "file": "maliyet-maliyet.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-birikimli-maliyet": "maliyet"
+    },
+    "distanceOf": {
+     "maliyet-maliyet.tif": "maliyet-16"
+    }
+   }
+  },
+  {
+   "id": "cost-8-allocation",
+   "title": "Birikimli maliyet, 8 komşu, En ucuz kaynak",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.cost"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "kaynaklar"
+    },
+    "neighbours": "8",
+    "result": "allocation"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Birikimli maliyet",
+    "summary": "31 × 23 hücrelik raster; “maliyet-maliyet.tif” yazıldı. 7 kaynak hücre.",
+    "outputs": {
+     "file": "maliyet-maliyet.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-birikimli-maliyet",
+      "name": "Birikimli maliyet",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-birikimli-maliyet",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 31,
+      "height": 23,
+      "bands": 1,
+      "sample": "f32",
+      "file": "maliyet-maliyet.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Spektral",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-birikimli-maliyet": "maliyet"
+    },
+    "distanceOf": {
+     "maliyet-maliyet.tif": "maliyet-8-tahsis"
+    }
+   }
+  },
+  {
+   "id": "cost-max",
+   "title": "Birikimli maliyet, en büyük maliyet 60, 64 bit: ötesi değersiz",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.cost"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "kaynaklar"
+    },
+    "max": 60,
+    "sample": "f64"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Birikimli maliyet",
+    "summary": "31 × 23 hücrelik raster; “maliyet-maliyet.tif” yazıldı. 7 kaynak hücre; en büyük birikimli maliyet 55.849. Değersiz 702 hücre (engel, erişilemeyen ya da sınırın ötesi).",
+    "outputs": {
+     "file": "maliyet-maliyet.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-birikimli-maliyet",
+      "name": "Birikimli maliyet",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-birikimli-maliyet",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 31,
+      "height": 23,
+      "bands": 1,
+      "sample": "f64",
+      "file": "maliyet-maliyet.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-birikimli-maliyet": "maliyet"
+    },
+    "distanceOf": {
+     "maliyet-maliyet.tif": "maliyet-en-buyuk"
+    }
+   }
+  },
+  {
+   "id": "cost-barrier",
+   "title": "Birikimli maliyet, engeller: köşeden bağlı duvar geçilmez",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.cost"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "engel"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "engel-kaynak"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Birikimli maliyet",
+    "summary": "31 × 23 hücrelik raster; “engel-maliyet.tif” yazıldı. 1 kaynak hücre; en büyük birikimli maliyet 1579.682. Değersiz 46 hücre (engel, erişilemeyen ya da sınırın ötesi).",
+    "outputs": {
+     "file": "engel-maliyet.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-birikimli-maliyet",
+      "name": "Birikimli maliyet",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-birikimli-maliyet",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 31,
+      "height": 23,
+      "bands": 1,
+      "sample": "f32",
+      "file": "engel-maliyet.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-birikimli-maliyet": "engel"
+    },
+    "distanceOf": {
+     "engel-maliyet.tif": "maliyet-engel-16"
+    }
+   }
+  },
+  {
+   "id": "cost-surface",
+   "title": "Birikimli maliyet, yükseklik modeliyle: yüzey uzunluğu ve en büyük boyuna eğim %12",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.cost"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "kaynaklar"
+    },
+    "useSurface": true,
+    "surface": {
+     "scope": "layer",
+     "layerId": "yukseklik"
+    },
+    "surfaceLength": true,
+    "slope": 12,
+    "sample": "f64"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Birikimli maliyet",
+    "summary": "31 × 23 hücrelik raster; “maliyet-maliyet.tif” yazıldı. 7 kaynak hücre; en büyük birikimli maliyet 1664.325. Değersiz 1 hücre (engel, erişilemeyen ya da sınırın ötesi).",
+    "outputs": {
+     "file": "maliyet-maliyet.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-birikimli-maliyet",
+      "name": "Birikimli maliyet",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-birikimli-maliyet",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 31,
+      "height": 23,
+      "bands": 1,
+      "sample": "f64",
+      "file": "maliyet-maliyet.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-birikimli-maliyet": "maliyet"
+    },
+    "distanceOf": {
+     "maliyet-maliyet.tif": "maliyet-yukseklik-egim"
+    }
+   }
+  },
+  {
+   "id": "path",
+   "title": "En düşük maliyetli yol, 16 komşu: üç varış, rasterin dışındaki söylenir",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.path"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "baslangic"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "varis"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "En düşük maliyetli yol",
+    "summary": "3 yol yazıldı.",
+    "outputs": {
+     "count": 3
+    },
+    "layers": [
+     {
+      "id": "islem-en-dusuk-maliyetli-yol",
+      "name": "En düşük maliyetli yol",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-dusuk-maliyetli-yol",
+      "attrs": {
+       "Yol": "1",
+       "Kaynak": "1",
+       "Maliyet": "626.944",
+       "Uzunluk": "336.143"
+      },
+      "pts": [
+       {
+        "x": 500015.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500015.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500035.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500095.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500105.0,
+        "y": 4419865.0
+       },
+       {
+        "x": 500115.0,
+        "y": 4419865.0
+       },
+       {
+        "x": 500135.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500165.0,
+        "y": 4419905.0
+       },
+       {
+        "x": 500225.0,
+        "y": 4419905.0
+       },
+       {
+        "x": 500245.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500265.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500275.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500295.0,
+        "y": 4419895.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-dusuk-maliyetli-yol",
+      "attrs": {
+       "Yol": "2",
+       "Kaynak": "1",
+       "Maliyet": "689.963",
+       "Uzunluk": "286.077"
+      },
+      "pts": [
+       {
+        "x": 500015.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500015.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500035.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500095.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500105.0,
+        "y": 4419865.0
+       },
+       {
+        "x": 500115.0,
+        "y": 4419865.0
+       },
+       {
+        "x": 500135.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500165.0,
+        "y": 4419905.0
+       },
+       {
+        "x": 500185.0,
+        "y": 4419915.0
+       },
+       {
+        "x": 500195.0,
+        "y": 4419925.0
+       },
+       {
+        "x": 500205.0,
+        "y": 4419945.0
+       },
+       {
+        "x": 500205.0,
+        "y": 4419985.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-dusuk-maliyetli-yol",
+      "attrs": {
+       "Yol": "3",
+       "Kaynak": "1",
+       "Maliyet": "404.501",
+       "Uzunluk": "147.213"
+      },
+      "pts": [
+       {
+        "x": 500015.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500015.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500035.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500065.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500085.0,
+        "y": 4419845.0
+       },
+       {
+        "x": 500125.0,
+        "y": 4419805.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-en-dusuk-maliyetli-yol": "maliyet"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 varışa yol yok (erişilemiyor ya da rasterin değerli hücrelerine düşmüyor): 4."
+     }
+    ]
+   }
+  },
+  {
+   "id": "path-8-simplify",
+   "title": "En düşük maliyetli yol, 8 komşu, sadeleştirme 1 hücre",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.path"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "baslangic"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "varis"
+    },
+    "neighbours": "8",
+    "simplify": 1
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "En düşük maliyetli yol",
+    "summary": "3 yol yazıldı.",
+    "outputs": {
+     "count": 3
+    },
+    "layers": [
+     {
+      "id": "islem-en-dusuk-maliyetli-yol",
+      "name": "En düşük maliyetli yol",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-dusuk-maliyetli-yol",
+      "attrs": {
+       "Yol": "1",
+       "Kaynak": "1",
+       "Maliyet": "631.708",
+       "Uzunluk": "339.706"
+      },
+      "pts": [
+       {
+        "x": 500015.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500035.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500095.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500165.0,
+        "y": 4419905.0
+       },
+       {
+        "x": 500225.0,
+        "y": 4419905.0
+       },
+       {
+        "x": 500265.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500295.0,
+        "y": 4419895.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-dusuk-maliyetli-yol",
+      "attrs": {
+       "Yol": "2",
+       "Kaynak": "1",
+       "Maliyet": "694.086",
+       "Uzunluk": "285.563"
+      },
+      "pts": [
+       {
+        "x": 500015.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500035.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500095.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500135.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500205.0,
+        "y": 4419945.0
+       },
+       {
+        "x": 500205.0,
+        "y": 4419985.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-dusuk-maliyetli-yol",
+      "attrs": {
+       "Yol": "3",
+       "Kaynak": "1",
+       "Maliyet": "405.168",
+       "Uzunluk": "148.995"
+      },
+      "pts": [
+       {
+        "x": 500015.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500035.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500075.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500125.0,
+        "y": 4419805.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-en-dusuk-maliyetli-yol": "maliyet"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 varışa yol yok (erişilemiyor ya da rasterin değerli hücrelerine düşmüyor): 4."
+     }
+    ]
+   }
+  },
+  {
+   "id": "path-surface",
+   "title": "En düşük maliyetli yol, yükseklik modeliyle: yüzey uzunluğu, en büyük eğim %9",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.path"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "baslangic"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "varis-iki"
+    },
+    "useSurface": true,
+    "surface": {
+     "scope": "layer",
+     "layerId": "yukseklik"
+    },
+    "surfaceLength": true,
+    "slope": 9
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "En düşük maliyetli yol",
+    "summary": "2 yol yazıldı.",
+    "outputs": {
+     "count": 2
+    },
+    "layers": [
+     {
+      "id": "islem-en-dusuk-maliyetli-yol",
+      "name": "En düşük maliyetli yol",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-dusuk-maliyetli-yol",
+      "attrs": {
+       "Yol": "1",
+       "Kaynak": "1",
+       "Maliyet": "2569.953",
+       "Uzunluk": "971.302",
+       "Yüzey uzunluğu": "973.264",
+       "En büyük eğim": "8.943"
+      },
+      "pts": [
+       {
+        "x": 500015.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500005.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500015.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500035.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500015.0,
+        "y": 4419845.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4419845.0
+       },
+       {
+        "x": 500045.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500035.0,
+        "y": 4419835.0
+       },
+       {
+        "x": 500055.0,
+        "y": 4419845.0
+       },
+       {
+        "x": 500065.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500055.0,
+        "y": 4419835.0
+       },
+       {
+        "x": 500085.0,
+        "y": 4419865.0
+       },
+       {
+        "x": 500075.0,
+        "y": 4419845.0
+       },
+       {
+        "x": 500105.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500115.0,
+        "y": 4419895.0
+       },
+       {
+        "x": 500125.0,
+        "y": 4419905.0
+       },
+       {
+        "x": 500145.0,
+        "y": 4419915.0
+       },
+       {
+        "x": 500135.0,
+        "y": 4419905.0
+       },
+       {
+        "x": 500155.0,
+        "y": 4419915.0
+       },
+       {
+        "x": 500145.0,
+        "y": 4419895.0
+       },
+       {
+        "x": 500185.0,
+        "y": 4419915.0
+       },
+       {
+        "x": 500175.0,
+        "y": 4419895.0
+       },
+       {
+        "x": 500185.0,
+        "y": 4419905.0
+       },
+       {
+        "x": 500205.0,
+        "y": 4419915.0
+       },
+       {
+        "x": 500195.0,
+        "y": 4419895.0
+       },
+       {
+        "x": 500215.0,
+        "y": 4419905.0
+       },
+       {
+        "x": 500215.0,
+        "y": 4419895.0
+       },
+       {
+        "x": 500205.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500225.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500235.0,
+        "y": 4419895.0
+       },
+       {
+        "x": 500235.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500245.0,
+        "y": 4419895.0
+       },
+       {
+        "x": 500225.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500245.0,
+        "y": 4419865.0
+       },
+       {
+        "x": 500265.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500255.0,
+        "y": 4419865.0
+       },
+       {
+        "x": 500265.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500255.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500265.0,
+        "y": 4419865.0
+       },
+       {
+        "x": 500255.0,
+        "y": 4419845.0
+       },
+       {
+        "x": 500265.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500255.0,
+        "y": 4419835.0
+       },
+       {
+        "x": 500265.0,
+        "y": 4419845.0
+       },
+       {
+        "x": 500285.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500295.0,
+        "y": 4419895.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-en-dusuk-maliyetli-yol",
+      "attrs": {
+       "Yol": "2",
+       "Kaynak": "1",
+       "Maliyet": "1358.098",
+       "Uzunluk": "466.252",
+       "Yüzey uzunluğu": "467.21",
+       "En büyük eğim": "8.943"
+      },
+      "pts": [
+       {
+        "x": 500015.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500005.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500015.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500035.0,
+        "y": 4419885.0
+       },
+       {
+        "x": 500015.0,
+        "y": 4419845.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4419845.0
+       },
+       {
+        "x": 500045.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500035.0,
+        "y": 4419835.0
+       },
+       {
+        "x": 500055.0,
+        "y": 4419845.0
+       },
+       {
+        "x": 500065.0,
+        "y": 4419855.0
+       },
+       {
+        "x": 500055.0,
+        "y": 4419835.0
+       },
+       {
+        "x": 500085.0,
+        "y": 4419865.0
+       },
+       {
+        "x": 500075.0,
+        "y": 4419845.0
+       },
+       {
+        "x": 500105.0,
+        "y": 4419875.0
+       },
+       {
+        "x": 500115.0,
+        "y": 4419895.0
+       },
+       {
+        "x": 500125.0,
+        "y": 4419905.0
+       },
+       {
+        "x": 500145.0,
+        "y": 4419915.0
+       },
+       {
+        "x": 500155.0,
+        "y": 4419925.0
+       },
+       {
+        "x": 500175.0,
+        "y": 4419935.0
+       },
+       {
+        "x": 500185.0,
+        "y": 4419945.0
+       },
+       {
+        "x": 500205.0,
+        "y": 4419985.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-en-dusuk-maliyetli-yol": "maliyet"
+    }
+   }
+  },
+  {
+   "id": "corridor",
+   "title": "Maliyet koridoru, en küçük toplamın %10 fazlasına kadar",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.corridor"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "baslangic"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "ikinci"
+    },
+    "threshold": "percent"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Maliyet koridoru",
+    "summary": "31 × 23 hücrelik raster; “maliyet-koridor.tif” yazıldı. En ucuz yolun maliyeti 626.944; koridorda 140 hücre.",
+    "outputs": {
+     "file": "maliyet-koridor.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-maliyet-koridoru",
+      "name": "Maliyet koridoru",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-maliyet-koridoru",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 31,
+      "height": 23,
+      "bands": 1,
+      "sample": "f32",
+      "file": "maliyet-koridor.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-maliyet-koridoru": "maliyet"
+    },
+    "distanceOf": {
+     "maliyet-koridor.tif": "koridor-percent"
+    }
+   }
+  },
+  {
+   "id": "corridor-below",
+   "title": "Maliyet koridoru, 8 komşu, eşik 300: en ucuz yol 300'den pahalı, hücre kalmaz",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.corridor"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "baslangic"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "ikinci"
+    },
+    "neighbours": "8",
+    "threshold": "value",
+    "value": 300
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Maliyet koridoru",
+    "summary": "31 × 23 hücrelik raster; “maliyet-koridor.tif” yazıldı. En ucuz yolun maliyeti 631.708; eşiğin içinde hücre yok.",
+    "outputs": {
+     "file": "maliyet-koridor.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-maliyet-koridoru",
+      "name": "Maliyet koridoru",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-maliyet-koridoru",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 31,
+      "height": 23,
+      "bands": 1,
+      "sample": "f32",
+      "file": "maliyet-koridor.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-maliyet-koridoru": "maliyet"
+    },
+    "distanceOf": {
+     "maliyet-koridor.tif": "koridor-esik-alti"
+    }
+   }
+  },
+  {
+   "id": "cost-zero",
+   "title": "Birikimli maliyet, maliyeti 0 olan hücre: ret",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.cost"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "sifir"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "kaynaklar"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Maliyet rasterinde 0 ya da eksi değer var (en küçüğü 0): maliyet 0'dan büyük olmalı. Geçilmeyecek yerleri değersiz yapın, çok ucuz yerlere küçük bir artı değer verin."
+   }
+  },
+  {
+   "id": "cost-surface-missing",
+   "title": "Birikimli maliyet, Yükseklik modeliyle açık, yükseklik modeli seçilmemiş: ret",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.cost"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "kaynaklar"
+    },
+    "useSurface": true
+   },
+   "expect": {
+    "status": "error",
+    "message": "Yükseklik modelini seçin: Yükseklik modeliyle açık."
+   }
+  },
+  {
+   "id": "cost-source-in-barrier",
+   "title": "Birikimli maliyet, kaynak engelin içinde: ret",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.cost"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "engel"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "engelde"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Kaynak hücre yok: kaynak nesneleri maliyet rasterinin değerli hücrelerine düşmüyor."
+   }
+  }
+ ]
+}

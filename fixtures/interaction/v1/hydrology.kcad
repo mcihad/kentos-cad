@@ -1,0 +1,147 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Havza",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 2,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "gis"
+ },
+ "origin": {
+  "x": 487580.0,
+  "y": 4420340.0
+ },
+ "layers": [
+  {
+   "id": "cikis",
+   "name": "Çıkış noktaları",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol ekseni",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#1F2933",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "dem",
+   "name": "Yükseklik modeli",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#7A6B5B",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "dem",
+ "entities": [
+  {
+   "kind": "raster",
+   "id": 1,
+   "layerId": "dem",
+   "attrs": {},
+   "affine": [
+    487200.0,
+    1.6,
+    0.0,
+    4420600.0,
+    0.0,
+    -1.6
+   ],
+   "width": 480,
+   "height": 324,
+   "bands": 1,
+   "sample": "f32",
+   "file": "rasters/dem.tif",
+   "srid": 5256,
+   "style": {
+    "render": "rampShade",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   }
+  },
+  {
+   "kind": "polyline",
+   "id": 2,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Yol ekseni"
+   },
+   "pts": [
+    {
+     "x": 487640.0,
+     "y": 4420322.0
+    },
+    {
+     "x": 487760.0,
+     "y": 4420334.0
+    },
+    {
+     "x": 487880.0,
+     "y": 4420326.0
+    },
+    {
+     "x": 487960.0,
+     "y": 4420338.0
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 3,
+   "layerId": "cikis",
+   "attrs": {
+    "Ad": "Ç1"
+   },
+   "p": {
+    "x": 487248.0,
+    "y": 4420276.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 4,
+   "layerId": "cikis",
+   "attrs": {
+    "Ad": "Ç2"
+   },
+   "p": {
+    "x": 487860.0,
+    "y": 4420272.0
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

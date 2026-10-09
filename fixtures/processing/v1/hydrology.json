@@ -1,0 +1,4508 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "rasters": {
+  "ag.tif": "hydrology/ag.tif",
+  "vadi.tif": "hydrology/vadi.tif",
+  "teras.tif": "hydrology/teras.tif",
+  "koni.tif": "hydrology/koni.tif"
+ },
+ "documents": {
+  "hydrology.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "drawingFont": "barlow",
+    "activeLayer": "ag",
+    "measureHeightMm": 2
+   },
+   "tools": {
+    "hydrology.fill": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "slope": 0,
+     "result": "filled",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Doldurulmuş DEM"
+     }
+    },
+    "hydrology.flowDirection": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "fill": true,
+     "coding": "esri",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Akış yönü"
+     }
+    },
+    "hydrology.flowAccumulation": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "fill": true,
+     "method": "d8",
+     "exponent": 0,
+     "unit": "cells",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Akış birikimi"
+     }
+    },
+    "hydrology.wetness": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "fill": true,
+     "method": "mfd",
+     "exponent": 0,
+     "slope": 0.1,
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Nemlilik indisi"
+     }
+    },
+    "hydrology.pourPoint": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "points": {
+      "scope": "layer",
+      "layerId": "ag"
+     },
+     "fill": true,
+     "snap": 0,
+     "layer": {
+      "newName": "Döküm noktaları"
+     }
+    },
+    "hydrology.watershed": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "points": {
+      "scope": "layer",
+      "layerId": "ag"
+     },
+     "fill": true,
+     "snap": 0,
+     "layer": {
+      "newName": "Havzalar"
+     }
+    },
+    "hydrology.basins": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "fill": true,
+     "mode": "main",
+     "threshold": 0,
+     "routes": {
+      "scope": "selection"
+     },
+     "least": 0,
+     "layer": {
+      "newName": "Havzalar"
+     }
+    },
+    "hydrology.streams": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "fill": true,
+     "threshold": 0,
+     "simplify": 0,
+     "layer": {
+      "newName": "Dere ağı"
+     }
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "fill",
+   "title": "Çukur doldur, en küçük eğim 0: vadinin altı hücrelik çukuru taşma yüksekliğine; DEM'in görünüşü kalır",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.fill"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "vadi"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Çukur doldur",
+    "summary": "14 × 11 hücrelik raster; “vadi-dolu.tif” yazıldı. 6 hücre dolduruldu.",
+    "outputs": {
+     "file": "vadi-dolu.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-doldurulmus-dem",
+      "name": "Doldurulmuş DEM",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-doldurulmus-dem",
+      "attrs": {},
+      "affine": [
+       1000.0,
+       10.0,
+       0.0,
+       2000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 14,
+      "height": 11,
+      "bands": 1,
+      "sample": "f32",
+      "file": "vadi-dolu.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Arazi"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-doldurulmus-dem": "vadi"
+    },
+    "hydrologyOf": {
+     "vadi-dolu.tif": "vadi-doldur"
+    }
+   }
+  },
+  {
+   "id": "fill-depth",
+   "title": "Çukur doldur, Dolgu derinliği: dolgunun derinliği ve en derin dolgu",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.fill"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "vadi"
+    },
+    "result": "depth"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Çukur doldur",
+    "summary": "14 × 11 hücrelik raster; “vadi-dolu.tif” yazıldı. 6 hücre dolduruldu. En derin dolgu 4.543 m.",
+    "outputs": {
+     "file": "vadi-dolu.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-doldurulmus-dem",
+      "name": "Doldurulmuş DEM",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-doldurulmus-dem",
+      "attrs": {},
+      "affine": [
+       1000.0,
+       10.0,
+       0.0,
+       2000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 14,
+      "height": 11,
+      "bands": 1,
+      "sample": "f32",
+      "file": "vadi-dolu.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-doldurulmus-dem": "vadi"
+    },
+    "hydrologyOf": {
+     "vadi-dolu.tif": "vadi-derinlik"
+    }
+   }
+  },
+  {
+   "id": "fill-slope",
+   "title": "Çukur doldur, en küçük eğim %0,5: doldurulan yüzey çıkışa doğru alçalır",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.fill"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "vadi"
+    },
+    "slope": 0.5
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Çukur doldur",
+    "summary": "14 × 11 hücrelik raster; “vadi-dolu.tif” yazıldı. 7 hücre dolduruldu.",
+    "outputs": {
+     "file": "vadi-dolu.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-doldurulmus-dem",
+      "name": "Doldurulmuş DEM",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-doldurulmus-dem",
+      "attrs": {},
+      "affine": [
+       1000.0,
+       10.0,
+       0.0,
+       2000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 14,
+      "height": 11,
+      "bands": 1,
+      "sample": "f32",
+      "file": "vadi-dolu.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Arazi"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-doldurulmus-dem": "vadi"
+    },
+    "hydrologyOf": {
+     "vadi-dolu.tif": "vadi-doldur-egim"
+    }
+   }
+  },
+  {
+   "id": "fill-none",
+   "title": "Çukur doldur, çukursuz koni: hiçbir hücre değişmez",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.fill"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koni"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Çukur doldur",
+    "summary": "11 × 11 hücrelik raster; “koni-dolu.tif” yazıldı. Doldurulacak çukur yok.",
+    "outputs": {
+     "file": "koni-dolu.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-doldurulmus-dem",
+      "name": "Doldurulmuş DEM",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-doldurulmus-dem",
+      "attrs": {},
+      "affine": [
+       1000.0,
+       10.0,
+       0.0,
+       2000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 11,
+      "height": 11,
+      "bands": 1,
+      "sample": "f32",
+      "file": "koni-dolu.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Arazi"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-doldurulmus-dem": "koni"
+    },
+    "hydrologyOf": {
+     "koni-dolu.tif": "koni-doldur"
+    }
+   }
+  },
+  {
+   "id": "direction",
+   "title": "Akış yönü, ESRI: vadinin dolgu düzlüğündeki altı hücrenin yönü Barnes'ın gradyanlarıyla",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.flowDirection"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "vadi"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Akış yönü",
+    "summary": "14 × 11 hücrelik raster; “vadi-yon.tif” yazıldı. 6 düzlük hücresinin yönü verildi.",
+    "outputs": {
+     "file": "vadi-yon.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-akis-yonu",
+      "name": "Akış yönü",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-akis-yonu",
+      "attrs": {},
+      "affine": [
+       1000.0,
+       10.0,
+       0.0,
+       2000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 14,
+      "height": 11,
+      "bands": 1,
+      "sample": "u8",
+      "file": "vadi-yon.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 1.0,
+       "max": 128.0,
+       "ramp": "Spektral",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-akis-yonu": "vadi"
+    },
+    "hydrologyOf": {
+     "vadi-yon.tif": "vadi-yon"
+    }
+   }
+  },
+  {
+   "id": "direction-unfilled",
+   "title": "Akış yönü, Çukurları doldur kapalı: çukurun dört hücresi yönsüz kalır",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.flowDirection"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "vadi"
+    },
+    "fill": false
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Akış yönü",
+    "summary": "14 × 11 hücrelik raster; “vadi-yon.tif” yazıldı. 4 hücre yönsüz kaldı: çukurlar ve çıkışsız düzlükler (Çukurları doldur açıkken kalmaz).",
+    "outputs": {
+     "file": "vadi-yon.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-akis-yonu",
+      "name": "Akış yönü",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-akis-yonu",
+      "attrs": {},
+      "affine": [
+       1000.0,
+       10.0,
+       0.0,
+       2000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 14,
+      "height": 11,
+      "bands": 1,
+      "sample": "u8",
+      "file": "vadi-yon.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 1.0,
+       "max": 128.0,
+       "ramp": "Spektral",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-akis-yonu": "vadi"
+    },
+    "hydrologyOf": {
+     "vadi-yon.tif": "vadi-yon-dolgusuz"
+    }
+   }
+  },
+  {
+   "id": "direction-taudem",
+   "title": "Akış yönü, 1–8 (TauDEM): terasların 45 düzlük hücresi",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.flowDirection"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "teras"
+    },
+    "coding": "taudem"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Akış yönü",
+    "summary": "13 × 13 hücrelik raster; “teras-yon.tif” yazıldı. 45 düzlük hücresinin yönü verildi.",
+    "outputs": {
+     "file": "teras-yon.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-akis-yonu",
+      "name": "Akış yönü",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-akis-yonu",
+      "attrs": {},
+      "affine": [
+       1000.0,
+       10.0,
+       0.0,
+       2000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 13,
+      "height": 13,
+      "bands": 1,
+      "sample": "u8",
+      "file": "teras-yon.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 1.0,
+       "max": 8.0,
+       "ramp": "Spektral",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-akis-yonu": "teras"
+    },
+    "hydrologyOf": {
+     "teras-yon.tif": "teras-yon-taudem"
+    }
+   }
+  },
+  {
+   "id": "accumulation",
+   "title": "Akış birikimi, D8, Alan: vadinin çıkışında bütün vadi",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.flowAccumulation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "vadi"
+    },
+    "unit": "area"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Akış birikimi",
+    "summary": "14 × 11 hücrelik raster; “vadi-birikim.tif” yazıldı. En büyük birikim 14800 m².",
+    "outputs": {
+     "file": "vadi-birikim.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-akis-birikimi",
+      "name": "Akış birikimi",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-akis-birikimi",
+      "attrs": {},
+      "affine": [
+       1000.0,
+       10.0,
+       0.0,
+       2000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 14,
+      "height": 11,
+      "bands": 1,
+      "sample": "f32",
+      "file": "vadi-birikim.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-akis-birikimi": "vadi"
+    },
+    "hydrologyOf": {
+     "vadi-birikim.tif": "vadi-birikim-d8-area-0"
+    }
+   }
+  },
+  {
+   "id": "accumulation-mfd",
+   "title": "Akış birikimi, Çoklu yön, uyarlanan üs, Hücre sayısı: teraslarda pay komşulara bölünür",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.flowAccumulation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "teras"
+    },
+    "method": "mfd"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Akış birikimi",
+    "summary": "13 × 13 hücrelik raster; “teras-birikim.tif” yazıldı. En büyük birikim 169 hücre.",
+    "outputs": {
+     "file": "teras-birikim.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-akis-birikimi",
+      "name": "Akış birikimi",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-akis-birikimi",
+      "attrs": {},
+      "affine": [
+       1000.0,
+       10.0,
+       0.0,
+       2000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 13,
+      "height": 13,
+      "bands": 1,
+      "sample": "f32",
+      "file": "teras-birikim.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-akis-birikimi": "teras"
+    },
+    "hydrologyOf": {
+     "teras-birikim.tif": "teras-birikim-mfd-cells-0"
+    }
+   }
+  },
+  {
+   "id": "accumulation-dinf",
+   "title": "Akış birikimi, D∞, Özgül havza alanı",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.flowAccumulation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "vadi"
+    },
+    "method": "dinf",
+    "unit": "sca"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Akış birikimi",
+    "summary": "14 × 11 hücrelik raster; “vadi-birikim.tif” yazıldı. En büyük birikim 1480 m.",
+    "outputs": {
+     "file": "vadi-birikim.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-akis-birikimi",
+      "name": "Akış birikimi",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-akis-birikimi",
+      "attrs": {},
+      "affine": [
+       1000.0,
+       10.0,
+       0.0,
+       2000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 14,
+      "height": 11,
+      "bands": 1,
+      "sample": "f32",
+      "file": "vadi-birikim.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-akis-birikimi": "vadi"
+    },
+    "hydrologyOf": {
+     "vadi-birikim.tif": "vadi-birikim-dinf-sca-0"
+    }
+   }
+  },
+  {
+   "id": "wetness",
+   "title": "Topografik nemlilik indisi, Çoklu yön, en küçük eğim %0,1: terasların düz basamaklarında taban eğim",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.wetness"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "teras"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Topografik nemlilik indisi",
+    "summary": "13 × 13 hücrelik raster; “teras-twi.tif” yazıldı. 16 hücrede en küçük eğim kullanıldı.",
+    "outputs": {
+     "file": "teras-twi.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-nemlilik-indisi",
+      "name": "Nemlilik indisi",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-nemlilik-indisi",
+      "attrs": {},
+      "affine": [
+       1000.0,
+       10.0,
+       0.0,
+       2000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 13,
+      "height": 13,
+      "bands": 1,
+      "sample": "f32",
+      "file": "teras-twi.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Mavi-kırmızı",
+       "invert": true
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-nemlilik-indisi": "teras"
+    },
+    "hydrologyOf": {
+     "teras-twi.tif": "teras-twi-mfd-0.1"
+    }
+   }
+  },
+  {
+   "id": "pour-points",
+   "title": "Döküm noktası, 25 m: noktalar derenin en büyük birikimli hücresine; rasterin dışındaki atlanır",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.pourPoint"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "ag"
+    },
+    "points": {
+     "scope": "layer",
+     "layerId": "noktalar"
+    },
+    "snap": 25
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Döküm noktası",
+    "summary": "5 döküm noktası yazıldı.",
+    "outputs": {
+     "count": 5
+    },
+    "layers": [
+     {
+      "id": "islem-dokum-noktalari",
+      "name": "Döküm noktaları",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-dokum-noktalari",
+      "attrs": {
+       "Nokta": "1",
+       "Birikim": "832",
+       "Alan": "83200",
+       "Uzaklık": "14.142"
+      },
+      "p": {
+       "x": 1315.0,
+       "y": 1745.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-dokum-noktalari",
+      "attrs": {
+       "Nokta": "2",
+       "Birikim": "530",
+       "Alan": "53000",
+       "Uzaklık": "14.142"
+      },
+      "p": {
+       "x": 1215.0,
+       "y": 1835.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-dokum-noktalari",
+      "attrs": {
+       "Nokta": "3",
+       "Birikim": "166",
+       "Alan": "16600",
+       "Uzaklık": "22.361"
+      },
+      "p": {
+       "x": 1145.0,
+       "y": 1825.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-dokum-noktalari",
+      "attrs": {
+       "Nokta": "5",
+       "Birikim": "530",
+       "Alan": "53000",
+       "Uzaklık": "14.142"
+      },
+      "p": {
+       "x": 1215.0,
+       "y": 1835.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-dokum-noktalari",
+      "attrs": {
+       "Nokta": "6",
+       "Birikim": "10",
+       "Alan": "1000",
+       "Uzaklık": "22.361"
+      },
+      "p": {
+       "x": 1085.0,
+       "y": 1945.0
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-dokum-noktalari": "ag"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nokta rasterin dışında ya da değersiz hücrede kaldığı için atlandı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "watershed",
+   "title": "Noktadan havza, 25 m: aynı hücreye düşen iki noktadan öncekinin havzası boş, söylenir",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.watershed"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "ag"
+    },
+    "points": {
+     "scope": "layer",
+     "layerId": "noktalar"
+    },
+    "snap": 25
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Noktadan havza",
+    "summary": "4 havza yazıldı.",
+    "outputs": {
+     "count": 4
+    },
+    "layers": [
+     {
+      "id": "islem-havzalar",
+      "name": "Havzalar",
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#30A46C26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Havza": "1",
+       "Alan": "30200"
+      },
+      "pts": [
+       {
+        "x": 1200.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1210.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1210.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1220.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1220.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1230.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1230.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1220.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1220.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1810.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1810.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1740.0
+       },
+       {
+        "x": 1320.0,
+        "y": 1740.0
+       },
+       {
+        "x": 1320.0,
+        "y": 2000.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Havza": "3",
+       "Alan": "16600"
+      },
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 1880.0
+       },
+       {
+        "x": 1000.0,
+        "y": 1740.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1740.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1780.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1780.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1800.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1800.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1820.0
+       },
+       {
+        "x": 1150.0,
+        "y": 1820.0
+       },
+       {
+        "x": 1150.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1070.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1070.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1030.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1030.0,
+        "y": 1880.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Havza": "5",
+       "Alan": "35400"
+      },
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1000.0,
+        "y": 1880.0
+       },
+       {
+        "x": 1030.0,
+        "y": 1880.0
+       },
+       {
+        "x": 1030.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1070.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1070.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1150.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1150.0,
+        "y": 1820.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1820.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1800.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1800.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1780.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1780.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1740.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1740.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1810.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1810.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1220.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1220.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1230.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1230.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1220.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1220.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1210.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1210.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1200.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1100.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1100.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1090.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1090.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1080.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1080.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1070.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1070.0,
+        "y": 2000.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Havza": "6",
+       "Alan": "1000"
+      },
+      "pts": [
+       {
+        "x": 1070.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1070.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1080.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1080.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1090.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1090.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1100.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1100.0,
+        "y": 2000.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-havzalar": "ag"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nokta rasterin dışında ya da değersiz hücrede kaldığı için atlandı."
+     },
+     {
+      "level": "warn",
+      "text": "1 noktanın hücresini sonraki bir nokta aldığı için havzası boş."
+     }
+    ]
+   }
+  },
+  {
+   "id": "basins-main",
+   "title": "Havzalar, Ana havzalar, en küçük alan 601 m²: 600 m²'lik havza yazılmaz, kalan yeniden numaralanır",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.basins"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "vadi"
+    },
+    "least": 601
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Havzalar",
+    "summary": "1 havza yazıldı. En küçük alandan küçük 1 havza yazılmadı.",
+    "outputs": {
+     "count": 1
+    },
+    "layers": [
+     {
+      "id": "islem-havzalar",
+      "name": "Havzalar",
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#30A46C26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Havza": "1",
+       "Alan": "14800"
+      },
+      "pts": [
+       {
+        "x": 1010.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1000.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1000.0,
+        "y": 1890.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1890.0
+       },
+       {
+        "x": 1140.0,
+        "y": 2000.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-havzalar": "vadi"
+    }
+   }
+  },
+  {
+   "id": "basins-sub",
+   "title": "Havzalar, Alt havzalar, eşik 3000 m²: yedi kolun havzaları, Bağ ve Sıra",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.basins"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "ag"
+    },
+    "mode": "sub",
+    "threshold": 3000
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Havzalar",
+    "summary": "7 havza yazıldı.",
+    "outputs": {
+     "count": 7
+    },
+    "layers": [
+     {
+      "id": "islem-havzalar",
+      "name": "Havzalar",
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#30A46C26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Bağ": "1",
+       "Sıra": "1",
+       "Alan": "11700"
+      },
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1000.0,
+        "y": 1880.0
+       },
+       {
+        "x": 1020.0,
+        "y": 1880.0
+       },
+       {
+        "x": 1020.0,
+        "y": 1890.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1890.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1100.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1100.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1100.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1100.0,
+        "y": 2000.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Bağ": "2",
+       "Sıra": "1",
+       "Alan": "6000"
+      },
+      "pts": [
+       {
+        "x": 1100.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1100.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1980.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1970.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1970.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1920.0
+       },
+       {
+        "x": 1150.0,
+        "y": 1920.0
+       },
+       {
+        "x": 1150.0,
+        "y": 1930.0
+       },
+       {
+        "x": 1160.0,
+        "y": 1930.0
+       },
+       {
+        "x": 1160.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1950.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1950.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1970.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1970.0
+       },
+       {
+        "x": 1200.0,
+        "y": 2000.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Bağ": "3",
+       "Sıra": "1",
+       "Alan": "14000"
+      },
+      "pts": [
+       {
+        "x": 1200.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1210.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1210.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1220.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1220.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1230.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1230.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1240.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1240.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1230.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1230.0,
+        "y": 1820.0
+       },
+       {
+        "x": 1240.0,
+        "y": 1820.0
+       },
+       {
+        "x": 1240.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1250.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1250.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1260.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1260.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1270.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1270.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1280.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1280.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1290.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1290.0,
+        "y": 1890.0
+       },
+       {
+        "x": 1300.0,
+        "y": 1890.0
+       },
+       {
+        "x": 1300.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1310.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1310.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1320.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1320.0,
+        "y": 2000.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Bağ": "4",
+       "Sıra": "2",
+       "Alan": "10900"
+      },
+      "pts": [
+       {
+        "x": 1110.0,
+        "y": 1970.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1100.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1100.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1890.0
+       },
+       {
+        "x": 1020.0,
+        "y": 1890.0
+       },
+       {
+        "x": 1020.0,
+        "y": 1880.0
+       },
+       {
+        "x": 1030.0,
+        "y": 1880.0
+       },
+       {
+        "x": 1030.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1070.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1070.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1160.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1160.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1920.0
+       },
+       {
+        "x": 1210.0,
+        "y": 1920.0
+       },
+       {
+        "x": 1210.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1970.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1970.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1950.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1950.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1160.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1160.0,
+        "y": 1930.0
+       },
+       {
+        "x": 1150.0,
+        "y": 1930.0
+       },
+       {
+        "x": 1150.0,
+        "y": 1920.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1920.0
+       },
+       {
+        "x": 1140.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1130.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1120.0,
+        "y": 1970.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Bağ": "5",
+       "Sıra": "2",
+       "Alan": "3500"
+      },
+      "pts": [
+       {
+        "x": 1210.0,
+        "y": 1940.0
+       },
+       {
+        "x": 1210.0,
+        "y": 1920.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1920.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1820.0
+       },
+       {
+        "x": 1230.0,
+        "y": 1820.0
+       },
+       {
+        "x": 1230.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1240.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1240.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1230.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1230.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1220.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1220.0,
+        "y": 1940.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Bağ": "6",
+       "Sıra": "2",
+       "Alan": "15100"
+      },
+      "pts": [
+       {
+        "x": 1310.0,
+        "y": 1910.0
+       },
+       {
+        "x": 1310.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1300.0,
+        "y": 1900.0
+       },
+       {
+        "x": 1300.0,
+        "y": 1890.0
+       },
+       {
+        "x": 1290.0,
+        "y": 1890.0
+       },
+       {
+        "x": 1290.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1280.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1280.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1270.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1270.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1260.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1260.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1250.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1250.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1240.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1240.0,
+        "y": 1820.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1820.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1810.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1810.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1740.0
+       },
+       {
+        "x": 1320.0,
+        "y": 1740.0
+       },
+       {
+        "x": 1320.0,
+        "y": 1910.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Bağ": "7",
+       "Sıra": "1",
+       "Alan": "22000"
+      },
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 1880.0
+       },
+       {
+        "x": 1000.0,
+        "y": 1740.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1740.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1810.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1810.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1160.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1160.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1110.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1070.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1070.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1030.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1030.0,
+        "y": 1880.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-havzalar": "ag"
+    }
+   }
+  },
+  {
+   "id": "basins-route",
+   "title": "Havzalar, Güzergâhı kesen dereler, eşik 3000 m², en küçük alan 20 000 m²: geçişlerin havzaları km'leriyle",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.basins"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "ag"
+    },
+    "mode": "route",
+    "threshold": 3000,
+    "routes": {
+     "scope": "layer",
+     "layerId": "guzergah"
+    },
+    "least": 20000
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Havzalar",
+    "summary": "2 havza yazıldı. En küçük alandan küçük 1 havza yazılmadı.",
+    "outputs": {
+     "count": 2
+    },
+    "layers": [
+     {
+      "id": "islem-havzalar",
+      "name": "Havzalar",
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#30A46C26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Havza": "1",
+       "Km": "172.648",
+       "Sıra": "2",
+       "Alan": "25300"
+      },
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1000.0,
+        "y": 1880.0
+       },
+       {
+        "x": 1030.0,
+        "y": 1880.0
+       },
+       {
+        "x": 1030.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1070.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1070.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1930.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1930.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1200.0,
+        "y": 1960.0
+       },
+       {
+        "x": 1200.0,
+        "y": 2000.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-havzalar",
+      "attrs": {
+       "Havza": "2",
+       "Km": "182.376",
+       "Sıra": "2",
+       "Alan": "69800"
+      },
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1000.0,
+        "y": 1740.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1740.0
+       },
+       {
+        "x": 1170.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1750.0
+       },
+       {
+        "x": 1180.0,
+        "y": 1800.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1800.0
+       },
+       {
+        "x": 1190.0,
+        "y": 1810.0
+       },
+       {
+        "x": 1240.0,
+        "y": 1810.0
+       },
+       {
+        "x": 1240.0,
+        "y": 1820.0
+       },
+       {
+        "x": 1250.0,
+        "y": 1820.0
+       },
+       {
+        "x": 1250.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1260.0,
+        "y": 1830.0
+       },
+       {
+        "x": 1260.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1270.0,
+        "y": 1840.0
+       },
+       {
+        "x": 1270.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1280.0,
+        "y": 1850.0
+       },
+       {
+        "x": 1280.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1290.0,
+        "y": 1860.0
+       },
+       {
+        "x": 1290.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1300.0,
+        "y": 1870.0
+       },
+       {
+        "x": 1300.0,
+        "y": 1880.0
+       },
+       {
+        "x": 1310.0,
+        "y": 1880.0
+       },
+       {
+        "x": 1310.0,
+        "y": 1890.0
+       },
+       {
+        "x": 1320.0,
+        "y": 1890.0
+       },
+       {
+        "x": 1320.0,
+        "y": 2000.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-havzalar": "ag"
+    }
+   }
+  },
+  {
+   "id": "streams",
+   "title": "Dere ağı, eşik 3000 m²: yedi kol, Strahler ve Shreve, uzunluk, düşü, eğim",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.streams"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "ag"
+    },
+    "threshold": 3000
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Dere ağı",
+    "summary": "7 kol yazıldı; en büyük Strahler sırası 2, eşik 3000 m².",
+    "outputs": {
+     "count": 7
+    },
+    "layers": [
+     {
+      "id": "islem-dere-agi",
+      "name": "Dere ağı",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "1",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "86.569",
+       "Düşü": "14.351",
+       "Eğim": "0.16578",
+       "Alan": "11700",
+       "Aşağı": "4"
+      },
+      "pts": [
+       {
+        "x": 1055.0,
+        "y": 1935.0
+       },
+       {
+        "x": 1065.0,
+        "y": 1935.0
+       },
+       {
+        "x": 1085.0,
+        "y": 1915.0
+       },
+       {
+        "x": 1095.0,
+        "y": 1915.0
+       },
+       {
+        "x": 1115.0,
+        "y": 1895.0
+       },
+       {
+        "x": 1125.0,
+        "y": 1895.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "2",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "44.142",
+       "Düşü": "10.077",
+       "Eğim": "0.22828",
+       "Alan": "6000",
+       "Aşağı": "4"
+      },
+      "pts": [
+       {
+        "x": 1135.0,
+        "y": 1935.0
+       },
+       {
+        "x": 1135.0,
+        "y": 1915.0
+       },
+       {
+        "x": 1125.0,
+        "y": 1905.0
+       },
+       {
+        "x": 1125.0,
+        "y": 1895.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "3",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "132.426",
+       "Düşü": "32.259",
+       "Eğim": "0.2436",
+       "Alan": "14000",
+       "Aşağı": "6"
+      },
+      "pts": [
+       {
+        "x": 1265.0,
+        "y": 1935.0
+       },
+       {
+        "x": 1265.0,
+        "y": 1915.0
+       },
+       {
+        "x": 1255.0,
+        "y": 1905.0
+       },
+       {
+        "x": 1255.0,
+        "y": 1865.0
+       },
+       {
+        "x": 1245.0,
+        "y": 1855.0
+       },
+       {
+        "x": 1245.0,
+        "y": 1835.0
+       },
+       {
+        "x": 1235.0,
+        "y": 1825.0
+       },
+       {
+        "x": 1235.0,
+        "y": 1815.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "4",
+       "Sıra": "2",
+       "Shreve": "2",
+       "Uzunluk": "100.711",
+       "Düşü": "15.557",
+       "Eğim": "0.15448",
+       "Alan": "28600",
+       "Aşağı": "5"
+      },
+      "pts": [
+       {
+        "x": 1125.0,
+        "y": 1895.0
+       },
+       {
+        "x": 1135.0,
+        "y": 1885.0
+       },
+       {
+        "x": 1145.0,
+        "y": 1885.0
+       },
+       {
+        "x": 1165.0,
+        "y": 1865.0
+       },
+       {
+        "x": 1175.0,
+        "y": 1865.0
+       },
+       {
+        "x": 1185.0,
+        "y": 1855.0
+       },
+       {
+        "x": 1195.0,
+        "y": 1855.0
+       },
+       {
+        "x": 1205.0,
+        "y": 1845.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "5",
+       "Sıra": "2",
+       "Shreve": "3",
+       "Uzunluk": "42.426",
+       "Düşü": "6.638",
+       "Eğim": "0.15645",
+       "Alan": "54100",
+       "Aşağı": "6"
+      },
+      "pts": [
+       {
+        "x": 1205.0,
+        "y": 1845.0
+       },
+       {
+        "x": 1235.0,
+        "y": 1815.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "6",
+       "Sıra": "2",
+       "Shreve": "4",
+       "Uzunluk": "108.995",
+       "Düşü": "17.639",
+       "Eğim": "0.16183",
+       "Alan": "83200",
+       "Aşağı": "0"
+      },
+      "pts": [
+       {
+        "x": 1235.0,
+        "y": 1815.0
+       },
+       {
+        "x": 1275.0,
+        "y": 1775.0
+       },
+       {
+        "x": 1285.0,
+        "y": 1775.0
+       },
+       {
+        "x": 1315.0,
+        "y": 1745.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "7",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "184.853",
+       "Düşü": "23.67",
+       "Eğim": "0.12805",
+       "Alan": "22000",
+       "Aşağı": "5"
+      },
+      "pts": [
+       {
+        "x": 1055.0,
+        "y": 1795.0
+       },
+       {
+        "x": 1065.0,
+        "y": 1795.0
+       },
+       {
+        "x": 1075.0,
+        "y": 1785.0
+       },
+       {
+        "x": 1085.0,
+        "y": 1785.0
+       },
+       {
+        "x": 1085.0,
+        "y": 1795.0
+       },
+       {
+        "x": 1105.0,
+        "y": 1815.0
+       },
+       {
+        "x": 1135.0,
+        "y": 1815.0
+       },
+       {
+        "x": 1145.0,
+        "y": 1825.0
+       },
+       {
+        "x": 1155.0,
+        "y": 1825.0
+       },
+       {
+        "x": 1165.0,
+        "y": 1835.0
+       },
+       {
+        "x": 1185.0,
+        "y": 1835.0
+       },
+       {
+        "x": 1195.0,
+        "y": 1845.0
+       },
+       {
+        "x": 1205.0,
+        "y": 1845.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-dere-agi": "ag"
+    }
+   }
+  },
+  {
+   "id": "streams-default",
+   "title": "Dere ağı, eşik 0: en büyük birikimin yüzde biri (832 m²), sadeleştirme 1 hücre",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.streams"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "ag"
+    },
+    "simplify": 1
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Dere ağı",
+    "summary": "61 kol yazıldı; en büyük Strahler sırası 3, eşik 832 m².",
+    "outputs": {
+     "count": 61
+    },
+    "layers": [
+     {
+      "id": "islem-dere-agi",
+      "name": "Dere ağı",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "1",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "88.284",
+       "Düşü": "21.335",
+       "Eğim": "0.24167",
+       "Alan": "6000",
+       "Aşağı": "18"
+      },
+      "pts": [
+       {
+        "x": 1145.0,
+        "y": 1975.0
+       },
+       {
+        "x": 1125.0,
+        "y": 1895.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "2",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "92.426",
+       "Düşü": "20.086",
+       "Eğim": "0.21732",
+       "Alan": "4900",
+       "Aşağı": "20"
+      },
+      "pts": [
+       {
+        "x": 1285.0,
+        "y": 1975.0
+       },
+       {
+        "x": 1255.0,
+        "y": 1895.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "3",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "92.426",
+       "Düşü": "24.737",
+       "Eğim": "0.26764",
+       "Alan": "2300",
+       "Aşağı": "25"
+      },
+      "pts": [
+       {
+        "x": 1225.0,
+        "y": 1965.0
+       },
+       {
+        "x": 1235.0,
+        "y": 1905.0
+       },
+       {
+        "x": 1255.0,
+        "y": 1885.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "4",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "38.284",
+       "Düşü": "6.372",
+       "Eğim": "0.16643",
+       "Alan": "3200",
+       "Aşağı": "7"
+      },
+      "pts": [
+       {
+        "x": 1035.0,
+        "y": 1955.0
+       },
+       {
+        "x": 1065.0,
+        "y": 1935.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "5",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "44.142",
+       "Düşü": "9.57",
+       "Eğim": "0.21679",
+       "Alan": "1700",
+       "Aşağı": "13"
+      },
+      "pts": [
+       {
+        "x": 1085.0,
+        "y": 1955.0
+       },
+       {
+        "x": 1095.0,
+        "y": 1915.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "6",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "14.142",
+       "Düşü": "3.199",
+       "Eğim": "0.22619",
+       "Alan": "1100",
+       "Aşağı": "7"
+      },
+      "pts": [
+       {
+        "x": 1055.0,
+        "y": 1945.0
+       },
+       {
+        "x": 1065.0,
+        "y": 1935.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "7",
+       "Sıra": "2",
+       "Shreve": "2",
+       "Uzunluk": "14.142",
+       "Düşü": "1.423",
+       "Eğim": "0.10062",
+       "Alan": "5000",
+       "Aşağı": "9"
+      },
+      "pts": [
+       {
+        "x": 1065.0,
+        "y": 1935.0
+       },
+       {
+        "x": 1075.0,
+        "y": 1925.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "8",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "20",
+       "Düşü": "4.523",
+       "Eğim": "0.22613",
+       "Alan": "1200",
+       "Aşağı": "9"
+      },
+      "pts": [
+       {
+        "x": 1055.0,
+        "y": 1925.0
+       },
+       {
+        "x": 1075.0,
+        "y": 1925.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "9",
+       "Sıra": "2",
+       "Shreve": "3",
+       "Uzunluk": "14.142",
+       "Düşü": "1.695",
+       "Eğim": "0.11988",
+       "Alan": "6300",
+       "Aşağı": "12"
+      },
+      "pts": [
+       {
+        "x": 1075.0,
+        "y": 1925.0
+       },
+       {
+        "x": 1085.0,
+        "y": 1915.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "10",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "34.142",
+       "Düşü": "9.077",
+       "Eğim": "0.26585",
+       "Alan": "1700",
+       "Aşağı": "20"
+      },
+      "pts": [
+       {
+        "x": 1245.0,
+        "y": 1925.0
+       },
+       {
+        "x": 1255.0,
+        "y": 1895.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "11",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "10",
+       "Düşü": "2.095",
+       "Eğim": "0.20949",
+       "Alan": "900",
+       "Aşağı": "12"
+      },
+      "pts": [
+       {
+        "x": 1075.0,
+        "y": 1915.0
+       },
+       {
+        "x": 1085.0,
+        "y": 1915.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "12",
+       "Sıra": "2",
+       "Shreve": "4",
+       "Uzunluk": "10",
+       "Düşü": "2.32",
+       "Eğim": "0.23204",
+       "Alan": "7300",
+       "Aşağı": "13"
+      },
+      "pts": [
+       {
+        "x": 1085.0,
+        "y": 1915.0
+       },
+       {
+        "x": 1095.0,
+        "y": 1915.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "13",
+       "Sıra": "2",
+       "Shreve": "5",
+       "Uzunluk": "28.284",
+       "Düşü": "3.815",
+       "Eğim": "0.13487",
+       "Alan": "10300",
+       "Aşağı": "17"
+      },
+      "pts": [
+       {
+        "x": 1095.0,
+        "y": 1915.0
+       },
+       {
+        "x": 1115.0,
+        "y": 1895.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "14",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "60",
+       "Düşü": "14.436",
+       "Eğim": "0.24061",
+       "Alan": "1600",
+       "Aşağı": "31"
+      },
+      "pts": [
+       {
+        "x": 1195.0,
+        "y": 1915.0
+       },
+       {
+        "x": 1195.0,
+        "y": 1855.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "15",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "14.142",
+       "Düşü": "3.044",
+       "Eğim": "0.21524",
+       "Alan": "900",
+       "Aşağı": "18"
+      },
+      "pts": [
+       {
+        "x": 1115.0,
+        "y": 1905.0
+       },
+       {
+        "x": 1125.0,
+        "y": 1895.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "16",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "50",
+       "Düşü": "11.995",
+       "Eğim": "0.23989",
+       "Alan": "1300",
+       "Aşağı": "17"
+      },
+      "pts": [
+       {
+        "x": 1065.0,
+        "y": 1895.0
+       },
+       {
+        "x": 1115.0,
+        "y": 1895.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "17",
+       "Sıra": "2",
+       "Shreve": "6",
+       "Uzunluk": "10",
+       "Düşü": "2.387",
+       "Eğim": "0.23866",
+       "Alan": "11700",
+       "Aşağı": "18"
+      },
+      "pts": [
+       {
+        "x": 1115.0,
+        "y": 1895.0
+       },
+       {
+        "x": 1125.0,
+        "y": 1895.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "18",
+       "Sıra": "2",
+       "Shreve": "8",
+       "Uzunluk": "14.142",
+       "Düşü": "1.628",
+       "Eğim": "0.11512",
+       "Alan": "18700",
+       "Aşağı": "22"
+      },
+      "pts": [
+       {
+        "x": 1125.0,
+        "y": 1895.0
+       },
+       {
+        "x": 1135.0,
+        "y": 1885.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "19",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "38.284",
+       "Düşü": "8.119",
+       "Eğim": "0.21208",
+       "Alan": "1500",
+       "Aşağı": "30"
+      },
+      "pts": [
+       {
+        "x": 1155.0,
+        "y": 1895.0
+       },
+       {
+        "x": 1175.0,
+        "y": 1865.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "20",
+       "Sıra": "2",
+       "Shreve": "2",
+       "Uzunluk": "10",
+       "Düşü": "2.459",
+       "Eğim": "0.24593",
+       "Alan": "7300",
+       "Aşağı": "25"
+      },
+      "pts": [
+       {
+        "x": 1255.0,
+        "y": 1895.0
+       },
+       {
+        "x": 1255.0,
+        "y": 1885.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "21",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "60",
+       "Düşü": "14.276",
+       "Eğim": "0.23794",
+       "Alan": "1400",
+       "Aşağı": "22"
+      },
+      "pts": [
+       {
+        "x": 1075.0,
+        "y": 1885.0
+       },
+       {
+        "x": 1135.0,
+        "y": 1885.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "22",
+       "Sıra": "2",
+       "Shreve": "9",
+       "Uzunluk": "24.142",
+       "Düşü": "3.935",
+       "Eğim": "0.163",
+       "Alan": "20700",
+       "Aşağı": "27"
+      },
+      "pts": [
+       {
+        "x": 1135.0,
+        "y": 1885.0
+       },
+       {
+        "x": 1155.0,
+        "y": 1875.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "23",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "20",
+       "Düşü": "4.292",
+       "Eğim": "0.21462",
+       "Alan": "1000",
+       "Aşağı": "30"
+      },
+      "pts": [
+       {
+        "x": 1175.0,
+        "y": 1885.0
+       },
+       {
+        "x": 1175.0,
+        "y": 1865.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "24",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "40",
+       "Düşü": "9.876",
+       "Eğim": "0.2469",
+       "Alan": "1200",
+       "Aşağı": "32"
+      },
+      "pts": [
+       {
+        "x": 1205.0,
+        "y": 1885.0
+       },
+       {
+        "x": 1205.0,
+        "y": 1845.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "25",
+       "Sıra": "2",
+       "Shreve": "3",
+       "Uzunluk": "54.142",
+       "Düşü": "11.793",
+       "Eğim": "0.21781",
+       "Alan": "12600",
+       "Aşağı": "36"
+      },
+      "pts": [
+       {
+        "x": 1255.0,
+        "y": 1885.0
+       },
+       {
+        "x": 1245.0,
+        "y": 1835.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "26",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "10",
+       "Düşü": "2.423",
+       "Eğim": "0.24233",
+       "Alan": "900",
+       "Aşağı": "27"
+      },
+      "pts": [
+       {
+        "x": 1145.0,
+        "y": 1875.0
+       },
+       {
+        "x": 1155.0,
+        "y": 1875.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "27",
+       "Sıra": "2",
+       "Shreve": "10",
+       "Uzunluk": "14.142",
+       "Düşü": "1.708",
+       "Eğim": "0.12074",
+       "Alan": "21700",
+       "Aşağı": "29"
+      },
+      "pts": [
+       {
+        "x": 1155.0,
+        "y": 1875.0
+       },
+       {
+        "x": 1165.0,
+        "y": 1865.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "28",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "10",
+       "Düşü": "2.339",
+       "Eğim": "0.23389",
+       "Alan": "900",
+       "Aşağı": "29"
+      },
+      "pts": [
+       {
+        "x": 1155.0,
+        "y": 1865.0
+       },
+       {
+        "x": 1165.0,
+        "y": 1865.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "29",
+       "Sıra": "2",
+       "Shreve": "11",
+       "Uzunluk": "10",
+       "Düşü": "1.918",
+       "Eğim": "0.19176",
+       "Alan": "22700",
+       "Aşağı": "30"
+      },
+      "pts": [
+       {
+        "x": 1165.0,
+        "y": 1865.0
+       },
+       {
+        "x": 1175.0,
+        "y": 1865.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "30",
+       "Sıra": "2",
+       "Shreve": "13",
+       "Uzunluk": "24.142",
+       "Düşü": "3.631",
+       "Eğim": "0.15041",
+       "Alan": "26300",
+       "Aşağı": "31"
+      },
+      "pts": [
+       {
+        "x": 1175.0,
+        "y": 1865.0
+       },
+       {
+        "x": 1195.0,
+        "y": 1855.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "31",
+       "Sıra": "2",
+       "Shreve": "14",
+       "Uzunluk": "14.142",
+       "Düşü": "2.738",
+       "Eğim": "0.19359",
+       "Alan": "28600",
+       "Aşağı": "32"
+      },
+      "pts": [
+       {
+        "x": 1195.0,
+        "y": 1855.0
+       },
+       {
+        "x": 1205.0,
+        "y": 1845.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "32",
+       "Sıra": "3",
+       "Shreve": "22",
+       "Uzunluk": "42.426",
+       "Düşü": "6.638",
+       "Eğim": "0.15645",
+       "Alan": "54100",
+       "Aşağı": "39"
+      },
+      "pts": [
+       {
+        "x": 1205.0,
+        "y": 1845.0
+       },
+       {
+        "x": 1235.0,
+        "y": 1815.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "33",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "14.142",
+       "Düşü": "3.622",
+       "Eğim": "0.2561",
+       "Alan": "1100",
+       "Aşağı": "36"
+      },
+      "pts": [
+       {
+        "x": 1255.0,
+        "y": 1845.0
+       },
+       {
+        "x": 1245.0,
+        "y": 1835.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "34",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "42.426",
+       "Düşü": "12.841",
+       "Eğim": "0.30267",
+       "Alan": "1100",
+       "Aşağı": "39"
+      },
+      "pts": [
+       {
+        "x": 1265.0,
+        "y": 1845.0
+       },
+       {
+        "x": 1235.0,
+        "y": 1815.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "35",
+       "Sıra": "2",
+       "Shreve": "7",
+       "Uzunluk": "24.142",
+       "Düşü": "5.331",
+       "Eğim": "0.22083",
+       "Alan": "22000",
+       "Aşağı": "32"
+      },
+      "pts": [
+       {
+        "x": 1185.0,
+        "y": 1835.0
+       },
+       {
+        "x": 1205.0,
+        "y": 1845.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "36",
+       "Sıra": "2",
+       "Shreve": "4",
+       "Uzunluk": "24.142",
+       "Düşü": "7.465",
+       "Eğim": "0.30922",
+       "Alan": "14000",
+       "Aşağı": "39"
+      },
+      "pts": [
+       {
+        "x": 1245.0,
+        "y": 1835.0
+       },
+       {
+        "x": 1235.0,
+        "y": 1815.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "37",
+       "Sıra": "2",
+       "Shreve": "6",
+       "Uzunluk": "34.142",
+       "Düşü": "4.231",
+       "Eğim": "0.12393",
+       "Alan": "20500",
+       "Aşağı": "35"
+      },
+      "pts": [
+       {
+        "x": 1155.0,
+        "y": 1825.0
+       },
+       {
+        "x": 1185.0,
+        "y": 1835.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "38",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "50",
+       "Düşü": "12.324",
+       "Eğim": "0.24648",
+       "Alan": "1500",
+       "Aşağı": "54"
+      },
+      "pts": [
+       {
+        "x": 1285.0,
+        "y": 1825.0
+       },
+       {
+        "x": 1285.0,
+        "y": 1775.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "39",
+       "Sıra": "3",
+       "Shreve": "27",
+       "Uzunluk": "42.426",
+       "Düşü": "6.705",
+       "Eğim": "0.15805",
+       "Alan": "71200",
+       "Aşağı": "49"
+      },
+      "pts": [
+       {
+        "x": 1235.0,
+        "y": 1815.0
+       },
+       {
+        "x": 1265.0,
+        "y": 1785.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "40",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "14.142",
+       "Düşü": "3.98",
+       "Eğim": "0.28145",
+       "Alan": "1500",
+       "Aşağı": "44"
+      },
+      "pts": [
+       {
+        "x": 1075.0,
+        "y": 1805.0
+       },
+       {
+        "x": 1085.0,
+        "y": 1795.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "41",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "24.142",
+       "Düşü": "4.845",
+       "Eğim": "0.20068",
+       "Alan": "1100",
+       "Aşağı": "37"
+      },
+      "pts": [
+       {
+        "x": 1145.0,
+        "y": 1805.0
+       },
+       {
+        "x": 1155.0,
+        "y": 1825.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "42",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "34.142",
+       "Düşü": "7.058",
+       "Eğim": "0.20672",
+       "Alan": "1100",
+       "Aşağı": "35"
+      },
+      "pts": [
+       {
+        "x": 1175.0,
+        "y": 1805.0
+       },
+       {
+        "x": 1185.0,
+        "y": 1835.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "43",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "38.284",
+       "Düşü": "7.566",
+       "Eğim": "0.19761",
+       "Alan": "1700",
+       "Aşağı": "54"
+      },
+      "pts": [
+       {
+        "x": 1265.0,
+        "y": 1805.0
+       },
+       {
+        "x": 1285.0,
+        "y": 1775.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "44",
+       "Sıra": "2",
+       "Shreve": "4",
+       "Uzunluk": "82.426",
+       "Düşü": "7.612",
+       "Eğim": "0.09235",
+       "Alan": "16600",
+       "Aşağı": "37"
+      },
+      "pts": [
+       {
+        "x": 1085.0,
+        "y": 1795.0
+       },
+       {
+        "x": 1105.0,
+        "y": 1815.0
+       },
+       {
+        "x": 1155.0,
+        "y": 1825.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "45",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "30",
+       "Düşü": "6.2",
+       "Eğim": "0.20667",
+       "Alan": "1400",
+       "Aşağı": "37"
+      },
+      "pts": [
+       {
+        "x": 1155.0,
+        "y": 1795.0
+       },
+       {
+        "x": 1155.0,
+        "y": 1825.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "46",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "68.284",
+       "Düşü": "10.348",
+       "Eğim": "0.15154",
+       "Alan": "4200",
+       "Aşağı": "47"
+      },
+      "pts": [
+       {
+        "x": 1025.0,
+        "y": 1785.0
+       },
+       {
+        "x": 1085.0,
+        "y": 1785.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "47",
+       "Sıra": "2",
+       "Shreve": "3",
+       "Uzunluk": "10",
+       "Düşü": "0",
+       "Eğim": "0",
+       "Alan": "8600",
+       "Aşağı": "44"
+      },
+      "pts": [
+       {
+        "x": 1085.0,
+        "y": 1785.0
+       },
+       {
+        "x": 1085.0,
+        "y": 1795.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "48",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "10",
+       "Düşü": "2.25",
+       "Eğim": "0.22505",
+       "Alan": "900",
+       "Aşağı": "49"
+      },
+      "pts": [
+       {
+        "x": 1255.0,
+        "y": 1785.0
+       },
+       {
+        "x": 1265.0,
+        "y": 1785.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "49",
+       "Sıra": "3",
+       "Shreve": "28",
+       "Uzunluk": "14.142",
+       "Düşü": "1.883",
+       "Eğim": "0.13312",
+       "Alan": "72200",
+       "Aşağı": "53"
+      },
+      "pts": [
+       {
+        "x": 1265.0,
+        "y": 1785.0
+       },
+       {
+        "x": 1275.0,
+        "y": 1775.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "50",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "40",
+       "Düşü": "9.752",
+       "Eğim": "0.24381",
+       "Alan": "1200",
+       "Aşağı": "61"
+      },
+      "pts": [
+       {
+        "x": 1315.0,
+        "y": 1785.0
+       },
+       {
+        "x": 1315.0,
+        "y": 1745.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "51",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "10",
+       "Düşü": "1.379",
+       "Eğim": "0.13786",
+       "Alan": "1000",
+       "Aşağı": "47"
+      },
+      "pts": [
+       {
+        "x": 1085.0,
+        "y": 1775.0
+       },
+       {
+        "x": 1085.0,
+        "y": 1785.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "52",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "10",
+       "Düşü": "2.145",
+       "Eğim": "0.21449",
+       "Alan": "900",
+       "Aşağı": "53"
+      },
+      "pts": [
+       {
+        "x": 1265.0,
+        "y": 1775.0
+       },
+       {
+        "x": 1275.0,
+        "y": 1775.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "53",
+       "Sıra": "3",
+       "Shreve": "29",
+       "Uzunluk": "10",
+       "Düşü": "2.16",
+       "Eğim": "0.21598",
+       "Alan": "73200",
+       "Aşağı": "54"
+      },
+      "pts": [
+       {
+        "x": 1275.0,
+        "y": 1775.0
+       },
+       {
+        "x": 1285.0,
+        "y": 1775.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "54",
+       "Sıra": "3",
+       "Shreve": "31",
+       "Uzunluk": "14.142",
+       "Düşü": "2.318",
+       "Eğim": "0.16388",
+       "Alan": "76500",
+       "Aşağı": "56"
+      },
+      "pts": [
+       {
+        "x": 1285.0,
+        "y": 1775.0
+       },
+       {
+        "x": 1295.0,
+        "y": 1765.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "55",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "30",
+       "Düşü": "6.781",
+       "Eğim": "0.22603",
+       "Alan": "1100",
+       "Aşağı": "56"
+      },
+      "pts": [
+       {
+        "x": 1265.0,
+        "y": 1765.0
+       },
+       {
+        "x": 1295.0,
+        "y": 1765.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "56",
+       "Sıra": "3",
+       "Shreve": "32",
+       "Uzunluk": "14.142",
+       "Düşü": "2.17",
+       "Eğim": "0.15346",
+       "Alan": "78400",
+       "Aşağı": "59"
+      },
+      "pts": [
+       {
+        "x": 1295.0,
+        "y": 1765.0
+       },
+       {
+        "x": 1305.0,
+        "y": 1755.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "57",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "38.284",
+       "Düşü": "4.008",
+       "Eğim": "0.10468",
+       "Alan": "2600",
+       "Aşağı": "47"
+      },
+      "pts": [
+       {
+        "x": 1065.0,
+        "y": 1755.0
+       },
+       {
+        "x": 1085.0,
+        "y": 1785.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "58",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "50",
+       "Düşü": "11.594",
+       "Eğim": "0.23189",
+       "Alan": "1300",
+       "Aşağı": "59"
+      },
+      "pts": [
+       {
+        "x": 1255.0,
+        "y": 1755.0
+       },
+       {
+        "x": 1305.0,
+        "y": 1755.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "59",
+       "Sıra": "3",
+       "Shreve": "33",
+       "Uzunluk": "14.142",
+       "Düşü": "2.403",
+       "Eğim": "0.16991",
+       "Alan": "80600",
+       "Aşağı": "61"
+      },
+      "pts": [
+       {
+        "x": 1305.0,
+        "y": 1755.0
+       },
+       {
+        "x": 1315.0,
+        "y": 1745.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "60",
+       "Sıra": "1",
+       "Shreve": "1",
+       "Uzunluk": "50",
+       "Düşü": "11.968",
+       "Eğim": "0.23937",
+       "Alan": "1300",
+       "Aşağı": "61"
+      },
+      "pts": [
+       {
+        "x": 1265.0,
+        "y": 1745.0
+       },
+       {
+        "x": 1315.0,
+        "y": 1745.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-dere-agi",
+      "attrs": {
+       "Bağ": "61",
+       "Sıra": "3",
+       "Shreve": "35",
+       "Uzunluk": "0",
+       "Düşü": "0",
+       "Eğim": "0",
+       "Alan": "83200",
+       "Aşağı": "0"
+      },
+      "pts": [
+       {
+        "x": 1315.0,
+        "y": 1745.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-dere-agi": "ag"
+    }
+   }
+  },
+  {
+   "id": "basins-route-missing",
+   "title": "Havzalar, Güzergâhı kesen dereler, güzergâh seçilmemiş",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.basins"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "ag"
+    },
+    "mode": "route",
+    "threshold": 3000
+   },
+   "expect": {
+    "status": "error",
+    "message": "Güzergâhı seçin: çizgi, çoklu çizgi ya da yay."
+   }
+  },
+  {
+   "id": "accumulation-exponent",
+   "title": "Akış birikimi, Çoklu yönün üssü 0,05",
+   "document": "hydrology.kcad",
+   "selection": [],
+   "run": {
+    "tool": "hydrology.flowAccumulation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "vadi"
+    },
+    "method": "mfd",
+    "exponent": 0.05
+   },
+   "expect": {
+    "status": "error",
+    "message": "Çoklu yönün üssü 0 (uyarlanan) ya da 0,1 ile 100 arasında olmalı."
+   }
+  }
+ ]
+}

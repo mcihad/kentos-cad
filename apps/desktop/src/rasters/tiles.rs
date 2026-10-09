@@ -276,7 +276,7 @@ pub(crate) fn read_at(file: &File, offset: u64, len: u64) -> Result<Vec<u8>, Str
 }
 
 /// A JPEG block's or image's pixels (zune-jpeg) and their components.
-pub(super) fn jpeg_pixels(stream: &[u8]) -> Result<(Vec<u8>, u32), String> {
+pub(crate) fn jpeg_pixels(stream: &[u8]) -> Result<(Vec<u8>, u32), String> {
     use zune_jpeg::JpegDecoder;
     use zune_jpeg::zune_core::bytestream::ZCursor;
     use zune_jpeg::zune_core::colorspace::ColorSpace;
@@ -300,6 +300,31 @@ fn file_identity(path: &std::path::Path) -> Option<String> {
 
 /// A raster opened from where its bytes are; why not when it cannot be.
 pub(super) fn open(origin: &Origin) -> Result<Opened, String> {
+    let read = open_reader(origin, READER_BUDGET)?;
+    Ok(Opened {
+        reader: Mutex::new(read.reader),
+        source: read.source,
+        size: read.size,
+        identity: read.identity,
+        pyramid: Mutex::new(None),
+        stats: Mutex::new(None),
+    })
+}
+
+/// A raster's reader, its header read, keeping at most `budget` bytes of blocks.
+pub(crate) struct ReaderOpen {
+    pub(crate) reader: Reader,
+    /// Level 0's bytes (a TIFF read in pieces), or none (a whole image decoded at once).
+    pub(crate) source: Option<Bytes>,
+    /// The file's size in bytes.
+    pub(crate) size: u64,
+    /// What names its pyramid file (a TIFF's only).
+    pub(crate) identity: Option<String>,
+}
+
+/// A raster's reader from where its bytes are (the scene's, an analysis's
+/// own with its own budget, docs/adr/0231 §2); why not when it cannot be.
+pub(crate) fn open_reader(origin: &Origin, budget: usize) -> Result<ReaderOpen, String> {
     let (source, identity) = match origin {
         Origin::File(path) => (Bytes::file(path)?, file_identity(path)),
         Origin::Bytes(b) => (Bytes::Memory(b.clone()), None),
@@ -348,17 +373,11 @@ pub(super) fn open(origin: &Origin) -> Result<Opened, String> {
                 }
             }
         };
-        Reader::tiff(&t, None, READER_BUDGET).map_err(|e| e.0)?
+        Reader::tiff(&t, None, budget).map_err(|e| e.0)?
     } else if kentos_formats::raster::png::sniff(&head) {
         let p = kentos_formats::raster::png::decode(&whole(IMAGE_MOST)?).map_err(|e| e.0)?;
         Reader::image(
-            p.width,
-            p.height,
-            p.bands,
-            p.samples,
-            p.nodata,
-            None,
-            READER_BUDGET,
+            p.width, p.height, p.bands, p.samples, p.nodata, None, budget,
         )
         .map_err(|e| e.0)?
     } else if head.starts_with(&[0xFF, 0xD8]) {
@@ -372,20 +391,18 @@ pub(super) fn open(origin: &Origin) -> Result<Opened, String> {
             kentos_formats::raster::Samples::U8(pixels),
             None,
             None,
-            READER_BUDGET,
+            budget,
         )
         .map_err(|e| e.0)?
     } else {
         return Err("Dosya GeoTIFF, TIFF, PNG ya da JPEG değil.".into());
     };
     let tiled = tiff::sniff(&head);
-    Ok(Opened {
-        reader: Mutex::new(reader),
+    Ok(ReaderOpen {
+        reader,
         source: tiled.then_some(source),
         size,
         identity: identity.filter(|_| tiled),
-        pyramid: Mutex::new(None),
-        stats: Mutex::new(None),
     })
 }
 

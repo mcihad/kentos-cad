@@ -7,6 +7,7 @@ pub mod arrowhead;
 pub mod bulge;
 pub mod centroid;
 pub mod curve_outline;
+pub mod delaunay;
 pub mod dimension;
 pub mod ellipse;
 pub mod hatch;

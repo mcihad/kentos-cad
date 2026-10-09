@@ -1,0 +1,660 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: raster ve vektör",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 500000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "siniflar",
+   "name": "Sınıflar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "cizgiler",
+   "name": "Çizgi rasteri",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yukseklik",
+   "name": "Yükseklik",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "tarama",
+   "name": "Taranmış pafta",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "pafta",
+   "name": "Parsel paftası",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "pafta2",
+   "name": "Parsel paftası 2",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "nesneler",
+   "name": "Nesneler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#1565C0",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "izgara",
+   "name": "Izgara",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "egriler",
+   "name": "Eğriler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#A0522D",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "siniflar",
+ "entities": [
+  {
+   "kind": "raster",
+   "affine": [
+    1000.0,
+    2.0,
+    0.0,
+    2000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 9,
+   "height": 7,
+   "bands": 1,
+   "sample": "f32",
+   "file": "siniflar.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 1,
+   "layerId": "siniflar",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    1000.0,
+    2.0,
+    0.0,
+    2000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 16,
+   "height": 12,
+   "bands": 1,
+   "sample": "f32",
+   "file": "cizgiler.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 2,
+   "layerId": "cizgiler",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    1000.0,
+    2.0,
+    0.0,
+    2000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 12,
+   "height": 9,
+   "bands": 1,
+   "sample": "f32",
+   "file": "yukseklik.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 3,
+   "layerId": "yukseklik",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    1000.0,
+    2.0,
+    0.0,
+    2000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 40,
+   "height": 24,
+   "bands": 3,
+   "sample": "u8",
+   "file": "tarama.tif",
+   "srid": 5254,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     1,
+     2,
+     3
+    ]
+   },
+   "id": 4,
+   "layerId": "tarama",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    1000.0,
+    2.0,
+    0.0,
+    2000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 24,
+   "height": 16,
+   "bands": 3,
+   "sample": "u8",
+   "file": "pafta.tif",
+   "srid": 5254,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     1,
+     2,
+     3
+    ]
+   },
+   "id": 5,
+   "layerId": "pafta",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    1000.0,
+    2.0,
+    0.0,
+    2000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 24,
+   "height": 16,
+   "bands": 3,
+   "sample": "u8",
+   "file": "pafta2.tif",
+   "srid": 5254,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     1,
+     2,
+     3
+    ]
+   },
+   "id": 6,
+   "layerId": "pafta2",
+   "attrs": {}
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500.3,
+     "y": 300.4
+    },
+    {
+     "x": 506.7,
+     "y": 300.9
+    },
+    {
+     "x": 505.8,
+     "y": 307.1
+    },
+    {
+     "x": 500.6,
+     "y": 305.2
+    }
+   ],
+   "id": 7,
+   "layerId": "nesneler",
+   "attrs": {
+    "Değer": "3"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 504.1,
+     "y": 303.3
+    },
+    {
+     "x": 511.6,
+     "y": 302.7
+    },
+    {
+     "x": 510.9,
+     "y": 309.4
+    },
+    {
+     "x": 503.7,
+     "y": 308.6
+    }
+   ],
+   "holes": [
+    {
+     "pts": [
+      {
+       "x": 506.2,
+       "y": 305.1
+      },
+      {
+       "x": 508.9,
+       "y": 305.3
+      },
+      {
+       "x": 508.3,
+       "y": 307.4
+      },
+      {
+       "x": 506.6,
+       "y": 307.0
+      }
+     ]
+    }
+   ],
+   "id": 8,
+   "layerId": "nesneler",
+   "attrs": {
+    "Değer": "7,5"
+   }
+  },
+  {
+   "kind": "circle",
+   "c": {
+    "x": 515.3,
+    "y": 306.2
+   },
+   "r": 3.7,
+   "id": 9,
+   "layerId": "nesneler",
+   "attrs": {
+    "Değer": "-2.25"
+   }
+  },
+  {
+   "kind": "line",
+   "a": {
+    "x": 500.37,
+    "y": 310.83
+   },
+   "b": {
+    "x": 518.41,
+    "y": 301.29
+   },
+   "id": 10,
+   "layerId": "nesneler",
+   "attrs": {
+    "Değer": "11"
+   }
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 501.13,
+     "y": 301.71
+    },
+    {
+     "x": 509.27,
+     "y": 310.53
+    },
+    {
+     "x": 517.71,
+     "y": 310.19
+    }
+   ],
+   "bulges": [
+    0.0,
+    0.31
+   ],
+   "id": 11,
+   "layerId": "nesneler",
+   "attrs": {
+    "Değer": "4"
+   }
+  },
+  {
+   "kind": "arc",
+   "c": {
+    "x": 513.1,
+    "y": 304.4
+   },
+   "r": 2.9,
+   "a0": 0.37,
+   "a1": 2.81,
+   "id": 12,
+   "layerId": "nesneler",
+   "attrs": {
+    "Değer": "yok"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 502.21,
+    "y": 309.13
+   },
+   "parts": [
+    {
+     "p": {
+      "x": 516.83,
+      "y": 301.37
+     }
+    },
+    {
+     "p": {
+      "x": 516.92,
+      "y": 301.11
+     }
+    }
+   ],
+   "id": 13,
+   "layerId": "nesneler",
+   "attrs": {
+    "Değer": "9"
+   }
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    502.0,
+    1.0,
+    0.0,
+    312.0,
+    0.0,
+    -1.0
+   ],
+   "width": 9,
+   "height": 7,
+   "bands": 1,
+   "sample": "f32",
+   "file": "izgara.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 14,
+   "layerId": "izgara",
+   "attrs": {}
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 0.0,
+     "y": 1.1
+    },
+    {
+     "x": 4.3,
+     "y": 2.7
+    },
+    {
+     "x": 9.8,
+     "y": 1.9
+    }
+   ],
+   "id": 15,
+   "layerId": "egriler",
+   "attrs": {
+    "Ad": "E1"
+   }
+  },
+  {
+   "kind": "line",
+   "a": {
+    "x": 0.5,
+    "y": 4.2
+   },
+   "b": {
+    "x": 9.1,
+    "y": 5.3
+   },
+   "id": 16,
+   "layerId": "egriler",
+   "attrs": {
+    "Ad": "E2"
+   }
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 0.2,
+     "y": 7.7
+    },
+    {
+     "x": 5.1,
+     "y": 6.4
+    },
+    {
+     "x": 9.9,
+     "y": 8.1
+    }
+   ],
+   "id": 17,
+   "layerId": "egriler",
+   "attrs": {
+    "Ad": "E3"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 2.0,
+     "y": 9.0
+    },
+    {
+     "x": 8.0,
+     "y": 9.0
+    },
+    {
+     "x": 8.0,
+     "y": 11.5
+    },
+    {
+     "x": 2.0,
+     "y": 11.5
+    }
+   ],
+   "holes": [
+    {
+     "pts": [
+      {
+       "x": 4.0,
+       "y": 9.8
+      },
+      {
+       "x": 6.0,
+       "y": 9.8
+      },
+      {
+       "x": 6.0,
+       "y": 10.6
+      },
+      {
+       "x": 4.0,
+       "y": 10.6
+      }
+     ]
+    }
+   ],
+   "id": 18,
+   "layerId": "egriler",
+   "attrs": {
+    "Ad": "E4"
+   }
+  },
+  {
+   "kind": "line",
+   "a": {
+    "x": 20.0,
+    "y": 0.0
+   },
+   "b": {
+    "x": 21.0,
+    "y": 10.0
+   },
+   "id": 19,
+   "layerId": "egriler",
+   "attrs": {
+    "Ad": "E5"
+   }
+  },
+  {
+   "kind": "line",
+   "a": {
+    "x": 0.0,
+    "y": 4.7
+   },
+   "b": {
+    "x": 9.0,
+    "y": 4.7
+   },
+   "id": 20,
+   "layerId": "egriler",
+   "attrs": {
+    "Ad": "E6"
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

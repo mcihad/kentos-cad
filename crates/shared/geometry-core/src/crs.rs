@@ -123,6 +123,19 @@ impl System {
         }
     }
 
+    /// The point's latitude and longitude (degrees) on the system's own
+    /// datum: what a raster's insolation takes its rows' latitudes from
+    /// (docs/adr/0231 §8); none outside the system.
+    pub fn geographic_of(&self, p: Vec2) -> Option<(f64, f64)> {
+        self.unproject(p)
+    }
+
+    /// Whether the system's coordinates are degrees (a local system's are its
+    /// plane's, whatever its base).
+    pub fn is_geographic(&self) -> bool {
+        matches!(self, System::Geographic { .. })
+    }
+
     /// The point's latitude and longitude (degrees) on the system's datum.
     fn unproject(&self, p: Vec2) -> Option<(f64, f64)> {
         match self {

@@ -15,6 +15,9 @@ import { workerExecutor, type WorkerLike } from './worker/workerExecutor';
 import type { FileValue, ProcessingTool } from './types';
 import type { TableFileRead } from '../contracts/generated/TableFileRead';
 import { geoMeasure } from '../model/ops/geoprocess';
+import { setRasterRunHost } from './rasterHost';
+import { contourObjects, fixtureRasterHost, level0, surfaceModulesBuilt, ulps } from './surfaceTesting';
+import { elevatedPaths } from '../product/elevation';
 
 /**
  * The shared processing cases (fixtures/processing/v1, format in
@@ -23,9 +26,14 @@ import { geoMeasure } from '../model/ops/geoprocess';
  * (handleJob), and what the run did is compared with what the case says.
  * The desktop's kentos-processing plays the same files: cases.json,
  * queries.json (docs/adr/0200), whose file values name files beside it,
- * read through the formats module as the dialog reads a chosen file, and
+ * read through the formats module as the dialog reads a chosen file,
  * geometry.json (docs/adr/0201), whose new objects are measured
- * (`addedShapes`).
+ * (`addedShapes`), and surface.json (docs/adr/0231), the raster tools run
+ * with a host whose rasters are the cases' files: a written raster's level 0
+ * is the independent surface reference's (fixtures/terrain/v1), the contour
+ * lines the contour reference's (fixtures/contours/v1); interpolation.json
+ * (docs/adr/0232), its written rasters the interpolation reference's
+ * (fixtures/interpolation/v1), a second band its standard errors.
  */
 
 const files = import.meta.glob<string>('../../../../fixtures/processing/v1/*', { query: '?raw', import: 'default', eager: true });
@@ -62,6 +70,16 @@ const CASES = JSON.parse(file('cases.json')) as CaseFile;
 const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
 const NETWORK = JSON.parse(file('network.json')) as CaseFile;
+const SURFACE = JSON.parse(file('surface.json')) as CaseFile & { rasters: Record<string, string> };
+const INTERPOLATION = JSON.parse(file('interpolation.json')) as CaseFile;
+const RASTER_VECTOR = JSON.parse(file('raster-vector.json')) as CaseFile & { rasters: Record<string, string> };
+const HYDROLOGY = JSON.parse(file('hydrology.json')) as CaseFile & { rasters: Record<string, string> };
+const DISTANCE = JSON.parse(file('distance.json')) as CaseFile & { rasters: Record<string, string> };
+const RASTER_OPS = JSON.parse(file('raster-ops.json')) as CaseFile & {
+  rasters: Record<string, string>;
+  /** The names an expression field offers on an input (docs/adr/0233 §3). */
+  inputFields: { id: string; title: string; document: string; tool: string; values: Record<string, unknown>; fields: [string, number][] }[];
+};
 
 interface Formats {
   initSync(o: { module: BufferSource }): unknown;
@@ -267,6 +285,11 @@ function check(c: Case, s: Seen, tol: number, measureTol = tol): void {
     wantAdded.forEach((w, i) => expect(sameObject(added[i], w, tol), `${c.id}: added[${i}] ${JSON.stringify(added[i])}`).toBe(true));
   }
   expect(got.updated, where).toEqual(want.updated ?? []);
+  // The vertices' elevations of the objects a run changed (Eğrilere kot ver), each path's in `elevatedPaths`' order.
+  for (const [id, zs] of Object.entries((want.elevations ?? {}) as Record<string, (number | null)[][]>)) {
+    const e = s.doc.get(Number(id));
+    expect(e && elevatedPaths(e).map((p) => p.zs), `${c.id}: elevations of ${id}`).toEqual(zs);
+  }
   expect(got.removed, where).toEqual(want.removed ?? []);
   if (want.selection) expect(got.selection, where).toEqual(want.selection);
   const outputs = got.outputs as Json;
@@ -288,7 +311,17 @@ describe('processing cases (fixtures/processing/v1)', () => {
   });
 
   // Each drawing's defaults (DefaultsContext) and each tool's default values on it, as the desktop must read them.
-  for (const [name, d] of [...Object.entries(CASES.documents), ...Object.entries(GEOMETRY.documents), ...Object.entries(NETWORK.documents)]) {
+  for (const [name, d] of [
+    ...Object.entries(CASES.documents),
+    ...Object.entries(GEOMETRY.documents),
+    ...Object.entries(NETWORK.documents),
+    ...Object.entries(SURFACE.documents),
+    ...Object.entries(INTERPOLATION.documents),
+    ...Object.entries(RASTER_OPS.documents),
+    ...Object.entries(RASTER_VECTOR.documents),
+    ...Object.entries(HYDROLOGY.documents),
+    ...Object.entries(DISTANCE.documents),
+  ]) {
     it(`${name}: the defaults the tools take from the drawing`, () => {
       const runner = new ProcessingRunner({ doc: load(name), selectedIds: () => [], visibleBounds: () => null });
       expect(runner.defaults()).toEqual(d.defaults);
@@ -331,6 +364,311 @@ describe('geometry cases (fixtures/processing/v1/geometry.json, docs/adr/0201)',
     it(`${c.id}: ${c.title}`, async () => {
       check(c, await play(GEOMETRY, c, 'client'), GEOMETRY.tolerance, GEOMETRY.measureTolerance);
       check(c, await play(GEOMETRY, c, 'worker'), GEOMETRY.tolerance, GEOMETRY.measureTolerance);
+    });
+  }
+});
+
+describe.skipIf(!surfaceModulesBuilt)('surface cases (fixtures/processing/v1/surface.json, docs/adr/0231)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const rasters = new Map(Object.entries(SURFACE.rasters).map(([name, rel]) => [name, read(rel)]));
+  const terrain = JSON.parse(new TextDecoder().decode(read('../../terrain/v1/cases.json'))) as { cases: { dem: string; name: string; sample: string; values: (number | null)[] }[] };
+  const contours = JSON.parse(new TextDecoder().decode(read('../../contours/v1/cases.json')));
+
+  it('is a v1 case file', () => {
+    expect([SURFACE.format, SURFACE.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of SURFACE.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(rasters);
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { contoursOf?: number; rasterOf?: Record<string, string>; layers?: { id: string }[]; layerAbove?: Record<string, string> };
+        // The contour lines are the contour reference's, in its order.
+        const expected: Case = want.contoursOf === undefined ? c : { ...c, expect: { ...want, added: contourObjects(contours, want.contoursOf, want.layers![0].id) } };
+        const seen = await play(SURFACE, c, 'client');
+        // Each new layer right above the layer it names (its group, the place before it).
+        for (const [id, over] of Object.entries((want.layerAbove ?? {}) as Record<string, string>)) {
+          const layers = seen.doc.layers;
+          const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(over)?.id ?? null);
+          expect(siblings(id).findIndex((n) => n.id === id) + 1, `${c.id}: ${id} above ${over}`).toBe(siblings(over).findIndex((n) => n.id === over));
+        }
+        check(expected, seen, SURFACE.tolerance);
+        // Each written raster's level 0 is the surface reference's case of that name.
+        const of = want.rasterOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, caseName] of Object.entries(of)) {
+          const ref = terrain.cases.find((t) => t.dem === 'tepe' && t.name === caseName)!;
+          const got = await level0(written.get(name)!);
+          expect(got.length, `${c.id}: ${name}`).toBe(ref.values.length);
+          const off = got.findIndex((g, k) => (ref.sample === 'u8' ? g !== ref.values[k] : ulps(g, ref.values[k] ?? NaN) > 1));
+          expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${ref.values[off]}`).toBe(-1);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
+    });
+  }
+
+  it('a raster tool refuses where there is no host', async () => {
+    setRasterRunHost(null);
+    const s = await play(SURFACE, SURFACE.cases[0], 'client');
+    expect(observed(s)).toMatchObject({ status: 'error', message: 'Bu araç rasterin dosyasını okuyup sonucu dosyaya yazar; bu ortamda dosya erişimi yok.' });
+  });
+});
+
+describe.skipIf(!surfaceModulesBuilt)('interpolation cases (fixtures/processing/v1/interpolation.json, docs/adr/0232)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const reference = JSON.parse(new TextDecoder().decode(read('../../interpolation/v1/cases.json'))) as {
+    cases: { name: string; expect: { values: (number | null)[]; error?: (number | null)[] } }[];
+  };
+
+  it('is a v1 case file', () => {
+    expect([INTERPOLATION.format, INTERPOLATION.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of INTERPOLATION.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(new Map());
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { interpolationOf?: Record<string, string>; layerBelow?: Record<string, string> };
+        const seen = await play(INTERPOLATION, c, 'client');
+        // Each new layer right below the layer it names (its group, the place after it).
+        for (const [id, under] of Object.entries(want.layerBelow ?? {})) {
+          const layers = seen.doc.layers;
+          const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(under)?.id ?? null);
+          expect(siblings(id).findIndex((n) => n.id === id), `${c.id}: ${id} below ${under}`).toBe(siblings(under).findIndex((n) => n.id === under) + 1);
+        }
+        check(c, seen, INTERPOLATION.tolerance);
+        // Each written raster's level 0 is the interpolation reference's case of that name (a second band its errors).
+        const of = want.interpolationOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, caseName] of Object.entries(of)) {
+          const ref = reference.cases.find((t) => t.name === caseName)!.expect;
+          const got = await level0(written.get(name)!);
+          const two = !!ref.error && got.length === 2 * ref.values.length;
+          const values = two ? ref.values.flatMap((v, k) => [v, ref.error![k]]) : ref.values;
+          expect(got.length, `${c.id}: ${name}`).toBe(values.length);
+          const off = got.findIndex((g, k) => ulps(g, values[k] ?? NaN) > 1);
+          expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${values[off]}`).toBe(-1);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
+    });
+  }
+});
+
+describe.skipIf(!surfaceModulesBuilt)('raster operations cases (fixtures/processing/v1/raster-ops.json, docs/adr/0233)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const rasters = new Map(Object.entries(RASTER_OPS.rasters).map(([name, rel]) => [name, read(rel)]));
+  const reference = JSON.parse(new TextDecoder().decode(read('../../raster-ops/v1/cases.json'))) as {
+    cases: { name: string; expect: { raster?: { rule: string; values: (number | null)[] } } }[];
+  };
+
+  it('is a v1 case file', () => {
+    expect([RASTER_OPS.format, RASTER_OPS.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  // A raster's names are the input's fields: the expression's chips and the builder's fields.
+  for (const f of RASTER_OPS.inputFields) {
+    it(`${f.id}: ${f.title}`, () => {
+      const runner = new ProcessingRunner({ doc: load(f.document), selectedIds: () => [], visibleBounds: () => null });
+      const tool = TOOLS.get(f.tool)!;
+      const values = { ...defaultValues(tool, runner.defaults()), ...f.values };
+      const got = runner.describeInputs(tool, values).input.fields.map((x) => [x.name, x.count] as [string, number]);
+      expect(got.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))).toEqual(f.fields);
+    });
+  }
+
+  for (const c of RASTER_OPS.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(rasters);
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { rasterOpsOf?: Record<string, string>; layerAbove?: Record<string, string> };
+        const seen = await play(RASTER_OPS, c, 'client');
+        // Each new layer right above the first raster's layer (its group, the place before it).
+        for (const [id, over] of Object.entries(want.layerAbove ?? {})) {
+          const layers = seen.doc.layers;
+          const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(over)?.id ?? null);
+          expect(siblings(id).findIndex((n) => n.id === id) + 1, `${c.id}: ${id} above ${over}`).toBe(siblings(over).findIndex((n) => n.id === over));
+        }
+        check(c, seen, RASTER_OPS.tolerance);
+        // Each written raster's level 0 is the raster operations' reference case of that name, by its rule.
+        const of = want.rasterOpsOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, caseName] of Object.entries(of)) {
+          const ref = reference.cases.find((t) => t.name === caseName)!.expect.raster!;
+          const got = await level0(written.get(name)!);
+          expect(got.length, `${c.id}: ${name}`).toBe(ref.values.length);
+          const off = got.findIndex((g, k) => {
+            const w = ref.values[k] ?? NaN;
+            if (Number.isNaN(g) || Number.isNaN(w)) return !(Number.isNaN(g) && Number.isNaN(w));
+            return ref.rule === 'exact' ? g !== w : ulps(g, w) > 1;
+          });
+          expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${ref.values[off]}`).toBe(-1);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
+    });
+  }
+});
+
+describe.skipIf(!surfaceModulesBuilt)('raster and vector cases (fixtures/processing/v1/raster-vector.json, docs/adr/0234)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const rasters = new Map(Object.entries(RASTER_VECTOR.rasters).map(([name, rel]) => [name, read(rel)]));
+  const reference = JSON.parse(new TextDecoder().decode(read('../../raster-vector/v1/cases.json'))) as {
+    cases: { name: string; expect: { raster?: { values: (number | null)[] } } }[];
+  };
+
+  it('is a v1 case file', () => {
+    expect([RASTER_VECTOR.format, RASTER_VECTOR.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of RASTER_VECTOR.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(rasters);
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { rasterVectorOf?: Record<string, string>; layerAbove?: Record<string, string>; layerBelow?: Record<string, string> };
+        const seen = await play(RASTER_VECTOR, c, 'client');
+        // Each new layer right above (below) the layer it names: its group, the place before (after) it.
+        const layers = seen.doc.layers;
+        const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+        const at = (id: string) => siblings(id).findIndex((n) => n.id === id);
+        for (const [id, over] of Object.entries(want.layerAbove ?? {})) {
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(over)?.id ?? null);
+          expect(at(id) + 1, `${c.id}: ${id} above ${over}`).toBe(at(over));
+        }
+        for (const [id, under] of Object.entries(want.layerBelow ?? {})) {
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(under)?.id ?? null);
+          expect(at(id), `${c.id}: ${id} below ${under}`).toBe(at(under) + 1);
+        }
+        check(c, seen, RASTER_VECTOR.tolerance);
+        // Each written raster's level 0 is the reference's case of that name, sample for sample.
+        const of = want.rasterVectorOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, caseName] of Object.entries(of)) {
+          const ref = reference.cases.find((t) => t.name === caseName)!.expect.raster!;
+          const got = await level0(written.get(name)!);
+          expect(got.length, `${c.id}: ${name}`).toBe(ref.values.length);
+          const off = got.findIndex((g, k) => {
+            const w = ref.values[k] ?? NaN;
+            return Number.isNaN(g) || Number.isNaN(w) ? !(Number.isNaN(g) && Number.isNaN(w)) : g !== w;
+          });
+          expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${ref.values[off]}`).toBe(-1);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
+    });
+  }
+});
+
+describe.skipIf(!surfaceModulesBuilt)('hydrology cases (fixtures/processing/v1/hydrology.json, docs/adr/0235)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const rasters = new Map(Object.entries(HYDROLOGY.rasters).map(([name, rel]) => [name, read(rel)]));
+  const reference = JSON.parse(new TextDecoder().decode(read('../../hydrology/v1/cases.json'))) as {
+    cases: { name: string; expect: { raster?: { rule: string; values: (number | null)[] } } }[];
+  };
+
+  it('is a v1 case file', () => {
+    expect([HYDROLOGY.format, HYDROLOGY.version]).toEqual(['kentos.processing-cases', 1]);
+    expect(HYDROLOGY.cases.length).toBeGreaterThanOrEqual(20);
+  });
+
+  for (const c of HYDROLOGY.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(rasters);
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { hydrologyOf?: Record<string, string>; layerAbove?: Record<string, string> };
+        const seen = await play(HYDROLOGY, c, 'client');
+        // Each new layer right above the DEM's layer: its group, the place before it.
+        const layers = seen.doc.layers;
+        const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+        const at = (id: string) => siblings(id).findIndex((n) => n.id === id);
+        for (const [id, over] of Object.entries(want.layerAbove ?? {})) {
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(over)?.id ?? null);
+          expect(at(id) + 1, `${c.id}: ${id} above ${over}`).toBe(at(over));
+        }
+        check(c, seen, HYDROLOGY.tolerance);
+        // Each written raster's level 0 is the hydrology reference's case of that name, by its rule.
+        const of = want.hydrologyOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, caseName] of Object.entries(of)) {
+          const ref = reference.cases.find((t) => t.name === caseName)!.expect.raster!;
+          const got = await level0(written.get(name)!);
+          expect(got.length, `${c.id}: ${name}`).toBe(ref.values.length);
+          const off = got.findIndex((g, k) => {
+            const w = ref.values[k] ?? NaN;
+            if (Number.isNaN(g) || Number.isNaN(w)) return !(Number.isNaN(g) && Number.isNaN(w));
+            return ref.rule === 'exact' ? g !== w : ulps(g, w) > 1;
+          });
+          expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${ref.values[off]}`).toBe(-1);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
+    });
+  }
+});
+
+describe.skipIf(!surfaceModulesBuilt)('distance and cost cases (fixtures/processing/v1/distance.json, docs/adr/0236)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const rasters = new Map(Object.entries(DISTANCE.rasters).map(([name, rel]) => [name, read(rel)]));
+  const reference = JSON.parse(new TextDecoder().decode(read('../../distance/v1/cases.json'))) as {
+    cases: { name: string; expect: { raster?: { rule: string; values: (number | null)[] } } }[];
+  };
+
+  it('is a v1 case file', () => {
+    expect([DISTANCE.format, DISTANCE.version]).toEqual(['kentos.processing-cases', 1]);
+    expect(DISTANCE.cases.length).toBeGreaterThanOrEqual(18);
+  });
+
+  for (const c of DISTANCE.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(rasters);
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { distanceOf?: Record<string, string>; layerAbove?: Record<string, string>; layerBelow?: Record<string, string> };
+        const seen = await play(DISTANCE, c, 'client');
+        // Each new layer right above (below) the layer it names: its group, the place before (after) it.
+        const layers = seen.doc.layers;
+        const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+        const at = (id: string) => siblings(id).findIndex((n) => n.id === id);
+        for (const [id, over] of Object.entries(want.layerAbove ?? {})) {
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(over)?.id ?? null);
+          expect(at(id) + 1, `${c.id}: ${id} above ${over}`).toBe(at(over));
+        }
+        for (const [id, under] of Object.entries(want.layerBelow ?? {})) {
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(under)?.id ?? null);
+          expect(at(id), `${c.id}: ${id} below ${under}`).toBe(at(under) + 1);
+        }
+        check(c, seen, DISTANCE.tolerance);
+        // Each written raster's level 0 is the distance reference's case of that name, by its rule.
+        const of = want.distanceOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, caseName] of Object.entries(of)) {
+          const ref = reference.cases.find((t) => t.name === caseName)!.expect.raster!;
+          const got = await level0(written.get(name)!);
+          expect(got.length, `${c.id}: ${name}`).toBe(ref.values.length);
+          const off = got.findIndex((g, k) => {
+            const w = ref.values[k] ?? NaN;
+            if (Number.isNaN(g) || Number.isNaN(w)) return !(Number.isNaN(g) && Number.isNaN(w));
+            return ref.rule === 'exact' ? g !== w : ulps(g, w) > 1;
+          });
+          expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${ref.values[off]}`).toBe(-1);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
     });
   }
 });

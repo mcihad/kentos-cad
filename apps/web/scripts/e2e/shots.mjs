@@ -4807,7 +4807,7 @@ SCENES.convert = [
 // tabs and a CBS project's map work's (the desktop's are ribbon_tests::screens, serit-cad-* and serit-cbs-*).
 const TYPE_TABS = {
   cad: ['file', 'home', 'insert', 'annotate', 'modify', 'view', 'manage', 'output'],
-  gis: ['file', 'home', 'map', 'data', 'edit', 'analysis', 'survey', 'view', 'output'],
+  gis: ['file', 'home', 'map', 'data', 'edit', 'analysis', 'raster', 'survey', 'view', 'output'],
 };
 SCENES.types = Object.entries(TYPE_TABS).flatMap(([type, tabs]) =>
   tabs.map((tab) => ({
@@ -5873,6 +5873,489 @@ function rasterScenes() {
       },
       close,
     },
+  ];
+}
+
+// Yüzey analizi (docs/adr/0231 §10) over the shared valley (fixtures/interaction/v1/rasters.kcad, its elevation model
+// 480 × 324 cells of 1.6 m): a CBS project's Analiz tab with its Yüzey analizi panel, Eğim's, Renkli kabartma's and
+// Güneşlenme's windows, and each tool's result drawn over the valley, the photograph's layer hidden. Each job runs in a
+// worker of its own (io/rasterAnalysisWorker.ts); a result under 32 MB is embedded. The desktop's are `tools_screens`'
+// yuzey-* (apps/desktop/src/surface_scenes.rs).
+SCENES.surface = surfaceScenes();
+
+function surfaceScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const file = (n) => `new File([Uint8Array.from(atob(${JSON.stringify(RASTER_FILES[n])}), (c) => c.charCodeAt(0))], ${JSON.stringify(n)})`;
+  /** Draws while the raster workers make the view's tiles. */
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  /** The valley open, its rasters' files the session's, the view on its elevation model, the Raster tab on. */
+  const opened = async (ui) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const files = { 'dem.tif': ${file('dem.tif')}, 'orto.tif': ${file('orto.tif')}, 'tarama.png': ${file('tarama.png')} };
+      for (const [n, f] of Object.entries(files)) rasterService().setFile('rasters/' + n, f);
+      if (!(await k.files.load(${JSON.stringify(RASTERS)}, null))) throw new Error('rasters.kcad did not load');
+      k.selection.clear();
+      for (const id of ['orto', 'tarama']) k.doc.layers.setVisible(id, false);
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${X0}, minY: ${Y0 - 518.4}, maxX: ${X0 + 768}, maxY: ${Y0} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** A tool's window on the elevation model, with `values`. */
+  const windowOf = (tool, values = {}) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, { input: QUERY_LAYER('dem'), ...values }));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  /** A tool run on the elevation model in its worker, its window closed, its result drawn. */
+  const drawn = (tool, values = {}) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, { input: QUERY_LAYER('dem'), ...values }));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    await ui.escapeAll(2);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  return [
+    { id: 'yuzey-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'yuzey-egim', open: windowOf('surface.slope'), close },
+    { id: 'yuzey-egim-cizim', open: drawn('surface.slope'), close },
+    { id: 'yuzey-baki-cizim', open: drawn('surface.aspect'), close },
+    { id: 'yuzey-golge-cizim', open: drawn('surface.hillshade'), close },
+    { id: 'yuzey-renkli', open: windowOf('surface.colorRelief', { colors: 'table', table: '1010 #2E7D32; 1040 #9CCC65; 1070 #FFF59D; 1100 #A1887F; 1130 #FAFAFA' }), close },
+    { id: 'yuzey-renkli-cizim', open: drawn('surface.colorRelief'), close },
+    { id: 'yuzey-egrilik-cizim', open: drawn('surface.curvature', { curvature: 'profile' }), close },
+    { id: 'yuzey-puruzluluk-cizim', open: drawn('surface.ruggedness'), close },
+    { id: 'yuzey-gunes', open: windowOf('surface.insolation', { period: 'range' }), close },
+    { id: 'yuzey-gunes-cizim', open: drawn('surface.insolation'), close },
+    { id: 'yuzey-esyukselti-cizim', open: drawn('surface.contours', { interval: 2 }), close },
+  ];
+}
+
+// İnterpolasyon and Yoğunluk (docs/adr/0232 §13) over the shared processing drawing
+// (fixtures/processing/v1/interpolation.kcad: 40 survey points over 120 × 80 m, 60 events, roads): the CBS ribbon's Raster
+// tab with its İnterpolasyon and Yoğunluk panels, IDW's and Kriging's windows, a run's cross-validation, each
+// interpolation's surface under its points (a metre a cell), the two densities. Each job runs in a worker of its own;
+// a result under 32 MB is embedded. The desktop's are `tools_screens`' interp-*, yogunluk-cizim and
+// cizgi-yogunlugu-cizim (apps/desktop/src/interpolation_scenes.rs).
+SCENES.interpolation = interpolationScenes();
+
+function interpolationScenes() {
+  const DRAWING = readFileSync(new URL('../../../../fixtures/processing/v1/interpolation.kcad', import.meta.url), 'utf8');
+  const POINTS = [499998, 4419998, 500122, 4420082];
+  const EVENTS = [499990, 4419990, 500210, 4420210];
+  const ROADS = [-6, -6, 106, 98];
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(600);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  /** The drawing open, the layers a scene does not show hidden, the Raster tab on, the view on `b`. */
+  const opened = async (ui, b = POINTS) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(DRAWING)}, null))) throw new Error('interpolation.kcad did not load');
+      k.selection.clear();
+      for (const id of ['alan', 'izgara', 'dogru', 'kotsuz']) k.doc.layers.setVisible(id, false);
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** A tool's window on `layer`, with `values`. */
+  const windowOf = (tool, layer, values = {}, b = POINTS) => async (ui) => {
+    await opened(ui, b);
+    await ui.eval(openTool(tool, { input: QUERY_LAYER(layer), ...values }));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  /** A tool run on `layer` in its worker, its window closed (or kept, `keep`), its result drawn. */
+  const drawn = (tool, layer, values = {}, b = POINTS, keep = false) => async (ui) => {
+    await opened(ui, b);
+    await ui.eval(openTool(tool, { input: QUERY_LAYER(layer), ...values }));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    if (!keep) await ui.escapeAll(2);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const manual = { variogram: 'manual', nugget: 0.5, sill: 120, range: 90 };
+  return [
+    { id: 'interp-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'interp-idw', open: windowOf('interpolation.idw', 'noktalar', { cellSize: 1, cross: true }), close },
+    { id: 'interp-idw-cizim', open: drawn('interpolation.idw', 'noktalar', { cellSize: 1 }), close },
+    { id: 'interp-capraz', open: drawn('interpolation.idw', 'noktalar', { cellSize: 1, cross: true }, POINTS, true), close },
+    { id: 'interp-dogal-cizim', open: drawn('interpolation.naturalNeighbor', 'noktalar', { cellSize: 1 }), close },
+    { id: 'interp-tin-cizim', open: drawn('interpolation.tin', 'noktalar', { cellSize: 1 }), close },
+    { id: 'interp-spline-cizim', open: drawn('interpolation.spline', 'noktalar', { cellSize: 1 }), close },
+    { id: 'interp-kriging', open: windowOf('interpolation.kriging', 'noktalar', { ...manual, errorSurface: true }), close },
+    { id: 'interp-kriging-cizim', open: drawn('interpolation.kriging', 'noktalar', { cellSize: 1, ...manual }), close },
+    { id: 'yogunluk-cizim', open: drawn('density.kernel', 'olaylar', { radius: 30, cellSize: 1 }, EVENTS), close },
+    { id: 'cizgi-yogunlugu-cizim', open: drawn('density.line', 'yollar', { radius: 12, cellSize: 0.5 }, ROADS), close },
+  ];
+}
+
+// Raster işlemleri and Raster istatistiği (docs/adr/0233) over the valley (rasters.kcad: its elevation model, the
+// photograph, five parcels), as the desktop's `tools_screens` ops-* (apps/desktop/src/raster_ops_scenes.rs).
+SCENES.rasterops = rasterOpsScenes();
+
+function rasterOpsScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const file = (n) => `new File([Uint8Array.from(atob(${JSON.stringify(RASTER_FILES[n])}), (c) => c.charCodeAt(0))], ${JSON.stringify(n)})`;
+  const INDEX = '([Ortofoto@1] - [Ortofoto@2]) / ([Ortofoto@1] + [Ortofoto@2])';
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const PARCELS = [487310, 4420360, 487642, 4420462];
+  /** The valley open, its rasters' files the session's, the scanned sheet (and the photograph unless `photo`) hidden; the view on `b`. */
+  const opened = async (ui, photo = false, b = [X0, Y0 - 518.4, X0 + 768, Y0]) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const files = { 'dem.tif': ${file('dem.tif')}, 'orto.tif': ${file('orto.tif')}, 'tarama.png': ${file('tarama.png')} };
+      for (const [n, f] of Object.entries(files)) rasterService().setFile('rasters/' + n, f);
+      if (!(await k.files.load(${JSON.stringify(RASTERS)}, null))) throw new Error('rasters.kcad did not load');
+      k.selection.clear();
+      k.doc.layers.setVisible('tarama', false);
+      k.doc.layers.setVisible('orto', ${photo});
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  const DEM = { input: QUERY_LAYER('dem') };
+  /** A tool's window with `values`. */
+  const windowOf = (tool, values, photo = false) => async (ui) => {
+    await opened(ui, photo);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  /** A tool run with `values`; its window closed (or kept with its form at its end, the table), the layers `hide` hidden. */
+  const drawn = (tool, values, { photo = false, keep = false, hide = [], view } = {}) => async (ui) => {
+    await opened(ui, photo, view);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    if (keep) await formEnd(ui);
+    else await ui.escapeAll(2);
+    await ui.eval(`(() => { for (const id of ${JSON.stringify(hide)}) window.kentos.doc.layers.setVisible(id, false); })()`);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  return [
+    { id: 'ops-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'ops-hesap', open: windowOf('raster.calculator', { expression: INDEX }, true), close },
+    { id: 'ops-hesap-cizim', open: drawn('raster.calculator', { input: { scope: 'all' }, expression: INDEX }, { photo: true, hide: ['dem', 'orto'] }), close },
+    { id: 'ops-sinif-cizim', open: drawn('raster.reclassify', { ...DEM, table: '* 910 1; 910 930 2; 930 955 3; 955 * 4' }, { hide: ['dem'] }), close },
+    { id: 'ops-kirp-cizim', open: drawn('raster.clipByMask', { ...DEM, mask: QUERY_LAYER('parsel') }, { hide: ['dem'], view: PARCELS }), close },
+    { id: 'ops-komsuluk-cizim', open: drawn('raster.focalStatistics', { ...DEM, width: 9, height: 9, stat: 'range' }, { hide: ['dem'] }), close },
+    { id: 'ops-ornek-cizim', open: drawn('raster.resample', { ...DEM, cell: 16, method: 'mean' }, { hide: ['dem'] }), close },
+    { id: 'ops-bolge', open: drawn('raster.zonalStatistics', { ...DEM, zones: QUERY_LAYER('parsel'), output: 'Ortalama kot' }, { keep: true }), close },
+    { id: 'ops-histogram', open: drawn('raster.histogram', { ...DEM, bins: 16 }, { keep: true }), close },
+  ];
+}
+
+// Raster ve vektör and Taranmış harita (docs/adr/0234): Rasterleştir, Rasterden alan and Rasterden nokta over the valley
+// (fixtures/interaction/v1/rasters.kcad); Rasterden çizgi, Çizgi yakala, Alan kapat and Eğrilere kot ver over a scanned
+// topographic sheet (fixtures/interaction/v1/scanned.kcad, scripts/fixtures/scanned_scene.py): brown contours, a blue
+// stream, a road and six parcels in black. The desktop's are `tools_screens`' vek-* (apps/desktop/src/raster_vector_scenes.rs).
+const SCANNED = readFileSync(new URL('../../../../fixtures/interaction/v1/scanned.kcad', import.meta.url), 'utf8');
+const SCANNED_SHEET = readFileSync(new URL('../../../../fixtures/interaction/v1/scanned/pafta.tif', import.meta.url)).toString('base64');
+SCENES.rastervector = rasterVectorScenes();
+
+function rasterVectorScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const file = (n) => `new File([Uint8Array.from(atob(${JSON.stringify(RASTER_FILES[n])}), (c) => c.charCodeAt(0))], ${JSON.stringify(n)})`;
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const VALLEY = [X0, Y0 - 518.4, X0 + 768, Y0];
+  const PARCELS = [487310, 4420360, 487642, 4420462];
+  const SHEET = [486900, 4420850, 487500, 4421300];
+  const HILL = [487120, 4421040, 487290, 4421160];
+  /** The valley open (the scanned sheet and the photograph hidden), or the scanned sheet; the view on `b`. */
+  const opened = async (ui, scanned, b) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      ${
+        scanned
+          ? `rasterService().setFile('scanned/pafta.tif', new File([Uint8Array.from(atob(${JSON.stringify(SCANNED_SHEET)}), (c) => c.charCodeAt(0))], 'pafta.tif'));
+      if (!(await k.files.load(${JSON.stringify(SCANNED)}, null))) throw new Error('scanned.kcad did not load');`
+          : `const files = { 'dem.tif': ${file('dem.tif')}, 'orto.tif': ${file('orto.tif')}, 'tarama.png': ${file('tarama.png')} };
+      for (const [n, f] of Object.entries(files)) rasterService().setFile('rasters/' + n, f);
+      if (!(await k.files.load(${JSON.stringify(RASTERS)}, null))) throw new Error('rasters.kcad did not load');
+      k.doc.layers.setVisible('tarama', false);
+      k.doc.layers.setVisible('orto', false);`
+      }
+      k.selection.clear();
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** Runs `tool` with `values` to its end and closes its window. */
+  const runTool = async (ui, tool, values) => {
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    await ui.escapeAll(2);
+  };
+  /** The runs in turn over the opened drawing, the layers `hide` hidden. */
+  const drawn = (scanned, view, runs, hide = []) => async (ui) => {
+    await opened(ui, scanned, view);
+    for (const [tool, values] of runs) await runTool(ui, tool, values);
+    await ui.eval(`(() => { for (const id of ${JSON.stringify(hide)}) window.kentos.doc.layers.setVisible(id, false); })()`);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  /** `tool`'s window with `values` over the opened drawing, after the runs `before`. */
+  const windowOf = (scanned, view, tool, values, before = []) => async (ui) => {
+    await opened(ui, scanned, view);
+    for (const [t, v] of before) await runTool(ui, t, v);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const SHEET_IN = { input: QUERY_LAYER('pafta') };
+  // On the third ring round the hill top (pixel 626, 350), clicked two pixels short of it.
+  const ON_RING = { x: 487212.25, y: 4421124.75 };
+  // Inside the north-west parcel: the contours and the stream within 300 of the paper even with the scan's noise, the black lines not.
+  const IN_PARCEL = { x: 487262, y: 4421025 };
+  const CONTOURS = ['raster.toLines', { ...SHEET_IN, select: 'color', color: '#9C5C2C', tolerance: 60, spur: 5, simplify: 1 }];
+  const CUT = { start: { x: 487187.75, y: 4421049.75 }, end: { x: 487187.75, y: 4421123.75 }, first: 980, step: 5 };
+  return [
+    { id: 'vek-serit', open: async (ui) => (await opened(ui, false, VALLEY), await tiles(ui)), close },
+    {
+      id: 'vek-rasterlestir-cizim',
+      open: drawn(false, PARCELS, [['raster.rasterize', { input: QUERY_LAYER('parsel'), valueFrom: 'field', field: 'Parsel', cellSize: 2 }]], ['dem']),
+      close,
+    },
+    {
+      id: 'vek-alan-cizim',
+      open: drawn(
+        false,
+        VALLEY,
+        [
+          ['raster.reclassify', { input: QUERY_LAYER('dem'), table: '* 905 1; 905 920 2; 920 935 3; 935 950 4; 950 * 5', sample: 'u8' }],
+          ['raster.toPolygons', { input: QUERY_LAYER('islem-siniflar') }],
+        ],
+        ['dem'],
+      ),
+      close,
+    },
+    { id: 'vek-nokta-cizim', open: drawn(false, VALLEY, [['raster.toPoints', { input: QUERY_LAYER('dem'), mode: 'extrema', radius: 12 }]]), close },
+    { id: 'vek-yakala', open: windowOf(true, HILL, 'scan.captureLine', { ...SHEET_IN, at: ON_RING, z: 1000 }), close },
+    { id: 'vek-yakala-cizim', open: drawn(true, HILL, [['scan.captureLine', { ...SHEET_IN, at: ON_RING, z: 1000 }]]), close },
+    { id: 'vek-kapat-cizim', open: drawn(true, SHEET, [['scan.closeArea', { ...SHEET_IN, at: IN_PARCEL, tolerance: 300 }]]), close },
+    { id: 'vek-cizgi-cizim', open: drawn(true, HILL, [CONTOURS], ['pafta']), close },
+    { id: 'vek-kot', open: windowOf(true, HILL, 'scan.contourElevations', { curves: QUERY_LAYER('islem-cizgiler'), ...CUT }, [CONTOURS]), close },
+  ];
+}
+
+// Hidroloji (docs/adr/0235) over the shared valley's elevation model with a road's axis and two outlets
+// (fixtures/interaction/v1/hydrology.kcad, scripts/fixtures/hydrology_scene.py): the filled lakes' depth, the flow
+// accumulation, the wetness index, the stream network, the outlets' watersheds, the links' sub-basins and the basins of the
+// streams the road crosses. The desktop's are `tools_screens`' hid-* (apps/desktop/src/hydrology_scenes.rs), at the same
+// places with the same values.
+const HYDROLOGY_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/hydrology.kcad', import.meta.url), 'utf8');
+SCENES.hydrology = hydrologyScenes();
+
+function hydrologyScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const VALLEY = [X0, Y0 - 518.4, X0 + 768, Y0];
+  // The eastern streams and the road across them, the view's right side the model's east edge.
+  const EAST = [487400, 4420160, 487968, 4420490];
+  /** The valley with the road and the outlets open, the CBS ribbon's Raster on, the view on `b`. */
+  const opened = async (ui, b) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      rasterService().setFile('rasters/dem.tif', new File([Uint8Array.from(atob(${JSON.stringify(RASTER_FILES['dem.tif'])}), (c) => c.charCodeAt(0))], 'dem.tif'));
+      if (!(await k.files.load(${JSON.stringify(HYDROLOGY_SCENE)}, null))) throw new Error('hydrology.kcad did not load');
+      k.selection.clear();
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** Runs `tool` with `values` to its end and closes its window. */
+  const runTool = async (ui, tool, values) => {
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    await ui.escapeAll(2);
+  };
+  /** The runs in turn over the opened drawing. */
+  const drawn = (view, runs) => async (ui) => {
+    await opened(ui, view);
+    for (const [tool, values] of runs) await runTool(ui, tool, values);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  /** `tool`'s window with `values` over the opened drawing, after the runs `before`. */
+  const windowOf = (view, tool, values, before = []) => async (ui) => {
+    await opened(ui, view);
+    for (const [t, v] of before) await runTool(ui, t, v);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const DEM = { input: QUERY_LAYER('dem') };
+  const STREAMS = ['hydrology.streams', { ...DEM, threshold: 2000 }];
+  const ROUTE = { ...DEM, mode: 'route', threshold: 2000, routes: QUERY_LAYER('yol') };
+  return [
+    { id: 'hid-serit', open: async (ui) => (await opened(ui, VALLEY), await tiles(ui)), close },
+    { id: 'hid-doldur-cizim', open: drawn(VALLEY, [['hydrology.fill', { ...DEM, result: 'depth' }]]), close },
+    { id: 'hid-birikim-cizim', open: drawn(VALLEY, [['hydrology.flowAccumulation', DEM]]), close },
+    { id: 'hid-twi-cizim', open: drawn(VALLEY, [['hydrology.wetness', DEM]]), close },
+    { id: 'hid-dere', open: windowOf(VALLEY, ...STREAMS), close },
+    { id: 'hid-dere-cizim', open: drawn(VALLEY, [STREAMS]), close },
+    { id: 'hid-havza-cizim', open: drawn(VALLEY, [['hydrology.watershed', { ...DEM, points: QUERY_LAYER('cikis'), snap: 10 }], STREAMS]), close },
+    { id: 'hid-alt-havzalar-cizim', open: drawn(VALLEY, [['hydrology.basins', { ...DEM, mode: 'sub', threshold: 2000 }], STREAMS]), close },
+    { id: 'hid-guzergah', open: windowOf(EAST, 'hydrology.basins', ROUTE, [STREAMS]), close },
+    { id: 'hid-guzergah-cizim', open: drawn(EAST, [['hydrology.basins', ROUTE], STREAMS]), close },
+  ];
+}
+
+// Uzaklık ve maliyet (docs/adr/0236) over the shared valley's elevation model, a cost raster made from its slope with a
+// lake that cannot be crossed, five villages and the road along the valley's south (fixtures/interaction/v1/distance.kcad,
+// scripts/fixtures/distance_scene.py): the distance from the road, the villages' nearest one, the cost from Köy A, the
+// least cost paths climbing at most 30 % and the corridor to Köy B. The desktop's are `tools_screens`' uzk-*
+// (apps/desktop/src/distance_scenes.rs), at the same places with the same values.
+const DISTANCE_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/distance.kcad', import.meta.url), 'utf8');
+const DISTANCE_COST = readFileSync(new URL('../../../../fixtures/interaction/v1/distance/maliyet.tif', import.meta.url)).toString('base64');
+SCENES.distance = distanceScenes();
+
+function distanceScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const VALLEY = [X0, Y0 - 518.4, X0 + 768, Y0];
+  /** The valley with the villages, the road and the cost raster open, the CBS ribbon's Raster on, the view on it. */
+  const opened = async (ui) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const file = (b64, name) => new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], name);
+      rasterService().setFile('rasters/dem.tif', file(${JSON.stringify(RASTER_FILES['dem.tif'])}, 'dem.tif'));
+      rasterService().setFile('distance/maliyet.tif', file(${JSON.stringify(DISTANCE_COST)}, 'maliyet.tif'));
+      if (!(await k.files.load(${JSON.stringify(DISTANCE_SCENE)}, null))) throw new Error('distance.kcad did not load');
+      k.selection.clear();
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    const b = VALLEY;
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** Runs `tool` with `values` to its end and closes its window. */
+  const runTool = async (ui, tool, values) => {
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    await ui.escapeAll(2);
+  };
+  const drawn = (runs) => async (ui) => {
+    await opened(ui);
+    for (const [tool, values] of runs) await runTool(ui, tool, values);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const windowOf = (tool, values) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const L = QUERY_LAYER;
+  const FROM_ROAD = { sources: L('yol'), extent: 'raster', grid: L('maliyet') };
+  const PATHS = { input: L('maliyet'), sources: L('baslangic'), targets: L('varis'), useSurface: true, surface: L('dem'), surfaceLength: true, slope: 30 };
+  const TO_B = { input: L('maliyet'), sources: L('baslangic'), targets: L('ikinci') };
+  return [
+    { id: 'uzk-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'uzk-yuzey', open: windowOf('distance.euclidean', FROM_ROAD), close },
+    { id: 'uzk-yuzey-cizim', open: drawn([['distance.euclidean', FROM_ROAD]]), close },
+    { id: 'uzk-tahsis-cizim', open: drawn([['distance.euclidean', { sources: L('koyler'), result: 'allocation', extent: 'raster', grid: L('maliyet') }]]), close },
+    { id: 'uzk-maliyet-cizim', open: drawn([['distance.cost', { input: L('maliyet'), sources: L('baslangic') }]]), close },
+    { id: 'uzk-yol', open: windowOf('distance.path', PATHS), close },
+    { id: 'uzk-yol-cizim', open: drawn([['distance.path', PATHS]]), close },
+    // The path's layer first: the corridor's then goes right above the cost raster, under it.
+    { id: 'uzk-koridor-cizim', open: drawn([['distance.path', TO_B], ['distance.corridor', { ...TO_B, threshold: 'percent', percent: 5 }]]), close },
   ];
 }
 

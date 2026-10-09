@@ -30,6 +30,7 @@
     "rust:wasm:svg": "cargo build -p kentos-svg-wasm --target wasm32-unknown-unknown --profile ${KENTOS_WASM_PROFILE:-wasm} && wasm-bindgen --target web --out-dir apps/web/src/style/svg/pkg target/wasm32-unknown-unknown/${KENTOS_WASM_PROFILE:-wasm}/kentos_svg_wasm.wasm",
     "rust:wasm:sheet": "cargo build -p kentos-sheet-wasm --target wasm32-unknown-unknown --profile ${KENTOS_WASM_PROFILE:-wasm} && wasm-bindgen --target web --out-dir apps/web/src/product/sheet/pkg target/wasm32-unknown-unknown/${KENTOS_WASM_PROFILE:-wasm}/kentos_sheet_wasm.wasm",
     "rust:wasm:services": "cargo build -p kentos-services-wasm --target wasm32-unknown-unknown --profile ${KENTOS_WASM_PROFILE:-wasm} && wasm-bindgen --target web --out-dir apps/web/src/io/services/pkg target/wasm32-unknown-unknown/${KENTOS_WASM_PROFILE:-wasm}/kentos_services_wasm.wasm",
+    "rust:wasm:raster": "cargo build -p kentos-raster-wasm --target wasm32-unknown-unknown --profile ${KENTOS_WASM_PROFILE:-wasm} && wasm-bindgen --target web --out-dir apps/web/src/io/raster/pkg target/wasm32-unknown-unknown/${KENTOS_WASM_PROFILE:-wasm}/kentos_raster_wasm.wasm",
     "test:rust": "pnpm rust:test && pnpm wasm && pnpm -C apps/web exec vitest run src/wasm src/io",
     "py:test": "sh scripts/python/test.sh",
     "api": "cargo run -q -p kentos-api --bin kentosd -- serve",

@@ -101,5 +101,6 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::ops::topology_rules::calls::OPS,
     crate::survey::adjust::OPS,
     crate::ops::georef::OPS,
+    crate::ops::contour_elevations::OPS,
     crate::time::OPS,
 ];

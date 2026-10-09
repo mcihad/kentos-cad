@@ -22,10 +22,10 @@ import type { Workspace } from '../model/projectSettings';
  */
 export type RibbonSource =
   /**
-   * The titled blocks of a main menu, one panel each (optionally only the named ones); `omit` leaves out the processing
-   * categories (by id) a panel of the tab holds elsewhere.
+   * The titled blocks of a main menu, one panel each (optionally only the named ones, or all but those `except` names);
+   * `omit` leaves out the processing categories (by id) a panel of the tab holds elsewhere.
    */
-  | { readonly menu: string; readonly sections?: readonly string[]; readonly omit?: readonly string[] }
+  | { readonly menu: string; readonly sections?: readonly string[]; readonly except?: readonly string[]; readonly omit?: readonly string[] }
   /** A tool group from the catalog, one panel per tool section. */
   | { readonly tools: ToolGroup }
   /**
@@ -187,8 +187,13 @@ const EXPORTS = ['file.export.dxf', 'file.export.pdf', 'file.export.geojson', 'f
 const SHEET_LAYOUTS = ['sheet.new', 'sheet.fromTemplate'];
 const SELECTION_TAB: RibbonTabSpec = RIBBON_TABS.find((t) => t.contextual === 'selection')!;
 
-/** Raster katmanları (docs/adr/0204 §8): CAD's Ekle › Raster and CBS's Veri › Raster. */
+/** Raster katmanları (docs/adr/0204 §8): CAD's Ekle › Raster, CBS's Veri › Raster and its Raster tab (docs/adr/0231 §10). */
 const RASTERS = ['raster.add', 'raster.style', 'raster.georef'];
+/**
+ * İşlemler's categories of raster analysis (docs/adr/0231 §10): CBS's Raster tab rather than Analiz, which they would
+ * crowd past 1100 px; GIS-32 to GIS-36 add theirs here.
+ */
+const RASTER_ANALYSIS = ['Yüzey analizi', 'İnterpolasyon', 'Yoğunluk', 'Raster işlemleri', 'Raster istatistiği', 'Raster ve vektör', 'Taranmış harita', 'Hidroloji', 'Uzaklık ve maliyet'];
 /** Nokta bulutu (docs/adr/0207 §9), the desktop's for now: CAD's Ekle and CBS's Veri, İşlemler's tools under ▾. */
 const POINT_CLOUD_PANEL = { pick: 'Nokta bulutu', icon: 'pointCloudAdd', commands: POINT_CLOUDS, under: POINT_CLOUD_TOOLS } as const;
 
@@ -295,7 +300,8 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
  * coordinate system, measuring, parcels and styles; Veri with layers, imports and exports, coordinates, attributes and
  * blocks;
  * Düzenle with creating and modifying objects and the editing aids; Analiz with the processing tools, models, terrain
- * analysis and the command line; Ölçme with the survey computations and points; Çıktı with sheets, the legend and exports.
+ * analysis and the command line; Raster with the rasters and İşlemler's raster analysis; Ölçme with the survey
+ * computations and points; Çıktı with sheets, the legend and exports.
  */
 export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
   { id: 'file', label: 'Dosya', sources: [{ menu: 'file' }] },
@@ -375,11 +381,13 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     id: 'analysis',
     label: 'Analiz',
     sources: [
-      // Ağ analizi's İşlemler tools sit in the Ağ analizi panel (docs/adr/0209 §10).
-      { menu: 'processing', omit: ['network'] },
-      // The terrain's work in one panel: Aplikasyon and Kot noktası, contours and profiles, the volume and the slope
-      // (Arazi and Arazi analizi were two; docs/adr/0209 §10 made room for Ağ analizi at 1100 pixels).
-      { pick: 'Arazi', icon: 'contours', commands: ['tool.stakeout', 'tool.spot', 'map.contours', 'map.profile', 'analysis.volume', 'analysis.slope'] },
+      // Ağ analizi's İşlemler tools sit in the Ağ analizi panel (docs/adr/0209 §10), the raster analysis's in the Raster
+      // tab (docs/adr/0231 §10).
+      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network'] },
+      // The terrain's work in one panel: Aplikasyon and Kot noktası, profiles and the volume (Arazi and Arazi analizi were
+      // two; docs/adr/0209 §10 made room for Ağ analizi at 1100 pixels). The contours and the slope are Yüzey analizi's
+      // tools in the Raster tab (docs/adr/0231 §10).
+      { pick: 'Arazi', icon: 'contours', commands: ['tool.stakeout', 'tool.spot', 'map.profile', 'analysis.volume'] },
       // The data's checks together (docs/adr/0202 §8; Düzenle is full): Topoloji kuralları and Veri karşılaştır, one panel
       // since docs/adr/0209 §10 made room for Ağ analizi at 1100 pixels.
       { pick: 'Denetim', icon: 'topologyCheck', commands: ['topology.check', 'topology.rules', 'data.compare'] },
@@ -399,6 +407,13 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       },
       { menu: 'tools', sections: ['Komut'] },
     ],
+  },
+  {
+    // Raster (docs/adr/0231 §10), QGIS's Raster menu: the rasters, then İşlemler's raster analysis, a panel a category;
+    // Eşyükselti üret and Eğim analizi open two of Yüzey analizi's tools.
+    id: 'raster',
+    label: 'Raster',
+    sources: [{ pick: 'Raster', icon: 'rasterAdd', commands: RASTERS }, { menu: 'processing', sections: RASTER_ANALYSIS }],
   },
   {
     id: 'survey',
@@ -592,7 +607,7 @@ export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[]
       } else {
         const menu = menuById(src.menu);
         if (!menu || !filter.menu(menu.id)) continue;
-        const keep = (label: string) => !src.sections || src.sections.includes(label);
+        const keep = (label: string) => (!src.sections || src.sections.includes(label)) && !src.except?.includes(label);
         for (const block of expandBlocks(menuBlocks(menu.items, tools, filter), menu.label, inputs, tools, filter, src.omit)) {
           if (!keep(block.label)) continue;
           const d = panel(block.label);

@@ -2816,6 +2816,7 @@ dependencies = [
  "kentos-native-application",
  "kentos-pointcloud",
  "kentos-project",
+ "kentos-raster",
  "kentos-style-core",
  "serde",
  "serde_json",
@@ -2847,6 +2848,31 @@ dependencies = [
  "pyo3",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "kentos-raster"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-expression",
+ "kentos-formats",
+ "kentos-geometry-core",
+ "libm",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-raster-wasm"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-formats",
+ "kentos-geometry-core",
+ "kentos-raster",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]

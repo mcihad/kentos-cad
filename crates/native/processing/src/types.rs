@@ -199,9 +199,15 @@ pub enum ParamKind {
     Choice {
         options: Vec<EnumOption>,
     },
-    /// Where the tool writes: an existing layer, or a new one made when the tool writes to it.
+    /// Where the tool writes: an existing layer, or a new one made when the
+    /// tool writes to it. `above`: a features parameter; a new layer goes
+    /// right above the layer of its first object (a raster result over its
+    /// source, docs/adr/0231 §2); `below`: right below it (a surface under
+    /// its points, docs/adr/0232 §13); else last, drawn under the rest.
     Layer {
         new_layer_style: NewLayerStyle,
+        above: Option<String>,
+        below: Option<String>,
     },
     Point,
     /// An expression over each object (`of`: the features parameter it reads).
@@ -562,12 +568,15 @@ pub trait Feedback {
     }
 }
 
-/// A change to one object: its whole attribute table and, when it changes, its label.
+/// A change to one object: its whole attribute table and, when it changes,
+/// its label; or its vertices' elevations (Eğrilere kot ver, docs/adr/0234
+/// §9), each path's in `kentos_native_application::elevation::paths`' order.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Patch {
     pub id: Slot,
     pub attrs: Option<BTreeMap<String, String>>,
     pub label: Option<Option<String>>,
+    pub zs: Option<Vec<Vec<Option<f64>>>>,
 }
 
 /// The document edits a run asks for, applied by the runner in one transaction.
@@ -592,6 +601,10 @@ pub struct RunResult {
     /// The run refuses, and says why (a file without the key column):
     /// nothing changes and the run ends as an error with this message as it is.
     pub refused: Option<String>,
+    /// The layer a new output layer that goes above an input goes right
+    /// above, where the tool knows better than the input's first object (a
+    /// raster operation's first raster read, docs/adr/0233 §2).
+    pub above: Option<String>,
 }
 
 impl RunResult {

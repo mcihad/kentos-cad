@@ -1,0 +1,608 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: uzaklık ve maliyet",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 1000,
+  "y": 2000
+ },
+ "layers": [
+  {
+   "id": "kaynaklar",
+   "name": "Kaynaklar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "baslangic",
+   "name": "Başlangıç",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#2E7D32",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "varis",
+   "name": "Varış",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#1565C0",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "varis-iki",
+   "name": "Varış (iki)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#1565C0",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "ikinci",
+   "name": "İkinci uç",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#6A1B9A",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "engel-kaynak",
+   "name": "Engelin kaynağı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "engelde",
+   "name": "Engeldeki kaynak",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "nesneler",
+   "name": "Nesneler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#EF6C00",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "kaynak-raster",
+   "name": "Kaynak raster",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "izgara",
+   "name": "Izgara",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "maliyet",
+   "name": "Maliyet",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "engel",
+   "name": "Engelli maliyet",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yukseklik",
+   "name": "Yükseklik",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "sifir",
+   "name": "Sıfır maliyet",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "kaynaklar",
+ "entities": [
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 23,
+   "height": 17,
+   "bands": 1,
+   "sample": "f32",
+   "file": "kaynak-raster.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 1,
+   "layerId": "kaynak-raster",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    499990.0,
+    10.0,
+    0.0,
+    4420090.0,
+    0.0,
+    -6.0
+   ],
+   "width": 16,
+   "height": 17,
+   "bands": 1,
+   "sample": "f32",
+   "file": "izgara.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 2,
+   "layerId": "izgara",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 31,
+   "height": 23,
+   "bands": 1,
+   "sample": "f32",
+   "file": "maliyet.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 3,
+   "layerId": "maliyet",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 31,
+   "height": 23,
+   "bands": 1,
+   "sample": "f32",
+   "file": "engel.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 4,
+   "layerId": "engel",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 31,
+   "height": 23,
+   "bands": 1,
+   "sample": "f32",
+   "file": "yukseklik.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 5,
+   "layerId": "yukseklik",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 5,
+   "height": 4,
+   "bands": 1,
+   "sample": "f32",
+   "file": "sifir.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 6,
+   "layerId": "sifir",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500023.0,
+    "y": 4419954.0
+   },
+   "id": 7,
+   "layerId": "kaynaklar",
+   "attrs": {
+    "Ad": "Kaynaklar 1"
+   }
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 500252.0,
+     "y": 4419817.0
+    },
+    {
+     "x": 500287.0,
+     "y": 4419796.0
+    }
+   ],
+   "id": 8,
+   "layerId": "kaynaklar",
+   "attrs": {
+    "Ad": "Kaynaklar 2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500014.0,
+    "y": 4419884.0
+   },
+   "id": 9,
+   "layerId": "baslangic",
+   "attrs": {
+    "Ad": "Başlangıç 1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500296.0,
+    "y": 4419897.0
+   },
+   "id": 10,
+   "layerId": "varis",
+   "attrs": {
+    "Ad": "Varış 1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500203.0,
+    "y": 4419986.0
+   },
+   "id": 11,
+   "layerId": "varis",
+   "attrs": {
+    "Ad": "Varış 2"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500123.0,
+     "y": 4419808.0
+    },
+    {
+     "x": 500167.0,
+     "y": 4419807.0
+    },
+    {
+     "x": 500166.0,
+     "y": 4419782.0
+    },
+    {
+     "x": 500122.0,
+     "y": 4419783.0
+    }
+   ],
+   "id": 12,
+   "layerId": "varis",
+   "attrs": {
+    "Ad": "Varış 3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500405.0,
+    "y": 4419965.0
+   },
+   "id": 13,
+   "layerId": "varis",
+   "attrs": {
+    "Ad": "Varış 4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500296.0,
+    "y": 4419897.0
+   },
+   "id": 14,
+   "layerId": "varis-iki",
+   "attrs": {
+    "Ad": "Varış (iki) 1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500203.0,
+    "y": 4419986.0
+   },
+   "id": 15,
+   "layerId": "varis-iki",
+   "attrs": {
+    "Ad": "Varış (iki) 2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500296.0,
+    "y": 4419897.0
+   },
+   "id": 16,
+   "layerId": "ikinci",
+   "attrs": {
+    "Ad": "İkinci uç 1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500124.0,
+    "y": 4419984.0
+   },
+   "id": 17,
+   "layerId": "engel-kaynak",
+   "attrs": {
+    "Ad": "Engelin kaynağı 1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500195.0,
+    "y": 4419955.0
+   },
+   "id": 18,
+   "layerId": "engelde",
+   "attrs": {
+    "Ad": "Engeldeki kaynak 1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500013.0,
+    "y": 4420047.0
+   },
+   "id": 19,
+   "layerId": "nesneler",
+   "attrs": {
+    "Ad": "Nesneler 1"
+   }
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 500031.0,
+     "y": 4420009.0
+    },
+    {
+     "x": 500078.0,
+     "y": 4420061.0
+    }
+   ],
+   "id": 20,
+   "layerId": "nesneler",
+   "attrs": {
+    "Ad": "Nesneler 2"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500091.0,
+     "y": 4420003.0
+    },
+    {
+     "x": 500121.0,
+     "y": 4420004.0
+    },
+    {
+     "x": 500117.0,
+     "y": 4420033.0
+    }
+   ],
+   "id": 21,
+   "layerId": "nesneler",
+   "attrs": {
+    "Ad": "Nesneler 3"
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

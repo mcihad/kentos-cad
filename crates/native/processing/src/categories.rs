@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 10] = [
+pub const CATEGORIES: [Category; 19] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -88,5 +88,65 @@ pub const CATEGORIES: [Category; 10] = [
         "Nokta bulutu",
         "pointCloudAdd",
         "Seyreltme, zemin, sınıflama, kırpma, karolama, raster ve sınır",
+    ),
+    // docs/adr/0231: the DEM's surface.
+    category(
+        "surface",
+        "Yüzey analizi",
+        "hillshade",
+        "Eğim, bakı, kabartma, eğrilik, güneşlenme ve eş yükselti eğrileri",
+    ),
+    // docs/adr/0232: surfaces from points, densities.
+    category(
+        "interpolation",
+        "İnterpolasyon",
+        "idw",
+        "Noktalardan yüzey: IDW, doğal komşu, spline, kriging, TIN",
+    ),
+    category(
+        "density",
+        "Yoğunluk",
+        "kernelDensity",
+        "Noktaların ve çizgilerin yoğunluğu",
+    ),
+    // docs/adr/0233: map algebra, masks, mosaics, statistics.
+    category(
+        "rasterOps",
+        "Raster işlemleri",
+        "rasterCalculator",
+        "Hesaplayıcı, sınıflandırma, maskeyle kırpma, mozaik, yeniden örnekleme",
+    ),
+    category(
+        "rasterStats",
+        "Raster istatistiği",
+        "zonalStats",
+        "Bölgesel, komşuluk ve hücre istatistikleri, histogram",
+    ),
+    // docs/adr/0234: vectors burnt into cells, regions, lines and points out of them; scanned sheets digitized.
+    category(
+        "rasterVector",
+        "Raster ve vektör",
+        "rasterize",
+        "Rasterleştirme; rasterden alan, çizgi ve nokta",
+    ),
+    category(
+        "scannedMap",
+        "Taranmış harita",
+        "captureLine",
+        "Çizgi yakalama, alan kapatma, eğrilere kot verme",
+    ),
+    // docs/adr/0235: the water's way over a DEM.
+    category(
+        "hydrology",
+        "Hidroloji",
+        "streams",
+        "Çukur doldurma, akış yönü ve birikimi, havzalar, dere ağı, nemlilik indisi",
+    ),
+    // docs/adr/0236: how far, and how dear, every cell is from the sources.
+    category(
+        "distance",
+        "Uzaklık ve maliyet",
+        "costPath",
+        "Uzaklık yüzeyi, birikimli maliyet, en düşük maliyetli yol, maliyet koridoru",
     ),
 ];

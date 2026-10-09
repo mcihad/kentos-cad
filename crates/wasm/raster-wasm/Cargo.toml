@@ -1,0 +1,19 @@
+[package]
+name = "kentos-raster-wasm"
+description = "KentOS raster analysis for the browser (docs/adr/0231, 0232): the raster core's jobs behind wasm-bindgen, loaded in the analysis worker when a job starts"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-formats = { path = "../../shared/formats" }
+kentos-geometry-core = { path = "../../shared/geometry-core" }
+kentos-raster = { path = "../../shared/raster" }
+serde_json = { workspace = true }
+wasm-bindgen = { workspace = true }
+

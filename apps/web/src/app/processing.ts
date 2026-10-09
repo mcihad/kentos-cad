@@ -139,6 +139,9 @@ export function registerProcessingCommands(ctx: AppContext, hooks: ProcessingHoo
     { id: 'processing.toolbox', title: 'İşlem araç kutusu', category: cat, icon: 'processing', aliases: ['ISLEMLER', 'PROCESSING'], description: 'Toplu işlem araçlarını sağ panelde listeler.', run: () => hooks.show('tools') },
     // Harita menüsündeki eski komut, aynı işi yapan işlem aracını açar.
     { id: 'map.edgeLengths', title: 'Kenar ölçülerini yaz…', short: 'Kenar ölçüleri', category: 'Harita', icon: 'dimension', aliases: ['KENAR', 'KENAROLCU'], description: 'Parsel ve çizgilerin kenar uzunluklarını yazar (işlem aracı).', run: () => hooks.open('annotation.edgeLengths') },
+    // Harita's Eşyükselti üret and Analiz's Eğim analizi open the surface tools (docs/adr/0231 §10).
+    { id: 'map.contours', title: 'Eşyükselti üret…', short: 'Eşyükselti', category: 'Harita', icon: 'contours', description: 'Yükseklik rasterinden kotlu eş yükselti eğrileri çıkarır (işlem aracı).', run: () => hooks.open('surface.contours') },
+    { id: 'analysis.slope', title: 'Eğim analizi…', short: 'Eğim', category: 'Analiz', icon: 'slope', description: 'Yükseklik rasterinin eğimini derece ya da yüzde olarak yazar (işlem aracı).', run: () => hooks.open('surface.slope') },
     { id: 'processing.history', title: 'İşlem geçmişi', category: cat, icon: 'history', description: 'Bu oturumda çalıştırılan işlemler; yeniden çalıştırılabilir.', run: () => hooks.show('history') },
     {
       id: 'processing.newModel',

@@ -188,6 +188,8 @@ pub fn tool() -> Tool {
                         }),
                         ..NewLayerStyle::default()
                     },
+                    above: None,
+                    below: None,
                 },
             )
             .default_value(json!({ "newName": "Köşe noktaları" }))

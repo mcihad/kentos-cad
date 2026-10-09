@@ -8,7 +8,21 @@ import { resolveFeatures, summarizeFeatures, type FeatureHost, type InputSummary
 import { withObjects } from './geometry';
 import { clientExecutor, type Executor, type FeatureRef, type RunJob } from './job';
 import { fileTable, isVisible, validateValues, type ValidationIssue } from './parameters';
-import type { DefaultsContext, ExecutionTarget, Feedback, FeaturesValue, FileValue, LayerParam, LayerValue, NetworkValue, ProcessingTool, ProjectCrs, RunResult, TargetLayer } from './types';
+import type {
+  DefaultsContext,
+  ExecutionTarget,
+  Feedback,
+  FeaturesValue,
+  FileValue,
+  LayerParam,
+  LayerValue,
+  NetworkValue,
+  ProcessingTool,
+  ProjectCrs,
+  ProjectInfo,
+  RunResult,
+  TargetLayer,
+} from './types';
 import { checkWrites } from './writeCheck';
 
 /**
@@ -138,6 +152,13 @@ export class ProcessingRunner {
   }
 
   /** The project's coordinate system for a run (docs/adr/0201 §8): its own system and datum choices; null without one. */
+  /** The project's SRID and type (docs/adr/0232). */
+  projectInfo(): ProjectInfo {
+    const settings = this.host.doc.settings;
+    const w = settings.workspace.value;
+    return { srid: settings.crs.value.srid, type: w === 'cad' || w === 'gis' ? w : null };
+  }
+
   projectCrs(): ProjectCrs | null {
     const settings = crsSettings(this.host.doc.settings);
     const own = ownSystem(settings);
@@ -180,6 +201,8 @@ export class ProcessingRunner {
     const input = tool.parameters.find((p) => p.name === (def.of ?? ''));
     if (input?.type !== 'features' || !values[input.name]) return null;
     const set = resolveFeatures(values[input.name] as FeaturesValue, input, this.host);
+    // A raster's expression runs cell by cell in the raster core (docs/adr/0233 §3): no object to preview it on.
+    if (onlyRasters(set.entities)) return null;
     const layers = this.host.doc.layers;
     const layerName = (id: string) => layers.get(id)?.name ?? id;
     // Evaluated in the drawing's store the host keeps, else in a store of the previewed objects: the geometry values are read there.
@@ -200,6 +223,7 @@ export class ProcessingRunner {
     const input = tool.parameters.find((p) => p.name === (def.of ?? ''));
     if (input?.type !== 'features' || !values[input.name]) return undefined;
     const set = resolveFeatures(values[input.name] as FeaturesValue, input, this.host);
+    if (onlyRasters(set.entities)) return undefined;
     const layers = this.host.doc.layers;
     // The drawing's store the host keeps gives every geometry value ($genişlik, $merkez_y …); the measures are the fallback.
     return entityObjects(set.entities, (id) => layers.get(id)?.name ?? id, { geometry: this.host.geometry, measures: (list) => this.measures(list) });
@@ -271,7 +295,7 @@ export class ProcessingRunner {
     };
     // Resolve what depends on the host: features to ids, layers to a target (new layers are made only on apply).
     const jobValues: Record<string, unknown> = { ...values };
-    const newLayers = new Map<string, { name: string; def: LayerParam }>();
+    const newLayers = new Map<string, { name: string; def: LayerParam; above?: string; below?: string }>();
     /** What resolving the inputs left out, said once the run starts. */
     const notes: string[] = [];
     let size = 0;
@@ -307,6 +331,18 @@ export class ProcessingRunner {
         jobValues[p.name] = { network: n.network, cost: n.cost, def: this.host.doc.settings.networks.value.find((d) => d.id === n.network) } satisfies NetworkValue;
       }
     }
+    // A new layer named to go above or below a features input: the layer of that input's first object. An input not shown
+    // is not resolved, and names none (Uzaklık yüzeyi's objects or raster, docs/adr/0236 §2).
+    const layerOf = (param: string | undefined) => {
+      const p = param ? tool.parameters.find((d) => d.name === param) : undefined;
+      if (!p || !isVisible(p, values)) return undefined;
+      const first = (jobValues[param!] as FeatureRef | undefined)?.ids?.[0];
+      return first === undefined ? undefined : this.host.doc.get(first)?.layerId;
+    };
+    for (const plan of newLayers.values()) {
+      plan.above = layerOf(plan.def.above);
+      plan.below = layerOf(plan.def.below);
+    }
     const executor = this.executorFor(tool, choice, size);
     if (!executor) {
       const where = choice === 'auto' ? tool.targets.join(', ') : choice;
@@ -323,6 +359,7 @@ export class ProcessingRunner {
       layers: layers.leaves().map((l) => [l.id, l.name] as const),
       fields: layers.leaves().flatMap((l) => (l.fields?.length ? [[l.id, l.fields] as const] : [])),
       crs: this.projectCrs(),
+      project: this.projectInfo(),
     };
 
     this.canceled = false;
@@ -392,7 +429,7 @@ export class ProcessingRunner {
   }
 
   /** Applies the ChangeSet in one undo step; locked layers are left alone and counted. */
-  private apply(tool: ProcessingTool, result: RunResult, newLayers: Map<string, { name: string; def: LayerParam }>, log?: (level: 'info' | 'warn', message: string) => void): number[] {
+  private apply(tool: ProcessingTool, result: RunResult, newLayers: Map<string, { name: string; def: LayerParam; above?: string; below?: string }>, log?: (level: 'info' | 'warn', message: string) => void): number[] {
     const { doc } = this.host;
     const ch = result.changes;
     if (!ch) return [];
@@ -402,10 +439,25 @@ export class ProcessingRunner {
     // Removals, then updates, then additions, each as one change (the panels and the store hear it once).
     doc.transact(tool.label, () => {
       // Layers the run writes to but that do not exist yet: in the tool's step, so undo takes them too.
+      // New layers below one layer keep the run's order: each below the one before (Kriging's prediction right under
+      // its points, its error under that).
+      const under = new Map<string, number>();
       for (const e of ch.add ?? []) {
         const pending = newLayers.get(e.layerId);
         if (!pending || doc.layers.get(e.layerId)) continue;
-        doc.addLayer({ id: e.layerId, name: pending.name, style: pending.def.newLayerStyle }, null);
+        // Right above or below the layer its plan names (its group, its place), else last; the tool may name it.
+        const above = pending.above && result.above ? result.above : pending.above;
+        const over = above && doc.layers.get(above) ? above : null;
+        const below = !over && pending.below && doc.layers.get(pending.below) ? pending.below : null;
+        const anchor = over ?? below;
+        const group = anchor ? doc.layers.parentOf(anchor) : null;
+        let index = anchor ? (group ? group.children : doc.layers.tree).findIndex((n) => n.id === anchor) : -1;
+        if (below && index >= 0) {
+          const n = (under.get(below) ?? 0) + 1;
+          under.set(below, n);
+          index += n;
+        }
+        doc.addLayer({ id: e.layerId, name: pending.name, style: pending.def.newLayerStyle }, group?.id ?? null, index >= 0 ? { index } : {});
       }
       const gone: number[] = [];
       for (const id of ch.remove ?? []) {
@@ -436,4 +488,9 @@ export class ProcessingRunner {
     if (skipped) log?.('warn', `${skipped} değişiklik kilitli ya da olmayan katmanda olduğu için atlandı.`);
     return added;
   }
+}
+
+/** Rasters only: an expression on them names their bands (docs/adr/0233 §3), not attributes. */
+function onlyRasters(list: readonly Entity[]): boolean {
+  return list.length > 0 && list.every((e) => e.kind === 'raster');
 }

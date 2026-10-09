@@ -19,10 +19,10 @@
   },
   "summary": {
     "commands": {
-      "total": 465,
-      "implemented": 440,
+      "total": 508,
+      "implemented": 485,
       "partial": 0,
-      "pending": 25
+      "pending": 23
     },
     "tools": {
       "total": 126,
@@ -31,8 +31,8 @@
       "pending": 2
     },
     "processing": {
-      "total": 23,
-      "implemented": 23,
+      "total": 66,
+      "implemented": 66,
       "partial": 0,
       "pending": 0
     },
@@ -73,6 +73,8 @@
       "pending": 0
     },
     "commandsWithoutPlace": [
+      "analysis.slope",
+      "map.contours",
       "sheet.align.bottom",
       "sheet.align.center",
       "sheet.align.left",
@@ -100,14 +102,14 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 182,
-    "commandsOnDesktop": 393,
+    "commandsWithoutTests": 225,
+    "commandsOnDesktop": 438,
     "desktop": {
       "commands": {
-        "total": 465,
-        "implemented": 393,
+        "total": 508,
+        "implemented": 438,
         "partial": 0,
-        "pending": 12,
+        "pending": 10,
         "none": 58,
         "n/a": 2
       },
@@ -120,8 +122,8 @@
         "n/a": 0
       },
       "processing": {
-        "total": 23,
-        "implemented": 23,
+        "total": 66,
+        "implemented": 66,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -187,29 +189,24 @@
     {
       "id": "analysis.slope",
       "title": "Eğim analizi…",
+      "short": "Eğim",
       "category": "Analiz",
       "icon": "slope",
+      "description": "Yükseklik rasterinin eğimini derece ya da yüzde olarak yazar (işlem aracı).",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
-      "menus": [
-        "Analiz › Arazi analizi"
-      ],
-      "ribbon": [
-        "CBS › Analiz › Arazi"
-      ],
+      "menus": [],
+      "ribbon": [],
       "quickAccess": false,
-      "hiddenIn": [
-        "cad"
-      ],
+      "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "pending"
+        "web": "implemented",
+        "desktop": "implemented"
       },
-      "tests": [],
-      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
+      "tests": []
     },
     {
       "id": "analysis.volume",
@@ -4965,27 +4962,24 @@
     {
       "id": "map.contours",
       "title": "Eşyükselti üret…",
+      "short": "Eşyükselti",
       "category": "Harita",
       "icon": "contours",
+      "description": "Yükseklik rasterinden kotlu eş yükselti eğrileri çıkarır (işlem aracı).",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
-      "menus": [
-        "Harita › Arazi"
-      ],
-      "ribbon": [
-        "CBS › Analiz › Arazi"
-      ],
+      "menus": [],
+      "ribbon": [],
       "quickAccess": false,
       "hiddenIn": [],
       "uiSources": [],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "pending"
+        "web": "implemented",
+        "desktop": "implemented"
       },
-      "tests": [],
-      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
+      "tests": []
     },
     {
       "id": "map.edgeLengths",
@@ -5517,6 +5511,176 @@
       "tests": []
     },
     {
+      "id": "processing.run.density.kernel",
+      "title": "Çekirdek yoğunluğu…",
+      "category": "İşlemler",
+      "icon": "kernelDensity",
+      "description": "Noktaların yoğunluğu: her nokta yarıçap içindeki hücrelere çekirdeğiyle yayılır (ısı haritası).",
+      "aliases": [
+        "YOGUNLUK",
+        "CEKIRDEKYOGUNLUGU",
+        "ISIHARITASI",
+        "HEATMAP"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yoğunluk"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.density.line",
+      "title": "Çizgi yoğunluğu…",
+      "category": "İşlemler",
+      "icon": "lineDensity",
+      "description": "Çizgilerin yoğunluğu: her hücre yarıçap içindeki çizgi uzunluğunun dairenin alanına oranıdır.",
+      "aliases": [
+        "CIZGIYOGUNLUGU"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yoğunluk"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.distance.corridor",
+      "title": "Maliyet koridoru…",
+      "category": "İşlemler",
+      "icon": "costCorridor",
+      "description": "İki uçtan birikimli maliyetlerin toplamını yazar: en küçük toplam en ucuz yolun maliyetidir, koridor onun çevresidir.",
+      "aliases": [
+        "KORIDOR",
+        "CORRIDOR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Uzaklık ve maliyet"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.distance.cost",
+      "title": "Birikimli maliyet…",
+      "category": "İşlemler",
+      "icon": "costDistance",
+      "description": "Her hücreye en ucuz kaynaktan varmanın birikimli maliyetini ya da o kaynağın numarasını yazar.",
+      "aliases": [
+        "MALIYET",
+        "COSTDIST"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Uzaklık ve maliyet"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.distance.euclidean",
+      "title": "Uzaklık yüzeyi…",
+      "category": "İşlemler",
+      "icon": "distanceSurface",
+      "description": "Her hücreye en yakın kaynağın düz uzaklığını (m) ya da en yakın kaynağın numarasını yazar.",
+      "aliases": [
+        "UZAKLIK",
+        "PROXIMITY",
+        "EUCDIST"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Uzaklık ve maliyet"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.distance.path",
+      "title": "En düşük maliyetli yol…",
+      "category": "İşlemler",
+      "icon": "costPath",
+      "description": "Her varış nesnesinden en ucuz başlangıca giden en düşük maliyetli yolu çoklu çizgi olarak yazar.",
+      "aliases": [
+        "GUZERGAHBUL",
+        "COSTPATH"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Uzaklık ve maliyet"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "processing.run.geometry.buffer",
       "title": "Tampon…",
       "category": "İşlemler",
@@ -5814,6 +5978,372 @@
       ],
       "ribbon": [
         "CBS › Analiz › Geometri"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.hydrology.basins",
+      "title": "Havzalar…",
+      "category": "İşlemler",
+      "icon": "basins",
+      "description": "Bütün havzaları, dere kollarının alt havzalarını ya da bir güzergâhı kesen derelerin havzalarını alan olarak yazar.",
+      "aliases": [
+        "HAVZALAR",
+        "ALTHAVZA",
+        "BASINS"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Hidroloji"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.hydrology.fill",
+      "title": "Çukur doldur…",
+      "category": "İşlemler",
+      "icon": "fillSinks",
+      "description": "Yükseklik modelinin çukurlarını taşma yüksekliğine doldurur: her hücreden rasterin dışına alçalan bir yol kalır.",
+      "aliases": [
+        "CUKURDOLDUR",
+        "FILLSINKS"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Hidroloji"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.hydrology.flowAccumulation",
+      "title": "Akış birikimi…",
+      "category": "İşlemler",
+      "icon": "flowAccumulation",
+      "description": "Her hücreden geçen suyun geldiği alanı yazar: hücre sayısı, alan ya da özgül havza alanı.",
+      "aliases": [
+        "AKISBIRIKIMI",
+        "FLOWACC"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Hidroloji"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.hydrology.flowDirection",
+      "title": "Akış yönü…",
+      "category": "İşlemler",
+      "icon": "flowDirection",
+      "description": "Her hücrenin suyunu verdiği komşuyu D8 kodu olarak yazar.",
+      "aliases": [
+        "AKISYONU",
+        "FLOWDIR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Hidroloji"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.hydrology.pourPoint",
+      "title": "Döküm noktası…",
+      "category": "İşlemler",
+      "icon": "pourPoint",
+      "description": "Noktaları yakındaki en büyük akış birikimli hücreye taşır: havzanın çıkışı derenin üstüne gelir.",
+      "aliases": [
+        "DOKUMNOKTASI",
+        "SNAPPOUR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Hidroloji"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.hydrology.streams",
+      "title": "Dere ağı…",
+      "category": "İşlemler",
+      "icon": "streams",
+      "description": "Akış birikimi eşiği aşan hücrelerden dere ağını çoklu çizgi olarak yazar; her kolun Strahler ve Shreve sırasıyla.",
+      "aliases": [
+        "DEREAGI",
+        "STREAMORDER"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Hidroloji"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.hydrology.watershed",
+      "title": "Noktadan havza…",
+      "category": "İşlemler",
+      "icon": "watershed",
+      "description": "Her döküm noktasının havzasını alan olarak yazar: suyu o noktadan geçen bütün hücreler.",
+      "aliases": [
+        "HAVZABUL",
+        "NOKTAHAVZA",
+        "WATERSHED"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Hidroloji"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.hydrology.wetness",
+      "title": "Topografik nemlilik indisi…",
+      "category": "İşlemler",
+      "icon": "wetness",
+      "description": "Topografik nemlilik indisi TWI = ln(a / tan β): suyun toplandığı düz yerler yüksek, sırtlar düşük.",
+      "aliases": [
+        "NEMLILIK",
+        "TWI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Hidroloji"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.interpolation.idw",
+      "title": "Ters uzaklık (IDW)…",
+      "category": "İşlemler",
+      "icon": "idw",
+      "description": "Noktalardan yüzey: her hücre en yakın noktaların uzaklıklarının ters üssüyle ağırlıklı ortalamasıdır.",
+      "aliases": [
+        "IDW",
+        "TERSUZAKLIK",
+        "TERSMESAFE"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › İnterpolasyon"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.interpolation.kriging",
+      "title": "Kriging…",
+      "category": "İşlemler",
+      "icon": "kriging",
+      "description": "Noktalardan yüzey: sıradan kriging, variogram otomatik uydurulur ya da elle verilir; isteğe bağlı standart hata.",
+      "aliases": [
+        "KRIGING"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › İnterpolasyon"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.interpolation.naturalNeighbor",
+      "title": "Doğal komşu…",
+      "category": "İşlemler",
+      "icon": "naturalNeighbor",
+      "description": "Noktalardan yüzey: her hücre doğal komşularının, Voronoi hücrelerinden aldığı alanlarla ağırlıklı ortalamasıdır (Sibson).",
+      "aliases": [
+        "DOGALKOMSU",
+        "SIBSON"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › İnterpolasyon"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.interpolation.spline",
+      "title": "Spline…",
+      "category": "İşlemler",
+      "icon": "splineSurface",
+      "description": "Noktalardan geçen en az eğrilikli yüzey (ArcGIS'in Spline'ı): düzenlemeli ya da gerilimli.",
+      "aliases": [
+        "SPLINEYUZEY",
+        "SPLINEINTERPOLASYON"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › İnterpolasyon"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.interpolation.tin",
+      "title": "TIN'den raster…",
+      "category": "İşlemler",
+      "icon": "tinRaster",
+      "description": "Noktaların Delaunay üçgenlemesinden yüzey: her hücre içinde kaldığı üçgende doğrusal.",
+      "aliases": [
+        "TINRASTER",
+        "TINDENRASTER"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › İnterpolasyon"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6194,6 +6724,453 @@
       "tests": []
     },
     {
+      "id": "processing.run.raster.calculator",
+      "title": "Raster hesaplayıcı…",
+      "category": "İşlemler",
+      "icon": "rasterCalculator",
+      "description": "Rasterlerin hücrelerinden ifadeyle yeni bir raster yazar: aritmetik, koşul ve matematik işlevleri.",
+      "aliases": [
+        "RASTERHESAP",
+        "HARITACEBIRI",
+        "BANDARITMETIGI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster işlemleri"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.raster.cellStatistics",
+      "title": "Hücre istatistiği…",
+      "category": "İşlemler",
+      "icon": "cellStats",
+      "description": "Rasterlerin her hücredeki değerlerinin istatistiğini yeni bir rastere yazar: yılların ortalaması, en büyüğü, sayısı.",
+      "aliases": [
+        "HUCREISTATISTIK",
+        "CELLSTATS"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster istatistiği"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.raster.clipByMask",
+      "title": "Maskeyle kırp…",
+      "category": "İşlemler",
+      "icon": "clipRaster",
+      "description": "Rasterin maskenin içindeki hücrelerini tutar, dışarıdakileri değersiz yapar; isterseniz maskenin kutusuna kırpar.",
+      "aliases": [
+        "MASKEKIRP",
+        "RASTERKIRP"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster işlemleri"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.raster.focalStatistics",
+      "title": "Komşuluk istatistiği…",
+      "category": "İşlemler",
+      "icon": "focalStats",
+      "description": "Her hücreye çevresindeki pencerenin istatistiğini yazar: ortalama, toplam, en küçük, en büyük, aralık, standart sapma, ortanca, çoğunluk, azınlık, çeşit.",
+      "aliases": [
+        "KOMSULUK",
+        "ODAKISTATISTIK",
+        "FOCAL"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster istatistiği"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.raster.histogram",
+      "title": "Histogram…",
+      "category": "İşlemler",
+      "icon": "histogram",
+      "description": "Bandın değerlerini eşit aralıklara bölüp her aralıktaki hücre sayısını tablo olarak verir.",
+      "aliases": [
+        "HISTOGRAM"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster istatistiği"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.raster.mosaic",
+      "title": "Mozaik…",
+      "category": "İşlemler",
+      "icon": "mosaic",
+      "description": "Rasterleri tek rasterde birleştirir; çakışan hücrelerde üstteki, alttaki, ortalama, en küçük ya da en büyük değer.",
+      "aliases": [
+        "MOZAIK"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster işlemleri"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.raster.rasterize",
+      "title": "Rasterleştir…",
+      "category": "İşlemler",
+      "icon": "rasterize",
+      "description": "Nesneleri rasterin hücrelerine yakar: alanlar merkezlerini, çizgiler geçtikleri hücreleri, noktalar içinde oldukları hücreyi.",
+      "aliases": [
+        "RASTERIZE",
+        "VEKTORRASTER"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster ve vektör"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.raster.reclassify",
+      "title": "Yeniden sınıflandır…",
+      "category": "İşlemler",
+      "icon": "reclassify",
+      "description": "Rasterin değerlerini bir tabloyla yeni değerlere çevirir: aralıklar, tek değerler, değersiz hücreler.",
+      "aliases": [
+        "YENIDENSINIFLA",
+        "RECLASS"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster işlemleri"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.raster.resample",
+      "title": "Yeniden örnekle…",
+      "category": "İşlemler",
+      "icon": "resample",
+      "description": "Rasteri yeni bir hücre boyuyla yeniden örnekler: en yakın, çift doğrusal, kübik ya da örtüşen hücrelerin ortalaması, çoğunluğu, en küçüğü, en büyüğü.",
+      "aliases": [
+        "YENIDENORNEKLE",
+        "RESAMPLE"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster işlemleri"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.raster.toLines",
+      "title": "Rasterden çizgi…",
+      "category": "İşlemler",
+      "icon": "toLines",
+      "description": "Rasterdeki ince çizgileri inceltip çoklu çizgi yapar: sıfır dışındaki hücreler, bir değer aralığı ya da bir renk.",
+      "aliases": [
+        "RASTERDENCIZGI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster ve vektör"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.raster.toPoints",
+      "title": "Rasterden nokta…",
+      "category": "İşlemler",
+      "icon": "toPoints",
+      "description": "Hücre merkezlerinde nokta yazar: adım adım, her hücrede ya da yalnız tepe ve çukurlarda; kotu hücrenin değeri.",
+      "aliases": [
+        "RASTERDENNOKTA",
+        "YUKSEKLIKNOKTALARI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster ve vektör"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.raster.toPolygons",
+      "title": "Rasterden alan…",
+      "category": "İşlemler",
+      "icon": "toPolygons",
+      "description": "Rasterin değeri eşit komşu hücrelerini alan yapar; her alanın Değer özniteliği bölgenin değeridir.",
+      "aliases": [
+        "RASTERDENALAN",
+        "RASTERALAN"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster ve vektör"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.raster.zonalStatistics",
+      "title": "Bölgesel istatistik…",
+      "category": "İşlemler",
+      "icon": "zonalStats",
+      "description": "Her bölgenin (kapalı alanın) içindeki hücrelerin istatistiğini alanına yazar ve tablo olarak verir.",
+      "aliases": [
+        "BOLGESELISTATISTIK",
+        "ZONAL"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Raster istatistiği"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.scan.captureLine",
+      "title": "Çizgi yakala…",
+      "category": "İşlemler",
+      "icon": "captureLine",
+      "description": "Taranmış paftada tıklanan çizgiyi (ve ona bağlı aynı renkteki çizgileri) yakalayıp çoklu çizgi yapar; isterseniz kotuyla.",
+      "aliases": [
+        "RASTERDENHATYAKALA",
+        "HATYAKALA",
+        "RASTERDENEGRIYAKALA"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Taranmış harita"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.scan.closeArea",
+      "title": "Alan kapat…",
+      "category": "İşlemler",
+      "icon": "closeArea",
+      "description": "Taranmış paftada tıklanan noktanın çevresindeki çizgilerin kapattığı alanı bulup alan yapar.",
+      "aliases": [
+        "RASTERDENALANKAPAT",
+        "PAFTAALANKAPAT"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Taranmış harita"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.scan.contourElevations",
+      "title": "Eğrilere kot ver…",
+      "category": "İşlemler",
+      "icon": "contourElevations",
+      "description": "Kesen bir çizginin geçtiği eğrilere sırayla kot verir: ilk kot, sonra her eğride bir aralık.",
+      "aliases": [
+        "EGRILEREKOTVER"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Taranmış harita"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "processing.run.selection.byExpression",
       "title": "İfadeyle seç…",
       "category": "İşlemler",
@@ -6284,6 +7261,231 @@
       "tests": []
     },
     {
+      "id": "processing.run.surface.aspect",
+      "title": "Bakı…",
+      "category": "İşlemler",
+      "icon": "aspect",
+      "description": "Her hücrenin baktığı yönü, en dik inişin kuzeyden saat yönündeki açısı olarak yazar; düzlük −1.",
+      "aliases": [
+        "BAKI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.colorRelief",
+      "title": "Renkli kabartma…",
+      "category": "İşlemler",
+      "icon": "colorRelief",
+      "description": "Yükseklikleri bir rampayla ya da renk tablosuyla renklendirip RGBA raster yazar.",
+      "aliases": [
+        "RENKLIKABARTMA",
+        "HIPSOMETRI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.contours",
+      "title": "Eş yükselti eğrileri…",
+      "category": "İşlemler",
+      "icon": "contours",
+      "description": "Yükseklik rasterinden kotlu eş yükselti eğrileri (ana ve ara) çıkarır.",
+      "aliases": [
+        "ESYUKSELTI",
+        "KONTUR",
+        "EGRIURET"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.curvature",
+      "title": "Eğrilik…",
+      "category": "İşlemler",
+      "icon": "curvature",
+      "description": "Yüzeyin toplam, profil ya da plan eğriliğini (ArcGIS'teki gibi 1/100 m⁻¹) yazar.",
+      "aliases": [
+        "EGRILIK",
+        "EGRISELLIK"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.hillshade",
+      "title": "Gölgeli kabartma…",
+      "category": "İşlemler",
+      "icon": "hillshade",
+      "description": "Arazinin verilen yönden ışıklandırılmış gri görüntüsünü yazar (1–255, boş hücre 0).",
+      "aliases": [
+        "GOLGEURET",
+        "KABARTMAURET"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.insolation",
+      "title": "Güneşlenme…",
+      "category": "İşlemler",
+      "icon": "insolation",
+      "description": "Dönemde eğimli yüzeye gelen doğrudan güneş enerjisini (açık gök, kWh/m²) yazar.",
+      "aliases": [
+        "GUNESLENME",
+        "GUNESRADYASYONU"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.ruggedness",
+      "title": "Pürüzlülük…",
+      "category": "İşlemler",
+      "icon": "ruggedness",
+      "description": "Arazinin pürüzlülüğünü TRI (Riley ya da Wilson), TPI ya da engebe olarak yazar.",
+      "aliases": [
+        "PURUZLULUK",
+        "TRI",
+        "TPI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.surface.slope",
+      "title": "Eğim…",
+      "category": "İşlemler",
+      "icon": "slope",
+      "description": "Yükseklik rasterinin her hücresinin eğimini derece ya da yüzde olarak yazar.",
+      "aliases": [
+        "EGIMANALIZI",
+        "EGIMHARITASI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Yüzey analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "processing.toolbox",
       "title": "İşlem araç kutusu",
       "category": "İşlemler",
@@ -6333,7 +7535,8 @@
       "menus": [],
       "ribbon": [
         "CAD › Ekle › Raster",
-        "CBS › Veri › Raster"
+        "CBS › Veri › Raster",
+        "CBS › Raster › Raster"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6364,7 +7567,8 @@
       "menus": [],
       "ribbon": [
         "CAD › Ekle › Raster",
-        "CBS › Veri › Raster"
+        "CBS › Veri › Raster",
+        "CBS › Raster › Raster"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6396,7 +7600,8 @@
       "menus": [],
       "ribbon": [
         "CAD › Ekle › Raster",
-        "CBS › Veri › Raster"
+        "CBS › Veri › Raster",
+        "CBS › Raster › Raster"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -18584,6 +19789,637 @@
       ]
     },
     {
+      "id": "density.kernel",
+      "label": "Çekirdek yoğunluğu",
+      "category": "Yoğunluk",
+      "description": "Noktaların yoğunluğu: her nokta yarıçap içindeki hücrelere çekirdeğiyle yayılır (ısı haritası).",
+      "aliases": [
+        "YOGUNLUK",
+        "CEKIRDEKYOGUNLUGU",
+        "ISIHARITASI",
+        "HEATMAP"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Noktalar",
+          "optional": false
+        },
+        {
+          "name": "weightField",
+          "type": "field",
+          "label": "Ağırlık alanı",
+          "optional": true
+        },
+        {
+          "name": "radius",
+          "type": "number",
+          "label": "Yarıçap",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "kernel",
+          "type": "enum",
+          "label": "Çekirdek",
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": "enum",
+          "label": "Birim",
+          "optional": false
+        },
+        {
+          "name": "cellSize",
+          "type": "number",
+          "label": "Hücre boyu",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "extent",
+          "type": "enum",
+          "label": "Kapsam",
+          "optional": false
+        },
+        {
+          "name": "grid",
+          "type": "features",
+          "label": "Izgara rasteri",
+          "optional": true
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.density.kernel",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "density.line",
+      "label": "Çizgi yoğunluğu",
+      "category": "Yoğunluk",
+      "description": "Çizgilerin yoğunluğu: her hücre yarıçap içindeki çizgi uzunluğunun dairenin alanına oranıdır.",
+      "aliases": [
+        "CIZGIYOGUNLUGU"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Çizgiler",
+          "optional": false
+        },
+        {
+          "name": "weightField",
+          "type": "field",
+          "label": "Ağırlık alanı",
+          "optional": true
+        },
+        {
+          "name": "radius",
+          "type": "number",
+          "label": "Yarıçap",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "unit",
+          "type": "enum",
+          "label": "Birim",
+          "optional": false
+        },
+        {
+          "name": "cellSize",
+          "type": "number",
+          "label": "Hücre boyu",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "extent",
+          "type": "enum",
+          "label": "Kapsam",
+          "optional": false
+        },
+        {
+          "name": "grid",
+          "type": "features",
+          "label": "Izgara rasteri",
+          "optional": true
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.density.line",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "distance.corridor",
+      "label": "Maliyet koridoru",
+      "category": "Uzaklık ve maliyet",
+      "description": "İki uçtan birikimli maliyetlerin toplamını yazar: en küçük toplam en ucuz yolun maliyetidir, koridor onun çevresidir.",
+      "aliases": [
+        "KORIDOR",
+        "CORRIDOR"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Maliyet rasteri",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "sources",
+          "type": "features",
+          "label": "Birinci uçlar",
+          "optional": false
+        },
+        {
+          "name": "targets",
+          "type": "features",
+          "label": "İkinci uçlar",
+          "optional": false
+        },
+        {
+          "name": "neighbours",
+          "type": "enum",
+          "label": "Komşuluk",
+          "optional": false
+        },
+        {
+          "name": "useSurface",
+          "type": "boolean",
+          "label": "Yükseklik modeliyle",
+          "optional": false
+        },
+        {
+          "name": "surface",
+          "type": "features",
+          "label": "Yükseklik modeli",
+          "optional": true
+        },
+        {
+          "name": "surfaceLength",
+          "type": "boolean",
+          "label": "Yüzey uzunluğu",
+          "optional": false
+        },
+        {
+          "name": "slope",
+          "type": "number",
+          "label": "En büyük boyuna eğim",
+          "optional": false
+        },
+        {
+          "name": "threshold",
+          "type": "enum",
+          "label": "Eşik",
+          "optional": false
+        },
+        {
+          "name": "percent",
+          "type": "number",
+          "label": "Yüzde",
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "label": "Eşik değeri",
+          "optional": false
+        },
+        {
+          "name": "sample",
+          "type": "enum",
+          "label": "Sonuç türü",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.distance.corridor",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "distance.cost",
+      "label": "Birikimli maliyet",
+      "category": "Uzaklık ve maliyet",
+      "description": "Her hücreye en ucuz kaynaktan varmanın birikimli maliyetini ya da o kaynağın numarasını yazar.",
+      "aliases": [
+        "MALIYET",
+        "COSTDIST"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Maliyet rasteri",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "sources",
+          "type": "features",
+          "label": "Kaynaklar",
+          "optional": false
+        },
+        {
+          "name": "neighbours",
+          "type": "enum",
+          "label": "Komşuluk",
+          "optional": false
+        },
+        {
+          "name": "useSurface",
+          "type": "boolean",
+          "label": "Yükseklik modeliyle",
+          "optional": false
+        },
+        {
+          "name": "surface",
+          "type": "features",
+          "label": "Yükseklik modeli",
+          "optional": true
+        },
+        {
+          "name": "surfaceLength",
+          "type": "boolean",
+          "label": "Yüzey uzunluğu",
+          "optional": false
+        },
+        {
+          "name": "slope",
+          "type": "number",
+          "label": "En büyük boyuna eğim",
+          "optional": false
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "label": "En büyük maliyet",
+          "optional": false
+        },
+        {
+          "name": "result",
+          "type": "enum",
+          "label": "Sonuç",
+          "optional": false
+        },
+        {
+          "name": "sample",
+          "type": "enum",
+          "label": "Sonuç türü",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.distance.cost",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "distance.euclidean",
+      "label": "Uzaklık yüzeyi",
+      "category": "Uzaklık ve maliyet",
+      "description": "Her hücreye en yakın kaynağın düz uzaklığını (m) ya da en yakın kaynağın numarasını yazar.",
+      "aliases": [
+        "UZAKLIK",
+        "PROXIMITY",
+        "EUCDIST"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "from",
+          "type": "enum",
+          "label": "Kaynak",
+          "optional": false
+        },
+        {
+          "name": "sources",
+          "type": "features",
+          "label": "Kaynaklar",
+          "optional": false
+        },
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Kaynak raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "label": "En büyük uzaklık",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "result",
+          "type": "enum",
+          "label": "Sonuç",
+          "optional": false
+        },
+        {
+          "name": "margin",
+          "type": "number",
+          "label": "Kenar payı",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "cellSize",
+          "type": "number",
+          "label": "Hücre boyu",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "extent",
+          "type": "enum",
+          "label": "Kapsam",
+          "optional": false
+        },
+        {
+          "name": "grid",
+          "type": "features",
+          "label": "Izgara rasteri",
+          "optional": true
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.distance.euclidean",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "distance.path",
+      "label": "En düşük maliyetli yol",
+      "category": "Uzaklık ve maliyet",
+      "description": "Her varış nesnesinden en ucuz başlangıca giden en düşük maliyetli yolu çoklu çizgi olarak yazar.",
+      "aliases": [
+        "GUZERGAHBUL",
+        "COSTPATH"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Maliyet rasteri",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "sources",
+          "type": "features",
+          "label": "Başlangıç",
+          "optional": false
+        },
+        {
+          "name": "targets",
+          "type": "features",
+          "label": "Varış",
+          "optional": false
+        },
+        {
+          "name": "neighbours",
+          "type": "enum",
+          "label": "Komşuluk",
+          "optional": false
+        },
+        {
+          "name": "useSurface",
+          "type": "boolean",
+          "label": "Yükseklik modeliyle",
+          "optional": false
+        },
+        {
+          "name": "surface",
+          "type": "features",
+          "label": "Yükseklik modeli",
+          "optional": true
+        },
+        {
+          "name": "surfaceLength",
+          "type": "boolean",
+          "label": "Yüzey uzunluğu",
+          "optional": false
+        },
+        {
+          "name": "slope",
+          "type": "number",
+          "label": "En büyük boyuna eğim",
+          "optional": false
+        },
+        {
+          "name": "simplify",
+          "type": "number",
+          "label": "Sadeleştirme",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.distance.path",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "geometry.buffer",
       "label": "Tampon",
       "category": "Geometri",
@@ -19208,6 +21044,1141 @@
       "tests": []
     },
     {
+      "id": "hydrology.basins",
+      "label": "Havzalar",
+      "category": "Hidroloji",
+      "description": "Bütün havzaları, dere kollarının alt havzalarını ya da bir güzergâhı kesen derelerin havzalarını alan olarak yazar.",
+      "aliases": [
+        "HAVZALAR",
+        "ALTHAVZA",
+        "BASINS"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Yükseklik modeli",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "fill",
+          "type": "boolean",
+          "label": "Çukurları doldur",
+          "optional": false
+        },
+        {
+          "name": "mode",
+          "type": "enum",
+          "label": "Biçim",
+          "optional": false
+        },
+        {
+          "name": "threshold",
+          "type": "number",
+          "label": "Eşik alanı",
+          "optional": false,
+          "unit": "m²"
+        },
+        {
+          "name": "routes",
+          "type": "features",
+          "label": "Güzergâh",
+          "optional": true
+        },
+        {
+          "name": "least",
+          "type": "number",
+          "label": "En küçük alan",
+          "optional": false,
+          "unit": "m²"
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.hydrology.basins",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "hydrology.fill",
+      "label": "Çukur doldur",
+      "category": "Hidroloji",
+      "description": "Yükseklik modelinin çukurlarını taşma yüksekliğine doldurur: her hücreden rasterin dışına alçalan bir yol kalır.",
+      "aliases": [
+        "CUKURDOLDUR",
+        "FILLSINKS"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Yükseklik modeli",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "slope",
+          "type": "number",
+          "label": "En küçük eğim",
+          "optional": false
+        },
+        {
+          "name": "result",
+          "type": "enum",
+          "label": "Sonuç",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.hydrology.fill",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "hydrology.flowAccumulation",
+      "label": "Akış birikimi",
+      "category": "Hidroloji",
+      "description": "Her hücreden geçen suyun geldiği alanı yazar: hücre sayısı, alan ya da özgül havza alanı.",
+      "aliases": [
+        "AKISBIRIKIMI",
+        "FLOWACC"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Yükseklik modeli",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "fill",
+          "type": "boolean",
+          "label": "Çukurları doldur",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "enum",
+          "label": "Yöntem",
+          "optional": false
+        },
+        {
+          "name": "exponent",
+          "type": "number",
+          "label": "Çoklu yönün üssü",
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": "enum",
+          "label": "Birim",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.hydrology.flowAccumulation",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "hydrology.flowDirection",
+      "label": "Akış yönü",
+      "category": "Hidroloji",
+      "description": "Her hücrenin suyunu verdiği komşuyu D8 kodu olarak yazar.",
+      "aliases": [
+        "AKISYONU",
+        "FLOWDIR"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Yükseklik modeli",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "fill",
+          "type": "boolean",
+          "label": "Çukurları doldur",
+          "optional": false
+        },
+        {
+          "name": "coding",
+          "type": "enum",
+          "label": "Kodlama",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.hydrology.flowDirection",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "hydrology.pourPoint",
+      "label": "Döküm noktası",
+      "category": "Hidroloji",
+      "description": "Noktaları yakındaki en büyük akış birikimli hücreye taşır: havzanın çıkışı derenin üstüne gelir.",
+      "aliases": [
+        "DOKUMNOKTASI",
+        "SNAPPOUR"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Yükseklik modeli",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "points",
+          "type": "features",
+          "label": "Noktalar",
+          "optional": false
+        },
+        {
+          "name": "fill",
+          "type": "boolean",
+          "label": "Çukurları doldur",
+          "optional": false
+        },
+        {
+          "name": "snap",
+          "type": "number",
+          "label": "Yaklaştırma uzaklığı",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.hydrology.pourPoint",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "hydrology.streams",
+      "label": "Dere ağı",
+      "category": "Hidroloji",
+      "description": "Akış birikimi eşiği aşan hücrelerden dere ağını çoklu çizgi olarak yazar; her kolun Strahler ve Shreve sırasıyla.",
+      "aliases": [
+        "DEREAGI",
+        "STREAMORDER"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Yükseklik modeli",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "fill",
+          "type": "boolean",
+          "label": "Çukurları doldur",
+          "optional": false
+        },
+        {
+          "name": "threshold",
+          "type": "number",
+          "label": "Eşik alanı",
+          "optional": false,
+          "unit": "m²"
+        },
+        {
+          "name": "simplify",
+          "type": "number",
+          "label": "Sadeleştirme",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.hydrology.streams",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "hydrology.watershed",
+      "label": "Noktadan havza",
+      "category": "Hidroloji",
+      "description": "Her döküm noktasının havzasını alan olarak yazar: suyu o noktadan geçen bütün hücreler.",
+      "aliases": [
+        "HAVZABUL",
+        "NOKTAHAVZA",
+        "WATERSHED"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Yükseklik modeli",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "points",
+          "type": "features",
+          "label": "Noktalar",
+          "optional": false
+        },
+        {
+          "name": "fill",
+          "type": "boolean",
+          "label": "Çukurları doldur",
+          "optional": false
+        },
+        {
+          "name": "snap",
+          "type": "number",
+          "label": "Yaklaştırma uzaklığı",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.hydrology.watershed",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "hydrology.wetness",
+      "label": "Topografik nemlilik indisi",
+      "category": "Hidroloji",
+      "description": "Topografik nemlilik indisi TWI = ln(a / tan β): suyun toplandığı düz yerler yüksek, sırtlar düşük.",
+      "aliases": [
+        "NEMLILIK",
+        "TWI"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Yükseklik modeli",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "fill",
+          "type": "boolean",
+          "label": "Çukurları doldur",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "enum",
+          "label": "Yöntem",
+          "optional": false
+        },
+        {
+          "name": "exponent",
+          "type": "number",
+          "label": "Çoklu yönün üssü",
+          "optional": false
+        },
+        {
+          "name": "slope",
+          "type": "number",
+          "label": "En küçük eğim",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.hydrology.wetness",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "interpolation.idw",
+      "label": "Ters uzaklık (IDW)",
+      "category": "İnterpolasyon",
+      "description": "Noktalardan yüzey: her hücre en yakın noktaların uzaklıklarının ters üssüyle ağırlıklı ortalamasıdır.",
+      "aliases": [
+        "IDW",
+        "TERSUZAKLIK",
+        "TERSMESAFE"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Noktalar",
+          "optional": false
+        },
+        {
+          "name": "field",
+          "type": "field",
+          "label": "Değer alanı",
+          "optional": true
+        },
+        {
+          "name": "power",
+          "type": "number",
+          "label": "Üs",
+          "optional": false
+        },
+        {
+          "name": "points",
+          "type": "number",
+          "label": "Nokta sayısı",
+          "optional": false
+        },
+        {
+          "name": "radius",
+          "type": "number",
+          "label": "Arama yarıçapı",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "minPoints",
+          "type": "number",
+          "label": "En az nokta",
+          "optional": false
+        },
+        {
+          "name": "cellSize",
+          "type": "number",
+          "label": "Hücre boyu",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "extent",
+          "type": "enum",
+          "label": "Kapsam",
+          "optional": false
+        },
+        {
+          "name": "grid",
+          "type": "features",
+          "label": "Izgara rasteri",
+          "optional": true
+        },
+        {
+          "name": "cross",
+          "type": "boolean",
+          "label": "Çapraz doğrulama",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.interpolation.idw",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "interpolation.kriging",
+      "label": "Kriging",
+      "category": "İnterpolasyon",
+      "description": "Noktalardan yüzey: sıradan kriging, variogram otomatik uydurulur ya da elle verilir; isteğe bağlı standart hata.",
+      "aliases": [
+        "KRIGING"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Noktalar",
+          "optional": false
+        },
+        {
+          "name": "field",
+          "type": "field",
+          "label": "Değer alanı",
+          "optional": true
+        },
+        {
+          "name": "model",
+          "type": "enum",
+          "label": "Model",
+          "optional": false
+        },
+        {
+          "name": "variogram",
+          "type": "enum",
+          "label": "Variogram",
+          "optional": false
+        },
+        {
+          "name": "lags",
+          "type": "number",
+          "label": "Aralık sayısı",
+          "optional": false
+        },
+        {
+          "name": "nugget",
+          "type": "number",
+          "label": "Külçe",
+          "optional": false
+        },
+        {
+          "name": "sill",
+          "type": "number",
+          "label": "Kısmi eşik",
+          "optional": false
+        },
+        {
+          "name": "range",
+          "type": "number",
+          "label": "Erim",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "points",
+          "type": "number",
+          "label": "Nokta sayısı",
+          "optional": false
+        },
+        {
+          "name": "radius",
+          "type": "number",
+          "label": "Arama yarıçapı",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "errorSurface",
+          "type": "boolean",
+          "label": "Hata yüzeyi",
+          "optional": false
+        },
+        {
+          "name": "cellSize",
+          "type": "number",
+          "label": "Hücre boyu",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "extent",
+          "type": "enum",
+          "label": "Kapsam",
+          "optional": false
+        },
+        {
+          "name": "grid",
+          "type": "features",
+          "label": "Izgara rasteri",
+          "optional": true
+        },
+        {
+          "name": "cross",
+          "type": "boolean",
+          "label": "Çapraz doğrulama",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        },
+        {
+          "name": "errorLayer",
+          "type": "layer",
+          "label": "Hata katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.interpolation.kriging",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "interpolation.naturalNeighbor",
+      "label": "Doğal komşu",
+      "category": "İnterpolasyon",
+      "description": "Noktalardan yüzey: her hücre doğal komşularının, Voronoi hücrelerinden aldığı alanlarla ağırlıklı ortalamasıdır (Sibson).",
+      "aliases": [
+        "DOGALKOMSU",
+        "SIBSON"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Noktalar",
+          "optional": false
+        },
+        {
+          "name": "field",
+          "type": "field",
+          "label": "Değer alanı",
+          "optional": true
+        },
+        {
+          "name": "cellSize",
+          "type": "number",
+          "label": "Hücre boyu",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "extent",
+          "type": "enum",
+          "label": "Kapsam",
+          "optional": false
+        },
+        {
+          "name": "grid",
+          "type": "features",
+          "label": "Izgara rasteri",
+          "optional": true
+        },
+        {
+          "name": "cross",
+          "type": "boolean",
+          "label": "Çapraz doğrulama",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.interpolation.naturalNeighbor",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "interpolation.spline",
+      "label": "Spline",
+      "category": "İnterpolasyon",
+      "description": "Noktalardan geçen en az eğrilikli yüzey (ArcGIS'in Spline'ı): düzenlemeli ya da gerilimli.",
+      "aliases": [
+        "SPLINEYUZEY",
+        "SPLINEINTERPOLASYON"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Noktalar",
+          "optional": false
+        },
+        {
+          "name": "field",
+          "type": "field",
+          "label": "Değer alanı",
+          "optional": true
+        },
+        {
+          "name": "splineType",
+          "type": "enum",
+          "label": "Tür",
+          "optional": false
+        },
+        {
+          "name": "weight",
+          "type": "number",
+          "label": "Ağırlık",
+          "optional": false
+        },
+        {
+          "name": "points",
+          "type": "number",
+          "label": "Nokta sayısı",
+          "optional": false
+        },
+        {
+          "name": "cellSize",
+          "type": "number",
+          "label": "Hücre boyu",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "extent",
+          "type": "enum",
+          "label": "Kapsam",
+          "optional": false
+        },
+        {
+          "name": "grid",
+          "type": "features",
+          "label": "Izgara rasteri",
+          "optional": true
+        },
+        {
+          "name": "cross",
+          "type": "boolean",
+          "label": "Çapraz doğrulama",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.interpolation.spline",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "interpolation.tin",
+      "label": "TIN'den raster",
+      "category": "İnterpolasyon",
+      "description": "Noktaların Delaunay üçgenlemesinden yüzey: her hücre içinde kaldığı üçgende doğrusal.",
+      "aliases": [
+        "TINRASTER",
+        "TINDENRASTER"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Noktalar",
+          "optional": false
+        },
+        {
+          "name": "field",
+          "type": "field",
+          "label": "Değer alanı",
+          "optional": true
+        },
+        {
+          "name": "cellSize",
+          "type": "number",
+          "label": "Hücre boyu",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "extent",
+          "type": "enum",
+          "label": "Kapsam",
+          "optional": false
+        },
+        {
+          "name": "grid",
+          "type": "features",
+          "label": "Izgara rasteri",
+          "optional": true
+        },
+        {
+          "name": "cross",
+          "type": "boolean",
+          "label": "Çapraz doğrulama",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.interpolation.tin",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "network.closestFacility",
       "label": "En yakın tesis",
       "category": "Ağ analizi",
@@ -19600,6 +22571,1180 @@
       ]
     },
     {
+      "id": "raster.calculator",
+      "label": "Raster hesaplayıcı",
+      "category": "Raster işlemleri",
+      "description": "Rasterlerin hücrelerinden ifadeyle yeni bir raster yazar: aritmetik, koşul ve matematik işlevleri.",
+      "aliases": [
+        "RASTERHESAP",
+        "HARITACEBIRI",
+        "BANDARITMETIGI"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Rasterler",
+          "optional": false
+        },
+        {
+          "name": "expression",
+          "type": "expression",
+          "label": "İfade",
+          "optional": false
+        },
+        {
+          "name": "empty",
+          "type": "enum",
+          "label": "Değeri olmayan hücreler",
+          "optional": false
+        },
+        {
+          "name": "sample",
+          "type": "enum",
+          "label": "Sonuç türü",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.raster.calculator",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.cellStatistics",
+      "label": "Hücre istatistiği",
+      "category": "Raster istatistiği",
+      "description": "Rasterlerin her hücredeki değerlerinin istatistiğini yeni bir rastere yazar: yılların ortalaması, en büyüğü, sayısı.",
+      "aliases": [
+        "HUCREISTATISTIK",
+        "CELLSTATS"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Rasterler",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "stat",
+          "type": "enum",
+          "label": "İstatistik",
+          "optional": false
+        },
+        {
+          "name": "ignore",
+          "type": "boolean",
+          "label": "Değersizleri yok say",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.raster.cellStatistics",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.clipByMask",
+      "label": "Maskeyle kırp",
+      "category": "Raster işlemleri",
+      "description": "Rasterin maskenin içindeki hücrelerini tutar, dışarıdakileri değersiz yapar; isterseniz maskenin kutusuna kırpar.",
+      "aliases": [
+        "MASKEKIRP",
+        "RASTERKIRP"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "mask",
+          "type": "features",
+          "label": "Maske",
+          "optional": false
+        },
+        {
+          "name": "crop",
+          "type": "boolean",
+          "label": "Maskenin kutusuna kırp",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.raster.clipByMask",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.focalStatistics",
+      "label": "Komşuluk istatistiği",
+      "category": "Raster istatistiği",
+      "description": "Her hücreye çevresindeki pencerenin istatistiğini yazar: ortalama, toplam, en küçük, en büyük, aralık, standart sapma, ortanca, çoğunluk, azınlık, çeşit.",
+      "aliases": [
+        "KOMSULUK",
+        "ODAKISTATISTIK",
+        "FOCAL"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "shape",
+          "type": "enum",
+          "label": "Komşuluk",
+          "optional": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "label": "Genişlik",
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "label": "Yükseklik",
+          "optional": false
+        },
+        {
+          "name": "radius",
+          "type": "number",
+          "label": "Yarıçap",
+          "optional": false
+        },
+        {
+          "name": "inner",
+          "type": "number",
+          "label": "İç yarıçap",
+          "optional": false
+        },
+        {
+          "name": "stat",
+          "type": "enum",
+          "label": "İstatistik",
+          "optional": false
+        },
+        {
+          "name": "ignore",
+          "type": "boolean",
+          "label": "Değersizleri yok say",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.raster.focalStatistics",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.histogram",
+      "label": "Histogram",
+      "category": "Raster istatistiği",
+      "description": "Bandın değerlerini eşit aralıklara bölüp her aralıktaki hücre sayısını tablo olarak verir.",
+      "aliases": [
+        "HISTOGRAM"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "bins",
+          "type": "number",
+          "label": "Aralık sayısı",
+          "optional": false
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "label": "En küçük",
+          "optional": true
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "label": "En büyük",
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.raster.histogram",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.mosaic",
+      "label": "Mozaik",
+      "category": "Raster işlemleri",
+      "description": "Rasterleri tek rasterde birleştirir; çakışan hücrelerde üstteki, alttaki, ortalama, en küçük ya da en büyük değer.",
+      "aliases": [
+        "MOZAIK"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Rasterler",
+          "optional": false
+        },
+        {
+          "name": "overlap",
+          "type": "enum",
+          "label": "Çakışanlar",
+          "optional": false
+        },
+        {
+          "name": "sampling",
+          "type": "enum",
+          "label": "Örnekleme",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.raster.mosaic",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.rasterize",
+      "label": "Rasterleştir",
+      "category": "Raster ve vektör",
+      "description": "Nesneleri rasterin hücrelerine yakar: alanlar merkezlerini, çizgiler geçtikleri hücreleri, noktalar içinde oldukları hücreyi.",
+      "aliases": [
+        "RASTERIZE",
+        "VEKTORRASTER"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Nesneler",
+          "optional": false
+        },
+        {
+          "name": "valueFrom",
+          "type": "enum",
+          "label": "Değer",
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "label": "Sabit değer",
+          "optional": false
+        },
+        {
+          "name": "field",
+          "type": "field",
+          "label": "Değer alanı",
+          "optional": true
+        },
+        {
+          "name": "overlap",
+          "type": "enum",
+          "label": "Çakışanlar",
+          "optional": false
+        },
+        {
+          "name": "sample",
+          "type": "enum",
+          "label": "Sonuç türü",
+          "optional": false
+        },
+        {
+          "name": "cellSize",
+          "type": "number",
+          "label": "Hücre boyu",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "extent",
+          "type": "enum",
+          "label": "Kapsam",
+          "optional": false
+        },
+        {
+          "name": "grid",
+          "type": "features",
+          "label": "Izgara rasteri",
+          "optional": true
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.raster.rasterize",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.reclassify",
+      "label": "Yeniden sınıflandır",
+      "category": "Raster işlemleri",
+      "description": "Rasterin değerlerini bir tabloyla yeni değerlere çevirir: aralıklar, tek değerler, değersiz hücreler.",
+      "aliases": [
+        "YENIDENSINIFLA",
+        "RECLASS"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "table",
+          "type": "string",
+          "label": "Tablo",
+          "optional": false
+        },
+        {
+          "name": "bounds",
+          "type": "enum",
+          "label": "Sınırlar",
+          "optional": false
+        },
+        {
+          "name": "unmatched",
+          "type": "enum",
+          "label": "Tabloda olmayanlar",
+          "optional": false
+        },
+        {
+          "name": "sample",
+          "type": "enum",
+          "label": "Sonuç türü",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.raster.reclassify",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.resample",
+      "label": "Yeniden örnekle",
+      "category": "Raster işlemleri",
+      "description": "Rasteri yeni bir hücre boyuyla yeniden örnekler: en yakın, çift doğrusal, kübik ya da örtüşen hücrelerin ortalaması, çoğunluğu, en küçüğü, en büyüğü.",
+      "aliases": [
+        "YENIDENORNEKLE",
+        "RESAMPLE"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "cell",
+          "type": "number",
+          "label": "Hücre boyu",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "method",
+          "type": "enum",
+          "label": "Yöntem",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.raster.resample",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.toLines",
+      "label": "Rasterden çizgi",
+      "category": "Raster ve vektör",
+      "description": "Rasterdeki ince çizgileri inceltip çoklu çizgi yapar: sıfır dışındaki hücreler, bir değer aralığı ya da bir renk.",
+      "aliases": [
+        "RASTERDENCIZGI"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "select",
+          "type": "enum",
+          "label": "Çizgi hücreleri",
+          "optional": false
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "label": "En küçük",
+          "optional": false
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "label": "En büyük",
+          "optional": false
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "label": "Renk",
+          "optional": false
+        },
+        {
+          "name": "tolerance",
+          "type": "number",
+          "label": "Renk toleransı",
+          "optional": false
+        },
+        {
+          "name": "spur",
+          "type": "number",
+          "label": "Kısa parçaları at",
+          "optional": false
+        },
+        {
+          "name": "simplify",
+          "type": "number",
+          "label": "Sadeleştirme",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.raster.toLines",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.toPoints",
+      "label": "Rasterden nokta",
+      "category": "Raster ve vektör",
+      "description": "Hücre merkezlerinde nokta yazar: adım adım, her hücrede ya da yalnız tepe ve çukurlarda; kotu hücrenin değeri.",
+      "aliases": [
+        "RASTERDENNOKTA",
+        "YUKSEKLIKNOKTALARI"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "mode",
+          "type": "enum",
+          "label": "Biçim",
+          "optional": false
+        },
+        {
+          "name": "step",
+          "type": "number",
+          "label": "Adım",
+          "optional": false
+        },
+        {
+          "name": "radius",
+          "type": "number",
+          "label": "Pencere yarıçapı",
+          "optional": false
+        },
+        {
+          "name": "elevation",
+          "type": "boolean",
+          "label": "Kot olarak yaz",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.raster.toPoints",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.toPolygons",
+      "label": "Rasterden alan",
+      "category": "Raster ve vektör",
+      "description": "Rasterin değeri eşit komşu hücrelerini alan yapar; her alanın Değer özniteliği bölgenin değeridir.",
+      "aliases": [
+        "RASTERDENALAN",
+        "RASTERALAN"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "connect",
+          "type": "enum",
+          "label": "Komşuluk",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.raster.toPolygons",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "raster.zonalStatistics",
+      "label": "Bölgesel istatistik",
+      "category": "Raster istatistiği",
+      "description": "Her bölgenin (kapalı alanın) içindeki hücrelerin istatistiğini alanına yazar ve tablo olarak verir.",
+      "aliases": [
+        "BOLGESELISTATISTIK",
+        "ZONAL"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "zones",
+          "type": "features",
+          "label": "Bölgeler",
+          "optional": false
+        },
+        {
+          "name": "stat",
+          "type": "enum",
+          "label": "İstatistik",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "field",
+          "label": "Yazılacak alan",
+          "optional": true
+        },
+        {
+          "name": "decimals",
+          "type": "number",
+          "label": "Basamak",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "table",
+          "type": "table"
+        },
+        {
+          "name": "changed",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.raster.zonalStatistics",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "scan.captureLine",
+      "label": "Çizgi yakala",
+      "category": "Taranmış harita",
+      "description": "Taranmış paftada tıklanan çizgiyi (ve ona bağlı aynı renkteki çizgileri) yakalayıp çoklu çizgi yapar; isterseniz kotuyla.",
+      "aliases": [
+        "RASTERDENHATYAKALA",
+        "HATYAKALA",
+        "RASTERDENEGRIYAKALA"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "at",
+          "type": "point",
+          "label": "Çizgi üzerinde nokta",
+          "optional": false
+        },
+        {
+          "name": "tolerance",
+          "type": "number",
+          "label": "Renk toleransı",
+          "optional": false
+        },
+        {
+          "name": "spur",
+          "type": "number",
+          "label": "Kısa parçaları at",
+          "optional": false
+        },
+        {
+          "name": "simplify",
+          "type": "number",
+          "label": "Sadeleştirme",
+          "optional": false
+        },
+        {
+          "name": "z",
+          "type": "number",
+          "label": "Kot",
+          "optional": true,
+          "unit": "m"
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.scan.captureLine",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "scan.closeArea",
+      "label": "Alan kapat",
+      "category": "Taranmış harita",
+      "description": "Taranmış paftada tıklanan noktanın çevresindeki çizgilerin kapattığı alanı bulup alan yapar.",
+      "aliases": [
+        "RASTERDENALANKAPAT",
+        "PAFTAALANKAPAT"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "at",
+          "type": "point",
+          "label": "Alanın içinde nokta",
+          "optional": false
+        },
+        {
+          "name": "tolerance",
+          "type": "number",
+          "label": "Renk toleransı",
+          "optional": false
+        },
+        {
+          "name": "holes",
+          "type": "enum",
+          "label": "Delikler",
+          "optional": false
+        },
+        {
+          "name": "simplify",
+          "type": "number",
+          "label": "Sadeleştirme",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.scan.closeArea",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "scan.contourElevations",
+      "label": "Eğrilere kot ver",
+      "category": "Taranmış harita",
+      "description": "Kesen bir çizginin geçtiği eğrilere sırayla kot verir: ilk kot, sonra her eğride bir aralık.",
+      "aliases": [
+        "EGRILEREKOTVER"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "curves",
+          "type": "features",
+          "label": "Eğriler",
+          "optional": false
+        },
+        {
+          "name": "start",
+          "type": "point",
+          "label": "Başlangıç",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "point",
+          "label": "Bitiş",
+          "optional": false
+        },
+        {
+          "name": "first",
+          "type": "number",
+          "label": "İlk kot",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "step",
+          "type": "number",
+          "label": "Aralık",
+          "optional": false,
+          "unit": "m"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "changed",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.scan.contourElevations",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "selection.byExpression",
       "label": "İfadeyle seç",
       "category": "Seçim",
@@ -19775,6 +23920,663 @@
       "tests": [
         "apps/web/scripts/fixtures/record-processing-dialog.test.ts"
       ]
+    },
+    {
+      "id": "surface.aspect",
+      "label": "Bakı",
+      "category": "Yüzey analizi",
+      "description": "Her hücrenin baktığı yönü, en dik inişin kuzeyden saat yönündeki açısı olarak yazar; düzlük −1.",
+      "aliases": [
+        "BAKI"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "enum",
+          "label": "Yöntem",
+          "optional": false
+        },
+        {
+          "name": "zFactor",
+          "type": "number",
+          "label": "Z çarpanı",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.aspect",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.colorRelief",
+      "label": "Renkli kabartma",
+      "category": "Yüzey analizi",
+      "description": "Yükseklikleri bir rampayla ya da renk tablosuyla renklendirip RGBA raster yazar.",
+      "aliases": [
+        "RENKLIKABARTMA",
+        "HIPSOMETRI"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "colors",
+          "type": "enum",
+          "label": "Renkler",
+          "optional": false
+        },
+        {
+          "name": "ramp",
+          "type": "enum",
+          "label": "Rampa",
+          "optional": false
+        },
+        {
+          "name": "invert",
+          "type": "boolean",
+          "label": "Ters",
+          "optional": false
+        },
+        {
+          "name": "range",
+          "type": "enum",
+          "label": "Değer aralığı",
+          "optional": false
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "label": "En küçük",
+          "optional": false
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "label": "En büyük",
+          "optional": false
+        },
+        {
+          "name": "table",
+          "type": "string",
+          "label": "Renk tablosu",
+          "optional": false
+        },
+        {
+          "name": "interp",
+          "type": "enum",
+          "label": "Ara renkler",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.colorRelief",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.contours",
+      "label": "Eş yükselti eğrileri",
+      "category": "Yüzey analizi",
+      "description": "Yükseklik rasterinden kotlu eş yükselti eğrileri (ana ve ara) çıkarır.",
+      "aliases": [
+        "ESYUKSELTI",
+        "KONTUR",
+        "EGRIURET"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "interval",
+          "type": "number",
+          "label": "Aralık",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "base",
+          "type": "number",
+          "label": "Taban",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "indexEvery",
+          "type": "number",
+          "label": "Ana eğri her",
+          "optional": false
+        },
+        {
+          "name": "simplify",
+          "type": "number",
+          "label": "Sadeleştir",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "lines",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.surface.contours",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.curvature",
+      "label": "Eğrilik",
+      "category": "Yüzey analizi",
+      "description": "Yüzeyin toplam, profil ya da plan eğriliğini (ArcGIS'teki gibi 1/100 m⁻¹) yazar.",
+      "aliases": [
+        "EGRILIK",
+        "EGRISELLIK"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "curvature",
+          "type": "enum",
+          "label": "Eğrilik",
+          "optional": false
+        },
+        {
+          "name": "zFactor",
+          "type": "number",
+          "label": "Z çarpanı",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.curvature",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.hillshade",
+      "label": "Gölgeli kabartma",
+      "category": "Yüzey analizi",
+      "description": "Arazinin verilen yönden ışıklandırılmış gri görüntüsünü yazar (1–255, boş hücre 0).",
+      "aliases": [
+        "GOLGEURET",
+        "KABARTMAURET"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "azimuth",
+          "type": "number",
+          "label": "Işığın açısı",
+          "optional": false,
+          "unit": "°"
+        },
+        {
+          "name": "altitude",
+          "type": "number",
+          "label": "Işığın yüksekliği",
+          "optional": false,
+          "unit": "°"
+        },
+        {
+          "name": "zFactor",
+          "type": "number",
+          "label": "Z çarpanı",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.hillshade",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.insolation",
+      "label": "Güneşlenme",
+      "category": "Yüzey analizi",
+      "description": "Dönemde eğimli yüzeye gelen doğrudan güneş enerjisini (açık gök, kWh/m²) yazar.",
+      "aliases": [
+        "GUNESLENME",
+        "GUNESRADYASYONU"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "period",
+          "type": "enum",
+          "label": "Dönem",
+          "optional": false
+        },
+        {
+          "name": "startDay",
+          "type": "number",
+          "label": "Başlangıç günü",
+          "optional": false
+        },
+        {
+          "name": "startMonth",
+          "type": "enum",
+          "label": "Başlangıç ayı",
+          "optional": false
+        },
+        {
+          "name": "endDay",
+          "type": "number",
+          "label": "Bitiş günü",
+          "optional": false
+        },
+        {
+          "name": "endMonth",
+          "type": "enum",
+          "label": "Bitiş ayı",
+          "optional": false
+        },
+        {
+          "name": "dayStep",
+          "type": "number",
+          "label": "Gün aralığı",
+          "optional": false
+        },
+        {
+          "name": "hourStep",
+          "type": "enum",
+          "label": "Saat aralığı",
+          "optional": false
+        },
+        {
+          "name": "transmissivity",
+          "type": "number",
+          "label": "Geçirgenlik",
+          "optional": false
+        },
+        {
+          "name": "latitude",
+          "type": "number",
+          "label": "Enlem",
+          "optional": true,
+          "unit": "°"
+        },
+        {
+          "name": "zFactor",
+          "type": "number",
+          "label": "Z çarpanı",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.insolation",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.ruggedness",
+      "label": "Pürüzlülük",
+      "category": "Yüzey analizi",
+      "description": "Arazinin pürüzlülüğünü TRI (Riley ya da Wilson), TPI ya da engebe olarak yazar.",
+      "aliases": [
+        "PURUZLULUK",
+        "TRI",
+        "TPI"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "index",
+          "type": "enum",
+          "label": "Ölçü",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.ruggedness",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "surface.slope",
+      "label": "Eğim",
+      "category": "Yüzey analizi",
+      "description": "Yükseklik rasterinin her hücresinin eğimini derece ya da yüzde olarak yazar.",
+      "aliases": [
+        "EGIMANALIZI",
+        "EGIMHARITASI"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "enum",
+          "label": "Yöntem",
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": "enum",
+          "label": "Birim",
+          "optional": false
+        },
+        {
+          "name": "zFactor",
+          "type": "number",
+          "label": "Z çarpanı",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.surface.slope",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
     }
   ],
   "models": [
@@ -19835,7 +24637,6 @@
         ],
         "commands": [
           "analysis.volume",
-          "analysis.slope",
           "network.manage"
         ]
       },
@@ -32758,7 +37559,6 @@
             "items": [
               "tool.stakeout",
               "tool.spot",
-              "map.contours",
               "map.profile"
             ]
           },
@@ -32940,8 +37740,7 @@
           {
             "label": "Arazi analizi",
             "items": [
-              "analysis.volume",
-              "analysis.slope"
+              "analysis.volume"
             ]
           },
           {
@@ -32999,7 +37798,50 @@
               "processing.run.geometry.reproject",
               "processing.run.network.closestFacility",
               "processing.run.network.odMatrix",
-              "processing.run.network.serviceAreas"
+              "processing.run.network.serviceAreas",
+              "processing.run.surface.slope",
+              "processing.run.surface.aspect",
+              "processing.run.surface.hillshade",
+              "processing.run.surface.colorRelief",
+              "processing.run.surface.curvature",
+              "processing.run.surface.ruggedness",
+              "processing.run.surface.insolation",
+              "processing.run.surface.contours",
+              "processing.run.interpolation.idw",
+              "processing.run.interpolation.naturalNeighbor",
+              "processing.run.interpolation.spline",
+              "processing.run.interpolation.kriging",
+              "processing.run.interpolation.tin",
+              "processing.run.density.kernel",
+              "processing.run.density.line",
+              "processing.run.raster.calculator",
+              "processing.run.raster.reclassify",
+              "processing.run.raster.clipByMask",
+              "processing.run.raster.mosaic",
+              "processing.run.raster.resample",
+              "processing.run.raster.zonalStatistics",
+              "processing.run.raster.histogram",
+              "processing.run.raster.focalStatistics",
+              "processing.run.raster.cellStatistics",
+              "processing.run.raster.rasterize",
+              "processing.run.raster.toPolygons",
+              "processing.run.raster.toLines",
+              "processing.run.raster.toPoints",
+              "processing.run.scan.captureLine",
+              "processing.run.scan.closeArea",
+              "processing.run.scan.contourElevations",
+              "processing.run.hydrology.fill",
+              "processing.run.hydrology.flowDirection",
+              "processing.run.hydrology.flowAccumulation",
+              "processing.run.hydrology.wetness",
+              "processing.run.hydrology.pourPoint",
+              "processing.run.hydrology.watershed",
+              "processing.run.hydrology.basins",
+              "processing.run.hydrology.streams",
+              "processing.run.distance.euclidean",
+              "processing.run.distance.cost",
+              "processing.run.distance.path",
+              "processing.run.distance.corridor"
             ]
           }
         ]
@@ -35085,19 +39927,11 @@
                 "size": "large"
               },
               {
-                "command": "map.contours",
-                "size": "small"
-              },
-              {
                 "command": "map.profile",
                 "size": "small"
               },
               {
                 "command": "analysis.volume",
-                "size": "small"
-              },
-              {
-                "command": "analysis.slope",
                 "size": "small"
               }
             ],
@@ -35181,6 +40015,276 @@
                     ]
                   }
                 ]
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          }
+        ]
+      },
+      {
+        "id": "raster",
+        "label": "Raster",
+        "panels": [
+          {
+            "label": "Raster",
+            "icon": "rasterAdd",
+            "items": [
+              {
+                "command": "raster.add",
+                "size": "small"
+              },
+              {
+                "command": "raster.style",
+                "size": "small"
+              },
+              {
+                "command": "raster.georef",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Yüzey analizi",
+            "icon": "aspect",
+            "items": [
+              {
+                "command": "processing.run.surface.aspect",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.slope",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.curvature",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.contours",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.hillshade",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.insolation",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.ruggedness",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.surface.colorRelief",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "İnterpolasyon",
+            "icon": "naturalNeighbor",
+            "items": [
+              {
+                "command": "processing.run.interpolation.naturalNeighbor",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.interpolation.kriging",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.interpolation.spline",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.interpolation.idw",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.interpolation.tin",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Yoğunluk",
+            "icon": "kernelDensity",
+            "items": [
+              {
+                "command": "processing.run.density.kernel",
+                "size": "large"
+              },
+              {
+                "command": "processing.run.density.line",
+                "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Raster işlemleri",
+            "icon": "clipRaster",
+            "items": [
+              {
+                "command": "processing.run.raster.clipByMask",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.raster.mosaic",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.raster.calculator",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.raster.resample",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.raster.reclassify",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Raster istatistiği",
+            "icon": "zonalStats",
+            "items": [
+              {
+                "command": "processing.run.raster.zonalStatistics",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.raster.histogram",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.raster.cellStatistics",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.raster.focalStatistics",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Raster ve vektör",
+            "icon": "toPolygons",
+            "items": [
+              {
+                "command": "processing.run.raster.toPolygons",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.raster.toLines",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.raster.toPoints",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.raster.rasterize",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Taranmış harita",
+            "icon": "closeArea",
+            "items": [
+              {
+                "command": "processing.run.scan.closeArea",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.scan.captureLine",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.scan.contourElevations",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Hidroloji",
+            "icon": "flowAccumulation",
+            "items": [
+              {
+                "command": "processing.run.hydrology.flowAccumulation",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.hydrology.flowDirection",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.hydrology.fill",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.hydrology.streams",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.hydrology.pourPoint",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.hydrology.basins",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.hydrology.watershed",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.hydrology.wetness",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Uzaklık ve maliyet",
+            "icon": "costDistance",
+            "items": [
+              {
+                "command": "processing.run.distance.cost",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.distance.path",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.distance.corridor",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.distance.euclidean",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -40276,19 +45380,11 @@
                   "size": "large"
                 },
                 {
-                  "command": "map.contours",
-                  "size": "small"
-                },
-                {
                   "command": "map.profile",
                   "size": "small"
                 },
                 {
                   "command": "analysis.volume",
-                  "size": "small"
-                },
-                {
-                  "command": "analysis.slope",
                   "size": "small"
                 }
               ],
@@ -40372,6 +45468,276 @@
                       ]
                     }
                   ]
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "raster",
+          "label": "Raster",
+          "panels": [
+            {
+              "label": "Raster",
+              "icon": "rasterAdd",
+              "items": [
+                {
+                  "command": "raster.add",
+                  "size": "small"
+                },
+                {
+                  "command": "raster.style",
+                  "size": "small"
+                },
+                {
+                  "command": "raster.georef",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Yüzey analizi",
+              "icon": "aspect",
+              "items": [
+                {
+                  "command": "processing.run.surface.aspect",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.slope",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.curvature",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.contours",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.hillshade",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.insolation",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.ruggedness",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.surface.colorRelief",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "İnterpolasyon",
+              "icon": "naturalNeighbor",
+              "items": [
+                {
+                  "command": "processing.run.interpolation.naturalNeighbor",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.interpolation.kriging",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.interpolation.spline",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.interpolation.idw",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.interpolation.tin",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Yoğunluk",
+              "icon": "kernelDensity",
+              "items": [
+                {
+                  "command": "processing.run.density.kernel",
+                  "size": "large"
+                },
+                {
+                  "command": "processing.run.density.line",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Raster işlemleri",
+              "icon": "clipRaster",
+              "items": [
+                {
+                  "command": "processing.run.raster.clipByMask",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.raster.mosaic",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.raster.calculator",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.raster.resample",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.raster.reclassify",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Raster istatistiği",
+              "icon": "zonalStats",
+              "items": [
+                {
+                  "command": "processing.run.raster.zonalStatistics",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.raster.histogram",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.raster.cellStatistics",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.raster.focalStatistics",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Raster ve vektör",
+              "icon": "toPolygons",
+              "items": [
+                {
+                  "command": "processing.run.raster.toPolygons",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.raster.toLines",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.raster.toPoints",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.raster.rasterize",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Taranmış harita",
+              "icon": "closeArea",
+              "items": [
+                {
+                  "command": "processing.run.scan.closeArea",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.scan.captureLine",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.scan.contourElevations",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Hidroloji",
+              "icon": "flowAccumulation",
+              "items": [
+                {
+                  "command": "processing.run.hydrology.flowAccumulation",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.hydrology.flowDirection",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.hydrology.fill",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.hydrology.streams",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.hydrology.pourPoint",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.hydrology.basins",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.hydrology.watershed",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.hydrology.wetness",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Uzaklık ve maliyet",
+              "icon": "costDistance",
+              "items": [
+                {
+                  "command": "processing.run.distance.cost",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.distance.path",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.distance.corridor",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.distance.euclidean",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -41490,6 +46856,47 @@
     "crsSecond": "<circle cx=\"8.5\" cy=\"11.5\" r=\"5.5\"/><path d=\"M3 11.5h11M8.5 6c-2 1.6-2 9.4 0 11M8.5 6c2 1.6 2 9.4 0 11\"/><path d=\"M13.8 4.5a1.9 1.9 0 0 1 3.7.4c0 1.2-1.2 1.9-3.7 3.4h3.9\"/>",
     "volume": "<path d=\"m10 2.8 6.8 3.7v7L10 17.2l-6.8-3.7v-7z\"/><path d=\"m3.2 6.5 6.8 3.7 6.8-3.7M10 10.2v7\"/><path d=\"m10 10.2 6.8-3.7v7L10 17.2z\" fill=\"currentColor\" fill-opacity=\".18\" stroke=\"none\"/>",
     "slope": "<path d=\"M2.5 16.5h15L17.5 5.5z\" fill=\"currentColor\" fill-opacity=\".14\"/><path d=\"M2.5 16.5h15V5.5z\"/><path d=\"M8 16.5a5.6 5.6 0 0 0-.9-3.1\"/>",
+    "aspect": "<circle cx=\"10\" cy=\"10.5\" r=\"7\"/><path d=\"m10 1.6 1.5 3h-3z\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M17 10.5h1.6M1.4 10.5H3M10 17.5v1.6\" stroke-width=\"1.1\"/><path d=\"M10 10.5l3.4 3.4\" stroke-width=\"1.5\"/><path d=\"m15.5 16-4.6-1.1 3.5-3.5z\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10\" cy=\"10.5\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>",
+    "hillshade": "<path d=\"M1.5 17 9.5 5.5 18.5 17z\"/><path d=\"M9.5 5.5 18.5 17h-6.8l-1.4-5.2z\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><circle cx=\"3.6\" cy=\"3.6\" r=\"1.5\" stroke-width=\"1.1\"/><path d=\"M5.6 5.6l1.3 1.3\" stroke-width=\"1.1\" stroke-dasharray=\"1 .9\"/>",
+    "colorRelief": "<path d=\"M2 16.5h16l-2.65-4.3H4.65z\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><path d=\"M4.65 12.2h10.7l-2.64-4.3H7.29z\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><path d=\"M7.29 7.9h5.42L10 3.5z\" fill=\"currentColor\" fill-opacity=\".85\" stroke=\"none\"/><path d=\"M2 16.5 10 3.5l8 13z\"/><path d=\"M4.65 12.2h10.7M7.29 7.9h5.42\" stroke-width=\".9\"/>",
+    "curvature": "<path d=\"M1.5 12.5c2.4-7.4 6.4-7.4 8.5-2.6s6.1 4.8 8.5-2.6\"/><circle cx=\"6.2\" cy=\"9.9\" r=\"2.6\" stroke-width=\"1\" stroke-dasharray=\"1.3 1.1\"/><circle cx=\"13.9\" cy=\"11.1\" r=\"2.3\" stroke-width=\"1\" stroke-dasharray=\"1.3 1.1\"/><path d=\"M1.5 17.5h17\" stroke-width=\"1\"/>",
+    "ruggedness": "<path d=\"M1.5 14.5 3.8 8l2.1 4.2L8.4 4.5l2.2 7.3 2.1-4.4 2.3 6.1 1.6-3.4 1.9 2.4\"/><path d=\"M1.5 17.5h17\" stroke-width=\"1\"/><path d=\"M1.5 14.5 3.8 8l2.1 4.2L8.4 4.5l2.2 7.3 2.1-4.4 2.3 6.1 1.6-3.4 1.9 2.4v3.4h-17z\" fill=\"currentColor\" fill-opacity=\".16\" stroke=\"none\"/>",
+    "insolation": "<circle cx=\"5\" cy=\"5\" r=\"2.3\"/><path d=\"M5 .9v1.2M5 7.9v1.2M.9 5h1.2M7.9 5h1.2M2.1 2.1l.8.8M7.1 7.1l.8.8M7.9 2.1l-.8.8M2.9 7.1l-.8.8\" stroke-width=\"1.1\"/><path d=\"M3 17.5h15.5V9z\" fill=\"currentColor\" fill-opacity=\".22\"/><path d=\"M8.6 8.6l3.6 3.6M12.2 6.6l3.1 3.1\" stroke-width=\"1.1\" stroke-dasharray=\"1.5 1.1\"/>",
+    "idw": "<circle cx=\"10\" cy=\"10\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"4.2\" cy=\"5\" r=\"1.4\"/><circle cx=\"16\" cy=\"6.5\" r=\"1.4\"/><circle cx=\"5.5\" cy=\"16\" r=\"1.4\"/><circle cx=\"16.8\" cy=\"16.6\" r=\"1.4\"/><path d=\"M8.6 8.8 5.3 5.9M11.5 9.1l3.3-1.8\" stroke-width=\"1.3\"/><path d=\"M8.9 11.3l-2.4 3.4\" stroke-width=\"1.1\" stroke-opacity=\".7\"/><path d=\"M11.3 11.3l4.4 4.3\" stroke-width=\".9\" stroke-opacity=\".45\" stroke-dasharray=\"1.3 1\"/>",
+    "naturalNeighbor": "<path d=\"M10 5.3l4.2 2.5v4.9L10 15.1l-4.2-2.4V7.8z\" fill=\"currentColor\" fill-opacity=\".22\"/><path d=\"M10 5.3V1.5M14.2 7.8l3.9-2.3M14.2 12.7l3.9 2.4M10 15.1v3.4M5.8 12.7l-3.9 2.4M5.8 7.8 1.9 5.5\" stroke-width=\"1.1\"/><circle cx=\"10\" cy=\"10.2\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"4.2\" cy=\"2.8\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"17.2\" cy=\"10.2\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"4.4\" cy=\"16.9\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/>",
+    "splineSurface": "<path d=\"M2 12.5c3-5.2 5.6-5.4 8-1.8s5 4.2 8-2.7\"/><path d=\"M2 17c3-4.6 5.6-4.8 8-1.6s5 3.7 8-2.4\" stroke-opacity=\".45\"/><circle cx=\"2.6\" cy=\"11.6\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"7.4\" cy=\"8.2\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13\" cy=\"13.2\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"17.4\" cy=\"8.9\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "kriging": "<path d=\"M2.5 2v15.5H18\" stroke-width=\"1.2\"/><path d=\"M3 16.5c2.4-6.6 4.9-9.8 8.4-10.6 1.6-.4 3.6-.4 6.1-.4\"/><circle cx=\"5.3\" cy=\"11.8\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"7.9\" cy=\"9.4\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10.6\" cy=\"6.9\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.6\" cy=\"6.1\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"16.4\" cy=\"5\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>",
+    "tinRaster": "<path d=\"M2 7.5h16M2 13h16M7.5 2v16M13 2v16\" stroke-width=\".7\" stroke-opacity=\".35\"/><path d=\"M2.5 16.5 7.5 3.2 17.5 7 14.2 17zM7.5 3.2l6.7 13.8M2.5 16.5 17.5 7\"/>",
+    "kernelDensity": "<circle cx=\"8\" cy=\"8.5\" r=\"6\" fill=\"currentColor\" fill-opacity=\".13\" stroke=\"none\"/><circle cx=\"8\" cy=\"8.5\" r=\"3.8\" fill=\"currentColor\" fill-opacity=\".25\" stroke=\"none\"/><circle cx=\"8\" cy=\"8.5\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"14.6\" cy=\"14.4\" r=\"3.6\" fill=\"currentColor\" fill-opacity=\".18\" stroke=\"none\"/><circle cx=\"14.6\" cy=\"14.4\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"8\" cy=\"8.5\" r=\"6\" stroke-width=\".8\" stroke-dasharray=\"1.2 1\"/>",
+    "lineDensity": "<circle cx=\"10\" cy=\"10\" r=\"5.6\" stroke-width=\"1\" stroke-dasharray=\"1.4 1.1\"/><path d=\"M1.5 7.2 18.5 13M5 18.5 12.4 1.5M1.5 14.5 18.5 4.6\" stroke-opacity=\".45\"/><path d=\"M4.7 8.3l10.6 3.6M7.7 13.8l4.6-10.6\" stroke-width=\"2\"/>",
+    "rasterCalculator": "<rect x=\"3.5\" y=\"1.8\" width=\"13\" height=\"16.4\" rx=\"1.6\"/><rect x=\"5.8\" y=\"4\" width=\"8.4\" height=\"3.3\" rx=\".5\" stroke-width=\"1\"/><rect x=\"5.8\" y=\"9.4\" width=\"2.4\" height=\"2.4\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8.8\" y=\"9.4\" width=\"2.4\" height=\"2.4\" fill=\"currentColor\" fill-opacity=\".45\" stroke=\"none\"/><rect x=\"11.8\" y=\"9.4\" width=\"2.4\" height=\"2.4\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><rect x=\"5.8\" y=\"13.2\" width=\"2.4\" height=\"2.4\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><rect x=\"8.8\" y=\"13.2\" width=\"2.4\" height=\"2.4\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"11.8\" y=\"13.2\" width=\"2.4\" height=\"2.4\" fill=\"currentColor\" fill-opacity=\".45\" stroke=\"none\"/>",
+    "reclassify": "<rect x=\"1.8\" y=\"2.5\" width=\"5\" height=\"15\" rx=\".6\" stroke-width=\"1.1\"/><rect x=\"1.8\" y=\"2.5\" width=\"5\" height=\"3.75\" fill=\"currentColor\" fill-opacity=\".15\" stroke=\"none\"/><rect x=\"1.8\" y=\"6.25\" width=\"5\" height=\"3.75\" fill=\"currentColor\" fill-opacity=\".38\" stroke=\"none\"/><rect x=\"1.8\" y=\"10\" width=\"5\" height=\"3.75\" fill=\"currentColor\" fill-opacity=\".62\" stroke=\"none\"/><rect x=\"1.8\" y=\"13.75\" width=\"5\" height=\"3.75\" fill=\"currentColor\" fill-opacity=\".9\" stroke=\"none\"/><path d=\"M8.6 10h3.6M10.6 8.2l1.8 1.8-1.8 1.8\" stroke-width=\"1.2\"/><rect x=\"13.6\" y=\"2.5\" width=\"4.6\" height=\"15\" rx=\".6\" stroke-width=\"1.1\"/><rect x=\"13.6\" y=\"10\" width=\"4.6\" height=\"7.5\" fill=\"currentColor\" stroke=\"none\"/>",
+    "clipRaster": "<path d=\"M2 7h16M2 12.5h16M7.3 2v16M12.7 2v16\" stroke-width=\".8\" stroke-opacity=\".35\"/><rect x=\"2\" y=\"2\" width=\"16\" height=\"16\" rx=\"1\" stroke-width=\"1\" stroke-opacity=\".35\"/><path d=\"M5 5.5 14.8 4l1.6 8.5-6.4 4.8-5.6-3.6z\" fill=\"currentColor\" fill-opacity=\".2\" stroke-width=\"1.5\"/>",
+    "mosaic": "<rect x=\"2\" y=\"2\" width=\"10.5\" height=\"10.5\" rx=\".8\"/><rect x=\"7.5\" y=\"7.5\" width=\"10.5\" height=\"10.5\" rx=\".8\"/><rect x=\"7.5\" y=\"7.5\" width=\"5\" height=\"5\" fill=\"currentColor\" fill-opacity=\".45\" stroke=\"none\"/><path d=\"M2 5.5h10.5M5.5 2v10.5M7.5 15h10.5M15 7.5v10.5\" stroke-width=\".8\" stroke-opacity=\".45\"/>",
+    "resample": "<rect x=\"2\" y=\"2\" width=\"16\" height=\"16\" rx=\"1\"/><path d=\"M10 2v16M2 10h16\" stroke-width=\"1.3\"/><path d=\"M4.67 2v8M7.33 2v8M2 4.67h8M2 7.33h8\" stroke-width=\".7\"/><rect x=\"10\" y=\"10\" width=\"8\" height=\"8\" fill=\"currentColor\" fill-opacity=\".35\" stroke=\"none\"/>",
+    "zonalStats": "<path d=\"M3.2 6.2 9.5 2.5l7.6 3.3-.8 9.6-8.8 2.4-4.5-4.4z\" fill=\"currentColor\" fill-opacity=\".12\"/><path d=\"M6.8 14.5v-3.8M9.6 14.5V8M12.4 14.5V9.6\" stroke-width=\"2\"/>",
+    "histogram": "<path d=\"M1.8 17.5h16.4\" stroke-width=\"1.2\"/><rect x=\"2.8\" y=\"12\" width=\"2.5\" height=\"5.5\" fill=\"currentColor\" fill-opacity=\".35\"/><rect x=\"5.9\" y=\"7\" width=\"2.5\" height=\"10.5\" fill=\"currentColor\" fill-opacity=\".6\"/><rect x=\"9\" y=\"3\" width=\"2.5\" height=\"14.5\" fill=\"currentColor\" fill-opacity=\".85\"/><rect x=\"12.1\" y=\"8.5\" width=\"2.5\" height=\"9\" fill=\"currentColor\" fill-opacity=\".6\"/><rect x=\"15.2\" y=\"13\" width=\"2.5\" height=\"4.5\" fill=\"currentColor\" fill-opacity=\".35\"/>",
+    "focalStats": "<path d=\"M2 5.5h16M2 9h16M2 12.5h16M2 16h16M5.5 2v16M9 2v16M12.5 2v16M16 2v16\" stroke-width=\".6\" stroke-opacity=\".4\"/><rect x=\"5.5\" y=\"5.5\" width=\"10.5\" height=\"10.5\" fill=\"currentColor\" fill-opacity=\".14\" stroke-width=\"1.6\"/><rect x=\"9\" y=\"9\" width=\"3.5\" height=\"3.5\" fill=\"currentColor\" stroke=\"none\"/>",
+    "cellStats": "<path d=\"M2 13.5 8 16.8l10-4.3-6-3.3z\" fill=\"currentColor\" fill-opacity=\".12\"/><path d=\"M2 9.5 8 12.8l10-4.3-6-3.3z\" fill=\"currentColor\" fill-opacity=\".12\"/><path d=\"M2 5.5 8 8.8l10-4.3-6-3.3z\" fill=\"currentColor\" fill-opacity=\".12\"/><path d=\"M10.2 3.8v11\" stroke-width=\"1.6\"/><circle cx=\"10.2\" cy=\"3.8\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10.2\" cy=\"7.8\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10.2\" cy=\"11.8\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/>",
+    "rasterize": "<path d=\"M2 6h16M2 10h16M2 14h16M6 2v16M10 2v16M14 2v16\" stroke-width=\".8\" stroke-opacity=\".35\"/><rect x=\"2\" y=\"2\" width=\"16\" height=\"16\" rx=\"1\" stroke-width=\"1\" stroke-opacity=\".35\"/><path d=\"M6 6h4v4h4v4H6z\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><path d=\"M4.4 4.4 15.6 9 8.6 16.4z\" stroke-width=\"1.5\"/>",
+    "toPolygons": "<path d=\"M2 6h16M2 10h16M2 14h16M6 2v16M10 2v16M14 2v16\" stroke-width=\".8\" stroke-opacity=\".35\"/><rect x=\"2\" y=\"2\" width=\"16\" height=\"16\" rx=\"1\" stroke-width=\"1\" stroke-opacity=\".35\"/><path d=\"M2 2h8v4h4v8H6v4H2z\" fill=\"currentColor\" fill-opacity=\".28\" stroke-width=\"1.6\"/><rect x=\"14\" y=\"14\" width=\"4\" height=\"4\" fill=\"currentColor\" fill-opacity=\".6\" stroke=\"none\"/>",
+    "toLines": "<path d=\"M2 12.5h3.5V16H2zM5.5 9.5H9V13H5.5zM9 9.5h3.5V13H9zM12.5 6h3.5v3.5h-3.5zM14.5 2.5H18V6h-3.5z\" fill=\"currentColor\" fill-opacity=\".25\" stroke=\"none\"/><path d=\"M3.7 14.2 7.2 11.2h3.6l3.4-3.4 2-3.5\" stroke-width=\"1.5\"/>",
+    "toPoints": "<path d=\"M2 6h16M2 10h16M2 14h16M6 2v16M10 2v16M14 2v16\" stroke-width=\".8\" stroke-opacity=\".35\"/><rect x=\"2\" y=\"2\" width=\"16\" height=\"16\" rx=\"1\" stroke-width=\"1\" stroke-opacity=\".35\"/><circle cx=\"4\" cy=\"4\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"4\" cy=\"12\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"8\" cy=\"8\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M16 13.6 18.2 17.6H13.8z\" fill=\"currentColor\" stroke=\"none\"/>",
+    "captureLine": "<path d=\"M2 12.5c3-1 5-6 9-6s4.5 3 7 1.5\" stroke-width=\"4.2\" stroke-opacity=\".25\"/><path d=\"M2 12.5c3-1 5-6 9-6s4.5 3 7 1.5\" stroke-width=\"1.3\"/><path d=\"M10.2 10.6v6.2l1.6-1.5 1.1 2.5 1.2-.5-1.1-2.5h2.2z\" fill=\"currentColor\" stroke=\"none\"/>",
+    "closeArea": "<path d=\"M3 5.5 9 2.5l8 3.5-1.5 9.5-9.5 2z\" stroke-width=\"3.6\" stroke-opacity=\".25\"/><path d=\"M3 5.5 9 2.5l8 3.5-1.5 9.5-9.5 2z\" fill=\"currentColor\" fill-opacity=\".18\" stroke-width=\"1.3\"/><path d=\"M8.6 7.4v6.2l1.6-1.5 1.1 2.5 1.2-.5-1.1-2.5h2.2z\" fill=\"currentColor\" stroke=\"none\"/>",
+    "contourElevations": "<path d=\"M2 5.2c3-2 6 1 9-.5s5-2 7-.5M2 10c3-2 6 1 9-.5s5-2 7-.5M2 14.8c3-2 6 1 9-.5s5-2 7-.5\" stroke-width=\"1.2\"/><path d=\"M6.4 18.2 13.6 1.8\" stroke-width=\"1.2\" stroke-dasharray=\"1.6 1.3\"/><circle cx=\"12.3\" cy=\"4.8\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10.2\" cy=\"9.5\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"8.1\" cy=\"14.3\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "fillSinks": "<path d=\"M2 5.5c2.4 0 3 9 8 9s5.6-9 8-9\" stroke-width=\"1.4\"/><path d=\"M4.6 9.6c1 2.9 2.6 4.9 5.4 4.9s4.4-2 5.4-4.9z\" fill=\"currentColor\" fill-opacity=\".34\" stroke=\"none\"/><path d=\"M3.8 9.6h12.4\" stroke-width=\"1.1\"/><path d=\"M10 2v4.4M8.2 4.8 10 6.6l1.8-1.8\" stroke-width=\"1.3\"/>",
+    "flowDirection": "<path d=\"M2 7.3h16M2 12.7h16M7.3 2v16M12.7 2v16\" stroke-width=\".7\" stroke-opacity=\".35\"/><path d=\"M4.4 4.4 14.8 14.8\" stroke-width=\"1.7\"/><path d=\"M8.4 15.2h6.8V8.4\" stroke-width=\"1.7\"/>",
+    "flowAccumulation": "<path d=\"M2 7.3h16M2 12.7h16M7.3 2v16M12.7 2v16\" stroke-width=\".7\" stroke-opacity=\".35\"/><rect x=\"2.6\" y=\"2.6\" width=\"4.1\" height=\"4.1\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><rect x=\"13.3\" y=\"2.6\" width=\"4.1\" height=\"4.1\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><rect x=\"7.9\" y=\"7.9\" width=\"4.2\" height=\"4.2\" fill=\"currentColor\" fill-opacity=\".55\" stroke=\"none\"/><rect x=\"7.9\" y=\"13.3\" width=\"4.2\" height=\"4.1\" fill=\"currentColor\" stroke=\"none\"/>",
+    "wetness": "<path d=\"M2 17c3-.8 4.5-3 8-3s5 2.2 8 3\" stroke-width=\"1.2\" stroke-opacity=\".6\"/><path d=\"M10 2.4c2.9 3.7 4.3 6.1 4.3 7.9a4.3 4.3 0 0 1-8.6 0c0-1.8 1.4-4.2 4.3-7.9z\" fill=\"currentColor\" fill-opacity=\".28\" stroke-width=\"1.4\"/><path d=\"M8.2 10.6a1.9 1.9 0 0 0 1.6 1.8\" stroke-width=\"1.2\"/>",
+    "pourPoint": "<path d=\"M2.5 3c2.5 1 4 3 5 5.5S10 14 13.5 15\" stroke-width=\"1.5\"/><circle cx=\"14.6\" cy=\"15.2\" r=\"3.1\" stroke-width=\"1.3\"/><circle cx=\"14.6\" cy=\"15.2\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M14.6 10.6v1.4M14.6 18.4v1.2M10 15.2h1.4M17.8 15.2h1.2\" stroke-width=\"1.1\"/>",
+    "watershed": "<path d=\"M4 4.5 9.5 2l7 2.8.8 6.3-5.3 6.6H8.4L2.6 11z\" fill=\"currentColor\" fill-opacity=\".16\" stroke-width=\"1.3\"/><path d=\"M5.5 6.5c1.5 1 2.6 2.5 4.6 3.4M14.5 5.5 12 9.8M10.1 9.9l.2 7.8\" stroke-width=\"1.2\"/><circle cx=\"10.3\" cy=\"17.6\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/>",
+    "basins": "<path d=\"M3 4.5 9 2.2l.8 8.2-7.2 2.2z\" fill=\"currentColor\" fill-opacity=\".32\" stroke=\"none\"/><path d=\"M9.8 10.4 18 10.2l-3 6.8-7 1.2-5.4-5.6z\" fill=\"currentColor\" fill-opacity=\".16\" stroke=\"none\"/><path d=\"M3 4.5 9 2.2l7.2 1.6L18 10.2l-3 6.8-7 1.2-5.4-5.6z\" stroke-width=\"1.3\"/><path d=\"M9 2.2l.8 8.2M2.6 12.6l7.2-2.2L18 10.2\" stroke-width=\"1.2\"/>",
+    "streams": "<path d=\"M2.5 2.5 5 6.6M8 2 6.6 6.4\" stroke-width=\"1\"/><path d=\"M5 6.6l1.6-.2 2.6 5.3M17.5 5.5l-2.7 3.4M13.5 2.8l.9 4.8\" stroke-width=\"1.5\"/><path d=\"M14.4 7.6l.4 1.3-5.6 2.8M9.2 11.7l1.4 6.3\" stroke-width=\"2.4\"/>",
+    "distanceSurface": "<rect x=\"2.4\" y=\"2.4\" width=\"15.2\" height=\"15.2\" rx=\"1.4\" stroke-width=\"1\" stroke-opacity=\".45\"/><circle cx=\"10\" cy=\"10\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10\" cy=\"10\" r=\"4.1\" stroke-width=\"1.4\"/><circle cx=\"10\" cy=\"10\" r=\"6.6\" stroke-width=\"1.1\" stroke-opacity=\".6\" stroke-dasharray=\"2.2 1.5\"/>",
+    "costDistance": "<path d=\"M2 7.3h16M2 12.7h16M7.3 2v16M12.7 2v16\" stroke-width=\".7\" stroke-opacity=\".35\"/><rect x=\"7.9\" y=\"2.6\" width=\"4.2\" height=\"4.1\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><rect x=\"2.6\" y=\"7.9\" width=\"4.1\" height=\"4.2\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><rect x=\"7.9\" y=\"7.9\" width=\"4.2\" height=\"4.2\" fill=\"currentColor\" fill-opacity=\".38\" stroke=\"none\"/><rect x=\"13.3\" y=\"2.6\" width=\"4.1\" height=\"4.1\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><rect x=\"2.6\" y=\"13.3\" width=\"4.1\" height=\"4.1\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><rect x=\"13.3\" y=\"7.9\" width=\"4.1\" height=\"4.2\" fill=\"currentColor\" fill-opacity=\".66\" stroke=\"none\"/><rect x=\"7.9\" y=\"13.3\" width=\"4.2\" height=\"4.1\" fill=\"currentColor\" fill-opacity=\".66\" stroke=\"none\"/><rect x=\"13.3\" y=\"13.3\" width=\"4.1\" height=\"4.1\" fill=\"currentColor\" fill-opacity=\".9\" stroke=\"none\"/><circle cx=\"4.65\" cy=\"4.65\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/>",
+    "costPath": "<path d=\"M6.6 5.4c2.6-.6 5 .9 5.2 3.3.2 2.2-1.6 3.8-4 3.9-2.5.1-4-1.4-4-3.4 0-1.8 1-3.4 2.8-3.8z\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><path d=\"M3.6 16.4 9.4 15.8 13.6 13 15 8.2 16.4 3.6\" stroke-width=\"1.6\"/><circle cx=\"3.6\" cy=\"16.4\" r=\"1.6\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"16.4\" cy=\"3.6\" r=\"1.7\" stroke-width=\"1.3\"/>",
+    "costCorridor": "<path d=\"M4.2 15.8C4.2 8.6 15.8 11.4 15.8 4.2\" stroke-width=\"6.2\" stroke-opacity=\".24\"/><path d=\"M4.2 15.8C4.2 8.6 15.8 11.4 15.8 4.2\" stroke-width=\"1.2\"/><circle cx=\"4.2\" cy=\"16.6\" r=\"1.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15.8\" cy=\"3.4\" r=\"1.8\" fill=\"currentColor\" stroke=\"none\"/>",
     "server": "<rect x=\"3\" y=\"3\" width=\"14\" height=\"5.5\" rx=\"1\"/><rect x=\"3\" y=\"11.5\" width=\"14\" height=\"5.5\" rx=\"1\"/><path d=\"M6 5.75h.01M6 14.25h.01\" stroke-width=\"2\"/><path d=\"M9.5 5.75h4.5M9.5 14.25h4.5\"/>",
     "cloud": "<path d=\"M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z\"/><path d=\"M10 9v4.6M7.9 11.6 10 13.7l2.1-2.1\"/>",
     "cloudUpload": "<path d=\"M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z\"/><path d=\"M10 13.8V9.2M7.9 11.1 10 9l2.1 2.1\"/>",

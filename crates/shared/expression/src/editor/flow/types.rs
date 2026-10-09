@@ -49,7 +49,20 @@ pub(crate) fn takes(f: Func, i: usize) -> Type {
         | Func::Max
         | Func::Sqrt
         | Func::Ceil
-        | Func::Floor => N,
+        | Func::Floor
+        | Func::Ln
+        | Func::Log10
+        | Func::Log
+        | Func::Exp
+        | Func::Sin
+        | Func::Cos
+        | Func::Tan
+        | Func::Asin
+        | Func::Acos
+        | Func::Atan
+        | Func::Atan2
+        | Func::Degrees
+        | Func::Radians => N,
         Func::Text => [Any, N][i.min(1)],
         Func::Number => Any,
         Func::Upper | Func::Lower | Func::Trim | Func::Length => Text,
@@ -77,7 +90,20 @@ pub(crate) fn gives(f: Func) -> Type {
         | Func::Ceil
         | Func::Floor
         | Func::Pi
-        | Func::Find => Type::Number,
+        | Func::Find
+        | Func::Ln
+        | Func::Log10
+        | Func::Log
+        | Func::Exp
+        | Func::Sin
+        | Func::Cos
+        | Func::Tan
+        | Func::Asin
+        | Func::Acos
+        | Func::Atan
+        | Func::Atan2
+        | Func::Degrees
+        | Func::Radians => Type::Number,
         Func::Text
         | Func::Upper
         | Func::Lower

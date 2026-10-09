@@ -121,6 +121,10 @@
     "label": "Analiz"
    },
    {
+    "id": "raster",
+    "label": "Raster"
+   },
+   {
     "id": "survey",
     "label": "Ölçme"
    },
@@ -196,6 +200,7 @@
      "Veri",
      "Düzenle",
      "Analiz",
+     "Raster",
      "Ölçme",
      "Görünüm",
      "Çıktı"
@@ -208,6 +213,7 @@
      "V",
      "DU",
      "A",
+     "R",
      "O",
      "GO",
      "C"
@@ -394,6 +400,7 @@
      "Veri",
      "Düzenle",
      "Analiz",
+     "Raster",
      "Ölçme",
      "Görünüm",
      "Çıktı"
@@ -412,6 +419,7 @@
       "V",
       "DU",
       "A",
+      "R",
       "O",
       "GO",
       "C"
@@ -429,6 +437,7 @@
      "Veri",
      "Düzenle",
      "Analiz",
+     "Raster",
      "Ölçme",
      "Görünüm",
      "Çıktı",
@@ -449,6 +458,7 @@
       "V",
       "DU",
       "A",
+      "R",
       "O",
       "GO",
       "C",
@@ -499,6 +509,7 @@
      "Veri",
      "Düzenle",
      "Analiz",
+     "Raster",
      "Ölçme",
      "Görünüm",
      "Çıktı"
@@ -516,6 +527,7 @@
       "V",
       "DU",
       "A",
+      "R",
       "O",
       "GO",
       "C"
@@ -533,6 +545,7 @@
      "Veri",
      "Düzenle",
      "Analiz",
+     "Raster",
      "Ölçme",
      "Görünüm",
      "Çıktı"
@@ -556,6 +569,7 @@
       "V",
       "DU",
       "A",
+      "R",
       "O",
       "GO",
       "C"

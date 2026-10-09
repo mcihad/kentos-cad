@@ -76,8 +76,10 @@ pub struct RunRecord {
     pub target: Option<Target>,
 }
 
-/// How a run ended.
+/// How a run ended. A run ends once and `Ok` is its usual end: boxing the
+/// result would only add an allocation.
 #[derive(Clone, Debug, PartialEq)]
+#[allow(clippy::large_enum_variant)]
 pub enum Outcome {
     /// It ran; `edited`: the drawing changed (there is something to undo).
     Ok {
@@ -114,9 +116,20 @@ pub struct Job {
     started: (u64, Instant),
     inputs: BTreeMap<String, (Vec<Slot>, String)>,
     layers: BTreeMap<String, TargetLayer>,
-    new_layers: BTreeMap<String, (String, NewLayerStyle)>,
+    /// Layers the run writes to that do not exist yet: their names, looks and
+    /// the layer each goes right above (none: last).
+    new_layers: BTreeMap<String, NewLayerPlan>,
     selection: Vec<Slot>,
     run: RunFn,
+}
+
+/// A layer the run creates on apply: its name, its look and the layer it goes right above or below.
+#[derive(Clone, Debug)]
+struct NewLayerPlan {
+    name: String,
+    style: NewLayerStyle,
+    above: Option<String>,
+    below: Option<String>,
 }
 
 impl Job {
@@ -328,6 +341,10 @@ impl Runner {
         };
         let fv = values.get(&input.name).and_then(FeaturesValue::read)?;
         let set = resolve_features(&fv, kinds.as_deref(), scene);
+        // A raster's expression runs cell by cell in the raster core (docs/adr/0233 §3): no object to preview it on.
+        if only_rasters(&set.entities) {
+            return None;
+        }
         let doc = scene.doc();
         let layer_name = |id: &str| {
             doc.layers()
@@ -455,7 +472,7 @@ impl Runner {
         // target (new layers are made only on apply).
         let mut inputs: BTreeMap<String, (Vec<Slot>, String)> = BTreeMap::new();
         let mut layers: BTreeMap<String, TargetLayer> = BTreeMap::new();
-        let mut new_layers: BTreeMap<String, (String, NewLayerStyle)> = BTreeMap::new();
+        let mut new_layers: BTreeMap<String, NewLayerPlan> = BTreeMap::new();
         // What resolving the inputs left out, said once the run starts.
         let mut notes: Vec<String> = Vec::new();
         {
@@ -518,14 +535,26 @@ impl Runner {
                             ),
                         );
                     }
-                    ParamKind::Layer { new_layer_style } => {
+                    ParamKind::Layer {
+                        new_layer_style,
+                        above,
+                        below,
+                    } => {
                         let Some(lv) = LayerValue::read(v) else {
                             continue;
                         };
                         let t = resolve_layer(doc, &lv);
                         if t.is_new {
-                            new_layers
-                                .insert(t.id.clone(), (t.name.clone(), new_layer_style.clone()));
+                            new_layers.insert(
+                                t.id.clone(),
+                                NewLayerPlan {
+                                    name: t.name.clone(),
+                                    style: new_layer_style.clone(),
+                                    // The features parameter's name for now; its first object's layer below.
+                                    above: above.clone(),
+                                    below: below.clone(),
+                                },
+                            );
                         }
                         layers.insert(p.name.clone(), t);
                     }
@@ -563,6 +592,15 @@ impl Runner {
                 record,
             });
         };
+        // A new layer named to go above or below a features input: the layer of that input's first object.
+        let layer_of = |param: String| {
+            let first = *inputs.get(&param)?.0.first()?;
+            Some(host.doc().get(first)?.base().layer_id.clone())
+        };
+        for plan in new_layers.values_mut() {
+            plan.above = plan.above.take().and_then(layer_of);
+            plan.below = plan.below.take().and_then(layer_of);
+        }
         self.canceled = false;
         for note in notes {
             log.push(LogLine::warn(note));
@@ -732,7 +770,13 @@ impl Runner {
         }
         let updated: Vec<Slot> = changes.update.iter().map(|u| u.id).collect();
         let removed = !changes.remove.is_empty();
-        let added = match apply(host.doc_mut(), tool, changes, &new_layers, log) {
+        let added = match apply(
+            host.doc_mut(),
+            tool,
+            changes,
+            (&new_layers, result.above.as_deref()),
+            log,
+        ) {
             Ok(added) => added,
             Err(why) => {
                 let message = format!("“{}” çalışırken hata: {why}", tool.label);
@@ -808,7 +852,7 @@ fn apply(
     doc: &mut Document,
     tool: &Tool,
     ch: ChangeSet,
-    new_layers: &BTreeMap<String, (String, NewLayerStyle)>,
+    (new_layers, above): (&BTreeMap<String, NewLayerPlan>, Option<&str>),
     log: &mut Vec<LogLine>,
 ) -> Result<Vec<Slot>, String> {
     let mut skipped = 0usize;
@@ -817,22 +861,43 @@ fn apply(
         // Layers the run writes to but that do not exist yet: in the tool's step, so undo takes them too.
         // Each run of one layer is asked once: a run adds hundreds of thousands of objects to a few layers.
         let mut asked: Option<&str> = None;
+        // New layers below one layer keep the run's order: each below the one before (Kriging's
+        // prediction right under its points, its error under that).
+        let mut under_count: BTreeMap<&str, usize> = BTreeMap::new();
         for e in &ch.add {
             let id = &e.base().layer_id;
             if asked == Some(id.as_str()) {
                 continue;
             }
             asked = Some(id.as_str());
-            let Some((name, style)) = new_layers.get(id) else {
+            let Some(plan) = new_layers.get(id) else {
                 continue;
             };
             if doc.layers().get(id).is_some() {
                 continue;
             }
-            let mut layer = NewLayer::layer(name.clone());
+            let mut layer = NewLayer::layer(plan.name.clone());
             layer.id = Some(id.clone());
-            layer.style = style.over(default_style());
-            doc.add_layer(layer, None, false).map_err(|r| r.0)?;
+            layer.style = plan.style.over(default_style());
+            // Right above or below the layer its plan names (its group, its place), else last;
+            // the tool may name it.
+            let at = match (&plan.above, &plan.below) {
+                (Some(over), _) => doc.layers().place_of(above.unwrap_or(over)),
+                (None, Some(under)) => {
+                    let n = under_count.entry(under.as_str()).or_insert(0);
+                    *n += 1;
+                    doc.layers()
+                        .place_of(under)
+                        .map(|(group, index)| (group, index + *n))
+                }
+                (None, None) => None,
+            };
+            match at {
+                Some((group, index)) => doc
+                    .add_layer_at(layer, group.as_deref(), Some(index), None, false)
+                    .map_err(|r| r.0)?,
+                None => doc.add_layer(layer, None, false).map_err(|r| r.0)?,
+            };
         }
         let locked = |doc: &Document, layer: &str| doc.layers().is_locked(layer);
         let mut gone = Vec::new();
@@ -863,6 +928,9 @@ fn apply(
             if let Some(label) = &u.label {
                 next.base_mut().label.clone_from(label);
             }
+            if let Some(zs) = &u.zs {
+                kentos_native_application::elevation::assign(&mut next, zs);
+            }
             patches.push((u.id, next));
         }
         doc.update_many(patches, &tool.label);
@@ -892,4 +960,9 @@ fn apply(
         )));
     }
     Ok(added)
+}
+
+/// Rasters only: an expression on them names their bands (docs/adr/0233 §3), not attributes.
+pub fn only_rasters(list: &[&Entity]) -> bool {
+    !list.is_empty() && list.iter().all(|e| matches!(e, Entity::Raster(_)))
 }

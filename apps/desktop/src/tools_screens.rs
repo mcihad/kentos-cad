@@ -124,6 +124,12 @@ fn pointed_scenes() -> Vec<Pointed> {
     all.extend(crate::raster_scenes::pointed());
     all.extend(crate::cloud_scenes::pointed());
     all.extend(crate::service_scenes::pointed());
+    all.extend(crate::surface_scenes::pointed());
+    all.extend(crate::interpolation_scenes::pointed());
+    all.extend(crate::raster_ops_scenes::pointed());
+    all.extend(crate::raster_vector_scenes::pointed());
+    all.extend(crate::hydrology_scenes::pointed());
+    all.extend(crate::distance_scenes::pointed());
     let menus: Vec<Pointed> = vec![
         (
             "katman-menu-katman",

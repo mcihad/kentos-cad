@@ -408,7 +408,7 @@ mod tests {
     fn a_word_finds_fields_functions_variables_and_words() {
         assert_eq!(
             labels("ta", 2, false),
-            ["Tapu alanı", "taban", "tamsayı", "tavan"]
+            ["Tapu alanı", "taban", "tamsayı", "tan", "tavan"]
         );
         let c = complete("yuv", 3, &schema(), false).expect("yuvarla");
         assert_eq!((c.start, c.end), (0, 3));

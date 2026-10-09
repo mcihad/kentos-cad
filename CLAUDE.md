@@ -142,6 +142,33 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   seçilmez, kenetlenmez, Öznitelik tablosunda, İşlemler'in girdilerinde ve Veride ara'da yoktur, ağaçta huni ve “geçen / bütün”; dosya
   alışverişi ve komutlar bütün nesnelerle çalışır; Katman süzgeci penceresi (ε, Seçimden al, önizleme), Seçimden süzgeç, Süzgeci kaldır,
   süzgeçten geçmeyen yeni nesne söylenir; `cad.layers.filter`; CBS'de Veri › Süzgeç, iki platformda Katmanlar'ın sağ tıkı (ADR 0211);
+  yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
+  engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
+  yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
+  başına bir çözümleme işçisinde (`raster-wasm`; sonuç gömülür ya da indirilir); `analysis.slope` ve `map.contours` araçları açar; CBS
+  şeridinde Raster sekmesi (rasterler ve raster çözümleme kategorileri); çekirdek `kentos-raster`, GIS-32–36'nın da altyapısı (ADR 0231);
+  interpolasyon ve yoğunluk: İşlemler'in İnterpolasyon ve Yoğunluk kategorilerinde Ters uzaklık (IDW), Doğal komşu, Spline, Kriging (hata
+  yüzeyiyle), TIN'den raster, Çekirdek yoğunluğu, Çizgi yoğunluğu; noktaların ve çizgi ve alanların kotlu köşelerinden ya da alan değerinden,
+  çapraz doğrulama tablosu; sonuç girdinin katmanının hemen altında; geometri çekirdeğinde kesin Delaunay (`geom::delaunay`) (ADR 0232);
+  raster işlemleri: İşlemler'in Raster işlemleri ve Raster istatistiği kategorilerinde Raster hesaplayıcı (harita cebiri: rasterler
+  katmanlarının adlarıyla, bantlar `@`'la; yalnız andığı rasterler açılır, sonuç ilk andığının ızgarasında; ifade diline `ln`, `log10`,
+  `log`, `üstel`, trigonometri, `derece`, `radyan`), Yeniden sınıflandır, Maskeyle kırp, Mozaik, Yeniden örnekle, Bölgesel istatistik
+  (alana yazar, tablo), Histogram, Komşuluk istatistiği, Hücre istatistiği; sayıların kuralı `kentos.rasterstats/1` (çift-çift
+  toplamlar); rasterlerin girdisinde ifadenin alanları bantların adları (ADR 0233);
+  raster ve vektör: İşlemler'in Raster ve vektör kategorisinde Rasterleştir (alanlar, çizgiler, noktalar; sabit ya da alandan değer, altı
+  çakışma kuralı, sonuç girdinin katmanının altında), Rasterden alan, Rasterden çizgi (Lü–Wang'lı inceltme), Rasterden nokta (adımla, her
+  hücre, tepeler ve çukurlar); Taranmış harita kategorisinde Çizgi yakala (renge göre, tıklanan çizgi ve ona bağlılar, isteğe bağlı kot),
+  Alan kapat ve Eğrilere kot ver (kesen çizginin sırasıyla); vektör sonuçlar rasterin hemen üstündeki yeni katmanda (ADR 0234);
+  hidroloji: İşlemler'in Hidroloji kategorisinde Çukur doldur (taşma yüksekliğine ya da en küçük eğimle; derinlik; şeritlerde paralel
+  doldurma), Akış yönü (D8, ESRI ya da TauDEM kodları, düzlükler Barnes'ın gradyanlarıyla), Akış birikimi (D8, D∞, çoklu yön; hücre,
+  alan, özgül havza alanı), Topografik nemlilik indisi, Döküm noktası, Noktadan havza, Havzalar (ana, alt havzalar, güzergâhı kesen
+  derelerin havzaları km'leriyle) ve Dere ağı (Strahler, Shreve, uzunluk, düşü, eğim); bütün DEM bellekte, 2²⁵ hücreye kadar; sonuçlar
+  DEM'in hemen üstündeki yeni katmanda (ADR 0235);
+  uzaklık ve maliyet: İşlemler'in Uzaklık ve maliyet kategorisinde Uzaklık yüzeyi (nesnelerden ya da rasterin değerli hücrelerinden;
+  kesin uzaklık dönüşümü; uzaklık ya da en yakın kaynak), Birikimli maliyet (8 ya da at hamleleriyle 16 komşu; köşeden bağlı engel
+  geçilmez; Yükseklik modeliyle yüzey uzunluğu ve en büyük boyuna eğim; maliyet ya da en ucuz kaynak), En düşük maliyetli yol (Yol,
+  Kaynak, Maliyet, Uzunluk) ve Maliyet koridoru (yüzde ya da değer eşiği); bütün raster bellekte; nesnelerden uzaklık kaynakların
+  katmanının, öbürleri maliyet rasterinin yanında (ADR 0236);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -419,6 +446,37 @@ cargo test --release -p kentos-desktop style::perf::temporal -- --ignored --noca
 KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; TIME_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/time.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp   # web'de zamanların okunması ve 10 000 nesnede sürgünün bir adımı, gönderilen WASM'la (ADR 0210 §12)
 KENTOS_SHOTS_ONLY=zaman-serit,zaman-surgu,zaman-surgu-2015,zaman-ayarlari,senaryo-olustur,senaryo-gosterilen,senaryo-uygula,zaman-karsilastir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # zaman ve senaryoların masaüstü resimleri, .run/shots/arac-zaman-*, arac-senaryo-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs temporal); ADR 0210)
 KENTOS_TRACES_ONLY=time-slider,scenarios cargo test -p kentos-desktop every_trace_passes   # masaüstünde yalnız adı verilen izler
+python3 scripts/fixtures/terrain_cases.py --check   # yüzey analizinin (eğim, bakı, gölgeli ve renkli kabartma, eğrilik, pürüzlülük, güneşlenme) durumlarını numpy ve GDAL'la, KentOS kodu olmadan denetle; tanımlar gdaldem'le çapraz denetlenir; durumlar ve DEM'ler fixtures/terrain/v1 (ADR 0231)
+python3 scripts/fixtures/contour_cases.py --check   # eş yükselti eğrilerini (kareler, eyer, zincirleme, Douglas-Peucker, Kot yazısı) KentOS kodu olmadan denetle; gdal_contour'la çapraz denetim; durumlar fixtures/contours/v1 (ADR 0231 §9)
+python3 scripts/fixtures/surface_processing_cases.py --check   # yüzey araçlarının İşlemler durumlarını (adlar, özetler, katmanlar, nesneler; yazılan dosyanın değerleri ve eğriler yüzey ve eğri başvurularına bağlı) denetle; durumlar fixtures/processing/v1/surface.json ve surface.kcad (ADR 0231 §10)
+cargo test --release -p kentos-raster --test all timing -- --ignored --nocapture --test-threads=1   # yüzey analizinin süreleri 4096² DEM'de, 8 ve 1 iş parçacığıyla (ADR 0231 §11)
+(cd apps/web && node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs)   # aynı işler tarayıcının çözümleme işçisinde, release WASM'la; DEM'leri GDAL bir kez .run/perf'e yazar (ADR 0231 §11)
+KENTOS_SHOTS_ONLY=yuzey-serit,yuzey-egim,yuzey-egim-cizim,yuzey-esyukselti-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # yüzey analizinin resimleri, .run/shots/arac-yuzey-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs surface); ADR 0231)
+python3 scripts/fixtures/delaunay_cases.py --check   # Delaunay üçgenlemesini qhull'un (matplotlib) üçgenleriyle ve Python'un kesirleriyle tam boş çember denetiminden geçmiş başvuruyla, dejenere kümelerde sayılarla denetle; durumlar fixtures/delaunay/v1/cases.json (ADR 0232 §4)
+python3 scripts/fixtures/interpolation_cases.py --check   # interpolasyonu ve yoğunluğu (noktaların toplanması, ızgara, IDW, TIN, Doğal komşu kesirli Voronoi'yle, Spline ve Kriging 40 basamaklı mpmath'le, variogram uydurması, çekirdek ve çizgi yoğunluğu, çapraz doğrulama) KentOS kodu olmadan denetle; IDW ve TIN GDAL'la çapraz denetlenir; birkaç dakika sürer; durumlar fixtures/interpolation/v1/cases.json (ADR 0232)
+python3 scripts/fixtures/bessel_k0.py --check   # Spline'ın K₀'ının Chebyshev katsayılarını mpmath'ten yeniden üretip çekirdekteki kopyayla karşılaştır (ADR 0232 §8)
+python3 scripts/fixtures/interpolation_processing_cases.py --check   # interpolasyon ve yoğunluğun İşlemler durumlarını denetle; yazılan dosyalar interpolasyon başvurusuna bağlı; durumlar fixtures/processing/v1/interpolation.json ve interpolation.kcad (ADR 0232 §13)
+cargo test --release -p kentos-raster --test all interpolation_timing -- --ignored --nocapture --test-threads=1   # 100 000 noktadan 2048² ızgarada yedi işin ve 10⁶ noktanın Delaunay'ının süreleri (ADR 0232 §14)
+KENTOS_SHOTS_ONLY=interp-serit,interp-idw-cizim,interp-capraz,yogunluk-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # interpolasyon ve yoğunluğun resimleri, .run/shots/arac-interp-*, arac-yogunluk-*, arac-cizgi-yogunlugu-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs interpolation); ADR 0232)
+python3 scripts/fixtures/raster_ops_cases.py --check   # raster işlemlerini (hesaplayıcı, sınıflandırma, maskeyle kırpma, mozaik, yeniden örnekleme, bölgesel istatistik, histogram, komşuluk ve hücre istatistiği) ADR'den, KentOS kodu olmadan kesirler ve mpmath'le denetle; yeniden örnekleme gdalwarp'la çapraz denetlenir; durumlar fixtures/raster-ops/v1/cases.json (ADR 0233)
+python3 scripts/fixtures/raster_ops_processing_cases.py --check   # raster işlemlerinin İşlemler durumlarını ve girdinin adlarını denetle; rasterleri GDAL yazar, yazılan dosyalar başvuruya bağlı; durumlar fixtures/processing/v1/raster-ops.json, raster-ops.kcad ve raster-ops/ (ADR 0233)
+cargo test --release -p kentos-raster --test all ops_timing -- --ignored --nocapture --test-threads=1   # 4096² rasterlerde dokuz aracın on iki işinin süreleri, 10 000 parselle kırpma ve bölgesel istatistik (ADR 0233 §15)
+KENTOS_SHOTS_ONLY=ops-serit,ops-hesap,ops-hesap-cizim,ops-bolge cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # raster işlemlerinin resimleri, .run/shots/arac-ops-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs rasterops); ADR 0233)
+python3 scripts/fixtures/raster_vector_cases.py --check   # raster ve vektör araçlarını (yakma, bölgelerin halkaları, inceltme ve yollar, noktalar, Çizgi yakala, Alan kapat, Eğrilere kot ver) ADR'den, KentOS kodu olmadan denetle; GDAL'ın Polygonize ve RasterizeLayer'ıyla çapraz denetim; durumlar fixtures/raster-vector/v1/cases.json (ADR 0234)
+python3 scripts/fixtures/raster_vector_processing_cases.py --check   # raster ve vektör araçlarının İşlemler durumlarını denetle; rasterleri GDAL yazar; durumlar fixtures/processing/v1/raster-vector.json, raster-vector.kcad ve raster-vector/ (ADR 0234)
+python3 scripts/fixtures/scanned_scene.py --check   # taranmış paftanın sahnesini (fixtures/interaction/v1/scanned.kcad ve scanned/pafta.tif) GDAL'la yeniden üretip karşılaştır (ADR 0234)
+cargo test --release -p kentos-raster --test all vector_timing -- --ignored --nocapture --test-threads=1   # 4096² ve 8192² rasterlerde yedi aracın süreleri; KENTOS_PHASES=1 Çizgi yakala'nın aşamalarını da yazar (ADR 0234 §11)
+KENTOS_SHOTS_ONLY=vek-serit,vek-yakala-cizim,vek-kapat-cizim,vek-kot cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # raster ve vektör araçlarının resimleri, .run/shots/arac-vek-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs rastervector); ADR 0234)
+python3 scripts/fixtures/hydrology_cases.py --check   # hidrolojinin sekiz aracını (doldurma, D8 ve düzlükler, D8, çoklu yön ve D∞ birikimi, TWI, döküm noktası, havzalar, dere ağı ve sıraları) ADR'den, KentOS kodu olmadan denetle; GRASS GIS'in r.terraflow, r.watershed ve r.water.outlet'iyle çapraz denetim (grass yoksa atlanır); durumlar fixtures/hydrology/v1/cases.json (ADR 0235)
+python3 scripts/fixtures/hydrology_processing_cases.py --check   # hidroloji araçlarının İşlemler durumlarını denetle; rasterleri GDAL yazar, yazılan dosyalar başvuruya bağlı; durumlar fixtures/processing/v1/hydrology.json, hydrology.kcad ve hydrology/ (ADR 0235)
+python3 scripts/fixtures/hydrology_scene.py --check   # hidroloji resimlerinin çizimini (fixtures/interaction/v1/hydrology.kcad: vadinin DEM'i, yol ekseni, çıkış noktaları) denetle (ADR 0235)
+cargo test --release -p kentos-raster --test all hydro_timing -- --ignored --nocapture --test-threads=1   # 4096² DEM'de sekiz aracın dokuz işinin süreleri; KENTOS_PHASES=1 birikimin aşamalarını da yazar (ADR 0235 §12; web'inkiler: (cd apps/web && node scripts/perf/raster.mjs --only hydro))
+python3 scripts/fixtures/distance_cases.py --check   # uzaklık ve maliyetin dört aracını (kesin düz uzaklık kaba kuvvetle, birikimli maliyet önceliğiyle Dijkstra'yla, geldiği komşu, yollar, koridor) ADR'den, KentOS kodu olmadan denetle; GRASS GIS'in r.cost ve r.grow.distance'ı ve GDAL'ın Proximity'siyle çapraz denetim (grass yoksa atlanır); durumlar fixtures/distance/v1/cases.json (ADR 0236)
+python3 scripts/fixtures/distance_processing_cases.py --check   # uzaklık ve maliyet araçlarının İşlemler durumlarını denetle; rasterleri GDAL yazar, yazılan dosyalar başvuruya bağlı; durumlar fixtures/processing/v1/distance.json, distance.kcad ve distance/ (ADR 0236)
+python3 scripts/fixtures/distance_scene.py --check   # uzaklık ve maliyet resimlerinin çizimini ve maliyet rasterini (fixtures/interaction/v1/distance.kcad, distance/maliyet.tif: vadinin DEM'i, eğimden maliyet, göl, köyler, yol) denetle (ADR 0236)
+cargo test --release -p kentos-raster --test all distance_timing -- --ignored --nocapture --test-threads=1   # 4096² maliyet rasterinde dört aracın dokuz işinin süreleri; KENTOS_PHASES=1 aşamaları da yazar (ADR 0236 §8; web'inkiler: (cd apps/web && node scripts/perf/raster.mjs --only distance))
+KENTOS_SHOTS_ONLY=uzk-serit,uzk-yol-cizim,uzk-koridor-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # uzaklık ve maliyetin resimleri, .run/shots/arac-uzk-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs distance); ADR 0236)
+KENTOS_SHOTS_ONLY=hid-serit,hid-dere-cizim,hid-havza-cizim,hid-guzergah-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # hidrolojinin resimleri, .run/shots/arac-hid-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hydrology); ADR 0235)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
 cargo test --release -p kentos-pointcloud --test all timing -- --ignored --nocapture   # aynı bulutta düğümün görünüşe göre çözülmesi (katman katman) ve LAZ yazma, tek ve dört iş parçacığıyla (önce perf::clouds dosyayı yazar; ADR 0207 §12)
@@ -1304,7 +1362,42 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `sync_filters`'ı, web'de `PickIndex`'in `markWhole`'u ve `model/idMarks.ts`; web'de `app/layerFilterCommands.ts`,
   `ui/layers/LayerFilterDialog.ts`; masaüstünde `layer_filters.rs`; sunucu ağacın kuralını denetler (`http::filter_tests`); Python
   `kentos.cad.layers.filter`, MCP'de araç; komut durumları `layer_filter_command_cases.py`; ortak iz `layer-filter.json` (yeni beklenti
-  `layerCounts`); süreler `perf layer_filter`, `scripts/perf/filter.test.ts`. Sıradaki `GIS-16`.
+  `layerCounts`); süreler `perf layer_filter`, `scripts/perf/filter.test.ts`.
+  Paralel dal `gis-31-36-raster-analysis` (sahibin sözü, 9 Ekim:
+  “yeni bir branch açarak GIS-31 ve GIS-36 aralığını yapacağız”, “yüksek performans ilk önceliğimiz”; ADR numaraları 0231–0236 bu aralığa
+  ayrıldı): `GIS-31` yüzey analizi ([ADR 0231](docs/adr/0231-raster-analysis-and-surface.md)) tek parçada bitti (9 Ekim): çekirdek
+  `kentos-raster` (`job`, `terrain`, `relief`, `insolation`, `contours`, `out`, `par`; bağımsız başvurular `terrain_cases.py` gdaldem'le,
+  `contour_cases.py` gdal_contour'la), WASM `crates/wasm/raster-wasm`; İşlemler'in `builtin/surface/`'u iki platformda, ev sahibinin
+  `Files::open_raster`'ı, katman parametresinin `above`'u; masaüstünde `DesktopFiles::open_raster`, `rasters/tiles.rs`'in `open_reader`'ı; web'de
+  `io/rasterAnalysis*.ts`, `processing/rasterHost.ts`, `app/rasterAnalysis.ts`; ortak durumlar `fixtures/processing/v1/surface.json`
+  (`surface_processing_cases.py`); süreler ADR'nin Doğrulama'sında. `GIS-32` interpolasyon ve yoğunluk
+  ([ADR 0232](docs/adr/0232-interpolation-and-density.md)) tek parçada bitti (9 Ekim): geometri çekirdeğinde `predicates::incircle` ve
+  `geom::delaunay` (bağımsız başvuru `delaunay_cases.py`); raster çekirdeğinde `points`, `grid`, `index`, `solve`, `interp` (`natural`,
+  `spline`, `kriging`), `density`, `from_points` (bağımsız başvurular `interpolation_cases.py`, `bessel_k0.py`), WASM `PointAnalysis`;
+  İşlemler'in `builtin/interpolation/`'u iki platformda, katman parametresinin `below`'u, `Beside::named`, web RunContext'in `project`'i;
+  ortak durumlar `fixtures/processing/v1/interpolation.json` (`interpolation_processing_cases.py`). `GIS-33` raster işlemleri
+  ([ADR 0233](docs/adr/0233-raster-operations.md)) tek parçada bitti (9 Ekim): raster çekirdeğinde `dd`, `stats`, `inputs`, `areas`,
+  `calc`, `reclass`, `focal`, `resample`, `ops` (`OpsSpec::reads`: hesaplayıcının okuduğu rasterler, rasterler açılmadan), `out`'un her
+  örnek türü (bağımsız başvuru `raster_ops_cases.py`, gdalwarp'la çapraz denetim); ifade dilinin matematik işlevleri; WASM `OpsOpening`,
+  `OpsAnalysis`, `opsReads`; İşlemler'in `builtin/raster_ops/`'u ve `rasterOps/`'u iki platformda, girdinin özetinde raster adları
+  (`features::raster_order`, `rasterRun`), `RunResult.above`; ortak durumlar `fixtures/processing/v1/raster-ops.json`
+  (`raster_ops_processing_cases.py`). `GIS-34` raster ve vektör dönüşümü
+  ([ADR 0234](docs/adr/0234-raster-vector-conversion.md)) tek parçada bitti (9 Ekim): raster çekirdeğinde `vector` (`label`, `rings`,
+  `thin`, `simplify`, `capture`, `work`), `rasterize`, `inputs`'un `Raw`'ı; geometri çekirdeğinde `ops::contour_elevations` (bağımsız
+  başvuru `raster_vector_cases.py`, GDAL'la çapraz denetim); WASM `OpsAnalysis`'in nesneleri; İşlemler'in `builtin/raster_vector/`'u ve
+  `rasterVector/`'u iki platformda, `Patch.zs`; ortak durumlar `fixtures/processing/v1/raster-vector.json`
+  (`raster_vector_processing_cases.py`), taranmış paftanın sahnesi `scanned.kcad` (`scanned_scene.py`). `GIS-35` hidroloji
+  ([ADR 0235](docs/adr/0235-hydrology.md); sahibin sözü “Bu konu çok önemli iyi araştır”) tek parçada bitti (9 Ekim): raster çekirdeğinde
+  `hydro` (`surface`, `heap`, `fill`, `tiled`, `flow`, `accum`, `basins`, `streams`; bağımsız başvuru `hydrology_cases.py`, GRASS'la
+  çapraz denetim), `ops`'un sekiz türü, `vector`'ün `fields` ve `numbers`'ı; WASM `featureFields`, `featureNumbers`; İşlemler'in
+  `builtin/hydrology/`'si iki platformda; ortak durumlar `fixtures/processing/v1/hydrology.json` (`hydrology_processing_cases.py`),
+  resimlerin sahnesi `hydrology.kcad` (`hydrology_scene.py`). `GIS-36` uzaklık ve maliyet
+  ([ADR 0236](docs/adr/0236-distance-and-cost.md)) tek parçada bitti (9 Ekim): raster çekirdeğinde `distance` (`edt`, `network`, `mod`;
+  bağımsız başvuru `distance_cases.py`, GRASS'ın r.cost ve r.grow.distance'ı ve GDAL'ın Proximity'siyle çapraz denetim), `ops`'un dört
+  türü, `from_points`'in `PointTool::Distance`'ı; WASM notlarında `distance`; İşlemler'in `builtin/distance/`'ı iki platformda, web
+  koşucusunun yerleşimi görünen girdiyle; ortak durumlar `fixtures/processing/v1/distance.json` (`distance_processing_cases.py`),
+  resimlerin sahnesi `distance.kcad` (`distance_scene.py`). Dal 9 Ekim'de `main`'e birleşti (sahibin sözü: “36 bitince main ile
+  birleştir ve main push yap”); raster çözümleme kümesi bitti. Sıradaki `GIS-16`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
@@ -1347,7 +1440,7 @@ crates/ui/             KentOS UI bileşen kütüphanesi (kentos-ui)
 crates/native/         native belge (domain), ürün komutları (application), araç oturumu (interaction), işlem araçları (processing), proje modeli (project), başsız komut sunucusu (headless), Python eklentisi (python), MCP sunucusu (mcp) ve bulut istemcisi (cloud); web'e derlenmez
 crates/render/wgpu/    native wgpu çizim hattı (Iced bilmez)
 shaders/wgsl/          paylaşılabilir WGSL ve sürümlü düzen sözleşmesi
-crates/shared/         contracts, geometry-core, expression, style-core, svg-core, formats, kcad
+crates/shared/         contracts, geometry-core, expression, style-core, svg-core, formats, kcad, raster
 crates/wasm/           yalnız hesap/codec bağlayıcıları
 crates/server/         application ve postgres
 fixtures/              sürümlü ortak test verisi

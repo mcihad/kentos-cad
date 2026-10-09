@@ -1,0 +1,865 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "documents": {
+  "surface.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "drawingFont": "barlow",
+    "activeLayer": "dem",
+    "measureHeightMm": 2
+   },
+   "tools": {
+    "surface.slope": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "method": "horn",
+     "unit": "degrees",
+     "zFactor": 1,
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Eğim"
+     }
+    },
+    "surface.aspect": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "method": "horn",
+     "zFactor": 1,
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Bakı"
+     }
+    },
+    "surface.hillshade": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "azimuth": 315,
+     "altitude": 45,
+     "zFactor": 1,
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Gölgeli kabartma"
+     }
+    },
+    "surface.colorRelief": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "colors": "ramp",
+     "ramp": "Arazi",
+     "invert": false,
+     "range": "auto",
+     "min": 0,
+     "max": 1000,
+     "table": "",
+     "interp": "linear",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Renkli kabartma"
+     }
+    },
+    "surface.curvature": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "curvature": "total",
+     "zFactor": 1,
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Eğrilik"
+     }
+    },
+    "surface.ruggedness": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "index": "triRiley",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Pürüzlülük"
+     }
+    },
+    "surface.insolation": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "period": "year",
+     "startDay": 21,
+     "startMonth": "6",
+     "endDay": 21,
+     "endMonth": "9",
+     "dayStep": 14,
+     "hourStep": "0.5",
+     "transmissivity": 0.5,
+     "latitude": null,
+     "zFactor": 1,
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Güneşlenme"
+     }
+    },
+    "surface.contours": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "interval": 5,
+     "base": 0,
+     "indexEvery": 5,
+     "simplify": 0,
+     "layer": {
+      "newName": "Eş yükselti eğrileri"
+     }
+    }
+   }
+  }
+ },
+ "rasters": {
+  "tepe.tif": "../../terrain/v1/tepe.tif",
+  "donuk.tif": "../../terrain/v1/donuk.tif"
+ },
+ "cases": [
+  {
+   "id": "slope",
+   "title": "Eğim, varsayılanlar: derece, Horn; kaynağın yanına tepe-egim.tif, Spektral'le",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.slope"
+   },
+   "values": {},
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-egim.tif” yazıldı.",
+    "undo": "Eğim",
+    "layers": [
+     {
+      "id": "islem-egim",
+      "name": "Eğim",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-egim",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-egim.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-egim.tif"
+    },
+    "rasterOf": {
+     "tepe-egim.tif": "Eğim (derece, Horn)"
+    },
+    "layerAbove": {
+     "islem-egim": "dem"
+    }
+   }
+  },
+  {
+   "id": "slope-percent-named",
+   "title": "Eğim yüzde, Zevenbergen-Thorne, z 1,5; yazılan ad .tif'le, çizime eklenmez",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.slope"
+   },
+   "values": {
+    "method": "zevenbergenThorne",
+    "unit": "percent",
+    "zFactor": 1.5,
+    "output": "egim haritasi.tiff",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “egim haritasi.tif” yazıldı.",
+    "undo": null,
+    "layers": [],
+    "added": [],
+    "outputs": {
+     "file": "egim haritasi.tif"
+    },
+    "rasterOf": {
+     "egim haritasi.tif": "Eğim (yüzde, Zevenbergen-Thorne, z 1,5)"
+    }
+   }
+  },
+  {
+   "id": "aspect",
+   "title": "Bakı, Zevenbergen-Thorne",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.aspect"
+   },
+   "values": {
+    "method": "zevenbergenThorne"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-baki.tif” yazıldı.",
+    "undo": "Bakı",
+    "layers": [
+     {
+      "id": "islem-baki",
+      "name": "Bakı",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-baki",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-baki.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-baki.tif"
+    },
+    "rasterOf": {
+     "tepe-baki.tif": "Bakı (Zevenbergen-Thorne)"
+    },
+    "layerAbove": {
+     "islem-baki": "dem"
+    }
+   }
+  },
+  {
+   "id": "hillshade",
+   "title": "Gölgeli kabartma 135°, 30°, z 2: 8 bit gri",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.hillshade"
+   },
+   "values": {
+    "azimuth": 135,
+    "altitude": 30,
+    "zFactor": 2
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-golge.tif” yazıldı.",
+    "undo": "Gölgeli kabartma",
+    "layers": [
+     {
+      "id": "islem-golgeli-kabartma",
+      "name": "Gölgeli kabartma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-golgeli-kabartma",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "u8",
+      "file": "tepe-golge.tif",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-golge.tif"
+    },
+    "rasterOf": {
+     "tepe-golge.tif": "Gölgeli kabartma (135, 30, 2)"
+    },
+    "layerAbove": {
+     "islem-golgeli-kabartma": "dem"
+    }
+   }
+  },
+  {
+   "id": "color-relief-table",
+   "title": "Renkli kabartma, renk tablosu (alfalı satır, aynı değerden ilki), doğrusal: RGBA",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.colorRelief"
+   },
+   "values": {
+    "colors": "table",
+    "table": "180 #A1887F\n100 #2E7D32\n140 #FFF59D80\n140 #000000\n"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-renkli.tif” yazıldı.",
+    "undo": "Renkli kabartma",
+    "layers": [
+     {
+      "id": "islem-renkli-kabartma",
+      "name": "Renkli kabartma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-renkli-kabartma",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 4,
+      "sample": "u8",
+      "file": "tepe-renkli.tif",
+      "srid": 5254,
+      "style": {
+       "render": "rgb",
+       "bands": [
+        1,
+        2,
+        3,
+        4
+       ]
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-renkli.tif"
+    },
+    "rasterOf": {
+     "tepe-renkli.tif": "Renkli kabartma (tablo, alfa)"
+    },
+    "layerAbove": {
+     "islem-renkli-kabartma": "dem"
+    }
+   }
+  },
+  {
+   "id": "color-relief-ramp",
+   "title": "Renkli kabartma, Viridis ters, elle 100–200, en yakın",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.colorRelief"
+   },
+   "values": {
+    "ramp": "Viridis",
+    "invert": true,
+    "range": "manual",
+    "min": 100,
+    "max": 200,
+    "interp": "nearest"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-renkli.tif” yazıldı.",
+    "undo": "Renkli kabartma",
+    "layers": [
+     {
+      "id": "islem-renkli-kabartma",
+      "name": "Renkli kabartma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-renkli-kabartma",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 4,
+      "sample": "u8",
+      "file": "tepe-renkli.tif",
+      "srid": 5254,
+      "style": {
+       "render": "rgb",
+       "bands": [
+        1,
+        2,
+        3,
+        4
+       ]
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-renkli.tif"
+    },
+    "rasterOf": {
+     "tepe-renkli.tif": "Renkli kabartma (Viridis ters, 100–200, en yakın)"
+    },
+    "layerAbove": {
+     "islem-renkli-kabartma": "dem"
+    }
+   }
+  },
+  {
+   "id": "curvature",
+   "title": "Eğrilik, toplam, z 2: Mavi-kırmızı",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.curvature"
+   },
+   "values": {
+    "curvature": "total",
+    "zFactor": 2
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-egrilik.tif” yazıldı.",
+    "undo": "Eğrilik",
+    "layers": [
+     {
+      "id": "islem-egrilik",
+      "name": "Eğrilik",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-egrilik",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-egrilik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Mavi-kırmızı"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-egrilik.tif"
+    },
+    "rasterOf": {
+     "tepe-egrilik.tif": "Eğrilik (toplam, z 2)"
+    },
+    "layerAbove": {
+     "islem-egrilik": "dem"
+    }
+   }
+  },
+  {
+   "id": "ruggedness",
+   "title": "Pürüzlülük, TPI: Viridis",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.ruggedness"
+   },
+   "values": {
+    "index": "tpi"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-puruzluluk.tif” yazıldı.",
+    "undo": "Pürüzlülük",
+    "layers": [
+     {
+      "id": "islem-puruzluluk",
+      "name": "Pürüzlülük",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-puruzluluk",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-puruzluluk.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-puruzluluk.tif"
+    },
+    "rasterOf": {
+     "tepe-puruzluluk.tif": "TPI"
+    },
+    "layerAbove": {
+     "islem-puruzluluk": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-range",
+   "title": "Güneşlenme 1 Haziran–31 Ağustos, 7 gün, 1 saat, geçirgenlik 0,6: Sıcaklık",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "6",
+    "endDay": 31,
+    "endMonth": "8",
+    "dayStep": 7,
+    "hourStep": "1",
+    "transmissivity": 0.6
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (1 Haziran–31 Ağustos, 7 gün, 1 saat, 0,6)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "contours",
+   "title": "Eş yükselti eğrileri, tepe, 5 m, her beşincisi ana: kotlu çoklu çizgiler",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.contours"
+   },
+   "values": {},
+   "expect": {
+    "status": "ok",
+    "summary": "20 eğri (4 ana, 16 ara), 670 köşe; kotlar 105 ile 160 arası.",
+    "undo": "Eş yükselti eğrileri",
+    "layers": [
+     {
+      "id": "islem-es-yukselti-egrileri",
+      "name": "Eş yükselti eğrileri",
+      "style": {
+       "color": "#A0522D",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "contoursOf": 2,
+    "outputs": {
+     "lines": 20
+    },
+    "layerAbove": {
+     "islem-es-yukselti-egrileri": "dem"
+    }
+   }
+  },
+  {
+   "id": "two-rasters",
+   "title": "İki raster seçili: tek raster ister",
+   "document": "surface.kcad",
+   "selection": [
+    1,
+    2
+   ],
+   "run": {
+    "tool": "surface.slope"
+   },
+   "values": {},
+   "expect": {
+    "status": "error",
+    "message": "2 raster seçili; çözümleme tek raster ister."
+   }
+  },
+  {
+   "id": "only-a-line",
+   "title": "Seçimde raster yok (yalnız çizgi): pencere reddeder",
+   "document": "surface.kcad",
+   "selection": [
+    3
+   ],
+   "run": {
+    "tool": "surface.aspect"
+   },
+   "values": {},
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "param": "input",
+      "message": "“Raster”: seçili nesneler arasında uygun nesne yok. Önce nesneleri seçin ya da kapsamı değiştirin."
+     }
+    ]
+   }
+  },
+  {
+   "id": "band",
+   "title": "2. bant: rasterin bir bandı var",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.hillshade"
+   },
+   "values": {
+    "band": 2
+   },
+   "expect": {
+    "status": "error",
+    "message": "Rasterin 1 bandı var; 2. bant yok."
+   }
+  },
+  {
+   "id": "sheared-curvature",
+   "title": "Eğrilik eğik pikselli rasterde (eksenleri dik değil): dik piksel ister",
+   "document": "surface.kcad",
+   "selection": [
+    4
+   ],
+   "run": {
+    "tool": "surface.curvature"
+   },
+   "values": {},
+   "expect": {
+    "status": "error",
+    "message": "Eğrilik dik pikselli raster ister; bu rasterin pikselleri eğik (afinin eksenleri dik değil)."
+   }
+  },
+  {
+   "id": "february-30",
+   "title": "Güneşlenme 30 Şubat'tan: pencere reddeder",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "day",
+    "startDay": 30,
+    "startMonth": "2"
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "message": "Şubat ayının günü 1 ile 28 arasında olmalı; 30 verildi."
+     }
+    ]
+   }
+  }
+ ]
+}

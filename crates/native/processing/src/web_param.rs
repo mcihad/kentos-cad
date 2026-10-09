@@ -104,6 +104,8 @@ pub fn param_from_json(v: &Value) -> Option<ParamDef> {
                     fill: text("fill"),
                     ..NewLayerStyle::default()
                 },
+                above: None,
+                below: None,
             }
         }
         "point" => ParamKind::Point,
