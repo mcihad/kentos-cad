@@ -39,6 +39,9 @@ fn layer(id: &str, style: LayerStyle) -> LayerNode {
         fields: Vec::new(),
         service: None,
         feed: None,
+        time: None,
+        scenario: None,
+        replaces: None,
     }
 }
 
@@ -128,10 +131,23 @@ fn drawing(n: usize) -> Document {
         symbol: PointSymbol::Cross,
         size: 9.0,
     });
+    document(
+        format!("olcum-{n}"),
+        vec![
+            layer("parsel", style("#E06C75", LineType::Continuous, 0.35)),
+            layer("nokta", points),
+            layer("yol", style("#4E79A7", LineType::Dashdot, 0.5)),
+        ],
+        entities,
+    )
+}
+
+/// A GIS drawing of these layers and objects.
+fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Document {
     let snapshot = DocumentSnapshotV1 {
         format: "kentos.document".into(),
         version: 1,
-        name: format!("olcum-{n}"),
+        name,
         settings: ProjectSettings {
             srid: 5256,
             length_decimals: 3,
@@ -160,11 +176,7 @@ fn drawing(n: usize) -> Document {
             y: 4_420_000.0,
         },
         home_view: None,
-        layers: vec![
-            layer("parsel", style("#E06C75", LineType::Continuous, 0.35)),
-            layer("nokta", points),
-            layer("yol", style("#4E79A7", LineType::Dashdot, 0.5)),
-        ],
+        layers,
         active_layer: "parsel".into(),
         entities,
         styles: ProjectStyles::default(),
@@ -333,4 +345,166 @@ fn perf() {
                 .sum::<usize>()
         );
     }
+}
+
+/// `n` parcels of 20 vertices on a temporal layer (docs/adr/0210): each
+/// starts in one of a hundred years (1925–2024), none ends. `in_order`: the
+/// drawing holds them in time order, as a layer grows over the years (a
+/// year's parcels together); else the years take turns (every part of the
+/// layer holds every year, the worst case of ADR 0121's parts).
+fn temporal_drawing(n: usize, in_order: bool) -> Document {
+    let entities = (0..n)
+        .map(|i| {
+            let (x0, y0) = (
+                486_000.0 + (i % 300) as f64 * 31.7,
+                4_420_000.0 + (i / 300) as f64 * 27.3,
+            );
+            let year = 1925 + if in_order { i * 100 / n } else { i % 100 };
+            let pts = (0..20)
+                .map(|k| {
+                    let a = k as f64 / 20.0 * std::f64::consts::TAU;
+                    Vec2 {
+                        x: x0 + 12.5 + 11.0 * a.cos(),
+                        y: y0 + 12.5 + 9.0 * a.sin(),
+                    }
+                })
+                .collect();
+            Entity::Polygon(PathEntity {
+                base: EntityBase {
+                    id: i as u32 + 1,
+                    layer_id: "parsel".into(),
+                    color: None,
+                    attrs: BTreeMap::from([("baslangic".to_owned(), format!("{year}-01-01"))]),
+                    label: None,
+                    symbol: None,
+                    line_weight: None,
+                },
+                pts,
+                bulges: None,
+                holes: None,
+                zs: None,
+                parts: None,
+            })
+        })
+        .collect();
+    let mut parcels = layer("parsel", style("#E06C75", LineType::Continuous, 0.35));
+    parcels.time = Some(kentos_contracts::LayerTime {
+        start: "baslangic".into(),
+        end: Some("bitis".into()),
+        key: None,
+        cumulative: false,
+    });
+    document(format!("zaman-{n}"), vec![parcels], entities)
+}
+
+/// ADR 0210 §12: the time slider's step on a temporal layer of 100 000
+/// parcels (each step shows 1 % more of them: a year's), its first build at a
+/// moment, and Senaryo oluştur copying the layer. Release, by hand:
+///
+/// ```text
+/// cargo test --release -p kentos-desktop style::perf::temporal -- --ignored --nocapture --test-threads=1
+/// ```
+#[test]
+#[ignore = "a measurement, run by hand in release"]
+fn temporal() {
+    use kentos_geometry_core::time::{Window, days_from_civil};
+
+    let library = kentos_native_style::system::library();
+    let at = |y: i64| (days_from_civil(y, 1, 1) * 86_400_000) as f64;
+    let view = Bounds {
+        min_x: 486_000.0,
+        min_y: 4_420_000.0,
+        max_x: 486_400.0,
+        max_y: 4_420_250.0,
+    };
+    let row = |what: &str, ms: f64, budget: Option<f64>| match budget {
+        Some(b) => println!(
+            "{what:<58} {ms:>9.1} ms   bütçe {b:>5} ms  {}",
+            if ms <= b { "✓" } else { "✗" }
+        ),
+        None => println!("{what:<58} {ms:>9.1} ms"),
+    };
+    for in_order in [true, false] {
+        let doc = temporal_drawing(100_000, in_order);
+        let how = if in_order {
+            "zaman sırasıyla"
+        } else {
+            "yıllar karışık"
+        };
+        println!("100 000 parsel, {how}:");
+        let t = Instant::now();
+        let mut spatial = Spatial::of(&doc.model);
+        row("  depo (zamanların okunması dahil)", ms(t), None);
+        let mut cache = StyledCache::default();
+        spatial.set_time_window(Some(Window::Instant(at(1990))));
+        let t = Instant::now();
+        let _ = cache.scene(
+            1,
+            &doc.model,
+            spatial.store(),
+            &library,
+            &look(&doc, 1000.0),
+            &view,
+            1,
+        );
+        row("  ilk kurulum, 1990'da", ms(t), None);
+        // Ten steps, a year each: the slowest.
+        let mut worst: f64 = 0.0;
+        for y in 1991..=2000 {
+            spatial.set_time_window(Some(Window::Instant(at(y))));
+            let t = Instant::now();
+            let _ = cache.scene(
+                1,
+                &doc.model,
+                spatial.store(),
+                &library,
+                &look(&doc, 1000.0),
+                &view,
+                1,
+            );
+            worst = worst.max(ms(t));
+        }
+        row(
+            "  sürgünün bir adımı (%1 değişir), en yavaşı",
+            worst,
+            Some(50.0),
+        );
+        spatial.set_time_window(None);
+        let t = Instant::now();
+        let _ = cache.scene(
+            1,
+            &doc.model,
+            spatial.store(),
+            &library,
+            &look(&doc, 1000.0),
+            &view,
+            1,
+        );
+        row("  sürgü kapanınca (hepsi görünür)", ms(t), None);
+    }
+    let mut doc = temporal_drawing(100_000, true);
+    let t = Instant::now();
+    let result = kentos_native_application::scenarios_edit::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        kentos_contracts::ScenariosEdit {
+            operation: kentos_contracts::ScenarioOperation::Create,
+            name: Some("Öneri".into()),
+            layers: Some(vec!["parsel".into()]),
+            copy_objects: None,
+            note: None,
+            scenario: None,
+            expected_revision: None,
+        },
+    );
+    let copied = ms(t);
+    assert!(matches!(
+        result,
+        kentos_contracts::CommandResult::Completed { .. }
+    ));
+    assert_eq!(doc.model.len(), 200_000);
+    row(
+        "Senaryo oluştur: 100 000 nesnenin kopyası",
+        copied,
+        Some(1000.0),
+    );
 }

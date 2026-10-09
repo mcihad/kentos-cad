@@ -139,3 +139,64 @@ pub struct LayersServicePlan {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
+
+/// Writes or takes away a layer's time setting (docs/adr/0210 §11).
+pub const CAD_LAYERS_TIME: &str = "cad.layers.time";
+pub const CAD_LAYERS_TIME_VERSION: u32 = 1;
+
+/// Input of `cad.layers.time` v1: a layer's time setting written, or taken
+/// away (`time` absent or null), as one undo step “Zaman ayarları”. A layer
+/// that already has it as given is left as it is (`changed` false, no step).
+///
+/// Refusals (`CommandError.code`), checked in this order: `invalid_time`
+/// (`LayerTime::problem`); then `invalid_revision`, `revision_conflict`
+/// (status `conflict`), `layer_not_found`, `not_a_layer` (a group),
+/// `service_layer` (a layer drawn from a service: it holds no objects).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersTime {
+    /// The layer's id.
+    pub layer: String,
+    /// Its new time setting; absent or null takes it away.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub time: Option<crate::temporal::LayerTime>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.layers.time` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersTimed {
+    pub layer: String,
+    /// Whether the setting differed (an undo step was written).
+    pub changed: bool,
+    /// The document's revision after the write, as decimal text.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.layers.time` would write (plan mode); nothing is written.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersTimePlan {
+    /// The layer as execute would leave it.
+    pub node: LayerNode,
+    pub changed: bool,
+    /// The document revision the plan was made against.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}

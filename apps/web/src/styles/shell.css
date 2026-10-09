@@ -984,6 +984,7 @@
 .status[data-fit-zoom] .status__zoom,
 .status[data-fit-cloud] .status__server-text,
 .status[data-fit-cloud] .status__save-text,
+.status[data-fit-scenario] .status__scenario-name,
 .status[data-fit-mode] .status__mode-name {
   display: none;
 }

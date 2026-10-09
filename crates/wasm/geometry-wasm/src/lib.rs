@@ -19,6 +19,7 @@ pub mod adjoin;
 pub mod faces;
 pub mod network;
 pub mod store;
+pub mod time;
 pub mod trace;
 
 fn points(xy: &[f64]) -> Vec<Vec2> {

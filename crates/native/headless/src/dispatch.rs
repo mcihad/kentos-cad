@@ -5,12 +5,14 @@
 use kentos_contracts::{
     ArcCreate, BlocksDefine, BlocksEdit, CircleCreate, EntitiesArray, EntitiesCreate,
     EntitiesDelete, EntitiesEdit, EntitiesSetProperties, EntitiesTransform, LayersService,
-    LineCreate, NetworkDefine, PointCreate, PolygonCreate, PolylineCreate,
+    LayersTime, LineCreate, NetworkDefine, PointCreate, PolygonCreate, PolylineCreate,
+    ScenariosEdit,
 };
 use kentos_domain::Document;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, arc, array, blocks_define, blocks_edit, circle, create,
-    delete, edit, layers_service, line, network_define, point, polygon, polyline, set, transform,
+    delete, edit, layers_service, layers_time, line, network_define, point, polygon, polyline,
+    scenarios_edit, set, transform,
 };
 use serde_json::Value;
 
@@ -99,6 +101,8 @@ pub fn run(
         kentos_contracts::CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
         kentos_contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         kentos_contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
+        kentos_contracts::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
+        kentos_contracts::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
         other => return Err(refusal(other)),
     };
     answer.map_err(|e| {

@@ -196,6 +196,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::centerline_scenes::scenes());
     all.extend(crate::edge_shift_scenes::scenes());
     all.extend(crate::image_scenes::scenes());
+    all.extend(crate::temporal_scenes::scenes());
     all
 }
 

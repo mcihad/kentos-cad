@@ -785,6 +785,27 @@ export const ICONS = {
   ...ARROW_ICONS,
   // Map services and the ready basemaps (docs/adr/0208 §14).
   ...SERVICE_ICONS,
+  // Zaman and Senaryo (docs/adr/0210 §10): a slider under a clock; a layer with a clock; a version's old shape dashed beside
+  // its new one; an hourglass; two clocks; a branch with a plus, an eye, its trunk ticked, beside ≠ and merged back.
+  timeSlider: '<circle cx="10" cy="7" r="4.2"/><path d="M10 4.9V7l1.5 1.1"/><path d="M2.5 15h15"/><rect x="11.4" y="13" width="2.6" height="4" rx=".8" fill="currentColor" stroke="none"/>',
+  timeLayer: '<path d="M2.5 8.2 8.5 5l6 3.2-6 3.2z"/><path d="m2.5 11.4 6 3.2 2.2-1.2"/><circle cx="14.6" cy="13.8" r="3.4"/><path d="M14.6 12.1v1.8l1.2.8"/>',
+  timeVersion: '<rect x="2.5" y="5" width="6" height="10" rx="1" stroke-dasharray="2 1.6"/><rect x="11.5" y="5" width="6" height="10" rx="1"/><path d="M8.5 10h3M10.2 8.5l1.3 1.5-1.3 1.5"/>',
+  timeEnd: '<path d="M5.5 3h9M5.5 17h9"/><path d="M6.5 3c0 3.6 3.5 4.6 3.5 7s-3.5 3.4-3.5 7M13.5 3c0 3.6-3.5 4.6-3.5 7s3.5 3.4 3.5 7"/><path d="M8 15.5h4" stroke-width="2"/>',
+  timeCompare: '<circle cx="6.2" cy="10" r="4"/><circle cx="13.8" cy="10" r="4"/><path d="M6.2 8v2H8M13.8 8v2l1.4 1"/>',
+  scenarioCreate: '<circle cx="5" cy="15.5" r="1.8"/><circle cx="5" cy="4.5" r="1.8"/><path d="M5 6.3v7.4M5 11.5c0-2.6 1.8-4.2 4.6-4.2"/><path d="M14.5 3.5v7M11 7h7"/>',
+  scenarioShow: '<circle cx="5" cy="15.5" r="1.8"/><path d="M5 13.7V3.5M5 9.5c0-2.6 1.8-4.2 4.6-4.2h1"/><path d="M9.5 14c1.7-2.4 6.3-2.4 8 0-1.7 2.4-6.3 2.4-8 0z"/><circle cx="13.5" cy="14" r="1.1" fill="currentColor" stroke="none"/>',
+  scenarioBase: '<circle cx="5" cy="15.5" r="1.8"/><circle cx="5" cy="4.5" r="1.8"/><path d="M5 6.3v7.4" stroke-width="2"/><path d="M5 11.5c0-2.6 1.8-4.2 4.6-4.2h1.6" stroke-dasharray="1.6 1.6"/><path d="m11.5 13.5 2 2 4-4.5"/>',
+  scenarioCompare: '<circle cx="5" cy="15.5" r="1.8"/><path d="M5 13.7V3.5M5 9.5c0-2.6 1.8-4.2 4.6-4.2"/><path d="M11 10.5h6.5M11 14h6.5M15.6 8.2l-2.7 8"/>',
+  scenarioApply: '<circle cx="5" cy="16" r="1.8"/><path d="M5 14.2V3.5"/><path d="M15.5 3.5c0 4.4-3.2 6.6-8.8 7.4"/><path d="M8.9 8.8 6.5 11l2.6 1.8"/>',
+  // A scenario group in the layer tree: a branch off the trunk; a temporal layer's badge: a clock.
+  scenario: '<circle cx="5" cy="15.5" r="1.8"/><circle cx="5" cy="4.5" r="1.8"/><circle cx="14.5" cy="6.5" r="1.8"/><path d="M5 6.3v7.4M5 12c0-3.2 2.6-4.8 7.8-5.4"/>',
+  clock: '<circle cx="10" cy="10" r="6.5"/><path d="M10 6.2V10l2.6 1.7"/>',
+  timeFirst: '<path d="M5 5v10M14.5 5l-5 5 5 5"/>',
+  timePrev: '<path d="M12.5 5l-5 5 5 5"/>',
+  timeNext: '<path d="M7.5 5l5 5-5 5"/>',
+  timeLast: '<path d="M15 5v10M5.5 5l5 5-5 5"/>',
+  pause: '<rect x="5.5" y="4.5" width="3" height="11" rx=".8" fill="currentColor" stroke="none"/><rect x="11.5" y="4.5" width="3" height="11" rx=".8" fill="currentColor" stroke="none"/>',
+  loop: '<path d="M3.5 10.5V9a4 4 0 0 1 4-4h7.5"/><path d="M13 2.8 15.2 5 13 7.2"/><path d="M16.5 9.5V11a4 4 0 0 1-4 4H5"/><path d="M7 17.2 4.8 15 7 12.8"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

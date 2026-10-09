@@ -252,6 +252,19 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub feed: Option<crate::service::FeatureFeed>,
+    /// A temporal layer's time setting (docs/adr/0210 §2): which attributes
+    /// hold its objects' start and end. Only a layer has it, never a group.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub time: Option<crate::temporal::LayerTime>,
+    /// A group made a scenario (docs/adr/0210 §9). Only a group has it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scenario: Option<crate::temporal::ScenarioInfo>,
+    /// A scenario's layer: the base layer it stands for (docs/adr/0210 §9).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub replaces: Option<String>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

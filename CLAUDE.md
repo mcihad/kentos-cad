@@ -132,6 +132,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Birleşik ya da Ayrı, Disk ya da Halka), Şebeke izleme (Bağlı, Akış yukarı, Akış aşağı, Yalıtım ve beslemesiz kalanlar); İşlemler'in Ağ
   analizi kategorisi (En yakın tesis, Maliyet matrisi, Hizmet alanları); kurma ve aramalar web'de ağın işçisinde, masaüstünde ağın iş
   parçacığında; `cad.network.define`; Python `kentos.network`; CBS'de Analiz › Ağ analizi (ADR 0209);
+  zaman ve senaryolar: katmanın zaman ayarı (başlangıç, bitiş, kimlik alanı, Birikimli; nesnenin zamanı özniteliklerinden), senaryo
+  grubu ve ana katmanın yerine geçen katman (`.kcad` şema 34); geometri deposunda zamanlar ve pencere (tıklama, kenet, etiket ve Genel
+  bakış süzülür); çizimin altında Zaman sürgüsü (Başa … Sona, adım ve birim, Anlık ve Aralık, Hız, Döngü; oynatma çizimi bekler), Zaman
+  ayarları, Yeni sürüm oluştur ve Sona erdir, Veri karşılaştır'da tarafın tarihi, Zamanı karşılaştır, Geçmiş'te revizyonla Karşılaştır,
+  Senaryo oluştur, Senaryoyu göster, Mevcut durum, Senaryoyu karşılaştır, Senaryoyu uygula; `cad.layers.time`, `cad.scenarios.edit`;
+  Python `kentos.temporal`; CBS'de Harita › Zaman ve Senaryo (ADR 0210);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -401,10 +407,18 @@ python3 scripts/fixtures/network_processing_cases.py --check; python3 scripts/fi
 cargo test --release -p kentos-geometry-core --test all network::timing -- --ignored --nocapture   # 100 800 parçalı ızgara şehirde kurma, konum, Dijkstra, imlece yol, rota, izleme, hizmet alanının çizgileri ve alanları, Denetle; bütçeleriyle (ADR 0209 §12)
 cargo test --release -p kentos-processing --test cases network_timing -- --ignored --nocapture   # aynı şehrin çizimden okunması ve bütün kurma (masaüstünün arayüz iş parçacığındaki payı, İşlemler ve Python; ADR 0209 §12)
 cargo test -p kentos-desktop networks::tests::screens -- --ignored --nocapture   # Ağlar penceresi, İşlemler'in ağ araçları ve sonuçları, Analiz şeridi, .run/shots/aglar-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs networks); ADR 0209)
+python3 scripts/fixtures/temporal_cases.py --check   # zaman değerlerinin okunuşunu, yazılışını ve gösterimini, aşağı yuvarlamayı, sürgünün konumlarını (takvimle ay ve yıl), son konumu ve açılış adımını, nesnenin zamanını, görünme tablosunu ve katmanın özetini ADR'nin dilbilgisi ve takvimiyle, KentOS kodu olmadan denetle; durumlar fixtures/temporal/v1/cases.json (ADR 0210 §3–§5)
+python3 scripts/fixtures/temporal_rules_cases.py --check; python3 scripts/fixtures/temporal_command_cases.py --check   # zaman ayarının ve senaryo ağacının kurallarını (fixtures/temporal/v1/rules.json) ve cad.layers.time ile cad.scenarios.edit durumlarını sözleşmenin kurallarından denetle (ADR 0210 §2, §11)
+python3 scripts/fixtures/temporal_scene.py --check   # zaman izlerinin ve resimlerin sahnesini (fixtures/interaction/v1/temporal.kcad) denetle (ADR 0210)
+cargo test --release -p kentos-geometry-core --test all time::timing -- --ignored --nocapture   # 100 000 değerin zamanı, deponun zamanları alması, pencerenin süzgeci ve sürgünün konumları (ADR 0210 §12)
+cargo test --release -p kentos-desktop style::perf::temporal -- --ignored --nocapture --test-threads=1   # 100 000 parsellik zamansal katmanda sürgünün bir adımı (zaman sırası ve karışık yıllar) ve Senaryo oluştur'un kopyası (ADR 0210 §12)
+KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; TIME_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/time.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp   # web'de zamanların okunması ve 10 000 nesnede sürgünün bir adımı, gönderilen WASM'la (ADR 0210 §12)
+KENTOS_SHOTS_ONLY=zaman-serit,zaman-surgu,zaman-surgu-2015,zaman-ayarlari,senaryo-olustur,senaryo-gosterilen,senaryo-uygula,zaman-karsilastir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # zaman ve senaryoların masaüstü resimleri, .run/shots/arac-zaman-*, arac-senaryo-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs temporal); ADR 0210)
+KENTOS_TRACES_ONLY=time-slider,scenarios cargo test -p kentos-desktop every_trace_passes   # masaüstünde yalnız adı verilen izler
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
 cargo test --release -p kentos-pointcloud --test all timing -- --ignored --nocapture   # aynı bulutta düğümün görünüşe göre çözülmesi (katman katman) ve LAZ yazma, tek ve dört iş parçacığıyla (önce perf::clouds dosyayı yazar; ADR 0207 §12)
-python3 scripts/fixtures/exchange_cases.py --check   # Çizimler arası alışverişin kurallarını (seçimin çizimi: budanan ağaç, iç içe bloklar, kitaplığın kullanılanları, düşen bağlar; Başka çizimden al: yollar, katlanan adlar, Atla ve Değiştir, kimliklerin ekleri, katman durumlarının yolları; Dosyadan blok ekle: ad sayısı, sol alt köşe, resim ve tablo; Kaynaklar'ın Katman olarak ekle'si: katman nesneleriyle, aynı adlı blok ve stil, açılan katmanın görünüşünün simgesi) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/exchange/v1/cases.json (ADR 0193, 0199 §7)
+python3 scripts/fixtures/exchange_cases.py --check   # Çizimler arası alışverişin kurallarını (seçimin çizimi: budanan ağaç, iç içe bloklar, kitaplığın kullanılanları, düşen bağlar; Başka çizimden al: yollar, katlanan adlar, Atla ve Değiştir, kimliklerin ekleri, katman durumlarının yolları; Dosyadan blok ekle: ad sayısı, sol alt köşe, resim ve tablo; Kaynaklar'ın Katman olarak ekle'si: katman nesneleriyle, aynı adlı blok ve stil, açılan katmanın görünüşünün simgesi; senaryo bağları gelmez, zaman ayarı gelir) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/exchange/v1/cases.json (ADR 0193, 0199 §7, 0210 §9)
 python3 scripts/fixtures/image_cases.py --check   # Resim ekle'nin çerçevesini (genişlik, yükseklik, dönüş) ve Resmi kırp'ın sınırını resmin kendi kesirleriyle (taşan, saran, saat yönünde, aynalı, dönük, dışarıda) kesirlerle bağımsız başvurudan denetle; durumlar fixtures/image/v1/cases.json (ADR 0192)
 KENTOS_SHOTS_ONLY=resim-ekle,resim-ekle-yazildi,resim-kirp,resim-kirpildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # resim nesnesinin resimleri, .run/shots/arac-resim-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs images), WebGPU'yla --renderer webgpu; ADR 0192)
 python3 scripts/fixtures/edge_shift_cases.py --check   # Paralel kaydır'ın kenarlarını (dışarı ve içeri, saat yönü, delik, çoklu çizginin serbest ucu, harita koordinatları, irrasyonel boy, halkadaki yay, retler) ve hedef alanın uzaklığını kesirlerle ve 50 basamaklı mpmath ile bağımsız başvurudan denetle; durumlar fixtures/edge-shift/v1/cases.json (ADR 0191)
@@ -1268,7 +1282,15 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `kentos_interaction::network`; İşlemler'in Ağ analizi kategorisi iki platformda (`network_processing_cases.py`); Python `kentos.network`;
   ortak izler `network-*.json`, sahne `networks.kcad`; süreler `network::timing`, `network_timing`. Açık kalanlar TODOS.md `GEO-01`,
   `GEO-02`. Raster analizi kümesi (`GIS-31`…`GIS-36`) başka bir ajandadır (sahibin kararı, 9 Ekim; onun ADR'leri 0230'dan başlar), bu
-  sırada atlanır; dosyalarına dokunulmaz. Sıradaki `GIS-12`.
+  sırada atlanır; dosyalarına dokunulmaz. `GIS-12` zaman ve senaryolar ([ADR 0210](docs/adr/0210-temporal-layers-and-scenarios.md);
+  kapsamı ben belirledim) tek parçada bitti (9 Ekim): sözleşmenin `temporal`'ı (`LayerTime`, `ScenarioInfo`, `scenarios_problem`),
+  `cad_layers`'ın `LayersTime`'ı ve `cad_scenarios`'ı, `.kcad` şema 34 (`FORMATS_VERSION` 44); çekirdek `time` ve deponun zamanları
+  (bağımsız başvurular `temporal_cases.py`, `temporal_rules_cases.py`, `temporal_command_cases.py`); web'de `app/timeSlider.ts`,
+  `app/timeCommands.ts`, `app/scenarios.ts`, `ui/time/`, `tools/timeVersionTool.ts`; masaüstünde `temporal/` ve
+  `kentos_interaction::time_version`, stilli çizimin önbelleği pencerenin farkını parçalarla kurar; sunucu ağacın kurallarını denetler;
+  Python `kentos.temporal`; komut durumlarında `$layer:K`; ortak izler `time-*.json`, `scenarios.json`, sahne `temporal.kcad`; süreler
+  `time::timing`, `style::perf::temporal`, `scripts/perf/time.test.ts`. `GIS-13` ve `GIS-14` mevzuatla düzenlenen işlerdir (sona kalır);
+  sıradaki `GIS-15`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

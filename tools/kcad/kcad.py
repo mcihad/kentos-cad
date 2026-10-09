@@ -127,6 +127,11 @@ SCHEMA_WITH_POINT_CLOUDS = 31
 SCHEMA_WITH_SERVICES = 32
 # Schema 33: schema 32 and the settings' `networks` (docs/adr/0209 §2).
 SCHEMA_WITH_NETWORKS = 33
+# Schema 34: schema 33 and a layer node's `time`, a group's `scenario`, a scenario layer's `replaces` (docs/adr/0210 §2).
+SCHEMA_WITH_TEMPORAL = 34
+# A time setting's field names and a scenario's note (kentos_contracts::temporal).
+TIME_FIELD_MAX = 64
+SCENARIO_NOTE_MAX = 500
 # Networks' bounds and names (kentos_contracts::network).
 NETWORK_KINDS = ("road", "utility")
 NETWORK_CONNECTS = ("ends", "vertices")
@@ -243,7 +248,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -670,6 +675,100 @@ def networks_problem(list_):
         if any(caseless(o["name"]) == caseless(n["name"]) for o in list_[:i]):
             return f"“{n['name']}” adlı ağ iki kez var."
     return None
+
+
+def time_field_problem(what, name):
+    if name.strip() != name:
+        return f"{what} alanının adının başında ya da sonunda boşluk var"
+    if not name:
+        return f"{what} alanının adı boş"
+    if len(name) > TIME_FIELD_MAX:
+        return f"{what} alanının adı {TIME_FIELD_MAX} karakterden uzun"
+    return None
+
+
+def layer_time_problem(t):
+    """A layer's time setting (kentos_contracts::temporal::LayerTime::problem): its fields' names trimmed, 1–64 characters;
+    the end another field than the start."""
+    for what, key in (("başlangıç", "start"), ("bitiş", "end"), ("kimlik", "key")):
+        if key in t:
+            p = time_field_problem(what, t[key])
+            if p:
+                return p
+    if t.get("end") == t["start"]:
+        return "başlangıç ve bitiş aynı alan olamaz"
+    return None
+
+
+def scenario_problem(s):
+    """A scenario's note (kentos_contracts::temporal::ScenarioInfo::problem): trimmed, 1–500 characters."""
+    note = s.get("note")
+    if note is None:
+        return None
+    if note.strip() != note or not note:
+        return "senaryonun notu boş ya da başında veya sonunda boşluk var"
+    if len(note) > SCENARIO_NOTE_MAX:
+        return f"senaryonun notu {SCENARIO_NOTE_MAX} karakterden uzun"
+    return None
+
+
+def scenarios_problem(layers):
+    """The tree's time settings and scenarios (kentos_contracts::temporal::scenarios_problem, docs/adr/0210 §2): a time
+    only on a layer that holds objects; a scenario only a group, never inside another; `replaces` only on a layer inside
+    a scenario, not empty, not itself, naming a base layer (a layer outside every scenario) when the node is in the tree,
+    each base layer replaced at most once in a scenario. A `replaces` naming no node is left out."""
+    where = {}
+
+    def index(nodes, inside):
+        for n in nodes:
+            where[n["id"]] = (n, inside)
+            index(n["children"], inside or "scenario" in n)
+
+    index(layers, False)
+    replaced = set()
+
+    def walk(nodes, scenario):
+        for n in nodes:
+            if "time" in n:
+                if n["type"] == "group":
+                    return f"“{n['name']}” bir grup; grubun zamanı olmaz, zaman katmanındır"
+                if "service" in n:
+                    return f"“{n['name']}” servisten çizilir; nesnesi olmayan katmanın zamanı olmaz"
+                p = layer_time_problem(n["time"])
+                if p:
+                    return f"“{n['name']}” katmanının zamanı: {p}"
+            if "scenario" in n:
+                if n["type"] == "layer":
+                    return f"“{n['name']}” bir katman; yalnız grup senaryo olur"
+                if scenario is not None:
+                    return f"“{n['name']}” senaryosu “{scenario['name']}” senaryosunun içinde; senaryo iç içe olmaz"
+                p = scenario_problem(n["scenario"])
+                if p:
+                    return f"“{n['name']}” senaryosu: {p}"
+            if "replaces" in n:
+                target = n["replaces"]
+                if scenario is None:
+                    return f"“{n['name']}” bir senaryonun içinde değil; yalnız senaryo katmanı bir katmanın yerine geçer"
+                if n["type"] == "group":
+                    return f"“{n['name']}” bir grup; yalnız katman bir katmanın yerine geçer"
+                if not target:
+                    return f"“{n['name']}” katmanının yerine geçtiği katman boş"
+                if target == n["id"]:
+                    return f"“{n['name']}” katmanı kendi yerine geçemez"
+                if target in where:
+                    base, inside = where[target]
+                    if base["type"] != "layer" or inside or "scenario" in base:
+                        return (f"“{n['name']}” katmanı “{base['name']}” düğümünün yerine geçiyor; yalnız bir ana katmanın "
+                                "(senaryo dışındaki katmanın) yerine geçilir")
+                    if (scenario["id"], target) in replaced:
+                        return f"“{scenario['name']}” senaryosunda “{base['name']}” katmanının yerine iki katman geçiyor"
+                    replaced.add((scenario["id"], target))
+            p = walk(n["children"], n if "scenario" in n else scenario)
+            if p:
+                return p
+        return None
+
+    return walk(layers, None)
 
 
 def service_links_problem(layers, connections, entities):
@@ -1213,6 +1312,7 @@ class _Schema:
         self.annotation = version >= SCHEMA_WITH_ANNOTATION
         self.services = version >= SCHEMA_WITH_SERVICES
         self.networks = version >= SCHEMA_WITH_NETWORKS
+        self.temporal = version >= SCHEMA_WITH_TEMPORAL
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -1238,6 +1338,11 @@ class _Schema:
             place, words = links
             self.path.extend(place.split("/"))
             self.fail("bad_value", words)
+        # Schema 34's tree rules (docs/adr/0210 §2).
+        tree = scenarios_problem(d["layers"])
+        if tree:
+            self.path.append("layers")
+            self.fail("bad_value", tree)
         out = {
             "format": DOCUMENT_FORMAT,
             "version": DOCUMENT_VERSION,
@@ -1641,6 +1746,7 @@ class _Schema:
                 **({"snap": (self.layer_snap_, False)} if self.layer_snap else {}),
                 **({"fields": (self.layer_fields_, False)} if self.layer_fields else {}),
                 **({"service": (self.service_, False), "feed": (self.feed_, False)} if self.services else {}),
+                **({"time": (self.layer_time_, False), "scenario": (self.scenario_, False), "replaces": (self.text, False)} if self.temporal else {}),
                 "type": (self.enum(("group", "layer")), True),
                 "style": (self.layer_style, True),
                 "locked": (self.bool, True),
@@ -1659,7 +1765,29 @@ class _Schema:
             self.fail("bad_value", "grubun servisi olmaz; servis yalnız katmanındır")
         if "feed" in n and n["type"] == "group":
             self.fail("bad_value", "grubun veri kaynağı olmaz; kaynak yalnız katmanındır")
+        if "time" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun zamanı olmaz; zaman yalnız katmanındır")
+        if "scenario" in n and n["type"] == "layer":
+            self.fail("bad_value", "katman senaryo olmaz; yalnız grup senaryodur")
+        if "replaces" in n and n["type"] == "group":
+            self.fail("bad_value", "grup bir katmanın yerine geçmez; yalnız katman geçer")
         return n
+
+    # Schema 34's time settings and scenarios (docs/adr/0210 §2): read field by field, then checked by the contract's rules.
+
+    def layer_time_(self, v):
+        t = self.fields({"start": (self.text, True), "end": (self.text, False), "key": (self.text, False), "cumulative": (self.only_true, False)})(v)
+        p = layer_time_problem(t)
+        if p:
+            self.fail("bad_value", p)
+        return t
+
+    def scenario_(self, v):
+        s = self.fields({"note": (self.text, False)})(v)
+        p = scenario_problem(s)
+        if p:
+            self.fail("bad_value", p)
+        return s
 
     # Schema 32's map services (docs/adr/0208 §2): read field by field, then checked whole by the contract's rules.
 

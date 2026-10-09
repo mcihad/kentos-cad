@@ -423,6 +423,45 @@ impl App {
                 fetch: Fetch::Revision(r.revision),
                 name,
                 listed: Some(r.sha256),
+                compare: None,
+            },
+        )
+    }
+
+    /// Revizyonla karşılaştır (docs/adr/0210 §8): the point's drawing as
+    /// Veri karşılaştır's Eski veri, the open drawing as Yeni.
+    pub(crate) fn history_compare(&mut self, point: Point) -> Task<Message> {
+        let Some(p) = self.history_project() else {
+            return Task::none();
+        };
+        let (fetch, name, listed, refused) = match point {
+            Point::Revision(r) => (
+                Fetch::Revision(r.revision.clone()),
+                format!("Revizyon {}", r.revision),
+                Some(r.sha256),
+                history::why_not_download(&p.access.permissions).is_some(),
+            ),
+            Point::Checkpoint(c) => (
+                Fetch::Checkpoint(c.id),
+                c.name.clone(),
+                Some(c.sha256),
+                history::why_not_take(&p.access.permissions, "indirme").is_some(),
+            ),
+        };
+        if refused {
+            return Task::none();
+        }
+        if self.document.is_none() {
+            self.warn("Açık çizim yok; karşılaştırmak için önce bir çizim açın.");
+            return Task::none();
+        }
+        self.catalog_download(
+            p,
+            Download {
+                fetch,
+                name: name.clone(),
+                listed,
+                compare: Some(name),
             },
         )
     }
@@ -442,6 +481,7 @@ impl App {
                 fetch: Fetch::Checkpoint(c.id),
                 name,
                 listed: Some(c.sha256),
+                compare: None,
             },
         )
     }

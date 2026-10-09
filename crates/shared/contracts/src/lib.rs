@@ -40,6 +40,7 @@ pub mod cad_layers;
 pub mod cad_networks;
 pub mod cad_primitives;
 pub mod cad_properties;
+pub mod cad_scenarios;
 pub mod cad_transform;
 pub mod catalog;
 pub mod checkpoints;
@@ -66,6 +67,7 @@ pub mod service;
 pub mod settings;
 pub mod style;
 pub mod table;
+pub mod temporal;
 pub mod topology;
 
 pub use annotation::*;
@@ -80,6 +82,7 @@ pub use cad_layers::*;
 pub use cad_networks::*;
 pub use cad_primitives::*;
 pub use cad_properties::*;
+pub use cad_scenarios::*;
 pub use cad_transform::*;
 pub use catalog::*;
 pub use checkpoints::*;
@@ -106,6 +109,7 @@ pub use service::*;
 pub use settings::*;
 pub use style::*;
 pub use table::*;
+pub use temporal::*;
 pub use topology::*;
 
 /// Version of this set of contracts, reported by the API's health endpoint.

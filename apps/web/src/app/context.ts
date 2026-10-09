@@ -18,6 +18,7 @@ import type { ProcessingService } from './processing';
 import type { DraftingSettings, MessageLog, Preferences, UiState } from './state';
 import type { SettingsStore } from './settings/store';
 import type { StyleService } from './styles';
+import type { TimeSlider } from './timeSlider';
 
 /**
  * The single dependency every feature module receives. Modules talk to each
@@ -64,4 +65,6 @@ export interface AppContext {
   readonly server: ServerStatus;
   /** Signing in, the open cloud project, its autosave and live events (app/cloud/session.ts). */
   readonly cloud: CloudSession;
+  /** Zaman sürgüsü (app/timeSlider.ts, docs/adr/0210 §5): the session's time window over the temporal layers. */
+  readonly time: TimeSlider;
 }

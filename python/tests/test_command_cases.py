@@ -41,6 +41,8 @@ class Case:
         self.setup_blocks = [b.id for b in self.doc.blocks()]
         # The layer the last command added or would add (`$layer`, docs/adr/0208 §15).
         self.layer: str | None = None
+        # The layers the last command that added any added or would add, by their number (`$layer:1` …, docs/adr/0210 §11).
+        self.fresh: list[str] = []
 
     def layer_ids(self) -> set[str]:
         out: set[str] = set()
@@ -74,6 +76,10 @@ class Case:
                 return record.uid
             if "$uid:" in value:
                 return re.sub(r"\$uid:([A-Za-z0-9_-]+)", lambda m: self.uids[m.group(1)], value)
+            if value.startswith("$layer:"):
+                k = int(value[len("$layer:"):])
+                assert 1 <= k <= len(self.fresh), f"{at}: {value}: the last command added {len(self.fresh)} layers"
+                return self.fresh[k - 1]
             if value == "$layer":
                 assert self.layer is not None, f"{at}: $layer: no command added a layer"
                 return self.layer
@@ -127,6 +133,14 @@ class Case:
         outcome = self.wrapper.run(self.doc, typed, op=step["op"])
         got = wire(outcome)
         want = json.loads(json.dumps(step["result"]))
+        # `$layer:K`: the layers the command added (execute) or would add (plan), ids the tree did not have, by their
+        # number (docs/adr/0210 §11); a command that adds none leaves the last ones.
+        fresh = sorted({s for s in strings(got) if re.fullmatch(r"layer-\d+", s) and s not in layers_before}, key=lambda s: int(s[6:]))
+        if fresh:
+            after = self.layer_ids()
+            wrong = [f for f in fresh if (f in after) != (step["op"] == "execute")]
+            assert not wrong, f"{at}: new layers {wrong} {'missing from' if step['op'] == 'execute' else 'in'} the tree"
+            self.fresh = fresh
         # `$layer`: the layer the command added (execute) or would add (plan): an id the tree did not have.
         for path in (("output", "layer"), ("output", "node", "id")):
             w: Any = want
@@ -210,12 +224,23 @@ class Case:
         """An expected object with its block ids (`$blockOf:Ad`, `$block:name`) and the persistent ids of the objects it
         names (`$uidOf:12`: a linked text's object, docs/adr/0175 §4) filled in; nothing else is a placeholder."""
         if isinstance(value, str):
-            return self.fill(value, at) if value.startswith(("$blockOf:", "$block:", "$uidOf:")) else value
+            return self.fill(value, at) if value.startswith(("$blockOf:", "$block:", "$uidOf:", "$layer:")) else value
         if isinstance(value, list):
             return [self.block_ids(v, at) for v in value]
         if isinstance(value, dict):
             return {k: self.block_ids(v, at) for k, v in value.items()}
         return value
+
+
+def strings(value: Any) -> list[str]:
+    """Every string in a JSON value."""
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list):
+        return [s for v in value for s in strings(v)]
+    if isinstance(value, dict):
+        return [s for v in value.values() for s in strings(v)]
+    return []
 
 
 def fold(name: str) -> str:

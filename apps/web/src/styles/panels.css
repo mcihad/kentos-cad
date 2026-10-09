@@ -218,6 +218,15 @@
   color: var(--c-text-3);
 }
 /* A map service layer whose service shows nothing (docs/adr/0208 §14): why, in its tip. */
+.tree__clock {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  color: var(--c-text-3);
+}
+.tree__clock[hidden] {
+  display: none;
+}
 .tree__fail {
   display: inline-flex;
   flex: none;

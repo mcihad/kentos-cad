@@ -314,6 +314,86 @@ impl Document {
         Ok(true)
     }
 
+    /// Gives a node its time setting, scenario and base layer (docs/adr/0210
+    /// §2) as one undo step named `label`. Refused with nothing changed (the
+    /// web's `setLayerTemporal`): a time or a base layer on a group, a
+    /// scenario on a layer, a time on a layer drawn from a service, a setting
+    /// or a note with a problem, a tree the change would break
+    /// (`scenarios_problem`). An unknown id changes nothing; returns whether it changed.
+    pub fn set_layer_temporal(
+        &mut self,
+        id: &str,
+        next: crate::history::Temporal,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(node) = self.layers.get(id) else {
+            return Ok(false);
+        };
+        let name = &node.name;
+        let group = node.kind == LayerNodeType::Group;
+        if group && next.time.is_some() {
+            return Err(Refusal(format!(
+                "“{name}” bir grup; zaman yalnız katmanın olur."
+            )));
+        }
+        if group && next.replaces.is_some() {
+            return Err(Refusal(format!(
+                "“{name}” bir grup; yalnız katman bir katmanın yerine geçer."
+            )));
+        }
+        if !group && next.scenario.is_some() {
+            return Err(Refusal(format!(
+                "“{name}” bir katman; yalnız grup senaryo olur."
+            )));
+        }
+        if next.time.is_some() && node.service.is_some() {
+            return Err(Refusal(format!(
+                "“{name}” servisten çizilir; nesnesi olmayan katmanın zamanı olmaz."
+            )));
+        }
+        if let Some(problem) = next.time.as_ref().and_then(|t| t.problem()) {
+            return Err(Refusal(format!("Katmanın zamanı: {problem}.")));
+        }
+        if let Some(problem) = next.scenario.as_ref().and_then(|s| s.problem()) {
+            return Err(Refusal(format!("Senaryo: {problem}.")));
+        }
+        let before = crate::history::Temporal {
+            time: node.time.clone(),
+            scenario: node.scenario.clone(),
+            replaces: node.replaces.clone(),
+        };
+        if before == next {
+            return Ok(false);
+        }
+        // The tree as the change would leave it keeps its rules.
+        let mut tree = self.layers.clone();
+        tree.replace_temporal(id, &next);
+        if let Some(problem) = kentos_contracts::scenarios_problem(tree.nodes()) {
+            return Err(Refusal(format!("Katman ağacı: {problem}.")));
+        }
+        let op = Op::LayerTemporal {
+            layer: id.to_owned(),
+            before: Box::new(before),
+            after: Box::new(next),
+        };
+        self.record(vec![op], label);
+        Ok(true)
+    }
+
+    /// A layer's time setting (docs/adr/0210 §2) as one undo step `label`,
+    /// its scenario fields as they are: [`Document::set_layer_temporal`].
+    pub fn set_layer_time(
+        &mut self,
+        id: &str,
+        time: Option<kentos_contracts::LayerTime>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(now) = self.layers.temporal_of(id) else {
+            return Ok(false);
+        };
+        self.set_layer_temporal(id, crate::history::Temporal { time, ..now }, label)
+    }
+
     /// Deletes a layer, or a group with everything under it, and the objects
     /// on them, as one undo step “Katman sil” (into the open transaction or
     /// group, if one is). Undo puts the node back in its place with its

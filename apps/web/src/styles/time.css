@@ -1,0 +1,143 @@
+/* Zaman sürgüsü's bar under the drawing (docs/adr/0210 §10). */
+.timebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--cmd-h);
+  padding: 4px 10px;
+  background: var(--c-panel);
+  border-top: 1px solid var(--c-line);
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  /* Its width is the drawing's, not the window's (a wide dock narrows it): the rules below ask the bar. */
+  container-type: inline-size;
+}
+.timebar[hidden] {
+  display: none;
+}
+.timebar__nav {
+  display: inline-flex;
+  gap: 2px;
+}
+.timebar__btn {
+  display: inline-grid;
+  place-items: center;
+  width: calc(28px * var(--ui-scale));
+  height: calc(28px * var(--ui-scale));
+  border-radius: var(--r-sm);
+  color: var(--c-text-2);
+}
+.timebar__btn:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.timebar__btn:active {
+  background: var(--c-press);
+}
+.timebar__btn[aria-pressed='true'] {
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+}
+.timebar__when {
+  /* The date is never cut nor run over by the slider: the slider gives room. */
+  flex: none;
+  min-width: calc(92px * var(--ui-scale));
+  color: var(--c-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.timebar__track {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+.timebar__end {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+.timebar__range {
+  flex: 1 1 auto;
+  min-width: 80px;
+  accent-color: var(--c-accent);
+}
+.timebar__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.timebar__count {
+  width: calc(52px * var(--ui-scale));
+  height: calc(26px * var(--ui-scale));
+  padding: 0 6px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-sm);
+  background: var(--c-field);
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
+.timebar .dropdown {
+  height: calc(26px * var(--ui-scale));
+}
+.timebar__kind .seg__opt {
+  height: calc(22px * var(--ui-scale));
+  padding: 0 10px;
+}
+/* A narrow bar: the ends' dates go first, then the words beside the fields, then the gaps and the slider shrink. */
+@container (max-width: 1060px) {
+  .timebar__end {
+    display: none;
+  }
+}
+@container (max-width: 960px) {
+  .timebar__word {
+    display: none;
+  }
+}
+@container (max-width: 820px) {
+  .timebar__nav,
+  .timebar__track {
+    gap: 0;
+  }
+  .timebar__track {
+    min-width: calc(64px * var(--ui-scale));
+  }
+  .timebar__range {
+    min-width: calc(48px * var(--ui-scale));
+  }
+}
+
+/* Zaman ayarları and Senaryo oluştur (docs/adr/0210 §10). */
+.time-layer__layer {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.time-layer__fields .io-field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.time-layer__fields select {
+  width: 100%;
+}
+.scenario-note {
+  width: 100%;
+  height: auto;
+  min-height: calc(52px * var(--ui-scale));
+  padding: 6px 8px;
+  line-height: 1.45;
+  font-family: inherit;
+  resize: vertical;
+}
+.scenario-rows {
+  height: min(calc(200px * var(--ui-scale)), 28vh);
+}
+.time-layer__layer .io-field {
+  flex: 1 1 auto;
+}
+.time-layer__layer select {
+  width: 100%;
+}

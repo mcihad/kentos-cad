@@ -68,6 +68,10 @@ pub fn check_tree(tree: &[LayerNode], active: &str) -> AppResult<()> {
     snaps(tree)?;
     schemas(tree)?;
     services(tree)?;
+    // The layers' time settings and the scenarios (docs/adr/0210 §2), the tree whole.
+    if let Some(problem) = kentos_contracts::scenarios_problem(tree) {
+        return Err(AppError::invalid(format!("Katman ağacı: {problem}.")));
+    }
     match find_layer(tree, active) {
         Some((n, _)) if n.kind == LayerNodeType::Layer => Ok(()),
         _ => Err(AppError::invalid(format!(
@@ -653,6 +657,9 @@ mod tests {
             fields: Vec::new(),
             service: None,
             feed: None,
+            time: None,
+            scenario: None,
+            replaces: None,
         }
     }
 
@@ -693,6 +700,42 @@ mod tests {
             vec![node("a", LayerNodeType::Layer, None, Vec::new())],
         )];
         assert!(check_tree(&group, "a").is_err(), "a group keeps none");
+    }
+
+    /// A layer's time setting and the scenarios are checked as the files' readers check them (docs/adr/0210 §2).
+    #[test]
+    fn times_and_scenarios_keep_their_rules_in_the_tree() {
+        use kentos_contracts::{LayerTime, ScenarioInfo};
+        let time = |start: &str, end: Option<&str>| LayerTime {
+            start: start.to_owned(),
+            end: end.map(str::to_owned),
+            key: None,
+            cumulative: false,
+        };
+        let mut timed = node("a", LayerNodeType::Layer, None, Vec::new());
+        timed.time = Some(time("baslangic", Some("bitis")));
+        assert!(check_tree(&[timed.clone()], "a").is_ok());
+        let mut same = timed.clone();
+        same.time = Some(time("tarih", Some("tarih")));
+        let refused = check_tree(&[same], "a").unwrap_err();
+        assert!(
+            refused
+                .to_string()
+                .contains("başlangıç ve bitiş aynı alan olamaz"),
+            "{refused}"
+        );
+        // A scenario standing for a base layer, and the same base layer twice in it.
+        let mut copy = node("a2", LayerNodeType::Layer, None, Vec::new());
+        copy.replaces = Some("a".to_owned());
+        let mut group = node("s", LayerNodeType::Group, None, vec![copy.clone()]);
+        group.scenario = Some(ScenarioInfo::default());
+        assert!(check_tree(&[group.clone(), timed.clone()], "a").is_ok());
+        let mut again = copy.clone();
+        again.id = "a3".to_owned();
+        group.children.push(again);
+        assert!(check_tree(&[group, timed.clone()], "a").is_err());
+        // A layer standing for another outside a scenario.
+        assert!(check_tree(&[copy, timed], "a").is_err());
     }
 
     /// A layer's fields are checked as the files' readers check them (docs/adr/0199 §1).

@@ -89,6 +89,8 @@ impl App {
             stack![
                 column![
                     self.drawing_area(),
+                    // Zaman sürgüsü's bar while it is open (temporal/bar.rs, docs/adr/0210 §10).
+                    self.time_bar(self.window_size.width),
                     self.sheets.tabs().map(Message::Sheet),
                     self.bottom()
                 ],
@@ -929,12 +931,41 @@ impl App {
         parent_visible: bool,
     ) -> Node<'a, Message> {
         let active = doc.model.layers().active() == node.id;
+        let count = label::caption(doc.count_below(node).to_string());
+        // A temporal layer's clock before its count, in the count's column (docs/adr/0210 §10).
+        let cells: Vec<Element<'_, Message>> = match &node.time {
+            Some(t) if node.kind == LayerNodeType::Layer => vec![
+                iced::widget::row![
+                    kentos_ui::widget::tip(
+                        kentos_ui::icon::icon(crate::icons::from_web(Some("clock")))
+                            .size(12.0)
+                            .tone(kentos_ui::icon::Tone::Muted),
+                        kentos_ui::widget::Tip::new(format!(
+                            "Zamansal katman: {}{}{}",
+                            t.start,
+                            match (&t.end, t.cumulative) {
+                                (Some(e), _) => format!(" – {e}"),
+                                (None, true) => String::new(),
+                                (None, false) => " (anlık)".to_owned(),
+                            },
+                            if t.cumulative { " (birikimli)" } else { "" }
+                        )),
+                        iced::widget::tooltip::Position::Top,
+                    ),
+                    count
+                ]
+                .spacing(4)
+                .align_y(iced::Center)
+                .into(),
+            ],
+            _ => vec![count.into()],
+        };
         let mut row = Node::new(node.name.as_str())
             // Its place in the tree (the web's name title).
             .tip(kentos_ui::widget::Tip::new(
                 doc.model.layers().path(&node.id),
             ))
-            .cells([label::caption(doc.count_below(node).to_string()).into()])
+            .cells(cells)
             .on_press(Message::LayerSelected(node.id.clone()))
             .selected(self.layer_row_selected(&node.id))
             .active(active)
@@ -962,6 +993,20 @@ impl App {
             ));
         }
         match node.kind {
+            // A scenario's own icon, its note in the tip (docs/adr/0210 §10).
+            LayerNodeType::Group if node.scenario.is_some() => {
+                let note = node.scenario.as_ref().and_then(|s| s.note.clone());
+                row.folder()
+                    .icon(
+                        kentos_ui::icon::icon(crate::icons::from_web(Some("scenario"))).size(14.0),
+                    )
+                    .tip(kentos_ui::widget::Tip::new(format!(
+                        "{}\nSenaryo{}",
+                        doc.model.layers().path(&node.id),
+                        note.map_or_else(String::new, |n| format!(": {n}"))
+                    )))
+                    .expanded(node.expanded, Message::LayerExpanded(node.id.clone()))
+            }
             LayerNodeType::Group => row
                 .folder()
                 .icon(kentos_ui::icon::icon(Icon::Folder).size(14.0))
@@ -1240,7 +1285,7 @@ impl App {
         // The drafting aids (the web's `status__toggles`): a lamp each, lit while on.
         bar = bar.separator();
         for (id, name) in STATUS_AIDS {
-            bar = bar.push(self.status_aid(id, name, fit >= 6));
+            bar = bar.push(self.status_aid(id, name, fit >= 7));
         }
         if let Some(doc) = &self.document {
             let settings = doc.settings();
@@ -1260,7 +1305,11 @@ impl App {
                 };
                 bar = bar.separator().push(cell);
             }
-            bar = bar.separator().push(self.mode_cell(fit < 5));
+            // Senaryo (docs/adr/0210 §10): while the project has scenarios, which one the drawing shows.
+            if let Some(cell) = self.scenario_cell(fit < 5) {
+                bar = bar.separator().push(cell);
+            }
+            bar = bar.separator().push(self.mode_cell(fit < 6));
             if fit < 2 {
                 // Clicked, Proje ayarları on its coordinate system page (the web's cell); the second
                 // system on its right-click menu (docs/adr/0167 §1).
@@ -1422,7 +1471,7 @@ impl App {
         }
         // A lamp, its gap and the row's spacing (14, measured on the pictures),
         // and the padding (less once the bar is tight).
-        let pad = if fit >= 6 { 12.0 } else { 18.0 };
+        let pad = if fit >= 7 { 12.0 } else { 18.0 };
         width += SEPARATOR
             + STATUS_AIDS
                 .iter()
@@ -1433,9 +1482,13 @@ impl App {
                 let zoom = format!("Ekran 1:{}", thousands(self.viewport.camera.screen_scale()));
                 width += SEPARATOR + cell(&zoom, false);
             }
+            if let Some(words) = self.scenario_words() {
+                // Its icon and its words; the icon alone once tight.
+                width += SEPARATOR + if fit < 5 { cell(&words, true) } else { 35.0 };
+            }
             let mode = crate::catalog::effective_mode(Some(self.work_mode())).label;
             // Its icon, its name and the menu's chevron.
-            width += SEPARATOR + if fit < 5 { text(mode) + 50.0 } else { 51.0 };
+            width += SEPARATOR + if fit < 6 { text(mode) + 50.0 } else { 51.0 };
             if fit < 2 {
                 width += SEPARATOR + cell(&crate::crs::project_name(doc.settings()), true);
             }
@@ -1564,6 +1617,8 @@ impl App {
             Asking::Feed => self.feed_window_view(),
             Asking::TopologyRules => self.topology_rules_view(),
             Asking::Networks => self.networks_view(),
+            Asking::TimeLayer => self.time_layer_view(),
+            Asking::Scenario => self.scenario_view(),
             Asking::LayerStates => self.layer_states_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::LayerPurge => self.layer_purge_view(),
@@ -1715,7 +1770,7 @@ const STATUS_AIDS: [(&str, &str); 10] = [
 /// name, the coordinate system, the screen scale, the cloud cells' words,
 /// the mode's name, the aids' padding. The second system's values share
 /// the message's room.
-const STATUS_STEPS: u8 = 6;
+const STATUS_STEPS: u8 = 7;
 
 /// A launcher's message: another tab, or a command the desktop runs.
 pub(crate) fn launch(launcher: &Launcher) -> Option<Message> {

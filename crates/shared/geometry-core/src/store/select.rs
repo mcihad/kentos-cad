@@ -115,7 +115,7 @@ impl Store {
         self.candidates(&super::padded(q, tol))
             .into_iter()
             .filter(|it| {
-                self.flags(it).visible
+                self.shown(it)
                     && it
                         .shapes()
                         .any(|s| crosses(s, fence, &segs, tol, self.font))
@@ -140,7 +140,7 @@ impl Store {
         let within = |p: &Vec2| js_hypot(p.x - c.x, p.y - c.y) <= r;
         let mut out = Vec::new();
         for it in self.candidates(&super::padded(q, 0.0)) {
-            if !self.flags(it).visible {
+            if !self.shown(it) {
                 continue;
             }
             // An insert by its pieces (docs/adr/0144).
@@ -177,7 +177,7 @@ impl Store {
         let items: Vec<_> = self
             .all_items()
             .into_iter()
-            .filter(|it| self.flags(it).visible && !infinite(&it.shape))
+            .filter(|it| self.shown(it) && !infinite(&it.shape))
             .collect();
         if items.len() < 4 {
             return Vec::new();

@@ -1,0 +1,484 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Zaman ve senaryolar",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "alt-a",
+      "name": "Yol genişletme A",
+      "type": "group",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": [
+        {
+          "id": "alt-a-yol",
+          "name": "Yol",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#E5484D",
+            "lineType": "continuous",
+            "lineWeight": 0.35
+          },
+          "children": [],
+          "replaces": "yol"
+        },
+        {
+          "id": "alt-a-park",
+          "name": "Yeni park",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#30A46C",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ],
+      "scenario": {
+        "note": "12 m'lik yol önerisi"
+      }
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#4F8EF7",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": [],
+      "time": {
+        "start": "gecerlilik_baslangic",
+        "end": "gecerlilik_bitis",
+        "key": "parsel_no"
+      }
+    },
+    {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#F76B15",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "time": {
+        "start": "yapim_tarihi",
+        "cumulative": true
+      }
+    },
+    {
+      "id": "ariza",
+      "name": "Arıza",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "time": {
+        "start": "tarih"
+      }
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#8C9AAA",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "id": 1,
+      "attrs": {
+        "parsel_no": "101",
+        "gecerlilik_baslangic": "2010-03-05",
+        "gecerlilik_bitis": "2018-06-01"
+      },
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 487000.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487040.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487040.0,
+          "y": 4420030.0
+        },
+        {
+          "x": 487000.0,
+          "y": 4420030.0
+        }
+      ],
+      "label": "101"
+    },
+    {
+      "id": 2,
+      "attrs": {
+        "parsel_no": "101/1",
+        "gecerlilik_baslangic": "2018-06-01"
+      },
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 487000.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487020.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487020.0,
+          "y": 4420030.0
+        },
+        {
+          "x": 487000.0,
+          "y": 4420030.0
+        }
+      ],
+      "label": "101/1"
+    },
+    {
+      "id": 3,
+      "attrs": {
+        "parsel_no": "101/2",
+        "gecerlilik_baslangic": "2018-06-01"
+      },
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 487020.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487040.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487040.0,
+          "y": 4420030.0
+        },
+        {
+          "x": 487020.0,
+          "y": 4420030.0
+        }
+      ],
+      "label": "101/2"
+    },
+    {
+      "id": 4,
+      "attrs": {
+        "parsel_no": "102",
+        "gecerlilik_baslangic": "2012-01-01"
+      },
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 487040.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487070.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487070.0,
+          "y": 4420030.0
+        },
+        {
+          "x": 487040.0,
+          "y": 4420030.0
+        }
+      ],
+      "label": "102"
+    },
+    {
+      "id": 5,
+      "attrs": {
+        "parsel_no": "103",
+        "gecerlilik_baslangic": "2015-07-01",
+        "gecerlilik_bitis": "2021-01-01"
+      },
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 487070.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487100.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487100.0,
+          "y": 4420030.0
+        },
+        {
+          "x": 487070.0,
+          "y": 4420030.0
+        }
+      ],
+      "label": "103"
+    },
+    {
+      "id": 6,
+      "attrs": {
+        "parsel_no": "104",
+        "gecerlilik_baslangic": "2022-04-01"
+      },
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 487070.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487100.0,
+          "y": 4420000.0
+        },
+        {
+          "x": 487100.0,
+          "y": 4420030.0
+        },
+        {
+          "x": 487070.0,
+          "y": 4420030.0
+        }
+      ],
+      "label": "104"
+    },
+    {
+      "id": 7,
+      "attrs": {
+        "yapim_tarihi": "2013-05-20"
+      },
+      "kind": "polygon",
+      "layerId": "bina",
+      "pts": [
+        {
+          "x": 487005.0,
+          "y": 4420008.0
+        },
+        {
+          "x": 487015.0,
+          "y": 4420008.0
+        },
+        {
+          "x": 487015.0,
+          "y": 4420020.0
+        },
+        {
+          "x": 487005.0,
+          "y": 4420020.0
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "attrs": {
+        "yapim_tarihi": "2019-08-01"
+      },
+      "kind": "polygon",
+      "layerId": "bina",
+      "pts": [
+        {
+          "x": 487045.0,
+          "y": 4420008.0
+        },
+        {
+          "x": 487055.0,
+          "y": 4420008.0
+        },
+        {
+          "x": 487055.0,
+          "y": 4420020.0
+        },
+        {
+          "x": 487045.0,
+          "y": 4420020.0
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "attrs": {
+        "yapim_tarihi": "2023-02-15"
+      },
+      "kind": "polygon",
+      "layerId": "bina",
+      "pts": [
+        {
+          "x": 487078.0,
+          "y": 4420008.0
+        },
+        {
+          "x": 487088.0,
+          "y": 4420008.0
+        },
+        {
+          "x": 487088.0,
+          "y": 4420020.0
+        },
+        {
+          "x": 487078.0,
+          "y": 4420020.0
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "attrs": {
+        "tarih": "2016-04-12"
+      },
+      "kind": "point",
+      "layerId": "ariza",
+      "p": {
+        "x": 487030.0,
+        "y": 4420039.0
+      }
+    },
+    {
+      "id": 11,
+      "attrs": {
+        "tarih": "2020-09-30T14:30:00"
+      },
+      "kind": "point",
+      "layerId": "ariza",
+      "p": {
+        "x": 487060.0,
+        "y": 4420039.0
+      }
+    },
+    {
+      "id": 12,
+      "attrs": {
+        "genislik": "8",
+        "acilis_tarihi": "2011-09-01"
+      },
+      "kind": "line",
+      "layerId": "yol",
+      "a": {
+        "x": 486990.0,
+        "y": 4420036.0
+      },
+      "b": {
+        "x": 487110.0,
+        "y": 4420036.0
+      }
+    },
+    {
+      "id": 13,
+      "attrs": {
+        "genislik": "12"
+      },
+      "kind": "polygon",
+      "layerId": "alt-a-yol",
+      "pts": [
+        {
+          "x": 486990.0,
+          "y": 4420031.0
+        },
+        {
+          "x": 487110.0,
+          "y": 4420031.0
+        },
+        {
+          "x": 487110.0,
+          "y": 4420043.0
+        },
+        {
+          "x": 486990.0,
+          "y": 4420043.0
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "attrs": {
+        "ad": "Yeni park"
+      },
+      "kind": "polygon",
+      "layerId": "alt-a-park",
+      "pts": [
+        {
+          "x": 487070.0,
+          "y": 4420046.0
+        },
+        {
+          "x": 487100.0,
+          "y": 4420046.0
+        },
+        {
+          "x": 487100.0,
+          "y": 4420060.0
+        },
+        {
+          "x": 487070.0,
+          "y": 4420060.0
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

@@ -29,6 +29,9 @@ export type HistoryState = HistoryData | 'loading' | 'none' | Error;
 
 export interface HistoryActions {
   downloadRevision(r: FileRevision): void;
+  /** Revizyonla karşılaştır (docs/adr/0210 §8): the revision as Eski, the open drawing as Yeni. */
+  compareRevision(r: FileRevision): void;
+  compareCheckpoint(c: Checkpoint): void;
   restoreRevision(r: FileRevision): void;
   createCheckpoint(): void;
   downloadCheckpoint(c: Checkpoint): void;
@@ -62,6 +65,7 @@ function revisionRow(p: ProjectSummary, r: FileRevision, marks: readonly string[
       'div',
       { class: 'catalog-history__acts' },
       rowButton('İndir', 'export', () => actions.downloadRevision(r), whyNotDownload(perms)),
+      rowButton('Karşılaştır', 'dataCompare', () => actions.compareRevision(r), whyNotDownload(perms)),
       rowButton('Yeni proje olarak geri yükle…', 'history', () => actions.restoreRevision(r), whyNotTake(perms, 'geri yükleme')),
     ),
   );
@@ -84,6 +88,7 @@ function checkpointRow(ctx: AppContext, p: ProjectSummary, c: Checkpoint, action
       'div',
       { class: 'catalog-history__acts' },
       rowButton('İndir', 'export', () => actions.downloadCheckpoint(c), whyNotTake(perms, 'indirme')),
+      rowButton('Karşılaştır', 'dataCompare', () => actions.compareCheckpoint(c), whyNotTake(perms, 'indirme')),
       rowButton('Yeni proje olarak geri yükle…', 'history', () => actions.restoreCheckpoint(c), whyNotTake(perms, 'geri yükleme')),
       rowButton('Sil…', 'trash', () => actions.deleteCheckpoint(c), whyNotDelete(c, ctx.cloud.me.value?.user.id, perms, p.state === 'archived'), true),
     ),

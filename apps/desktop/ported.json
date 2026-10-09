@@ -379,7 +379,17 @@
     "network.manage",
     "tool.netRoute",
     "tool.netServiceArea",
-    "tool.netTrace"
+    "tool.netTrace",
+    "time.slider",
+    "time.layer",
+    "tool.timeVersion",
+    "tool.timeEnd",
+    "time.compare",
+    "scenario.create",
+    "scenario.show",
+    "scenario.base",
+    "scenario.compare",
+    "scenario.apply"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

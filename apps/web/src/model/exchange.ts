@@ -229,6 +229,9 @@ function takeLayers(ours: Json, theirs: Json, paths: ReadonlySet<string>, same: 
       const at = nodes.findIndex((m) => exchangeFold(m.name) === exchangeFold(names[depth]));
       if (at < 0) {
         const made = { ...clone(source), id: freeId(source.id, taken), children: [] };
+        // A scenario's links name the other drawing's layers: they do not come; the time setting does (docs/adr/0210 §9).
+        delete made.scenario;
+        delete made.replaces;
         nodes.push(made);
         nodes = made.children;
         continue;

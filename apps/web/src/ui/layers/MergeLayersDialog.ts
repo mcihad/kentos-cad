@@ -51,7 +51,7 @@ export function openMergeLayers(ctx: AppContext, target?: string): void {
       'tr',
       { class: `merge-row${locked || isTarget ? ' find-row--blocked' : ''}`, ...(why && { title: why }) },
       h('td', { class: 'find-check' }, box),
-      h('td', null, locked ? icon('lock', 12) : null, layers.path(id), isTarget ? h('span', { class: 'merge-row__target' }, ' (hedef)') : null),
+      h('td', { class: 'io-table__name' }, locked ? icon('lock', 12) : null, layers.path(id), isTarget ? h('span', { class: 'merge-row__target' }, ' (hedef)') : null),
       h('td', { class: 'num' }, String(counts.get(id) ?? 0)),
     );
   }

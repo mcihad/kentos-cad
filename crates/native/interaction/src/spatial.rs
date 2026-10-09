@@ -30,7 +30,9 @@
 
 use std::sync::Arc;
 
-use kentos_contracts::{BlockDefinition, Entity, LabelPlacement, LabelStyle, LayerNode, LayerSnap};
+use kentos_contracts::{
+    BlockDefinition, Entity, LabelPlacement, LabelStyle, LayerNode, LayerSnap, LayerTime,
+};
 use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length, entity_vertices};
 use kentos_geometry_core::geom::dimension::dimension_measure;
@@ -68,6 +70,10 @@ pub struct Spatial {
     text_labelled: Vec<Slot>,
     /// How many times every object was read (a drawing opened, or the journal fell behind).
     reloads: u64,
+    /// The temporal layers' time settings the objects' times were made with (docs/adr/0210 §6).
+    rules: std::collections::HashMap<String, LayerTime>,
+    /// Whether an object has had a time since the store was emptied: a put object off a temporal layer loses its own.
+    timed: bool,
 }
 
 impl Spatial {
@@ -102,6 +108,9 @@ impl Spatial {
         self.revision = Some(doc.revision());
         self.layers.clear();
         self.sync_layers(doc.layers());
+        self.rules.clear();
+        self.timed = false;
+        self.sync_times(doc, &[]);
     }
 
     /// Brings the store up to date with `doc`: the block definitions and the
@@ -128,7 +137,7 @@ impl Spatial {
         self.store
             .set_font(drawing_font(doc.settings().drawing_font));
         match doc.changes_since(self.mark) {
-            Changes::All => return self.reload(doc),
+            Changes::All => self.reload(doc),
             Changes::Slots(slots) => {
                 // Each slot once, in slot order: new objects go in in the
                 // order they were made (slots are given in turn).
@@ -144,13 +153,118 @@ impl Spatial {
                     }
                 }
                 self.store.remove(&gone);
-                self.store.put_many(changed.into_iter().map(record));
+                self.store.put_many(changed.iter().copied().map(record));
                 self.sync_text_labelled(doc);
+                self.mark = mark;
+                self.revision = Some(doc.revision());
+                self.sync_layers(doc.layers());
+                self.sync_times(doc, &changed);
             }
         }
-        self.mark = mark;
-        self.revision = Some(doc.revision());
-        self.sync_layers(doc.layers());
+    }
+
+    /// The temporal layers' objects' times (docs/adr/0210 §6): a layer whose
+    /// time setting changed (or that has one since the store was emptied)
+    /// whole, then the objects just put that are on a temporal layer, each
+    /// from its start and end attributes; an object put off a temporal layer
+    /// loses its time.
+    fn sync_times(&mut self, doc: &Document, put: &[&Entity]) {
+        let next: std::collections::HashMap<String, LayerTime> = doc
+            .layers()
+            .leaves()
+            .into_iter()
+            .filter(|l| l.service.is_none())
+            .filter_map(|l| l.time.clone().map(|t| (l.id.clone(), t)))
+            .collect();
+        let gone: Vec<String> = self
+            .rules
+            .keys()
+            .filter(|id| !next.contains_key(*id))
+            .cloned()
+            .collect();
+        for id in gone {
+            let ids: Vec<f64> = doc.by_layer(&id).map(|e| f64::from(e.base().id)).collect();
+            self.store.set_times(ids.into_iter().map(|id| (id, None)));
+        }
+        let whole: Vec<String> = next
+            .iter()
+            .filter(|(id, t)| self.rules.get(*id) != Some(*t))
+            .map(|(id, _)| id.clone())
+            .collect();
+        self.rules = next;
+        for id in &whole {
+            let list: Vec<&Entity> = doc.by_layer(id).collect();
+            self.time(&list, id);
+        }
+        if put.is_empty() {
+            return;
+        }
+        let mut by_layer: std::collections::HashMap<&str, Vec<&Entity>> =
+            std::collections::HashMap::new();
+        let mut off = Vec::new();
+        for e in put {
+            let layer = e.base().layer_id.as_str();
+            if whole.iter().any(|w| w == layer) {
+                continue;
+            }
+            if self.rules.contains_key(layer) {
+                by_layer.entry(layer).or_default().push(e);
+            } else if self.timed {
+                off.push(f64::from(e.base().id));
+            }
+        }
+        for (layer, list) in by_layer {
+            let layer = layer.to_owned();
+            self.time(&list, &layer);
+        }
+        self.store.set_times(off.into_iter().map(|id| (id, None)));
+    }
+
+    /// The times of `list`, objects of temporal layer `layer`, into the store.
+    fn time(&mut self, list: &[&Entity], layer: &str) {
+        let Some(rule) = self.rules.get(layer) else {
+            return;
+        };
+        if list.is_empty() {
+            return;
+        }
+        let ranged = rule.end.is_some();
+        let core = kentos_geometry_core::time::Rule {
+            ranged,
+            cumulative: rule.cumulative,
+        };
+        let (times, _) = kentos_geometry_core::time::layer_times(
+            core,
+            list.iter().map(|e| {
+                let attrs = &e.base().attrs;
+                (
+                    attrs.get(&rule.start).map(String::as_str),
+                    rule.end
+                        .as_ref()
+                        .and_then(|k| attrs.get(k))
+                        .map(String::as_str),
+                )
+            }),
+        );
+        let ids: Vec<f64> = list.iter().map(|e| f64::from(e.base().id)).collect();
+        self.store.set_times(ids.into_iter().zip(times));
+        self.timed = true;
+    }
+
+    /// The time slider's window (docs/adr/0210 §5): queries leave out the
+    /// temporal layers' objects it does not show; none ends the filter.
+    pub fn set_time_window(&mut self, window: Option<kentos_geometry_core::time::Window>) {
+        self.store.set_time_window(window);
+    }
+
+    /// Whether the object shows at the slider's window (always without one, or for an object without a time).
+    pub fn time_shown(&self, slot: Slot) -> bool {
+        self.store.time_shown(f64::from(slot.0))
+    }
+
+    /// How many objects on shown layers have a time, and their extent (the slider's range).
+    pub fn time_summary(&self) -> (usize, Option<(f64, f64)>) {
+        self.store.time_summary()
     }
 
     /// Sends the objects whose label a text writes when they differ from

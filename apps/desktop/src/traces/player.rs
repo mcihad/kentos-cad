@@ -411,6 +411,8 @@ pub struct Observation {
     pub overview: Option<Option<[f64; 4]>>,
     /// Büyüteç's zoom, side and centre (absolute) while it shows.
     pub magnifier: Option<(u32, &'static str, Option<[f64; 2]>)>,
+    /// Zaman sürgüsü's words, position and last while it is open (docs/adr/0210 §5).
+    pub time: Option<(String, i64, i64)>,
     /// The digitizing locks' words (docs/adr/0166 §6).
     pub locks: Vec<String>,
     /// The active layer's groups and name (docs/adr/0176 §3).
@@ -656,6 +658,25 @@ impl<'a> Player<'a> {
             return self.apply(Message::Navigation(crate::navigation_cards::Event::Zoom(
                 zoom,
             )));
+        }
+        // Zaman sürgüsü's bar, a button by its words (docs/adr/0210 §10).
+        if let Some(words) = &step.timebar {
+            if !self.app.time.slider.open {
+                return Err("Zaman sürgüsü açık değil".to_owned());
+            }
+            use crate::temporal::Event;
+            let event = match words.as_str() {
+                "Başa" => Event::First,
+                "Geri" => Event::Prev,
+                "Oynat" | "Durdur" => Event::PlayStop,
+                "İleri" => Event::Next,
+                "Sona" => Event::Last,
+                "Kapat" => Event::Close,
+                "Anlık" => Event::Ranged(false),
+                "Aralık" => Event::Ranged(true),
+                other => return Err(format!("Zaman sürgüsünde “{other}” düğmesi yok")),
+            };
+            return self.apply(Message::Time(event));
         }
         if let Some(key) = &step.key {
             // Yazı's field over the drawing: Enter keeps what is typed (its text box's submit).
@@ -1177,6 +1198,10 @@ impl<'a> Player<'a> {
             mark: app.data_mark().map(|p| [p.x, p.y]),
             overview: app.overview_extent(),
             magnifier: app.magnifier_state(),
+            time: app.time.slider.open.then(|| {
+                let s = &app.time.slider;
+                (s.label(), s.position, s.last)
+            }),
             active_layer: doc.map_or_else(Vec::new, |d| {
                 let layers = d.model.layers();
                 let mut names = Vec::new();

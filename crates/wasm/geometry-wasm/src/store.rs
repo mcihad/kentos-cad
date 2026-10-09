@@ -234,6 +234,11 @@ impl GeometryStore {
     pub(crate) fn store(&self) -> &Store {
         &self.inner
     }
+
+    /// The store to change, for the crate's other bindings (the objects' times, docs/adr/0210 §6).
+    pub(crate) fn store_mut(&mut self) -> &mut Store {
+        &mut self.inner
+    }
 }
 
 #[wasm_bindgen]

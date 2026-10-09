@@ -10,6 +10,8 @@ import { transformedFrom } from '../model/ops/transform';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
 import type { ExprTable } from '../model/expression/expression';
 import type { LabelTexts, LabelWanted } from '../model/ops/labelText';
+import type { LayerTime } from '../contracts/generated/LayerTime';
+import type { TimeWindow } from '../model/time';
 import { CoreStore, op, type CoreStyleProgram, type ExprColumnData } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
 import { DEFAULT_LABELS, labelRule, readGrips, type GripSet } from './storeRecords';
@@ -175,6 +177,11 @@ export class PickIndex {
   /** The document's `linksVersion` the store's text-labelled objects were sent at (-1: not since a reload). */
   private sentLinks = -1;
   private timer: ReturnType<typeof setTimeout> | undefined;
+  /** The temporal layers' time settings the objects' times were made with (docs/adr/0210 §6), as JSON by layer id. */
+  private sentRules = new Map<string, string>();
+  private rules = new Map<string, LayerTime>();
+  /** Whether an object has had a time since the store was emptied: a put object off a temporal layer loses its own. */
+  private timed = false;
 
   constructor(doc: CadDocument) {
     this.doc = doc;
@@ -236,32 +243,118 @@ export class PickIndex {
       this.blocksDirty = false;
       this.store.setBlocks(JSON.stringify(this.doc.blocks.value));
     }
+    let put: Entity[] = [];
+    const reloaded = this.reload;
     if (this.reload) {
       this.reload = false;
       this.pending.clear();
       this.store.clear();
       this.sentLinks = -1;
+      this.sentRules.clear();
+      this.timed = false;
       const p = packEntities(this.doc.all());
       this.store.putPacked(p.nums, p.strings);
     } else if (this.pending.size) {
-      const list: Entity[] = [];
       for (const id of this.pending) {
         const e = this.doc.get(id);
-        if (e) list.push(e);
+        if (e) put.push(e);
       }
       this.pending.clear();
-      const p = packEntities(list);
+      const p = packEntities(put);
       this.store.putPacked(p.nums, p.strings);
     }
+    const layersChanged = this.layersDirty || reloaded;
     if (this.layersDirty) {
       this.layersDirty = false;
       this.store.setLayers(JSON.stringify(layerTable(this.doc.layers)));
     }
+    if (layersChanged || put.length) this.syncTimes(put, layersChanged);
     // The objects whose label a text writes show none of their own (docs/adr/0175 §4).
     if (this.sentLinks !== this.doc.linksVersion) {
       this.sentLinks = this.doc.linksVersion;
       this.store.setTextLabelled(Float64Array.from(this.doc.textLabelled()));
     }
+  }
+
+  /**
+   * The temporal layers' objects' times (docs/adr/0210 §6): a layer whose time setting changed (or that has one since
+   * the store was emptied) whole, then the objects just put that are on a temporal layer, each from its start and end
+   * attributes; an object put off a temporal layer loses its time.
+   */
+  private syncTimes(put: readonly Entity[], layersChanged: boolean): void {
+    const whole: string[] = [];
+    if (layersChanged) {
+      const next = new Map<string, LayerTime>();
+      for (const l of this.doc.layers.leaves()) if (l.time && !l.service) next.set(l.id, l.time);
+      const keys = new Map([...next].map(([id, t]) => [id, JSON.stringify(t)]));
+      for (const [id, key] of keys) if (this.sentRules.get(id) !== key) whole.push(id);
+      // A setting taken away: the layer's objects lose their times.
+      for (const id of this.sentRules.keys()) if (!next.has(id)) this.untime(this.doc.byLayer(id));
+      this.rules = next;
+      this.sentRules = keys;
+    }
+    for (const id of whole) this.time(this.doc.byLayer(id), this.rules.get(id)!);
+    if (!put.length) return;
+    const done = new Set(whole);
+    const byLayer = new Map<string, Entity[]>();
+    const off: Entity[] = [];
+    for (const e of put) {
+      if (done.has(e.layerId)) continue;
+      if (this.rules.has(e.layerId)) {
+        const list = byLayer.get(e.layerId);
+        if (list) list.push(e);
+        else byLayer.set(e.layerId, [e]);
+      } else if (this.timed) off.push(e);
+    }
+    for (const [id, list] of byLayer) this.time(list, this.rules.get(id)!);
+    this.untime(off);
+  }
+
+  /** The objects' times read from their values straight into the store, in one call: nothing crosses back. */
+  private time(list: readonly Entity[], rule: LayerTime): void {
+    if (!list.length) return;
+    const end = rule.end ?? null;
+    const lens = new Int32Array(list.length * 2);
+    const ids = new Float64Array(list.length);
+    const texts: string[] = [];
+    for (let i = 0; i < list.length; i++) {
+      const { id, attrs } = list[i];
+      const s = attrs[rule.start];
+      const e = end === null ? undefined : attrs[end];
+      ids[i] = id;
+      lens[2 * i] = s === undefined ? -1 : s.length;
+      lens[2 * i + 1] = e === undefined ? -1 : e.length;
+      if (s !== undefined) texts.push(s);
+      if (e !== undefined) texts.push(e);
+    }
+    this.store.setLayerTimes(ids, end !== null, !!rule.cumulative, texts.join(''), lens);
+    this.timed = true;
+  }
+
+  private untime(list: readonly Entity[]): void {
+    if (!list.length) return;
+    const times = new Float64Array(list.length * 3).fill(-1);
+    this.store.setTimes(Float64Array.from(list, (e) => e.id), times);
+  }
+
+  /** The time slider's window (docs/adr/0210 §5): queries leave out the objects it does not show; null ends the filter. */
+  setTimeWindow(w: TimeWindow | null): void {
+    if (!w) this.store.setTimeWindow(0, 0, 0);
+    else if (w.kind === 'instant') this.store.setTimeWindow(1, w.a, w.a);
+    else this.store.setTimeWindow(2, w.a, w.b);
+  }
+
+  /** For each of `ids`, whether it shows at the slider's window (the layer builder's filter). */
+  timeShown(ids: readonly number[]): Uint8Array {
+    this.sync();
+    return this.store.timeMask(Float64Array.from(ids));
+  }
+
+  /** How many objects have a time and the extent of their starts and ends (the slider's range). */
+  timeSummary(): { count: number; extent: [number, number] | null } {
+    this.sync();
+    const [count, lo, hi] = this.store.timeSummary();
+    return { count, extent: Number.isNaN(lo) ? null : [lo, hi] };
   }
 
   private entities(ids: Float64Array): Entity[] {

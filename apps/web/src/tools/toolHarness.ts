@@ -98,6 +98,8 @@ export function toolHarness() {
     },
     // The manager's `exit` (tools/ToolManager.ts): the running tool's `cancel` first, and it leaves when that says no.
     tools: { exit: () => void (state.tool?.cancel?.() || state.exited++) },
+    // The time slider (docs/adr/0210 §5): closed, as every session starts.
+    time: { open: new Signal(false), moment: () => 0 },
   } as unknown as AppContext;
   const said = () => log.entries.value.map((e) => e.text);
   const add = (e: Loose<NewEntity>): Entity => doc.add({ layerId: 'cizim', attrs: {}, ...e } as NewEntity);

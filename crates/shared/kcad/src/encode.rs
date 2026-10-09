@@ -20,6 +20,7 @@ mod networks;
 mod objects;
 mod services;
 mod styles;
+mod temporal;
 
 use kentos_contracts::{
     AnnotationHeights, AnnotationKind, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
@@ -41,8 +42,8 @@ use crate::{
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_NETWORKS,
     SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
-    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS,
-    SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -234,6 +235,11 @@ impl<'d> Encoder<'d> {
                 _ => self.path.push(Seg::Name("layers")),
             }
             return Err(self.fail(Code::BadValue, &fault.words()));
+        }
+        // Schema 34's tree rules (docs/adr/0210 §2), as a reader checks them.
+        if let Some(problem) = kentos_contracts::scenarios_problem(&doc.layers) {
+            self.path.push(Seg::Name("layers"));
+            return Err(self.fail(Code::BadValue, &problem));
         }
         let optional = usize::from(!doc.blocks.is_empty())
             + usize::from(doc.home_view.is_some())
@@ -657,11 +663,14 @@ impl<'d> Encoder<'d> {
             8 + usize::from(n.snap.is_some())
                 + usize::from(fields)
                 + usize::from(n.service.is_some())
-                + usize::from(n.feed.is_some()),
+                + usize::from(n.feed.is_some())
+                + usize::from(n.time.is_some())
+                + usize::from(n.scenario.is_some())
+                + usize::from(n.replaces.is_some()),
             true,
         )?;
-        // id (2), feed name snap type (4), style (5), fields locked (6),
-        // service visible (7), children expanded (8).
+        // id (2), feed name snap time type (4), style (5), fields locked (6),
+        // service visible (7), children expanded replaces scenario (8).
         if n.service.is_some() && n.feed.is_some() {
             return Err(self.fail(
                 Code::BadValue,
@@ -679,6 +688,10 @@ impl<'d> Encoder<'d> {
         if let Some(snap) = &n.snap {
             self.key("snap");
             self.at(Seg::Name("snap"), |e| e.layer_snap(n.kind, snap))?;
+        }
+        if let Some(time) = &n.time {
+            self.key("time");
+            self.at(Seg::Name("time"), |e| e.layer_time(n.kind, time))?;
         }
         self.key("type");
         self.w.text(match n.kind {
@@ -703,6 +716,14 @@ impl<'d> Encoder<'d> {
         self.at(Seg::Name("children"), |e| e.layers(&n.children))?;
         self.key("expanded");
         self.w.bool(n.expanded);
+        if let Some(base) = &n.replaces {
+            self.key("replaces");
+            self.at(Seg::Name("replaces"), |e| e.replaces(n.kind, base))?;
+        }
+        if let Some(scenario) = &n.scenario {
+            self.key("scenario");
+            self.at(Seg::Name("scenario"), |e| e.scenario(n.kind, scenario))?;
+        }
         self.close();
         Ok(())
     }
@@ -987,7 +1008,9 @@ fn has_heights(s: &ProjectSettings) -> bool {
         .is_some_and(|a| *a != AnnotationHeights::default())
 }
 
-/// The oldest schema that holds the drawing: 33 when the project has a
+/// The oldest schema that holds the drawing: 34 when a layer has a time
+/// setting, a group is a scenario or a layer stands for a base layer
+/// (docs/adr/0210), 33 when the project has a
 /// network (docs/adr/0209), 32 when a layer is drawn from a
 /// service or has a feed, or the project has connections (docs/adr/0208), 31
 /// when it has a point cloud or a raster read from an address
@@ -1027,6 +1050,18 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.service.is_some() || n.feed.is_some() || services(&n.children))
+    }
+    fn temporal(nodes: &[LayerNode]) -> bool {
+        nodes.iter().any(|n| {
+            n.time.is_some()
+                || n.scenario.is_some()
+                || n.replaces.is_some()
+                || temporal(&n.children)
+        })
+    }
+    // Schema 34 (docs/adr/0210): a layer's time, a scenario, a scenario layer's base layer.
+    if temporal(&doc.layers) {
+        return SCHEMA_WITH_TEMPORAL;
     }
     // Schema 33 (docs/adr/0209): the project's networks.
     if !doc.settings.networks.is_empty() {

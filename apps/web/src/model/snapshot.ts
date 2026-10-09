@@ -41,7 +41,10 @@ import {
 } from './entities';
 import { annotationHeightsProblem, ANNOTATION_KINDS, type AnnotationHeights } from './annotationScale';
 import { assocProblem, patternProblem } from './hatchRules';
-import type { LayerInit, LayerSnap } from './layers';
+import type { LayerInit, LayerNode, LayerSnap } from './layers';
+import { scenariosProblem } from './temporalRules';
+import type { LayerTime } from '../contracts/generated/LayerTime';
+import type { ScenarioInfo } from '../contracts/generated/ScenarioInfo';
 import { DRAWING_FONT_IDS, DRAWING_UNIT_IDS, LEGACY_HYBRID, WORKSPACE_IDS } from './projectSettings';
 
 /**
@@ -414,6 +417,9 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
     });
   walk(layers);
   if (!leaves.size) fail('Katmanlar', 'en az bir katman olmalı');
+  // The layers' time settings and scenarios (docs/adr/0210 §2), the tree whole.
+  const scenarioFault = scenariosProblem(layers as unknown as LayerNode[]);
+  if (scenarioFault) fail('Katmanlar', scenarioFault);
   // The project's connections (docs/adr/0208 §2), and the links of its layers' services: a connection named is one of
   // them, no layer has both; an object on a service layer is refused as it is read (`entity`).
   const connections = settings.connections === undefined ? undefined : readConnections(settings.connections, 'Proje ayarları › bağlantılar', fail);
@@ -588,7 +594,32 @@ function layer(v: unknown, where: string): LayerInit {
     // A layer's map service and source (docs/adr/0208 §2, §10), by the contract's rules.
     ...(v.service !== undefined && { service: readService(v.service, type, `${w} › servis`, fail) }),
     ...(v.feed !== undefined && { feed: readFeed(v.feed, type, `${w} › veri kaynağı`, fail) }),
+    // A layer's time setting and base layer, a group's scenario (docs/adr/0210 §2): their fields here, their rules and
+    // the tree's scenarios whole in `head` (`scenariosProblem`).
+    ...(v.time !== undefined && { time: layerTimeAt(v.time, `${w} › zaman`) }),
+    ...(v.scenario !== undefined && { scenario: scenarioAt(v.scenario, `${w} › senaryo`) }),
+    ...(v.replaces !== undefined && { replaces: str(v.replaces, `${w} › yerine geçtiği katman`) }),
   };
+}
+
+/** A layer's time setting (docs/adr/0210 §2) as the KCAD readers read it: the start's field, the end's and the key's when given, birikimli only true. */
+function layerTimeAt(v: unknown, where: string): LayerTime {
+  if (!isObj(v)) return fail(where, 'nesne olmalı');
+  if (Object.keys(v).some((k) => !['start', 'end', 'key', 'cumulative'].includes(k))) return fail(where, 'yalnız start, end, key ve cumulative olabilir');
+  if (v.cumulative !== undefined && v.cumulative !== true) return fail(`${where} › birikimli`, 'yalnız true olabilir');
+  return {
+    start: str(v.start, `${where} › başlangıç`),
+    ...(v.end !== undefined && { end: str(v.end, `${where} › bitiş`) }),
+    ...(v.key !== undefined && { key: str(v.key, `${where} › kimlik`) }),
+    ...(v.cumulative === true && { cumulative: true }),
+  };
+}
+
+/** A group's scenario (docs/adr/0210 §9): its note when it has one. */
+function scenarioAt(v: unknown, where: string): ScenarioInfo {
+  if (!isObj(v)) return fail(where, 'nesne olmalı');
+  if (Object.keys(v).some((k) => k !== 'note')) return fail(where, 'yalnız note olabilir');
+  return v.note === undefined ? {} : { note: str(v.note, `${where} › not`) };
 }
 
 /**

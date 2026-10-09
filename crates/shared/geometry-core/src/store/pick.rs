@@ -45,7 +45,7 @@ impl Store {
         self.candidates(&q)
             .into_iter()
             .filter(|it| {
-                if !self.flags(it).visible {
+                if !self.shown(it) {
                     return false;
                 }
                 // Infinite lines have no useful bounds; their distance test decides.
@@ -66,7 +66,7 @@ impl Store {
         self.candidates(&padded(*r, 0.0))
             .into_iter()
             .filter(|it| {
-                if Some(it.id) == except || !self.flags(it).visible {
+                if Some(it.id) == except || !self.shown(it) {
                     return false;
                 }
                 if infinite(&it.shape) {
@@ -273,7 +273,7 @@ impl Store {
     pub fn in_rect(&self, r: &Bounds, crossing: bool) -> Vec<f64> {
         let mut out = Vec::new();
         for it in self.candidates(&padded(*r, 0.0)) {
-            if !self.flags(it).visible {
+            if !self.shown(it) {
                 continue;
             }
             let b = &it.bounds;

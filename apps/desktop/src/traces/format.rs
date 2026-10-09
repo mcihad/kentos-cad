@@ -135,6 +135,9 @@ pub struct Step {
     pub(super) overview: Option<[f64; 2]>,
     /// Büyüteç's zoom button, by its words (`8×`).
     pub(super) magnifier: Option<String>,
+    /// Zaman sürgüsü's bar (docs/adr/0210 §10): a button by its words (`Başa`, `Geri`, `Oynat`, `İleri`,
+    /// `Sona`, `Kapat`) or the window's (`Anlık`, `Aralık`).
+    pub(super) timebar: Option<String>,
     /// The paragraph editor (docs/adr/0182 §4): its text typed, letters
     /// chosen and formatted, then kept or dropped.
     pub(super) paragraph: Option<ParagraphStep>,
@@ -237,6 +240,18 @@ pub struct Expect {
     /// `null` when it is closed.
     #[serde(default, deserialize_with = "present")]
     pub(super) magnifier: Option<Option<MagnifierExpect>>,
+    /// Zaman sürgüsü (docs/adr/0210 §5): what its position shows, its position and its last, exact; `null`
+    /// when it is closed, and absent differ.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) time: Option<Option<TimeExpect>>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TimeExpect {
+    pub(super) label: String,
+    pub(super) position: i64,
+    pub(super) last: i64,
 }
 
 #[derive(Debug, Deserialize)]

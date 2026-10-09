@@ -504,6 +504,12 @@ fn take_layers(
                 let mut made = source.clone();
                 made["id"] = json!(free_id(str_of(source, "id"), taken));
                 made["children"] = json!([]);
+                // A scenario's links name the other drawing's layers: they do not come; the time setting does
+                // (docs/adr/0210 §9).
+                if let Some(o) = made.as_object_mut() {
+                    o.remove("scenario");
+                    o.remove("replaces");
+                }
                 list.push(made);
                 let end = list.len() - 1;
                 list = arr_mut(&mut list[end], "children");

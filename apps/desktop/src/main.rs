@@ -173,6 +173,9 @@ mod template_editor;
 mod template_members;
 mod templates;
 mod templates_panel;
+mod temporal;
+#[cfg(test)]
+mod temporal_scenes;
 mod text_field;
 mod text_file;
 #[cfg(test)]
@@ -225,6 +228,14 @@ fn main() -> iced::Result {
     }
 
     let path = std::env::args_os().nth(1).map(std::path::PathBuf::from);
+    // Today's midnight for Yeni sürüm oluştur and Sona erdir is the device's (docs/adr/0210 §7).
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs() as i64);
+    kentos_interaction::time_version::LOCAL_OFFSET.store(
+        cloud::local_time::Zone::system().offset_at(now),
+        std::sync::atomic::Ordering::Relaxed,
+    );
 
     iced::application(
         // The user's settings file (docs/adr/0023); in memory where no configuration folder is known.

@@ -12,6 +12,7 @@ mod networks;
 mod objects;
 mod services;
 mod styles;
+mod temporal;
 
 use kentos_contracts::{
     AngleUnit, AnnotationHeights, AnnotationKind, AreaUnit, Bounds, DOCUMENT_FORMAT,
@@ -287,6 +288,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     let settings = required(r, settings_, "settings")?;
     let active_layer = required(r, active_layer, "activeLayer")?;
     service_links(r, &layers, &settings, &entities)?;
+    scenario_tree(r, &layers)?;
     Ok(DocumentSnapshotV2 {
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -303,6 +305,19 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
         project_id,
         migrated_from,
     })
+}
+
+/// Schema 34's tree rules (docs/adr/0210 §2), as `scenarios_problem` says
+/// them: a time on a layer that holds objects, scenarios not nested, a
+/// scenario layer standing for one base layer.
+fn scenario_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadError> {
+    let Some(problem) = kentos_contracts::scenarios_problem(layers) else {
+        return Ok(());
+    };
+    r.push(Seg::Name("layers"));
+    let e = r.fail(Code::BadValue, &problem);
+    r.pop();
+    Err(e)
 }
 
 /// Schema 32's links (docs/adr/0208 §2), as `service_links` says them: a
@@ -758,10 +773,14 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut id, mut name, mut kind, mut style) = (None, None, None, None);
     let (mut locked, mut visible, mut children, mut expanded) = (None, None, None, None);
     let (mut snap, mut fields, mut service, mut feed) = (None, None, None, None);
+    let (mut time, mut scenario, mut replaces) = (None, None, None);
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
             "name" => name = Some(text(r)?),
+            "time" if has.temporal => time = Some(temporal::layer_time(r)?),
+            "scenario" if has.temporal => scenario = Some(temporal::scenario(r)?),
+            "replaces" if has.temporal => replaces = Some(text(r)?),
             "snap" if has.layer_snap => snap = Some(layer_snap(r)?),
             "fields" if has.layer_fields => fields = Some(layer_fields(r)?),
             "service" if has.services => service = Some(services::service_layer(r)?),
@@ -834,6 +853,33 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 ));
             }
             (feed, _) => feed,
+        },
+        time: match (time, kind) {
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grubun zamanı olmaz; zaman yalnız katmanındır",
+                ));
+            }
+            (time, _) => time,
+        },
+        scenario: match (scenario, kind) {
+            (Some(_), Some(LayerNodeType::Layer)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "katman senaryo olmaz; yalnız grup senaryodur",
+                ));
+            }
+            (scenario, _) => scenario,
+        },
+        replaces: match (replaces, kind) {
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grup bir katmanın yerine geçmez; yalnız katman geçer",
+                ));
+            }
+            (replaces, _) => replaces,
         },
     })
 }

@@ -119,6 +119,9 @@ fn opened(n: usize) -> Opened {
         fields: Vec::new(),
         service: None,
         feed: None,
+        time: None,
+        scenario: None,
+        replaces: None,
     }];
     let project = Uuid::now_v7();
     let snapshot = DocumentSnapshotV2 {

@@ -2837,6 +2837,7 @@ name = "kentos-python"
 version = "0.1.0"
 dependencies = [
  "kentos-contracts",
+ "kentos-domain",
  "kentos-geometry-core",
  "kentos-headless",
  "kentos-processing",

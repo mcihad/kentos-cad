@@ -559,6 +559,17 @@ pub const PORTED: &[&str] = &[
     "tool.netRoute",
     "tool.netServiceArea",
     "tool.netTrace",
+    // docs/adr/0210: Zaman and Senaryo (temporal/, kentos_interaction::time_version).
+    "time.slider",
+    "time.layer",
+    "tool.timeVersion",
+    "tool.timeEnd",
+    "time.compare",
+    "scenario.create",
+    "scenario.show",
+    "scenario.base",
+    "scenario.compare",
+    "scenario.apply",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

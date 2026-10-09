@@ -62,6 +62,7 @@ import { AreaIntersectTool, AreaSplitTool, AreaSubtractTool, AreaUnionTool, Boun
 import { ContinueTool } from './continueTool';
 import { ReshapeTool } from './reshapeTool';
 import { HoleAddTool, HoleClickTool } from './holeTools';
+import { TimeVersionTool } from './timeVersionTool';
 import { PanTool, SelectTool, ZoomWindowTool } from './SelectTool';
 import type { ToolDescriptor } from './Tool';
 import { arcCreate } from '../product/arcCreate';
@@ -452,6 +453,38 @@ const defs: Def[] = [
   { id: 'area', label: 'Alan hesapla', icon: 'area', group: 'map', section: 'measure', shortcut: 'Alt+H', aliases: ['AA', 'AREA', 'ALANSOR'], description: 'Tıklanan köşelerden ya da içine tıklanan bölgeden alan ve çevre hesaplar; ölçülen alan istenirse alan olarak çizilir. Projenin ikinci koordinat sistemi projeksiyonluysa alan ve çevre onun düzleminde de verilir.', steps: ['Alanın köşelerine tıklayın.', 'İlk köşeye ya da sağ tıklayın: alan ve çevre mesaj satırına yazılır.', '“İçine tıkla” açıkken çizgilerle çevrili bölgenin içine tıklamak yeter; içteki kapalı şekiller delik sayılır.', '“Alan olarak çiz” son ölçülen alanı, delikleriyle, etkin katmana kapalı alan olarak yazar (tek adım).'], productCommand: polygonCreate.id, create: (c) => new AreaMeasureTool(c) },
   { id: 'measureAngle', label: 'Açı ölç', icon: 'measureAngle', group: 'map', section: 'measure', aliases: ['ACIOLC', 'ANGLE', 'ACI'], description: 'Bir tepe noktası ve iki koldan açıyı ölçer; projenin açı biriminde ve dış açısıyla yazar.', steps: ['Açının tepe noktasına tıklayın.', 'Birinci ve ikinci kolun bir noktasına tıklayın; açı ve dış açısı canlı yazılır.', 'Sonuç iletiye gider; araç yeniden sorar. Çizime bir şey yazılmaz.'], create: (c) => new MeasureAngleTool(c) },
   { id: 'stationOffset', label: 'Dik ayak ölç', icon: 'stationOffset', group: 'map', section: 'measure', aliases: ['PRIZMA', 'DIKAYAKOLC', 'STATIONOFFSET'], description: 'Noktaların bir hatta göre dik ayağını ve dik boyunu ölçer (sağa artı); çizime yazmaz, iletiye yazar.', steps: ['Hattın başına (A), sonra sonuna (B) tıklayın.', 'Ölçülecek noktalara tıklayın: dik ayak ve dik boy imleç yanında görünür, her tık iletiye yazılır.', '“Başka hat” yeni hat seçtirir; sağ tık ya da Enter bitirir.'], create: (c) => new StationOffsetTool(c) },
+  // Zaman (docs/adr/0210 §7): versions of the objects of a ranged temporal layer.
+  {
+    id: 'timeVersion',
+    label: 'Yeni sürüm oluştur',
+    icon: 'timeVersion',
+    group: 'map',
+    section: 'time',
+    aliases: ['YENISURUM', 'SURUMOLUSTUR', 'NEWVERSION'],
+    description: 'Seçili nesneleri bir tarihte sona erdirir ve yanlarına o tarihte başlayan yeni sürümlerini yazar: geometri, öznitelik, etiket ve sembol aynı; eski hâli geçmişte kalır.',
+    steps: [
+      'Nesneleri seçin (önceden seçiliyse bu adım atlanır), sağ tıklayın ya da Enter’a basın. Nesneler başlangıç ve bitiş alanı olan zamansal katmanda olmalı.',
+      'Tarih sürgünün anıdır (sürgü kapalıysa bugün); Enter yazar ya da başka bir tarih yazın (05.03.2024).',
+      'Tek adımda: nesnelerin bitişi o tarih olur, yeni sürümleri o tarihte başlar ve seçilir. Tarihi kapsamayan nesne varsa hiçbiri yazılmaz.',
+    ],
+    productCommand: entitiesCreate.id,
+    create: (c) => new TimeVersionTool(c, 'timeVersion'),
+  },
+  {
+    id: 'timeEnd',
+    label: 'Sona erdir',
+    icon: 'timeEnd',
+    group: 'map',
+    section: 'time',
+    aliases: ['SONAERDIR', 'SURUMBITIR', 'RETIRE'],
+    description: 'Seçili nesnelerin bitişini bir tarih yapar: o tarihten sonra zaman sürgüsünde görünmezler, silinmezler.',
+    steps: [
+      'Nesneleri seçin (önceden seçiliyse bu adım atlanır), sağ tıklayın ya da Enter’a basın. Nesneler başlangıç ve bitiş alanı olan zamansal katmanda olmalı.',
+      'Tarih sürgünün anıdır (sürgü kapalıysa bugün); Enter yazar ya da başka bir tarih yazın (05.03.2024).',
+    ],
+    productCommand: entitiesSet.id,
+    create: (c) => new TimeVersionTool(c, 'timeEnd'),
+  },
   // Ağ analizi (docs/adr/0209 §10): the networks the project defines (Ağlar), asked in the network worker.
   {
     id: 'netRoute',

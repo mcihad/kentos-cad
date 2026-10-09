@@ -22,6 +22,8 @@ mod networks_tests;
 #[cfg(test)]
 mod people_tests;
 pub mod projects;
+#[cfg(test)]
+mod temporal_tests;
 // The map services' proxy (docs/adr/0208 §13).
 pub mod proxy;
 #[cfg(test)]

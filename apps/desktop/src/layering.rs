@@ -494,6 +494,39 @@ impl App {
                     event(Event::Fields(id.clone())),
                 )
                 .icon(crate::icons::from_web(Some("layerFields")))
+                // Zaman ayarları (docs/adr/0210 §10): its objects' start, end and key fields.
+                .item(
+                    if node.time.is_some() {
+                        "Zaman ayarları… (zamansal)"
+                    } else {
+                        "Zaman ayarları…"
+                    },
+                    Message::Time(crate::temporal::Event::OpenLayer(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("timeLayer")))
+                .separator();
+        }
+        // A scenario group (docs/adr/0210 §10): shown, compared, applied.
+        if node.scenario.is_some() {
+            let time = |e: crate::temporal::Event| Message::Time(e);
+            menu = menu
+                .item(
+                    "Senaryoyu göster",
+                    time(crate::temporal::Event::Show(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("scenarioShow")))
+                .item("Mevcut durum", time(crate::temporal::Event::Base))
+                .icon(crate::icons::from_web(Some("scenarioBase")))
+                .item(
+                    "Senaryoyu karşılaştır…",
+                    time(crate::temporal::Event::Compare(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("scenarioCompare")))
+                .item(
+                    "Senaryoyu uygula…",
+                    time(crate::temporal::Event::AskApply(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("scenarioApply")))
                 .separator();
         }
         let menu = menu

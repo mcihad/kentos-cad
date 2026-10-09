@@ -800,6 +800,18 @@ def networks(list_):
     return nonempty(network)(list_)
 
 
+def layer_time(t):
+    """A layer's time setting (schema 34, docs/adr/0210 §2): the start's field, the end's and the key's when given,
+    Birikimli only when true."""
+    assert t.get("cumulative", True) is True, "cumulative yalnız true yazılır"
+    return cmap(fields(t, {"start": (text, True), "end": (text, False), "key": (text, False), "cumulative": (only_true, False)}, "time"))
+
+
+def scenario(s):
+    """A group's scenario (schema 34, docs/adr/0210 §2): its note when given."""
+    return cmap(fields(s, {"note": (text, False)}, "scenario"))
+
+
 def layer(n):
     assert "snap" not in n or n["type"] == "layer", f"layer {n.get('id')}: grubun keneti olmaz"
     assert "fields" not in n or (n["type"] == "layer" and n["fields"]), f"layer {n.get('id')}: alanlar yalnız katmanın, boş değil"
@@ -817,6 +829,10 @@ def layer(n):
                 # Schema 32 (docs/adr/0208 §2, §10): drawn from a map service, or its objects from a source.
                 "service": (service, False),
                 "feed": (feed, False),
+                # Schema 34 (docs/adr/0210 §2): a layer's time setting, a group's scenario, a scenario layer's base layer.
+                "time": (layer_time, False),
+                "scenario": (scenario, False),
+                "replaces": (text, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -1226,7 +1242,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 33 with the project's networks (docs/adr/0209 §2), 32 with a layer drawn
+    """The oldest schema that holds the drawing: 34 with a layer's time setting, a scenario or a scenario layer's base
+    layer (docs/adr/0210 §2), 33 with the project's networks (docs/adr/0209 §2), 32 with a layer drawn
     from a map service or one whose objects came from
     a source, or the project's connections (docs/adr/0208 §2), 31 with a point cloud or a raster read from an address, only in the
     drawing (docs/adr/0207), 30 with the project's annotation heights, a dimension style's or a
@@ -1288,6 +1305,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def served(nodes):
         return any("service" in n or "feed" in n or served(n["children"]) for n in nodes)
 
+    def temporal(nodes):
+        return any("time" in n or "scenario" in n or "replaces" in n or temporal(n["children"]) for n in nodes)
+
+    if temporal(layers):
+        return 34
     if settings and "networks" in settings:
         return 33
     if served(layers) or (settings and "connections" in settings):
@@ -1547,7 +1569,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-34.kcad"] = container(root(cmap(parts), version=uint(34)))
+    files["schema-version-35.kcad"] = container(root(cmap(parts), version=uint(35)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2131,6 +2153,45 @@ def broken(minimal_content, minimal_file):
     files["network-cost-field-speed.kcad"] = networked([net(costs=array([cost(name="Ücret", kind="field", speed=f64(5.0))]))])
     files["network-costs-empty.kcad"] = networked([net(costs=array([]))])
     files["network-closed-blank.kcad"] = networked([net(closed=text("  "))])
+
+    # A layer's time setting, a group's scenario and a scenario layer's base layer are schema 34's (docs/adr/0210 §2):
+    # in schema 33 unknown fields; every rule of the contract's `LayerTime::problem`, `ScenarioInfo::problem` and
+    # `scenarios_problem` broken one at a time.
+    def timed(**f):
+        base = {"start": text("baslangic"), "end": text("bitis"), **f}
+        return cmap({k: v for k, v in base.items() if v is not None})
+
+    files["time-in-schema-33.kcad"] = on_layer({"time": timed()}, schema=33)
+    files["time-on-group.kcad"] = on_layer({"time": timed()}, node_type="group", schema=34)
+    files["time-start-blank.kcad"] = on_layer({"time": timed(start=text(" baslangic"))}, schema=34)
+    files["time-start-missing.kcad"] = on_layer({"time": cmap({"end": text("bitis")})}, schema=34)
+    files["time-same-fields.kcad"] = on_layer({"time": timed(end=text("baslangic"))}, schema=34)
+    files["time-cumulative-false.kcad"] = on_layer({"time": timed(cumulative=boolean(False))}, schema=34)
+    files["time-unknown-field.kcad"] = on_layer({"time": timed(format=text("ISO"))}, schema=34)
+    files["time-field-long.kcad"] = on_layer({"time": timed(key=text("k" * 65))}, schema=34)
+    files["time-on-service-layer.kcad"] = on_layer({"time": timed(), "service": cmap(osm)}, schema=34)
+    files["scenario-on-layer.kcad"] = on_layer({"scenario": cmap({})}, schema=34)
+    files["scenario-note-blank.kcad"] = on_layer({"scenario": cmap({"note": text("")})}, node_type="group", schema=34)
+    files["replaces-outside-scenario.kcad"] = on_layer({"replaces": text("yol")}, schema=34)
+
+    def node_(nid, node_type="layer", children=(), **extra):
+        return cmap({"id": text(nid), "name": text(nid), **extra, "type": text(node_type), "visible": boolean(True),
+                     "locked": boolean(False), "expanded": boolean(True), "style": cmap(layer_style_parts(top["style"])),
+                     "children": array(list(children))})
+
+    def treed(nodes):
+        return container(root(cmap({**parts, "layers": array(nodes), "entities": array([]), "activeLayer": text("yol")}), version=uint(34)))
+
+    def alternative(children, nid="alt-a"):
+        return node_(nid, "group", children, scenario=cmap({}))
+
+    files["scenario-nested.kcad"] = treed([alternative([alternative([], "alt-b")]), node_("yol")])
+    files["replaces-on-group.kcad"] = treed([alternative([node_("grup", "group", replaces=text("yol"))]), node_("yol")])
+    files["replaces-self.kcad"] = treed([alternative([node_("yol-a", replaces=text("yol-a"))]), node_("yol")])
+    files["replaces-empty.kcad"] = treed([alternative([node_("yol-a", replaces=text(""))]), node_("yol")])
+    files["replaces-scenario-layer.kcad"] = treed([alternative([node_("yol-a", replaces=text("yol-b")), node_("yol-b")]), node_("yol")])
+    files["replaces-twice.kcad"] = treed([alternative([node_("yol-a", replaces=text("yol")), node_("yol-b", replaces=text("yol"))]), node_("yol")])
+    files["replaces-group-target.kcad"] = treed([alternative([node_("yol-a", replaces=text("grup"))]), node_("grup", "group", [node_("yol")])])
     files["big-negative.kcad"] = container(with_parts({**parts, "styles": cmap({"items": array([b"\x3b" + b"\xff" * 8]), "categories": array([])})}))
     files["bytes-in-opaque.kcad"] = container(with_parts({**parts, "styles": cmap({"items": array([blob(b"\x01")]), "categories": array([])})}))
     files["bad-enum.kcad"] = container(with_parts({**parts, "settings": cmap({**settings_parts(m["settings"]), "areaUnit": text("acre")})}))
@@ -2325,6 +2386,7 @@ def build():
     out["pointclouds.kcad"] = container(document(load("pointclouds.json")))
     out["services.kcad"] = container(document(load("services.json")))
     out["networks.kcad"] = container(document(load("networks.json")))
+    out["scenarios.kcad"] = container(document(load("scenarios.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

@@ -45,11 +45,13 @@ pub mod edit;
 pub mod elevation;
 pub mod geometry;
 pub mod layers_service;
+pub mod layers_time;
 pub mod line;
 pub mod network_define;
 pub mod point;
 pub mod polygon;
 pub mod polyline;
+pub mod scenarios_edit;
 pub mod set;
 pub mod transform;
 
@@ -107,5 +109,14 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_NETWORK_DEFINE,
         kentos_contracts::CAD_NETWORK_DEFINE_VERSION,
+    ),
+    // Zaman ayarları and the scenarios ([`layers_time`], [`scenarios_edit`], docs/adr/0210 §11).
+    (
+        kentos_contracts::CAD_LAYERS_TIME,
+        kentos_contracts::CAD_LAYERS_TIME_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_SCENARIOS_EDIT,
+        kentos_contracts::CAD_SCENARIOS_EDIT_VERSION,
     ),
 ];

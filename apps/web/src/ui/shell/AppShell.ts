@@ -17,6 +17,7 @@ import { InlineTextEditor } from './InlineTextEditor';
 import { ParagraphEditor } from './ParagraphEditor';
 import { bindViewportMenus } from './viewportMenus';
 import { splitter } from '../widgets/Splitter';
+import { TimeBar } from '../time/TimeBar';
 
 /**
  * Workbench layout. Regions are slots; each is filled by an independent
@@ -25,6 +26,7 @@ import { splitter } from '../widgets/Splitter';
  *
  *   ribbon
  *   [viewport]                     | [right dock]
+ *   [time slider, when open]       |
  *   [sheet tabs: Model | Pafta …]  |
  *   [bottom: panel + command line] |
  *   status bar
@@ -65,11 +67,13 @@ export class AppShell extends Component {
     const right = h('div', { class: 'shell__right' }, split.el, dock.el);
 
     this.ribbon = this.own(new Ribbon(ctx));
+    // Zaman sürgüsü's bar, under the drawing while the slider is open (docs/adr/0210 §10).
+    const timeBar = this.own(new TimeBar(ctx));
     this.el = h(
       'div',
       { class: 'shell' },
       h('div', { class: 'shell__chrome' }, this.ribbon.el),
-      h('div', { class: 'shell__body' }, h('main', { class: 'shell__center' }, this.viewportHost, this.sheetTabs, this.bottom.el), right),
+      h('div', { class: 'shell__body' }, h('main', { class: 'shell__center' }, this.viewportHost, timeBar.el, this.sheetTabs, this.bottom.el), right),
       status.el,
     );
 

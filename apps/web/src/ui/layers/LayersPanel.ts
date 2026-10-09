@@ -41,7 +41,10 @@ interface Row {
   readonly swatch: HTMLElement | null;
   /** A map service layer's badge: why its service shows nothing, when it failed (docs/adr/0208 §14). */
   readonly fail: HTMLElement | null;
-  readonly shown: { count?: number; visible?: boolean; locked?: boolean; hidden?: boolean; active?: boolean; color?: string; snap?: SnapState; fail?: string | null };
+  /** A temporal layer's clock (docs/adr/0210 §10); a group's lead, which a scenario's own icon takes. */
+  readonly clock: HTMLElement;
+  readonly lead: HTMLElement;
+  readonly shown: { count?: number; visible?: boolean; locked?: boolean; hidden?: boolean; active?: boolean; color?: string; snap?: SnapState; fail?: string | null; time?: string; scenario?: boolean };
 }
 
 /**
@@ -319,6 +322,19 @@ export class LayersPanel extends Panel {
       r.item.toggleAttribute('data-active', active);
     }
     this.writeFailure(r);
+    // A temporal layer's clock and a scenario group's icon (docs/adr/0210 §10).
+    const time = n.time ? `Zamansal katman: ${n.time.start}${n.time.end ? ` – ${n.time.end}` : n.time.cumulative ? '' : ' (anlık)'}${n.time.cumulative ? ' (birikimli)' : ''}` : '';
+    if (shown.time !== time) {
+      shown.time = time;
+      r.clock.hidden = !time;
+      r.clock.title = time;
+    }
+    const scenario = !!n.scenario;
+    if (n.type === 'group' && shown.scenario !== scenario) {
+      shown.scenario = scenario;
+      r.lead.replaceChildren(icon(scenario ? 'scenario' : 'folder', 15));
+      r.lead.title = scenario ? `Senaryo${n.scenario?.note ? `: ${n.scenario.note}` : ''}` : '';
+    }
     if (r.swatch) {
       const color = layerSwatch(n, this.ctx.view.palette);
       if (shown.color !== color) {
@@ -348,9 +364,10 @@ export class LayersPanel extends Panel {
     const count = h('span', { class: 'tree__count num' });
     const fail = n.service ? h('span', { class: 'tree__fail', hidden: true }, icon('warning', 12)) : null;
     const lead = swatch ?? h('span', { class: 'tree__folder' }, icon(n.service ? serviceIcon(n.service) : 'folder', 15));
-    content.append(lead, name, ...(fail ? [fail] : []), count, eye, lock, magnet);
+    const clock = h('span', { class: 'tree__clock', hidden: true }, icon('clock', 12));
+    content.append(lead, name, clock, ...(fail ? [fail] : []), count, eye, lock, magnet);
 
-    const row: Row = { node: n, item, name, count, eye, lock, magnet, swatch, fail, shown: {} };
+    const row: Row = { node: n, item, name, count, eye, lock, magnet, swatch, fail, clock, lead, shown: {} };
     this.rows.set(n.id, row);
     this.writeCount(row);
     this.writeState(row);
@@ -444,9 +461,20 @@ export class LayersPanel extends Panel {
         },
         // Alanlar (docs/adr/0199 §3): the schema of its objects' attributes.
         { label: n.fields?.length ? `Alanlar… (${n.fields.length})` : 'Alanlar…', icon: 'layerFields', run: () => void this.ctx.commands.execute('layer.fields', n.id) },
+        // Zaman ayarları (docs/adr/0210 §10): its objects' start, end and key fields.
+        { label: n.time ? 'Zaman ayarları… (zamansal)' : 'Zaman ayarları…', icon: 'timeLayer', run: () => void this.ctx.commands.execute('time.layer', n.id) },
         { kind: 'separator' },
       );
     }
+    // A scenario group (docs/adr/0210 §10): shown, compared, applied.
+    if (n.scenario)
+      items.push(
+        { label: 'Senaryoyu göster', icon: 'scenarioShow', run: () => void this.ctx.commands.execute('scenario.show', n.id) },
+        { label: 'Mevcut durum', icon: 'scenarioBase', run: () => void this.ctx.commands.execute('scenario.base') },
+        { label: 'Senaryoyu karşılaştır…', icon: 'scenarioCompare', run: () => void this.ctx.commands.execute('scenario.compare', n.id) },
+        { label: 'Senaryoyu uygula…', icon: 'scenarioApply', run: () => void this.ctx.commands.execute('scenario.apply', n.id) },
+        { kind: 'separator' },
+      );
     items.push(
       { label: 'Yeniden adlandır', icon: 'edit', shortcut: 'F2', run: () => this.rename(n) },
       {

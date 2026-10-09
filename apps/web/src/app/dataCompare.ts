@@ -1,6 +1,8 @@
 import { fixed } from '../core/displayNumber';
 import { ENTITY_KIND_LABEL, type Entity } from '../model/entities';
+import type { LayerTime } from '../contracts/generated/LayerTime';
 import type { LayerNode } from '../model/layers';
+import { shownIn, timeValues } from '../model/time';
 import { dataCompare, type CompareRow, type CompareSettings, type CompareStatus } from '../model/ops/compare';
 import { entitiesCreate } from '../product/entitiesCreate';
 import { geometryOf } from '../product/entitiesEdit';
@@ -36,10 +38,14 @@ export interface CompareDrawing {
   readonly system: string;
 }
 
-/** A side: its drawing and its node (a layer's or a group's id; null, the whole drawing). */
+/**
+ * A side: its drawing and its node (a layer's or a group's id; null, the whole drawing); `at`, a moment its temporal
+ * layers are seen at (docs/adr/0210 §8): their objects shown then, the other layers' all.
+ */
 export interface CompareSide {
   readonly drawing: CompareDrawing;
   readonly node: string | null;
+  readonly at?: number;
 }
 
 /** The comparison's rows with the two sides' objects they index. */
@@ -89,10 +95,29 @@ function layersOf(tree: readonly LayerNode[], node: string | null): Set<string> 
   return out;
 }
 
-/** A side's objects, in the drawing's order. */
+/** A side's objects, in the drawing's order; at a moment, its temporal layers' objects shown then. */
 export function sideObjects(side: CompareSide): Entity[] {
   const layers = layersOf(side.drawing.tree, side.node);
-  return side.drawing.entities.filter((e) => layers.has(e.layerId));
+  const all = side.drawing.entities.filter((e) => layers.has(e.layerId));
+  if (side.at === undefined) return all;
+  const rules = new Map<string, LayerTime>();
+  for (const [n] of walk(side.drawing.tree)) if (n.type === 'layer' && n.time && layers.has(n.id)) rules.set(n.id, n.time);
+  if (!rules.size) return all;
+  const byLayer = new Map<string, Entity[]>();
+  for (const e of all) if (rules.has(e.layerId)) byLayer.set(e.layerId, [...(byLayer.get(e.layerId) ?? []), e]);
+  const keep = new Set<Entity>();
+  for (const [id, list] of byLayer) {
+    const rule = rules.get(id)!;
+    const shown = shownIn(rule.end != null, !!rule.cumulative, timeValues(rule, list.map((e) => e.attrs)), { kind: 'instant', a: side.at });
+    list.forEach((e, i) => shown[i] && keep.add(e));
+  }
+  return all.filter((e) => !rules.has(e.layerId) || keep.has(e));
+}
+
+/** The temporal layers under a side's node, by id. */
+export function temporalLayersOf(tree: readonly LayerNode[], node: string | null): LayerNode[] {
+  const layers = layersOf(tree, node);
+  return [...walk(tree)].map(([n]) => n).filter((n) => n.type === 'layer' && n.time && layers.has(n.id));
 }
 
 /** The attribute fields of the sides' objects, each once, in the order of their characters' codes (as the core's rows). */
@@ -110,10 +135,12 @@ function pathOf(tree: readonly LayerNode[], id: string): string {
 
 /** Why the two sides cannot be compared, or null. */
 export function sidesRefused(old: CompareSide, next: CompareSide): string | null {
-  if (old.drawing.here && next.drawing.here) {
+  // The same layers at two different dates are two states of them (docs/adr/0210 §8).
+  const dated = old.at !== undefined && next.at !== undefined && old.at !== next.at;
+  if (old.drawing.here && next.drawing.here && !dated) {
     const a = layersOf(old.drawing.tree, old.node);
     const b = layersOf(next.drawing.tree, next.node);
-    if ([...a].some((id) => b.has(id))) return 'Eski ve Yeni aynı katmanları içeriyor; ayrı katmanlar ya da gruplar seçin.';
+    if ([...a].some((id) => b.has(id))) return 'Eski ve Yeni aynı katmanları içeriyor; ayrı katmanlar ya da gruplar seçin ya da iki tarafa farklı tarihler yazın.';
   }
   if (old.drawing.system !== next.drawing.system)
     return `“${old.drawing.name}” başka bir koordinat sisteminde; dönüştürme yapılmaz. Bu çizimle aynı koordinat sistemindeki bir çizim seçin.`;

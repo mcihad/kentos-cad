@@ -299,8 +299,15 @@ pub const SCHEMA_WITH_SERVICES: u32 = 32;
 /// byte; a reader of those refuses them rather than lose them.
 pub const SCHEMA_WITH_NETWORKS: u32 = 33;
 
+/// Document schema 34 (docs/specs/kcad-v2.md §6.5): schema 33 and a layer
+/// node's `time`, a group's `scenario` and a scenario layer's `replaces`
+/// (docs/adr/0210 §2). A writer writes it only when a node has one of these:
+/// any other drawing stays 33 or older, byte for byte; a reader of those
+/// refuses them rather than lose them.
+pub const SCHEMA_WITH_TEMPORAL: u32 = 34;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 32] = [
+pub const SCHEMAS: [u32; 33] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -333,6 +340,7 @@ pub const SCHEMAS: [u32; 32] = [
     SCHEMA_WITH_POINT_CLOUDS,
     SCHEMA_WITH_SERVICES,
     SCHEMA_WITH_NETWORKS,
+    SCHEMA_WITH_TEMPORAL,
 ];
 
 /// The file a drawing is saved as.

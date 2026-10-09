@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 452,
-      "implemented": 427,
+      "total": 462,
+      "implemented": 437,
       "partial": 0,
       "pending": 25
     },
     "tools": {
-      "total": 124,
-      "implemented": 122,
+      "total": 126,
+      "implemented": 124,
       "partial": 0,
       "pending": 2
     },
@@ -61,14 +61,14 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 683,
-      "implemented": 683,
+      "total": 691,
+      "implemented": 691,
       "partial": 0,
       "pending": 0
     },
     "screens": {
-      "total": 127,
-      "implemented": 127,
+      "total": 130,
+      "implemented": 130,
       "partial": 0,
       "pending": 0
     },
@@ -101,19 +101,19 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 182,
-    "commandsOnDesktop": 380,
+    "commandsOnDesktop": 390,
     "desktop": {
       "commands": {
-        "total": 452,
-        "implemented": 380,
+        "total": 462,
+        "implemented": 390,
         "partial": 0,
         "pending": 12,
         "none": 58,
         "n/a": 2
       },
       "tools": {
-        "total": 124,
-        "implemented": 122,
+        "total": 126,
+        "implemented": 124,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -160,16 +160,16 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 683,
-        "implemented": 683,
+        "total": 691,
+        "implemented": 691,
         "partial": 0,
         "pending": 0,
         "none": 0,
         "n/a": 0
       },
       "screens": {
-        "total": 127,
-        "implemented": 107,
+        "total": 130,
+        "implemented": 110,
         "partial": 2,
         "pending": 0,
         "none": 17,
@@ -6318,6 +6318,158 @@
       "tests": []
     },
     {
+      "id": "scenario.apply",
+      "title": "Senaryoyu uygula…",
+      "short": "Senaryoyu uygula",
+      "category": "Harita",
+      "icon": "scenarioApply",
+      "description": "Senaryonun katmanlarını ana katmanlara yazar: ana katmanların nesneleri senaryodakilerle değişir, senaryo grubu sıradan gruba döner. Tek adımda geri alınır.",
+      "aliases": [
+        "SENARYOUYGULA"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Senaryo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts",
+        "apps/web/src/ui/statusbar/StatusBar.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/scenarios.json"
+      ]
+    },
+    {
+      "id": "scenario.base",
+      "title": "Mevcut durum",
+      "category": "Harita",
+      "icon": "scenarioBase",
+      "description": "Senaryoları gizler, yerine geçtikleri ana katmanları gösterir.",
+      "aliases": [
+        "MEVCUTDURUM"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Senaryo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/scenarios.json"
+      ]
+    },
+    {
+      "id": "scenario.compare",
+      "title": "Senaryoyu karşılaştır…",
+      "short": "Senaryoyu karşılaştır",
+      "category": "Harita",
+      "icon": "scenarioCompare",
+      "description": "Ana katmanı senaryodaki karşılığıyla Veri karşılaştır ile karşılaştırır.",
+      "aliases": [
+        "SENARYOKARSILASTIR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Senaryo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts",
+        "apps/web/src/ui/statusbar/StatusBar.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/scenarios.json"
+      ]
+    },
+    {
+      "id": "scenario.create",
+      "title": "Senaryo oluştur…",
+      "short": "Senaryo oluştur",
+      "category": "Harita",
+      "icon": "scenarioCreate",
+      "description": "Seçilen ana katmanların kopyalarıyla bir senaryo grubu yapar: öneriler Mevcut durum’dan ayrı çizilir, gösterilir ve karşılaştırılır.",
+      "aliases": [
+        "SENARYO",
+        "SENARYOOLUSTUR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Senaryo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/statusbar/StatusBar.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
+        "fixtures/interaction/v1/scenarios.json"
+      ]
+    },
+    {
+      "id": "scenario.show",
+      "title": "Senaryoyu göster",
+      "category": "Harita",
+      "icon": "scenarioShow",
+      "description": "Seçili ya da etkin katmanın senaryosunu gösterir: senaryonun katmanları görünür, yerine geçtiği ana katmanlar gizlenir.",
+      "aliases": [
+        "SENARYOGOSTER"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Senaryo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/scenarios.json"
+      ]
+    },
+    {
       "id": "server.check",
       "title": "Sunucu bağlantısını denetle",
       "short": "Sunucuyu denetle",
@@ -8445,6 +8597,98 @@
       },
       "tests": [
         "fixtures/interaction/v1/find-replace.json"
+      ]
+    },
+    {
+      "id": "time.compare",
+      "title": "Zamanı karşılaştır…",
+      "short": "Zamanı karşılaştır",
+      "category": "Harita",
+      "icon": "timeCompare",
+      "description": "Zamansal bir katmanın iki tarihteki hâlini Veri karşılaştır ile karşılaştırır: eklenen, silinen ve değişen nesneler.",
+      "aliases": [
+        "ZAMANKARSILASTIR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Zaman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/time-slider.json"
+      ]
+    },
+    {
+      "id": "time.layer",
+      "title": "Zaman ayarları…",
+      "short": "Zaman ayarları",
+      "category": "Harita",
+      "icon": "timeLayer",
+      "description": "Katmanın nesnelerinin başlangıç, bitiş ve kimlik alanlarını seçer; katmanı zamansal yapar ya da zamanını kaldırır.",
+      "aliases": [
+        "ZAMANAYARLARI",
+        "ZAMANAYAR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Zaman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
+        "fixtures/interaction/v1/time-layer.json"
+      ]
+    },
+    {
+      "id": "time.slider",
+      "title": "Zaman sürgüsü",
+      "category": "Harita",
+      "icon": "timeSlider",
+      "description": "Zamansal katmanları bir anda ya da aralıkta gösterir: çizim alanının altındaki sürgüyle adım adım ilerler, oynatır. Çizim değişmez.",
+      "aliases": [
+        "ZAMAN",
+        "ZAMANSURGUSU",
+        "TIMESLIDER"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Zaman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
+        "fixtures/interaction/v1/time-layer.json",
+        "fixtures/interaction/v1/time-slider.json",
+        "fixtures/interaction/v1/time-version.json"
       ]
     },
     {
@@ -12643,6 +12887,72 @@
       },
       "tests": [
         "fixtures/interaction/v1/text-along.json"
+      ]
+    },
+    {
+      "id": "tool.timeEnd",
+      "title": "Sona erdir",
+      "category": "Harita",
+      "icon": "timeEnd",
+      "description": "Seçili nesnelerin bitişini bir tarih yapar: o tarihten sonra zaman sürgüsünde görünmezler, silinmezler.",
+      "aliases": [
+        "SONAERDIR",
+        "SURUMBITIR",
+        "RETIRE"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Harita › Zaman"
+      ],
+      "ribbon": [
+        "CBS › Harita › Zaman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "cad"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/time-version.json"
+      ]
+    },
+    {
+      "id": "tool.timeVersion",
+      "title": "Yeni sürüm oluştur",
+      "category": "Harita",
+      "icon": "timeVersion",
+      "description": "Seçili nesneleri bir tarihte sona erdirir ve yanlarına o tarihte başlayan yeni sürümlerini yazar: geometri, öznitelik, etiket ve sembol aynı; eski hâli geçmişte kalır.",
+      "aliases": [
+        "YENISURUM",
+        "SURUMOLUSTUR",
+        "NEWVERSION"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Harita › Zaman"
+      ],
+      "ribbon": [
+        "CBS › Harita › Zaman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "cad"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/time-version.json"
       ]
     },
     {
@@ -17527,6 +17837,58 @@
       ]
     },
     {
+      "id": "timeEnd",
+      "label": "Sona erdir",
+      "icon": "timeEnd",
+      "group": "map",
+      "section": "time",
+      "aliases": [
+        "SONAERDIR",
+        "SURUMBITIR",
+        "RETIRE"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 2,
+      "description": "Seçili nesnelerin bitişini bir tarih yapar: o tarihten sonra zaman sürgüsünde görünmezler, silinmezler.",
+      "productCommand": "cad.entities.set",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/time-version.json"
+      ]
+    },
+    {
+      "id": "timeVersion",
+      "label": "Yeni sürüm oluştur",
+      "icon": "timeVersion",
+      "group": "map",
+      "section": "time",
+      "aliases": [
+        "YENISURUM",
+        "SURUMOLUSTUR",
+        "NEWVERSION"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Seçili nesneleri bir tarihte sona erdirir ve yanlarına o tarihte başlayan yeni sürümlerini yazar: geometri, öznitelik, etiket ve sembol aynı; eski hâli geçmişte kalır.",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/time-version.json"
+      ]
+    },
+    {
       "id": "toArea",
       "label": "Alana çevir",
       "icon": "toArea",
@@ -19373,6 +19735,7 @@
         "tools": [
           "map/parcel",
           "map/field",
+          "map/time",
           "network"
         ],
         "commands": [
@@ -25214,6 +25577,32 @@
       }
     },
     {
+      "id": "LayerNode.replaces",
+      "contract": "LayerNode",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "replaces",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerNode.scenario",
+      "contract": "LayerNode",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "scenario",
+      "type": "ScenarioInfo",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LayerNode.service",
       "contract": "LayerNode",
       "rust": "crates/shared/contracts/src/layer.rs",
@@ -25246,6 +25635,19 @@
       "field": "style",
       "type": "LayerStyle",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerNode.time",
+      "contract": "LayerNode",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "time",
+      "type": "LayerTime",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -25507,6 +25909,58 @@
       "field": "renderer",
       "type": "unknown",
       "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerTime.cumulative",
+      "contract": "LayerTime",
+      "rust": "crates/shared/contracts/src/temporal.rs",
+      "field": "cumulative",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerTime.end",
+      "contract": "LayerTime",
+      "rust": "crates/shared/contracts/src/temporal.rs",
+      "field": "end",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerTime.key",
+      "contract": "LayerTime",
+      "rust": "crates/shared/contracts/src/temporal.rs",
+      "field": "key",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerTime.start",
+      "contract": "LayerTime",
+      "rust": "crates/shared/contracts/src/temporal.rs",
+      "field": "start",
+      "type": "string",
+      "optional": false,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -27819,6 +28273,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "zs",
       "type": "Array<number | null>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "ScenarioInfo.note",
+      "contract": "ScenarioInfo",
+      "rust": "crates/shared/contracts/src/temporal.rs",
+      "field": "note",
+      "type": "string",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -31523,6 +31990,42 @@
       "desktopWhere": "apps/desktop/src/find_replace.rs (ADR 0145 §6)"
     },
     {
+      "id": "apps/web/src/ui/time/ScenarioDialog.ts#openScenarioCreate",
+      "name": "openScenarioCreate",
+      "role": "window",
+      "source": "apps/web/src/ui/time/ScenarioDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/temporal/scenario.rs (ADR 0210 §10)"
+    },
+    {
+      "id": "apps/web/src/ui/time/TimeBar.ts#TimeBar",
+      "name": "TimeBar",
+      "role": "panel",
+      "source": "apps/web/src/ui/time/TimeBar.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/temporal/bar.rs (ADR 0210 §10)"
+    },
+    {
+      "id": "apps/web/src/ui/time/TimeLayerDialog.ts#openTimeLayer",
+      "name": "openTimeLayer",
+      "role": "window",
+      "source": "apps/web/src/ui/time/TimeLayerDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/temporal/layer.rs (ADR 0210 §10)"
+    },
+    {
       "id": "apps/web/src/ui/topology/TopologyRulesDialog.ts#openTopologyRules",
       "name": "openTopologyRules",
       "role": "window",
@@ -32120,6 +32623,13 @@
               "tool.area",
               "tool.measureAngle",
               "tool.stationOffset"
+            ]
+          },
+          {
+            "label": "Zaman",
+            "items": [
+              "tool.timeVersion",
+              "tool.timeEnd"
             ]
           },
           {
@@ -33323,6 +33833,62 @@
                 ],
                 "key": "textAlong",
                 "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Zaman",
+            "icon": "timeSlider",
+            "items": [
+              {
+                "command": "time.slider",
+                "size": "small"
+              },
+              {
+                "command": "time.layer",
+                "size": "small"
+              },
+              {
+                "command": "tool.timeVersion",
+                "size": "small"
+              },
+              {
+                "command": "tool.timeEnd",
+                "size": "small"
+              },
+              {
+                "command": "time.compare",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Senaryo",
+            "icon": "scenarioCreate",
+            "items": [
+              {
+                "command": "scenario.create",
+                "size": "small"
+              },
+              {
+                "command": "scenario.show",
+                "size": "small"
+              },
+              {
+                "command": "scenario.base",
+                "size": "small"
+              },
+              {
+                "command": "scenario.compare",
+                "size": "small"
+              },
+              {
+                "command": "scenario.apply",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -38442,6 +39008,62 @@
               ],
               "overflow": [],
               "keep": false
+            },
+            {
+              "label": "Zaman",
+              "icon": "timeSlider",
+              "items": [
+                {
+                  "command": "time.slider",
+                  "size": "small"
+                },
+                {
+                  "command": "time.layer",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.timeVersion",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.timeEnd",
+                  "size": "small"
+                },
+                {
+                  "command": "time.compare",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Senaryo",
+              "icon": "scenarioCreate",
+              "items": [
+                {
+                  "command": "scenario.create",
+                  "size": "small"
+                },
+                {
+                  "command": "scenario.show",
+                  "size": "small"
+                },
+                {
+                  "command": "scenario.base",
+                  "size": "small"
+                },
+                {
+                  "command": "scenario.compare",
+                  "size": "small"
+                },
+                {
+                  "command": "scenario.apply",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
             }
           ]
         },
@@ -40831,6 +41453,24 @@
     "basemapGoogleHybrid": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1.4\" stroke-width=\"1.2\"/><path d=\"M6.5 11.2C4.8 9.3 4 8 4 6.9a2.5 2.5 0 0 1 5 0c0 1.1-.8 2.4-2.5 4.3z\" fill=\"currentColor\" fill-opacity=\".25\" stroke-width=\"1.1\"/><path d=\"M2.5 14 6 12l3 2 3.5-4 5 4.5v3h-15z\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><path d=\"M11.5 17.5 13.2 8.5M17.5 11.5l-8 2.6\" stroke-width=\"1.3\"/>",
     "basemapMaptiler": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1.4\" stroke-width=\"1.2\"/><path d=\"M2.5 8.5h15M8.5 2.5v15\" stroke-width=\"1\"/><path d=\"M4.5 6.5 6.7 4.6M10.5 5.8l4.5-1.6M4.2 14 6.5 11\" stroke-width=\"1.2\"/><circle cx=\"14.3\" cy=\"14.3\" r=\"1.7\" stroke-width=\"1.1\"/><path d=\"M15.5 15.5 18 18M17 17l1-1\" stroke-width=\"1.1\"/>",
     "basemapMaptilerSatellite": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1.4\" stroke-width=\"1.2\"/><path d=\"M2.5 12 6 9l2.8 2.4 3-3.4 5.7 5.5\" stroke-width=\"1.1\"/><path d=\"M2.5 12 6 9l2.8 2.4 3-3.4 5.7 5.5V17.5h-15z\" fill=\"currentColor\" fill-opacity=\".25\" stroke=\"none\"/><circle cx=\"14.3\" cy=\"14.3\" r=\"1.7\" stroke-width=\"1.1\"/><path d=\"M15.5 15.5 18 18M17 17l1-1\" stroke-width=\"1.1\"/>",
+    "timeSlider": "<circle cx=\"10\" cy=\"7\" r=\"4.2\"/><path d=\"M10 4.9V7l1.5 1.1\"/><path d=\"M2.5 15h15\"/><rect x=\"11.4\" y=\"13\" width=\"2.6\" height=\"4\" rx=\".8\" fill=\"currentColor\" stroke=\"none\"/>",
+    "timeLayer": "<path d=\"M2.5 8.2 8.5 5l6 3.2-6 3.2z\"/><path d=\"m2.5 11.4 6 3.2 2.2-1.2\"/><circle cx=\"14.6\" cy=\"13.8\" r=\"3.4\"/><path d=\"M14.6 12.1v1.8l1.2.8\"/>",
+    "timeVersion": "<rect x=\"2.5\" y=\"5\" width=\"6\" height=\"10\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><rect x=\"11.5\" y=\"5\" width=\"6\" height=\"10\" rx=\"1\"/><path d=\"M8.5 10h3M10.2 8.5l1.3 1.5-1.3 1.5\"/>",
+    "timeEnd": "<path d=\"M5.5 3h9M5.5 17h9\"/><path d=\"M6.5 3c0 3.6 3.5 4.6 3.5 7s-3.5 3.4-3.5 7M13.5 3c0 3.6-3.5 4.6-3.5 7s3.5 3.4 3.5 7\"/><path d=\"M8 15.5h4\" stroke-width=\"2\"/>",
+    "timeCompare": "<circle cx=\"6.2\" cy=\"10\" r=\"4\"/><circle cx=\"13.8\" cy=\"10\" r=\"4\"/><path d=\"M6.2 8v2H8M13.8 8v2l1.4 1\"/>",
+    "scenarioCreate": "<circle cx=\"5\" cy=\"15.5\" r=\"1.8\"/><circle cx=\"5\" cy=\"4.5\" r=\"1.8\"/><path d=\"M5 6.3v7.4M5 11.5c0-2.6 1.8-4.2 4.6-4.2\"/><path d=\"M14.5 3.5v7M11 7h7\"/>",
+    "scenarioShow": "<circle cx=\"5\" cy=\"15.5\" r=\"1.8\"/><path d=\"M5 13.7V3.5M5 9.5c0-2.6 1.8-4.2 4.6-4.2h1\"/><path d=\"M9.5 14c1.7-2.4 6.3-2.4 8 0-1.7 2.4-6.3 2.4-8 0z\"/><circle cx=\"13.5\" cy=\"14\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/>",
+    "scenarioBase": "<circle cx=\"5\" cy=\"15.5\" r=\"1.8\"/><circle cx=\"5\" cy=\"4.5\" r=\"1.8\"/><path d=\"M5 6.3v7.4\" stroke-width=\"2\"/><path d=\"M5 11.5c0-2.6 1.8-4.2 4.6-4.2h1.6\" stroke-dasharray=\"1.6 1.6\"/><path d=\"m11.5 13.5 2 2 4-4.5\"/>",
+    "scenarioCompare": "<circle cx=\"5\" cy=\"15.5\" r=\"1.8\"/><path d=\"M5 13.7V3.5M5 9.5c0-2.6 1.8-4.2 4.6-4.2\"/><path d=\"M11 10.5h6.5M11 14h6.5M15.6 8.2l-2.7 8\"/>",
+    "scenarioApply": "<circle cx=\"5\" cy=\"16\" r=\"1.8\"/><path d=\"M5 14.2V3.5\"/><path d=\"M15.5 3.5c0 4.4-3.2 6.6-8.8 7.4\"/><path d=\"M8.9 8.8 6.5 11l2.6 1.8\"/>",
+    "scenario": "<circle cx=\"5\" cy=\"15.5\" r=\"1.8\"/><circle cx=\"5\" cy=\"4.5\" r=\"1.8\"/><circle cx=\"14.5\" cy=\"6.5\" r=\"1.8\"/><path d=\"M5 6.3v7.4M5 12c0-3.2 2.6-4.8 7.8-5.4\"/>",
+    "clock": "<circle cx=\"10\" cy=\"10\" r=\"6.5\"/><path d=\"M10 6.2V10l2.6 1.7\"/>",
+    "timeFirst": "<path d=\"M5 5v10M14.5 5l-5 5 5 5\"/>",
+    "timePrev": "<path d=\"M12.5 5l-5 5 5 5\"/>",
+    "timeNext": "<path d=\"M7.5 5l5 5-5 5\"/>",
+    "timeLast": "<path d=\"M15 5v10M5.5 5l5 5-5 5\"/>",
+    "pause": "<rect x=\"5.5\" y=\"4.5\" width=\"3\" height=\"11\" rx=\".8\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"11.5\" y=\"4.5\" width=\"3\" height=\"11\" rx=\".8\" fill=\"currentColor\" stroke=\"none\"/>",
+    "loop": "<path d=\"M3.5 10.5V9a4 4 0 0 1 4-4h7.5\"/><path d=\"M13 2.8 15.2 5 13 7.2\"/><path d=\"M16.5 9.5V11a4 4 0 0 1-4 4H5\"/><path d=\"M7 17.2 4.8 15 7 12.8\"/>",
     "sheetLayout": "<rect x=\"3.5\" y=\"2.5\" width=\"13\" height=\"15\" rx=\"1\"/><rect x=\"5.5\" y=\"4.5\" width=\"9\" height=\"6.5\"/><path d=\"M5.5 13h9v2.5h-9zM10.5 13v2.5\"/>",
     "sheetNew": "<path d=\"M11 2.5H4.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9\"/><path d=\"M14.5 1.8v5.4M11.8 4.5h5.4\"/>",
     "sheetTemplate": "<rect x=\"6.5\" y=\"2.5\" width=\"10\" height=\"12\" rx=\"1\"/><path d=\"M4 5.5v11a1 1 0 0 0 1 1h8.5\"/><path d=\"M8.7 5.5h5.6M8.7 8h5.6M8.7 10.5h3.4\"/>",

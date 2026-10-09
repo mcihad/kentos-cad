@@ -19,13 +19,14 @@ use kentos_domain::contracts::{
 };
 use kentos_domain::contracts::{
     BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT, CAD_ENTITIES_SET,
-    EntitiesCreate, EntitiesSetProperties, LayersService, NetworkDefine,
+    EntitiesCreate, EntitiesSetProperties, LayersService, LayersTime, NetworkDefine, ScenariosEdit,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::create;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, arc, array, blocks_define, blocks_edit, circle, delete,
-    edit, layers_service, line, network_define, point, polygon, polyline, set, transform,
+    edit, layers_service, layers_time, line, network_define, point, polygon, polyline,
+    scenarios_edit, set, transform,
 };
 use serde_json::{Value, json};
 
@@ -43,6 +44,9 @@ struct State {
     setup_blocks: Vec<BlockId>,
     /// The layer the last command added or would add (`$layer`, docs/adr/0208 §15).
     layer: Option<String>,
+    /// The layers the last command that added any added or would add, by
+    /// their number (`$layer:1`, `$layer:2` …, docs/adr/0210 §11).
+    fresh: Vec<String>,
 }
 
 const STEP_KEYS: &[&str] = &[
@@ -86,7 +90,9 @@ fn expect_same(got: &Value, want: &Value, what: &str, at: &str) -> Outcome<()> {
 /// `captureUid` took, lowercase with hyphens; `$uidOf:12`, the persistent id
 /// the object in slot 12 has now (a copy a command just wrote);
 /// `$blockOf:Rögar`, the id of the drawing's block of that name now, and
-/// `$block:name`, one `captureBlock` took (docs/adr/0144).
+/// `$block:name`, one `captureBlock` took (docs/adr/0144); `$layer:2`, the
+/// second layer the last command that added any added or would add, by
+/// their numbers (docs/adr/0210 §11).
 fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value> {
     Ok(match value {
         Value::String(text) if text.starts_with("$blockOf:") => {
@@ -114,6 +120,19 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
             Value::String(uid.to_string())
         }
         Value::String(text) if text.contains("$uid:") => Value::String(with_uids(text, state, at)?),
+        Value::String(text) if text.starts_with("$layer:") => {
+            let k = text["$layer:".len()..]
+                .parse::<usize>()
+                .ok()
+                .filter(|k| *k >= 1)
+                .ok_or_else(|| format!("{at}: {text}: sıra 1'den başlayan bir sayı olmalı"))?;
+            Value::String(state.fresh.get(k - 1).cloned().ok_or_else(|| {
+                format!(
+                    "{at}: {text}: son komut {} katman ekledi",
+                    state.fresh.len()
+                )
+            })?)
+        }
         Value::String(text) if text == "$layer" => Value::String(
             state
                 .layer
@@ -158,7 +177,8 @@ fn block_ids(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<
         Value::String(text)
             if text.starts_with("$blockOf:")
                 || text.starts_with("$block:")
-                || text.starts_with("$uidOf:") =>
+                || text.starts_with("$uidOf:")
+                || text.starts_with("$layer:") =>
         {
             fill(value, doc, state, at)?
         }
@@ -303,6 +323,19 @@ impl Input for LayersService {
             "service.opacity" => self.service.as_mut()?.opacity.as_mut(),
             _ => None,
         }
+    }
+}
+
+/// No number of these is a NaN or ±∞ case (docs/adr/0210 §11).
+impl Input for LayersTime {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for ScenariosEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -834,6 +867,8 @@ fn run_op(
         CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
         kentos_domain::contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         kentos_domain::contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
+        kentos_domain::contracts::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
+        kentos_domain::contracts::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))
@@ -876,6 +911,22 @@ fn run_command(
             *field = Value::String(text.to_owned());
         }
     }
+    // “$layer:K”: the layers the command added (execute) or would add (plan), ids the tree did not have, by their number
+    // (docs/adr/0210 §11); a command that adds none leaves the last ones.
+    let fresh = fresh_layers(&got, &before);
+    if !fresh.is_empty() {
+        let after = layer_ids(doc.layers().nodes());
+        if let Some(id) = fresh
+            .iter()
+            .find(|id| after.contains(*id) != (op == "execute"))
+        {
+            return Err(format!(
+                "{at}: “{id}” yeni katman ağaçta {}",
+                if op == "execute" { "yok" } else { "var" }
+            ));
+        }
+        state.fresh = fresh;
+    }
     // “$layer”: the layer the command added (execute) or would add (plan): an id the tree did not have (docs/adr/0208 §15).
     for pointer in ["/output/layer", "/output/node/id"] {
         if want.pointer(pointer) != Some(&json!("$layer")) {
@@ -896,6 +947,29 @@ fn run_command(
         state.layer = Some(id.to_owned());
     }
     expect_same(&got, &fill(&want, doc, state, at)?, "sonuç", at)
+}
+
+/// The `layer-N` ids in a result the tree did not have before, by N.
+fn fresh_layers(got: &Value, before: &std::collections::HashSet<String>) -> Vec<String> {
+    fn walk(v: &Value, before: &std::collections::HashSet<String>, out: &mut Vec<(u64, String)>) {
+        match v {
+            Value::String(s) => {
+                if let Some(n) = s.strip_prefix("layer-").and_then(|n| n.parse::<u64>().ok())
+                    && !before.contains(s)
+                    && !out.iter().any(|(_, o)| o == s)
+                {
+                    out.push((n, s.clone()));
+                }
+            }
+            Value::Array(items) => items.iter().for_each(|i| walk(i, before, out)),
+            Value::Object(fields) => fields.values().for_each(|f| walk(f, before, out)),
+            _ => {}
+        }
+    }
+    let mut out = Vec::new();
+    walk(got, before, &mut out);
+    out.sort_by_key(|(n, _)| *n);
+    out.into_iter().map(|(_, s)| s).collect()
 }
 
 /// Every node's id of a layer tree.

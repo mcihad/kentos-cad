@@ -255,6 +255,9 @@ fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
         fields: Vec::new(),
         service: None,
         feed: None,
+        time: None,
+        scenario: None,
+        replaces: None,
     }
 }
 

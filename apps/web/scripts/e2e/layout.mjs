@@ -195,6 +195,21 @@ const ITEMS = [
     must: '.dialog--networks .net-line--edge',
   },
   { id: 'processing-network', open: (ui) => ui.run('processing.run.network.closestFacility'), ready: '.dialog--ptool' },
+  // Zaman ve senaryolar (docs/adr/0210 §10): Zaman ayarları over the parcels, Senaryo oluştur with the tree's layers,
+  // and the time slider's bar under the drawing (the parcels given years for it; both steps undone on closing).
+  { id: 'time-layer', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('parsel')`), await ui.run('time.layer')), ready: '.dialog--time-layer' },
+  { id: 'scenario-create', open: (ui) => ui.run('scenario.create'), ready: '.dialog--scenario' },
+  {
+    id: 'time-bar',
+    open: async (ui) => {
+      await ui.eval(
+        `(() => { const d = window.kentos.doc; d.updateMany(d.byLayer('parsel').map((e, i) => ({ id: e.id, attrs: { ...e.attrs, tarih: (2001 + (i % 20)) + '-01-01' } })), 'Tarih'); d.setLayerTime('parsel', { start: 'tarih', cumulative: true }, 'Zaman ayarları'); })()`,
+      );
+      await ui.run('time.slider');
+    },
+    close: async (ui) => (await ui.run('time.slider'), await ui.eval('(() => { window.kentos.doc.undo(); window.kentos.doc.undo(); })()')),
+    must: '.timebar:not([hidden])',
+  },
   { id: 'style-manager', open: (ui) => ui.run('style.manager'), ready: '.smgr__grid, .dialog' },
   { id: 'symbol-designer', open: async (ui) => (await ui.run('style.manager'), await ui.clickText('.dialog button', 'Yeni sembol'), await ui.clickText('.menu__item', 'Alan sembolü')) },
   { id: 'layer-style', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('ada')`), await ui.run('style.layerStyle')) },

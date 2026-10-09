@@ -79,6 +79,8 @@ Sürüm ve kalıcı kimlik iki uygulamada aynı sayı değildir; dosya onları a
 | `"$uidOf:22"` | 22 yuvasındaki nesnenin şimdiki kalıcı kimliği | aynı, adımdan sonra: bir komutun az önce yazdığı kopyanın kimliği |
 | `"$blockOf:Ad"` | çizimdeki o adlı bloğun kimliği (Türkçe harf katlamasıyla) | aynı, adımdan sonra: az önce tanımlanan bloğun kimliği; `expect.entities`'te de (yerleştirmenin `block`'u) |
 | `"$block:ad"` | `captureBlock` ile `ad` adıyla alınan blok kimliği | aynı; `expect.entities`'te de |
+| `"$layer"` | son komutun eklediği katman | `output.layer` ya da `output.node.id`'de: komutun eklediği (plan: ekleyeceği), ağaçta olmayan bir `layer-N` (ADR 0208 §15); `expect.layers`'ta da |
+| `"$layer:2"` | katman ekleyen son komutun ikinci yeni katmanı | sonuçta adımdan önce ağaçta olmayan `layer-N`'ler sayılarına göre sıralı; execute'ta ağaçta, plan'da ağaçta değil; katman eklemeyen komut önceki bağı bırakır (ADR 0210 §11); `expect.layers` ve `expect.entities`'te de |
 
 **Sürüm neden yalnız karşılaştırılır?** Sürüm bir sayaçtır; sözleşmesi eşitliktir. Web açılışı bir kez sayar, masaüstü saymaz (ADR 0020). Kimlik yeni nesnede rastgeledir (UUIDv7, ADR 0014).
 
@@ -95,6 +97,9 @@ Yalnız yazılan alanlar denetlenir.
 | `uids` | `{ "kimlik": ad }`: nesnenin kalıcı kimliği `captureUid`'in bu adla sakladığıdır; `"new"`: saklananların hiçbiri değildir |
 | `blocks` | çizimin blok tanımları sırasıyla, her biri kimliği hariç, alan alan eşit (ADR 0144) |
 | `blockIds` | `{ "ad": kimlik }`: o adlı bloğun kimliği; `"new"`: kurulumdakilerin ve `captureBlock`'un sakladıklarının hiçbiri değildir; `"$block:ad"` ya da kimliğin kendisi |
+| `layers` | katman ağacının tamamı, her düğüm bütün alanlarıyla (ADR 0208 §15) |
+| `connections` | projenin bağlantıları (ADR 0208 §2) |
+| `networks` | projenin ağları (ADR 0209 §2) |
 
 ## Kurallar
 

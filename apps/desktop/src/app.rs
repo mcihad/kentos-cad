@@ -178,6 +178,10 @@ pub enum Dialog {
     TopologyRules,
     /// Ağlar (networks/window.rs, docs/adr/0209 §10); the window is `App::networks.window`.
     Networks,
+    /// Zaman ayarları (temporal/layer.rs, docs/adr/0210 §10); the window is `App::time.layer`.
+    TimeLayer,
+    /// Senaryo oluştur and Senaryoyu uygula's question (temporal/scenario.rs); the window is `App::time.scenario`.
+    Scenario,
     /// Katman durumları (layer_states.rs, docs/adr/0177 §4); the window is `App::layer_states_window`.
     LayerStates,
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
@@ -328,6 +332,8 @@ pub enum Message {
     TopologyRules(crate::topology::rules::Event),
     /// Ağ analizi: the networks' answers and Ağlar (networks/, docs/adr/0209).
     Networks(crate::networks::Event),
+    /// Zaman sürgüsü, Zaman ayarları and the scenarios (temporal/, docs/adr/0210).
+    Time(crate::temporal::Event),
     /// Köşe tablosu in the Koordinat listesi tab (vertices/, docs/adr/0172).
     Vertices(crate::vertices::Event),
     /// The bottom panel's top edge dragged: the open history's new height.
@@ -588,6 +594,8 @@ pub struct App {
     pub(crate) network_wanted: Vec<kentos_interaction::network::NetworkAsk>,
     /// The project's networks as built on the network thread, and Ağlar's window.
     pub(crate) networks: crate::networks::State,
+    /// Zaman sürgüsü and the windows of Zaman and Senaryo (temporal/, docs/adr/0210).
+    pub(crate) time: crate::temporal::State,
     /// Commands a tool asked the host to run (Ağlar from the network tools).
     pub(crate) command_wanted: Vec<&'static str>,
     /// Nokta bulutu ekle and Nokta bulutu stili (pointclouds/, docs/adr/0207 §9).
@@ -929,6 +937,7 @@ impl App {
             cloud_query_wanted: Vec::new(),
             network_wanted: Vec::new(),
             networks: crate::networks::State::default(),
+            time: crate::temporal::State::default(),
             command_wanted: Vec::new(),
             clouds: crate::pointclouds::Windows::default(),
             image_file_wanted: false,
@@ -1185,6 +1194,13 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // Zaman sürgüsü's playback (temporal/, docs/adr/0210 §5): a tick is handled after the
+            // drawing showed the last step; the step itself waits for the speed.
+            if self.time.slider.playing {
+                Subscription::run(crate::temporal::ticks)
+            } else {
+                Subscription::none()
+            },
             // The status bar's message: when it goes, and its fades (message_log.rs).
             self.log_subscription(Instant::now()),
             // The kept layout, written after its last change; the window's size.
@@ -1301,6 +1317,8 @@ impl App {
         self.styles.follow_project(Some(doc.model.styles()));
         let model = &doc.model;
         self.selection.retain(|slot| model.get(slot).is_some());
+        // The slider's range follows the drawing (docs/adr/0210 §5).
+        self.time_refresh();
     }
 
     fn handle(&mut self, message: Message) -> Task<Message> {
@@ -1389,6 +1407,7 @@ impl App {
             Message::Topology(event) => return self.topology_event(event),
             Message::TopologyRules(event) => return self.topology_rules_event(event),
             Message::Networks(event) => return self.networks_event(event),
+            Message::Time(event) => return self.time_event(event),
             Message::Vertices(event) => return self.vertices_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
@@ -2086,6 +2105,19 @@ impl App {
             "topology.rules" => return self.open_topology_rules(),
             // Ağlar (networks/, docs/adr/0209 §10).
             "network.manage" => return self.open_networks(),
+            // Zaman and Senaryo (temporal/, docs/adr/0210 §10).
+            "time.slider" => self.time_toggle(),
+            "time.layer" => self.open_time_layer(None),
+            "time.compare" => self.open_time_compare(),
+            "scenario.create" => self.open_scenario_create(),
+            "scenario.show" => {
+                if let Some(id) = self.scenario_at_hand() {
+                    self.show_scenario(&id);
+                }
+            }
+            "scenario.base" => self.show_base(),
+            "scenario.compare" => self.open_scenario_compare(None),
+            "scenario.apply" => self.ask_scenario_apply(None),
             crate::catalog::PYTHON_CONSOLE => self.toggle_python(),
             // The navigation commands keep the view they leave (navigation.rs, docs/adr/0141).
             "view.zoomIn" => self.navigating(Self::zoom_in),
@@ -2245,6 +2277,15 @@ impl App {
             "view.overview" => self.overview_shown(),
             "view.magnifier" => self.magnifier_shown(),
             "view.fullscreen" => self.fullscreen,
+            // Zaman sürgüsü and Mevcut durum (docs/adr/0210 §10).
+            "time.slider" => self.time.slider.open,
+            "scenario.base" => {
+                self.has_scenarios()
+                    && self.document.as_ref().is_some_and(|d| {
+                        crate::temporal::shown_scenario(d.model.layers())
+                            == crate::temporal::Shown::Base
+                    })
+            }
             id if id.starts_with("workspace.") => {
                 crate::catalog::mode_command(self.work_mode()) == id
             }
@@ -2287,6 +2328,10 @@ impl App {
             "service.connections" | "service.add" | "service.feed" | "service.info" => {
                 doc.is_some()
             }
+            // The scenarios' commands while the project has one (docs/adr/0210 §10).
+            "scenario.show" | "scenario.base" | "scenario.compare" | "scenario.apply" => {
+                self.has_scenarios()
+            }
             id if crate::clipboard::COMMANDS.contains(&id) => self.clipboard_available(id),
             "server.check" => !self.server_checking,
             id if id.starts_with("cloud.") => self.cloud_available(id),
@@ -2320,6 +2365,11 @@ impl App {
     pub fn why_disabled(&self, id: &str) -> Option<&'static str> {
         match id {
             "layer.new" | "layer.newGroup" => self.tree_locked(),
+            "scenario.show" | "scenario.base" | "scenario.compare" | "scenario.apply"
+                if !self.has_scenarios() =>
+            {
+                Some("Projede senaryo yok; önce Senaryo oluştur ile bir senaryo yapın.")
+            }
             _ => None,
         }
     }

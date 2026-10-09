@@ -4,15 +4,15 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 452 | 427 | 0 | 25 |
-| Araçlar | 124 | 122 | 0 | 2 |
+| Komutlar | 462 | 437 | 0 | 25 |
+| Araçlar | 126 | 124 | 0 | 2 |
 | İşlem araçları | 23 | 23 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
 | Ayarlar | 93 | 93 | 0 | 0 |
 | Tarayıcı depoları | 12 | 12 | 0 | 0 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 683 | 683 | 0 | 0 |
-| Pencereler ve paneller | 127 | 127 | 0 | 0 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 691 | 691 | 0 | 0 |
+| Pencereler ve paneller | 130 | 130 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -62,15 +62,15 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 380 | 0 | 58 | 12 | 2 | 452 |
-| Araçlar | 122 | 0 | 0 | 2 | 0 | 124 |
+| Komutlar | 390 | 0 | 58 | 12 | 2 | 462 |
+| Araçlar | 124 | 0 | 0 | 2 | 0 | 126 |
 | İşlem araçları | 23 | 0 | 0 | 0 | 0 | 23 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
 | Ayarlar | 89 | 0 | 3 | 0 | 1 | 93 |
 | Tarayıcı depoları | 10 | 0 | 0 | 0 | 2 | 12 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 683 | 0 | 0 | 0 | 0 | 683 |
-| Pencereler ve paneller | 107 | 2 | 17 | 0 | 1 | 127 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 691 | 0 | 0 | 0 | 0 | 691 |
+| Pencereler ve paneller | 110 | 2 | 17 | 0 | 1 | 130 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -89,7 +89,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 452; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 462; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -162,7 +162,7 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `workspace.disaster` Afet Analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `workspace.plan3d` 3D Plan (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Araçlar (0 / 124; ayrıca 2 iki platformda da bekliyor)
+#### Araçlar (0 / 126; ayrıca 2 iki platformda da bekliyor)
 
 - `stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - `subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
@@ -190,11 +190,11 @@ Yok.
 
 Yok.
 
-#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 683)
+#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 691)
 
 Yok.
 
-#### Pencereler ve paneller (19 / 127)
+#### Pencereler ve paneller (19 / 130)
 
 - `apps/web/src/ui/io/TakeFromDialog.ts#openTakeFrom` openTakeFrom
 - `apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog` openProjectTypeDialog
@@ -218,4 +218,4 @@ Yok.
 
 ## Test başvurusu
 
-182 / 452 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+182 / 462 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

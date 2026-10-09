@@ -27,6 +27,8 @@ import {
   scratchPointInPolygon as wasmScratchPointInPolygon,
   scratchSignedArea as wasmScratchSignedArea,
   TraceGraph,
+  timeLayer as wasmTimeLayer,
+  timeLayerMask as wasmTimeLayerMask,
   transformObjects as wasmTransformObjects,
   triangulateMany as wasmTriangulateMany,
 } from './pkg/kentos_geometry_wasm.js';
@@ -171,6 +173,20 @@ export function callNamed(name: string, args: unknown[]): unknown {
  */
 export function triangulateMany(xy: Float64Array, ringSizes: Uint32Array, polyRings: Uint32Array): Uint32Array {
   return typed(() => wasmTriangulateMany(xy, ringSizes, polyRings));
+}
+
+/**
+ * The times of a temporal layer's objects (docs/adr/0210 §4) in one call: `texts` each object's start and end values
+ * one after another, `lens` their lengths (−1: the object lacks it). Per object `s, e, mode` (−1: timeless), then
+ * `timed, timeless, unreadable, extent start, extent end`.
+ */
+export function coreTimeLayer(ranged: boolean, cumulative: boolean, texts: string, lens: Int32Array): Float64Array {
+  return typed(() => wasmTimeLayer(ranged, cumulative, texts, lens));
+}
+
+/** Which of a temporal layer's objects show in a window (kind 1 the moment `a`, 2 from `a` up to `b`): 1 per object shown, a timeless one always. */
+export function coreTimeLayerMask(ranged: boolean, cumulative: boolean, texts: string, lens: Int32Array, kind: number, a: number, b: number): Uint8Array {
+  return typed(() => wasmTimeLayerMask(ranged, cumulative, texts, lens, kind, a, b));
 }
 
 /**
@@ -626,6 +642,35 @@ export class CoreStore {
   /** The objects whose label a text writes (docs/adr/0175 §4): `labels` leaves their own out. */
   setTextLabelled(ids: Float64Array): void {
     typed(() => this.raw.setTextLabelled(ids));
+  }
+
+  /** The objects' times (docs/adr/0210 §6): `s, e, mode` per id, mode −1 takes it away. */
+  setTimes(ids: Float64Array, times: Float64Array): void {
+    typed(() => this.raw.setTimes(ids, times));
+  }
+
+  /** A temporal layer's objects' times read from their values straight into the store (`texts`, `lens` as `coreTimeLayer`'s). */
+  setLayerTimes(ids: Float64Array, ranged: boolean, cumulative: boolean, texts: string, lens: Int32Array): void {
+    typed(() => this.raw.setLayerTimes(ids, ranged, cumulative, texts, lens));
+  }
+
+  clearTimes(): void {
+    typed(() => this.raw.clearTimes());
+  }
+
+  /** The time slider's window: kind 0 none, 1 the moment `a`, 2 from `a` up to `b`; queries leave out what it does not show. */
+  setTimeWindow(kind: number, a: number, b: number): void {
+    typed(() => this.raw.setTimeWindow(kind, a, b));
+  }
+
+  /** How many objects have a time, then the extent of their starts and ends (NaN without one). */
+  timeSummary(): Float64Array {
+    return typed(() => this.raw.timeSummary());
+  }
+
+  /** For each id, 1 when it shows at the slider's window. */
+  timeMask(ids: Float64Array): Uint8Array {
+    return typed(() => this.raw.timeMask(ids));
   }
 
   /** What the overlay draws in the view: eight numbers per record (geometry-core store/labels.rs). */

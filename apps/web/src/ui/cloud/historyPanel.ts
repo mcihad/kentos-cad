@@ -55,6 +55,14 @@ export class HistoryPanel {
         const p = this.project;
         if (p) this.o.download({ name: `${p.name} (revizyon ${r.revision})`, fetch: (step, signal) => this.ctx.cloud.api.fileRevision(p.tenantId, p.id, r.revision, step, signal), listed: r.sha256 });
       },
+      compareRevision: (r) => {
+        const p = this.project;
+        if (p) void this.compare(`Revizyon ${r.revision}`, () => this.ctx.cloud.api.fileRevision(p.tenantId, p.id, r.revision));
+      },
+      compareCheckpoint: (c) => {
+        const p = this.project;
+        if (p) void this.compare(c.name, () => this.ctx.cloud.api.checkpointFile(p.tenantId, p.id, c.id));
+      },
       restoreRevision: (r) => {
         const t = target();
         if (t) openRestoreDialog(this.ctx, t, { revision: r }, this.o.opened);
@@ -131,6 +139,18 @@ export class HistoryPanel {
         this.o.paint();
       },
     );
+  }
+
+  /** Revizyonla karşılaştır (docs/adr/0210 §8): the point downloaded and read as Eski veri, the open drawing as Yeni. */
+  private async compare(name: string, fetch: () => Promise<{ bytes: Uint8Array }>): Promise<void> {
+    this.ctx.log.info(`“${name}” indiriliyor…`);
+    try {
+      const got = await fetch();
+      const m = await import('../data/DataCompareDialog');
+      await m.compareWithFile(this.ctx, name, got.bytes);
+    } catch (e) {
+      this.ctx.log.error(`“${name}” karşılaştırılamadı: ${reason(e)}`);
+    }
   }
 
   /** Asks, then removes a checkpoint (its maker, or someone who manages the project). */

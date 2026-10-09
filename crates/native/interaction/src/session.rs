@@ -183,6 +183,9 @@ pub const TOOLS: &[&str] = &[
     select_similar::ID,
     // docs/adr/0142: Kot ver.
     set_elevation::ID,
+    // Yeni sürüm oluştur and Sona erdir (docs/adr/0210 §7).
+    crate::time_version::VERSION_ID,
+    crate::time_version::END_ID,
     // docs/adr/0148: Topolojik temizlik.
     topology::ID,
     // docs/adr/0151: Toplu alan.
@@ -418,6 +421,11 @@ impl Session {
             select_polygon::ID => Box::new(select_polygon::SelectPolygon::new()),
             select_similar::ID => Box::new(select_similar::SelectSimilar::new()),
             set_elevation::ID => Box::new(set_elevation::SetElevation::tool()),
+            // Yeni sürüm oluştur and Sona erdir (docs/adr/0210 §7).
+            crate::time_version::VERSION_ID => {
+                Box::new(crate::time_version::TimeVersion::tool(true))
+            }
+            crate::time_version::END_ID => Box::new(crate::time_version::TimeVersion::tool(false)),
             topology::ID => Box::new(crate::topology::Topology::new()),
             labels_to_text::ID => Box::new(crate::labels_to_text::LabelsToText::new()),
             polygonize::ID => Box::new(crate::polygonize::Polygonize::new()),

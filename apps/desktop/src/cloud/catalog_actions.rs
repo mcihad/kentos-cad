@@ -79,6 +79,9 @@ pub struct Download {
     pub fetch: Fetch,
     pub name: String,
     pub listed: Option<String>,
+    /// Revizyonla karşılaştır (docs/adr/0210 §8): the point's name; the file goes to a
+    /// place of the app's own and opens as Veri karşılaştır's Eski veri, not to a place chosen.
+    pub compare: Option<String>,
 }
 
 /// The action on its way: which, on what, and its request.
@@ -152,6 +155,7 @@ impl App {
                         fetch: Fetch::Project,
                         name,
                         listed: None,
+                        compare: None,
                     },
                 )
             }
@@ -307,8 +311,18 @@ impl App {
             return Task::none();
         };
         let name = p.name.clone();
+        let compare = download.as_ref().and_then(|d| d.compare.clone());
         let download_name = download.map(|d| d.name);
         let open = self.is_open_project(&p.id);
+        // Revizyonla karşılaştır (docs/adr/0210 §8): the file opens as Veri karşılaştır's Eski veri.
+        if let (Some(point), Ok(Acted::Downloaded { path, .. })) = (&compare, &result) {
+            if let Some(c) = self.cloud.catalog.as_mut() {
+                c.status = None;
+            }
+            let path = path.clone();
+            self.compare_with_file(point, &path);
+            return Task::none();
+        }
         let failure = match result {
             Ok(done) => return self.catalog_done(act, p, done, open, download_name),
             Err(failure) => failure,
@@ -473,6 +487,22 @@ impl App {
             progress: None,
             _request: None,
         });
+        // A point to compare goes to a file of the app's own (read, then removed).
+        let compare = c
+            .acting
+            .as_ref()
+            .and_then(|a| a.download.as_ref())
+            .is_some_and(|d| d.compare.is_some());
+        if compare {
+            let path = std::env::temp_dir().join(format!(
+                "kentos-karsilastir-{}-{id}.kcad",
+                std::process::id()
+            ));
+            return Task::done(crate::cloud::msg(Event::CatalogDownloadTo {
+                id,
+                path: Some(path),
+            }));
+        }
         if let Picker::File(path) = &self.picker {
             let path = path.clone();
             return Task::done(crate::cloud::msg(Event::CatalogDownloadTo {

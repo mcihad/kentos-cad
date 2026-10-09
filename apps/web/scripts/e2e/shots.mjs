@@ -2988,6 +2988,84 @@ SCENES.networks = [
   { id: 'aglar-serit', open: async (ui) => (await loadNetworks(ui), await ribbonOn(ui, { ribbonTab: 'analysis' }), await ui.sleep(300)), close: ribbonOff },
 ];
 
+// Zaman and Senaryo (docs/adr/0210) on fixtures/interaction/v1/temporal.kcad, the scenes the desktop's
+// `temporal_scenes` draws: the CBS ribbon's Harita with its Zaman and Senaryo panels; the slider at its last position
+// and back in 2015; Zaman ayarları; Senaryo oluştur; the scenario shown; Senaryoyu uygula's question; Zamanı
+// karşılaştır across the split year.
+const TEMPORAL_DRAWING = readFileSync(new URL('../../../../fixtures/interaction/v1/temporal.kcad', import.meta.url), 'utf8');
+const loadTemporal = async (ui) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(TEMPORAL_DRAWING)}, null))) throw new Error('temporal.kcad did not load');
+    k.view.zoomToBox({ minX: 486985, minY: 4419992, maxX: 487115, maxY: 4420064 }, 24);
+    k.selection.clear();
+  })()`);
+  await ui.sleep(300);
+};
+const temporalClose = async (ui) => {
+  await ui.escapeAll(2);
+  await ui.eval(`(() => { const k = window.kentos; k.time.close(); })()`);
+};
+const timeAt = async (ui, back) => {
+  await ui.eval(`(() => { const t = window.kentos.time; t.show(); t.go(t.last.value - ${back}); })()`);
+  await ui.sleep(400);
+};
+SCENES.temporal = [
+  { id: 'zaman-serit', open: async (ui) => (await loadTemporal(ui), await ribbonOn(ui, { ribbonTab: 'map' }), await ui.sleep(300)), close: async (ui) => (await ribbonOff(ui), await temporalClose(ui)) },
+  { id: 'zaman-surgu', open: async (ui) => (await loadTemporal(ui), await timeAt(ui, 0)), close: temporalClose },
+  { id: 'zaman-surgu-2015', open: async (ui) => (await loadTemporal(ui), await timeAt(ui, 9)), close: temporalClose },
+  {
+    id: 'zaman-ayarlari',
+    open: async (ui) => {
+      await loadTemporal(ui);
+      await ui.eval(`window.kentos.commands.execute('time.layer')`);
+      await ui.waitFor(`!!document.querySelector('.dialog--time-layer .io-summary__line')`, 8000);
+      await ui.sleep(300);
+    },
+    close: temporalClose,
+  },
+  {
+    id: 'senaryo-olustur',
+    open: async (ui) => {
+      await loadTemporal(ui);
+      await ui.eval(`window.kentos.commands.execute('scenario.create')`);
+      await ui.waitFor(`!!document.querySelector('.dialog--scenario .scenario-row')`, 8000);
+      await ui.eval(`(() => { const box = [...document.querySelectorAll('.dialog--scenario .scenario-row')].find((r) => r.textContent.includes('Yol'))?.querySelector('input'); box?.click(); })()`);
+      await ui.sleep(300);
+    },
+    close: temporalClose,
+  },
+  {
+    id: 'senaryo-gosterilen',
+    open: async (ui) => (await loadTemporal(ui), await ui.eval(`window.kentos.commands.execute('scenario.show', 'alt-a')`), await ui.move(2, 2), await ui.sleep(400)),
+    close: temporalClose,
+  },
+  {
+    id: 'senaryo-uygula',
+    open: async (ui) => {
+      await loadTemporal(ui);
+      await ui.eval(`window.kentos.commands.execute('scenario.show', 'alt-a')`);
+      await ui.eval(`window.kentos.commands.execute('scenario.apply', 'alt-a')`);
+      await ui.waitFor(`!!document.querySelector('.dialog .btn--primary')`, 8000);
+      await ui.sleep(300);
+    },
+    close: temporalClose,
+  },
+  {
+    id: 'zaman-karsilastir',
+    open: async (ui) => {
+      await loadTemporal(ui);
+      await timeAt(ui, 5);
+      await ui.eval(`window.kentos.commands.execute('time.compare')`);
+      await ui.waitFor(`!!document.querySelector('.dialog--compare')`, 8000);
+      await ui.clickText('.dialog--compare .btn', 'Karşılaştır');
+      await ui.sleep(400);
+    },
+    close: temporalClose,
+  },
+];
+
 // Topoloji kuralları (docs/adr/0202) on fixtures/interaction/v1/topology-rules.kcad, the scenes the desktop's
 // `topology::tests::screens` draws: the Topoloji tab after Denetle with the overlap chosen, the gap chosen (its region
 // over the drawing), Düzelt ▾ on it, the rules window.

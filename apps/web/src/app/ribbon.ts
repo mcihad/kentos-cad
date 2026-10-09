@@ -331,6 +331,10 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       // The layers' labels as texts (docs/adr/0175 §3), beside the styles that draw them; a name along a creek or a
       // road (docs/adr/0196 §4).
       { pick: 'Etiket', icon: 'labelsToText', commands: ['tool.labelsToText', 'tool.textAlong', 'tool.textCurve'] },
+      // Zaman and Senaryo (docs/adr/0210 §10): ArcGIS Pro's Time tab and QGIS's Temporal Controller; Netcad's
+      // versioned editing; proposals kept apart from the field state.
+      { pick: 'Zaman', icon: 'timeSlider', commands: ['time.slider', 'time.layer', 'tool.timeVersion', 'tool.timeEnd', 'time.compare'] },
+      { pick: 'Senaryo', icon: 'scenarioCreate', commands: ['scenario.create', 'scenario.show', 'scenario.base', 'scenario.compare', 'scenario.apply'] },
     ],
     launchers: { 'Koordinat sistemi': { command: 'crs.set', title: 'Proje ayarları: koordinat sistemi' } },
   },

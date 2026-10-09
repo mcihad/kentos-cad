@@ -1,0 +1,23 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "scenarios",
+  "title": "Senaryolar: Senaryoyu karşılaştır Yol genişletme A'nın yolunu eski yolla karşılaştırır; Yeni imar Parsel ve Yol'un kopyalarıyla oluşturulur ve gösterilir (ana katmanlar gizli, etkin katman senaryodaki karşılığı); Mevcut durum ana katmanları gösterir; Senaryoyu göster ilk senaryoyu gösterir; Senaryoyu uygula sorar, ana katmanlara yazar, grubu siler ve Mevcut durum'u gösterir; geri alınır",
+  "source": "docs/adr/0210",
+  "covers": ["GIS-12"],
+  "document": "temporal.kcad",
+  "view": {"center": [487050, 4420025], "metresPerPixel": 0.25},
+  "clickTolerance": 0.5,
+  "steps": [
+    {"run": "scenario.compare", "note": "Senaryoyu karşılaştır: ilk senaryonun (Yol genişletme A) ilk çifti, eski Yol ile yerine geçen 12 m'lik yol alanı", "expect": {"dialog": "Veri karşılaştır"}},
+    {"dialog": "Veri karşılaştır", "press": "Karşılaştır", "note": "Çizgi ile alan eşleşmez", "expect": {"dialog": "Veri karşılaştır", "logged": ["Karşılaştırıldı: 1 eklenen, 1 silinen."]}},
+    {"dialog": "Veri karşılaştır", "press": "Kapat", "expect": {"dialog": null}},
+    {"run": "scenario.create", "expect": {"dialog": "Senaryo oluştur"}},
+    {"dialog": "Senaryo oluştur", "fill": {"Ad": "Yeni imar"}, "check": {"Yol": true}, "press": "Oluştur", "expect": {"dialog": null, "entities": 21, "canUndo": true, "layers": ["Yeni imar", "Yeni imar / Parsel", "Yeni imar / Yol", "Yol genişletme A", "Yol genişletme A / Yol", "Yol genişletme A / Yeni park", "Parsel", "Bina", "Arıza", "Yol"], "hiddenLayers": ["Yol genişletme A", "Parsel", "Yol"], "activeLayer": ["Yeni imar", "Parsel"], "logged": ["Senaryo gösteriliyor: Yeni imar.", "Senaryo oluşturuldu: Yeni imar (2 katman, 7 nesne kopyalandı)."]}},
+    {"run": "scenario.base", "expect": {"hiddenLayers": ["Yeni imar", "Yol genişletme A"], "activeLayer": ["Parsel"], "logged": ["Mevcut durum gösteriliyor."]}},
+    {"run": "scenario.show", "expect": {"hiddenLayers": ["Yol genişletme A", "Parsel", "Yol"], "activeLayer": ["Yeni imar", "Parsel"], "logged": ["Senaryo gösteriliyor: Yeni imar."]}},
+    {"run": "scenario.apply", "expect": {"dialog": "Senaryoyu uygula"}},
+    {"dialog": "Senaryoyu uygula", "press": "Uygula", "expect": {"dialog": null, "entities": 14, "layers": ["Yol genişletme A", "Yol genişletme A / Yol", "Yol genişletme A / Yeni park", "Parsel", "Bina", "Arıza", "Yol"], "hiddenLayers": ["Yol genişletme A"], "activeLayer": ["Parsel"], "ids": [7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21], "logged": ["Mevcut durum gösteriliyor.", "Senaryo uygulandı: Yeni imar (2 katman; 7 nesne taşındı, 7 nesne silindi)."]}},
+    {"key": "Ctrl+Z", "note": "tek adım “Senaryoyu uygula”; görünürlük geri alma adımı değildir: geri gelen grup uygulandığı andaki gibi görünür, ana katmanlar da", "expect": {"hiddenLayers": ["Yol genişletme A"], "entities": 21, "layers": ["Yeni imar", "Yeni imar / Parsel", "Yeni imar / Yol", "Yol genişletme A", "Yol genişletme A / Yol", "Yol genişletme A / Yeni park", "Parsel", "Bina", "Arıza", "Yol"]}}
+  ]
+}

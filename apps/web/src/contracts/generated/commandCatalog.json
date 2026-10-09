@@ -2848,6 +2848,24 @@
               "name": {
                 "type": "string"
               },
+              "replaces": {
+                "description": "A scenario's layer: the base layer it stands for (docs/adr/0210 §9).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scenario": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ScenarioInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A group made a scenario (docs/adr/0210 §9). Only a group has it."
+              },
               "service": {
                 "anyOf": [
                   {
@@ -2872,6 +2890,17 @@
               },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
+              },
+              "time": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A temporal layer's time setting (docs/adr/0210 §2): which attributes\nhold its objects' start and end. Only a layer has it, never a group."
               },
               "type": {
                 "$ref": "#/$defs/LayerNodeType"
@@ -3033,6 +3062,37 @@
               "color",
               "lineType",
               "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
             ],
             "type": "object"
           },
@@ -4581,6 +4641,18 @@
             "required": [
               "pts"
             ],
+            "type": "object"
+          },
+          "ScenarioInfo": {
+            "description": "A group made a scenario (docs/adr/0210 §9): its layers are an alternative\nkept apart from the field state (Mevcut durum).",
+            "properties": {
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "ServiceConnection": {
@@ -7548,6 +7620,24 @@
               "name": {
                 "type": "string"
               },
+              "replaces": {
+                "description": "A scenario's layer: the base layer it stands for (docs/adr/0210 §9).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scenario": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ScenarioInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A group made a scenario (docs/adr/0210 §9). Only a group has it."
+              },
               "service": {
                 "anyOf": [
                   {
@@ -7572,6 +7662,17 @@
               },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
+              },
+              "time": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A temporal layer's time setting (docs/adr/0210 §2): which attributes\nhold its objects' start and end. Only a layer has it, never a group."
               },
               "type": {
                 "$ref": "#/$defs/LayerNodeType"
@@ -7733,6 +7834,37 @@
               "color",
               "lineType",
               "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
             ],
             "type": "object"
           },
@@ -8270,6 +8402,18 @@
               "WGS84"
             ],
             "type": "string"
+          },
+          "ScenarioInfo": {
+            "description": "A group made a scenario (docs/adr/0210 §9): its layers are an alternative\nkept apart from the field state (Mevcut durum).",
+            "properties": {
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
           },
           "ServiceConnection": {
             "description": "A connection of the project (docs/adr/0208 §2): what proof requests to\nits origin carry, without the secrets.",
@@ -11902,6 +12046,24 @@
               "name": {
                 "type": "string"
               },
+              "replaces": {
+                "description": "A scenario's layer: the base layer it stands for (docs/adr/0210 §9).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scenario": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ScenarioInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A group made a scenario (docs/adr/0210 §9). Only a group has it."
+              },
               "service": {
                 "anyOf": [
                   {
@@ -11926,6 +12088,17 @@
               },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
+              },
+              "time": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A temporal layer's time setting (docs/adr/0210 §2): which attributes\nhold its objects' start and end. Only a layer has it, never a group."
               },
               "type": {
                 "$ref": "#/$defs/LayerNodeType"
@@ -12087,6 +12260,37 @@
               "color",
               "lineType",
               "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
             ],
             "type": "object"
           },
@@ -13721,6 +13925,18 @@
             "required": [
               "pts"
             ],
+            "type": "object"
+          },
+          "ScenarioInfo": {
+            "description": "A group made a scenario (docs/adr/0210 §9): its layers are an alternative\nkept apart from the field state (Mevcut durum).",
+            "properties": {
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "ServiceConnection": {
@@ -73476,6 +73692,24 @@
               "name": {
                 "type": "string"
               },
+              "replaces": {
+                "description": "A scenario's layer: the base layer it stands for (docs/adr/0210 §9).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scenario": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ScenarioInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A group made a scenario (docs/adr/0210 §9). Only a group has it."
+              },
               "service": {
                 "anyOf": [
                   {
@@ -73500,6 +73734,17 @@
               },
               "style": {
                 "$ref": "#/$defs/LayerStyle"
+              },
+              "time": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A temporal layer's time setting (docs/adr/0210 §2): which attributes\nhold its objects' start and end. Only a layer has it, never a group."
               },
               "type": {
                 "$ref": "#/$defs/LayerNodeType"
@@ -73603,6 +73848,37 @@
             ],
             "type": "object"
           },
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          },
           "LineType": {
             "enum": [
               "continuous",
@@ -73636,6 +73912,18 @@
               "triangle"
             ],
             "type": "string"
+          },
+          "ScenarioInfo": {
+            "description": "A group made a scenario (docs/adr/0210 §9): its layers are an alternative\nkept apart from the field state (Mevcut durum).",
+            "properties": {
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
           },
           "ServiceConnection": {
             "description": "A connection of the project (docs/adr/0208 §2): what proof requests to\nits origin carry, without the secrets.",
@@ -75101,6 +75389,1318 @@
           "output": {
             "networks": [],
             "revision": "12"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.layers.time",
+      "version": 1,
+      "title": "Katmanın zamanı",
+      "summary": "Katmanın zaman ayarını yazar ya da kaldırır (time verilmezse ya da null ise): nesnelerin başlangıcı (anlık katmanda anı) ve bitişi hangi özniteliklerdedir, kimlik alanı (iki zamanı karşılaştırmanın anahtarı) ve Birikimli (nesne başlangıcından sonra hep görünür). Değerler öznitelik metnidir: YYYY-AA-GG ya da GG.AA.YYYY, isteğe bağlı saat (T ya da boşlukla SS:DD[:ss[.kesir]]) ve saat dilimi (Z, +SS:DD …); boş başlangıç ya da bitiş açık uçtur. Zaman sürgüsü, Yeni sürüm oluştur ve Sona erdir bu ayarı kullanır; sürgü bir görünümdür, çizimi değiştirmez. Katman ağacının değişikliğidir: tek geri alma adımı “Zaman ayarları”; ayar aynıysa hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.layers.time` v1: a layer's time setting written, or taken\naway (`time` absent or null), as one undo step “Zaman ayarları”. A layer\nthat already has it as given is left as it is (`changed` false, no step).\n\nRefusals (`CommandError.code`), checked in this order: `invalid_time`\n(`LayerTime::problem`); then `invalid_revision`, `revision_conflict`\n(status `conflict`), `layer_not_found`, `not_a_layer` (a group),\n`service_layer` (a layer drawn from a service: it holds no objects).",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The layer's id.",
+            "type": "string"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerTime"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its new time setting; absent or null takes it away."
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "LayersTime",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.time` v1.",
+        "properties": {
+          "changed": {
+            "description": "Whether the setting differed (an undo step was written).",
+            "type": "boolean"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "changed",
+          "revision"
+        ],
+        "title": "LayersTimed",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "FeatureFeed": {
+            "description": "Where a layer's objects came from, to take them again (docs/adr/0208 §10).",
+            "properties": {
+              "bbox": {
+                "description": "The area asked, `[x₁, y₁, x₂, y₂]` in the project's system; absent: all.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fetched": {
+                "description": "When they were last taken (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "description": "CQL, or ArcGIS's `where`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute that matches objects when they are taken again.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/FeedKind"
+              },
+              "limit": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "WFS's type, OGC's collection, ArcGIS's layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked of the service.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "url": {
+                "type": "string"
+              },
+              "version": {
+                "description": "WFS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "FeedKind": {
+            "description": "What a layer's objects were taken from (docs/adr/0208 §10).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wfs",
+                  "ogcFeatures"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST layer's `query`.",
+                "type": "string"
+              },
+              {
+                "const": "geojson",
+                "description": "A GeoJSON document at an address.",
+                "type": "string"
+              }
+            ]
+          },
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LayerField": {
+            "description": "A field of a layer (docs/adr/0199 §1): its name is the attribute's key.",
+            "properties": {
+              "alias": {
+                "description": "The name the table and the form show.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "default": {
+                "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind"
+              },
+              "length": {
+                "description": "A text's most characters (1–10 000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "max": {
+                "description": "A number's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "A number's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "description": "An object may not leave it empty; written only as `true`.",
+                "type": "boolean"
+              },
+              "scale": {
+                "description": "A decimal's most fraction digits (0–15).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "The values a text or a number takes, when only some.",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "enum": [
+              "text",
+              "integer",
+              "decimal",
+              "date",
+              "boolean"
+            ],
+            "type": "string"
+          },
+          "LayerNode": {
+            "description": "A node of the layer tree: a group or a layer.",
+            "properties": {
+              "children": {
+                "items": {
+                  "$ref": "#/$defs/LayerNode"
+                },
+                "type": "array"
+              },
+              "expanded": {
+                "type": "boolean"
+              },
+              "feed": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FeatureFeed"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the layer's objects were taken from, to take them again\n(docs/adr/0208 §10). Only a layer has it, never a group."
+              },
+              "fields": {
+                "description": "A layer's fields (docs/adr/0199 §1): the schema of its objects'\nattributes, in the order the table and the form show them; empty, no\nschema (and nothing written). Only a layer has them, never a group.",
+                "items": {
+                  "$ref": "#/$defs/LayerField"
+                },
+                "type": "array"
+              },
+              "id": {
+                "type": "string"
+              },
+              "locked": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "replaces": {
+                "description": "A scenario's layer: the base layer it stands for (docs/adr/0210 §9).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "scenario": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ScenarioInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A group made a scenario (docs/adr/0210 §9). Only a group has it."
+              },
+              "service": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ServiceLayer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer drawn from a map service (docs/adr/0208 §2): it holds no\nobjects. Only a layer has it, never a group."
+              },
+              "snap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerSnap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;\nabsent, the general kinds. Only a layer has it, never a group."
+              },
+              "style": {
+                "$ref": "#/$defs/LayerStyle"
+              },
+              "time": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A temporal layer's time setting (docs/adr/0210 §2): which attributes\nhold its objects' start and end. Only a layer has it, never a group."
+              },
+              "type": {
+                "$ref": "#/$defs/LayerNodeType"
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "type",
+              "visible",
+              "locked",
+              "expanded",
+              "style",
+              "children"
+            ],
+            "type": "object"
+          },
+          "LayerNodeType": {
+            "enum": [
+              "group",
+              "layer"
+            ],
+            "type": "string"
+          },
+          "LayerSnap": {
+            "description": "A layer's own snapping (docs/adr/0163 §4): `{ \"off\": true }`, no\nsnapping to its objects; or `{ \"kinds\": [...] }`, only these kinds (as\nfar as the general kinds take them). Exactly one of the two, and a list\nthat is not empty: the readers refuse anything else ([`LayerSnap::problem`]).",
+            "properties": {
+              "kinds": {
+                "description": "Only these kinds ([`LAYER_SNAP_KINDS`]' names).",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "off": {
+                "description": "No snapping to the layer's objects; written only as `true`.",
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "LayerStyle": {
+            "description": "A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.",
+            "properties": {
+              "color": {
+                "description": "Hex colour or a theme token (fg, fg-dim, ink, paper).",
+                "type": "string"
+              },
+              "fill": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "description": "Plot line weight in mm.",
+                "format": "double",
+                "type": "number"
+              },
+              "pickInterior": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "renderer": true
+            },
+            "required": [
+              "color",
+              "lineType",
+              "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "PointStyle": {
+            "properties": {
+              "size": {
+                "description": "Diameter in CSS px.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "$ref": "#/$defs/PointSymbol"
+              }
+            },
+            "required": [
+              "symbol",
+              "size"
+            ],
+            "type": "object"
+          },
+          "PointSymbol": {
+            "enum": [
+              "ring",
+              "cross",
+              "triangle"
+            ],
+            "type": "string"
+          },
+          "ScenarioInfo": {
+            "description": "A group made a scenario (docs/adr/0210 §9): its layers are an alternative\nkept apart from the field state (Mevcut durum).",
+            "properties": {
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "ServiceKind": {
+            "description": "What a service layer draws (docs/adr/0208 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "wms",
+                  "wmts"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "xyz",
+                "description": "Tiles by an address template, Web Mercator (TMS with `yFlip`).",
+                "type": "string"
+              },
+              {
+                "const": "ogcTiles",
+                "description": "OGC API Tiles' map tiles.",
+                "type": "string"
+              },
+              {
+                "const": "arcgis",
+                "description": "An ArcGIS REST MapServer or ImageServer: its cached tiles, else `export`.",
+                "type": "string"
+              },
+              {
+                "const": "google",
+                "description": "Google's Map Tiles API, 2D tiles.",
+                "type": "string"
+              },
+              {
+                "const": "vector",
+                "description": "Vector tiles (MVT) by a MapLibre style, a TileJSON or a template.",
+                "type": "string"
+              }
+            ]
+          },
+          "ServiceLayer": {
+            "description": "A layer drawn from a service (docs/adr/0208 §2).",
+            "properties": {
+              "attribution": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bbox": {
+                "description": "The service's extent, WGS 84 degrees (west, south, east, north), as\nits capabilities give it: what “Servisin kapsamına yakınlaştır” shows.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "connection": {
+                "description": "The project's connection whose proof goes with the requests.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dynamic": {
+                "description": "WMS and `export`: one picture of the view instead of tiles.",
+                "type": "boolean"
+              },
+              "format": {
+                "description": "The image's media type (`image/png`, …).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "grid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TileGrid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "WMTS's, OGC's and a cached ArcGIS service's matrices."
+              },
+              "kind": {
+                "$ref": "#/$defs/ServiceKind"
+              },
+              "layers": {
+                "description": "WMS's layer names; WMTS's one layer; ArcGIS's layers shown.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "matrixSet": {
+                "description": "WMTS's matrix set's identifier (`TILEMATRIXSET`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "minZoom": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "params": {
+                "items": {
+                  "$ref": "#/$defs/ServiceParam"
+                },
+                "type": "array"
+              },
+              "preset": {
+                "description": "The ready basemap it came from.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "description": "The system asked: WMS's `CRS`, ArcGIS's `imageSR`; a grid's own.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "style": {
+                "description": "WMS's and WMTS's style; Google's map type.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "subdomains": {
+                "description": "`{s}`'s values, taken in turn.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "template": {
+                "description": "WMTS REST's and OGC's tile template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tileSize": {
+                "description": "XYZ's and the vector tiles' tile side, pixels; absent 256.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "transparent": {
+                "description": "WMS's and `export`'s `TRANSPARENT`.",
+                "type": "boolean"
+              },
+              "url": {
+                "description": "XYZ: the template; WMS, WMTS, ArcGIS: the service's address; OGC\nAPI Tiles: the tile set's; vector: the style's, the TileJSON's or the\ntemplate; Google: empty.",
+                "type": "string"
+              },
+              "version": {
+                "description": "WMS's version.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "yFlip": {
+                "description": "TMS: rows counted from the bottom.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "url"
+            ],
+            "type": "object"
+          },
+          "ServiceParam": {
+            "description": "A parameter sent with every request (`TIME`, `CQL_FILTER`, …): never a secret.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          "TileGrid": {
+            "description": "A service's tile grid as read: its system and its matrices, coarsest first.",
+            "properties": {
+              "matrices": {
+                "items": {
+                  "$ref": "#/$defs/TileMatrix"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "srid",
+              "matrices"
+            ],
+            "type": "object"
+          },
+          "TileMatrix": {
+            "description": "One matrix of a tile grid (docs/adr/0208 §3): its pixel's size in the\ngrid system's units, its top left corner as east and north (longitude\nand latitude), whatever order the service wrote them in, its tiles' and\nits own size in tiles.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "matrixHeight": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "matrixWidth": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "resolution": {
+                "format": "double",
+                "type": "number"
+              },
+              "tileHeight": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "tileWidth": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "x0": {
+                "format": "double",
+                "type": "number"
+              },
+              "y0": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "resolution",
+              "x0",
+              "y0",
+              "tileWidth",
+              "tileHeight",
+              "matrixWidth",
+              "matrixHeight"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.layers.time` would write (plan mode); nothing is written.",
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "node": {
+            "$ref": "#/$defs/LayerNode",
+            "description": "The layer as execute would leave it."
+          },
+          "revision": {
+            "description": "The document revision the plan was made against.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "node",
+          "changed",
+          "revision"
+        ],
+        "title": "LayersTimePlan",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Parsellerin geçerlilik aralığı, parsel numarası anahtar",
+          "input": {
+            "layer": "parsel",
+            "time": {
+              "end": "gecerlilik_bitis",
+              "key": "parsel_no",
+              "start": "gecerlilik_baslangic"
+            }
+          },
+          "output": {
+            "changed": true,
+            "layer": "parsel",
+            "revision": "27"
+          }
+        },
+        {
+          "title": "Olaylar: yalnız tarih, birikimli",
+          "input": {
+            "layer": "ariza",
+            "time": {
+              "cumulative": true,
+              "start": "tarih"
+            }
+          }
+        },
+        {
+          "title": "Zamanı kaldır",
+          "input": {
+            "layer": "parsel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.scenarios.edit",
+      "version": 1,
+      "title": "Senaryo",
+      "summary": "Bir senaryo oluşturur (create) ya da birini mevcut duruma uygular (apply); tek geri alma adımı, adı işlemin. Senaryo ağacın en üstünde, senaryo olarak işaretli bir gruptur: verilen ana katmanların (senaryo dışındaki katmanların) her biri için aynı adlı, aynı stil, alanlar, zaman ayarı ve kenetle bir katman açılır, kaynağının yerine geçer (replaces); copyObjects açıksa (varsayılan) nesneleri yeni kimliklerle kopyalanır. Kilitli kaynağın nesneleri kopyalanmaz (layer_locked). apply: senaryonun bir ana katmanın yerine geçen her katmanı, o katmanın nesnelerini kendi nesneleriyle değiştirir (nesneler kimliklerini korur) ve silinir; grup senaryo olmaktan çıkar, öbür katmanlarıyla sıradan bir grup olarak kalır (katmanı kalmazsa silinir). Bir senaryoyu göstermek (grubunu görünür, yerine geçtiği ana katmanları gizli yapmak) bir görünümdür, komut değildir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "ScenarioOperation": {
+            "description": "What `cad.scenarios.edit` does; it names the undo step.",
+            "oneOf": [
+              {
+                "const": "create",
+                "description": "“Senaryo oluştur”.",
+                "type": "string"
+              },
+              {
+                "const": "apply",
+                "description": "“Senaryoyu uygula”.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.scenarios.edit` v1.\n\n- `create`: `name`; `layers`, the base layers it copies (absent or empty:\n  an empty scenario); `copyObjects` (absent: true), `note`. A group named\n  `name` goes on top of the tree, marked a scenario; in it, for each\n  source in the order given, a layer of the source's name, style, fields,\n  time setting and snapping, standing for it (`replaces`), with copies of\n  its objects under new ids when `copyObjects`.\n- `apply`: `scenario`, the scenario group. Each of its layers standing for\n  a base layer of the tree replaces that layer's objects with its own (they\n  keep their ids) and goes; the group is a scenario no more: an ordinary\n  group keeping its other layers (new base layers), or gone when it keeps\n  none. The active layer on a scenario layer that goes moves to its base layer.\n\nRefusals (`CommandError.code`), checked in this order: for `create`,\n`empty_name` (absent, or empty or only white space), `invalid_name`\n(longer than 80 characters), `invalid_note` (`ScenarioInfo::problem`),\n`duplicate_layer` (a layer listed twice); for `apply`, `no_scenario`;\nthen `invalid_revision`, `revision_conflict` (status `conflict`); for\n`create`, `layer_not_found`, `not_a_base_layer` (a group, a layer in a\nscenario, or one drawn from a service), `layer_locked` (a source locked,\nitself or through a group, when its objects are copied: docs/adr/0037);\nfor `apply`, `scenario_not_found` (no such node, or not a scenario group),\n`layer_locked` (a layer of the scenario or a base layer it replaces, itself\nor through a group).",
+        "properties": {
+          "copyObjects": {
+            "description": "`create`: whether their objects are copied (absent: true).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "`create`: the base layers it copies, in order.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "`create`: the scenario's name (trimmed).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "note": {
+            "description": "`create`: the scenario's note.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/ScenarioOperation"
+          },
+          "scenario": {
+            "description": "`apply`: the scenario group's id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "ScenariosEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ScenarioPair": {
+            "description": "A base layer and the scenario layer standing for it.",
+            "properties": {
+              "base": {
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "base",
+              "layer"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.scenarios.edit` v1.",
+        "properties": {
+          "kept": {
+            "description": "`apply`: the scenario's other layers, base layers now, in its group (an ordinary group now).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "`create`: each source with its copy; `apply`: each base layer with the scenario layer applied onto it.",
+            "items": {
+              "$ref": "#/$defs/ScenarioPair"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "Objects copied (`create`) or moved into base layers (`apply`).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "removed": {
+            "description": "`apply`: the base layers' objects removed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "scenario": {
+            "description": "The scenario group made, or the one applied (gone now).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario",
+          "layers",
+          "kept",
+          "objects",
+          "removed",
+          "revision"
+        ],
+        "title": "ScenariosEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ScenarioPair": {
+            "description": "A base layer and the scenario layer standing for it.",
+            "properties": {
+              "base": {
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "base",
+              "layer"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.scenarios.edit` would write (plan mode); nothing is written. The\nsame as the output, the ids those execute would give, and the revision\nthe plan was made against.",
+        "properties": {
+          "kept": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/ScenarioPair"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "removed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "scenario": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario",
+          "layers",
+          "kept",
+          "objects",
+          "removed",
+          "revision"
+        ],
+        "title": "ScenariosEditPlan",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Yol genişletme önerisi: yollar ve parseller kopyalanır",
+          "input": {
+            "layers": [
+              "yol",
+              "parsel"
+            ],
+            "name": "Yol genişletme A",
+            "note": "12 m'lik yol önerisi",
+            "operation": "create"
+          },
+          "output": {
+            "kept": [],
+            "layers": [
+              {
+                "base": "yol",
+                "layer": "layer-22"
+              },
+              {
+                "base": "parsel",
+                "layer": "layer-23"
+              }
+            ],
+            "objects": 48,
+            "removed": 0,
+            "revision": "31",
+            "scenario": "layer-21"
+          }
+        },
+        {
+          "title": "Seçilen öneriyi mevcut duruma uygula",
+          "input": {
+            "operation": "apply",
+            "scenario": "layer-21"
           }
         }
       ]

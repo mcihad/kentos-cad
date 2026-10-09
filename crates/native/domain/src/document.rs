@@ -139,6 +139,12 @@ impl Document {
             .map(|(place, stored)| (place, &*stored.entity))
     }
 
+    /// The places and slots of a layer's objects in document order, without
+    /// reading the objects (a pass over a large layer that needs only who is where).
+    pub fn layer_slots(&self, layer: &str) -> impl Iterator<Item = (u64, Slot)> {
+        self.store.layer_slots(layer)
+    }
+
     /// An object's place in the document: larger is later.
     pub fn place(&self, slot: Slot) -> Option<u64> {
         self.store.place(slot)

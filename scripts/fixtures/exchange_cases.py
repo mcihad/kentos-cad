@@ -354,6 +354,10 @@ def take_layers(ours, theirs, paths, same, taken):
             last = depth == len(here) - 1
             if hit is None:
                 made = {**copy.deepcopy(source), "id": free_id(source["id"], taken), "children": []}
+                # A scenario's links name the other drawing's layers: they do not come; the time setting does
+                # (docs/adr/0210 §9).
+                made.pop("scenario", None)
+                made.pop("replaces", None)
                 parent_list.append(made)
                 parent_list = made["children"]
                 continue
@@ -676,6 +680,16 @@ THEIRS_LOOK = copy.deepcopy(THEIRS)
 THEIRS_LOOK["name"] = "Kaynak (görünüş)"
 THEIRS_LOOK["layers"][1]["children"][1]["style"]["renderer"] = {"type": "single", "symbol": {"ref": "sym-parsel"}}
 
+# The source drawing with time and a scenario (docs/adr/0210): Yol is temporal; the scenario Öneri's Yol stands for it.
+THEIRS_SCENARIO = copy.deepcopy(THEIRS)
+THEIRS_SCENARIO["name"] = "Kaynak (senaryo)"
+THEIRS_SCENARIO["layers"][2]["time"] = {"start": "acilis", "cumulative": True}
+THEIRS_SCENARIO["layers"].insert(0, {**group("k-oneri", "Öneri", [{**layer("k-oneri-yol", "Yol", style("#E5484D", weight=0.5)),
+                                                                     "time": {"start": "acilis", "cumulative": True}, "replaces": "k-yol"}]),
+                                     "scenario": {"note": "Geniş yol"}})
+THEIRS_SCENARIO["entities"].append({"kind": "polygon", "id": 11, "layerId": "k-oneri-yol", "attrs": {"acilis": "2026-01-01"}, "pts": square(-10, -8, 60, -2)})
+THEIRS_SCENARIO["uids"].append(U(0x200B))
+
 
 # ── The cases ─────────────────────────────────────────────────────────
 
@@ -693,7 +707,7 @@ def build():
         "format": "kentos.exchange-cases",
         "version": 1,
         "source": SOURCE,
-        "drawings": {"ours": OURS, "theirs": THEIRS, "theirsLook": THEIRS_LOOK},
+        "drawings": {"ours": OURS, "theirs": THEIRS, "theirsLook": THEIRS_LOOK, "theirsScenario": THEIRS_SCENARIO},
         "selections": [
             {"name": "parsel, bağlı yazısı, lamba (iç içe Direk), ilişkisi kaydedilmeyen nesneye taramanın, tablo ve resim",
              "from": "theirs", "uids": [U(0x2001), U(0x2004), U(0x2005), U(0x2006), U(0x2007), U(0x2008)],
@@ -709,6 +723,9 @@ def build():
             {"name": "aynı adlılar değiştirilir, proje ayarları da", "into": "ours", "from": "theirs", "picks": {**picks, "settings": True}, "same": "replace",
              "expect": take(OURS, THEIRS, {**picks, "settings": True}, "replace")},
             {"name": "yalnız proje ayarları", "into": "ours", "from": "theirs", "picks": {"settings": True}, "same": "skip", "expect": take(OURS, THEIRS, {"settings": True}, "skip")},
+            {"name": "senaryo grubu sıradan grup olarak, yerine geçen katman bağsız gelir; zaman ayarları gelir",
+             "into": "ours", "from": "theirsScenario", "picks": {"layers": ["Öneri / Yol", "Yol"]}, "same": "skip",
+             "expect": take(OURS, THEIRS_SCENARIO, {"layers": ["Öneri / Yol", "Yol"]}, "skip")},
         ],
         "files": [
             {"name": "kaynak çizim blok olur: resim ve tablo kalır, katmanlar yoluyla açılır, Direk'in adı sayı alır",
@@ -723,6 +740,8 @@ def build():
              "into": "ours", "from": "theirsLook", "path": "Kadastro / Bina", "expect": layer_take(OURS, THEIRS_LOOK, "Kadastro / Bina")},
             {"name": "grup katman değildir", "into": "ours", "from": "theirs", "path": "Kadastro", "expect": layer_take(OURS, THEIRS, "Kadastro")},
             {"name": "olmayan yol", "into": "ours", "from": "theirs", "path": "Yok", "expect": layer_take(OURS, THEIRS, "Yok")},
+            {"name": "senaryonun katmanı nesneleriyle bağsız gelir, grubu sıradan grup",
+             "into": "ours", "from": "theirsScenario", "path": "Öneri / Yol", "expect": layer_take(OURS, THEIRS_SCENARIO, "Öneri / Yol")},
         ],
     }
 

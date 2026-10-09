@@ -18,6 +18,7 @@
 
 mod network;
 mod services;
+mod temporal;
 
 use std::path::PathBuf;
 
@@ -255,6 +256,12 @@ mod native {
         services_box_in, services_infer_fields, services_layer_colors, services_new_objects,
         services_preset_layer, services_presets, services_read_token, services_same_system,
         services_taken_words, services_to_project, services_token_request,
+    };
+    // kentos.temporal (docs/adr/0210 §11).
+    #[pymodule_export]
+    use super::temporal::{
+        temporal_layer, temporal_layers, temporal_shown, time_auto_step, time_floor, time_of,
+        time_position, time_positions, time_read, time_show, time_shows, time_values, time_write,
     };
     use pyo3::prelude::*;
 

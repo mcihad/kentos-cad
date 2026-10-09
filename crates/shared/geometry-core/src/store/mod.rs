@@ -190,6 +190,11 @@ pub struct Store {
     blocks: Blocks,
     /// The objects whose label a text writes (`set_text_labelled`, docs/adr/0175 §4).
     text_labelled: IdSet,
+    /// The times of the temporal layers' timed objects (`set_times`, docs/adr/0210 §4); a timeless or
+    /// another layer's object has none.
+    times: IdMap<crate::time::Time>,
+    /// The time slider's window (`set_time_window`); none, no object is left out by its time.
+    time_window: Option<crate::time::Window>,
 }
 
 /// An object read from the document's JSON: its id, layer, label and geometry.
@@ -325,6 +330,7 @@ impl Store {
     /// Removes objects; unknown ids are ignored.
     pub fn remove(&mut self, ids: &[f64]) {
         for id in ids {
+            self.times.remove(&id.to_bits());
             if let Some(s) = self.by_id.remove(&id.to_bits()) {
                 if let Some(it) = &self.slots[s as usize] {
                     self.vacated.insert(id.to_bits(), it.order);
@@ -428,7 +434,8 @@ impl Store {
         self.font
     }
 
-    /// Empties the store (the layer table, label defaults and block definitions stay).
+    /// Empties the store (the layer table, label defaults, block definitions
+    /// and the time slider's window stay; the objects' times go with them).
     pub fn clear(&mut self) {
         let layers = (
             std::mem::take(&mut self.layer_ids),
@@ -437,11 +444,13 @@ impl Store {
         let defaults = self.label_defaults;
         let font = self.font;
         let blocks = std::mem::take(&mut self.blocks);
+        let window = self.time_window;
         *self = Store::default();
         (self.layer_ids, self.flags) = layers;
         self.label_defaults = defaults;
         self.font = font;
         self.blocks = blocks;
+        self.time_window = window;
     }
 
     /// The objects whose label a text writes (docs/adr/0175 §4): `labels`
@@ -449,6 +458,81 @@ impl Store {
     /// sent before; `clear` empties it with the objects.
     pub fn set_text_labelled(&mut self, ids: &[f64]) {
         self.text_labelled = ids.iter().map(|id| id.to_bits()).collect();
+    }
+
+    /// Objects' times (docs/adr/0210 §4): a time is kept, none forgets the
+    /// object's (timeless, or no longer on a temporal layer). The host sends
+    /// them as a layer's time setting or an object's attributes change.
+    pub fn set_times(
+        &mut self,
+        entries: impl IntoIterator<Item = (f64, Option<crate::time::Time>)>,
+    ) {
+        for (id, t) in entries {
+            match t {
+                Some(t) => {
+                    self.times.insert(id.to_bits(), t);
+                }
+                None => {
+                    self.times.remove(&id.to_bits());
+                }
+            }
+        }
+    }
+
+    /// Forgets every object's time (the drawing reloaded, or its last temporal layer gone).
+    pub fn clear_times(&mut self) {
+        self.times.clear();
+    }
+
+    /// The time slider's window (docs/adr/0210 §5): queries leave out the
+    /// temporal layers' objects it does not show; none ends the filter.
+    pub fn set_time_window(&mut self, window: Option<crate::time::Window>) {
+        self.time_window = window;
+    }
+
+    pub fn time_window(&self) -> Option<crate::time::Window> {
+        self.time_window
+    }
+
+    /// Whether the object shows at the slider's window: always without a window or a time of its own.
+    pub fn time_shown(&self, id: f64) -> bool {
+        match (&self.time_window, self.times.get(&id.to_bits())) {
+            (Some(w), Some(t)) => crate::time::shows(t, w),
+            _ => true,
+        }
+    }
+
+    /// How many objects on shown layers have a time and the extent of their
+    /// finite starts and ends (the time slider's range, docs/adr/0210 §5).
+    pub fn time_summary(&self) -> (usize, Option<(f64, f64)>) {
+        let mut count = 0;
+        let shown = self
+            .times
+            .iter()
+            .filter(|(id, _)| {
+                self.by_id
+                    .get(*id)
+                    .and_then(|s| self.slots[*s as usize].as_ref())
+                    .is_some_and(|it| self.flags(it).visible)
+            })
+            .map(|(_, t)| {
+                count += 1;
+                t
+            });
+        let extent = crate::time::extent(shown);
+        (count, extent)
+    }
+
+    /// For each of `ids`, 1 when it shows at the slider's window (a renderer's filter, in one call).
+    pub fn time_mask(&self, ids: &[f64]) -> Vec<u8> {
+        ids.iter()
+            .map(|&id| u8::from(self.time_shown(id)))
+            .collect()
+    }
+
+    /// Whether queries see the object: its layer is shown and its time shows (docs/adr/0210 §6).
+    pub fn shown(&self, it: &Item) -> bool {
+        self.flags(it).visible && self.time_shown(it.id)
     }
 
     /// Replaces the layer table: every node of the layer tree with its flags
@@ -768,6 +852,46 @@ mod tests {
         format!(
             r#"{{"id":{id},"layerId":"{layer}","attrs":{{"Ada":"1"}},"kind":"line","a":{{"x":{x},"y":0}},"b":{{"x":{x},"y":10}}}}"#
         )
+    }
+
+    /// docs/adr/0210 §6: with the slider's window, a temporal layer's objects it does not show are neither
+    /// picked nor near nor in a window's selection; a timeless one always is; without a window nothing is left out.
+    #[test]
+    fn the_time_window_leaves_out_what_it_does_not_show() {
+        use crate::Vec2;
+        use crate::time::{Mode, Time, Window};
+        let mut s = Store::new();
+        s.put_json(&format!(
+            "[{},{},{}]",
+            line(1.0, "a", 0.0),
+            line(2.0, "a", 5.0),
+            line(3.0, "a", 10.0)
+        ))
+        .unwrap();
+        let t = |a: f64, b: f64| {
+            Some(Time {
+                s: a,
+                e: b,
+                mode: Mode::Range,
+            })
+        };
+        s.set_times([(1.0, t(0.0, 10.0)), (2.0, t(10.0, 20.0))]);
+        let near = |s: &Store, x: f64| {
+            s.near(Vec2::new(x, 5.0), 0.5)
+                .iter()
+                .map(|it| it.id)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(near(&s, 0.0), [1.0]);
+        s.set_time_window(Some(Window::Instant(15.0)));
+        assert!(near(&s, 0.0).is_empty());
+        assert_eq!(near(&s, 5.0), [2.0]);
+        assert_eq!(near(&s, 10.0), [3.0], "timeless");
+        assert_eq!(s.time_mask(&[1.0, 2.0, 3.0]), [0, 1, 1]);
+        s.set_times([(2.0, None)]);
+        assert_eq!(s.time_mask(&[1.0, 2.0]), [0, 1]);
+        s.set_time_window(None);
+        assert_eq!(near(&s, 0.0), [1.0]);
     }
 
     #[test]

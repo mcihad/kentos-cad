@@ -47,6 +47,9 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
         fields: Vec::new(),
         service: None,
         feed: None,
+        time: None,
+        scenario: None,
+        replaces: None,
     }
 }
 

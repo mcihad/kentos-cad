@@ -43,8 +43,8 @@ use crate::{
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_NETWORKS,
     SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
-    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS,
-    SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -163,6 +163,8 @@ pub(super) struct Features {
     pub(super) services: bool,
     /// Schema 33: the settings' `networks` (docs/adr/0209 §2).
     pub(super) networks: bool,
+    /// Schema 34: a layer node's `time`, `scenario` and `replaces` (docs/adr/0210 §2).
+    pub(super) temporal: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -205,6 +207,7 @@ impl Features {
             point_clouds: schema >= SCHEMA_WITH_POINT_CLOUDS,
             services: schema >= SCHEMA_WITH_SERVICES,
             networks: schema >= SCHEMA_WITH_NETWORKS,
+            temporal: schema >= SCHEMA_WITH_TEMPORAL,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
             uids: true,
         }

@@ -374,6 +374,15 @@
 .compare-run {
   align-items: flex-end;
 }
+.compare-date {
+  width: calc(150px * var(--ui-scale));
+}
+.compare-hint {
+  align-self: end;
+  padding-bottom: 6px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
 .compare-num {
   width: calc(110px * var(--ui-scale));
 }

@@ -312,6 +312,17 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{want:?} (±{} m)", trace.click_tolerance),
         );
     }
+    // Zaman sürgüsü's words, position and last (docs/adr/0210 §5), exact.
+    if let Some(want) = &expect.time {
+        let same = match (&got.time, want) {
+            (None, None) => true,
+            (Some((label, position, last)), Some(w)) => {
+                *label == w.label && *position == w.position && *last == w.last
+            }
+            _ => false,
+        };
+        check("time", same, format!("{:?}", got.time), format!("{want:?}"));
+    }
     // The active layer and the current colour and weight (docs/adr/0176 §3), exact.
     if let Some(want) = &expect.active_layer {
         check(

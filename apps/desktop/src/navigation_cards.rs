@@ -170,6 +170,8 @@ impl App {
         let mut key = DefaultHasher::new();
         (doc.model.generation(), doc.session).hash(&mut key);
         format!("{:?}", self.canvas()).hash(&mut key);
+        // The time slider's window leaves its temporal layers' objects out (docs/adr/0210 §6).
+        format!("{:?}", self.spatial.store().time_window()).hash(&mut key);
         self.viewport.scale_factor().to_bits().hash(&mut key);
         Some(key.finish())
     }

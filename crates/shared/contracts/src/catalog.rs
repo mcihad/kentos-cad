@@ -1740,6 +1740,97 @@ pub fn catalog() -> CommandCatalog {
                     output: Some(json!({ "networks": [], "revision": "12" })),
                 },
             ],
+        },
+        // Zaman ayarları (docs/adr/0210 §11), held together by fixtures/commands/v1/cad.layers.time.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_TIME.into(),
+            version: crate::CAD_LAYERS_TIME_VERSION,
+            title: "Katmanın zamanı".into(),
+            summary: "Katmanın zaman ayarını yazar ya da kaldırır (time verilmezse ya da null ise): nesnelerin başlangıcı (anlık katmanda anı) ve bitişi hangi özniteliklerdedir, kimlik alanı (iki zamanı karşılaştırmanın anahtarı) ve Birikimli (nesne başlangıcından sonra hep görünür). \
+                      Değerler öznitelik metnidir: YYYY-AA-GG ya da GG.AA.YYYY, isteğe bağlı saat (T ya da boşlukla SS:DD[:ss[.kesir]]) ve saat dilimi (Z, +SS:DD …); boş başlangıç ya da bitiş açık uçtur. \
+                      Zaman sürgüsü, Yeni sürüm oluştur ve Sona erdir bu ayarı kullanır; sürgü bir görünümdür, çizimi değiştirmez. \
+                      Katman ağacının değişikliğidir: tek geri alma adımı “Zaman ayarları”; ayar aynıysa hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersTime>(),
+            output: schema::<crate::LayersTimed>(),
+            plan: Some(schema::<crate::LayersTimePlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Parsellerin geçerlilik aralığı, parsel numarası anahtar".into(),
+                    input: json!({
+                        "layer": "parsel",
+                        "time": { "start": "gecerlilik_baslangic", "end": "gecerlilik_bitis", "key": "parsel_no" }
+                    }),
+                    output: Some(json!({ "layer": "parsel", "changed": true, "revision": "27" })),
+                },
+                CommandExample {
+                    title: "Olaylar: yalnız tarih, birikimli".into(),
+                    input: json!({ "layer": "ariza", "time": { "start": "tarih", "cumulative": true } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Zamanı kaldır".into(),
+                    input: json!({ "layer": "parsel" }),
+                    output: None,
+                },
+            ],
+        },
+        // Senaryo oluştur and Senaryoyu uygula (docs/adr/0210 §9, §11), held together by
+        // fixtures/commands/v1/cad.scenarios.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_SCENARIOS_EDIT.into(),
+            version: crate::CAD_SCENARIOS_EDIT_VERSION,
+            title: "Senaryo".into(),
+            summary: "Bir senaryo oluşturur (create) ya da birini mevcut duruma uygular (apply); tek geri alma adımı, adı işlemin. \
+                      Senaryo ağacın en üstünde, senaryo olarak işaretli bir gruptur: verilen ana katmanların (senaryo dışındaki katmanların) her biri için aynı adlı, aynı stil, alanlar, zaman ayarı ve kenetle bir katman açılır, kaynağının yerine geçer (replaces); copyObjects açıksa (varsayılan) nesneleri yeni kimliklerle kopyalanır. Kilitli kaynağın nesneleri kopyalanmaz (layer_locked). \
+                      apply: senaryonun bir ana katmanın yerine geçen her katmanı, o katmanın nesnelerini kendi nesneleriyle değiştirir (nesneler kimliklerini korur) ve silinir; grup senaryo olmaktan çıkar, öbür katmanlarıyla sıradan bir grup olarak kalır (katmanı kalmazsa silinir). \
+                      Bir senaryoyu göstermek (grubunu görünür, yerine geçtiği ana katmanları gizli yapmak) bir görünümdür, komut değildir. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ScenariosEdit>(),
+            output: schema::<crate::ScenariosEdited>(),
+            plan: Some(schema::<crate::ScenariosEditPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Yol genişletme önerisi: yollar ve parseller kopyalanır".into(),
+                    input: json!({
+                        "operation": "create",
+                        "name": "Yol genişletme A",
+                        "layers": ["yol", "parsel"],
+                        "note": "12 m'lik yol önerisi"
+                    }),
+                    output: Some(json!({
+                        "scenario": "layer-21",
+                        "layers": [{ "base": "yol", "layer": "layer-22" }, { "base": "parsel", "layer": "layer-23" }],
+                        "kept": [],
+                        "objects": 48,
+                        "removed": 0,
+                        "revision": "31"
+                    })),
+                },
+                CommandExample {
+                    title: "Seçilen öneriyi mevcut duruma uygula".into(),
+                    input: json!({ "operation": "apply", "scenario": "layer-21" }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -1921,6 +2012,12 @@ mod tests {
                     crate::CAD_NETWORK_DEFINE => {
                         serde_json::from_value::<crate::NetworkDefine>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_TIME => {
+                        serde_json::from_value::<crate::LayersTime>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SCENARIOS_EDIT => {
+                        serde_json::from_value::<crate::ScenariosEdit>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -1984,6 +2081,13 @@ mod tests {
                         }
                         crate::CAD_NETWORK_DEFINE => {
                             serde_json::from_value::<crate::NetworkDefined>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_TIME => {
+                            serde_json::from_value::<crate::LayersTimed>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_SCENARIOS_EDIT => {
+                            serde_json::from_value::<crate::ScenariosEdited>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

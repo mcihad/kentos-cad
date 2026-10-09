@@ -1,0 +1,142 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Zaman ve senaryolar",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis"
+  },
+  "origin": { "x": 500000.0, "y": 4400000.0 },
+  "layers": [
+    {
+      "id": "alt-a",
+      "name": "Yol genişletme A",
+      "type": "group",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
+      "children": [
+        {
+          "id": "alt-a-yol",
+          "name": "Yol",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": { "color": "#E5484D", "lineType": "continuous", "lineWeight": 0.35 },
+          "children": [],
+          "replaces": "yol"
+        },
+        {
+          "id": "alt-a-park",
+          "name": "Yeni park",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": { "color": "#30A46C", "lineType": "continuous", "lineWeight": 0.25 },
+          "children": []
+        }
+      ],
+      "scenario": { "note": "12 m'lik yol önerisi" }
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": { "color": "#E5484D", "lineType": "continuous", "lineWeight": 0.35 },
+      "children": []
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": { "color": "#0090FF", "lineType": "continuous", "lineWeight": 0.25 },
+      "children": [],
+      "time": { "start": "gecerlilik_baslangic", "end": "gecerlilik_bitis", "key": "parsel_no" }
+    },
+    {
+      "id": "ariza",
+      "name": "Arıza",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": { "color": "#F76B15", "lineType": "continuous", "lineWeight": 0.25 },
+      "children": [],
+      "time": { "start": "tarih", "cumulative": true }
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": { "parsel_no": "101", "gecerlilik_baslangic": "2010-03-05", "gecerlilik_bitis": "2018-06-01" },
+      "pts": [
+        { "x": 500000.0, "y": 4400000.0 },
+        { "x": 500040.0, "y": 4400000.0 },
+        { "x": 500040.0, "y": 4400030.0 },
+        { "x": 500000.0, "y": 4400030.0 }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": { "parsel_no": "101", "gecerlilik_baslangic": "2018-06-01", "gecerlilik_bitis": "" },
+      "pts": [
+        { "x": 500000.0, "y": 4400000.0 },
+        { "x": 500020.0, "y": 4400000.0 },
+        { "x": 500020.0, "y": 4400030.0 },
+        { "x": 500000.0, "y": 4400030.0 }
+      ]
+    },
+    {
+      "kind": "point",
+      "id": 3,
+      "layerId": "ariza",
+      "attrs": { "tarih": "2024-03-05T12:30:00+03:00" },
+      "p": { "x": 500010.0, "y": 4400040.0 }
+    },
+    {
+      "kind": "line",
+      "id": 4,
+      "layerId": "yol",
+      "attrs": {},
+      "a": { "x": 499990.0, "y": 4400035.0 },
+      "b": { "x": 500050.0, "y": 4400035.0 }
+    },
+    {
+      "kind": "polyline",
+      "id": 5,
+      "layerId": "alt-a-yol",
+      "attrs": { "genislik": "12" },
+      "pts": [
+        { "x": 499990.0, "y": 4400036.0 },
+        { "x": 500050.0, "y": 4400036.0 }
+      ]
+    }
+  ],
+  "uids": [
+    "0192f5a1-7777-7000-8000-000000000501",
+    "0192f5a1-7777-7000-8000-000000000502",
+    "0192f5a1-7777-7000-8000-000000000503",
+    "0192f5a1-7777-7000-8000-000000000504",
+    "0192f5a1-7777-7000-8000-000000000505"
+  ],
+  "styles": { "items": [], "categories": [] }
+}

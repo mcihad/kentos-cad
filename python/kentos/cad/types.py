@@ -995,6 +995,20 @@ RegistryDatumName = Literal["TUREF", "ED50", "WGS84"]
 """The names of :class:`RegistryDatum`, for a plain string."""
 
 
+class ScenarioOperation(_StrEnum):
+    """What `cad.scenarios.edit` does; it names the undo step.
+
+    - ``create``: “Senaryo oluştur”.
+    - ``apply``: “Senaryoyu uygula”.
+    """
+    CREATE = "create"
+    APPLY = "apply"
+
+
+ScenarioOperationName = Literal["create", "apply"]
+"""The names of :class:`ScenarioOperation`, for a plain string."""
+
+
 class ServiceKind(_StrEnum):
     """What a service layer draws (docs/adr/0208 §1).
 
@@ -4903,10 +4917,14 @@ class LayerNode(_Model):
         fields: A layer's fields (docs/adr/0199 §1): the schema of its objects'
             attributes, in the order the table and the form show them; empty, no
             schema (and nothing written). Only a layer has them, never a group.
+        replaces: A scenario's layer: the base layer it stands for (docs/adr/0210 §9).
+        scenario: A group made a scenario (docs/adr/0210 §9). Only a group has it.
         service: A layer drawn from a map service (docs/adr/0208 §2): it holds no
             objects. Only a layer has it, never a group.
         snap: A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;
             absent, the general kinds. Only a layer has it, never a group.
+        time: A temporal layer's time setting (docs/adr/0210 §2): which attributes
+            hold its objects' start and end. Only a layer has it, never a group.
     """
     id: str
     name: str
@@ -4918,8 +4936,11 @@ class LayerNode(_Model):
     children: list[LayerNode]
     feed: FeatureFeed | None | Unset = UNSET
     fields: list[LayerField] | Unset = UNSET
+    replaces: str | None | Unset = UNSET
+    scenario: ScenarioInfo | None | Unset = UNSET
     service: ServiceLayer | None | Unset = UNSET
     snap: LayerSnap | None | Unset = UNSET
+    time: LayerTime | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -4935,10 +4956,16 @@ class LayerNode(_Model):
             out["feed"] = None if self.feed is None else self.feed.to_json()
         if self.fields is not UNSET:
             out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.replaces is not UNSET:
+            out["replaces"] = self.replaces
+        if self.scenario is not UNSET:
+            out["scenario"] = None if self.scenario is None else self.scenario.to_json()
         if self.service is not UNSET:
             out["service"] = None if self.service is None else self.service.to_json()
         if self.snap is not UNSET:
             out["snap"] = None if self.snap is None else self.snap.to_json()
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else self.time.to_json()
         return out
 
     @classmethod
@@ -4954,8 +4981,11 @@ class LayerNode(_Model):
             children=[LayerNode.from_json(e0) for e0 in data["children"]],
             feed=UNSET if "feed" not in data else None if data["feed"] is None else FeatureFeed.from_json(data["feed"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
+            replaces=data.get("replaces", UNSET),
+            scenario=UNSET if "scenario" not in data else None if data["scenario"] is None else ScenarioInfo.from_json(data["scenario"]),
             service=UNSET if "service" not in data else None if data["service"] is None else ServiceLayer.from_json(data["service"]),
             snap=UNSET if "snap" not in data else None if data["snap"] is None else LayerSnap.from_json(data["snap"]),
+            time=UNSET if "time" not in data else None if data["time"] is None else LayerTime.from_json(data["time"]),
         )
 
 
@@ -5101,6 +5131,42 @@ class LayerStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerTime(_Model):
+    """A layer's time setting (docs/adr/0210 §2): its objects' start (or
+    moment) and end are the values of these attributes.
+    Attributes:
+        start: The attribute holding the start (an instant layer's moment).
+        cumulative: Birikimli: an object shows from its start on, whatever its end; written only as `true`.
+        end: The attribute holding the end; absent, the objects are moments.
+        key: The attribute naming an object across its versions (Zamanı karşılaştır's key).
+    """
+    start: str
+    cumulative: bool | Unset = UNSET
+    end: str | None | Unset = UNSET
+    key: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["start"] = self.start
+        if self.cumulative is not UNSET:
+            out["cumulative"] = self.cumulative
+        if self.end is not UNSET:
+            out["end"] = self.end
+        if self.key is not UNSET:
+            out["key"] = self.key
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerTime:
+        return cls(
+            start=data["start"],
+            cumulative=data.get("cumulative", UNSET),
+            end=data.get("end", UNSET),
+            key=data.get("key", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayersService(_Model):
     """Input of `cad.layers.service` v1: one change of the layer tree, as one
     undo step named after the operation.
@@ -5236,6 +5302,97 @@ class LayersServiced(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> LayersServiced:
         return cls(
             layer=data["layer"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersTime(_Model):
+    """Input of `cad.layers.time` v1: a layer's time setting written, or taken
+    away (`time` absent or null), as one undo step “Zaman ayarları”. A layer
+    that already has it as given is left as it is (`changed` false, no step).
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_time`
+    (`LayerTime::problem`); then `invalid_revision`, `revision_conflict`
+    (status `conflict`), `layer_not_found`, `not_a_layer` (a group),
+    `service_layer` (a layer drawn from a service: it holds no objects).
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        time: Its new time setting; absent or null takes it away.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    time: LayerTime | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else self.time.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersTime:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            time=UNSET if "time" not in data else None if data["time"] is None else LayerTime.from_json(data["time"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersTimePlan(_Model):
+    """What `cad.layers.time` would write (plan mode); nothing is written.
+    Attributes:
+        node: The layer as execute would leave it.
+        revision: The document revision the plan was made against.
+    """
+    node: LayerNode
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["node"] = self.node.to_json()
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersTimePlan:
+        return cls(
+            node=LayerNode.from_json(data["node"]),
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersTimed(_Model):
+    """Output of `cad.layers.time` v1.
+    Attributes:
+        changed: Whether the setting differed (an undo step was written).
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersTimed:
+        return cls(
+            layer=data["layer"],
+            changed=data["changed"],
             revision=data["revision"],
         )
 
@@ -7839,6 +7996,194 @@ class RubberLink(_Model):
         return cls(
             from_=Vec2.from_json(data["from"]),
             to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenarioInfo(_Model):
+    """A group made a scenario (docs/adr/0210 §9): its layers are an alternative
+    kept apart from the field state (Mevcut durum).
+    """
+    note: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenarioInfo:
+        return cls(
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenarioPair(_Model):
+    """A base layer and the scenario layer standing for it."""
+    base: str
+    layer: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["base"] = self.base
+        out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenarioPair:
+        return cls(
+            base=data["base"],
+            layer=data["layer"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenariosEdit(_Model):
+    """Input of `cad.scenarios.edit` v1.
+
+    - `create`: `name`; `layers`, the base layers it copies (absent or empty:
+      an empty scenario); `copyObjects` (absent: true), `note`. A group named
+      `name` goes on top of the tree, marked a scenario; in it, for each
+      source in the order given, a layer of the source's name, style, fields,
+      time setting and snapping, standing for it (`replaces`), with copies of
+      its objects under new ids when `copyObjects`.
+    - `apply`: `scenario`, the scenario group. Each of its layers standing for
+      a base layer of the tree replaces that layer's objects with its own (they
+      keep their ids) and goes; the group is a scenario no more: an ordinary
+      group keeping its other layers (new base layers), or gone when it keeps
+      none. The active layer on a scenario layer that goes moves to its base layer.
+
+    Refusals (`CommandError.code`), checked in this order: for `create`,
+    `empty_name` (absent, or empty or only white space), `invalid_name`
+    (longer than 80 characters), `invalid_note` (`ScenarioInfo::problem`),
+    `duplicate_layer` (a layer listed twice); for `apply`, `no_scenario`;
+    then `invalid_revision`, `revision_conflict` (status `conflict`); for
+    `create`, `layer_not_found`, `not_a_base_layer` (a group, a layer in a
+    scenario, or one drawn from a service), `layer_locked` (a source locked,
+    itself or through a group, when its objects are copied: docs/adr/0037);
+    for `apply`, `scenario_not_found` (no such node, or not a scenario group),
+    `layer_locked` (a layer of the scenario or a base layer it replaces, itself
+    or through a group).
+    Attributes:
+        copy_objects: `create`: whether their objects are copied (absent: true).
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        layers: `create`: the base layers it copies, in order.
+        name: `create`: the scenario's name (trimmed).
+        note: `create`: the scenario's note.
+        scenario: `apply`: the scenario group's id.
+    """
+    operation: ScenarioOperation | ScenarioOperationName
+    copy_objects: bool | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    layers: list[str] | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    note: str | None | Unset = UNSET
+    scenario: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.copy_objects is not UNSET:
+            out["copyObjects"] = self.copy_objects
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.note is not UNSET:
+            out["note"] = self.note
+        if self.scenario is not UNSET:
+            out["scenario"] = self.scenario
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenariosEdit:
+        return cls(
+            operation=_enum_in(ScenarioOperation, data["operation"]),
+            copy_objects=data.get("copyObjects", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            name=data.get("name", UNSET),
+            note=data.get("note", UNSET),
+            scenario=data.get("scenario", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenariosEditPlan(_Model):
+    """What `cad.scenarios.edit` would write (plan mode); nothing is written. The
+    same as the output, the ids those execute would give, and the revision
+    the plan was made against.
+    """
+    scenario: str
+    layers: list[ScenarioPair]
+    kept: list[str]
+    objects: int
+    removed: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scenario"] = self.scenario
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["kept"] = list(self.kept)
+        out["objects"] = self.objects
+        out["removed"] = self.removed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenariosEditPlan:
+        return cls(
+            scenario=data["scenario"],
+            layers=[ScenarioPair.from_json(e0) for e0 in data["layers"]],
+            kept=list(data["kept"]),
+            objects=data["objects"],
+            removed=data["removed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenariosEdited(_Model):
+    """Output of `cad.scenarios.edit` v1.
+    Attributes:
+        scenario: The scenario group made, or the one applied (gone now).
+        layers: `create`: each source with its copy; `apply`: each base layer with the scenario layer applied onto it.
+        kept: `apply`: the scenario's other layers, base layers now, in its group (an ordinary group now).
+        objects: Objects copied (`create`) or moved into base layers (`apply`).
+        removed: `apply`: the base layers' objects removed.
+        revision: The document's revision after the write, as decimal text.
+    """
+    scenario: str
+    layers: list[ScenarioPair]
+    kept: list[str]
+    objects: int
+    removed: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scenario"] = self.scenario
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["kept"] = list(self.kept)
+        out["objects"] = self.objects
+        out["removed"] = self.removed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenariosEdited:
+        return cls(
+            scenario=data["scenario"],
+            layers=[ScenarioPair.from_json(e0) for e0 in data["layers"]],
+            kept=list(data["kept"]),
+            objects=data["objects"],
+            removed=data["removed"],
+            revision=data["revision"],
         )
 
 
@@ -10694,9 +11039,13 @@ __all__ = [
     "LayerState",
     "LayerStateNode",
     "LayerStyle",
+    "LayerTime",
     "LayersService",
     "LayersServicePlan",
     "LayersServiced",
+    "LayersTime",
+    "LayersTimePlan",
+    "LayersTimed",
     "LeaderArrow",
     "LeaderArrowName",
     "LeaderEntity",
@@ -10820,6 +11169,13 @@ __all__ = [
     "RubberLink",
     "RubbersheetTransform",
     "ScaleTransform",
+    "ScenarioInfo",
+    "ScenarioOperation",
+    "ScenarioOperationName",
+    "ScenarioPair",
+    "ScenariosEdit",
+    "ScenariosEditPlan",
+    "ScenariosEdited",
     "ServiceConnection",
     "ServiceKind",
     "ServiceKindName",
