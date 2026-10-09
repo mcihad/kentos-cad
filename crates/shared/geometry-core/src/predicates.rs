@@ -406,6 +406,128 @@ fn compress(e: &[f64], h: &mut [f64]) -> usize {
     n + 1
 }
 
+/// Shewchuk's first-stage error bound of `incircle`.
+const ICC_ERRBOUND_A: f64 = (10.0 + 96.0 * EPSILON) * EPSILON;
+
+/// Whether d lies inside the circle through a, b and c, these counter-
+/// clockwise (docs/adr/0232 §4): positive inside, negative outside, zero
+/// when the four are cocircular, the sign exact for float64 input
+/// (Shewchuk's `incircle`). The plain determinant while its error bound
+/// proves the sign; otherwise the exact determinant of the input as an
+/// expansion (rare: a Delaunay triangulation of a regular grid). a, b, c
+/// clockwise turn the sign. The magnitude is an approximation; decide with
+/// the sign. NaN input gives NaN.
+pub fn incircle(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> f64 {
+    let adx = a.x - d.x;
+    let ady = a.y - d.y;
+    let bdx = b.x - d.x;
+    let bdy = b.y - d.y;
+    let cdx = c.x - d.x;
+    let cdy = c.y - d.y;
+    let bdxcdy = bdx * cdy;
+    let cdxbdy = cdx * bdy;
+    let alift = adx * adx + ady * ady;
+    let cdxady = cdx * ady;
+    let adxcdy = adx * cdy;
+    let blift = bdx * bdx + bdy * bdy;
+    let adxbdy = adx * bdy;
+    let bdxady = bdx * ady;
+    let clift = cdx * cdx + cdy * cdy;
+    let det = alift * (bdxcdy - cdxbdy) + blift * (cdxady - adxcdy) + clift * (adxbdy - bdxady);
+    let permanent = (bdxcdy.abs() + cdxbdy.abs()) * alift
+        + (cdxady.abs() + adxcdy.abs()) * blift
+        + (adxbdy.abs() + bdxady.abs()) * clift;
+    let errbound = ICC_ERRBOUND_A * permanent;
+    if det > errbound || -det > errbound || !permanent.is_finite() {
+        return det;
+    }
+    incircle_exact(a, b, c, d)
+}
+
+/// The in-circle determinant of the input exactly: each difference, lift
+/// and product an expansion; its largest component (whose sign is the
+/// whole's).
+fn incircle_exact(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> f64 {
+    let (adx, ady) = (exp_diff(a.x, d.x), exp_diff(a.y, d.y));
+    let (bdx, bdy) = (exp_diff(b.x, d.x), exp_diff(b.y, d.y));
+    let (cdx, cdy) = (exp_diff(c.x, d.x), exp_diff(c.y, d.y));
+    let cross = |ux: &[f64], uy: &[f64], vx: &[f64], vy: &[f64]| {
+        exp_sum(&exp_mul(ux, vy), &exp_negated(&exp_mul(vx, uy)))
+    };
+    let lift = |x: &[f64], y: &[f64]| exp_sum(&exp_mul(x, x), &exp_mul(y, y));
+    let bc = cross(&bdx, &bdy, &cdx, &cdy);
+    let ca = cross(&cdx, &cdy, &adx, &ady);
+    let ab = cross(&adx, &ady, &bdx, &bdy);
+    let det = exp_sum(
+        &exp_sum(
+            &exp_mul(&lift(&adx, &ady), &bc),
+            &exp_mul(&lift(&bdx, &bdy), &ca),
+        ),
+        &exp_mul(&lift(&cdx, &cdy), &ab),
+    );
+    det.last().copied().unwrap_or(0.0)
+}
+
+// Expansions on the heap, for the exact last resort of a predicate: never
+// empty (zero is [0.0]), least significant component first, nonoverlapping.
+
+/// a − b exactly.
+fn exp_diff(a: f64, b: f64) -> Vec<f64> {
+    let (x, y) = two_diff(a, b);
+    match (y != 0.0, x != 0.0) {
+        (true, _) => vec![y, x],
+        (false, true) => vec![x],
+        (false, false) => vec![0.0],
+    }
+}
+
+/// e + f exactly.
+fn exp_sum(e: &[f64], f: &[f64]) -> Vec<f64> {
+    let mut h = vec![0.0; e.len() + f.len()];
+    let n = fast_expansion_sum_zeroelim(e, f, &mut h);
+    h.truncate(n.max(1));
+    h
+}
+
+/// −e exactly.
+fn exp_negated(e: &[f64]) -> Vec<f64> {
+    e.iter().map(|x| -x).collect()
+}
+
+/// e · b exactly (Shewchuk's `scale_expansion_zeroelim`).
+fn exp_scaled(e: &[f64], b: f64) -> Vec<f64> {
+    let mut h = Vec::with_capacity(2 * e.len());
+    let (mut q, hh) = two_product(component(e, 0), b);
+    if hh != 0.0 {
+        h.push(hh);
+    }
+    for &enow in e.iter().skip(1) {
+        let (product1, product0) = two_product(enow, b);
+        let (sum, hh) = two_sum(q, product0);
+        if hh != 0.0 {
+            h.push(hh);
+        }
+        let (qnew, hh) = fast_two_sum(product1, sum);
+        q = qnew;
+        if hh != 0.0 {
+            h.push(hh);
+        }
+    }
+    if q != 0.0 || h.is_empty() {
+        h.push(q);
+    }
+    h
+}
+
+/// e · f exactly: e scaled by each component of f, summed.
+fn exp_mul(e: &[f64], f: &[f64]) -> Vec<f64> {
+    let mut acc = vec![0.0];
+    for &x in f {
+        acc = exp_sum(&acc, &exp_scaled(e, x));
+    }
+    acc
+}
+
 pub(crate) static OPS: &[Op] = &[op!("orientation", |a: Vec2, b: Vec2, c: Vec2| {
     f64::from(orientation(a, b, c))
 })];
@@ -690,6 +812,175 @@ mod tests {
         assert_eq!(&h[..n], &[tiny, 0.25]);
         let n = compress(&[0.0, 0.0], &mut h);
         assert_eq!(&h[..n], &[0.0]);
+    }
+
+    /// The exact in-circle sign for coordinates on a 2⁻ˢ grid whose
+    /// differences fit in 2²⁰ units: plain integer arithmetic.
+    fn exact_incircle(a: Vec2, b: Vec2, c: Vec2, d: Vec2, scale: u32) -> i8 {
+        let unit = (1u64 << scale) as f64;
+        let k = |x: f64| {
+            let s = x * unit;
+            assert!(s == s.trunc() && s.abs() < 9.0e18, "{x} is off the grid");
+            s as i128
+        };
+        let (adx, ady) = (k(a.x) - k(d.x), k(a.y) - k(d.y));
+        let (bdx, bdy) = (k(b.x) - k(d.x), k(b.y) - k(d.y));
+        let (cdx, cdy) = (k(c.x) - k(d.x), k(c.y) - k(d.y));
+        let det = (adx * adx + ady * ady) * (bdx * cdy - cdx * bdy)
+            + (bdx * bdx + bdy * bdy) * (cdx * ady - adx * cdy)
+            + (cdx * cdx + cdy * cdy) * (adx * bdy - bdx * ady);
+        det.signum() as i8
+    }
+
+    fn sign(x: f64) -> i8 {
+        if x > 0.0 {
+            1
+        } else if x < 0.0 {
+            -1
+        } else {
+            0
+        }
+    }
+
+    #[test]
+    fn incircle_plain_cases() {
+        let (a, b, c) = (v(1.0, 0.0), v(0.0, 1.0), v(-1.0, 0.0));
+        assert!(incircle(a, b, c, v(0.0, 0.0)) > 0.0);
+        assert!(incircle(a, b, c, v(2.0, 0.0)) < 0.0);
+        assert!(incircle(a, b, c, v(0.0, -1.0)) == 0.0);
+        // Clockwise turns the sign.
+        assert!(incircle(a, c, b, v(0.0, 0.0)) < 0.0);
+        assert!(incircle(v(f64::NAN, 0.0), b, c, v(0.0, 0.0)).is_nan());
+    }
+
+    /// Random triangles and points near their circles on the 2⁻¹⁰ grid
+    /// (the point on the circle rounded to the grid, nudged a unit or not):
+    /// the sign matches exact integer arithmetic, and permutations agree.
+    #[test]
+    fn incircle_matches_exact_arithmetic_near_the_circle() {
+        let g_unit = 1.0 / 1024.0;
+        let snap = |x: f64| crate::jsmath::js_round(x / g_unit) * g_unit;
+        let mut g = Rng(0x1c1c_1e5e_ed00);
+        let mut exact_needed = 0;
+        let mut zeros = 0;
+        for n in 0..100_000 {
+            let p = |g: &mut Rng| v(snap(g.range(-200.0, 200.0)), snap(g.range(-200.0, 200.0)));
+            let (mut a, mut b, c) = (p(&mut g), p(&mut g), p(&mut g));
+            if orientation(a, b, c) == 0 {
+                continue;
+            }
+            if orientation(a, b, c) < 0 {
+                std::mem::swap(&mut a, &mut b);
+            }
+            // The circle's centre and a point on it, on the grid.
+            let det = 2.0 * ((a.x - c.x) * (b.y - c.y) - (a.y - c.y) * (b.x - c.x));
+            let (ax, ay, bx, by) = (a.x - c.x, a.y - c.y, b.x - c.x, b.y - c.y);
+            let ux = c.x + ((ax * ax + ay * ay) * by - (bx * bx + by * by) * ay) / det;
+            let uy = c.y + ((bx * bx + by * by) * ax - (ax * ax + ay * ay) * bx) / det;
+            let r = ((a.x - ux) * (a.x - ux) + (a.y - uy) * (a.y - uy)).sqrt();
+            if !(r < 1e4) {
+                continue;
+            }
+            let t = g.range(0.0, std::f64::consts::TAU);
+            let mut d = v(
+                snap(ux + r * crate::jsmath::cos(t)),
+                snap(uy + r * crate::jsmath::sin(t)),
+            );
+            // Every fourth: four points of a circle whose points are on the
+            // grid (a Pythagorean triple round a grid point), so exactly
+            // cocircular, unless nudged a unit.
+            let (mut a, mut b, mut c) = (a, b, c);
+            if n % 4 == 3 {
+                let (p, q, h) = [
+                    (3.0, 4.0, 5.0),
+                    (5.0, 12.0, 13.0),
+                    (8.0, 15.0, 17.0),
+                    (20.0, 21.0, 29.0),
+                ][(n / 4) % 4];
+                let k = (1 + (n / 16) % 50) as f64 * g_unit;
+                let o = v(snap(g.range(-100.0, 100.0)), snap(g.range(-100.0, 100.0)));
+                let on = |x: f64, y: f64| v(o.x + x * k, o.y + y * k);
+                let ring = [
+                    on(h, 0.0),
+                    on(p, q),
+                    on(-q, p),
+                    on(-h, 0.0),
+                    on(-p, -q),
+                    on(q, -p),
+                    on(0.0, h),
+                    on(0.0, -h),
+                ];
+                let pick = |g: &mut Rng| ring[(g.next() * 8.0) as usize % 8];
+                (a, b, c) = (pick(&mut g), pick(&mut g), pick(&mut g));
+                d = pick(&mut g);
+                if orientation(a, b, c) == 0 || [a, b, c].contains(&d) {
+                    continue;
+                }
+                if orientation(a, b, c) < 0 {
+                    std::mem::swap(&mut a, &mut b);
+                }
+                if (n / 4) % 3 == 0 {
+                    d = v(d.x + g_unit, d.y);
+                }
+            } else {
+                match n % 3 {
+                    0 => d = v(d.x + g_unit, d.y),
+                    1 => d = v(d.x, d.y - g_unit),
+                    _ => {}
+                }
+            }
+            let want = exact_incircle(a, b, c, d, 10);
+            let got = incircle(a, b, c, d);
+            assert_eq!(sign(got), want, "{a:?} {b:?} {c:?} {d:?}");
+            assert_eq!(sign(incircle(b, c, a, d)), want);
+            assert_eq!(sign(incircle(c, a, b, d)), want);
+            assert_eq!(sign(incircle(b, a, c, d)), -want);
+            if want == 0 {
+                zeros += 1;
+            }
+            // Where the first stage cannot prove the sign.
+            let (adx, ady, bdx, bdy, cdx, cdy) = (
+                a.x - d.x,
+                a.y - d.y,
+                b.x - d.x,
+                b.y - d.y,
+                c.x - d.x,
+                c.y - d.y,
+            );
+            let permanent = ((bdx * cdy).abs() + (cdx * bdy).abs()) * (adx * adx + ady * ady)
+                + ((cdx * ady).abs() + (adx * cdy).abs()) * (bdx * bdx + bdy * bdy)
+                + ((adx * bdy).abs() + (bdx * ady).abs()) * (cdx * cdx + cdy * cdy);
+            let plain = (adx * adx + ady * ady) * (bdx * cdy - cdx * bdy)
+                + (bdx * bdx + bdy * bdy) * (cdx * ady - adx * cdy)
+                + (cdx * cdx + cdy * cdy) * (adx * bdy - bdx * ady);
+            if plain.abs() <= ICC_ERRBOUND_A * permanent {
+                exact_needed += 1;
+            }
+        }
+        assert!(zeros > 100, "too few cocircular cases: {zeros}");
+        assert!(
+            exact_needed > 100,
+            "the exact stage is not exercised: {exact_needed}"
+        );
+    }
+
+    /// Exactly cocircular points at TM coordinates (a 3-4-5 circle round a
+    /// point on the grid): zero, and an ulp in or out decides.
+    #[test]
+    fn incircle_at_tm_coordinates() {
+        let o = v(500_000.5, 4_420_000.25);
+        let at = |dx: f64, dy: f64| v(o.x + dx, o.y + dy);
+        let (a, b, c) = (at(5.0, 0.0), at(3.0, 4.0), at(-4.0, 3.0));
+        for d in [at(0.0, -5.0), at(-3.0, -4.0), at(4.0, -3.0), at(-5.0, 0.0)] {
+            assert!(incircle(a, b, c, d) == 0.0, "{d:?}");
+        }
+        // (0, −5) moved towards the centre is inside, away outside.
+        let d = at(0.0, -5.0);
+        assert!(incircle(a, b, c, v(d.x, step(d.y, true))) > 0.0);
+        assert!(incircle(a, b, c, v(d.x, step(d.y, false))) < 0.0);
+        let d = at(-5.0, 0.0);
+        assert!(incircle(a, b, c, v(step(d.x, true), d.y)) > 0.0);
+        assert!(incircle(a, b, c, v(step(d.x, false), d.y)) < 0.0);
     }
 
     #[test]

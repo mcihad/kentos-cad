@@ -153,6 +153,7 @@ pub fn layer_param(name: &str, color: &str) -> crate::types::ParamDef {
         crate::types::ParamKind::Layer {
             new_layer_style: output_style(color),
             above: None,
+            below: None,
         },
     )
     .default_value(serde_json::json!({ "newName": name }))

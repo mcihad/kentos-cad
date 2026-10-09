@@ -5,6 +5,7 @@ pub mod edge_lengths;
 pub mod geometry;
 pub mod info_from_enclosing;
 pub mod info_from_inside;
+pub mod interpolation;
 pub mod join_by_field;
 pub mod models;
 pub mod numbering;
@@ -61,6 +62,14 @@ pub fn tools() -> Vec<Tool> {
         surface::ruggedness(),
         surface::insolation(),
         surface::contours(),
+        // İnterpolasyon and Yoğunluk (docs/adr/0232): both platforms.
+        interpolation::idw(),
+        interpolation::natural_neighbor(),
+        interpolation::spline(),
+        interpolation::kriging(),
+        interpolation::tin(),
+        interpolation::kernel_density(),
+        interpolation::line_density(),
     ]
 }
 

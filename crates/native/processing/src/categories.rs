@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 10] = [
+pub const CATEGORIES: [Category; 12] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -89,5 +89,18 @@ pub const CATEGORIES: [Category; 10] = [
         "Yüzey analizi",
         "hillshade",
         "Eğim, bakı, kabartma, eğrilik, güneşlenme ve eş yükselti eğrileri",
+    ),
+    // docs/adr/0232: surfaces from points, densities.
+    category(
+        "interpolation",
+        "İnterpolasyon",
+        "idw",
+        "Noktalardan yüzey: IDW, doğal komşu, spline, kriging, TIN",
+    ),
+    category(
+        "density",
+        "Yoğunluk",
+        "kernelDensity",
+        "Noktaların ve çizgilerin yoğunluğu",
     ),
 ];

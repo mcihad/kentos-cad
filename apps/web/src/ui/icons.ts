@@ -719,6 +719,20 @@ export const ICONS = {
     '<path d="M1.5 14.5 3.8 8l2.1 4.2L8.4 4.5l2.2 7.3 2.1-4.4 2.3 6.1 1.6-3.4 1.9 2.4"/><path d="M1.5 17.5h17" stroke-width="1"/><path d="M1.5 14.5 3.8 8l2.1 4.2L8.4 4.5l2.2 7.3 2.1-4.4 2.3 6.1 1.6-3.4 1.9 2.4v3.4h-17z" fill="currentColor" fill-opacity=".16" stroke="none"/>',
   insolation:
     '<circle cx="5" cy="5" r="2.3"/><path d="M5 .9v1.2M5 7.9v1.2M.9 5h1.2M7.9 5h1.2M2.1 2.1l.8.8M7.1 7.1l.8.8M7.9 2.1l-.8.8M2.9 7.1l-.8.8" stroke-width="1.1"/><path d="M3 17.5h15.5V9z" fill="currentColor" fill-opacity=".22"/><path d="M8.6 8.6l3.6 3.6M12.2 6.6l3.1 3.1" stroke-width="1.1" stroke-dasharray="1.5 1.1"/>',
+  // İnterpolasyon and Yoğunluk (docs/adr/0232).
+  idw: '<circle cx="10" cy="10" r="1.7" fill="currentColor" stroke="none"/><circle cx="4.2" cy="5" r="1.4"/><circle cx="16" cy="6.5" r="1.4"/><circle cx="5.5" cy="16" r="1.4"/><circle cx="16.8" cy="16.6" r="1.4"/><path d="M8.6 8.8 5.3 5.9M11.5 9.1l3.3-1.8" stroke-width="1.3"/><path d="M8.9 11.3l-2.4 3.4" stroke-width="1.1" stroke-opacity=".7"/><path d="M11.3 11.3l4.4 4.3" stroke-width=".9" stroke-opacity=".45" stroke-dasharray="1.3 1"/>',
+  naturalNeighbor:
+    '<path d="M10 5.3l4.2 2.5v4.9L10 15.1l-4.2-2.4V7.8z" fill="currentColor" fill-opacity=".22"/><path d="M10 5.3V1.5M14.2 7.8l3.9-2.3M14.2 12.7l3.9 2.4M10 15.1v3.4M5.8 12.7l-3.9 2.4M5.8 7.8 1.9 5.5" stroke-width="1.1"/><circle cx="10" cy="10.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="4.2" cy="2.8" r=".9" fill="currentColor" stroke="none"/><circle cx="17.2" cy="10.2" r=".9" fill="currentColor" stroke="none"/><circle cx="4.4" cy="16.9" r=".9" fill="currentColor" stroke="none"/>',
+  splineSurface:
+    '<path d="M2 12.5c3-5.2 5.6-5.4 8-1.8s5 4.2 8-2.7"/><path d="M2 17c3-4.6 5.6-4.8 8-1.6s5 3.7 8-2.4" stroke-opacity=".45"/><circle cx="2.6" cy="11.6" r="1.3" fill="currentColor" stroke="none"/><circle cx="7.4" cy="8.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="13" cy="13.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.4" cy="8.9" r="1.3" fill="currentColor" stroke="none"/>',
+  kriging:
+    '<path d="M2.5 2v15.5H18" stroke-width="1.2"/><path d="M3 16.5c2.4-6.6 4.9-9.8 8.4-10.6 1.6-.4 3.6-.4 6.1-.4"/><circle cx="5.3" cy="11.8" r="1" fill="currentColor" stroke="none"/><circle cx="7.9" cy="9.4" r="1" fill="currentColor" stroke="none"/><circle cx="10.6" cy="6.9" r="1" fill="currentColor" stroke="none"/><circle cx="13.6" cy="6.1" r="1" fill="currentColor" stroke="none"/><circle cx="16.4" cy="5" r="1" fill="currentColor" stroke="none"/>',
+  tinRaster:
+    '<path d="M2 7.5h16M2 13h16M7.5 2v16M13 2v16" stroke-width=".7" stroke-opacity=".35"/><path d="M2.5 16.5 7.5 3.2 17.5 7 14.2 17zM7.5 3.2l6.7 13.8M2.5 16.5 17.5 7"/>',
+  kernelDensity:
+    '<circle cx="8" cy="8.5" r="6" fill="currentColor" fill-opacity=".13" stroke="none"/><circle cx="8" cy="8.5" r="3.8" fill="currentColor" fill-opacity=".25" stroke="none"/><circle cx="8" cy="8.5" r="1.7" fill="currentColor" stroke="none"/><circle cx="14.6" cy="14.4" r="3.6" fill="currentColor" fill-opacity=".18" stroke="none"/><circle cx="14.6" cy="14.4" r="1.4" fill="currentColor" stroke="none"/><circle cx="8" cy="8.5" r="6" stroke-width=".8" stroke-dasharray="1.2 1"/>',
+  lineDensity:
+    '<circle cx="10" cy="10" r="5.6" stroke-width="1" stroke-dasharray="1.4 1.1"/><path d="M1.5 7.2 18.5 13M5 18.5 12.4 1.5M1.5 14.5 18.5 4.6" stroke-opacity=".45"/><path d="M4.7 8.3l10.6 3.6M7.7 13.8l4.6-10.6" stroke-width="2"/>',
   server: '<rect x="3" y="3" width="14" height="5.5" rx="1"/><rect x="3" y="11.5" width="14" height="5.5" rx="1"/><path d="M6 5.75h.01M6 14.25h.01" stroke-width="2"/><path d="M9.5 5.75h4.5M9.5 14.25h4.5"/>',
   cloud: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 9v4.6M7.9 11.6 10 13.7l2.1-2.1"/>',
   cloudUpload: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 13.8V9.2M7.9 11.1 10 9l2.1 2.1"/>',

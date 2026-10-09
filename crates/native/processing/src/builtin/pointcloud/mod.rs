@@ -114,6 +114,7 @@ pub fn result_layer_param(name: &str, color: &str) -> ParamDef {
                 ..NewLayerStyle::default()
             },
             above: None,
+            below: None,
         },
     )
     .default_value(json!({ "newName": name }))

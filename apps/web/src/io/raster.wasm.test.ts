@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { analyzeHere, level0, surfaceModulesBuilt, ulps } from '../processing/surfaceTesting';
+import { analyzeHere, analyzePointsHere, level0, surfaceModulesBuilt, ulps } from '../processing/surfaceTesting';
 
 /**
  * The raster analyses as the browser runs them (docs/adr/0231): the raster analysis module (crates/wasm/raster-wasm →
  * src/io/raster/pkg, built by `pnpm wasm`) on one thread, as the analysis worker runs it, over every case of the
  * independent references the core plays natively (crates/shared/raster/tests/all): the surface's
  * (scripts/fixtures/terrain_cases.py; a 32-bit sample within one unit in the last place, a byte exact) and the
- * contours' (scripts/fixtures/contour_cases.py; the points bit for bit, the Kot texts). Skipped only when the
- * packages have not been built.
+ * contours' (scripts/fixtures/contour_cases.py; the points bit for bit, the Kot texts), and the interpolations' and
+ * densities' (scripts/fixtures/interpolation_cases.py, docs/adr/0232: a 32-bit cell within one unit in the last place,
+ * each point's cross-validation within the method's bound). Skipped only when the packages have not been built.
  */
 
 type Bytes = Uint8Array<ArrayBuffer>;
@@ -94,4 +95,44 @@ describe.skipIf(!surfaceModulesBuilt)('raster analysis module (crates/wasm/raste
       }
     });
   });
+
+  interface PointCase {
+    name: string;
+    kind: string;
+    sources?: unknown[];
+    shapes?: unknown[];
+    values: (string | null)[] | null;
+    tool: { kind: string; variogram?: { fit: string } };
+    cell: number;
+    grid?: unknown;
+    expect: { width: number; height: number; values: (number | null)[]; error?: (number | null)[]; cross?: (number | null | (number | null)[])[] };
+  }
+  /** The core's bound for a method's cell values (crates/shared/raster/tests/all/interpolation.rs). */
+  const bound = (c: PointCase) =>
+    ({ idw: 1e-13, tin: 1e-13, naturalNeighbor: 1e-13, spline: 1e-13, kernel: 1e-12, lineDensity: 1e-11 })[c.tool.kind] ??
+    (c.tool.variogram?.fit === 'auto' ? 1e-8 : 1e-13);
+  const interp = json<{ cases: PointCase[] }>('interpolation/v1/cases.json');
+  for (const c of interp.cases.filter((c) => c.kind === 'surface' || c.kind === 'lines')) {
+    it(`interpolation: ${c.name}`, async () => {
+      const lines = c.kind === 'lines';
+      const cross = !!c.expect.cross;
+      const spec = JSON.stringify({ tool: c.tool, cell: c.cell, grid: c.grid ?? null, cross });
+      const out = await analyzePointsHere(JSON.stringify(lines ? c.shapes : c.sources), JSON.stringify(c.values), spec, lines);
+      expect([out.grid[6], out.grid[7]]).toEqual([c.expect.width, c.expect.height]);
+      const got = await level0(out.bytes);
+      const want = c.expect.error ? c.expect.values.flatMap((v, k) => [v, c.expect.error![k]]) : c.expect.values;
+      expect(got.length).toBe(want.length);
+      const off = got.findIndex((g, k) => ulps(g, want[k] ?? NaN) > 1);
+      expect(off, `cell ${off}: ${got[off]} for ${want[off]}`).toBe(-1);
+      if (!cross) return;
+      const tol = bound(c);
+      c.expect.cross!.forEach((w, k) => {
+        const [wv, we] = Array.isArray(w) ? w : [w, null];
+        const gv = out.crossValues[5 * k + 3];
+        if (wv === null) expect(Number.isNaN(gv), `point ${k}`).toBe(true);
+        else expect(Math.abs(gv - wv), `point ${k}: ${gv} for ${wv}`).toBeLessThanOrEqual(tol * Math.max(1, Math.abs(wv)));
+        if (we !== null && we !== undefined) expect(Math.abs(out.crossValues[5 * k + 4] - we), `point ${k}'s error`).toBeLessThanOrEqual(tol * Math.max(1, Math.abs(we)));
+      });
+    });
+  }
 });

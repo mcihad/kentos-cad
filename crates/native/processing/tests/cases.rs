@@ -6,7 +6,8 @@
 //! (docs/adr/0200), whose file values name files beside it, read through the
 //! formats core as the dialog reads a chosen file, geometry.json
 //! (docs/adr/0201), whose new objects are measured (`addedShapes`), and
-//! surface.json (docs/adr/0231; cases/surface.rs), the raster tools run
+//! surface.json (docs/adr/0231) and interpolation.json (docs/adr/0232;
+//! cases/surface.rs), the raster tools run
 //! with files that read the cases' rasters.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -729,10 +730,11 @@ fn the_geometry_cases_do_what_they_say() {
 /// Each drawing's defaults and each tool's default values on it, as the web reads them.
 #[test]
 fn the_defaults_the_tools_take_from_the_drawing() {
-    let (file, geometry, surface) = (
+    let (file, geometry, surface, interpolation) = (
         cases(),
         case_file("geometry.json"),
         case_file("surface.json"),
+        case_file("interpolation.json"),
     );
     let registry = Registry::builtin();
     let lookup = |id: &str| registry.tool(id);
@@ -741,7 +743,8 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         .expect("documents")
         .iter()
         .chain(geometry["documents"].as_object().expect("documents"))
-        .chain(surface["documents"].as_object().expect("documents"));
+        .chain(surface["documents"].as_object().expect("documents"))
+        .chain(interpolation["documents"].as_object().expect("documents"));
     for (name, d) in documents {
         let doc = load(name);
         let defaults = Defaults::of(&doc);

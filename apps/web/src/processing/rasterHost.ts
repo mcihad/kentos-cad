@@ -1,4 +1,4 @@
-import type { AnalysisResult, AnalysisWatch } from '../io/rasterAnalysisProtocol';
+import type { AnalysisResult, AnalysisWatch, PointResult } from '../io/rasterAnalysisProtocol';
 import type { RasterEntity } from '../model/entities';
 
 /**
@@ -11,6 +11,11 @@ export interface RasterRunHost {
   source(raster: RasterEntity): Blob | { refused: string };
   /** Runs a job (`kentos_raster::job::Spec` JSON) in a worker of its own; rejects with `STOPPED` when stopped. */
   analyze(blob: Blob, spec: string, watch: AnalysisWatch): Promise<AnalysisResult>;
+  /**
+   * Makes a raster from points or lines (docs/adr/0232): the objects' JSON, their value texts' JSON, the
+   * `PointSpec` JSON; in a worker of its own, rejecting with `STOPPED` when stopped.
+   */
+  analyzePoints(objects: string, values: string, spec: string, lines: boolean, watch: AnalysisWatch): Promise<PointResult>;
   /**
    * Keeps a result GeoTIFF named `name` (`width` × `height`): embedded in the project's library when it is small
    * enough, else the session's file of that name, downloaded. What the raster object names, and a line for the log

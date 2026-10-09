@@ -1,7 +1,8 @@
 // Raster analysis in the browser (docs/adr/0231 §11): how long Yüzey analizi's jobs take in their own worker
 // (io/rasterAnalysisWorker.ts, raster-wasm on one thread) over a 4096 × 4096 32-bit DEM, tiled and Deflate'd as the
 // desktop's measurement makes it (crates/shared/raster/tests/all/timing.rs, the same hills): Eğim, Eş yükselti eğrileri
-// (5 m, about 100 levels), and Güneşlenme over a 2048 × 2048 one (a year, 14 days, half an hour). Starts its own Vite dev
+// (5 m, about 100 levels), and Güneşlenme over a 2048 × 2048 one (a year, 14 days, half an hour); then a raster from
+// points (docs/adr/0232 §14): IDW, Doğal komşu and Kriging, 100 000 points onto a 2048 × 2048 grid. Starts its own Vite dev
 // server and one headless Chrome; the DEMs are written once by GDAL into .run/perf (python3 with numpy and osgeo) and
 // fetched by the page as a file the user gave. The worker's whole run is timed: its start, the module, reading the
 // file's blocks, the job and the result's coding. Nothing else heavy may run meanwhile (docs/adr/0005).
@@ -74,6 +75,39 @@ try {
     times.sort((a, c) => a - c);
     const p50 = times[Math.floor(times.length / 2)];
     console.log(`${job.name.padEnd(20)} ${job.n}²  p50 ${p50.toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s${job.budget ? `  bütçe ${job.budget} s` : ''}`);
+  }
+  // İnterpolasyon (docs/adr/0232 §14): 100 000 random points over 2 km with a hill's heights (point_timing.rs's), a
+  // 2048 × 2048 grid of a metre; the objects' JSON made in the page, the worker's whole run timed.
+  const grid = { affine: [500000, 1, 0, 4422048, 0, -1], width: 2048, height: 2048 };
+  const pointJobs = [
+    { name: 'IDW (12 nokta)', tool: { kind: 'idw', power: 2, points: 12 } },
+    { name: 'Doğal komşu', tool: { kind: 'naturalNeighbor' } },
+    { name: 'Kriging (küresel, 12)', tool: { kind: 'kriging', model: 'spherical', variogram: { fit: 'manual', nugget: 0, sill: 1800, range: 400 }, points: 12 } },
+  ];
+  for (const job of pointJobs) {
+    const times = [];
+    for (let r = 0; r < Math.min(runs, 2); r++) {
+      const ms = await b.eval(`(async () => {
+        const { analyzePoints } = await import('/src/io/rasterAnalysis.ts');
+        let s = 0x5eedn;
+        const next = () => { s ^= s >> 12n; s ^= (s << 25n) & 0xffffffffffffffffn; s ^= s >> 27n; return Number(((s * 0x2545f4914f6cdd1dn) & 0xffffffffffffffffn) >> 11n) / 2 ** 53; };
+        const pts = [];
+        for (let i = 0; i < 100000; i++) {
+          const x = next() * 2048, y = next() * 2048;
+          pts.push({ kind: 'point', p: { x: 500000 + x, y: 4420000 + y }, z: 400 + 60 * Math.sin(x / 230) * Math.cos(y / 310) + 0.05 * x });
+        }
+        const objects = JSON.stringify(pts);
+        const spec = JSON.stringify({ tool: ${JSON.stringify(job.tool)}, grid: ${JSON.stringify(grid)}, epsg: 5254 });
+        const t0 = performance.now();
+        const out = await analyzePoints(objects, 'null', spec, false, { progress() {}, canceled: false });
+        const ms = performance.now() - t0;
+        if (!out.bytes.length) throw new Error('no result');
+        return ms;
+      })()`);
+      times.push(ms / 1000);
+    }
+    times.sort((a, c) => a - c);
+    console.log(`${job.name.padEnd(22)} 2048², 10⁵ nokta  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s`);
   }
 } finally {
   b.close();

@@ -13,14 +13,28 @@
 //! - [`contours`]: Eş yükselti eğrileri, marching squares (§9).
 //! - [`out`]: the result's GeoTIFF, written as it is worked out (§2).
 //! - [`job`]: a run: the host's settings, the strips, the result.
+//! - [`points`], [`grid`], [`index`], [`interp`], [`density`]: a raster from
+//!   points or lines (docs/adr/0232): the objects' points, the grid, the
+//!   neighbours, the interpolations and densities; [`from_points`] the run.
+
+// `!(r > 0.0)` refuses NaN as well as r ≤ 0; that is the point of writing it so.
+#![allow(clippy::neg_cmp_op_on_partial_ord)]
 
 pub mod contours;
+pub mod density;
 pub mod frame;
+pub mod from_points;
+pub mod grid;
+pub mod index;
 pub mod insolation;
+pub mod interp;
 pub mod job;
 pub mod out;
 pub mod par;
+pub mod points;
 pub mod relief;
+pub mod solve;
 pub mod terrain;
 
+pub use from_points::{PointInput, PointJob, PointSpec, PointTool};
 pub use job::{Finished, Job, Spec, Tool};

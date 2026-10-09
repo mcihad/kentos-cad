@@ -5819,6 +5819,78 @@ function surfaceScenes() {
   ];
 }
 
+// İnterpolasyon and Yoğunluk (docs/adr/0232 §13) over the shared processing drawing
+// (fixtures/processing/v1/interpolation.kcad: 40 survey points over 120 × 80 m, 60 events, roads): the CBS ribbon's Raster
+// tab with its İnterpolasyon and Yoğunluk panels, IDW's and Kriging's windows, a run's cross-validation, each
+// interpolation's surface under its points (a metre a cell), the two densities. Each job runs in a worker of its own;
+// a result under 32 MB is embedded. The desktop's are `tools_screens`' interp-*, yogunluk-cizim and
+// cizgi-yogunlugu-cizim (apps/desktop/src/interpolation_scenes.rs).
+SCENES.interpolation = interpolationScenes();
+
+function interpolationScenes() {
+  const DRAWING = readFileSync(new URL('../../../../fixtures/processing/v1/interpolation.kcad', import.meta.url), 'utf8');
+  const POINTS = [499998, 4419998, 500122, 4420082];
+  const EVENTS = [499990, 4419990, 500210, 4420210];
+  const ROADS = [-6, -6, 106, 98];
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(600);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  /** The drawing open, the layers a scene does not show hidden, the Raster tab on, the view on `b`. */
+  const opened = async (ui, b = POINTS) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(DRAWING)}, null))) throw new Error('interpolation.kcad did not load');
+      k.selection.clear();
+      for (const id of ['alan', 'izgara', 'dogru', 'kotsuz']) k.doc.layers.setVisible(id, false);
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** A tool's window on `layer`, with `values`. */
+  const windowOf = (tool, layer, values = {}, b = POINTS) => async (ui) => {
+    await opened(ui, b);
+    await ui.eval(openTool(tool, { input: QUERY_LAYER(layer), ...values }));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  /** A tool run on `layer` in its worker, its window closed (or kept, `keep`), its result drawn. */
+  const drawn = (tool, layer, values = {}, b = POINTS, keep = false) => async (ui) => {
+    await opened(ui, b);
+    await ui.eval(openTool(tool, { input: QUERY_LAYER(layer), ...values }));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    if (!keep) await ui.escapeAll(2);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const manual = { variogram: 'manual', nugget: 0.5, sill: 120, range: 90 };
+  return [
+    { id: 'interp-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'interp-idw', open: windowOf('interpolation.idw', 'noktalar', { cellSize: 1, cross: true }), close },
+    { id: 'interp-idw-cizim', open: drawn('interpolation.idw', 'noktalar', { cellSize: 1 }), close },
+    { id: 'interp-capraz', open: drawn('interpolation.idw', 'noktalar', { cellSize: 1, cross: true }, POINTS, true), close },
+    { id: 'interp-dogal-cizim', open: drawn('interpolation.naturalNeighbor', 'noktalar', { cellSize: 1 }), close },
+    { id: 'interp-tin-cizim', open: drawn('interpolation.tin', 'noktalar', { cellSize: 1 }), close },
+    { id: 'interp-spline-cizim', open: drawn('interpolation.spline', 'noktalar', { cellSize: 1 }), close },
+    { id: 'interp-kriging', open: windowOf('interpolation.kriging', 'noktalar', { ...manual, errorSurface: true }), close },
+    { id: 'interp-kriging-cizim', open: drawn('interpolation.kriging', 'noktalar', { cellSize: 1, ...manual }), close },
+    { id: 'yogunluk-cizim', open: drawn('density.kernel', 'olaylar', { radius: 30, cellSize: 1 }, EVENTS), close },
+    { id: 'cizgi-yogunlugu-cizim', open: drawn('density.line', 'yollar', { radius: 12, cellSize: 0.5 }, ROADS), close },
+  ];
+}
+
 // Harita servisleri (docs/adr/0208) over a CBS project in TUREF / TM33 at Ankara's Kızılay: parcels and a building over
 // a ready basemap, its tiles from the service itself (the network is needed), in the project's system. The desktop's
 // are `tools_screens`' servis-* (apps/desktop/src/service_scenes.rs), the same drawing.

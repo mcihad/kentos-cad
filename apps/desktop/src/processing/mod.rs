@@ -32,6 +32,8 @@ pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
 #[cfg(test)]
 mod geometry_tests;
 #[cfg(test)]
+mod interpolation_tests;
+#[cfg(test)]
 mod query_tests;
 #[cfg(test)]
 pub(crate) mod surface_tests;

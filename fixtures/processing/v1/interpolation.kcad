@@ -1,0 +1,3067 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: interpolasyon ve yoğunluk",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 500000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "noktalar",
+   "name": "Noktalar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#1565C0",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "alan",
+   "name": "Alan noktaları",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#6A1B9A",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "olaylar",
+   "name": "Olaylar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yollar",
+   "name": "Yollar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#455A64",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "izgara",
+   "name": "Izgara",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "dogru",
+   "name": "Doğru",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#2E7D32",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "kotsuz",
+   "name": "Kotsuz",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#9E9E9E",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "noktalar",
+ "entities": [
+  {
+   "kind": "point",
+   "p": {
+    "x": 500062.008,
+    "y": 4420048.981
+   },
+   "z": 96.307,
+   "id": 1,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "49,03"
+   },
+   "label": "N1"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500049.798,
+    "y": 4420079.361
+   },
+   "z": 84.928,
+   "id": 2,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "31,74"
+   },
+   "label": "N2"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500015.26,
+    "y": 4420019.332
+   },
+   "z": 106.67,
+   "id": 3,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "43,71"
+   },
+   "label": "N3"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500015.758,
+    "y": 4420054.309
+   },
+   "z": 93.776,
+   "id": 4,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "20,74"
+   },
+   "label": "N4"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500011.121,
+    "y": 4420062.733
+   },
+   "z": 93.111,
+   "id": 5,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "5,63"
+   },
+   "label": "N5"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500095.888,
+    "y": 4420049.133
+   },
+   "z": 106.326,
+   "id": 6,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "47,62"
+   },
+   "label": "N6"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500010.24,
+    "y": 4420038.082
+   },
+   "z": 99.168,
+   "id": 7,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "23,34"
+   },
+   "label": "N7"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500055.743,
+    "y": 4420017.459
+   },
+   "z": 121.968,
+   "id": 8,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "6,24"
+   },
+   "label": "N8"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500011.576,
+    "y": 4420079.419
+   },
+   "z": 91.906,
+   "id": 9,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "25,47"
+   },
+   "label": "N9"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500043.21,
+    "y": 4420021.41
+   },
+   "z": 116.397,
+   "id": 10,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "31,79"
+   },
+   "label": "N10"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500083.134,
+    "y": 4420050.504
+   },
+   "z": 100.817,
+   "id": 11,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "25,25"
+   },
+   "label": "N11"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500040.189,
+    "y": 4420034.421
+   },
+   "z": 105.62,
+   "id": 12,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "17,23"
+   },
+   "label": "N12"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500018.799,
+    "y": 4420015.251
+   },
+   "z": 109.725,
+   "id": 13,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "12,02"
+   },
+   "label": "N13"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500053.474,
+    "y": 4420039.079
+   },
+   "z": 103.529,
+   "id": 14,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "7,99"
+   },
+   "label": "N14"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500038.768,
+    "y": 4420078.299
+   },
+   "z": 85.168,
+   "id": 15,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "15,31"
+   },
+   "label": "N15"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500098.231,
+    "y": 4420014.229
+   },
+   "z": 121.644,
+   "id": 16,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "13,2"
+   },
+   "label": "N16"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500001.768,
+    "y": 4420076.741
+   },
+   "z": 95.491,
+   "id": 17,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "32,37"
+   },
+   "label": "N17"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500041.36,
+    "y": 4420075.721
+   },
+   "z": 84.638,
+   "id": 18,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "15,35"
+   },
+   "label": "N18"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500059.022,
+    "y": 4420068.057
+   },
+   "z": 85.789,
+   "id": 19,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "16,87"
+   },
+   "label": "N19"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500059.014,
+    "y": 4420024.474
+   },
+   "z": 117.332,
+   "id": 20,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "27,0"
+   },
+   "label": "N20"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500058.676,
+    "y": 4420060.177
+   },
+   "z": 88.49,
+   "id": 21,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "14,4"
+   },
+   "label": "N21"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500053.127,
+    "y": 4420011.822
+   },
+   "z": 124.635,
+   "id": 22,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "22,35"
+   },
+   "label": "N22"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500102.204,
+    "y": 4420034.685
+   },
+   "z": 114.061,
+   "id": 23,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "7,13"
+   },
+   "label": "N23"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500103.839,
+    "y": 4420027.908
+   },
+   "z": 116.482,
+   "id": 24,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "23,19"
+   },
+   "label": "N24"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500089.571,
+    "y": 4420021.162
+   },
+   "z": 120.373,
+   "id": 25,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "30,1"
+   },
+   "label": "N25"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500009.632,
+    "y": 4420066.015
+   },
+   "z": 93.185,
+   "id": 26,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "49,61"
+   },
+   "label": "N26"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500071.046,
+    "y": 4420064.134
+   },
+   "z": 89.818,
+   "id": 27,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "15,53"
+   },
+   "label": "N27"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500098.362,
+    "y": 4420063.377
+   },
+   "z": 102.978,
+   "id": 28,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "38,19"
+   },
+   "label": "N28"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500110.155,
+    "y": 4420046.13
+   },
+   "z": 112.838,
+   "id": 29,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "43,12"
+   },
+   "label": "N29"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500098.66,
+    "y": 4420040.35
+   },
+   "z": 111.112,
+   "id": 30,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "4,93"
+   },
+   "label": "N30"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500102.009,
+    "y": 4420003.644
+   },
+   "z": 122.529,
+   "id": 31,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "40,6"
+   },
+   "label": "N31"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500086.031,
+    "y": 4420064.697
+   },
+   "z": 95.876,
+   "id": 32,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "1,5"
+   },
+   "label": "N32"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500024.632,
+    "y": 4420063.171
+   },
+   "z": 89.135,
+   "id": 33,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "13,5"
+   },
+   "label": "N33"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500062.746,
+    "y": 4420043.679
+   },
+   "z": 100.83,
+   "id": 34,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "46,32"
+   },
+   "label": "N34"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500114.302,
+    "y": 4420006.621
+   },
+   "z": 117.818,
+   "id": 35,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "0,36"
+   },
+   "label": "N35"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500005.649,
+    "y": 4420069.027
+   },
+   "z": 94.384,
+   "id": 36,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "3,43"
+   },
+   "label": "N36"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500069.981,
+    "y": 4420022.883
+   },
+   "z": 119.69,
+   "id": 37,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "48,47"
+   },
+   "label": "N37"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500040.573,
+    "y": 4420050.539
+   },
+   "z": 93.126,
+   "id": 38,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "49,1"
+   },
+   "label": "N38"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500007.82,
+    "y": 4420018.981
+   },
+   "z": 103.07,
+   "id": 39,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "43,38"
+   },
+   "label": "N39"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500067.924,
+    "y": 4420064.706
+   },
+   "z": 88.682,
+   "id": 40,
+   "layerId": "noktalar",
+   "attrs": {
+    "Değer": "14,54"
+   },
+   "label": "N40"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 88.49,
+    "y": 175.52
+   },
+   "z": 50.783,
+   "id": 41,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A1"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 68.82,
+    "y": 89.57
+   },
+   "z": 50.013,
+   "id": 42,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A2"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 112.65,
+    "y": 65.42
+   },
+   "z": 57.019,
+   "id": 43,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A3"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 86.53,
+    "y": 65.49
+   },
+   "z": 51.589,
+   "id": 44,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A4"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 181.21,
+    "y": 118.4
+   },
+   "z": 46.593,
+   "id": 45,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A5"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 32.37,
+    "y": 147.44
+   },
+   "z": 48.783,
+   "id": 46,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A6"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 146.72,
+    "y": 42.38
+   },
+   "z": 51.833,
+   "id": 47,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A7"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 55.34,
+    "y": 26.12
+   },
+   "z": 54.311,
+   "id": 48,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A8"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 157.5,
+    "y": 130.15
+   },
+   "z": 49.475,
+   "id": 49,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A9"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 68.65,
+    "y": 174.51
+   },
+   "z": 50.485,
+   "id": 50,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A10"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 48.43,
+    "y": 8.56
+   },
+   "z": 50.674,
+   "id": 51,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A11"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 108.26,
+    "y": 44.63
+   },
+   "z": 38.614,
+   "id": 52,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A12"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 76.0,
+    "y": 13.54
+   },
+   "z": 51.271,
+   "id": 53,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A13"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 143.12,
+    "y": 190.7
+   },
+   "z": 50.786,
+   "id": 54,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A14"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 138.03,
+    "y": 176.53
+   },
+   "z": 51.792,
+   "id": 55,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A15"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 78.03,
+    "y": 9.58
+   },
+   "z": 51.251,
+   "id": 56,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A16"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 150.44,
+    "y": 122.34
+   },
+   "z": 49.532,
+   "id": 57,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A17"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 123.04,
+    "y": 4.38
+   },
+   "z": 51.831,
+   "id": 58,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A18"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 43.94,
+    "y": 79.48
+   },
+   "z": 49.622,
+   "id": 59,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A19"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 130.99,
+    "y": 85.54
+   },
+   "z": 51.33,
+   "id": 60,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A20"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 186.24,
+    "y": 51.93
+   },
+   "z": 56.836,
+   "id": 61,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A21"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 40.37,
+    "y": 188.21
+   },
+   "z": 50.832,
+   "id": 62,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A22"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 169.25,
+    "y": 181.87
+   },
+   "z": 49.582,
+   "id": 63,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A23"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 99.48,
+    "y": 183.53
+   },
+   "z": 51.359,
+   "id": 64,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A24"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 55.23,
+    "y": 105.5
+   },
+   "z": 49.74,
+   "id": 65,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A25"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 147.4,
+    "y": 21.42
+   },
+   "z": 50.343,
+   "id": 66,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A26"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 137.12,
+    "y": 129.0
+   },
+   "z": 51.237,
+   "id": 67,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A27"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 93.94,
+    "y": 190.31
+   },
+   "z": 50.64,
+   "id": 68,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A28"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 182.83,
+    "y": 136.93
+   },
+   "z": 49.42,
+   "id": 69,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A29"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 171.25,
+    "y": 161.17
+   },
+   "z": 49.811,
+   "id": 70,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A30"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 85.96,
+    "y": 52.21
+   },
+   "z": 45.104,
+   "id": 71,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A31"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 38.12,
+    "y": 149.79
+   },
+   "z": 49.527,
+   "id": 72,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A32"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 180.93,
+    "y": 181.11
+   },
+   "z": 49.459,
+   "id": 73,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A33"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 99.15,
+    "y": 65.63
+   },
+   "z": 53.282,
+   "id": 74,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A34"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 132.35,
+    "y": 102.17
+   },
+   "z": 49.94,
+   "id": 75,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A35"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 12.57,
+    "y": 134.03
+   },
+   "z": 43.62,
+   "id": 76,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A36"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 107.85,
+    "y": 100.8
+   },
+   "z": 51.447,
+   "id": 77,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A37"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 74.87,
+    "y": 139.13
+   },
+   "z": 50.066,
+   "id": 78,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A38"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 49.21,
+    "y": 138.16
+   },
+   "z": 49.638,
+   "id": 79,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A39"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 102.39,
+    "y": 22.01
+   },
+   "z": 43.163,
+   "id": 80,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A40"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 79.98,
+    "y": 185.88
+   },
+   "z": 50.287,
+   "id": 81,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A41"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 137.71,
+    "y": 20.3
+   },
+   "z": 50.455,
+   "id": 82,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A42"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 174.94,
+    "y": 51.22
+   },
+   "z": 53.387,
+   "id": 83,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A43"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 84.31,
+    "y": 99.07
+   },
+   "z": 50.693,
+   "id": 84,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A44"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 157.38,
+    "y": 185.67
+   },
+   "z": 49.973,
+   "id": 85,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A45"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 23.9,
+    "y": 128.61
+   },
+   "z": 46.41,
+   "id": 86,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A46"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 5.5,
+    "y": 12.7
+   },
+   "z": 50.04,
+   "id": 87,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A47"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 20.94,
+    "y": 89.03
+   },
+   "z": 49.168,
+   "id": 88,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A48"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 178.69,
+    "y": 142.54
+   },
+   "z": 49.672,
+   "id": 89,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A49"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 75.11,
+    "y": 162.59
+   },
+   "z": 50.952,
+   "id": 90,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A50"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 151.94,
+    "y": 74.97
+   },
+   "z": 47.726,
+   "id": 91,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A51"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 138.99,
+    "y": 136.68
+   },
+   "z": 51.75,
+   "id": 92,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A52"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 75.69,
+    "y": 12.16
+   },
+   "z": 51.265,
+   "id": 93,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A53"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 115.77,
+    "y": 25.91
+   },
+   "z": 44.594,
+   "id": 94,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A54"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 195.08,
+    "y": 19.69
+   },
+   "z": 57.579,
+   "id": 95,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A55"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 58.16,
+    "y": 90.75
+   },
+   "z": 49.608,
+   "id": 96,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A56"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 136.57,
+    "y": 23.96
+   },
+   "z": 50.63,
+   "id": 97,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A57"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 33.54,
+    "y": 149.48
+   },
+   "z": 49.131,
+   "id": 98,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A58"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 34.52,
+    "y": 194.54
+   },
+   "z": 50.715,
+   "id": 99,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A59"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 57.55,
+    "y": 179.64
+   },
+   "z": 50.255,
+   "id": 100,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A60"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 137.74,
+    "y": 14.15
+   },
+   "z": 50.387,
+   "id": 101,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A61"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 80.71,
+    "y": 104.82
+   },
+   "z": 50.192,
+   "id": 102,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A62"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 136.53,
+    "y": 115.32
+   },
+   "z": 50.165,
+   "id": 103,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A63"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 102.69,
+    "y": 198.94
+   },
+   "z": 50.782,
+   "id": 104,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A64"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 146.64,
+    "y": 134.19
+   },
+   "z": 50.769,
+   "id": 105,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A65"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 58.33,
+    "y": 116.48
+   },
+   "z": 49.852,
+   "id": 106,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A66"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 34.62,
+    "y": 159.54
+   },
+   "z": 50.266,
+   "id": 107,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A67"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 104.12,
+    "y": 158.57
+   },
+   "z": 51.482,
+   "id": 108,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A68"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 140.43,
+    "y": 93.25
+   },
+   "z": 48.919,
+   "id": 109,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A69"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 103.49,
+    "y": 84.62
+   },
+   "z": 56.166,
+   "id": 110,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A70"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 37.83,
+    "y": 19.12
+   },
+   "z": 52.069,
+   "id": 111,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A71"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 108.1,
+    "y": 157.9
+   },
+   "z": 51.821,
+   "id": 112,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A72"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 102.27,
+    "y": 7.85
+   },
+   "z": 52.127,
+   "id": 113,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A73"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 57.25,
+    "y": 168.88
+   },
+   "z": 50.304,
+   "id": 114,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A74"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 90.44,
+    "y": 189.2
+   },
+   "z": 50.483,
+   "id": 115,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A75"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 93.75,
+    "y": 126.88
+   },
+   "z": 50.37,
+   "id": 116,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A76"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 58.15,
+    "y": 17.93
+   },
+   "z": 52.053,
+   "id": 117,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A77"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 195.2,
+    "y": 11.86
+   },
+   "z": 53.852,
+   "id": 118,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A78"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 4.76,
+    "y": 149.15
+   },
+   "z": 45.86,
+   "id": 119,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A79"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 30.78,
+    "y": 39.77
+   },
+   "z": 54.611,
+   "id": 120,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A80"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 76.27,
+    "y": 148.88
+   },
+   "z": 50.574,
+   "id": 121,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A81"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 184.1,
+    "y": 1.97
+   },
+   "z": 51.308,
+   "id": 122,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A82"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 24.97,
+    "y": 176.64
+   },
+   "z": 51.469,
+   "id": 123,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A83"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 143.9,
+    "y": 124.06
+   },
+   "z": 50.281,
+   "id": 124,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A84"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 178.92,
+    "y": 79.39
+   },
+   "z": 43.334,
+   "id": 125,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A85"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 109.02,
+    "y": 168.66
+   },
+   "z": 52.337,
+   "id": 126,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A86"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 106.46,
+    "y": 181.17
+   },
+   "z": 52.287,
+   "id": 127,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A87"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 91.69,
+    "y": 56.89
+   },
+   "z": 45.637,
+   "id": 128,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A88"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 96.95,
+    "y": 163.57
+   },
+   "z": 51.141,
+   "id": 129,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A89"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 98.79,
+    "y": 91.42
+   },
+   "z": 53.6,
+   "id": 130,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A90"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 46.65,
+    "y": 12.16
+   },
+   "z": 51.088,
+   "id": 131,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A91"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 42.6,
+    "y": 110.96
+   },
+   "z": 49.604,
+   "id": 132,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A92"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 22.25,
+    "y": 66.33
+   },
+   "z": 50.204,
+   "id": 133,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A93"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 122.64,
+    "y": 122.88
+   },
+   "z": 51.118,
+   "id": 134,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A94"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 75.35,
+    "y": 154.77
+   },
+   "z": 50.824,
+   "id": 135,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A95"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 191.28,
+    "y": 107.4
+   },
+   "z": 45.74,
+   "id": 136,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A96"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 114.09,
+    "y": 112.58
+   },
+   "z": 50.542,
+   "id": 137,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A97"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 179.82,
+    "y": 186.83
+   },
+   "z": 49.507,
+   "id": 138,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A98"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 35.61,
+    "y": 40.86
+   },
+   "z": 56.119,
+   "id": 139,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A99"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 179.31,
+    "y": 14.55
+   },
+   "z": 55.237,
+   "id": 140,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A100"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 132.67,
+    "y": 134.64
+   },
+   "z": 52.117,
+   "id": 141,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A101"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 140.08,
+    "y": 29.7
+   },
+   "z": 51.232,
+   "id": 142,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A102"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 184.71,
+    "y": 144.68
+   },
+   "z": 49.792,
+   "id": 143,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A103"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 47.71,
+    "y": 138.62
+   },
+   "z": 49.608,
+   "id": 144,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A104"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 46.12,
+    "y": 103.58
+   },
+   "z": 49.509,
+   "id": 145,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A105"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 187.1,
+    "y": 152.27
+   },
+   "z": 49.882,
+   "id": 146,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A106"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 37.57,
+    "y": 89.06
+   },
+   "z": 48.855,
+   "id": 147,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A107"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 64.92,
+    "y": 30.63
+   },
+   "z": 54.465,
+   "id": 148,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A108"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 130.79,
+    "y": 48.67
+   },
+   "z": 56.708,
+   "id": 149,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A109"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 114.27,
+    "y": 74.07
+   },
+   "z": 58.303,
+   "id": 150,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A110"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 109.42,
+    "y": 68.03
+   },
+   "z": 57.296,
+   "id": 151,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A111"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 87.6,
+    "y": 175.59
+   },
+   "z": 50.758,
+   "id": 152,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A112"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 1.87,
+    "y": 146.07
+   },
+   "z": 45.382,
+   "id": 153,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A113"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 52.81,
+    "y": 67.52
+   },
+   "z": 53.349,
+   "id": 154,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A114"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 37.57,
+    "y": 71.62
+   },
+   "z": 50.422,
+   "id": 155,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A115"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 79.13,
+    "y": 187.42
+   },
+   "z": 50.237,
+   "id": 156,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A116"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 102.56,
+    "y": 183.33
+   },
+   "z": 51.723,
+   "id": 157,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A117"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 128.82,
+    "y": 198.55
+   },
+   "z": 51.323,
+   "id": 158,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A118"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 133.15,
+    "y": 154.36
+   },
+   "z": 52.632,
+   "id": 159,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A119"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 17.31,
+    "y": 51.08
+   },
+   "z": 51.055,
+   "id": 160,
+   "layerId": "alan",
+   "attrs": {},
+   "label": "A120"
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500087.83,
+    "y": 4420076.43
+   },
+   "id": 161,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500098.38,
+    "y": 4420038.78
+   },
+   "id": 162,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500026.7,
+    "y": 4420120.48
+   },
+   "id": 163,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500075.09,
+    "y": 4420023.66
+   },
+   "id": 164,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500070.3,
+    "y": 4420077.79
+   },
+   "id": 165,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500075.02,
+    "y": 4420170.84
+   },
+   "id": 166,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500144.68,
+    "y": 4420056.21
+   },
+   "id": 167,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500105.57,
+    "y": 4420139.53
+   },
+   "id": 168,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500074.61,
+    "y": 4420007.45
+   },
+   "id": 169,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500127.79,
+    "y": 4420103.9
+   },
+   "id": 170,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500176.66,
+    "y": 4420195.14
+   },
+   "id": 171,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500142.38,
+    "y": 4420042.25
+   },
+   "id": 172,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500182.92,
+    "y": 4420034.22
+   },
+   "id": 173,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500090.4,
+    "y": 4420166.64
+   },
+   "id": 174,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500057.74,
+    "y": 4420113.19
+   },
+   "id": 175,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500196.13,
+    "y": 4420076.25
+   },
+   "id": 176,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500079.89,
+    "y": 4420137.92
+   },
+   "id": 177,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500005.55,
+    "y": 4420177.37
+   },
+   "id": 178,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500111.19,
+    "y": 4420074.37
+   },
+   "id": 179,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500075.21,
+    "y": 4420116.28
+   },
+   "id": 180,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500103.07,
+    "y": 4420135.2
+   },
+   "id": 181,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500012.09,
+    "y": 4420149.73
+   },
+   "id": 182,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500072.91,
+    "y": 4420137.24
+   },
+   "id": 183,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500030.4,
+    "y": 4420195.96
+   },
+   "id": 184,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500197.89,
+    "y": 4420047.42
+   },
+   "id": 185,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500050.05,
+    "y": 4420084.38
+   },
+   "id": 186,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500192.96,
+    "y": 4420026.59
+   },
+   "id": 187,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500159.75,
+    "y": 4420099.06
+   },
+   "id": 188,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500062.42,
+    "y": 4420005.38
+   },
+   "id": 189,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500062.39,
+    "y": 4420023.52
+   },
+   "id": 190,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500033.09,
+    "y": 4420157.6
+   },
+   "id": 191,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500021.67,
+    "y": 4420024.64
+   },
+   "id": 192,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500131.19,
+    "y": 4420172.14
+   },
+   "id": 193,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500107.55,
+    "y": 4420098.44
+   },
+   "id": 194,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500090.22,
+    "y": 4420061.11
+   },
+   "id": 195,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500131.94,
+    "y": 4420047.26
+   },
+   "id": 196,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500185.9,
+    "y": 4420028.74
+   },
+   "id": 197,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500152.11,
+    "y": 4420127.69
+   },
+   "id": 198,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500179.29,
+    "y": 4420168.52
+   },
+   "id": 199,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500017.02,
+    "y": 4420161.83
+   },
+   "id": 200,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500081.66,
+    "y": 4420120.2
+   },
+   "id": 201,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500091.05,
+    "y": 4420150.03
+   },
+   "id": 202,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500161.95,
+    "y": 4420103.91
+   },
+   "id": 203,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500121.02,
+    "y": 4420181.73
+   },
+   "id": 204,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500092.82,
+    "y": 4420199.53
+   },
+   "id": 205,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500085.97,
+    "y": 4420157.36
+   },
+   "id": 206,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500126.96,
+    "y": 4420092.2
+   },
+   "id": 207,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500047.46,
+    "y": 4420160.54
+   },
+   "id": 208,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500153.44,
+    "y": 4420198.15
+   },
+   "id": 209,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500134.1,
+    "y": 4420177.39
+   },
+   "id": 210,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500107.59,
+    "y": 4420118.56
+   },
+   "id": 211,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500171.74,
+    "y": 4420035.84
+   },
+   "id": 212,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500192.15,
+    "y": 4420154.17
+   },
+   "id": 213,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500193.31,
+    "y": 4420015.68
+   },
+   "id": 214,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500051.67,
+    "y": 4420048.61
+   },
+   "id": 215,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500187.93,
+    "y": 4420046.63
+   },
+   "id": 216,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500077.08,
+    "y": 4420112.04
+   },
+   "id": 217,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500152.04,
+    "y": 4420004.72
+   },
+   "id": 218,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500055.48,
+    "y": 4420139.79
+   },
+   "id": 219,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500001.13,
+    "y": 4420127.34
+   },
+   "id": 220,
+   "layerId": "olaylar",
+   "attrs": {
+    "Ağırlık": "4"
+   }
+  },
+  {
+   "kind": "line",
+   "a": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "b": {
+    "x": 100.0,
+    "y": 30.0
+   },
+   "id": 221,
+   "layerId": "yollar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 10.0,
+     "y": 60.0
+    },
+    {
+     "x": 50.0,
+     "y": 70.0
+    },
+    {
+     "x": 90.0,
+     "y": 55.0
+    }
+   ],
+   "bulges": [
+    0.0,
+    0.4
+   ],
+   "id": 222,
+   "layerId": "yollar",
+   "attrs": {
+    "Ağırlık": "2"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 20.0,
+     "y": 10.0
+    },
+    {
+     "x": 45.0,
+     "y": 12.0
+    },
+    {
+     "x": 40.0,
+     "y": 40.0
+    }
+   ],
+   "holes": [
+    {
+     "pts": [
+      {
+       "x": 30.0,
+       "y": 18.0
+      },
+      {
+       "x": 36.0,
+       "y": 20.0
+      },
+      {
+       "x": 33.0,
+       "y": 26.0
+      }
+     ]
+    }
+   ],
+   "id": 223,
+   "layerId": "yollar",
+   "attrs": {
+    "Ağırlık": "0,5"
+   }
+  },
+  {
+   "kind": "arc",
+   "c": {
+    "x": 70.0,
+    "y": 20.0
+   },
+   "r": 12.0,
+   "a0": 0.3,
+   "a1": 2.5,
+   "id": 224,
+   "layerId": "yollar",
+   "attrs": {
+    "Ağırlık": "1"
+   }
+  },
+  {
+   "kind": "circle",
+   "c": {
+    "x": 25.0,
+    "y": 85.0
+   },
+   "r": 7.5,
+   "id": 225,
+   "layerId": "yollar",
+   "attrs": {
+    "Ağırlık": "3"
+   }
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500010.0,
+    4.0,
+    1.5,
+    4420075.0,
+    1.0,
+    -4.5
+   ],
+   "width": 18,
+   "height": 14,
+   "bands": 1,
+   "sample": "f32",
+   "file": "izgara.tif",
+   "srid": 5254,
+   "style": {
+    "render": "gray",
+    "bands": [
+     1
+    ]
+   },
+   "id": 226,
+   "layerId": "izgara",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500000.0,
+    "y": 4420000.0
+   },
+   "z": 100.0,
+   "id": 227,
+   "layerId": "dogru",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500010.0,
+    "y": 4420005.0
+   },
+   "z": 101.0,
+   "id": 228,
+   "layerId": "dogru",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500020.0,
+    "y": 4420010.0
+   },
+   "z": 102.0,
+   "id": 229,
+   "layerId": "dogru",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500030.0,
+    "y": 4420015.0
+   },
+   "z": 103.0,
+   "id": 230,
+   "layerId": "dogru",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500040.0,
+    "y": 4420020.0
+   },
+   "z": 104.0,
+   "id": 231,
+   "layerId": "dogru",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500000.0,
+    "y": 4420100.0
+   },
+   "id": 232,
+   "layerId": "kotsuz",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500007.0,
+    "y": 4420103.0
+   },
+   "id": 233,
+   "layerId": "kotsuz",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500014.0,
+    "y": 4420112.0
+   },
+   "id": 234,
+   "layerId": "kotsuz",
+   "attrs": {}
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

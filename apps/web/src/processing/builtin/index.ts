@@ -14,6 +14,7 @@ import { joinByField } from './joinByField';
 import { selectByExpression } from './selectByExpression';
 import { selectByLocation } from './selectByLocation';
 import { summaryStatistics } from './summaryStatistics';
+import { INTERPOLATION_TOOLS } from './interpolation/tools';
 import { SURFACE_TOOLS } from './surface/tools';
 import { vertexNumbering } from './vertexNumbering';
 
@@ -41,4 +42,6 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   geometryReproject,
   // Yüzey analizi (docs/adr/0231): the raster core's jobs in the page's analysis worker.
   ...SURFACE_TOOLS,
+  // İnterpolasyon and Yoğunluk (docs/adr/0232): the raster core's point jobs, in the same worker.
+  ...INTERPOLATION_TOOLS,
 ];

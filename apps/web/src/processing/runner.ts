@@ -8,7 +8,7 @@ import { resolveFeatures, summarizeFeatures, type FeatureHost, type InputSummary
 import { withObjects } from './geometry';
 import { clientExecutor, type Executor, type FeatureRef, type RunJob } from './job';
 import { fileTable, isVisible, validateValues, type ValidationIssue } from './parameters';
-import type { DefaultsContext, ExecutionTarget, Feedback, FeaturesValue, FileValue, LayerParam, LayerValue, ProcessingTool, ProjectCrs, RunResult, TargetLayer } from './types';
+import type { DefaultsContext, ExecutionTarget, Feedback, FeaturesValue, FileValue, LayerParam, LayerValue, ProcessingTool, ProjectCrs, ProjectInfo, RunResult, TargetLayer } from './types';
 import { checkWrites } from './writeCheck';
 
 /**
@@ -136,6 +136,13 @@ export class ProcessingRunner {
   }
 
   /** The project's coordinate system for a run (docs/adr/0201 §8): its own system and datum choices; null without one. */
+  /** The project's SRID and type (docs/adr/0232). */
+  projectInfo(): ProjectInfo {
+    const settings = this.host.doc.settings;
+    const w = settings.workspace.value;
+    return { srid: settings.crs.value.srid, type: w === 'cad' || w === 'gis' ? w : null };
+  }
+
   projectCrs(): ProjectCrs | null {
     const settings = crsSettings(this.host.doc.settings);
     const own = ownSystem(settings);
@@ -268,7 +275,7 @@ export class ProcessingRunner {
     };
     // Resolve what depends on the host: features to ids, layers to a target (new layers are made only on apply).
     const jobValues: Record<string, unknown> = { ...values };
-    const newLayers = new Map<string, { name: string; def: LayerParam; above?: string }>();
+    const newLayers = new Map<string, { name: string; def: LayerParam; above?: string; below?: string }>();
     /** What resolving the inputs left out, said once the run starts. */
     const notes: string[] = [];
     let size = 0;
@@ -299,11 +306,14 @@ export class ProcessingRunner {
         jobValues[p.name] = t;
       }
     }
-    // A new layer named to go above a features input: the layer of that input's first object.
+    // A new layer named to go above or below a features input: the layer of that input's first object.
+    const layerOf = (param: string | undefined) => {
+      const first = param ? (jobValues[param] as FeatureRef | undefined)?.ids[0] : undefined;
+      return first === undefined ? undefined : this.host.doc.get(first)?.layerId;
+    };
     for (const plan of newLayers.values()) {
-      const ref = plan.def.above ? (jobValues[plan.def.above] as FeatureRef | undefined) : undefined;
-      const first = ref?.ids[0];
-      plan.above = first === undefined ? undefined : this.host.doc.get(first)?.layerId;
+      plan.above = layerOf(plan.def.above);
+      plan.below = layerOf(plan.def.below);
     }
     const executor = this.executorFor(tool, choice, size);
     if (!executor) {
@@ -321,6 +331,7 @@ export class ProcessingRunner {
       layers: layers.leaves().map((l) => [l.id, l.name] as const),
       fields: layers.leaves().flatMap((l) => (l.fields?.length ? [[l.id, l.fields] as const] : [])),
       crs: this.projectCrs(),
+      project: this.projectInfo(),
     };
 
     this.canceled = false;
@@ -390,7 +401,7 @@ export class ProcessingRunner {
   }
 
   /** Applies the ChangeSet in one undo step; locked layers are left alone and counted. */
-  private apply(tool: ProcessingTool, result: RunResult, newLayers: Map<string, { name: string; def: LayerParam; above?: string }>, log?: (level: 'info' | 'warn', message: string) => void): number[] {
+  private apply(tool: ProcessingTool, result: RunResult, newLayers: Map<string, { name: string; def: LayerParam; above?: string; below?: string }>, log?: (level: 'info' | 'warn', message: string) => void): number[] {
     const { doc } = this.host;
     const ch = result.changes;
     if (!ch) return [];
@@ -400,13 +411,23 @@ export class ProcessingRunner {
     // Removals, then updates, then additions, each as one change (the panels and the store hear it once).
     doc.transact(tool.label, () => {
       // Layers the run writes to but that do not exist yet: in the tool's step, so undo takes them too.
+      // New layers below one layer keep the run's order: each below the one before (Kriging's prediction right under
+      // its points, its error under that).
+      const under = new Map<string, number>();
       for (const e of ch.add ?? []) {
         const pending = newLayers.get(e.layerId);
         if (!pending || doc.layers.get(e.layerId)) continue;
-        // Right above the layer its plan names (its group, its place), else last.
+        // Right above or below the layer its plan names (its group, its place), else last.
         const over = pending.above && doc.layers.get(pending.above) ? pending.above : null;
-        const group = over ? doc.layers.parentOf(over) : null;
-        const index = over ? (group ? group.children : doc.layers.tree).findIndex((n) => n.id === over) : -1;
+        const below = !over && pending.below && doc.layers.get(pending.below) ? pending.below : null;
+        const anchor = over ?? below;
+        const group = anchor ? doc.layers.parentOf(anchor) : null;
+        let index = anchor ? (group ? group.children : doc.layers.tree).findIndex((n) => n.id === anchor) : -1;
+        if (below && index >= 0) {
+          const n = (under.get(below) ?? 0) + 1;
+          under.set(below, n);
+          index += n;
+        }
         doc.addLayer({ id: e.layerId, name: pending.name, style: pending.def.newLayerStyle }, group?.id ?? null, index >= 0 ? { index } : {});
       }
       const gone: number[] = [];

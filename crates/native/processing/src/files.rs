@@ -37,8 +37,24 @@ pub struct Beside<'a> {
     pub file: Option<&'a str>,
     pub url: Option<&'a str>,
     pub asset: Option<&'a str>,
+    /// A name for a source that is no file (an interpolation's points: their
+    /// layer's, docs/adr/0232 §13); the drawing's folder holds the result.
+    pub name: Option<&'a str>,
     /// The result's name when the source's leaves none (“bulut”, “raster”).
     pub fallback: &'static str,
+}
+
+impl<'a> Beside<'a> {
+    /// A result named after `name` (a layer's), in the drawing's folder.
+    pub fn named(name: &'a str, fallback: &'static str) -> Beside<'a> {
+        Beside {
+            file: None,
+            url: None,
+            asset: None,
+            name: Some(name),
+            fallback,
+        }
+    }
 }
 
 impl<'a> From<&'a CloudSource> for Beside<'a> {
@@ -47,6 +63,7 @@ impl<'a> From<&'a CloudSource> for Beside<'a> {
             file: s.file.as_deref(),
             url: s.url.as_deref(),
             asset: s.asset.as_deref(),
+            name: None,
             fallback: "bulut",
         }
     }
@@ -58,6 +75,7 @@ impl<'a> From<&'a RasterFields> for Beside<'a> {
             file: r.file.as_deref(),
             url: r.url.as_deref(),
             asset: r.asset.as_deref(),
+            name: None,
             fallback: "raster",
         }
     }
@@ -67,7 +85,12 @@ impl Beside<'_> {
     /// The file's stem as the result names take it: its name without its
     /// folder, query and known extension.
     pub fn stem(&self) -> String {
-        let full = self.file.or(self.url).or(self.asset).unwrap_or("");
+        let full = self
+            .file
+            .or(self.url)
+            .or(self.asset)
+            .or(self.name)
+            .unwrap_or("");
         let base = full.rsplit(['/', '\\']).next().unwrap_or(full);
         let base = base.split(['?', '#']).next().unwrap_or(base);
         let lower = base.to_ascii_lowercase();

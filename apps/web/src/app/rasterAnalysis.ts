@@ -1,4 +1,4 @@
-import { analyzeRaster } from '../io/rasterAnalysis';
+import { analyzePoints, analyzeRaster } from '../io/rasterAnalysis';
 import type { RasterEntity } from '../model/entities';
 import { hasRaster } from '../product/entitiesEdit';
 import { setRasterRunHost } from '../processing/rasterHost';
@@ -21,7 +21,8 @@ function download(blob: Blob, name: string): void {
 }
 
 /**
- * The page's host for the raster tools (Yüzey analizi, docs/adr/0231 §2; processing/rasterHost.ts): a raster's bytes
+ * The page's host for the raster tools (Yüzey analizi, docs/adr/0231 §2; İnterpolasyon and Yoğunluk, docs/adr/0232;
+ * processing/rasterHost.ts): a raster's bytes
  * from the raster service (the session's linked file, an embedded raster's library data), the job in a worker of its
  * own (io/rasterAnalysis.ts), and the result kept as ADR 0204 §8 keeps a raster: embedded in the project's library up
  * to 32 MB (an edit of the library, not an undo step), else the session's file of its name, downloaded.
@@ -37,6 +38,7 @@ export function installRasterAnalysis(ctx: AppContext): void {
       return { refused: r.asset ? `“${r.asset}” kimlikli raster projenin kitaplığında yok.` : `“${r.file}” bu oturumda verilmedi: rasteri seçip Öznitelikler'de Kaynağı yeniden seç ile dosyasını verin.` };
     },
     analyze: analyzeRaster,
+    analyzePoints,
     async keep(bytes, name, width, height) {
       if (bytes.length <= MOST_EMBEDDED) {
         const { sha256Hex, toBase64 } = await import('../product/sheet/store');

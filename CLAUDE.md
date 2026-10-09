@@ -131,6 +131,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
   başına bir çözümleme işçisinde (`raster-wasm`; sonuç gömülür ya da indirilir); `analysis.slope` ve `map.contours` araçları açar; CBS
   şeridinde Raster sekmesi (rasterler ve raster çözümleme kategorileri); çekirdek `kentos-raster`, GIS-32–36'nın da altyapısı (ADR 0231);
+  interpolasyon ve yoğunluk: İşlemler'in İnterpolasyon ve Yoğunluk kategorilerinde Ters uzaklık (IDW), Doğal komşu, Spline, Kriging (hata
+  yüzeyiyle), TIN'den raster, Çekirdek yoğunluğu, Çizgi yoğunluğu; noktaların ve çizgi ve alanların kotlu köşelerinden ya da alan değerinden,
+  çapraz doğrulama tablosu; sonuç girdinin katmanının hemen altında; geometri çekirdeğinde kesin Delaunay (`geom::delaunay`) (ADR 0232);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -399,6 +402,12 @@ python3 scripts/fixtures/surface_processing_cases.py --check   # yüzey araçlar
 cargo test --release -p kentos-raster --test all timing -- --ignored --nocapture --test-threads=1   # yüzey analizinin süreleri 4096² DEM'de, 8 ve 1 iş parçacığıyla (ADR 0231 §11)
 (cd apps/web && node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs)   # aynı işler tarayıcının çözümleme işçisinde, release WASM'la; DEM'leri GDAL bir kez .run/perf'e yazar (ADR 0231 §11)
 KENTOS_SHOTS_ONLY=yuzey-serit,yuzey-egim,yuzey-egim-cizim,yuzey-esyukselti-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # yüzey analizinin resimleri, .run/shots/arac-yuzey-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs surface); ADR 0231)
+python3 scripts/fixtures/delaunay_cases.py --check   # Delaunay üçgenlemesini qhull'un (matplotlib) üçgenleriyle ve Python'un kesirleriyle tam boş çember denetiminden geçmiş başvuruyla, dejenere kümelerde sayılarla denetle; durumlar fixtures/delaunay/v1/cases.json (ADR 0232 §4)
+python3 scripts/fixtures/interpolation_cases.py --check   # interpolasyonu ve yoğunluğu (noktaların toplanması, ızgara, IDW, TIN, Doğal komşu kesirli Voronoi'yle, Spline ve Kriging 40 basamaklı mpmath'le, variogram uydurması, çekirdek ve çizgi yoğunluğu, çapraz doğrulama) KentOS kodu olmadan denetle; IDW ve TIN GDAL'la çapraz denetlenir; birkaç dakika sürer; durumlar fixtures/interpolation/v1/cases.json (ADR 0232)
+python3 scripts/fixtures/bessel_k0.py --check   # Spline'ın K₀'ının Chebyshev katsayılarını mpmath'ten yeniden üretip çekirdekteki kopyayla karşılaştır (ADR 0232 §8)
+python3 scripts/fixtures/interpolation_processing_cases.py --check   # interpolasyon ve yoğunluğun İşlemler durumlarını denetle; yazılan dosyalar interpolasyon başvurusuna bağlı; durumlar fixtures/processing/v1/interpolation.json ve interpolation.kcad (ADR 0232 §13)
+cargo test --release -p kentos-raster --test all interpolation_timing -- --ignored --nocapture --test-threads=1   # 100 000 noktadan 2048² ızgarada yedi işin ve 10⁶ noktanın Delaunay'ının süreleri (ADR 0232 §14)
+KENTOS_SHOTS_ONLY=interp-serit,interp-idw-cizim,interp-capraz,yogunluk-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # interpolasyon ve yoğunluğun resimleri, .run/shots/arac-interp-*, arac-yogunluk-*, arac-cizgi-yogunlugu-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs interpolation); ADR 0232)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
 cargo test --release -p kentos-pointcloud --test all timing -- --ignored --nocapture   # aynı bulutta düğümün görünüşe göre çözülmesi (katman katman) ve LAZ yazma, tek ve dört iş parçacığıyla (önce perf::clouds dosyayı yazar; ADR 0207 §12)
@@ -1264,7 +1273,12 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `contour_cases.py` gdal_contour'la), WASM `crates/wasm/raster-wasm`; İşlemler'in `builtin/surface/`'u iki platformda, ev sahibinin
   `Files::open_raster`'ı, katman parametresinin `above`'u; masaüstünde `DesktopFiles::open_raster`, `rasters/tiles.rs`'in `open_reader`'ı; web'de
   `io/rasterAnalysis*.ts`, `processing/rasterHost.ts`, `app/rasterAnalysis.ts`; ortak durumlar `fixtures/processing/v1/surface.json`
-  (`surface_processing_cases.py`); süreler ADR'nin Doğrulama'sında. Dalda sıradaki `GIS-32`.
+  (`surface_processing_cases.py`); süreler ADR'nin Doğrulama'sında. `GIS-32` interpolasyon ve yoğunluk
+  ([ADR 0232](docs/adr/0232-interpolation-and-density.md)) tek parçada bitti (9 Ekim): geometri çekirdeğinde `predicates::incircle` ve
+  `geom::delaunay` (bağımsız başvuru `delaunay_cases.py`); raster çekirdeğinde `points`, `grid`, `index`, `solve`, `interp` (`natural`,
+  `spline`, `kriging`), `density`, `from_points` (bağımsız başvurular `interpolation_cases.py`, `bessel_k0.py`), WASM `PointAnalysis`;
+  İşlemler'in `builtin/interpolation/`'u iki platformda, katman parametresinin `below`'u, `Beside::named`, web RunContext'in `project`'i;
+  ortak durumlar `fixtures/processing/v1/interpolation.json` (`interpolation_processing_cases.py`). Dalda sıradaki `GIS-33`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

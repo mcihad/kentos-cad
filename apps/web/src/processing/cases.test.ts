@@ -30,7 +30,9 @@ import { contourObjects, fixtureRasterHost, level0, surfaceModulesBuilt, ulps } 
  * (`addedShapes`), and surface.json (docs/adr/0231), the raster tools run
  * with a host whose rasters are the cases' files: a written raster's level 0
  * is the independent surface reference's (fixtures/terrain/v1), the contour
- * lines the contour reference's (fixtures/contours/v1).
+ * lines the contour reference's (fixtures/contours/v1); interpolation.json
+ * (docs/adr/0232), its written rasters the interpolation reference's
+ * (fixtures/interpolation/v1), a second band its standard errors.
  */
 
 const files = import.meta.glob<string>('../../../../fixtures/processing/v1/*', { query: '?raw', import: 'default', eager: true });
@@ -67,6 +69,7 @@ const CASES = JSON.parse(file('cases.json')) as CaseFile;
 const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
 const SURFACE = JSON.parse(file('surface.json')) as CaseFile & { rasters: Record<string, string> };
+const INTERPOLATION = JSON.parse(file('interpolation.json')) as CaseFile;
 
 interface Formats {
   initSync(o: { module: BufferSource }): unknown;
@@ -293,7 +296,7 @@ describe('processing cases (fixtures/processing/v1)', () => {
   });
 
   // Each drawing's defaults (DefaultsContext) and each tool's default values on it, as the desktop must read them.
-  for (const [name, d] of [...Object.entries(CASES.documents), ...Object.entries(GEOMETRY.documents), ...Object.entries(SURFACE.documents)]) {
+  for (const [name, d] of [...Object.entries(CASES.documents), ...Object.entries(GEOMETRY.documents), ...Object.entries(SURFACE.documents), ...Object.entries(INTERPOLATION.documents)]) {
     it(`${name}: the defaults the tools take from the drawing`, () => {
       const runner = new ProcessingRunner({ doc: load(name), selectedIds: () => [], visibleBounds: () => null });
       expect(runner.defaults()).toEqual(d.defaults);
@@ -388,4 +391,48 @@ describe.skipIf(!surfaceModulesBuilt)('surface cases (fixtures/processing/v1/sur
     const s = await play(SURFACE, SURFACE.cases[0], 'client');
     expect(observed(s)).toMatchObject({ status: 'error', message: 'Bu araç rasterin dosyasını okuyup sonucu dosyaya yazar; bu ortamda dosya erişimi yok.' });
   });
+});
+
+describe.skipIf(!surfaceModulesBuilt)('interpolation cases (fixtures/processing/v1/interpolation.json, docs/adr/0232)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const reference = JSON.parse(new TextDecoder().decode(read('../../interpolation/v1/cases.json'))) as {
+    cases: { name: string; expect: { values: (number | null)[]; error?: (number | null)[] } }[];
+  };
+
+  it('is a v1 case file', () => {
+    expect([INTERPOLATION.format, INTERPOLATION.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of INTERPOLATION.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(new Map());
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { interpolationOf?: Record<string, string>; layerBelow?: Record<string, string> };
+        const seen = await play(INTERPOLATION, c, 'client');
+        // Each new layer right below the layer it names (its group, the place after it).
+        for (const [id, under] of Object.entries(want.layerBelow ?? {})) {
+          const layers = seen.doc.layers;
+          const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(under)?.id ?? null);
+          expect(siblings(id).findIndex((n) => n.id === id), `${c.id}: ${id} below ${under}`).toBe(siblings(under).findIndex((n) => n.id === under) + 1);
+        }
+        check(c, seen, INTERPOLATION.tolerance);
+        // Each written raster's level 0 is the interpolation reference's case of that name (a second band its errors).
+        const of = want.interpolationOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, caseName] of Object.entries(of)) {
+          const ref = reference.cases.find((t) => t.name === caseName)!.expect;
+          const got = await level0(written.get(name)!);
+          const two = !!ref.error && got.length === 2 * ref.values.length;
+          const values = two ? ref.values.flatMap((v, k) => [v, ref.error![k]]) : ref.values;
+          expect(got.length, `${c.id}: ${name}`).toBe(values.length);
+          const off = got.findIndex((g, k) => ulps(g, values[k] ?? NaN) > 1);
+          expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${values[off]}`).toBe(-1);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
+    });
+  }
 });

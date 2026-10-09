@@ -121,12 +121,13 @@ pub struct Job {
     run: RunFn,
 }
 
-/// A layer the run creates on apply: its name, its look and the layer it goes right above.
+/// A layer the run creates on apply: its name, its look and the layer it goes right above or below.
 #[derive(Clone, Debug)]
 struct NewLayerPlan {
     name: String,
     style: NewLayerStyle,
     above: Option<String>,
+    below: Option<String>,
 }
 
 impl Job {
@@ -531,6 +532,7 @@ impl Runner {
                     ParamKind::Layer {
                         new_layer_style,
                         above,
+                        below,
                     } => {
                         let Some(lv) = LayerValue::read(v) else {
                             continue;
@@ -544,6 +546,7 @@ impl Runner {
                                     style: new_layer_style.clone(),
                                     // The features parameter's name for now; its first object's layer below.
                                     above: above.clone(),
+                                    below: below.clone(),
                                 },
                             );
                         }
@@ -583,12 +586,14 @@ impl Runner {
                 record,
             });
         };
-        // A new layer named to go above a features input: the layer of that input's first object.
+        // A new layer named to go above or below a features input: the layer of that input's first object.
+        let layer_of = |param: String| {
+            let first = *inputs.get(&param)?.0.first()?;
+            Some(host.doc().get(first)?.base().layer_id.clone())
+        };
         for plan in new_layers.values_mut() {
-            plan.above = plan.above.take().and_then(|param| {
-                let first = *inputs.get(&param)?.0.first()?;
-                Some(host.doc().get(first)?.base().layer_id.clone())
-            });
+            plan.above = plan.above.take().and_then(layer_of);
+            plan.below = plan.below.take().and_then(layer_of);
         }
         self.canceled = false;
         for note in notes {
@@ -844,6 +849,9 @@ fn apply(
         // Layers the run writes to but that do not exist yet: in the tool's step, so undo takes them too.
         // Each run of one layer is asked once: a run adds hundreds of thousands of objects to a few layers.
         let mut asked: Option<&str> = None;
+        // New layers below one layer keep the run's order: each below the one before (Kriging's
+        // prediction right under its points, its error under that).
+        let mut under_count: BTreeMap<&str, usize> = BTreeMap::new();
         for e in &ch.add {
             let id = &e.base().layer_id;
             if asked == Some(id.as_str()) {
@@ -859,12 +867,19 @@ fn apply(
             let mut layer = NewLayer::layer(plan.name.clone());
             layer.id = Some(id.clone());
             layer.style = plan.style.over(default_style());
-            // Right above the layer its plan names (its group, its place), else last.
-            match plan
-                .above
-                .as_deref()
-                .and_then(|over| doc.layers().place_of(over))
-            {
+            // Right above or below the layer its plan names (its group, its place), else last.
+            let at = match (&plan.above, &plan.below) {
+                (Some(over), _) => doc.layers().place_of(over),
+                (None, Some(under)) => {
+                    let n = under_count.entry(under.as_str()).or_insert(0);
+                    *n += 1;
+                    doc.layers()
+                        .place_of(under)
+                        .map(|(group, index)| (group, index + *n))
+                }
+                (None, None) => None,
+            };
+            match at {
                 Some((group, index)) => doc
                     .add_layer_at(layer, group.as_deref(), Some(index), None, false)
                     .map_err(|r| r.0)?,

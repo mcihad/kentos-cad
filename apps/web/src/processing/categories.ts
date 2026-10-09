@@ -23,4 +23,7 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   { id: 'selection', label: 'Seçim', icon: 'select', description: 'Özniteliğe ve konuma göre seçim' },
   // docs/adr/0231: the DEM's surface (the desktop's `pointcloud` category is its own, docs/adr/0207 §7).
   { id: 'surface', label: 'Yüzey analizi', icon: 'hillshade', description: 'Eğim, bakı, kabartma, eğrilik, güneşlenme ve eş yükselti eğrileri' },
+  // docs/adr/0232: surfaces from points, densities.
+  { id: 'interpolation', label: 'İnterpolasyon', icon: 'idw', description: 'Noktalardan yüzey: IDW, doğal komşu, spline, kriging, TIN' },
+  { id: 'density', label: 'Yoğunluk', icon: 'kernelDensity', description: 'Noktaların ve çizgilerin yoğunluğu' },
 ];

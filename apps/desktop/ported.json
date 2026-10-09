@@ -382,7 +382,14 @@
     "processing.run.surface.insolation",
     "processing.run.surface.contours",
     "map.contours",
-    "analysis.slope"
+    "analysis.slope",
+    "processing.run.interpolation.idw",
+    "processing.run.interpolation.naturalNeighbor",
+    "processing.run.interpolation.spline",
+    "processing.run.interpolation.kriging",
+    "processing.run.interpolation.tin",
+    "processing.run.density.kernel",
+    "processing.run.density.line"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

@@ -9,6 +9,12 @@
 //! lines as typed arrays and their Kot texts. Numbers cross as typed arrays,
 //! settings and looks as JSON; a refusal throws an `Error` whose message is
 //! the core's Turkish words.
+//!
+//! A raster made from points or lines (docs/adr/0232) is [`PointAnalysis`]:
+//! the objects as JSON (a point's, a line's, a path's places and elevations;
+//! for Çizgi yoğunluğu the objects' geometry), each object's value or weight
+//! text, the settings; it is stepped as a raster analysis is, and gives its
+//! notes and the cross-validation's rows besides.
 
 use kentos_contracts::RasterSample;
 use kentos_formats::raster::source::{BlockNeed, Put, Reader};
@@ -324,5 +330,184 @@ impl Analysis {
             Some(s) => self.lines.iter().map(|l| s.level_text(l.value)).collect(),
             None => Vec::new(),
         }
+    }
+}
+
+/// A raster from points or lines under way (docs/adr/0232).
+#[wasm_bindgen]
+pub struct PointAnalysis {
+    job: Option<kentos_raster::PointJob>,
+    header: Vec<u8>,
+    grid: Vec<f64>,
+    bands: u32,
+    styles: [String; 2],
+    head: Vec<u8>,
+    notes: String,
+    rows: Vec<kentos_raster::from_points::CrossRow>,
+}
+
+#[wasm_bindgen]
+impl PointAnalysis {
+    /// `objects`: a JSON array of the objects (as the drawing holds them);
+    /// `values`: a JSON array of each one's text (or null), or `null`;
+    /// `spec`: `kentos_raster::from_points::PointSpec` JSON; `lines`: Çizgi yoğunluğu's input.
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        objects: &str,
+        values: &str,
+        spec: &str,
+        lines: bool,
+    ) -> Result<PointAnalysis, JsError> {
+        use kentos_geometry_core::api::json::{FromJson, Json};
+        use kentos_raster::PointInput;
+        let values: Option<Vec<Option<String>>> = serde_json::from_str(values)
+            .map_err(|e| JsError::new(&format!("Değerler okunamadı: {e}")))?;
+        let input = if lines {
+            let j = Json::parse(objects)
+                .map_err(|e| JsError::new(&format!("Nesneler okunamadı: {e}")))?;
+            let Json::Arr(list) = j else {
+                return Err(JsError::new("Nesneler bir liste olmalı."));
+            };
+            let shapes = list
+                .iter()
+                .map(|o| kentos_geometry_core::entity::Entity::from_json(o).map(|e| e.shape))
+                .collect::<Result<Vec<_>, String>>()
+                .map_err(fail)?;
+            PointInput::Lines {
+                shapes,
+                weights: values,
+            }
+        } else {
+            let sources: Vec<kentos_raster::points::Source> = serde_json::from_str(objects)
+                .map_err(|e| JsError::new(&format!("Nesneler okunamadı: {e}")))?;
+            PointInput::Sources { sources, values }
+        };
+        let spec: kentos_raster::PointSpec = serde_json::from_str(spec)
+            .map_err(|e| JsError::new(&format!("Çözümlemenin ayarları okunamadı: {e}")))?;
+        let (job, header) = kentos_raster::PointJob::new(input, &spec, 1).map_err(fail)?;
+        let g = job.grid();
+        let style = |b: u32| serde_json::to_string(&job.style(b)).unwrap_or_default();
+        Ok(PointAnalysis {
+            grid: g
+                .affine
+                .iter()
+                .copied()
+                .chain([f64::from(g.width), f64::from(g.height)])
+                .collect(),
+            bands: job.bands(),
+            styles: [style(1), style(2)],
+            job: Some(job),
+            header,
+            head: Vec::new(),
+            notes: String::new(),
+            rows: Vec::new(),
+        })
+    }
+
+    /// The bytes to write first (written over at the end by [`PointAnalysis::head`]).
+    pub fn header(&self) -> Vec<u8> {
+        self.header.clone()
+    }
+
+    /// The grid: its affine's six numbers, its width and height.
+    pub fn grid(&self) -> Vec<f64> {
+        self.grid.clone()
+    }
+
+    pub fn bands(&self) -> u32 {
+        self.bands
+    }
+
+    /// Band `band`'s look (`RasterStyle` JSON).
+    pub fn style(&self, band: u32) -> String {
+        self.styles[if band == 2 { 1 } else { 0 }].clone()
+    }
+
+    /// Works out the next strip (or piece of cross-validation): the bytes to append.
+    pub fn step(&mut self) -> Result<Vec<u8>, JsError> {
+        self.job
+            .as_mut()
+            .ok_or_else(|| JsError::new("Çözümleme bitti."))?
+            .step()
+            .map_err(fail)
+    }
+
+    pub fn done(&self) -> bool {
+        self.job.as_ref().is_none_or(kentos_raster::PointJob::done)
+    }
+
+    pub fn share(&self) -> f64 {
+        self.job
+            .as_ref()
+            .map_or(1.0, kentos_raster::PointJob::share)
+    }
+
+    /// Ends the job: the GeoTIFF's directories to append (its header then from [`PointAnalysis::head`]).
+    pub fn finish(&mut self) -> Result<Vec<u8>, JsError> {
+        let job = self
+            .job
+            .take()
+            .ok_or_else(|| JsError::new("Çözümleme bitti."))?;
+        let done = job.finish().map_err(fail)?;
+        let n = &done.notes;
+        let mut notes = serde_json::json!({
+            "taken": n.taken, "merged": n.merged, "unread": n.unread, "noElevation": n.no_elevation, "empty": n.empty,
+        });
+        if let Some(r) = n.radius {
+            notes["radius"] = serde_json::json!(r);
+        }
+        if let Some(g) = &n.variogram {
+            notes["variogram"] = serde_json::json!({ "model": g.model.name(), "nugget": g.nugget, "sill": g.sill, "range": g.range });
+        }
+        if !done.rows.is_empty() {
+            let s = kentos_raster::from_points::CrossSummary::of(&done.rows);
+            notes["cross"] = serde_json::json!({
+                "count": s.count, "missing": s.missing, "mean": s.mean, "rmse": s.rmse, "mae": s.mae,
+                "stdMean": s.std_mean, "stdRmse": s.std_rmse,
+            });
+        }
+        self.notes = notes.to_string();
+        self.head = done.header;
+        self.rows = done.rows;
+        Ok(done.tail)
+    }
+
+    /// The header to write over the result's first bytes.
+    pub fn head(&self) -> Vec<u8> {
+        self.head.clone()
+    }
+
+    /// What the run met (JSON): taken, merged, unread, noElevation, empty, radius, variogram, cross (its sums).
+    pub fn notes(&self) -> String {
+        self.notes.clone()
+    }
+
+    /// The cross-validation's rows: each point's place among the points.
+    #[wasm_bindgen(js_name = crossPoint)]
+    pub fn cross_point(&self) -> Vec<u32> {
+        self.rows.iter().map(|r| r.point).collect()
+    }
+
+    /// Each row's object (its place in the input).
+    #[wasm_bindgen(js_name = crossObject)]
+    pub fn cross_object(&self) -> Vec<u32> {
+        self.rows.iter().map(|r| r.object).collect()
+    }
+
+    /// Each row's x, y, measured, predicted (NaN: none) and standard error (NaN: none), five numbers a row.
+    #[wasm_bindgen(js_name = crossValues)]
+    pub fn cross_values(&self) -> Vec<f64> {
+        self.rows
+            .iter()
+            .flat_map(|r| {
+                [
+                    r.x,
+                    r.y,
+                    r.measured,
+                    r.predicted.unwrap_or(f64::NAN),
+                    r.error.unwrap_or(f64::NAN),
+                ]
+            })
+            .collect()
     }
 }

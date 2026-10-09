@@ -151,6 +151,11 @@ export interface LayerParam<N extends string = string> extends ParamBase<N> {
    * result over its source, docs/adr/0231 §2); otherwise last, drawn under the rest.
    */
   readonly above?: string;
+  /**
+   * A features parameter: a layer created for the output goes right below the layer of its first object (a surface
+   * under its points, docs/adr/0232 §13); several such below one layer keep the run's order.
+   */
+  readonly below?: string;
 }
 
 export interface PointParam<N extends string = string> extends ParamBase<N> {
@@ -308,6 +313,14 @@ export interface RunContext {
   field(layerId: string, name: string): LayerField | undefined;
   /** The project's coordinate system as the transforms read it (docs/adr/0201 §8); null without one. */
   readonly crs: ProjectCrs | null;
+  /** The project's SRID and type (a raster made from points takes them, docs/adr/0232). */
+  readonly project: ProjectInfo;
+}
+
+/** The project's SRID (0: none, or a definition of its own) and its type (null: not asked). */
+export interface ProjectInfo {
+  readonly srid: number;
+  readonly type: 'cad' | 'gis' | null;
 }
 
 /**

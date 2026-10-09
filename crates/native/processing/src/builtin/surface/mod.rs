@@ -148,7 +148,7 @@ pub fn one_raster<'a>(r: &Resolved<'a>) -> Result<&'a RasterEntity, Box<RunResul
 }
 
 /// The project's coordinate system as the raster core reads it; none for a local project.
-fn system_of(ctx: &RunContext<'_>) -> Option<Value> {
+pub(crate) fn system_of(ctx: &RunContext<'_>) -> Option<Value> {
     let system = kentos_project::systems::own(ctx.doc.settings())?.system?;
     serde_json::from_str(&kentos_geometry_core::api::json::to_string(&system)).ok()
 }
@@ -312,13 +312,19 @@ pub fn run_raster(
 }
 
 /// The host's files, or why a raster tool does not run here (boxed: a run's result is large).
-fn files_of(feedback: &dyn Feedback) -> Result<std::sync::Arc<dyn Files>, Box<RunResult>> {
+pub(crate) fn files_of(
+    feedback: &dyn Feedback,
+) -> Result<std::sync::Arc<dyn Files>, Box<RunResult>> {
     feedback
         .files()
         .ok_or_else(|| Box::new(RunResult::refused(NO_RASTER_FILES.to_owned())))
 }
 
-fn base(layer: &str, attrs: BTreeMap<String, String>, line_weight: Option<f64>) -> EntityBase {
+pub(crate) fn base(
+    layer: &str,
+    attrs: BTreeMap<String, String>,
+    line_weight: Option<f64>,
+) -> EntityBase {
     EntityBase {
         id: 0,
         layer_id: layer.to_owned(),

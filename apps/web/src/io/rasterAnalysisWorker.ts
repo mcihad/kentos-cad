@@ -1,7 +1,8 @@
-import type { AnalysisReply, AnalysisRequest } from './rasterAnalysisProtocol';
+import type { AnalysisReply, AnalysisRequest, PointRequest } from './rasterAnalysisProtocol';
 
 /**
- * A raster analysis worker (docs/adr/0231 §2, §11; started by io/rasterAnalysis.ts, one a job): the raster core's job
+ * A raster analysis worker (docs/adr/0231 §2, §11; a raster from points, docs/adr/0232; started by
+ * io/rasterAnalysis.ts, one a job): the raster core's job
  * (crates/wasm/raster-wasm, loaded here when the job starts) over the raster file's slices (`Blob.slice`), never the
  * whole file: a TIFF's header in the pieces it asks for, then a strip at a time the blocks the job names; a JPEG
  * block or image decoded by the browser (`createImageBitmap`), a PNG by the core. The result's parts are kept in
@@ -9,7 +10,7 @@ import type { AnalysisReply, AnalysisRequest } from './rasterAnalysisProtocol';
  * terminates it, nothing half-written reaches the drawing.
  */
 const scope = self as unknown as {
-  onmessage: ((e: MessageEvent<AnalysisRequest>) => void) | null;
+  onmessage: ((e: MessageEvent<AnalysisRequest | PointRequest>) => void) | null;
   postMessage(m: AnalysisReply, transfer?: Transferable[]): void;
 };
 
@@ -102,6 +103,43 @@ async function run(job: AnalysisRequest): Promise<void> {
   }
 }
 
+/** A raster made from points or lines (docs/adr/0232): the job stepped strip by strip, its parts kept in order. */
+async function points(job: PointRequest): Promise<void> {
+  const m = await load();
+  const a = new m.PointAnalysis(job.objects, job.values, job.spec, job.lines);
+  try {
+    const parts: Uint8Array[] = [a.header()];
+    let told = -1;
+    while (!a.done()) {
+      parts.push(a.step());
+      const share = a.share();
+      if (share - told >= 0.01) {
+        told = share;
+        scope.postMessage({ type: 'progress', share });
+      }
+    }
+    parts.push(a.finish());
+    const bytes = new Uint8Array(await new Blob(parts as unknown as BlobPart[]).arrayBuffer());
+    bytes.set(a.head(), 0);
+    const points = {
+      bytes,
+      grid: Array.from(a.grid()),
+      bands: a.bands(),
+      styles: [a.style(1), a.style(2)] as [string, string],
+      notes: a.notes(),
+      crossPoint: a.crossPoint(),
+      crossObject: a.crossObject(),
+      crossValues: a.crossValues(),
+    };
+    scope.postMessage({ type: 'done', points }, [bytes.buffer, points.crossPoint.buffer, points.crossObject.buffer, points.crossValues.buffer]);
+  } finally {
+    a.free();
+  }
+}
+
 scope.onmessage = (e) => {
-  run(e.data).catch((err: unknown) => scope.postMessage({ type: 'done', error: err instanceof Error ? err.message : String(err) }));
+  const job = e.data;
+  (job.type === 'points' ? points(job) : run(job)).catch((err: unknown) =>
+    scope.postMessage({ type: 'done', error: err instanceof Error ? err.message : String(err) }),
+  );
 };

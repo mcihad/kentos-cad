@@ -61,6 +61,8 @@ Beklentiler:
 | `rasterOf` | Yazılan raster dosyaları (yüzey analizi, ADR 0231): ad → yüzey analizinin bağımsız başvurusunda (`fixtures/terrain/v1/cases.json`, tepe) bir durumun adı; dosyanın 0. katı o durumun değerleridir (32 bitte en çok bir birim son basamakta, baytta tam) ve başka dosya yazılmamıştır |
 | `contoursOf` | Eklenen nesneler eğri başvurusunun (`fixtures/contours/v1/cases.json`) bu sıradaki durumunun eğrileridir, sırasıyla: çoklu çizgi, köşeleri `tolerance` içinde, her köşenin kotu düzey, `Kot` durumun yazısı, `Tür` Ana ya da Ara, ana eğride `lineWeight` 0,35 (`added`'in yerine) |
 | `layerAbove` | Yeni katman → katman: yeni katman o katmanın hemen üstündedir (aynı grup, bir önceki yer) |
+| `layerBelow` | Yeni katman → katman: yeni katman o katmanın hemen altındadır (aynı grup, bir sonraki yer; interpolasyon, ADR 0232) |
+| `interpolationOf` | Yazılan raster dosyaları (interpolasyon ve yoğunluk, ADR 0232): ad → interpolasyonun bağımsız başvurusunda (`fixtures/interpolation/v1/cases.json`) bir durumun adı; dosyanın 0. katı o durumun `values`'ı, iki bantta ikinci bant `error`'u (32 bitte en çok bir birim son basamakta); başka dosya yazılmamıştır |
 
 ## Karşılaştırma kuralları
 

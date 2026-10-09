@@ -562,6 +562,14 @@ pub const PORTED: &[&str] = &[
     "processing.run.surface.contours",
     "map.contours",
     "analysis.slope",
+    // docs/adr/0232: İnterpolasyon and Yoğunluk, İşlemler's tools on both platforms.
+    "processing.run.interpolation.idw",
+    "processing.run.interpolation.naturalNeighbor",
+    "processing.run.interpolation.spline",
+    "processing.run.interpolation.kriging",
+    "processing.run.interpolation.tin",
+    "processing.run.density.kernel",
+    "processing.run.density.line",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the
