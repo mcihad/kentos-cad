@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { analyzeHere, analyzePointsHere, level0, surfaceModulesBuilt, ulps } from '../processing/surfaceTesting';
+import { analyzeHere, analyzeOpsHere, analyzePointsHere, level0, surfaceModulesBuilt, ulps } from '../processing/surfaceTesting';
 
 /**
  * The raster analyses as the browser runs them (docs/adr/0231): the raster analysis module (crates/wasm/raster-wasm →
@@ -8,7 +8,9 @@ import { analyzeHere, analyzePointsHere, level0, surfaceModulesBuilt, ulps } fro
  * (scripts/fixtures/terrain_cases.py; a 32-bit sample within one unit in the last place, a byte exact) and the
  * contours' (scripts/fixtures/contour_cases.py; the points bit for bit, the Kot texts), and the interpolations' and
  * densities' (scripts/fixtures/interpolation_cases.py, docs/adr/0232: a 32-bit cell within one unit in the last place,
- * each point's cross-validation within the method's bound). Skipped only when the packages have not been built.
+ * each point's cross-validation within the method's bound), and the raster operations' (scripts/fixtures/raster_ops_cases.py,
+ * docs/adr/0233: each sample by its case's rule, the zones' figures, the histograms, the refusals). Skipped only when the
+ * packages have not been built.
  */
 
 type Bytes = Uint8Array<ArrayBuffer>;
@@ -133,6 +135,145 @@ describe.skipIf(!surfaceModulesBuilt)('raster analysis module (crates/wasm/raste
         else expect(Math.abs(gv - wv), `point ${k}: ${gv} for ${wv}`).toBeLessThanOrEqual(tol * Math.max(1, Math.abs(wv)));
         if (we !== null && we !== undefined) expect(Math.abs(out.crossValues[5 * k + 4] - we), `point ${k}'s error`).toBeLessThanOrEqual(tol * Math.max(1, Math.abs(we)));
       });
+    });
+  }
+});
+
+interface OpsInput {
+  affine: number[];
+  width: number;
+  height: number;
+  bands: number;
+  sample: string;
+  nodata: 'nan' | number | null;
+  alpha: boolean;
+  values: (number | null)[];
+  name: string;
+}
+interface OpsCase {
+  name: string;
+  tool: unknown;
+  inputs: OpsInput[];
+  shapes: unknown[];
+  expect: {
+    refused?: string;
+    raster?: { width: number; height: number; bands: number; affine: number[]; rule: string; values: (number | null)[] };
+    zones?: { n: number; value: number | null; rule: string }[];
+    histogram?: { lo: number; hi: number; counts: number[]; below: number; above: number; valid: number; empty: number };
+  };
+}
+
+/**
+ * A reference input as an uncompressed TIFF in one strip: a 32-bit float band (its nodata the GDAL_NODATA tag) or bytes
+ * (three bands RGB). The core reads its own tiled files (crates/shared/raster/tests/all/raster_ops.rs) and these alike;
+ * the place is the run's, from the settings.
+ */
+function tiffOf(r: OpsInput): Uint8Array {
+  if (r.alpha || !((r.sample === 'f32' && r.bands === 1) || (r.sample === 'u8' && (r.bands === 1 || r.bands === 3)))) throw new Error(`${r.name}: not an input this writer makes`);
+  const float = r.sample === 'f32';
+  const strip = new Uint8Array(r.width * r.height * r.bands * (float ? 4 : 1));
+  const sv = new DataView(strip.buffer);
+  r.values.forEach((v, k) => (float ? sv.setFloat32(4 * k, v ?? NaN, true) : (strip[k] = v ?? 0)));
+  const nodata = r.nodata === null ? null : String(r.nodata);
+  // [tag, type (2 ASCII, 3 SHORT, 4 LONG), values]; the strip's offset is filled in below.
+  const tags: [number, 2 | 3 | 4, number[] | string][] = [
+    [256, 4, [r.width]],
+    [257, 4, [r.height]],
+    [258, 3, Array<number>(r.bands).fill(float ? 32 : 8)],
+    [259, 3, [1]],
+    [262, 3, [r.bands === 3 ? 2 : 1]],
+    [273, 4, [0]],
+    [277, 3, [r.bands]],
+    [278, 4, [r.height]],
+    [279, 4, [strip.length]],
+    [284, 3, [1]],
+    [339, 3, Array<number>(r.bands).fill(float ? 3 : 1)],
+    ...(nodata === null ? [] : [[42113, 2, `${nodata}\0`] as [number, 2, string]]),
+  ];
+  const width = (t: 2 | 3 | 4) => (t === 2 ? 1 : t === 3 ? 2 : 4);
+  const ifdEnd = 8 + 2 + 12 * tags.length + 4;
+  let extra = ifdEnd;
+  const places = tags.map(([, t, v]) => {
+    const n = v.length * width(t);
+    if (n <= 4) return -1;
+    const at = extra;
+    extra += n + (n & 1);
+    return at;
+  });
+  const data = extra;
+  const out = new Uint8Array(data + strip.length);
+  const dv = new DataView(out.buffer);
+  out.set([0x49, 0x49, 42, 0, 8, 0, 0, 0]);
+  dv.setUint16(8, tags.length, true);
+  const put = (at: number, t: 2 | 3 | 4, v: number[] | string) => {
+    if (typeof v === 'string') for (let k = 0; k < v.length; k++) out[at + k] = v.charCodeAt(k);
+    else v.forEach((x, k) => (t === 3 ? dv.setUint16(at + 2 * k, x, true) : dv.setUint32(at + 4 * k, x, true)));
+  };
+  tags.forEach(([tag, t, v], k) => {
+    const e = 10 + 12 * k;
+    dv.setUint16(e, tag, true);
+    dv.setUint16(e + 2, t, true);
+    dv.setUint32(e + 4, v.length, true);
+    put(places[k] < 0 ? e + 8 : places[k], t, tag === 273 ? [data] : v);
+    if (places[k] >= 0) dv.setUint32(e + 8, places[k], true);
+  });
+  out.set(strip, data);
+  return out;
+}
+
+/** The units in the last place between two doubles (sign apart: as far as they come). */
+function ulps64(a: number, b: number): number {
+  const key = (v: number) => {
+    const i = new DataView(new Float64Array([v]).buffer).getBigInt64(0, true);
+    return i < 0n ? -9223372036854775808n - i : i;
+  };
+  const d = key(a) - key(b);
+  return Number(d < 0n ? -d : d);
+}
+
+/** A sample against the reference's by its rule (`exact`: bit for bit; `sum`: one unit in the last place of the result's type, two in float64, one in an integer). */
+function meets(got: number, want: number, rule: string, sample: string): boolean {
+  if (Number.isNaN(got) || Number.isNaN(want)) return Number.isNaN(got) && Number.isNaN(want);
+  if (rule === 'exact') return Object.is(got, want) || got === want;
+  if (sample === 'f32') return ulps(got, want) <= 1;
+  if (sample === 'f64') return ulps64(got, want) <= 2;
+  return Math.abs(got - want) <= 1;
+}
+
+describe.skipIf(!surfaceModulesBuilt)('raster operations in the module (crates/wasm/raster-wasm, docs/adr/0233)', () => {
+  const ops = json<{ cases: OpsCase[] }>('raster-ops/v1/cases.json');
+
+  it('reads every case', () => {
+    expect(ops.cases.length).toBeGreaterThanOrEqual(70);
+  });
+
+  for (const c of ops.cases) {
+    it(`raster operation: ${c.name}`, async () => {
+      const spec = JSON.stringify({ tool: c.tool, inputs: c.inputs.map((r) => ({ affine: r.affine, name: r.name })) });
+      const run = analyzeOpsHere(c.inputs.map(tiffOf), spec, JSON.stringify(c.shapes));
+      if (c.expect.refused) {
+        await expect(run).rejects.toThrow(c.expect.refused);
+        return;
+      }
+      const out = await run;
+      const raster = c.expect.raster;
+      if (raster) {
+        expect([out.grid[6], out.grid[7], out.bands]).toEqual([raster.width, raster.height, raster.bands]);
+        expect(out.grid.slice(0, 6)).toEqual(raster.affine);
+        const got = await level0(out.bytes!);
+        expect(got.length).toBe(raster.values.length);
+        const off = got.findIndex((g, k) => !meets(g, raster.values[k] ?? NaN, raster.rule, out.sample));
+        expect(off, `sample ${off}: ${got[off]} for ${raster.values[off]}`).toBe(-1);
+      }
+      if (c.expect.zones) {
+        const z = out.zones!;
+        expect(z.length).toBe(7 * c.expect.zones.length);
+        c.expect.zones.forEach((w, k) => {
+          expect(z[7 * k], `zone ${k}'s count`).toBe(w.n);
+          expect(meets(z[7 * k + 1], w.value ?? NaN, w.rule, 'f64'), `zone ${k}: ${z[7 * k + 1]} for ${w.value}`).toBe(true);
+        });
+      }
+      if (c.expect.histogram) expect(JSON.parse(out.histogram!)).toMatchObject(c.expect.histogram);
     });
   }
 });

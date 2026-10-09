@@ -11,6 +11,7 @@ pub mod models;
 pub mod numbering;
 pub mod pointcloud;
 pub mod queries;
+pub mod raster_ops;
 pub mod select_by_expression;
 pub mod select_by_location;
 pub mod summary_statistics;
@@ -70,6 +71,16 @@ pub fn tools() -> Vec<Tool> {
         interpolation::tin(),
         interpolation::kernel_density(),
         interpolation::line_density(),
+        // Raster işlemleri and Raster istatistiği (docs/adr/0233): both platforms.
+        raster_ops::calculator(),
+        raster_ops::reclassify(),
+        raster_ops::clip_by_mask(),
+        raster_ops::mosaic(),
+        raster_ops::resample(),
+        raster_ops::zonal_statistics(),
+        raster_ops::histogram(),
+        raster_ops::focal_statistics(),
+        raster_ops::cell_statistics(),
     ]
 }
 

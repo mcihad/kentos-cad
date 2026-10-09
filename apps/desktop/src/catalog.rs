@@ -570,6 +570,16 @@ pub const PORTED: &[&str] = &[
     "processing.run.interpolation.tin",
     "processing.run.density.kernel",
     "processing.run.density.line",
+    // Raster işlemleri and Raster istatistiği (docs/adr/0233).
+    "processing.run.raster.calculator",
+    "processing.run.raster.reclassify",
+    "processing.run.raster.clipByMask",
+    "processing.run.raster.mosaic",
+    "processing.run.raster.resample",
+    "processing.run.raster.zonalStatistics",
+    "processing.run.raster.histogram",
+    "processing.run.raster.focalStatistics",
+    "processing.run.raster.cellStatistics",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

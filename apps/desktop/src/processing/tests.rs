@@ -598,7 +598,7 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     assert_eq!(app.processing.panel.tab, Tab::Tools);
     // The web's 35 (Yüzey analizi's eight, docs/adr/0231, İnterpolasyon and Yoğunluk's seven, docs/adr/0232,
     // among them) and the nine point cloud tools, the desktop's own for now (docs/adr/0207 §7).
-    assert_eq!(app.processing_meta(), "44 araç");
+    assert_eq!(app.processing_meta(), "53 araç");
     // Turkish letters folded: “kose numara” finds Köşe noktalarını numarala only (as the web's test).
     event(
         &mut app,

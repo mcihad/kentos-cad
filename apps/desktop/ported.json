@@ -389,7 +389,16 @@
     "processing.run.interpolation.kriging",
     "processing.run.interpolation.tin",
     "processing.run.density.kernel",
-    "processing.run.density.line"
+    "processing.run.density.line",
+    "processing.run.raster.calculator",
+    "processing.run.raster.reclassify",
+    "processing.run.raster.clipByMask",
+    "processing.run.raster.mosaic",
+    "processing.run.raster.resample",
+    "processing.run.raster.zonalStatistics",
+    "processing.run.raster.histogram",
+    "processing.run.raster.focalStatistics",
+    "processing.run.raster.cellStatistics"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

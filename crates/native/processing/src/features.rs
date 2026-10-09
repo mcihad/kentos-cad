@@ -4,9 +4,9 @@
 //! from the host, so this stays free of UI and viewport.
 
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
-use kentos_contracts::Entity;
+use kentos_contracts::{Entity, RasterEntity};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::Store;
@@ -261,10 +261,27 @@ pub fn summarize_features(
             *counts.entry(k.as_str()).or_default() += 1;
         }
     }
-    let mut fields: Vec<(String, usize)> = counts
+    let mut counts: BTreeMap<String, usize> = counts
         .into_iter()
         .map(|(name, n)| (name.to_owned(), n))
         .collect();
+    // A raster's bands are what an expression names it by (Raster hesaplayıcı, docs/adr/0233 §3).
+    let mut rasters: Vec<&RasterEntity> = set
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Raster(x) => Some(x),
+            _ => None,
+        })
+        .collect();
+    raster_order(&mut rasters, host.doc());
+    for (x, name) in rasters.iter().zip(raster_names(&rasters, host.doc())) {
+        for b in 2..=x.raster.bands {
+            counts.insert(format!("{name}@{b}"), 1);
+        }
+        counts.insert(name, 1);
+    }
+    let mut fields: Vec<(String, usize)> = counts.into_iter().collect();
     fields.sort_by(|a, b| match b.1.cmp(&a.1) {
         Ordering::Equal => compare_tr(&a.0, &b.0),
         other => other,
@@ -276,6 +293,52 @@ pub fn summarize_features(
         fields,
         rows: false,
     }
+}
+
+/// Rasters in a raster operation's order (docs/adr/0233 §2): the layers
+/// from the top of the panel down, on a layer the one drawn later first
+/// (the web's `rasterRun`).
+pub fn raster_order(list: &mut [&RasterEntity], doc: &Document) {
+    if list.len() < 2 {
+        return;
+    }
+    let layers: HashMap<&str, usize> = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .enumerate()
+        .map(|(k, l)| (l.id.as_str(), k))
+        .collect();
+    list.sort_by_key(|x| {
+        (
+            layers
+                .get(x.base.layer_id.as_str())
+                .copied()
+                .unwrap_or(usize::MAX),
+            std::cmp::Reverse(doc.place(Slot(x.base.id)).unwrap_or(0)),
+        )
+    });
+}
+
+/// The names an expression reads rasters in that order by (docs/adr/0233
+/// §3): the layer's; a second raster on a layer `Ad (2)`, and so on.
+pub fn raster_names(list: &[&RasterEntity], doc: &Document) -> Vec<String> {
+    let mut seen: HashMap<String, usize> = HashMap::new();
+    list.iter()
+        .map(|x| {
+            let name = doc
+                .layers()
+                .get(&x.base.layer_id)
+                .map_or_else(|| x.base.layer_id.clone(), |l| l.name.clone());
+            let n = seen.entry(name.clone()).or_insert(0);
+            *n += 1;
+            if *n == 1 {
+                name
+            } else {
+                format!("{name} ({n})")
+            }
+        })
+        .collect()
 }
 
 /// Where the tool looked, as a sentence start ("Seçili nesneler arasında uygun nesne yok").

@@ -1452,6 +1452,14 @@
             "label": "tamsayı"
           },
           {
+            "caret": 4,
+            "detail": "tan(açı)",
+            "insert": "tan()",
+            "key": "func:tan",
+            "kind": "function",
+            "label": "tan"
+          },
+          {
             "caret": 6,
             "detail": "tavan(sayı)",
             "insert": "tavan()",
@@ -1668,6 +1676,38 @@
             "label": "ve"
           },
           {
+            "caret": 5,
+            "detail": "acos(sayı)",
+            "insert": "acos()",
+            "key": "func:acos",
+            "kind": "function",
+            "label": "acos"
+          },
+          {
+            "caret": 5,
+            "detail": "asin(sayı)",
+            "insert": "asin()",
+            "key": "func:asin",
+            "kind": "function",
+            "label": "asin"
+          },
+          {
+            "caret": 5,
+            "detail": "atan(sayı)",
+            "insert": "atan()",
+            "key": "func:atan",
+            "kind": "function",
+            "label": "atan"
+          },
+          {
+            "caret": 6,
+            "detail": "atan2(y, x)",
+            "insert": "atan2()",
+            "key": "func:atan2",
+            "kind": "function",
+            "label": "atan2"
+          },
+          {
             "caret": 7,
             "detail": "başlar(metin, aranan)",
             "insert": "başlar()",
@@ -1716,12 +1756,28 @@
             "label": "büyük"
           },
           {
+            "caret": 4,
+            "detail": "cos(açı)",
+            "insert": "cos()",
+            "key": "func:cos",
+            "kind": "function",
+            "label": "cos"
+          },
+          {
             "caret": 9,
             "detail": "değiştir(metin, aranan, yeni)",
             "insert": "değiştir()",
             "key": "func:değiştir",
             "kind": "function",
             "label": "değiştir"
+          },
+          {
+            "caret": 7,
+            "detail": "derece(radyan)",
+            "insert": "derece()",
+            "key": "func:derece",
+            "kind": "function",
+            "label": "derece"
           },
           {
             "caret": 7,
@@ -1772,6 +1828,30 @@
             "label": "küçük"
           },
           {
+            "caret": 3,
+            "detail": "ln(sayı)",
+            "insert": "ln()",
+            "key": "func:ln",
+            "kind": "function",
+            "label": "ln"
+          },
+          {
+            "caret": 4,
+            "detail": "log(taban, sayı)",
+            "insert": "log()",
+            "key": "func:log",
+            "kind": "function",
+            "label": "log"
+          },
+          {
+            "caret": 6,
+            "detail": "log10(sayı)",
+            "insert": "log10()",
+            "key": "func:log10",
+            "kind": "function",
+            "label": "log10"
+          },
+          {
             "caret": 4,
             "detail": "max(a, b, …)",
             "insert": "max()",
@@ -1820,6 +1900,14 @@
             "label": "pi"
           },
           {
+            "caret": 7,
+            "detail": "radyan(derece)",
+            "insert": "radyan()",
+            "key": "func:radyan",
+            "kind": "function",
+            "label": "radyan"
+          },
+          {
             "caret": 4,
             "detail": "sağ(metin, uzunluk)",
             "insert": "sağ()",
@@ -1842,6 +1930,14 @@
             "key": "func:sayı",
             "kind": "function",
             "label": "sayı"
+          },
+          {
+            "caret": 4,
+            "detail": "sin(açı)",
+            "insert": "sin()",
+            "key": "func:sin",
+            "kind": "function",
+            "label": "sin"
           },
           {
             "caret": 4,
@@ -1868,6 +1964,14 @@
             "label": "tamsayı"
           },
           {
+            "caret": 4,
+            "detail": "tan(açı)",
+            "insert": "tan()",
+            "key": "func:tan",
+            "kind": "function",
+            "label": "tan"
+          },
+          {
             "caret": 6,
             "detail": "tavan(sayı)",
             "insert": "tavan()",
@@ -1882,6 +1986,14 @@
             "key": "func:uzunluk",
             "kind": "function",
             "label": "uzunluk"
+          },
+          {
+            "caret": 6,
+            "detail": "üstel(sayı)",
+            "insert": "üstel()",
+            "key": "func:üstel",
+            "kind": "function",
+            "label": "üstel"
           },
           {
             "caret": 11,
@@ -2243,6 +2355,38 @@
             "label": "ve"
           },
           {
+            "caret": 5,
+            "detail": "acos(sayı)",
+            "insert": "acos()",
+            "key": "func:acos",
+            "kind": "function",
+            "label": "acos"
+          },
+          {
+            "caret": 5,
+            "detail": "asin(sayı)",
+            "insert": "asin()",
+            "key": "func:asin",
+            "kind": "function",
+            "label": "asin"
+          },
+          {
+            "caret": 5,
+            "detail": "atan(sayı)",
+            "insert": "atan()",
+            "key": "func:atan",
+            "kind": "function",
+            "label": "atan"
+          },
+          {
+            "caret": 6,
+            "detail": "atan2(y, x)",
+            "insert": "atan2()",
+            "key": "func:atan2",
+            "kind": "function",
+            "label": "atan2"
+          },
+          {
             "caret": 7,
             "detail": "başlar(metin, aranan)",
             "insert": "başlar()",
@@ -2291,12 +2435,28 @@
             "label": "büyük"
           },
           {
+            "caret": 4,
+            "detail": "cos(açı)",
+            "insert": "cos()",
+            "key": "func:cos",
+            "kind": "function",
+            "label": "cos"
+          },
+          {
             "caret": 9,
             "detail": "değiştir(metin, aranan, yeni)",
             "insert": "değiştir()",
             "key": "func:değiştir",
             "kind": "function",
             "label": "değiştir"
+          },
+          {
+            "caret": 7,
+            "detail": "derece(radyan)",
+            "insert": "derece()",
+            "key": "func:derece",
+            "kind": "function",
+            "label": "derece"
           },
           {
             "caret": 7,
@@ -2347,6 +2507,30 @@
             "label": "küçük"
           },
           {
+            "caret": 3,
+            "detail": "ln(sayı)",
+            "insert": "ln()",
+            "key": "func:ln",
+            "kind": "function",
+            "label": "ln"
+          },
+          {
+            "caret": 4,
+            "detail": "log(taban, sayı)",
+            "insert": "log()",
+            "key": "func:log",
+            "kind": "function",
+            "label": "log"
+          },
+          {
+            "caret": 6,
+            "detail": "log10(sayı)",
+            "insert": "log10()",
+            "key": "func:log10",
+            "kind": "function",
+            "label": "log10"
+          },
+          {
             "caret": 4,
             "detail": "max(a, b, …)",
             "insert": "max()",
@@ -2395,6 +2579,14 @@
             "label": "pi"
           },
           {
+            "caret": 7,
+            "detail": "radyan(derece)",
+            "insert": "radyan()",
+            "key": "func:radyan",
+            "kind": "function",
+            "label": "radyan"
+          },
+          {
             "caret": 4,
             "detail": "sağ(metin, uzunluk)",
             "insert": "sağ()",
@@ -2417,6 +2609,14 @@
             "key": "func:sayı",
             "kind": "function",
             "label": "sayı"
+          },
+          {
+            "caret": 4,
+            "detail": "sin(açı)",
+            "insert": "sin()",
+            "key": "func:sin",
+            "kind": "function",
+            "label": "sin"
           },
           {
             "caret": 4,
@@ -2443,6 +2643,14 @@
             "label": "tamsayı"
           },
           {
+            "caret": 4,
+            "detail": "tan(açı)",
+            "insert": "tan()",
+            "key": "func:tan",
+            "kind": "function",
+            "label": "tan"
+          },
+          {
             "caret": 6,
             "detail": "tavan(sayı)",
             "insert": "tavan()",
@@ -2457,6 +2665,14 @@
             "key": "func:uzunluk",
             "kind": "function",
             "label": "uzunluk"
+          },
+          {
+            "caret": 6,
+            "detail": "üstel(sayı)",
+            "insert": "üstel()",
+            "key": "func:üstel",
+            "kind": "function",
+            "label": "üstel"
           },
           {
             "caret": 11,
@@ -6479,12 +6695,84 @@
           "group": "math",
           "items": [
             {
+              "caret": 5,
+              "detail": "acos(sayı)",
+              "insert": "acos()",
+              "key": "func:acos",
+              "kind": "function",
+              "label": "acos"
+            },
+            {
+              "caret": 5,
+              "detail": "asin(sayı)",
+              "insert": "asin()",
+              "key": "func:asin",
+              "kind": "function",
+              "label": "asin"
+            },
+            {
+              "caret": 5,
+              "detail": "atan(sayı)",
+              "insert": "atan()",
+              "key": "func:atan",
+              "kind": "function",
+              "label": "atan"
+            },
+            {
+              "caret": 6,
+              "detail": "atan2(y, x)",
+              "insert": "atan2()",
+              "key": "func:atan2",
+              "kind": "function",
+              "label": "atan2"
+            },
+            {
+              "caret": 4,
+              "detail": "cos(açı)",
+              "insert": "cos()",
+              "key": "func:cos",
+              "kind": "function",
+              "label": "cos"
+            },
+            {
+              "caret": 7,
+              "detail": "derece(radyan)",
+              "insert": "derece()",
+              "key": "func:derece",
+              "kind": "function",
+              "label": "derece"
+            },
+            {
               "caret": 4,
               "detail": "kök(sayı)",
               "insert": "kök()",
               "key": "func:kök",
               "kind": "function",
               "label": "kök"
+            },
+            {
+              "caret": 3,
+              "detail": "ln(sayı)",
+              "insert": "ln()",
+              "key": "func:ln",
+              "kind": "function",
+              "label": "ln"
+            },
+            {
+              "caret": 4,
+              "detail": "log(taban, sayı)",
+              "insert": "log()",
+              "key": "func:log",
+              "kind": "function",
+              "label": "log"
+            },
+            {
+              "caret": 6,
+              "detail": "log10(sayı)",
+              "insert": "log10()",
+              "key": "func:log10",
+              "kind": "function",
+              "label": "log10"
             },
             {
               "caret": 4,
@@ -6519,6 +6807,22 @@
               "label": "pi"
             },
             {
+              "caret": 7,
+              "detail": "radyan(derece)",
+              "insert": "radyan()",
+              "key": "func:radyan",
+              "kind": "function",
+              "label": "radyan"
+            },
+            {
+              "caret": 4,
+              "detail": "sin(açı)",
+              "insert": "sin()",
+              "key": "func:sin",
+              "kind": "function",
+              "label": "sin"
+            },
+            {
               "caret": 6,
               "detail": "taban(sayı)",
               "insert": "taban()",
@@ -6527,12 +6831,28 @@
               "label": "taban"
             },
             {
+              "caret": 4,
+              "detail": "tan(açı)",
+              "insert": "tan()",
+              "key": "func:tan",
+              "kind": "function",
+              "label": "tan"
+            },
+            {
               "caret": 6,
               "detail": "tavan(sayı)",
               "insert": "tavan()",
               "key": "func:tavan",
               "kind": "function",
               "label": "tavan"
+            },
+            {
+              "caret": 6,
+              "detail": "üstel(sayı)",
+              "insert": "üstel()",
+              "key": "func:üstel",
+              "kind": "function",
+              "label": "üstel"
             },
             {
               "caret": 8,
@@ -7174,12 +7494,84 @@
           "group": "math",
           "items": [
             {
+              "caret": 5,
+              "detail": "acos(sayı)",
+              "insert": "acos()",
+              "key": "func:acos",
+              "kind": "function",
+              "label": "acos"
+            },
+            {
+              "caret": 5,
+              "detail": "asin(sayı)",
+              "insert": "asin()",
+              "key": "func:asin",
+              "kind": "function",
+              "label": "asin"
+            },
+            {
+              "caret": 5,
+              "detail": "atan(sayı)",
+              "insert": "atan()",
+              "key": "func:atan",
+              "kind": "function",
+              "label": "atan"
+            },
+            {
+              "caret": 6,
+              "detail": "atan2(y, x)",
+              "insert": "atan2()",
+              "key": "func:atan2",
+              "kind": "function",
+              "label": "atan2"
+            },
+            {
+              "caret": 4,
+              "detail": "cos(açı)",
+              "insert": "cos()",
+              "key": "func:cos",
+              "kind": "function",
+              "label": "cos"
+            },
+            {
+              "caret": 7,
+              "detail": "derece(radyan)",
+              "insert": "derece()",
+              "key": "func:derece",
+              "kind": "function",
+              "label": "derece"
+            },
+            {
               "caret": 4,
               "detail": "kök(sayı)",
               "insert": "kök()",
               "key": "func:kök",
               "kind": "function",
               "label": "kök"
+            },
+            {
+              "caret": 3,
+              "detail": "ln(sayı)",
+              "insert": "ln()",
+              "key": "func:ln",
+              "kind": "function",
+              "label": "ln"
+            },
+            {
+              "caret": 4,
+              "detail": "log(taban, sayı)",
+              "insert": "log()",
+              "key": "func:log",
+              "kind": "function",
+              "label": "log"
+            },
+            {
+              "caret": 6,
+              "detail": "log10(sayı)",
+              "insert": "log10()",
+              "key": "func:log10",
+              "kind": "function",
+              "label": "log10"
             },
             {
               "caret": 4,
@@ -7214,6 +7606,22 @@
               "label": "pi"
             },
             {
+              "caret": 7,
+              "detail": "radyan(derece)",
+              "insert": "radyan()",
+              "key": "func:radyan",
+              "kind": "function",
+              "label": "radyan"
+            },
+            {
+              "caret": 4,
+              "detail": "sin(açı)",
+              "insert": "sin()",
+              "key": "func:sin",
+              "kind": "function",
+              "label": "sin"
+            },
+            {
               "caret": 6,
               "detail": "taban(sayı)",
               "insert": "taban()",
@@ -7222,12 +7630,28 @@
               "label": "taban"
             },
             {
+              "caret": 4,
+              "detail": "tan(açı)",
+              "insert": "tan()",
+              "key": "func:tan",
+              "kind": "function",
+              "label": "tan"
+            },
+            {
               "caret": 6,
               "detail": "tavan(sayı)",
               "insert": "tavan()",
               "key": "func:tavan",
               "kind": "function",
               "label": "tavan"
+            },
+            {
+              "caret": 6,
+              "detail": "üstel(sayı)",
+              "insert": "üstel()",
+              "key": "func:üstel",
+              "kind": "function",
+              "label": "üstel"
             },
             {
               "caret": 8,

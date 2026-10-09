@@ -26,4 +26,7 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   // docs/adr/0232: surfaces from points, densities.
   { id: 'interpolation', label: 'İnterpolasyon', icon: 'idw', description: 'Noktalardan yüzey: IDW, doğal komşu, spline, kriging, TIN' },
   { id: 'density', label: 'Yoğunluk', icon: 'kernelDensity', description: 'Noktaların ve çizgilerin yoğunluğu' },
+  // docs/adr/0233: map algebra, masks, mosaics, statistics.
+  { id: 'rasterOps', label: 'Raster işlemleri', icon: 'rasterCalculator', description: 'Hesaplayıcı, sınıflandırma, maskeyle kırpma, mozaik, yeniden örnekleme' },
+  { id: 'rasterStats', label: 'Raster istatistiği', icon: 'zonalStats', description: 'Bölgesel, komşuluk ve hücre istatistikleri, histogram' },
 ];

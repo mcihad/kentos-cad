@@ -9,6 +9,7 @@
 
 use kentos_contracts::RasterSample;
 use kentos_formats::raster::TILE;
+use kentos_formats::raster::samples::Samples;
 use kentos_formats::raster::samples::stored;
 use kentos_formats::raster::source::level_sizes;
 use kentos_formats::raster::write::{Geo, Image, Writer, code};
@@ -18,11 +19,40 @@ use crate::par;
 /// Deflate's level for results (1: fastest; docs/adr/0231 §11).
 pub const DEFLATE_LEVEL: u8 = 1;
 
-/// A result's samples: 32-bit floats or bytes.
+/// A result's samples, bands interleaved: 32-bit floats or bytes, or
+/// any sample type in its own vector (docs/adr/0233 §2).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Rows<'a> {
     F32(&'a [f32]),
     U8(&'a [u8]),
+    Any(&'a Samples),
+}
+
+impl Rows<'_> {
+    fn len(&self) -> usize {
+        match self {
+            Rows::F32(r) => r.len(),
+            Rows::U8(r) => r.len(),
+            Rows::Any(r) => r.len(),
+        }
+    }
+
+    fn kind(&self) -> RasterSample {
+        match self {
+            Rows::F32(_) => RasterSample::F32,
+            Rows::U8(_) => RasterSample::U8,
+            Rows::Any(r) => r.kind(),
+        }
+    }
+
+    /// Samples `from..to` as float64s.
+    fn floats(&self, from: usize, to: usize) -> Vec<f64> {
+        match self {
+            Rows::F32(s) => s[from..to].iter().map(|&v| f64::from(v)).collect(),
+            Rows::U8(s) => s[from..to].iter().map(|&v| f64::from(v)).collect(),
+            Rows::Any(s) => (from..to).map(|i| s.get(i)).collect(),
+        }
+    }
 }
 
 /// The result's shape.
@@ -31,18 +61,11 @@ pub struct OutSpec {
     pub width: u32,
     pub height: u32,
     pub bands: u32,
-    /// `F32` or `U8`.
     pub sample: RasterSample,
     /// The last band is alpha.
     pub alpha: bool,
     pub nodata: Option<f64>,
     pub geo: Geo,
-}
-
-#[derive(Debug)]
-enum Buf {
-    F32(Vec<f32>),
-    U8(Vec<u8>),
 }
 
 #[derive(Debug)]
@@ -53,8 +76,8 @@ struct Level {
     rows: u32,
     /// The row waiting for its pair (to make the next level's).
     held: Option<Vec<f64>>,
-    /// The band of rows not yet written (`TILE` rows at most).
-    band: Buf,
+    /// The band of rows not yet written (`TILE` rows at most), in the result's type.
+    band: Samples,
     band_rows: u32,
 }
 
@@ -75,6 +98,30 @@ pub struct Out {
     threads: usize,
 }
 
+/// An empty vector of `kind`.
+fn empty(kind: RasterSample) -> Samples {
+    Samples::filled(kind, 0, 0.0)
+}
+
+/// `row`'s values (as the type holds them already) appended to `buf`.
+fn extend(buf: &mut Samples, row: &[f64]) {
+    macro_rules! ext {
+        ($v:expr, $t:ty) => {
+            $v.extend(row.iter().map(|&x| x as $t))
+        };
+    }
+    match buf {
+        Samples::U8(v) => ext!(v, u8),
+        Samples::I8(v) => ext!(v, i8),
+        Samples::U16(v) => ext!(v, u16),
+        Samples::I16(v) => ext!(v, i16),
+        Samples::U32(v) => ext!(v, u32),
+        Samples::I32(v) => ext!(v, i32),
+        Samples::F32(v) => ext!(v, f32),
+        Samples::F64(v) => v.extend_from_slice(row),
+    }
+}
+
 impl Out {
     /// What the result is: its size, bands, samples and place.
     pub fn spec(&self) -> &OutSpec {
@@ -83,9 +130,6 @@ impl Out {
 
     /// A result of `spec`, its tiles coded on `threads`; the header to write first.
     pub fn new(spec: OutSpec, threads: usize) -> Result<(Out, Vec<u8>), String> {
-        if !matches!(spec.sample, RasterSample::F32 | RasterSample::U8) {
-            return Err("Sonuç rasteri 32 bit ya da 8 bit olmalı.".into());
-        }
         let sizes = level_sizes(spec.width, spec.height);
         let images = sizes
             .iter()
@@ -108,10 +152,7 @@ impl Out {
                 height: h,
                 rows: 0,
                 held: None,
-                band: match spec.sample {
-                    RasterSample::U8 => Buf::U8(Vec::new()),
-                    _ => Buf::F32(Vec::new()),
-                },
+                band: empty(spec.sample),
                 band_rows: 0,
             })
             .collect();
@@ -137,12 +178,9 @@ impl Out {
         let w = self.spec.width as usize;
         let b = self.spec.bands as usize;
         let want = n as usize * w * b;
-        let len = match rows {
-            Rows::F32(r) => r.len(),
-            Rows::U8(r) => r.len(),
-        };
         let first = self.levels[0].rows;
-        if len != want
+        if rows.len() != want
+            || rows.kind() != self.spec.sample
             || !first.is_multiple_of(TILE)
             || first + n > self.spec.height
             || (n != TILE && first + n != self.spec.height)
@@ -151,47 +189,48 @@ impl Out {
                 "Sonuç rasterinin satırları sırasıyla ve 256'lık şeritlerle verilmeli.".into(),
             );
         }
-        let mut pending = Vec::new();
-        // Level 0: the strip is a band of tiles.
+        // Level 0: the strip is a band of tiles, made and coded on the threads.
         let ty = first / TILE;
-        for tx in 0..w.div_ceil(TILE as usize) as u32 {
-            pending.push(Pending {
-                level: 0,
-                tx,
-                ty,
-                bytes: tile_bytes(rows, w, n as usize, b, tx, self.fill()),
-            });
+        let fill = self.fill();
+        let tiles: Vec<u32> = (0..w.div_ceil(TILE as usize) as u32).collect();
+        let coded = par::map(self.threads, &tiles, &|&tx| {
+            code(&tile_bytes(rows, w, n as usize, b, tx, fill), DEFLATE_LEVEL)
+        });
+        let mut out = Vec::new();
+        for (&tx, c) in tiles.iter().zip(coded) {
+            out.extend(self.writer.coded(0, tx, ty, c).map_err(|e| e.0)?);
         }
         self.levels[0].rows += n;
-        // The levels below, row by row.
+        // Level 1's rows from the strip's pairs of rows (a strip starts on an
+        // even row; an odd last row stands alone), on the threads; the levels
+        // below it row by row.
+        let mut pending = Vec::new();
         if self.levels.len() > 1 {
-            for r in 0..n as usize {
-                let row: Vec<f64> = match rows {
-                    Rows::F32(s) => s[r * w * b..(r + 1) * w * b]
-                        .iter()
-                        .map(|&v| f64::from(v))
-                        .collect(),
-                    Rows::U8(s) => s[r * w * b..(r + 1) * w * b]
-                        .iter()
-                        .map(|&v| f64::from(v))
-                        .collect(),
-                };
-                let last = first + r as u32 + 1 == self.spec.height;
-                self.pair(0, row, last, &mut pending)?;
+            let pairs: Vec<usize> = (0..(n as usize).div_ceil(2)).collect();
+            let this = &*self;
+            let halves = par::map(self.threads, &pairs, &|&k| {
+                let row = w * b;
+                let upper = rows.floats(2 * k * row, (2 * k + 1) * row);
+                let lower = (2 * k + 1 < n as usize)
+                    .then(|| rows.floats((2 * k + 1) * row, (2 * k + 2) * row));
+                this.halve(0, &upper, lower.as_deref())
+            });
+            for half in halves {
+                self.level_row(1, half, &mut pending)?;
             }
         }
-        self.code(pending)
+        out.extend(self.code(pending)?);
+        Ok(out)
     }
 
-    /// The value of a sample that is not there.
+    /// The value of a sample that is not there, as the type holds it.
     fn fill(&self) -> f64 {
-        self.spec
-            .nodata
-            .unwrap_or(if self.spec.sample == RasterSample::F32 {
-                f64::NAN
-            } else {
-                0.0
-            })
+        let f = self.spec.nodata.unwrap_or(if self.spec.sample.float() {
+            f64::NAN
+        } else {
+            0.0
+        });
+        Samples::filled(self.spec.sample, 1, f).get(0)
     }
 
     /// Row `row` of `level` (its last when `last`) pairs with the one held:
@@ -232,10 +271,7 @@ impl Out {
         let b = self.spec.bands as usize;
         {
             let lv = &mut self.levels[level];
-            match &mut lv.band {
-                Buf::F32(buf) => buf.extend(row.iter().map(|&v| v as f32)),
-                Buf::U8(buf) => buf.extend(row.iter().map(|&v| v as u8)),
-            }
+            extend(&mut lv.band, &row);
             lv.rows += 1;
             lv.band_rows += 1;
         }
@@ -247,18 +283,16 @@ impl Out {
         if band_rows == TILE || last {
             let ty = (rows - 1) / TILE;
             let fill = self.fill();
+            let kind = self.spec.sample;
             let lv = &mut self.levels[level];
-            let empty = match lv.band {
-                Buf::F32(_) => Buf::F32(Vec::new()),
-                Buf::U8(_) => Buf::U8(Vec::new()),
-            };
-            let band = std::mem::replace(&mut lv.band, empty);
+            let band = std::mem::replace(&mut lv.band, empty(kind));
             lv.band_rows = 0;
             let n = band_rows as usize;
             for tx in 0..lw.div_ceil(TILE as usize) as u32 {
                 let bytes = match &band {
-                    Buf::F32(v) => tile_bytes(Rows::F32(v), lw, n, b, tx, fill),
-                    Buf::U8(v) => tile_bytes(Rows::U8(v), lw, n, b, tx, fill),
+                    Samples::F32(v) => tile_bytes(Rows::F32(v), lw, n, b, tx, fill),
+                    Samples::U8(v) => tile_bytes(Rows::U8(v), lw, n, b, tx, fill),
+                    other => tile_bytes(Rows::Any(other), lw, n, b, tx, fill),
                 };
                 pending.push(Pending {
                     level,
@@ -277,7 +311,7 @@ impl Out {
         let nw = self.levels[level + 1].width as usize;
         let b = self.spec.bands as usize;
         let nodata = self.spec.nodata;
-        let float = self.spec.sample == RasterSample::F32;
+        let float = self.spec.sample.float();
         let mut out = vec![0.0; nw * b];
         for i in 0..nw {
             for k in 0..b {
@@ -305,7 +339,12 @@ impl Out {
                 out[i * b + k] = if n > 0 {
                     stored(self.spec.sample, sum / f64::from(n))
                 } else {
-                    nodata.unwrap_or(if float { f64::NAN } else { 0.0 })
+                    Samples::filled(
+                        self.spec.sample,
+                        1,
+                        nodata.unwrap_or(if float { f64::NAN } else { 0.0 }),
+                    )
+                    .get(0)
                 };
             }
         }
@@ -333,37 +372,70 @@ impl Out {
     }
 }
 
-/// Tile `tx`'s little-endian sample bytes (`TILE` × `TILE`, bands interleaved)
-/// from `n` rows of width `w`, the part past the rows `fill`.
-fn tile_bytes(rows: Rows<'_>, w: usize, n: usize, b: usize, tx: u32, fill: f64) -> Vec<u8> {
+/// A sample's little-endian bytes.
+trait Le: Copy {
+    fn put(self, out: &mut Vec<u8>);
+}
+
+macro_rules! le {
+    ($($t:ty),*) => {
+        $(impl Le for $t {
+            #[inline]
+            fn put(self, out: &mut Vec<u8>) {
+                out.extend_from_slice(&self.to_le_bytes());
+            }
+        })*
+    };
+}
+le!(u8, i8, u16, i16, u32, i32, f32, f64);
+
+/// Tile `tx`'s samples (`TILE` × `TILE`, bands interleaved) from `n` rows
+/// of width `w`, the part past the rows `fill`.
+fn tile_of<T: Le>(s: &[T], w: usize, n: usize, b: usize, tx: u32, fill: T) -> Vec<u8> {
     let t = TILE as usize;
     let x0 = tx as usize * t;
     let x1 = (x0 + t).min(w);
-    match rows {
-        Rows::F32(s) => {
-            let fill = (fill as f32).to_le_bytes();
-            let mut out = Vec::with_capacity(t * t * b * 4);
-            for j in 0..t {
-                for x in x0..x0 + t {
-                    for k in 0..b {
-                        if j < n && x < x1 {
-                            out.extend_from_slice(&s[(j * w + x) * b + k].to_le_bytes());
-                        } else {
-                            out.extend_from_slice(&fill);
-                        }
-                    }
+    let mut out = Vec::with_capacity(t * t * b * std::mem::size_of::<T>());
+    for j in 0..t {
+        for x in x0..x0 + t {
+            for k in 0..b {
+                if j < n && x < x1 {
+                    s[(j * w + x) * b + k].put(&mut out);
+                } else {
+                    fill.put(&mut out);
                 }
             }
-            out
         }
+    }
+    out
+}
+
+/// Tile `tx`'s little-endian sample bytes from `n` rows of width `w`, the
+/// part past the rows `fill` (a value its type holds).
+fn tile_bytes(rows: Rows<'_>, w: usize, n: usize, b: usize, tx: u32, fill: f64) -> Vec<u8> {
+    match rows {
+        Rows::F32(s) => tile_of(s, w, n, b, tx, fill as f32),
         Rows::U8(s) => {
-            let fill = fill as u8;
-            let mut out = vec![fill; t * t * b];
+            // Bytes: whole runs copied.
+            let t = TILE as usize;
+            let x0 = tx as usize * t;
+            let x1 = (x0 + t).min(w);
+            let mut out = vec![fill as u8; t * t * b];
             for j in 0..n.min(t) {
                 let src = &s[(j * w + x0) * b..(j * w + x1) * b];
                 out[j * t * b..j * t * b + src.len()].copy_from_slice(src);
             }
             out
         }
+        Rows::Any(s) => match s {
+            Samples::U8(v) => tile_bytes(Rows::U8(v), w, n, b, tx, fill),
+            Samples::I8(v) => tile_of(v, w, n, b, tx, fill as i8),
+            Samples::U16(v) => tile_of(v, w, n, b, tx, fill as u16),
+            Samples::I16(v) => tile_of(v, w, n, b, tx, fill as i16),
+            Samples::U32(v) => tile_of(v, w, n, b, tx, fill as u32),
+            Samples::I32(v) => tile_of(v, w, n, b, tx, fill as i32),
+            Samples::F32(v) => tile_of(v, w, n, b, tx, fill as f32),
+            Samples::F64(v) => tile_of(v, w, n, b, tx, fill),
+        },
     }
 }

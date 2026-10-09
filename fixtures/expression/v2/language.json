@@ -1,7 +1,7 @@
 {
  "format": "kentos.expression-language",
  "version": 1,
- "note": "Dilin §4 ekleri (durum … son, içinde, arasında, gibi, benzer, boş / boş değil, ^, yeni işlevler), motordan bağımsız hesaplanmış: her kaynağın her nesnedeki değeri ya da derlenmediği. Değer: null boş, [\"n\", x] sayı (\"-0\" eksi sıfır), [\"t\", s] metin, [\"b\", b] doğru/yanlış. \"ulp\": 1 olan durumda sayı tam olmayan üslü bir kuvvetten gelir: motorunki (libm) doğru yuvarlanmış değerin en çok bir son basamak birimi yanındadır. Üretici scripts/fixtures/expression_language.py (--check yalnız karşılaştırır).",
+ "note": "Dilin §4 ekleri (durum … son, içinde, arasında, gibi, benzer, boş / boş değil, ^, yeni işlevler), motordan bağımsız hesaplanmış: her kaynağın her nesnedeki değeri ya da derlenmediği. Değer: null boş, [\"n\", x] sayı (\"-0\" eksi sıfır), [\"t\", s] metin, [\"b\", b] doğru/yanlış. \"ulp\": n olan durumda sayı tam olmayan üslü bir kuvvetten ya da libm'nin bir işlevinden (ln, üstel, trigonometri; 1) ya da genel tabanlı log'dan (3) gelir: motorunki doğru yuvarlanmış değerin en çok n son basamak birimi yanındadır. Üretici scripts/fixtures/expression_language.py (--check yalnız karşılaştırır).",
  "objects": [
   {
    "Ada": "1245",
@@ -1914,6 +1914,546 @@
      314.1592653589793
     ]
    ]
+  },
+  {
+   "source": "ln(Oran)",
+   "values": [
+    [
+     "n",
+     -0.6931471805599453
+    ],
+    [
+     "n",
+     0.6931471805599453
+    ],
+    null,
+    null,
+    [
+     "n",
+     2.772588722239781
+    ],
+    [
+     "n",
+     709.1962086421661
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "ln(0)",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "log10(1000)",
+   "values": [
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "log10(Oran)",
+   "values": [
+    [
+     "n",
+     -0.3010299956639812
+    ],
+    [
+     "n",
+     0.3010299956639812
+    ],
+    null,
+    null,
+    [
+     "n",
+     1.2041199826559248
+    ],
+    [
+     "n",
+     308.0
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "log(2, 8)",
+   "values": [
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "log(10, 0.01)",
+   "values": [
+    [
+     "n",
+     -2.0
+    ],
+    [
+     "n",
+     -2.0
+    ],
+    [
+     "n",
+     -2.0
+    ],
+    [
+     "n",
+     -2.0
+    ],
+    [
+     "n",
+     -2.0
+    ],
+    [
+     "n",
+     -2.0
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "log(3, Oran)",
+   "values": [
+    [
+     "n",
+     -0.6309297535714574
+    ],
+    [
+     "n",
+     0.6309297535714574
+    ],
+    null,
+    null,
+    [
+     "n",
+     2.5237190142858297
+    ],
+    [
+     "n",
+     645.5382084811304
+    ]
+   ],
+   "ulp": 3
+  },
+  {
+   "source": "üstel(1)",
+   "values": [
+    [
+     "n",
+     2.718281828459045
+    ],
+    [
+     "n",
+     2.718281828459045
+    ],
+    [
+     "n",
+     2.718281828459045
+    ],
+    [
+     "n",
+     2.718281828459045
+    ],
+    [
+     "n",
+     2.718281828459045
+    ],
+    [
+     "n",
+     2.718281828459045
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "exp(Oran)",
+   "values": [
+    [
+     "n",
+     1.6487212707001282
+    ],
+    [
+     "n",
+     7.38905609893065
+    ],
+    [
+     "n",
+     0.00033546262790251185
+    ],
+    null,
+    [
+     "n",
+     8886110.520507872
+    ],
+    null
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "sin(pi() / 6)",
+   "values": [
+    [
+     "n",
+     0.49999999999999994
+    ],
+    [
+     "n",
+     0.49999999999999994
+    ],
+    [
+     "n",
+     0.49999999999999994
+    ],
+    [
+     "n",
+     0.49999999999999994
+    ],
+    [
+     "n",
+     0.49999999999999994
+    ],
+    [
+     "n",
+     0.49999999999999994
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "cos(Oran)",
+   "values": [
+    [
+     "n",
+     0.8775825618903728
+    ],
+    [
+     "n",
+     -0.4161468365471424
+    ],
+    [
+     "n",
+     -0.14550003380861354
+    ],
+    null,
+    [
+     "n",
+     -0.9576594803233847
+    ],
+    [
+     "n",
+     -0.8913089376870335
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "tan(1)",
+   "values": [
+    [
+     "n",
+     1.5574077246549023
+    ],
+    [
+     "n",
+     1.5574077246549023
+    ],
+    [
+     "n",
+     1.5574077246549023
+    ],
+    [
+     "n",
+     1.5574077246549023
+    ],
+    [
+     "n",
+     1.5574077246549023
+    ],
+    [
+     "n",
+     1.5574077246549023
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "asin(Oran)",
+   "values": [
+    [
+     "n",
+     0.5235987755982989
+    ],
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "acos(2)",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "atan(Oran)",
+   "values": [
+    [
+     "n",
+     0.4636476090008061
+    ],
+    [
+     "n",
+     1.1071487177940904
+    ],
+    [
+     "n",
+     -1.446441332248135
+    ],
+    null,
+    [
+     "n",
+     1.5083775167989393
+    ],
+    [
+     "n",
+     1.5707963267948966
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "arctan(-1)",
+   "values": [
+    [
+     "n",
+     -0.7853981633974483
+    ],
+    [
+     "n",
+     -0.7853981633974483
+    ],
+    [
+     "n",
+     -0.7853981633974483
+    ],
+    [
+     "n",
+     -0.7853981633974483
+    ],
+    [
+     "n",
+     -0.7853981633974483
+    ],
+    [
+     "n",
+     -0.7853981633974483
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "atan2(1, -1)",
+   "values": [
+    [
+     "n",
+     2.356194490192345
+    ],
+    [
+     "n",
+     2.356194490192345
+    ],
+    [
+     "n",
+     2.356194490192345
+    ],
+    [
+     "n",
+     2.356194490192345
+    ],
+    [
+     "n",
+     2.356194490192345
+    ],
+    [
+     "n",
+     2.356194490192345
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "atan2(Oran, Kat)",
+   "values": [
+    [
+     "n",
+     0.16514867741462683
+    ],
+    [
+     "n",
+     0.3805063771123649
+    ],
+    null,
+    null,
+    [
+     "n",
+     1.7257930687188376
+    ],
+    [
+     "n",
+     1.5707963267948966
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "derece(pi())",
+   "values": [
+    [
+     "n",
+     180.0
+    ],
+    [
+     "n",
+     180.0
+    ],
+    [
+     "n",
+     180.0
+    ],
+    [
+     "n",
+     180.0
+    ],
+    [
+     "n",
+     180.0
+    ],
+    [
+     "n",
+     180.0
+    ]
+   ]
+  },
+  {
+   "source": "radyan(Oran)",
+   "values": [
+    [
+     "n",
+     0.008726646259971648
+    ],
+    [
+     "n",
+     0.03490658503988659
+    ],
+    [
+     "n",
+     -0.13962634015954636
+    ],
+    null,
+    [
+     "n",
+     0.2792526803190927
+    ],
+    null
+   ]
+  },
+  {
+   "source": "degrees(atan2(Oran, 1))",
+   "values": [
+    [
+     "n",
+     26.56505117707799
+    ],
+    [
+     "n",
+     63.43494882292201
+    ],
+    [
+     "n",
+     -82.87498365109819
+    ],
+    null,
+    [
+     "n",
+     86.42366562500266
+    ],
+    [
+     "n",
+     90.0
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "ln()",
+   "compiles": false
+  },
+  {
+   "source": "log(2)",
+   "compiles": false
   },
   {
    "source": "sol(Kod, 3)",

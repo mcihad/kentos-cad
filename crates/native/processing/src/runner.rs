@@ -76,8 +76,10 @@ pub struct RunRecord {
     pub target: Option<Target>,
 }
 
-/// How a run ended.
+/// How a run ended. A run ends once and `Ok` is its usual end: boxing the
+/// result would only add an allocation.
 #[derive(Clone, Debug, PartialEq)]
+#[allow(clippy::large_enum_variant)]
 pub enum Outcome {
     /// It ran; `edited`: the drawing changed (there is something to undo).
     Ok {
@@ -339,6 +341,10 @@ impl Runner {
         };
         let fv = values.get(&input.name).and_then(FeaturesValue::read)?;
         let set = resolve_features(&fv, kinds.as_deref(), scene);
+        // A raster's expression runs cell by cell in the raster core (docs/adr/0233 §3): no object to preview it on.
+        if only_rasters(&set.entities) {
+            return None;
+        }
         let doc = scene.doc();
         let layer_name = |id: &str| {
             doc.layers()
@@ -764,7 +770,13 @@ impl Runner {
         }
         let updated: Vec<Slot> = changes.update.iter().map(|u| u.id).collect();
         let removed = !changes.remove.is_empty();
-        let added = match apply(host.doc_mut(), tool, changes, &new_layers, log) {
+        let added = match apply(
+            host.doc_mut(),
+            tool,
+            changes,
+            (&new_layers, result.above.as_deref()),
+            log,
+        ) {
             Ok(added) => added,
             Err(why) => {
                 let message = format!("“{}” çalışırken hata: {why}", tool.label);
@@ -840,7 +852,7 @@ fn apply(
     doc: &mut Document,
     tool: &Tool,
     ch: ChangeSet,
-    new_layers: &BTreeMap<String, NewLayerPlan>,
+    (new_layers, above): (&BTreeMap<String, NewLayerPlan>, Option<&str>),
     log: &mut Vec<LogLine>,
 ) -> Result<Vec<Slot>, String> {
     let mut skipped = 0usize;
@@ -867,9 +879,10 @@ fn apply(
             let mut layer = NewLayer::layer(plan.name.clone());
             layer.id = Some(id.clone());
             layer.style = plan.style.over(default_style());
-            // Right above or below the layer its plan names (its group, its place), else last.
+            // Right above or below the layer its plan names (its group, its place), else last;
+            // the tool may name it.
             let at = match (&plan.above, &plan.below) {
-                (Some(over), _) => doc.layers().place_of(over),
+                (Some(over), _) => doc.layers().place_of(above.unwrap_or(over)),
                 (None, Some(under)) => {
                     let n = under_count.entry(under.as_str()).or_insert(0);
                     *n += 1;
@@ -944,4 +957,9 @@ fn apply(
         )));
     }
     Ok(added)
+}
+
+/// Rasters only: an expression on them names their bands (docs/adr/0233 §3), not attributes.
+pub fn only_rasters(list: &[&Entity]) -> bool {
+    !list.is_empty() && list.iter().all(|e| matches!(e, Entity::Raster(_)))
 }

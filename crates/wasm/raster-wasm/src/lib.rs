@@ -10,6 +10,12 @@
 //! settings and looks as JSON; a refusal throws an `Error` whose message is
 //! the core's Turkish words.
 //!
+//! Raster işlemleri (docs/adr/0233) are [`OpsAnalysis`]: its inputs opened
+//! one after another into an [`OpsOpening`] (a TIFF by its header's pieces,
+//! a PNG here, a JPEG's pixels), the areas of a mask or the zones as JSON;
+//! then stepped as a raster analysis is, each block asked for with its
+//! input; a table's figures come back as typed arrays and JSON.
+//!
 //! A raster made from points or lines (docs/adr/0232) is [`PointAnalysis`]:
 //! the objects as JSON (a point's, a line's, a path's places and elevations;
 //! for Çizgi yoğunluğu the objects' geometry), each object's value or weight
@@ -85,12 +91,63 @@ impl AnalysisOpening {
 
     /// The analysis of `spec` (`kentos_raster::job::Spec` JSON) over the TIFF the header opens.
     pub fn analysis(&self, spec: &str) -> Result<Analysis, JsError> {
+        Analysis::of(self.reader()?, spec)
+    }
+}
+
+impl AnalysisOpening {
+    /// The reader of the TIFF the header opens.
+    fn reader(&self) -> Result<Reader, JsError> {
         let t = self
             .parsed
             .as_ref()
             .ok_or_else(|| JsError::new("TIFF'in başlığı okunmadı."))?;
-        Analysis::of(Reader::tiff(t, None, READER_BUDGET).map_err(fail)?, spec)
+        Reader::tiff(t, None, READER_BUDGET).map_err(fail)
     }
+}
+
+/// A PNG's raster (decoded here) as a reader.
+fn png_reader(bytes: &[u8]) -> Result<Reader, JsError> {
+    let p = kentos_formats::raster::png::decode(bytes).map_err(fail)?;
+    Reader::image(
+        p.width,
+        p.height,
+        p.bands,
+        p.samples,
+        p.nodata,
+        None,
+        READER_BUDGET,
+    )
+    .map_err(fail)
+}
+
+/// A JPEG's raster from the browser's decoded pixels (`components` a pixel; RGBA taken as RGB).
+fn pixels_reader(
+    width: u32,
+    height: u32,
+    components: u32,
+    pixels: Vec<u8>,
+) -> Result<Reader, JsError> {
+    let (bands, samples) = match components {
+        4 => (
+            3,
+            pixels
+                .chunks_exact(4)
+                .flat_map(|c| [c[0], c[1], c[2]])
+                .collect(),
+        ),
+        c => (c, pixels),
+    };
+    Reader::image(
+        width,
+        height,
+        bands,
+        Samples::U8(samples),
+        None,
+        None,
+        READER_BUDGET,
+    )
+    .map_err(fail)
 }
 
 /// An analysis under way: its job, the blocks it asked for last, and once
@@ -139,18 +196,7 @@ impl Analysis {
     /// The analysis of `spec` over a PNG's raster (decoded here).
     #[wasm_bindgen(js_name = fromPng)]
     pub fn from_png(bytes: &[u8], spec: &str) -> Result<Analysis, JsError> {
-        let p = kentos_formats::raster::png::decode(bytes).map_err(fail)?;
-        let reader = Reader::image(
-            p.width,
-            p.height,
-            p.bands,
-            p.samples,
-            p.nodata,
-            None,
-            READER_BUDGET,
-        )
-        .map_err(fail)?;
-        Analysis::of(reader, spec)
+        Analysis::of(png_reader(bytes)?, spec)
     }
 
     /// The analysis of `spec` over a JPEG's raster from the browser's decoded
@@ -163,27 +209,7 @@ impl Analysis {
         pixels: Vec<u8>,
         spec: &str,
     ) -> Result<Analysis, JsError> {
-        let (bands, samples) = match components {
-            4 => (
-                3,
-                pixels
-                    .chunks_exact(4)
-                    .flat_map(|c| [c[0], c[1], c[2]])
-                    .collect(),
-            ),
-            c => (c, pixels),
-        };
-        let reader = Reader::image(
-            width,
-            height,
-            bands,
-            Samples::U8(samples),
-            None,
-            None,
-            READER_BUDGET,
-        )
-        .map_err(fail)?;
-        Analysis::of(reader, spec)
+        Analysis::of(pixels_reader(width, height, components, pixels)?, spec)
     }
 
     /// The bytes to write first: a raster result's header (written over at
@@ -509,5 +535,307 @@ impl PointAnalysis {
                 ]
             })
             .collect()
+    }
+}
+
+/// The inputs of a raster operation (docs/adr/0233), opened one after another.
+#[wasm_bindgen]
+pub struct OpsOpening {
+    readers: Vec<Reader>,
+}
+
+impl Default for OpsOpening {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+impl OpsOpening {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> OpsOpening {
+        OpsOpening {
+            readers: Vec::new(),
+        }
+    }
+
+    /// The next input: the TIFF whose header `opening` read.
+    #[wasm_bindgen(js_name = addTiff)]
+    pub fn add_tiff(&mut self, opening: &AnalysisOpening) -> Result<(), JsError> {
+        self.readers.push(opening.reader()?);
+        Ok(())
+    }
+
+    /// The next input: a PNG's raster.
+    #[wasm_bindgen(js_name = addPng)]
+    pub fn add_png(&mut self, bytes: &[u8]) -> Result<(), JsError> {
+        self.readers.push(png_reader(bytes)?);
+        Ok(())
+    }
+
+    /// The next input: a JPEG's raster from the browser's pixels.
+    #[wasm_bindgen(js_name = addPixels)]
+    pub fn add_pixels(
+        &mut self,
+        width: u32,
+        height: u32,
+        components: u32,
+        pixels: Vec<u8>,
+    ) -> Result<(), JsError> {
+        self.readers
+            .push(pixels_reader(width, height, components, pixels)?);
+        Ok(())
+    }
+
+    /// The run of `spec` (`kentos_raster::ops::OpsSpec` JSON) over the inputs
+    /// and `shapes` (a JSON array of the mask's or the zones' objects).
+    pub fn start(&mut self, spec: &str, shapes: &str) -> Result<OpsAnalysis, JsError> {
+        use kentos_geometry_core::api::json::{FromJson, Json};
+        let spec: kentos_raster::ops::OpsSpec = serde_json::from_str(spec)
+            .map_err(|e| JsError::new(&format!("Çözümlemenin ayarları okunamadı: {e}")))?;
+        let j =
+            Json::parse(shapes).map_err(|e| JsError::new(&format!("Nesneler okunamadı: {e}")))?;
+        let Json::Arr(list) = j else {
+            return Err(JsError::new("Nesneler bir liste olmalı."));
+        };
+        let shapes = list
+            .iter()
+            .map(|o| kentos_geometry_core::entity::Entity::from_json(o).map(|e| e.shape))
+            .collect::<Result<Vec<_>, String>>()
+            .map_err(fail)?;
+        // The inputs given are the ones the run reads (`opsReads`), in that order.
+        let spec = spec.reading(&spec.reads().map_err(fail)?);
+        let readers = std::mem::take(&mut self.readers);
+        if readers.len() != spec.inputs.len() {
+            return Err(JsError::new("Rasterlerin ayarları eksik verildi."));
+        }
+        let inputs = readers
+            .into_iter()
+            .zip(&spec.inputs)
+            .map(|(r, s)| kentos_raster::inputs::Input::new(r, s.affine, s.nodata))
+            .collect::<Result<Vec<_>, String>>()
+            .map_err(fail)?;
+        let (job, header) =
+            kentos_raster::ops::OpsJob::new(inputs, &spec, shapes, 1).map_err(fail)?;
+        let g = job.grid();
+        Ok(OpsAnalysis {
+            result: job.result(),
+            style: job
+                .style()
+                .map(|s| serde_json::to_string(&s).unwrap_or_default())
+                .unwrap_or_default(),
+            grid: g
+                .affine
+                .iter()
+                .copied()
+                .chain([f64::from(g.width), f64::from(g.height)])
+                .collect(),
+            job: Some(job),
+            header,
+            needs: Vec::new(),
+            head: Vec::new(),
+            notes: String::new(),
+            zones: Vec::new(),
+            histogram: String::new(),
+        })
+    }
+}
+
+/// The inputs a raster operation of `spec` (`kentos_raster::ops::OpsSpec`
+/// JSON) reads, before any is opened (docs/adr/0233 §3): Raster
+/// hesaplayıcı's those its expression names, in the order it names them;
+/// every other tool's all. The host opens and adds only these, in this order.
+#[wasm_bindgen(js_name = opsReads)]
+pub fn ops_reads(spec: &str) -> Result<Vec<u32>, JsError> {
+    let spec: kentos_raster::ops::OpsSpec = serde_json::from_str(spec)
+        .map_err(|e| JsError::new(&format!("Çözümlemenin ayarları okunamadı: {e}")))?;
+    Ok(spec
+        .reads()
+        .map_err(fail)?
+        .into_iter()
+        .map(|k| k as u32)
+        .collect())
+}
+
+/// A raster operation under way.
+#[wasm_bindgen]
+pub struct OpsAnalysis {
+    job: Option<kentos_raster::ops::OpsJob>,
+    header: Vec<u8>,
+    needs: Vec<(u32, BlockNeed)>,
+    result: Option<(u32, RasterSample)>,
+    style: String,
+    grid: Vec<f64>,
+    head: Vec<u8>,
+    notes: String,
+    zones: Vec<f64>,
+    histogram: String,
+}
+
+impl OpsAnalysis {
+    fn job(&mut self) -> Result<&mut kentos_raster::ops::OpsJob, JsError> {
+        self.job
+            .as_mut()
+            .ok_or_else(|| JsError::new("Çözümleme bitti."))
+    }
+
+    fn need(&self, i: usize) -> Result<(u32, BlockNeed), JsError> {
+        self.needs
+            .get(i)
+            .copied()
+            .ok_or_else(|| JsError::new("Böyle bir blok istenmedi."))
+    }
+}
+
+#[wasm_bindgen]
+impl OpsAnalysis {
+    /// The bytes to write first: a raster result's header; empty for a table.
+    pub fn header(&self) -> Vec<u8> {
+        self.header.clone()
+    }
+
+    /// The blocks the next step wants, `[input, offset, length]` each;
+    /// `putBlock` takes them by their index here.
+    pub fn needs(&mut self) -> Result<Vec<f64>, JsError> {
+        self.needs = self.job()?.needs();
+        Ok(self
+            .needs
+            .iter()
+            .flat_map(|(k, n)| [f64::from(*k), n.offset as f64, n.len as f64])
+            .collect())
+    }
+
+    /// Need `i`'s bytes: decoded and kept; a JPEG block's stream comes back for the browser.
+    #[wasm_bindgen(js_name = putBlock)]
+    pub fn put_block(&mut self, i: usize, bytes: Vec<u8>) -> Result<Vec<u8>, JsError> {
+        let (k, need) = self.need(i)?;
+        let mut jpeg = self.job()?.put_all(vec![(k, need, bytes)]).map_err(fail)?;
+        Ok(jpeg.pop().map(|(_, _, stream)| stream).unwrap_or_default())
+    }
+
+    /// A JPEG block's pixels (`components` a pixel) for need `i`.
+    #[wasm_bindgen(js_name = putPixels)]
+    pub fn put_pixels(
+        &mut self,
+        i: usize,
+        pixels: Vec<u8>,
+        components: u32,
+    ) -> Result<(), JsError> {
+        let (k, need) = self.need(i)?;
+        self.job()?
+            .put_pixels(k, &need, pixels, components)
+            .map_err(fail)
+    }
+
+    /// Works out the next block: the bytes to append.
+    pub fn step(&mut self) -> Result<Vec<u8>, JsError> {
+        self.job()?.step().map_err(fail)
+    }
+
+    pub fn done(&self) -> bool {
+        self.job
+            .as_ref()
+            .is_none_or(kentos_raster::ops::OpsJob::done)
+    }
+
+    pub fn share(&self) -> f64 {
+        self.job
+            .as_ref()
+            .map_or(1.0, kentos_raster::ops::OpsJob::share)
+    }
+
+    /// Ends the run: a raster result's directories to append (its header
+    /// then from `head`); nothing for a table (then read by `zones`, `histogram`).
+    pub fn finish(&mut self) -> Result<Vec<u8>, JsError> {
+        use kentos_raster::ops::OpsFinished;
+        let job = self
+            .job
+            .take()
+            .ok_or_else(|| JsError::new("Çözümleme bitti."))?;
+        let n = job.notes().clone();
+        self.notes = serde_json::json!({
+            "cells": n.cells,
+            "emptyCells": n.empty_cells,
+        })
+        .to_string();
+        match job.finish().map_err(fail)? {
+            OpsFinished::Raster { tail, header } => {
+                self.head = header;
+                Ok(tail)
+            }
+            OpsFinished::Zones(z) => {
+                let none = |v: Option<f64>| v.unwrap_or(f64::NAN);
+                self.zones = z
+                    .iter()
+                    .flat_map(|f| {
+                        let m = &f.moments;
+                        [
+                            m.n as f64,
+                            none(f.value),
+                            none(m.sum()),
+                            none(m.mean()),
+                            none(m.min()),
+                            none(m.max()),
+                            none(m.std()),
+                        ]
+                    })
+                    .collect();
+                Ok(Vec::new())
+            }
+            OpsFinished::Histogram(h) => {
+                self.histogram = serde_json::json!({
+                    "lo": h.lo, "hi": h.hi, "counts": h.counts, "below": h.below,
+                    "above": h.above, "valid": h.valid, "empty": h.empty,
+                })
+                .to_string();
+                Ok(Vec::new())
+            }
+        }
+    }
+
+    /// The header to write over the result's first bytes.
+    pub fn head(&self) -> Vec<u8> {
+        self.head.clone()
+    }
+
+    /// A raster result's bands (0 for a table).
+    pub fn bands(&self) -> u32 {
+        self.result.map_or(0, |r| r.0)
+    }
+
+    /// A raster result's samples, as the contract names them; empty for a table.
+    pub fn sample(&self) -> String {
+        self.result.map_or_else(String::new, |r| {
+            serde_json::to_value(r.1)
+                .ok()
+                .and_then(|v| v.as_str().map(str::to_owned))
+                .unwrap_or_default()
+        })
+    }
+
+    /// A raster result's look (`RasterStyle` JSON); empty for a table.
+    pub fn style(&self) -> String {
+        self.style.clone()
+    }
+
+    /// The result's grid: its affine's six numbers, width and height.
+    pub fn grid(&self) -> Vec<f64> {
+        self.grid.clone()
+    }
+
+    /// What the run met (JSON: cells, emptyCells).
+    pub fn notes(&self) -> String {
+        self.notes.clone()
+    }
+
+    /// Each zone's figures, seven a zone: cells with a value, the statistic
+    /// asked for, the sum, mean, least, largest, standard deviation (NaN: none).
+    pub fn zones(&self) -> Vec<f64> {
+        self.zones.clone()
+    }
+
+    /// The histogram (JSON: lo, hi, counts, below, above, valid, empty).
+    pub fn histogram(&self) -> String {
+        self.histogram.clone()
     }
 }

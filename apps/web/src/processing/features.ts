@@ -1,5 +1,5 @@
 import type { CadDocument } from '../model/document';
-import { ENTITY_KIND_LABEL, type Entity, type EntityKind } from '../model/entities';
+import { ENTITY_KIND_LABEL, type Entity, type EntityKind, type RasterEntity } from '../model/entities';
 import type { Bounds } from '../model/geometry';
 import { withObjects, type DocumentGeometry } from './geometry';
 import type { FeatureSet, FeaturesParam, FeaturesValue } from './types';
@@ -112,12 +112,54 @@ export function summarizeFeatures(value: FeaturesValue, def: Pick<FeaturesParam,
   for (const e of candidates) kinds.set(e.kind, (kinds.get(e.kind) ?? 0) + 1);
   const fields = new Map<string, number>();
   for (const e of set.entities.slice(0, 20000)) for (const k of Object.keys(e.attrs)) fields.set(k, (fields.get(k) ?? 0) + 1);
+  // A raster's bands are what an expression names it by (Raster hesaplayıcı, docs/adr/0233 §3).
+  const rasters = set.entities.filter((e): e is RasterEntity => e.kind === 'raster');
+  const leaves = rasters.length ? new Map(host.doc.layers.leaves().map((l, k) => [l.id, k])) : new Map<string, number>();
+  const doc: RasterRunDoc = {
+    layerIndex: (id) => leaves.get(id) ?? Number.MAX_SAFE_INTEGER,
+    byLayer: (id) => host.doc.byLayer(id),
+    layerName: (id) => host.doc.layers.get(id)?.name ?? id,
+  };
+  for (const { raster, name } of rasterRun(rasters, doc)) {
+    fields.set(name, 1);
+    for (let b = 2; b <= raster.bands; b++) fields.set(`${name}@${b}`, 1);
+  }
   return {
     count: set.entities.length,
     description: set.description,
     byKind: [...kinds].map(([kind, count]) => ({ kind, count })).sort((a, b) => b.count - a.count),
     fields: [...fields].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'tr')),
   };
+}
+
+/** What a raster operation's order and names read of the drawing: the layers' places, a layer's objects, its name. */
+export interface RasterRunDoc {
+  /** A layer's place among the layers, the top of the panel first. */
+  layerIndex(id: string): number;
+  /** The objects on a layer, in document order. */
+  byLayer(layerId: string): readonly Entity[];
+  layerName(id: string): string;
+}
+
+/**
+ * Rasters in a raster operation's order (docs/adr/0233 §2): the layers from the top of the panel down, on a layer the
+ * later first; and the name an expression reads each by (§3): its layer's, a second raster on a layer “Ad (2)”, and so
+ * on. Only rasters sharing a layer ask for the layer's order of objects.
+ */
+export function rasterRun<T extends RasterEntity>(list: readonly T[], d: RasterRunDoc): { raster: T; name: string }[] {
+  if (!list.length) return [];
+  const on = new Map<string, number>();
+  for (const r of list) on.set(r.layerId, (on.get(r.layerId) ?? 0) + 1);
+  const place = new Map<number, number>();
+  for (const [layerId, n] of on) if (n > 1) d.byLayer(layerId).forEach((e, k) => place.set(e.id, k));
+  const sorted = [...list].sort((a, b) => d.layerIndex(a.layerId) - d.layerIndex(b.layerId) || (place.get(b.id) ?? 0) - (place.get(a.id) ?? 0));
+  const seen = new Map<string, number>();
+  return sorted.map((raster) => {
+    const name = d.layerName(raster.layerId);
+    const n = (seen.get(name) ?? 0) + 1;
+    seen.set(name, n);
+    return { raster, name: n === 1 ? name : `${name} (${n})` };
+  });
 }
 
 /** "Seçili nesneler arasında uygun nesne yok" — where the tool looked, as a sentence start. */

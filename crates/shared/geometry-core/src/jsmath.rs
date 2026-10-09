@@ -9,7 +9,7 @@
 
 use std::cmp::Ordering;
 
-pub use libm::{acos, asin, atan, atan2, cos, exp, log, pow, sin, tan};
+pub use libm::{acos, asin, atan, atan2, cos, exp, log, log2, log10, pow, sin, tan};
 
 pub const PI: f64 = std::f64::consts::PI;
 pub const TAU: f64 = PI * 2.0;

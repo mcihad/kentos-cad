@@ -20,20 +20,29 @@
 // `!(r > 0.0)` refuses NaN as well as r ≤ 0; that is the point of writing it so.
 #![allow(clippy::neg_cmp_op_on_partial_ord)]
 
+pub mod areas;
+pub mod calc;
 pub mod contours;
+pub mod dd;
 pub mod density;
+pub mod focal;
 pub mod frame;
 pub mod from_points;
 pub mod grid;
 pub mod index;
+pub mod inputs;
 pub mod insolation;
 pub mod interp;
 pub mod job;
+pub mod ops;
 pub mod out;
 pub mod par;
 pub mod points;
+pub mod reclass;
 pub mod relief;
+pub mod resample;
 pub mod solve;
+pub mod stats;
 pub mod terrain;
 
 pub use from_points::{PointInput, PointJob, PointSpec, PointTool};

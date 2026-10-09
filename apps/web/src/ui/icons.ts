@@ -733,6 +733,29 @@ export const ICONS = {
     '<circle cx="8" cy="8.5" r="6" fill="currentColor" fill-opacity=".13" stroke="none"/><circle cx="8" cy="8.5" r="3.8" fill="currentColor" fill-opacity=".25" stroke="none"/><circle cx="8" cy="8.5" r="1.7" fill="currentColor" stroke="none"/><circle cx="14.6" cy="14.4" r="3.6" fill="currentColor" fill-opacity=".18" stroke="none"/><circle cx="14.6" cy="14.4" r="1.4" fill="currentColor" stroke="none"/><circle cx="8" cy="8.5" r="6" stroke-width=".8" stroke-dasharray="1.2 1"/>',
   lineDensity:
     '<circle cx="10" cy="10" r="5.6" stroke-width="1" stroke-dasharray="1.4 1.1"/><path d="M1.5 7.2 18.5 13M5 18.5 12.4 1.5M1.5 14.5 18.5 4.6" stroke-opacity=".45"/><path d="M4.7 8.3l10.6 3.6M7.7 13.8l4.6-10.6" stroke-width="2"/>',
+  // Raster işlemleri and Raster istatistiği (docs/adr/0233): Raster hesaplayıcı a calculator whose keys are a raster's cells;
+  // Yeniden sınıflandır a column of shades turned into two classes; Maskeyle kırp a raster cut by an area, the cells outside
+  // faded; Mozaik two sheets joined over their overlap; Yeniden örnekle a fine grid into a coarse one; Bölgesel istatistik
+  // an area holding its figures' bars; Histogram bars on a base line; Komşuluk istatistiği a 3 × 3 window round a cell on a
+  // grid; Hücre istatistiği a stack of rasters and one cell's column through them.
+  rasterCalculator:
+    '<rect x="3.5" y="1.8" width="13" height="16.4" rx="1.6"/><rect x="5.8" y="4" width="8.4" height="3.3" rx=".5" stroke-width="1"/><rect x="5.8" y="9.4" width="2.4" height="2.4" fill="currentColor" stroke="none"/><rect x="8.8" y="9.4" width="2.4" height="2.4" fill="currentColor" fill-opacity=".45" stroke="none"/><rect x="11.8" y="9.4" width="2.4" height="2.4" fill="currentColor" fill-opacity=".2" stroke="none"/><rect x="5.8" y="13.2" width="2.4" height="2.4" fill="currentColor" fill-opacity=".2" stroke="none"/><rect x="8.8" y="13.2" width="2.4" height="2.4" fill="currentColor" stroke="none"/><rect x="11.8" y="13.2" width="2.4" height="2.4" fill="currentColor" fill-opacity=".45" stroke="none"/>',
+  reclassify:
+    '<rect x="1.8" y="2.5" width="5" height="15" rx=".6" stroke-width="1.1"/><rect x="1.8" y="2.5" width="5" height="3.75" fill="currentColor" fill-opacity=".15" stroke="none"/><rect x="1.8" y="6.25" width="5" height="3.75" fill="currentColor" fill-opacity=".38" stroke="none"/><rect x="1.8" y="10" width="5" height="3.75" fill="currentColor" fill-opacity=".62" stroke="none"/><rect x="1.8" y="13.75" width="5" height="3.75" fill="currentColor" fill-opacity=".9" stroke="none"/><path d="M8.6 10h3.6M10.6 8.2l1.8 1.8-1.8 1.8" stroke-width="1.2"/><rect x="13.6" y="2.5" width="4.6" height="15" rx=".6" stroke-width="1.1"/><rect x="13.6" y="10" width="4.6" height="7.5" fill="currentColor" stroke="none"/>',
+  clipRaster:
+    '<path d="M2 7h16M2 12.5h16M7.3 2v16M12.7 2v16" stroke-width=".8" stroke-opacity=".35"/><rect x="2" y="2" width="16" height="16" rx="1" stroke-width="1" stroke-opacity=".35"/><path d="M5 5.5 14.8 4l1.6 8.5-6.4 4.8-5.6-3.6z" fill="currentColor" fill-opacity=".2" stroke-width="1.5"/>',
+  mosaic:
+    '<rect x="2" y="2" width="10.5" height="10.5" rx=".8"/><rect x="7.5" y="7.5" width="10.5" height="10.5" rx=".8"/><rect x="7.5" y="7.5" width="5" height="5" fill="currentColor" fill-opacity=".45" stroke="none"/><path d="M2 5.5h10.5M5.5 2v10.5M7.5 15h10.5M15 7.5v10.5" stroke-width=".8" stroke-opacity=".45"/>',
+  resample:
+    '<rect x="2" y="2" width="16" height="16" rx="1"/><path d="M10 2v16M2 10h16" stroke-width="1.3"/><path d="M4.67 2v8M7.33 2v8M2 4.67h8M2 7.33h8" stroke-width=".7"/><rect x="10" y="10" width="8" height="8" fill="currentColor" fill-opacity=".35" stroke="none"/>',
+  zonalStats:
+    '<path d="M3.2 6.2 9.5 2.5l7.6 3.3-.8 9.6-8.8 2.4-4.5-4.4z" fill="currentColor" fill-opacity=".12"/><path d="M6.8 14.5v-3.8M9.6 14.5V8M12.4 14.5V9.6" stroke-width="2"/>',
+  histogram:
+    '<path d="M1.8 17.5h16.4" stroke-width="1.2"/><rect x="2.8" y="12" width="2.5" height="5.5" fill="currentColor" fill-opacity=".35"/><rect x="5.9" y="7" width="2.5" height="10.5" fill="currentColor" fill-opacity=".6"/><rect x="9" y="3" width="2.5" height="14.5" fill="currentColor" fill-opacity=".85"/><rect x="12.1" y="8.5" width="2.5" height="9" fill="currentColor" fill-opacity=".6"/><rect x="15.2" y="13" width="2.5" height="4.5" fill="currentColor" fill-opacity=".35"/>',
+  focalStats:
+    '<path d="M2 5.5h16M2 9h16M2 12.5h16M2 16h16M5.5 2v16M9 2v16M12.5 2v16M16 2v16" stroke-width=".6" stroke-opacity=".4"/><rect x="5.5" y="5.5" width="10.5" height="10.5" fill="currentColor" fill-opacity=".14" stroke-width="1.6"/><rect x="9" y="9" width="3.5" height="3.5" fill="currentColor" stroke="none"/>',
+  cellStats:
+    '<path d="M2 13.5 8 16.8l10-4.3-6-3.3z" fill="currentColor" fill-opacity=".12"/><path d="M2 9.5 8 12.8l10-4.3-6-3.3z" fill="currentColor" fill-opacity=".12"/><path d="M2 5.5 8 8.8l10-4.3-6-3.3z" fill="currentColor" fill-opacity=".12"/><path d="M10.2 3.8v11" stroke-width="1.6"/><circle cx="10.2" cy="3.8" r="1.2" fill="currentColor" stroke="none"/><circle cx="10.2" cy="7.8" r="1.2" fill="currentColor" stroke="none"/><circle cx="10.2" cy="11.8" r="1.2" fill="currentColor" stroke="none"/>',
   server: '<rect x="3" y="3" width="14" height="5.5" rx="1"/><rect x="3" y="11.5" width="14" height="5.5" rx="1"/><path d="M6 5.75h.01M6 14.25h.01" stroke-width="2"/><path d="M9.5 5.75h4.5M9.5 14.25h4.5"/>',
   cloud: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 9v4.6M7.9 11.6 10 13.7l2.1-2.1"/>',
   cloudUpload: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 13.8V9.2M7.9 11.1 10 9l2.1 2.1"/>',

@@ -190,7 +190,7 @@ const RASTERS = ['raster.add', 'raster.style', 'raster.georef'];
  * İşlemler's categories of raster analysis (docs/adr/0231 §10): CBS's Raster tab rather than Analiz, which they would
  * crowd past 1100 px; GIS-32 to GIS-36 add theirs here.
  */
-const RASTER_ANALYSIS = ['Yüzey analizi', 'İnterpolasyon', 'Yoğunluk'];
+const RASTER_ANALYSIS = ['Yüzey analizi', 'İnterpolasyon', 'Yoğunluk', 'Raster işlemleri', 'Raster istatistiği'];
 /** Nokta bulutu (docs/adr/0207 §9), the desktop's for now: CAD's Ekle and CBS's Veri, İşlemler's tools under ▾. */
 const POINT_CLOUD_PANEL = { pick: 'Nokta bulutu', icon: 'pointCloudAdd', commands: POINT_CLOUDS, under: POINT_CLOUD_TOOLS } as const;
 

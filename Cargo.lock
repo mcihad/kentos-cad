@@ -2851,6 +2851,7 @@ name = "kentos-raster"
 version = "0.1.0"
 dependencies = [
  "kentos-contracts",
+ "kentos-expression",
  "kentos-formats",
  "kentos-geometry-core",
  "libm",

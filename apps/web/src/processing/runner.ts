@@ -184,6 +184,8 @@ export class ProcessingRunner {
     const input = tool.parameters.find((p) => p.name === (def.of ?? ''));
     if (input?.type !== 'features' || !values[input.name]) return null;
     const set = resolveFeatures(values[input.name] as FeaturesValue, input, this.host);
+    // A raster's expression runs cell by cell in the raster core (docs/adr/0233 §3): no object to preview it on.
+    if (onlyRasters(set.entities)) return null;
     const layers = this.host.doc.layers;
     const layerName = (id: string) => layers.get(id)?.name ?? id;
     // Evaluated in the drawing's store the host keeps, else in a store of the previewed objects: the geometry values are read there.
@@ -204,6 +206,7 @@ export class ProcessingRunner {
     const input = tool.parameters.find((p) => p.name === (def.of ?? ''));
     if (input?.type !== 'features' || !values[input.name]) return undefined;
     const set = resolveFeatures(values[input.name] as FeaturesValue, input, this.host);
+    if (onlyRasters(set.entities)) return undefined;
     const layers = this.host.doc.layers;
     // The drawing's store the host keeps gives every geometry value ($genişlik, $merkez_y …); the measures are the fallback.
     return entityObjects(set.entities, (id) => layers.get(id)?.name ?? id, { geometry: this.host.geometry, measures: (list) => this.measures(list) });
@@ -417,8 +420,9 @@ export class ProcessingRunner {
       for (const e of ch.add ?? []) {
         const pending = newLayers.get(e.layerId);
         if (!pending || doc.layers.get(e.layerId)) continue;
-        // Right above or below the layer its plan names (its group, its place), else last.
-        const over = pending.above && doc.layers.get(pending.above) ? pending.above : null;
+        // Right above or below the layer its plan names (its group, its place), else last; the tool may name it.
+        const above = pending.above && result.above ? result.above : pending.above;
+        const over = above && doc.layers.get(above) ? above : null;
         const below = !over && pending.below && doc.layers.get(pending.below) ? pending.below : null;
         const anchor = over ?? below;
         const group = anchor ? doc.layers.parentOf(anchor) : null;
@@ -459,4 +463,9 @@ export class ProcessingRunner {
     if (skipped) log?.('warn', `${skipped} değişiklik kilitli ya da olmayan katmanda olduğu için atlandı.`);
     return added;
   }
+}
+
+/** Rasters only: an expression on them names their bands (docs/adr/0233 §3), not attributes. */
+function onlyRasters(list: readonly Entity[]): boolean {
+  return list.length > 0 && list.every((e) => e.kind === 'raster');
 }

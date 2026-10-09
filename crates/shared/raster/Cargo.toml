@@ -14,8 +14,10 @@ publish.workspace = true
 # whose bytes the host appends. The coordinate systems (a row's latitude)
 # are the geometry core's; libm gives both targets the same transcendental
 # functions, so the web and the desktop write the same samples (§23.4).
+# Raster hesaplayıcı's expressions are the expression language's (ADR 0100).
 [dependencies]
 kentos-contracts = { path = "../contracts", default-features = false }
+kentos-expression = { path = "../expression" }
 kentos-formats = { path = "../formats" }
 kentos-geometry-core = { path = "../geometry-core" }
 libm = { workspace = true }

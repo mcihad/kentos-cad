@@ -134,6 +134,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   interpolasyon ve yoğunluk: İşlemler'in İnterpolasyon ve Yoğunluk kategorilerinde Ters uzaklık (IDW), Doğal komşu, Spline, Kriging (hata
   yüzeyiyle), TIN'den raster, Çekirdek yoğunluğu, Çizgi yoğunluğu; noktaların ve çizgi ve alanların kotlu köşelerinden ya da alan değerinden,
   çapraz doğrulama tablosu; sonuç girdinin katmanının hemen altında; geometri çekirdeğinde kesin Delaunay (`geom::delaunay`) (ADR 0232);
+  raster işlemleri: İşlemler'in Raster işlemleri ve Raster istatistiği kategorilerinde Raster hesaplayıcı (harita cebiri: rasterler
+  katmanlarının adlarıyla, bantlar `@`'la; yalnız andığı rasterler açılır, sonuç ilk andığının ızgarasında; ifade diline `ln`, `log10`,
+  `log`, `üstel`, trigonometri, `derece`, `radyan`), Yeniden sınıflandır, Maskeyle kırp, Mozaik, Yeniden örnekle, Bölgesel istatistik
+  (alana yazar, tablo), Histogram, Komşuluk istatistiği, Hücre istatistiği; sayıların kuralı `kentos.rasterstats/1` (çift-çift
+  toplamlar); rasterlerin girdisinde ifadenin alanları bantların adları (ADR 0233);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -408,6 +413,10 @@ python3 scripts/fixtures/bessel_k0.py --check   # Spline'ın K₀'ının Chebysh
 python3 scripts/fixtures/interpolation_processing_cases.py --check   # interpolasyon ve yoğunluğun İşlemler durumlarını denetle; yazılan dosyalar interpolasyon başvurusuna bağlı; durumlar fixtures/processing/v1/interpolation.json ve interpolation.kcad (ADR 0232 §13)
 cargo test --release -p kentos-raster --test all interpolation_timing -- --ignored --nocapture --test-threads=1   # 100 000 noktadan 2048² ızgarada yedi işin ve 10⁶ noktanın Delaunay'ının süreleri (ADR 0232 §14)
 KENTOS_SHOTS_ONLY=interp-serit,interp-idw-cizim,interp-capraz,yogunluk-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # interpolasyon ve yoğunluğun resimleri, .run/shots/arac-interp-*, arac-yogunluk-*, arac-cizgi-yogunlugu-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs interpolation); ADR 0232)
+python3 scripts/fixtures/raster_ops_cases.py --check   # raster işlemlerini (hesaplayıcı, sınıflandırma, maskeyle kırpma, mozaik, yeniden örnekleme, bölgesel istatistik, histogram, komşuluk ve hücre istatistiği) ADR'den, KentOS kodu olmadan kesirler ve mpmath'le denetle; yeniden örnekleme gdalwarp'la çapraz denetlenir; durumlar fixtures/raster-ops/v1/cases.json (ADR 0233)
+python3 scripts/fixtures/raster_ops_processing_cases.py --check   # raster işlemlerinin İşlemler durumlarını ve girdinin adlarını denetle; rasterleri GDAL yazar, yazılan dosyalar başvuruya bağlı; durumlar fixtures/processing/v1/raster-ops.json, raster-ops.kcad ve raster-ops/ (ADR 0233)
+cargo test --release -p kentos-raster --test all ops_timing -- --ignored --nocapture --test-threads=1   # 4096² rasterlerde dokuz aracın on iki işinin süreleri, 10 000 parselle kırpma ve bölgesel istatistik (ADR 0233 §15)
+KENTOS_SHOTS_ONLY=ops-serit,ops-hesap,ops-hesap-cizim,ops-bolge cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # raster işlemlerinin resimleri, .run/shots/arac-ops-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs rasterops); ADR 0233)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
 cargo test --release -p kentos-pointcloud --test all timing -- --ignored --nocapture   # aynı bulutta düğümün görünüşe göre çözülmesi (katman katman) ve LAZ yazma, tek ve dört iş parçacığıyla (önce perf::clouds dosyayı yazar; ADR 0207 §12)
@@ -1278,7 +1287,13 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `geom::delaunay` (bağımsız başvuru `delaunay_cases.py`); raster çekirdeğinde `points`, `grid`, `index`, `solve`, `interp` (`natural`,
   `spline`, `kriging`), `density`, `from_points` (bağımsız başvurular `interpolation_cases.py`, `bessel_k0.py`), WASM `PointAnalysis`;
   İşlemler'in `builtin/interpolation/`'u iki platformda, katman parametresinin `below`'u, `Beside::named`, web RunContext'in `project`'i;
-  ortak durumlar `fixtures/processing/v1/interpolation.json` (`interpolation_processing_cases.py`). Dalda sıradaki `GIS-33`.
+  ortak durumlar `fixtures/processing/v1/interpolation.json` (`interpolation_processing_cases.py`). `GIS-33` raster işlemleri
+  ([ADR 0233](docs/adr/0233-raster-operations.md)) tek parçada bitti (9 Ekim): raster çekirdeğinde `dd`, `stats`, `inputs`, `areas`,
+  `calc`, `reclass`, `focal`, `resample`, `ops` (`OpsSpec::reads`: hesaplayıcının okuduğu rasterler, rasterler açılmadan), `out`'un her
+  örnek türü (bağımsız başvuru `raster_ops_cases.py`, gdalwarp'la çapraz denetim); ifade dilinin matematik işlevleri; WASM `OpsOpening`,
+  `OpsAnalysis`, `opsReads`; İşlemler'in `builtin/raster_ops/`'u ve `rasterOps/`'u iki platformda, girdinin özetinde raster adları
+  (`features::raster_order`, `rasterRun`), `RunResult.above`; ortak durumlar `fixtures/processing/v1/raster-ops.json`
+  (`raster_ops_processing_cases.py`). Dalda sıradaki `GIS-34`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

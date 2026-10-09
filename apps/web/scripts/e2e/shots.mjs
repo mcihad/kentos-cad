@@ -5891,6 +5891,78 @@ function interpolationScenes() {
   ];
 }
 
+// Raster işlemleri and Raster istatistiği (docs/adr/0233) over the valley (rasters.kcad: its elevation model, the
+// photograph, five parcels), as the desktop's `tools_screens` ops-* (apps/desktop/src/raster_ops_scenes.rs).
+SCENES.rasterops = rasterOpsScenes();
+
+function rasterOpsScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const file = (n) => `new File([Uint8Array.from(atob(${JSON.stringify(RASTER_FILES[n])}), (c) => c.charCodeAt(0))], ${JSON.stringify(n)})`;
+  const INDEX = '([Ortofoto@1] - [Ortofoto@2]) / ([Ortofoto@1] + [Ortofoto@2])';
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const PARCELS = [487310, 4420360, 487642, 4420462];
+  /** The valley open, its rasters' files the session's, the scanned sheet (and the photograph unless `photo`) hidden; the view on `b`. */
+  const opened = async (ui, photo = false, b = [X0, Y0 - 518.4, X0 + 768, Y0]) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const files = { 'dem.tif': ${file('dem.tif')}, 'orto.tif': ${file('orto.tif')}, 'tarama.png': ${file('tarama.png')} };
+      for (const [n, f] of Object.entries(files)) rasterService().setFile('rasters/' + n, f);
+      if (!(await k.files.load(${JSON.stringify(RASTERS)}, null))) throw new Error('rasters.kcad did not load');
+      k.selection.clear();
+      k.doc.layers.setVisible('tarama', false);
+      k.doc.layers.setVisible('orto', ${photo});
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  const DEM = { input: QUERY_LAYER('dem') };
+  /** A tool's window with `values`. */
+  const windowOf = (tool, values, photo = false) => async (ui) => {
+    await opened(ui, photo);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  /** A tool run with `values`; its window closed (or kept with its form at its end, the table), the layers `hide` hidden. */
+  const drawn = (tool, values, { photo = false, keep = false, hide = [], view } = {}) => async (ui) => {
+    await opened(ui, photo, view);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    if (keep) await formEnd(ui);
+    else await ui.escapeAll(2);
+    await ui.eval(`(() => { for (const id of ${JSON.stringify(hide)}) window.kentos.doc.layers.setVisible(id, false); })()`);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  return [
+    { id: 'ops-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'ops-hesap', open: windowOf('raster.calculator', { expression: INDEX }, true), close },
+    { id: 'ops-hesap-cizim', open: drawn('raster.calculator', { input: { scope: 'all' }, expression: INDEX }, { photo: true, hide: ['dem', 'orto'] }), close },
+    { id: 'ops-sinif-cizim', open: drawn('raster.reclassify', { ...DEM, table: '* 910 1; 910 930 2; 930 955 3; 955 * 4' }, { hide: ['dem'] }), close },
+    { id: 'ops-kirp-cizim', open: drawn('raster.clipByMask', { ...DEM, mask: QUERY_LAYER('parsel') }, { hide: ['dem'], view: PARCELS }), close },
+    { id: 'ops-komsuluk-cizim', open: drawn('raster.focalStatistics', { ...DEM, width: 9, height: 9, stat: 'range' }, { hide: ['dem'] }), close },
+    { id: 'ops-ornek-cizim', open: drawn('raster.resample', { ...DEM, cell: 16, method: 'mean' }, { hide: ['dem'] }), close },
+    { id: 'ops-bolge', open: drawn('raster.zonalStatistics', { ...DEM, zones: QUERY_LAYER('parsel'), output: 'Ortalama kot' }, { keep: true }), close },
+    { id: 'ops-histogram', open: drawn('raster.histogram', { ...DEM, bins: 16 }, { keep: true }), close },
+  ];
+}
+
 // Harita servisleri (docs/adr/0208) over a CBS project in TUREF / TM33 at Ankara's Kızılay: parcels and a building over
 // a ready basemap, its tiles from the service itself (the network is needed), in the project's system. The desktop's
 // are `tools_screens`' servis-* (apps/desktop/src/service_scenes.rs), the same drawing.

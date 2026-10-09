@@ -1,6 +1,6 @@
 /**
  * What the page and the raster analysis worker say to each other (io/rasterAnalysisWorker.ts,
- * io/rasterAnalysis.ts; docs/adr/0231 §2, docs/adr/0232). A job is one worker's: the raster comes as a Blob (a File the user chose,
+ * io/rasterAnalysis.ts; docs/adr/0231 §2, docs/adr/0232, docs/adr/0233). A job is one worker's: the raster comes as a Blob (a File the user chose,
  * or an embedded raster's bytes; cloning one passes a reference), its settings as the raster core's `Spec` JSON. The
  * result comes back as transferred buffers: a GeoTIFF's bytes with its kind and look, or the lines as typed arrays.
  */
@@ -59,9 +59,39 @@ export interface PointResult {
   crossValues: Float64Array;
 }
 
+/**
+ * A raster operation (docs/adr/0233): its inputs' Blobs in the run's order (each a TIFF read by its slices, a PNG, a
+ * JPEG), the raster core's `OpsSpec` JSON, and the mask's or the zones' objects as JSON (an array; `[]` for none).
+ */
+export interface OpsRequest {
+  type: 'ops';
+  /** Each input's file in the run's order, or why it cannot be read (said only when the run reads it). */
+  sources: (Blob | string)[];
+  spec: string;
+  shapes: string;
+}
+
+/**
+ * A raster operation's result: a raster (the GeoTIFF's bytes, its grid, bands, samples and look), or a table's figures
+ * (each zone's seven numbers: cells with a value, the statistic asked for, sum, mean, least, largest, standard
+ * deviation; NaN for none), or the histogram (JSON); what the run met (JSON: cells, emptyCells).
+ */
+export interface OpsResult {
+  /** The inputs the run read (`opsReads`): Raster hesaplayıcı's those its expression names, the first the grid's. */
+  reads: number[];
+  bytes?: Uint8Array;
+  grid: number[];
+  bands: number;
+  sample: string;
+  style: string;
+  notes: string;
+  zones?: Float64Array;
+  histogram?: string;
+}
+
 export type AnalysisReply =
   | { type: 'progress'; share: number }
-  | { type: 'done'; raster?: AnalysisRaster; lines?: AnalysisLines; points?: PointResult; error?: string };
+  | { type: 'done'; raster?: AnalysisRaster; lines?: AnalysisLines; points?: PointResult; ops?: OpsResult; error?: string };
 
 export type AnalysisResult = { raster: AnalysisRaster } | { lines: AnalysisLines };
 

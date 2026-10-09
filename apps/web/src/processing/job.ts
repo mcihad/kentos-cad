@@ -64,6 +64,7 @@ export function materialize(tool: ProcessingTool, values: RunJob['values'], doc:
 
 export function jobContext(job: RunJob, doc: DocumentSnapshot, geometry: RunGeometry): RunContext {
   const names = new Map(job.layers);
+  const order = new Map(job.layers.map(([id], k) => [id, k]));
   const fields = new Map(job.fields);
   return {
     doc,
@@ -74,6 +75,7 @@ export function jobContext(job: RunJob, doc: DocumentSnapshot, geometry: RunGeom
     field: (layerId, name) => fields.get(layerId)?.find((f) => f.name === name),
     crs: job.crs ?? null,
     project: job.project ?? { srid: 0, type: null },
+    layerIndex: (id) => order.get(id) ?? Number.MAX_SAFE_INTEGER,
   };
 }
 

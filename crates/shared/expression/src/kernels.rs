@@ -267,6 +267,19 @@ pub(crate) fn call(f: Func, cols: &[Col], out: &mut Out, scratch: &mut Scratch) 
             | Func::Sqrt
             | Func::Ceil
             | Func::Floor
+            | Func::Ln
+            | Func::Log10
+            | Func::Log
+            | Func::Exp
+            | Func::Sin
+            | Func::Cos
+            | Func::Tan
+            | Func::Asin
+            | Func::Acos
+            | Func::Atan
+            | Func::Atan2
+            | Func::Degrees
+            | Func::Radians
     );
     for i in 0..out.k.len() {
         if numeric && let Some(v) = number_function(f, cols, i) {

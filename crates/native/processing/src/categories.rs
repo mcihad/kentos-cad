@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 12] = [
+pub const CATEGORIES: [Category; 14] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -102,5 +102,18 @@ pub const CATEGORIES: [Category; 12] = [
         "Yoğunluk",
         "kernelDensity",
         "Noktaların ve çizgilerin yoğunluğu",
+    ),
+    // docs/adr/0233: map algebra, masks, mosaics, statistics.
+    category(
+        "rasterOps",
+        "Raster işlemleri",
+        "rasterCalculator",
+        "Hesaplayıcı, sınıflandırma, maskeyle kırpma, mozaik, yeniden örnekleme",
+    ),
+    category(
+        "rasterStats",
+        "Raster istatistiği",
+        "zonalStats",
+        "Bölgesel, komşuluk ve hücre istatistikleri, histogram",
     ),
 ];

@@ -584,6 +584,10 @@ pub struct RunResult {
     /// The run refuses, and says why (a file without the key column):
     /// nothing changes and the run ends as an error with this message as it is.
     pub refused: Option<String>,
+    /// The layer a new output layer that goes above an input goes right
+    /// above, where the tool knows better than the input's first object (a
+    /// raster operation's first raster read, docs/adr/0233 §2).
+    pub above: Option<String>,
 }
 
 impl RunResult {

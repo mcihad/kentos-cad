@@ -3,7 +3,10 @@
 //! names, arities and help are `library`'s table. Text a function makes is
 //! written at the end of the caller's buffer.
 
-use kentos_geometry_core::jsmath::{PI, js_max, js_max_all, js_min, js_min_all, js_round, js_sign};
+use kentos_geometry_core::jsmath::{
+    PI, acos, asin, atan, atan2, cos, exp, js_max, js_max_all, js_min, js_min_all, js_round,
+    js_sign, log, log2, log10, sin, tan,
+};
 
 use crate::js::number;
 use crate::js::text::{self, MAX_STRING_UNITS, utf16_len};
@@ -48,6 +51,39 @@ pub fn number_function(f: Func, xs: &[f64]) -> Option<V<'static>> {
         Func::Sqrt => finite(first.sqrt()),
         Func::Ceil => finite(first.ceil()),
         Func::Floor => finite(first.floor()),
+        f => finite(math(f, first, xs.get(1).copied().unwrap_or(f64::NAN))?),
+    })
+}
+
+/// `log(base, x)`: base 10 and 2 by their own functions, else ln x / ln base.
+#[inline]
+pub fn log_base(base: f64, x: f64) -> f64 {
+    if base == 10.0 {
+        log10(x)
+    } else if base == 2.0 {
+        log2(x)
+    } else {
+        log(x) / log(base)
+    }
+}
+
+/// A map algebra function of finite numbers (docs/adr/0233 §3).
+#[inline]
+fn math(f: Func, x: f64, y: f64) -> Option<f64> {
+    Some(match f {
+        Func::Ln => log(x),
+        Func::Log10 => log10(x),
+        Func::Log => log_base(x, y),
+        Func::Exp => exp(x),
+        Func::Sin => sin(x),
+        Func::Cos => cos(x),
+        Func::Tan => tan(x),
+        Func::Asin => asin(x),
+        Func::Acos => acos(x),
+        Func::Atan => atan(x),
+        Func::Atan2 => atan2(x, y),
+        Func::Degrees => x * 180.0 / PI,
+        Func::Radians => x * PI / 180.0,
         _ => return None,
     })
 }
@@ -113,6 +149,23 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
         Func::Ceil => numeric_of(args, |n| n.next().unwrap_or(f64::NAN).ceil()),
         Func::Floor => numeric_of(args, |n| n.next().unwrap_or(f64::NAN).floor()),
         Func::Pi => V::Num(PI),
+        Func::Ln
+        | Func::Log10
+        | Func::Log
+        | Func::Exp
+        | Func::Sin
+        | Func::Cos
+        | Func::Tan
+        | Func::Asin
+        | Func::Acos
+        | Func::Atan
+        | Func::Atan2
+        | Func::Degrees
+        | Func::Radians => numeric_of(args, |n| {
+            let x = n.next().unwrap_or(f64::NAN);
+            let y = n.next().unwrap_or(f64::NAN);
+            math(f, x, y).unwrap_or(f64::NAN)
+        }),
         Func::Left | Func::Right => {
             // The first or the last n characters (UTF-16 units, as `parça` counts).
             let Some(n) = num(1) else {

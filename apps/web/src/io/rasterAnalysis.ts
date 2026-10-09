@@ -1,4 +1,14 @@
-import { STOPPED, type AnalysisReply, type AnalysisRequest, type AnalysisResult, type AnalysisWatch, type PointRequest, type PointResult } from './rasterAnalysisProtocol';
+import {
+  STOPPED,
+  type AnalysisReply,
+  type AnalysisRequest,
+  type AnalysisResult,
+  type AnalysisWatch,
+  type OpsRequest,
+  type OpsResult,
+  type PointRequest,
+  type PointResult,
+} from './rasterAnalysisProtocol';
 
 /**
  * A raster analysis on the web (docs/adr/0231 §2, §11; a raster from points, docs/adr/0232): each job in a worker of its own
@@ -7,7 +17,7 @@ import { STOPPED, type AnalysisReply, type AnalysisRequest, type AnalysisResult,
  */
 
 /** Runs `request` in a worker of its own: its `done` reply, or why not. */
-function inWorker(request: AnalysisRequest | PointRequest, watch: AnalysisWatch): Promise<Extract<AnalysisReply, { type: 'done' }>> {
+function inWorker(request: AnalysisRequest | PointRequest | OpsRequest, watch: AnalysisWatch): Promise<Extract<AnalysisReply, { type: 'done' }>> {
   const worker = new Worker(new URL('./rasterAnalysisWorker.ts', import.meta.url), { type: 'module', name: 'KentOS raster çözümleme' });
   return new Promise((resolve, reject) => {
     // Durdur is heard between the worker's messages and a few times a second besides.
@@ -53,5 +63,15 @@ export async function analyzeRaster(blob: Blob, spec: string, watch: AnalysisWat
 export async function analyzePoints(objects: string, values: string, spec: string, lines: boolean, watch: AnalysisWatch): Promise<PointResult> {
   const r = await inWorker({ type: 'points', objects, values, spec, lines }, watch);
   if (r.points) return r.points;
+  throw new Error('Çözümleme bir sonuç vermedi.');
+}
+
+/**
+ * Runs a raster operation (docs/adr/0233) over the inputs' files `sources` (the run's order; a text says why one cannot
+ * be read) in a worker of its own.
+ */
+export async function analyzeOps(sources: (Blob | string)[], spec: string, shapes: string, watch: AnalysisWatch): Promise<OpsResult> {
+  const r = await inWorker({ type: 'ops', sources, spec, shapes }, watch);
+  if (r.ops) return r.ops;
   throw new Error('Çözümleme bir sonuç vermedi.');
 }

@@ -4,9 +4,9 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 460 | 437 | 0 | 23 |
+| Komutlar | 469 | 446 | 0 | 23 |
 | Araçlar | 121 | 119 | 0 | 2 |
-| İşlem araçları | 35 | 35 | 0 | 0 |
+| İşlem araçları | 44 | 44 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
 | Ayarlar | 93 | 93 | 0 | 0 |
@@ -60,9 +60,9 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 390 | 0 | 58 | 10 | 2 | 460 |
+| Komutlar | 399 | 0 | 58 | 10 | 2 | 469 |
 | Araçlar | 119 | 0 | 0 | 2 | 0 | 121 |
-| İşlem araçları | 35 | 0 | 0 | 0 | 0 | 35 |
+| İşlem araçları | 44 | 0 | 0 | 0 | 0 | 44 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
 | Ayarlar | 89 | 0 | 3 | 0 | 1 | 93 |
@@ -87,7 +87,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 460; ayrıca 10 iki platformda da bekliyor)
+#### Komutlar (58 / 469; ayrıca 10 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -163,7 +163,7 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - `subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 
-#### İşlem araçları (0 / 35)
+#### İşlem araçları (0 / 44)
 
 Yok.
 
@@ -214,4 +214,4 @@ Yok.
 
 ## Test başvurusu
 
-195 / 460 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+204 / 469 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

@@ -1,7 +1,9 @@
 """The language since docs/adr/0100 §4, evaluated here independently of the
 engine: durum … son (CASE), içinde (IN), arasında (BETWEEN), gibi and benzer
 (LIKE, ILIKE), boş / boş değil and IS [NOT] NULL, the power ^, and the
-functions kök, tavan, taban, pi, sol, sağ, bul, birleştir and sağdoldur.
+functions kök, tavan, taban, pi, sol, sağ, bul, birleştir and sağdoldur;
+since docs/adr/0233 §3 map algebra's ln, log10, log, üstel, sin, cos, tan,
+asin, acos, atan, atan2, derece and radyan.
 
     python3 scripts/fixtures/expression_language.py           # writes the file
     python3 scripts/fixtures/expression_language.py --check   # writes nothing; compares
@@ -25,6 +27,14 @@ docs/PROCESSING.md §5 states them, written anew here:
   case such a power decides carries "ulp": 1 (16 ^ (1/3): the engine
   2.519842099789746, the true value 0.41 units from 2.5198420997897464);
   whole powers are exact. kök is the square root to 60 digits, rounded once;
+- ln, log10, üstel and the trigonometric functions are the true values to
+  60 digits, rounded once (mpmath); the engine's (libm's) are within one
+  unit in the last place, so their cases carry "ulp": 1. log(b, x) is
+  log10 or log2 for b 10 or 2, else ln x / ln b with each logarithm rounded
+  once, then the quotient: the engine's two libm logarithms (each within
+  0.52 units) and its division leave it within 3 units of that, so such a
+  case carries "ulp": 3; derece and radyan are x · 180 / π and x · π / 180
+  in double precision, in that order;
 - positions and lengths of text count UTF-16 units, as JavaScript does;
 - a value that is not a finite number is boş; text past JavaScript's longest
   string makes the whole expression boş, but only where it is computed: the
@@ -41,6 +51,8 @@ import sys
 from decimal import Decimal
 from fractions import Fraction
 from pathlib import Path
+
+import mpmath
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures/expression/v2/language.json"
 
@@ -139,6 +151,30 @@ SOURCES = [
     "tavan('x')",
     "yuvarla(pi(), 4)",
     "pi() * 10 ^ 2",
+    # Map algebra's (docs/adr/0233 §3).
+    "ln(Oran)",
+    "ln(0)",
+    "log10(1000)",
+    "log10(Oran)",
+    "log(2, 8)",
+    "log(10, 0.01)",
+    "log(3, Oran)",
+    "üstel(1)",
+    "exp(Oran)",
+    "sin(pi() / 6)",
+    "cos(Oran)",
+    "tan(1)",
+    "asin(Oran)",
+    "acos(2)",
+    "atan(Oran)",
+    "arctan(-1)",
+    "atan2(1, -1)",
+    "atan2(Oran, Kat)",
+    "derece(pi())",
+    "radyan(Oran)",
+    "degrees(atan2(Oran, 1))",
+    "ln()",
+    "log(2)",
     # Text.
     "sol(Kod, 3)",
     "sağ(Kod, 2)",
@@ -440,7 +476,7 @@ def power(x, y):
     if x == 0:
         return 0.0
     r = PRECISE.exp(PRECISE.multiply(Decimal(y), PRECISE.ln(Decimal(x))))
-    NEARLY.append(True)
+    NEARLY.append(1)
     return float(r)
 
 
@@ -450,6 +486,84 @@ NEARLY = []
 
 def square_root(x):
     return float(PRECISE.sqrt(Decimal(x))) if x >= 0 else math.nan
+
+
+mpmath.mp.prec = 200
+
+
+def nearly(f):
+    """A function whose value the engine takes from libm: true to within one unit in the last place."""
+    def call(x):
+        NEARLY.append(1)
+        return f(x)
+    return call
+
+
+def checked(f, lo=None, hi=None):
+    """f's true value rounded once; NaN outside [lo, hi] (the engine's libm gives NaN there)."""
+    def call(x):
+        if (lo is not None and x < lo) or (hi is not None and x > hi):
+            return math.nan
+        return float(f(mpmath.mpf(x)))
+    return call
+
+
+def natural_log(x):
+    if x == 0:
+        return -math.inf
+    if x < 0:
+        return math.nan
+    return float(PRECISE.ln(Decimal(x)))
+
+
+def log10_of(x):
+    if x == 0:
+        return -math.inf
+    if x < 0:
+        return math.nan
+    return float(PRECISE.log10(Decimal(x)))
+
+
+def log2_of(x):
+    if x == 0:
+        return -math.inf
+    if x < 0:
+        return math.nan
+    return float(PRECISE.divide(PRECISE.ln(Decimal(x)), PRECISE.ln(Decimal(2))))
+
+
+def exponential(x):
+    """e^x rounded once; ∞ past float64's largest."""
+    try:
+        return float(PRECISE.exp(Decimal(x)))
+    except (decimal.Overflow, OverflowError):
+        return math.inf
+
+
+def log_base(args):
+    b, x = (to_number(a) for a in args)
+    if b is None or x is None:
+        return None
+    if b == 10:
+        NEARLY.append(1)
+        r = log10_of(x)
+    elif b == 2:
+        NEARLY.append(1)
+        r = log2_of(x)
+    else:
+        # Two logarithms and the quotient: within 3 units (see above).
+        NEARLY.append(3)
+        lx, lb = natural_log(x), natural_log(b)
+        r = lx / lb if lb != 0 else math.copysign(math.inf, lx) if lx != 0 else math.nan
+    return r if math.isfinite(r) else None
+
+
+def arc_tangent2(args):
+    y, x = (to_number(a) for a in args)
+    if y is None or x is None:
+        return None
+    NEARLY.append(1)
+    return float(mpmath.atan2(mpmath.mpf(y), mpmath.mpf(x)))
 
 
 def js_round(x):
@@ -520,10 +634,25 @@ FUNCTIONS = {
     "SAGDOLDUR": (2, 3, lambda args: pad(args[0], args[1], args[2] if len(args) > 2 else None, " ", True)),
     "DOLDUR": (2, 3, lambda args: pad(args[0], args[1], args[2] if len(args) > 2 else None, "0", False)),
     "YUVARLA": (1, 2, lambda args: yuvarla(args)),
+    "LN": (1, 1, number_fn(nearly(natural_log))),
+    "LOG10": (1, 1, number_fn(nearly(log10_of))),
+    "LOG": (2, 2, log_base),
+    "USTEL": (1, 1, number_fn(nearly(exponential))),
+    "SIN": (1, 1, number_fn(nearly(checked(mpmath.sin)))),
+    "COS": (1, 1, number_fn(nearly(checked(mpmath.cos)))),
+    "TAN": (1, 1, number_fn(nearly(checked(mpmath.tan)))),
+    "ASIN": (1, 1, number_fn(nearly(checked(mpmath.asin, -1, 1)))),
+    "ACOS": (1, 1, number_fn(nearly(checked(mpmath.acos, -1, 1)))),
+    "ATAN": (1, 1, number_fn(nearly(checked(mpmath.atan)))),
+    "ATAN2": (2, 2, arc_tangent2),
+    "DERECE": (1, 1, number_fn(lambda x: x * 180.0 / math.pi)),
+    "RADYAN": (1, 1, number_fn(lambda x: x * math.pi / 180.0)),
 }
 for english, turkish in [("SQRT", "KOK"), ("CEIL", "TAVAN"), ("FLOOR", "TABAN"), ("LEFT", "SOL"),
                          ("RIGHT", "SAG"), ("STRPOS", "BUL"), ("CONCAT", "BIRLESTIR"),
-                         ("RPAD", "SAGDOLDUR"), ("LPAD", "DOLDUR"), ("ROUND", "YUVARLA")]:
+                         ("RPAD", "SAGDOLDUR"), ("LPAD", "DOLDUR"), ("ROUND", "YUVARLA"),
+                         ("EXP", "USTEL"), ("ARCSIN", "ASIN"), ("ARCCOS", "ACOS"), ("ARCTAN", "ATAN"),
+                         ("DEGREES", "DERECE"), ("RADIANS", "RADYAN")]:
     FUNCTIONS[english] = FUNCTIONS[turkish]
 
 
@@ -914,7 +1043,7 @@ def build():
         NEARLY.clear()
         case = {"source": src, "values": [encode(value(tree, o)) for o in OBJECTS]}
         if NEARLY:
-            case["ulp"] = 1
+            case["ulp"] = max(NEARLY)
         cases.append(case)
     return {
         "format": "kentos.expression-language",
@@ -922,8 +1051,9 @@ def build():
         "note": "Dilin §4 ekleri (durum … son, içinde, arasında, gibi, benzer, boş / boş değil, ^, yeni işlevler), "
                 "motordan bağımsız hesaplanmış: her kaynağın her nesnedeki değeri ya da derlenmediği. "
                 "Değer: null boş, [\"n\", x] sayı (\"-0\" eksi sıfır), [\"t\", s] metin, [\"b\", b] doğru/yanlış. "
-                "\"ulp\": 1 olan durumda sayı tam olmayan üslü bir kuvvetten gelir: motorunki (libm) doğru yuvarlanmış "
-                "değerin en çok bir son basamak birimi yanındadır. "
+                "\"ulp\": n olan durumda sayı tam olmayan üslü bir kuvvetten ya da libm'nin bir işlevinden (ln, üstel, "
+                "trigonometri; 1) ya da genel tabanlı log'dan (3) gelir: motorunki doğru yuvarlanmış "
+                "değerin en çok n son basamak birimi yanındadır. "
                 "Üretici scripts/fixtures/expression_language.py (--check yalnız karşılaştırır).",
         "objects": OBJECTS,
         "cases": cases,

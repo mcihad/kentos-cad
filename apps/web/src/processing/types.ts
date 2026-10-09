@@ -315,6 +315,8 @@ export interface RunContext {
   readonly crs: ProjectCrs | null;
   /** The project's SRID and type (a raster made from points takes them, docs/adr/0232). */
   readonly project: ProjectInfo;
+  /** A layer's place among the layers, the top of the panel first (the raster operations' order, docs/adr/0233 §2). */
+  layerIndex(id: string): number;
 }
 
 /** The project's SRID (0: none, or a definition of its own) and its type (null: not asked). */
@@ -365,6 +367,12 @@ export interface RunResult {
    * changes and the run ends as an error with this message as it is.
    */
   refused?: string;
+  /**
+   * The layer a new output layer that goes above an input goes right above,
+   * where the tool knows better than the input's first object (a raster
+   * operation's first raster read, docs/adr/0233 §2).
+   */
+  above?: string;
 }
 
 // ── The tool ───────────────────────────────────────────────────────────

@@ -1,9 +1,9 @@
-import type { AnalysisResult, PointResult } from '../io/rasterAnalysisProtocol';
+import type { AnalysisResult, OpsResult, PointResult } from '../io/rasterAnalysisProtocol';
 import type { RasterRunHost } from './rasterHost';
 
 /**
- * What the surface and interpolation cases need in a test (processing/cases.test.ts, fixtures/processing/v1/surface.json
- * and interpolation.json; docs/adr/0231, 0232):
+ * What the raster cases need in a test (processing/cases.test.ts, fixtures/processing/v1/surface.json, interpolation.json
+ * and raster-ops.json; docs/adr/0231, 0232, 0233):
  * the raster analysis module run in process (crates/wasm/raster-wasm, `pnpm wasm`), a raster host whose rasters are
  * the cases' files and which keeps what a run writes, and the formats module reading a written GeoTIFF's level 0.
  * Test code only.
@@ -45,10 +45,30 @@ interface PointApi {
   crossValues(): Float64Array;
   free(): void;
 }
+interface OpsApi {
+  header(): Bytes;
+  needs(): Float64Array;
+  putBlock(i: number, bytes: Uint8Array): Bytes;
+  step(): Bytes;
+  done(): boolean;
+  finish(): Bytes;
+  head(): Bytes;
+  grid(): Float64Array;
+  bands(): number;
+  sample(): string;
+  style(): string;
+  notes(): string;
+  zones(): Float64Array;
+  histogram(): string;
+  free(): void;
+}
+type HeaderOpening = { need(): Float64Array; put(offset: number, bytes: Uint8Array): void; analysis(spec: string): AnalysisApi; free(): void };
 interface RasterWasm {
   initSync(o: { module: BufferSource }): unknown;
-  AnalysisOpening: new (size: number) => { need(): Float64Array; put(offset: number, bytes: Uint8Array): void; analysis(spec: string): AnalysisApi; free(): void };
+  AnalysisOpening: new (size: number) => HeaderOpening;
   PointAnalysis: new (objects: string, values: string, spec: string, lines: boolean) => PointApi;
+  OpsOpening: new () => { addTiff(o: HeaderOpening): void; start(spec: string, shapes: string): OpsApi; free(): void };
+  opsReads(spec: string): Uint32Array;
 }
 interface FormatsWasm {
   initSync(o: { module: BufferSource }): unknown;
@@ -145,6 +165,63 @@ export async function analyzePointsHere(objects: string, values: string, spec: s
   }
 }
 
+/**
+ * A raster operation (docs/adr/0233) run here as the analysis worker runs it, over TIFFs' bytes in the run's order (a
+ * text: why that input cannot be read): only the inputs the run reads are opened.
+ */
+export async function analyzeOpsHere(sources: (Uint8Array | string)[], spec: string, shapes: string): Promise<OpsResult> {
+  const { raster: m } = await modules();
+  const reads = Array.from(m.opsReads(spec));
+  const inputs = reads.map((k) => {
+    const s = sources[k];
+    if (typeof s === 'string') throw new Error(s);
+    return s;
+  });
+  const o = new m.OpsOpening();
+  let a: OpsApi;
+  try {
+    for (const bytes of inputs) {
+      const t = new m.AnalysisOpening(bytes.length);
+      try {
+        for (;;) {
+          const need = t.need();
+          if (!need.length) break;
+          t.put(need[0], bytes.slice(need[0], need[0] + need[1]));
+        }
+        o.addTiff(t);
+      } finally {
+        t.free();
+      }
+    }
+    a = o.start(spec, shapes);
+  } finally {
+    o.free();
+  }
+  try {
+    const parts: Uint8Array[] = [a.header()];
+    while (!a.done()) {
+      const needs = a.needs();
+      for (let i = 0; 3 * i < needs.length; i++) {
+        const bytes = inputs[needs[3 * i]];
+        a.putBlock(i, bytes.slice(needs[3 * i + 1], needs[3 * i + 1] + needs[3 * i + 2]));
+      }
+      parts.push(a.step());
+    }
+    parts.push(a.finish());
+    const result: OpsResult = { reads, grid: Array.from(a.grid()), bands: a.bands(), sample: a.sample(), style: a.style(), notes: a.notes() };
+    if (a.bands() > 0) {
+      const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+      let at = 0;
+      for (const p of parts) (out.set(p, at), (at += p.length));
+      out.set(a.head(), 0);
+      return { ...result, bytes: out };
+    }
+    return { ...result, zones: a.zones(), histogram: a.histogram() };
+  } finally {
+    a.free();
+  }
+}
+
 /** A host whose linked rasters are `rasters` (a raster's file name → its bytes), keeping what a run writes in `written`. */
 export function fixtureRasterHost(rasters: ReadonlyMap<string, Uint8Array>): { host: RasterRunHost; written: Map<string, Uint8Array> } {
   const written = new Map<string, Uint8Array>();
@@ -155,6 +232,8 @@ export function fixtureRasterHost(rasters: ReadonlyMap<string, Uint8Array>): { h
     },
     analyze: async (blob, spec) => analyzeHere(new Uint8Array(await blob.arrayBuffer()), spec),
     analyzePoints: (objects, values, spec, lines) => analyzePointsHere(objects, values, spec, lines),
+    analyzeOps: async (sources, spec, shapes) =>
+      analyzeOpsHere(await Promise.all(sources.map(async (b) => (typeof b === 'string' ? b : new Uint8Array(await b.arrayBuffer())))), spec, shapes),
     keep: async (bytes, name) => {
       written.set(name, bytes);
       return { file: name, note: '' };

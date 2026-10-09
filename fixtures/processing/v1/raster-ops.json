@@ -1,0 +1,1140 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "rasters": {
+  "kot.tif": "raster-ops/kot.tif",
+  "fark.tif": "raster-ops/fark.tif",
+  "egim.tif": "raster-ops/egim.tif",
+  "buyuk.tif": "raster-ops/buyuk.tif",
+  "pafta1.tif": "raster-ops/pafta1.tif",
+  "pafta2.tif": "raster-ops/pafta2.tif",
+  "pafta3.tif": "raster-ops/pafta3.tif",
+  "dem.tif": "raster-ops/dem.tif",
+  "bolge.tif": "raster-ops/bolge.tif",
+  "arazi.tif": "raster-ops/arazi.tif",
+  "yil1.tif": "raster-ops/yil1.tif",
+  "yil2.tif": "raster-ops/yil2.tif",
+  "yil3.tif": "raster-ops/yil3.tif"
+ },
+ "documents": {
+  "raster-ops.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "drawingFont": "barlow",
+    "activeLayer": "kot",
+    "measureHeightMm": 2
+   },
+   "tools": {
+    "raster.calculator": {
+     "input": {
+      "scope": "visible"
+     },
+     "expression": "",
+     "empty": "propagate",
+     "sample": "f32",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Hesap"
+     }
+    },
+    "raster.reclassify": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "table": "",
+     "bounds": "upperClosed",
+     "unmatched": "keep",
+     "sample": "f32",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Sınıflar"
+     }
+    },
+    "raster.clipByMask": {
+     "input": {
+      "scope": "selection"
+     },
+     "mask": {
+      "scope": "layer",
+      "layerId": "kot"
+     },
+     "crop": true,
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Kırpılmış"
+     }
+    },
+    "raster.mosaic": {
+     "input": {
+      "scope": "selection"
+     },
+     "overlap": "top",
+     "sampling": "nearest",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Mozaik"
+     }
+    },
+    "raster.resample": {
+     "input": {
+      "scope": "selection"
+     },
+     "cell": 0,
+     "method": "nearest",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Örneklenmiş"
+     }
+    },
+    "raster.zonalStatistics": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "zones": {
+      "scope": "layer",
+      "layerId": "kot"
+     },
+     "stat": "mean",
+     "output": "Ortalama",
+     "decimals": 3
+    },
+    "raster.histogram": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "bins": 20,
+     "min": null,
+     "max": null
+    },
+    "raster.focalStatistics": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "shape": "rect",
+     "width": 3,
+     "height": 3,
+     "radius": 3,
+     "inner": 1,
+     "stat": "mean",
+     "ignore": true,
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Komşuluk"
+     }
+    },
+    "raster.cellStatistics": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "stat": "mean",
+     "ignore": true,
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Hücre istatistiği"
+     }
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "calculator",
+   "title": "Raster hesaplayıcı: [Kot] * 2 + [Fark], iki raster seçili; değersizler değersiz kalır",
+   "document": "raster-ops.kcad",
+   "selection": [
+    1,
+    2
+   ],
+   "run": {
+    "tool": "raster.calculator"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "expression": "[Kot] * 2 + [Fark]"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Raster hesaplayıcı",
+    "summary": "9 × 7 hücrelik raster; “kot-hesap.tif” yazıldı.",
+    "outputs": {
+     "file": "kot-hesap.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-hesap",
+      "name": "Hesap",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-hesap",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       2.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -2.0
+      ],
+      "width": 9,
+      "height": 7,
+      "bands": 1,
+      "sample": "f32",
+      "file": "kot-hesap.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-hesap": "kot"
+    },
+    "rasterOpsOf": {
+     "kot-hesap.tif": "hesap-iki-raster"
+    }
+   }
+  },
+  {
+   "id": "reclassify",
+   "title": "Yeniden sınıflandır: * 5 1; 5 20 2; 30 boş; boş 99 — tabloda olmayanlar kalır",
+   "document": "raster-ops.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.reclassify"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "egim"
+    },
+    "table": "* 5 1; 5 20 2; 30 boş; boş 99"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Yeniden sınıflandır",
+    "summary": "8 × 6 hücrelik raster; “egim-sinif.tif” yazıldı. Tablonun hiçbir kuralının tutmadığı 26 hücre.",
+    "outputs": {
+     "file": "egim-sinif.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-siniflar",
+      "name": "Sınıflar",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-siniflar",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       2.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -2.0
+      ],
+      "width": 8,
+      "height": 6,
+      "bands": 1,
+      "sample": "f32",
+      "file": "egim-sinif.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-siniflar": "egim"
+    },
+    "rasterOpsOf": {
+     "egim-sinif.tif": "sinif-ust-kapali"
+    }
+   }
+  },
+  {
+   "id": "clip",
+   "title": "Maskeyle kırp: kare maske, kutusuna kırpılır",
+   "document": "raster-ops.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.clipByMask"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "buyuk"
+    },
+    "mask": {
+     "scope": "layer",
+     "layerId": "maske"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Maskeyle kırp",
+    "summary": "5 × 5 hücrelik raster; “buyuk-kirpik.tif” yazıldı. Maskenin içinde 25 hücre.",
+    "outputs": {
+     "file": "buyuk-kirpik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-kirpilmis",
+      "name": "Kırpılmış",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-kirpilmis",
+      "attrs": {},
+      "affine": [
+       500004.0,
+       2.0,
+       0.0,
+       4419994.0,
+       0.0,
+       -2.0
+      ],
+      "width": 5,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "buyuk-kirpik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Arazi"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-kirpilmis": "buyuk"
+    },
+    "rasterOpsOf": {
+     "buyuk-kirpik.tif": "kirp-kare"
+    }
+   }
+  },
+  {
+   "id": "mosaic",
+   "title": "Mozaik, üç pafta (biri iri hücreli), Üstteki: en ince ızgarada",
+   "document": "raster-ops.kcad",
+   "selection": [
+    5,
+    6,
+    7
+   ],
+   "run": {
+    "tool": "raster.mosaic"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Mozaik",
+    "summary": "12 × 10 hücrelik raster; “pafta1-mozaik.tif” yazıldı. 3 raster birleşti.",
+    "outputs": {
+     "file": "pafta1-mozaik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-mozaik",
+      "name": "Mozaik",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-mozaik",
+      "attrs": {},
+      "affine": [
+       499996.0,
+       2.0,
+       0.0,
+       4420004.0,
+       0.0,
+       -2.0
+      ],
+      "width": 12,
+      "height": 10,
+      "bands": 1,
+      "sample": "f32",
+      "file": "pafta1-mozaik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Arazi"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-mozaik": "pafta1"
+    },
+    "rasterOpsOf": {
+     "pafta1-mozaik.tif": "mozaik-top"
+    }
+   }
+  },
+  {
+   "id": "resample",
+   "title": "Yeniden örnekle, 3 m Ortalama: örtüşmeyle ağırlıklı",
+   "document": "raster-ops.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.resample"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "dem"
+    },
+    "cell": 3,
+    "method": "mean"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Yeniden örnekle",
+    "summary": "7 × 6 hücrelik raster; “dem-ornek.tif” yazıldı.",
+    "outputs": {
+     "file": "dem-ornek.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-orneklenmis",
+      "name": "Örneklenmiş",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-orneklenmis",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       3.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -3.0
+      ],
+      "width": 7,
+      "height": 6,
+      "bands": 1,
+      "sample": "f32",
+      "file": "dem-ornek.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Arazi"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-orneklenmis": "dem"
+    },
+    "rasterOpsOf": {
+     "dem-ornek.tif": "ornekle-mean-3.0"
+    }
+   }
+  },
+  {
+   "id": "focal",
+   "title": "Komşuluk istatistiği, 3 × 3 Ortalama: değersizler yok sayılır",
+   "document": "raster-ops.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.focalStatistics"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "arazi"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Komşuluk istatistiği",
+    "summary": "13 × 11 hücrelik raster; “arazi-komsuluk.tif” yazıldı.",
+    "outputs": {
+     "file": "arazi-komsuluk.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-komsuluk",
+      "name": "Komşuluk",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-komsuluk",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       2.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -2.0
+      ],
+      "width": 13,
+      "height": 11,
+      "bands": 1,
+      "sample": "f32",
+      "file": "arazi-komsuluk.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-komsuluk": "arazi"
+    },
+    "rasterOpsOf": {
+     "arazi-komsuluk.tif": "komsu-ortalama-3x3"
+    }
+   }
+  },
+  {
+   "id": "cells",
+   "title": "Hücre istatistiği, üç yıl Ortalama (biri kaydırılmış): ortak ızgarada",
+   "document": "raster-ops.kcad",
+   "selection": [
+    11,
+    12,
+    13
+   ],
+   "run": {
+    "tool": "raster.cellStatistics"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Hücre istatistiği",
+    "summary": "10 × 8 hücrelik raster; “yil1-hucre.tif” yazıldı. 3 raster birleşti.",
+    "outputs": {
+     "file": "yil1-hucre.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-hucre-istatistigi",
+      "name": "Hücre istatistiği",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-hucre-istatistigi",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       2.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -2.0
+      ],
+      "width": 10,
+      "height": 8,
+      "bands": 1,
+      "sample": "f32",
+      "file": "yil1-hucre.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-hucre-istatistigi": "yil1"
+    },
+    "rasterOpsOf": {
+     "yil1-hucre.tif": "hucre-mean"
+    }
+   }
+  },
+  {
+   "id": "calculator-all",
+   "title": "Raster hesaplayıcı bütün rasterlerde, [Yıl 3] - [Yıl 1]: yalnız andığı iki raster açılır (ortofotoların dosyası yok); sonuç ilk andığının ızgarasında, adıyla ve katmanının üstünde",
+   "document": "raster-ops.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.calculator"
+   },
+   "values": {
+    "input": {
+     "scope": "all"
+    },
+    "expression": "[Yıl 3] - [Yıl 1]"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Raster hesaplayıcı",
+    "summary": "8 × 7 hücrelik raster; “yil3-hesap.tif” yazıldı.",
+    "outputs": {
+     "file": "yil3-hesap.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-hesap",
+      "name": "Hesap",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-hesap",
+      "attrs": {},
+      "affine": [
+       500004.0,
+       2.0,
+       0.0,
+       4419998.0,
+       0.0,
+       -2.0
+      ],
+      "width": 8,
+      "height": 7,
+      "bands": 1,
+      "sample": "f32",
+      "file": "yil3-hesap.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-hesap": "yil3"
+    },
+    "rasterOpsOf": {
+     "yil3-hesap.tif": "hesap-ilk-anilan"
+    }
+   }
+  },
+  {
+   "id": "zonal",
+   "title": "Bölgesel istatistik, Ortalama: üç bölgeye yazılır (biri daire), dışarıdaki bölge boş; tablo",
+   "document": "raster-ops.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.zonalStatistics"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "bolge"
+    },
+    "zones": {
+     "scope": "layer",
+     "layerId": "bolgeler"
+    },
+    "stat": "mean",
+    "output": "Ortalama"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bölgesel istatistik",
+    "summary": "3 bölgeye “Ortalama” yazıldı (ortalama).",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Nesne",
+       "Sayı",
+       "Toplam",
+       "Ortalama",
+       "En küçük",
+       "En büyük",
+       "Standart sapma"
+      ],
+      "rows": [
+       [
+        "B1",
+        "30",
+        "3274.559",
+        "109.152",
+        "94.384",
+        "120.313",
+        "7.460"
+       ],
+       [
+        "B2",
+        "35",
+        "3632.148",
+        "103.776",
+        "91.088",
+        "127.812",
+        "10.747"
+       ],
+       [
+        "B3",
+        "23",
+        "2300.082",
+        "100.004",
+        "91.130",
+        "112.276",
+        "5.661"
+       ],
+       [
+        "B4",
+        "0",
+        "",
+        "",
+        "",
+        "",
+        ""
+       ]
+      ]
+     },
+     "changed": [
+      15,
+      16,
+      17
+     ],
+     "count": 3
+    },
+    "updated": [
+     {
+      "id": 15,
+      "attrs": {
+       "Ad": "Bölge 1",
+       "Ortalama": "109.152"
+      },
+      "label": "B1"
+     },
+     {
+      "id": 16,
+      "attrs": {
+       "Ad": "Bölge 2",
+       "Ortalama": "103.776"
+      },
+      "label": "B2"
+     },
+     {
+      "id": 17,
+      "attrs": {
+       "Ad": "Bölge 3",
+       "Ortalama": "100.004"
+      },
+      "label": "B3"
+     }
+    ],
+    "layers": [],
+    "added": [],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 bölgenin içinde değeri olan hücre merkezi yok."
+     }
+    ]
+   }
+  },
+  {
+   "id": "histogram",
+   "title": "Histogram, 8 aralık, bandın sınırlarıyla: değersiz hücreler sayılır",
+   "document": "raster-ops.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.histogram"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "bolge"
+    },
+    "bins": 8
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "117 hücre, 91.088 ile 131.868 arası 8 aralık. Değeri olmayan 3 hücre.",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Aralık",
+       "Alt sınır",
+       "Üst sınır",
+       "Sayı",
+       "Oran (%)",
+       "Birikimli (%)"
+      ],
+      "rows": [
+       [
+        "1",
+        "91.088",
+        "96.185",
+        "18",
+        "15.38",
+        "15.38"
+       ],
+       [
+        "2",
+        "96.185",
+        "101.283",
+        "15",
+        "12.82",
+        "28.21"
+       ],
+       [
+        "3",
+        "101.283",
+        "106.380",
+        "17",
+        "14.53",
+        "42.74"
+       ],
+       [
+        "4",
+        "106.380",
+        "111.478",
+        "21",
+        "17.95",
+        "60.68"
+       ],
+       [
+        "5",
+        "111.478",
+        "116.575",
+        "18",
+        "15.38",
+        "76.07"
+       ],
+       [
+        "6",
+        "116.575",
+        "121.673",
+        "14",
+        "11.97",
+        "88.03"
+       ],
+       [
+        "7",
+        "121.673",
+        "126.770",
+        "11",
+        "9.40",
+        "97.44"
+       ],
+       [
+        "8",
+        "126.770",
+        "131.868",
+        "3",
+        "2.56",
+        "100.00"
+       ]
+      ]
+     }
+    },
+    "layers": [],
+    "added": []
+   }
+  },
+  {
+   "id": "calculator-name",
+   "title": "Raster hesaplayıcı, adı olmayan raster: adlar söylenir",
+   "document": "raster-ops.kcad",
+   "selection": [
+    1,
+    2
+   ],
+   "run": {
+    "tool": "raster.calculator"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "expression": "[Yok] + 1"
+   },
+   "expect": {
+    "status": "error",
+    "message": "“Yok” adında raster bandı yok. Rasterler: [Kot], [Fark]; bant @ ile: [Ad@2]."
+   }
+  },
+  {
+   "id": "calculator-name-all",
+   "title": "Raster hesaplayıcı bütün rasterlerde, adı olmayan raster: bütün adlar panelin sırasıyla",
+   "document": "raster-ops.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.calculator"
+   },
+   "values": {
+    "input": {
+     "scope": "all"
+    },
+    "expression": "[Yok] + 1"
+   },
+   "expect": {
+    "status": "error",
+    "message": "“Yok” adında raster bandı yok. Rasterler: [Kot], [Fark], [Eğim], [Büyük], [Pafta 1], [Pafta 2], [Pafta 3], [DEM], [Bölge rasteri], [Arazi], [Yıl 1], [Yıl 2], [Yıl 3], [Ortofoto], [Ortofoto (2)]; bant @ ile: [Ad@2]."
+   }
+  },
+  {
+   "id": "resample-cell",
+   "title": "Yeniden örnekle, hücre boyu yazılmadı",
+   "document": "raster-ops.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.resample"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "dem"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Hücre boyunu yazın (0'dan büyük)."
+   }
+  },
+  {
+   "id": "mosaic-one",
+   "title": "Mozaik tek rasterle",
+   "document": "raster-ops.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.mosaic"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "pafta1"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Mozaik en az iki raster ister."
+   }
+  },
+  {
+   "id": "clip-outside",
+   "title": "Maskeyle kırp, maske rasterin dışında",
+   "document": "raster-ops.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.clipByMask"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kot"
+    },
+    "mask": {
+     "scope": "layer",
+     "layerId": "uzak"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Maske rasterle kesişmiyor: maskenin içinde rasterin hiçbir hücre merkezi yok."
+   }
+  }
+ ],
+ "inputFields": [
+  {
+   "id": "calculator-names",
+   "title": "Raster hesaplayıcı'nın İfade alanı: bütün rasterlerin adları ve bantları; aynı katmanda sonra eklenen “Ortofoto”, öncekini “Ortofoto (2)”",
+   "document": "raster-ops.kcad",
+   "tool": "raster.calculator",
+   "values": {
+    "input": {
+     "scope": "all"
+    }
+   },
+   "fields": [
+    [
+     "Arazi",
+     1
+    ],
+    [
+     "Bölge rasteri",
+     1
+    ],
+    [
+     "Büyük",
+     1
+    ],
+    [
+     "DEM",
+     1
+    ],
+    [
+     "Eğim",
+     1
+    ],
+    [
+     "Fark",
+     1
+    ],
+    [
+     "Kot",
+     1
+    ],
+    [
+     "Ortofoto",
+     1
+    ],
+    [
+     "Ortofoto (2)",
+     1
+    ],
+    [
+     "Ortofoto (2)@2",
+     1
+    ],
+    [
+     "Ortofoto (2)@3",
+     1
+    ],
+    [
+     "Ortofoto (2)@4",
+     1
+    ],
+    [
+     "Ortofoto@2",
+     1
+    ],
+    [
+     "Ortofoto@3",
+     1
+    ],
+    [
+     "Pafta 1",
+     1
+    ],
+    [
+     "Pafta 2",
+     1
+    ],
+    [
+     "Pafta 3",
+     1
+    ],
+    [
+     "Yıl 1",
+     1
+    ],
+    [
+     "Yıl 2",
+     1
+    ],
+    [
+     "Yıl 3",
+     1
+    ]
+   ]
+  }
+ ]
+}

@@ -2,12 +2,14 @@
 // (io/rasterAnalysisWorker.ts, raster-wasm on one thread) over a 4096 × 4096 32-bit DEM, tiled and Deflate'd as the
 // desktop's measurement makes it (crates/shared/raster/tests/all/timing.rs, the same hills): Eğim, Eş yükselti eğrileri
 // (5 m, about 100 levels), and Güneşlenme over a 2048 × 2048 one (a year, 14 days, half an hour); then a raster from
-// points (docs/adr/0232 §14): IDW, Doğal komşu and Kriging, 100 000 points onto a 2048 × 2048 grid. Starts its own Vite dev
+// points (docs/adr/0232 §14): IDW, Doğal komşu and Kriging, 100 000 points onto a 2048 × 2048 grid; then the raster
+// operations (docs/adr/0233 §15) over the 4096 × 4096 DEM: Raster hesaplayıcı, Yeniden sınıflandır, Yeniden örnekle
+// (Ortalama, 2×), Komşuluk istatistiği (5 × 5 Ortalama), Histogram and Bölgesel istatistik (10 000 parcels). Starts its own Vite dev
 // server and one headless Chrome; the DEMs are written once by GDAL into .run/perf (python3 with numpy and osgeo) and
 // fetched by the page as a file the user gave. The worker's whole run is timed: its start, the module, reading the
 // file's blocks, the job and the result's coding. Nothing else heavy may run meanwhile (docs/adr/0005).
 //
-//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3]
+//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops]
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { cpus } from 'node:os';
@@ -17,6 +19,8 @@ import { launch } from '../e2e/cdp.mjs';
 
 const args = process.argv.slice(2);
 const runs = Number(args.includes('--runs') ? args[args.indexOf('--runs') + 1] : '3');
+const only = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
+const part = (name) => !only || only === name;
 const dir = fileURLToPath(new URL('../../../../.run/perf/', import.meta.url));
 mkdirSync(dir, { recursive: true });
 
@@ -57,7 +61,7 @@ const b = await launch(`${server.resolvedUrls.local[0]}?start=0`, { width: 1280,
 try {
   await b.waitFor('!!window.kentos', 60000);
   console.log(`${cpus()[0].model}, ${cpus().length} çekirdek; işçi tek iş parçacığı`);
-  for (const job of jobs) {
+  for (const job of part('surface') ? jobs : []) {
     const path = dem(job.n);
     const times = [];
     for (let r = 0; r < runs; r++) {
@@ -84,7 +88,7 @@ try {
     { name: 'Doğal komşu', tool: { kind: 'naturalNeighbor' } },
     { name: 'Kriging (küresel, 12)', tool: { kind: 'kriging', model: 'spherical', variogram: { fit: 'manual', nugget: 0, sill: 1800, range: 400 }, points: 12 } },
   ];
-  for (const job of pointJobs) {
+  for (const job of part('points') ? pointJobs : []) {
     const times = [];
     for (let r = 0; r < Math.min(runs, 2); r++) {
       const ms = await b.eval(`(async () => {
@@ -108,6 +112,45 @@ try {
     }
     times.sort((a, c) => a - c);
     console.log(`${job.name.padEnd(22)} 2048², 10⁵ nokta  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s`);
+  }
+  // Raster işlemleri (docs/adr/0233 §15): the 4096 × 4096 DEM as the operations' one input; Bölgesel istatistik's
+  // 10 000 parcels made in the page, 100 × 100 squares over the raster's 20 480 m (as ops_timing.rs's cover its own).
+  const opsJobs = [
+    { name: 'Hesaplayıcı (iki raster)', tool: { kind: 'calculator', expression: '[A] * 2 + [B]', empty: 'propagate', sample: 'f32' }, two: true },
+    { name: 'Yeniden sınıflandır', tool: { kind: 'reclassify', band: 1, table: '* 350 1; 350 400 2; 400 450 3; 450 * 4', bounds: 'upperClosed', unmatched: 'keep', sample: 'u8' } },
+    { name: 'Yeniden örnekle (2×)', tool: { kind: 'resample', cell: 10, method: 'mean' } },
+    { name: 'Komşuluk (5 × 5)', tool: { kind: 'focalStatistics', band: 1, shape: 'rect', width: 5, height: 5, radius: 3, inner: 1, stat: 'mean', ignore: true } },
+    { name: 'Histogram', tool: { kind: 'histogram', band: 1, bins: 64, min: null, max: null } },
+    { name: 'Bölgesel (10⁴ parsel)', tool: { kind: 'zonalStatistics', band: 1, stat: 'mean' }, parcels: true },
+  ];
+  const path = dem(4096);
+  for (const job of part('ops') ? opsJobs : []) {
+    const times = [];
+    for (let r = 0; r < runs; r++) {
+      const ms = await b.eval(`(async () => {
+        const { analyzeOps } = await import('/src/io/rasterAnalysis.ts');
+        const blob = await (await fetch('/@fs${path}')).blob();
+        const shapes = [];
+        if (${!!job.parcels}) {
+          const side = 20480 / 100;
+          for (let j = 0; j < 100; j++) for (let i = 0; i < 100; i++) {
+            const [x0, y0] = [500000 + i * side + 3, 4420000 - 20480 + j * side + 3];
+            const [x1, y1] = [x0 + side - 6, y0 + side - 6];
+            shapes.push({ kind: 'polygon', pts: [{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }] });
+          }
+        }
+        const names = ${job.two ? "['A', 'B']" : "['A']"};
+        const spec = JSON.stringify({ tool: ${JSON.stringify(job.tool)}, inputs: names.map((name) => ({ affine: [500000, 5, 0, 4420000, 0, -5], name })), epsg: 5254 });
+        const t0 = performance.now();
+        const out = await analyzeOps(names.map(() => blob), spec, JSON.stringify(shapes), { progress() {}, canceled: false });
+        const ms = performance.now() - t0;
+        if (!out.bytes && !out.zones && !out.histogram) throw new Error('no result');
+        return ms;
+      })()`);
+      times.push(ms / 1000);
+    }
+    times.sort((a, c) => a - c);
+    console.log(`${job.name.padEnd(22)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s`);
   }
 } finally {
   b.close();
