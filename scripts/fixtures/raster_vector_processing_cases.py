@@ -195,7 +195,7 @@ def rasterize_case(id, title, values, refname, log):
         "layers": [raster_layer("Rasterleştirilmiş")],
         "added": [{"kind": "raster", "layerId": lid, "attrs": {}, "affine": e["affine"], "width": e["width"], "height": e["height"],
                    "bands": 1, "sample": e["sample"], "file": name, "srid": 5254,
-                   "style": {"render": "ramp", "bands": [1], "stretch": "minMax", "ramp": "Viridis"}}],
+                   "style": {"render": "ramp", "bands": [1], "stretch": "minMax", "ramp": "Viridis", "resampling": "nearest"}}],
         "layerBelow": {lid: "nesneler"},
         "rasterVectorOf": {name: refname},
     }

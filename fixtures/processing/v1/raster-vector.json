@@ -187,7 +187,8 @@
         1
        ],
        "stretch": "minMax",
-       "ramp": "Viridis"
+       "ramp": "Viridis",
+       "resampling": "nearest"
       }
      }
     ],
@@ -275,7 +276,8 @@
         1
        ],
        "stretch": "minMax",
-       "ramp": "Viridis"
+       "ramp": "Viridis",
+       "resampling": "nearest"
       }
      }
     ],

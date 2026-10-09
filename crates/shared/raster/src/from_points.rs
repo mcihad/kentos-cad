@@ -5,7 +5,7 @@
 //! (joined points, unread values, empty cells, the radius and variogram
 //! taken) come with the result.
 
-use kentos_contracts::{RasterRender, RasterSample, RasterStretch, RasterStyle};
+use kentos_contracts::{RasterRender, RasterResampling, RasterSample, RasterStretch, RasterStyle};
 use kentos_formats::raster::TILE;
 use kentos_formats::raster::style::default_style;
 use kentos_formats::raster::write::Geo;
@@ -679,7 +679,8 @@ impl PointJob {
     }
 
     /// Band `band`'s look (docs/adr/0232 §13): one band in the tool's ramp,
-    /// least to most; a density's zeros clear.
+    /// least to most; a density's zeros clear; Rasterleştir's values (most
+    /// often numbers or classes) shown cell by cell (docs/adr/0234 §3).
     pub fn style(&self, band: u32) -> RasterStyle {
         let base = default_style(1, RasterSample::F32, false);
         RasterStyle {
@@ -692,6 +693,11 @@ impl PointJob {
                 Some(0.0)
             } else {
                 base.nodata
+            },
+            resampling: if matches!(self.work, Work::Burn(_)) {
+                RasterResampling::Nearest
+            } else {
+                base.resampling
             },
             ..base
         }

@@ -71,7 +71,8 @@ gerisini araç bulur. Eğrilere kot ver iki noktanın çizdiği kesen çizgiyle 
 - **Çakışanlar:** bir hücreyi birden çok nesne yakarsa: Son çizilen (varsayılan; girdinin sırasında sonraki), İlk çizilen, En büyük,
   En küçük, Toplam (ADR 0233 §9'un çift-çift toplamı, bir kez yuvarlanır), Sayı (nesne sayısı).
 - **Tür:** Ondalık 32 bit (varsayılan), Ondalık 64 bit, Tam sayı 32 bit, Bayt; tam sayıda yarımlar sıfırdan uzağa yuvarlanır, türe
-  sığmayan değer ret (Tam sayıda −2 147 483 648, Bayt'ta 255 değersiz için ayrılır). Yanmayan hücre değersiz. Görünüş Viridis.
+  sığmayan değer ret (Tam sayıda −2 147 483 648, Bayt'ta 255 değersiz için ayrılır). Yanmayan hücre değersiz. Görünüş Viridis, en
+  yakın örnekleme (değerler çoğu kez numara ya da sınıftır: komşu değerler karışmaz).
 
 ### 4. Rasterden alan
 
