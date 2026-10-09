@@ -305,6 +305,8 @@ def settings(s):
                 "annotation": (annotation, False),
                 # Schema 32 (docs/adr/0208 §2): the project's connections to map services, without their secrets.
                 "connections": (connections, False),
+                # Schema 33 (docs/adr/0209 §2): the project's networks.
+                "networks": (networks, False),
             },
             "settings",
         )
@@ -740,6 +742,64 @@ def connections(list_):
     return nonempty(connection)(list_)
 
 
+# Schema 33 (docs/adr/0209 §2): the project's networks; a list only when it is not empty, the direction's field and
+# values only with a field direction.
+NETWORK_KINDS = ("road", "utility")
+NETWORK_CONNECTS = ("ends", "vertices")
+JUNCTION_ROLES = ("junction", "source", "valve")
+NETWORK_COST_KINDS = ("speed", "field")
+DIRECTION_KINDS = ("both", "digitized", "field")
+
+
+def network_layer(e):
+    return cmap(fields(e, {"layer": (text, True), "filter": (text, False)}, "kenar katmanı"))
+
+
+def junction_layer(j):
+    table = {"layer": (text, True), "role": (enum(JUNCTION_ROLES), True), "filter": (text, False), "closed": (text, False)}
+    return cmap(fields(j, table, "düğüm katmanı"))
+
+
+def network_direction(d):
+    if d["kind"] != "field":
+        assert set(d) == {"kind"}, "yönün alanı ve değerleri yalnız alanla yönde"
+    lists = {k: v for k, v in d.items() if k in ("forward", "backward", "closed") and v}
+    rest = {k: v for k, v in d.items() if k not in ("forward", "backward", "closed")}
+    table = {"kind": (enum(DIRECTION_KINDS), True), "field": (text, d["kind"] == "field")}
+    out = fields(rest, table, "yön")
+    for k, v in lists.items():
+        out[k] = nonempty(text)(v)
+    return cmap(out)
+
+
+def network_cost(c):
+    assert c.get("unit", "x") != "", "boş birim yazılmaz"
+    table = {"name": (text, True), "kind": (enum(NETWORK_COST_KINDS), True), "field": (text, True), "unit": (text, False), "speed": (finite, False)}
+    return cmap(fields(c, table, f"maliyet {c.get('name')}"))
+
+
+def network(n):
+    table = {
+        "id": (text, True),
+        "name": (text, True),
+        "kind": (enum(NETWORK_KINDS), True),
+        "edges": (nonempty(network_layer), True),
+        "junctions": (nonempty(junction_layer), False),
+        "connect": (enum(NETWORK_CONNECTS), True),
+        "tolerance": (finite, True),
+        "direction": (network_direction, True),
+        "costs": (nonempty(network_cost), False),
+        "closed": (text, False),
+    }
+    return cmap(fields(n, table, f"ağ {n.get('id')}"))
+
+
+def networks(list_):
+    ids = [n["id"] for n in list_]
+    assert len(set(ids)) == len(ids), "ağın kimliği bir kez"
+    return nonempty(network)(list_)
+
+
 def layer(n):
     assert "snap" not in n or n["type"] == "layer", f"layer {n.get('id')}: grubun keneti olmaz"
     assert "fields" not in n or (n["type"] == "layer" and n["fields"]), f"layer {n.get('id')}: alanlar yalnız katmanın, boş değil"
@@ -1166,7 +1226,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 32 with a layer drawn from a map service or one whose objects came from
+    """The oldest schema that holds the drawing: 33 with the project's networks (docs/adr/0209 §2), 32 with a layer drawn
+    from a map service or one whose objects came from
     a source, or the project's connections (docs/adr/0208 §2), 31 with a point cloud or a raster read from an address, only in the
     drawing (docs/adr/0207), 30 with the project's annotation heights, a dimension style's or a
     dimension's lines, a leader's arrowhead's size or one of AutoCAD's arrowheads, in the drawing or a block definition
@@ -1227,6 +1288,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def served(nodes):
         return any("service" in n or "feed" in n or served(n["children"]) for n in nodes)
 
+    if settings and "networks" in settings:
+        return 33
     if served(layers) or (settings and "connections" in settings):
         return 32
     if any(e["kind"] == "pointcloud" or (e["kind"] == "raster" and "url" in e) for e in entities):
@@ -1484,7 +1547,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-33.kcad"] = container(root(cmap(parts), version=uint(33)))
+    files["schema-version-34.kcad"] = container(root(cmap(parts), version=uint(34)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2023,6 +2086,51 @@ def broken(minimal_content, minimal_file):
     files["connection-oauth2-no-token-url.kcad"] = connected([conn(auth="oauth2")])
     files["connection-scope-not-oauth2.kcad"] = connected([conn(auth="bearer", scope=text("read"))])
     files["connection-secret.kcad"] = connected([conn(auth="basic", password=text("gizli"))])
+
+    # The project's networks are schema 33's (docs/adr/0209 §2): in schema 32 an unknown field; every rule of the
+    # contract's `networks_problem` broken one at a time; an empty list and a direction's field or values with another
+    # kind than a field refused as such.
+    def net(**fields_):
+        base = {"id": text("ag-1"), "name": text("Yollar"), "kind": text("road"), "edges": array([cmap({"layer": text(top["id"])})]),
+                "connect": text("ends"), "tolerance": f64(0.01), "direction": cmap({"kind": text("both")})}
+        base.update(fields_)
+        return cmap(base)
+
+    def networked(nets, schema=33):
+        return on_layer({}, schema=schema, settings_extra={"networks": array(nets)})
+
+    def by_field(**lists):
+        return cmap({"kind": text("field"), "field": text("yon"), **lists})
+
+    def cost(name="Süre", kind="speed", **extra):
+        if kind == "speed" and "speed" not in extra:
+            extra["speed"] = f64(50.0)
+        return cmap({"name": text(name), "kind": text(kind), "field": text("hiz"), **extra})
+
+    files["networks-in-schema-32.kcad"] = networked([net()], schema=32)
+    files["networks-empty.kcad"] = networked([])
+    files["network-duplicate-id.kcad"] = networked([net(), net(name=text("Yollar 2"))])
+    files["network-duplicate-name.kcad"] = networked([net(), net(id=text("ag-2"), name=text("YOLLAR"))])
+    files["network-bad-id.kcad"] = networked([net(id=text("Ağ 1"))])
+    files["network-name-untrimmed.kcad"] = networked([net(name=text(" Yollar"))])
+    files["network-no-edges.kcad"] = networked([net(edges=array([]))])
+    files["network-edge-twice.kcad"] = networked([net(edges=array([cmap({"layer": text("yol")}), cmap({"layer": text("yol")})]))])
+    files["network-tolerance.kcad"] = networked([net(tolerance=f64(20.0))])
+    files["network-unknown-kind.kcad"] = networked([net(kind=text("rail"))])
+    files["network-unknown-field.kcad"] = networked([net(speed=f64(50.0))])
+    files["network-junctions-empty.kcad"] = networked([net(junctions=array([]))])
+    files["network-junction-role.kcad"] = networked([net(junctions=array([cmap({"layer": text("vana"), "role": text("pump")})]))])
+    files["network-direction-no-values.kcad"] = networked([net(direction=by_field())])
+    files["network-direction-value-twice.kcad"] = networked([net(direction=by_field(forward=array([text("FT")]), closed=array([text("ft")])))])
+    files["network-direction-list-empty.kcad"] = networked([net(direction=by_field(forward=array([text("FT")]), backward=array([])))])
+    files["network-direction-field-on-both.kcad"] = networked([net(direction=cmap({"kind": text("both"), "field": text("yon")}))])
+    files["network-cost-length-name.kcad"] = networked([net(costs=array([cost(name="uzunluk")]))])
+    files["network-cost-twice.kcad"] = networked([net(costs=array([cost(), cost(name="SÜRE")]))])
+    files["network-cost-speed-unit.kcad"] = networked([net(costs=array([cost(unit=text("dk"))]))])
+    files["network-cost-speed-zero.kcad"] = networked([net(costs=array([cost(speed=f64(0.0))]))])
+    files["network-cost-field-speed.kcad"] = networked([net(costs=array([cost(name="Ücret", kind="field", speed=f64(5.0))]))])
+    files["network-costs-empty.kcad"] = networked([net(costs=array([]))])
+    files["network-closed-blank.kcad"] = networked([net(closed=text("  "))])
     files["big-negative.kcad"] = container(with_parts({**parts, "styles": cmap({"items": array([b"\x3b" + b"\xff" * 8]), "categories": array([])})}))
     files["bytes-in-opaque.kcad"] = container(with_parts({**parts, "styles": cmap({"items": array([blob(b"\x01")]), "categories": array([])})}))
     files["bad-enum.kcad"] = container(with_parts({**parts, "settings": cmap({**settings_parts(m["settings"]), "areaUnit": text("acre")})}))
@@ -2216,6 +2324,7 @@ def build():
     out["annotation.kcad"] = container(document(load("annotation.json")))
     out["pointclouds.kcad"] = container(document(load("pointclouds.json")))
     out["services.kcad"] = container(document(load("services.json")))
+    out["networks.kcad"] = container(document(load("networks.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

@@ -17,7 +17,7 @@ use crate::entity::{Shape, area_parts, join_parts};
 use crate::geom::arrangement::{Area, Rule, TOL, WindingIndex, edge_len};
 use crate::geom::bulge::bulge_of_sweep;
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
-use crate::geom::overlay::overlay;
+use crate::geom::overlay::{overlay, overlay_buffers};
 use crate::geom::region::{area_source, net_area, ring_edges};
 use crate::jsmath::js_hypot;
 use crate::ops::areas::areas_of_entity;
@@ -123,6 +123,13 @@ pub fn union_all(areas: &[Area]) -> Vec<Area> {
         return Vec::new();
     }
     overlay(&[area_source(areas)], Rule::Any)
+}
+
+/// The union of buffers, each area the points within `r` of one of `cores` (as `buffer::edge_pieces` makes them):
+/// `union_all`'s areas, found asking the cores near each point instead of counting windings across the whole layout
+/// (`overlay_buffers`): a service area of a whole city's streets in a fraction of the time.
+pub fn union_buffers(areas: &[Area], cores: &[Edge], r: f64) -> Vec<Area> {
+    overlay_buffers(areas, cores, r)
 }
 
 /// `from` less everything `cut` covers.

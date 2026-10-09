@@ -126,6 +126,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   şema 32; karolar projenin sistemine ağla, vektör karonun noktaları da aynı ağla; Altlık ▾ (hazır altlıklar), Harita servisi, Servisten veri al,
   Servis bilgisi, Bağlantılar (CBS'de Harita, CAD'de Ekle); katmanın menüsü, rozeti ve Öznitelikler'deki bölümü; atıf şeridi ve kartı;
   `cad.layers.service`; web vekili `kentosd`'nin `/v1/proxy`'si; Python `kentos.services` (ADR 0208);
+  ağ analizi: projenin ağları (kenar ve düğüm katmanları süzgeçleriyle, düğümün rolü Bağlantı, Kaynak ya da Vana ve kapalılığı, Uçlarda ya
+  da Köşelerde bağlanma ve tolerans, yön, Uzunluk ve hızdan ya da alandan maliyetler, kapalı kenarlar; `.kcad` şema 33), ağ her analizde
+  katmanlardan kurulan graf; Ağlar penceresi ve Denetle; En kısa yol (Sırayı iyileştir), Hizmet alanı (aralıkların çizgileri ve alanları,
+  Birleşik ya da Ayrı, Disk ya da Halka), Şebeke izleme (Bağlı, Akış yukarı, Akış aşağı, Yalıtım ve beslemesiz kalanlar); İşlemler'in Ağ
+  analizi kategorisi (En yakın tesis, Maliyet matrisi, Hizmet alanları); kurma ve aramalar web'de ağın işçisinde, masaüstünde ağın iş
+  parçacığında; `cad.network.define`; Python `kentos.network`; CBS'de Analiz › Ağ analizi (ADR 0209);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -388,6 +394,13 @@ python3 scripts/fixtures/layer_service_command_cases.py --check   # cad.layers.s
 KENTOS_SHOTS_ONLY=servis-osm,servis-vektor,servis-pencere,servis-wms,servis-veri,servis-oznitelik,servis-bilgi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # harita servislerinin masaüstü resimleri (ağ gerekir), .run/shots/arac-servis-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs services); ADR 0208)
 cargo test --release -p kentos-desktop perf::services -- --ignored --nocapture --test-threads=1   # görünen karolar, karo ağı, PNG çözümü, şehir karosunun MVT'si ve stili, önbellekten tam görünüm ve iki altlıklı kareler; gerçek karolar bir kez .run/perf/'e (ADR 0208 §16)
 cargo test -p kentos-api proxy   # kentosd'nin servis vekili: adres kuralları, başlıklar, yerel sunucuyla yönlendirme, 32 MB, POST ve iç ağ reddi (ADR 0208 §13)
+python3 scripts/fixtures/network_cases.py --check   # ağ analizini (graf, konumlar, rotalar ve sıraları, engeller, hizmet alanının çizgileri kesin ve alanları shapely'yle, en yakın tesis, maliyet matrisi, dört izleme, Denetle) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/network/v1/cases.json (ADR 0209)
+python3 scripts/fixtures/network_rules_cases.py --check; python3 scripts/fixtures/network_form_cases.py --check   # ağ tanımının kurallarını ve Ağlar penceresinin form kurallarını bağımsız KCAD okuyucusunun kurallarıyla denetle; durumlar fixtures/network/v1/rules.json ve form.json (ADR 0209 §2, §10)
+python3 scripts/fixtures/network_define_command_cases.py --check   # cad.network.define durumlarını sözleşmenin kurallarından denetle (ADR 0209 §11)
+python3 scripts/fixtures/network_processing_cases.py --check; python3 scripts/fixtures/network_scene.py --check   # İşlemler'in ağ araçlarının durumlarını (fixtures/processing/v1/network.json ve network.kcad) ve izlerin sahnesini (fixtures/interaction/v1/networks.kcad) bağımsız başvurudan denetle (ADR 0209)
+cargo test --release -p kentos-geometry-core --test all network::timing -- --ignored --nocapture   # 100 800 parçalı ızgara şehirde kurma, konum, Dijkstra, imlece yol, rota, izleme, hizmet alanının çizgileri ve alanları, Denetle; bütçeleriyle (ADR 0209 §12)
+cargo test --release -p kentos-processing --test cases network_timing -- --ignored --nocapture   # aynı şehrin çizimden okunması ve bütün kurma (masaüstünün arayüz iş parçacığındaki payı, İşlemler ve Python; ADR 0209 §12)
+cargo test -p kentos-desktop networks::tests::screens -- --ignored --nocapture   # Ağlar penceresi, İşlemler'in ağ araçları ve sonuçları, Analiz şeridi, .run/shots/aglar-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs networks); ADR 0209)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
 cargo test --release -p kentos-pointcloud --test all timing -- --ignored --nocapture   # aynı bulutta düğümün görünüşe göre çözülmesi (katman katman) ve LAZ yazma, tek ve dört iş parçacığıyla (önce perf::clouds dosyayı yazar; ADR 0207 §12)
@@ -1246,7 +1259,16 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `crates/wasm/services-wasm`; masaüstünde `services/` (hub, `net`, `cache`, `secrets`, `window`, `feed_window`, `connections`, `info`,
   `overlay`), çizim hattında `styled/service_tiles.rs`; web'de `io/services/` (`worker.ts`, `feedWorker.ts`, `fetch.ts`),
   `render/serviceHub.ts`, `render/servicePass.ts`, `ui/services/`, `ui/bottom/ServiceInfoPanel.ts`; sunucuda `http/proxy.rs`; Python
-  `python/kentos/services.py`; süreler `perf::services`. Sıradaki `GIS-11`.
+  `python/kentos/services.py`; süreler `perf::services`. `GIS-11` ağ analizi ([ADR 0209](docs/adr/0209-network-analysis.md); kapsamı
+  sahibin sözüyle ben belirledim, “Biliyorsun önceliğimiz performans”) tek parçada bitti (9 Ekim): sözleşmenin `network`'ü ve
+  `cad_networks`'ü (`cad.network.define`), `.kcad` şema 33 (`FORMATS_VERSION` 43); çekirdek `ops::network` (`input`, `graph`, `search`,
+  `route`, `area`, `closest`, `trace`, `check`, `session`; bağımsız başvuru `network_cases.py`, kurallar `network_rules_cases.py`, form
+  `network_form_cases.py`), tamponların birleşimi `buffer::union_pieces` ve `overlay::overlay_buffers`; web'de ağın işçisi `io/network/`,
+  `app/networks.ts`, araçlar `tools/network*Tool.ts`, `ui/networks/`; masaüstünde `networks/` (ağın iş parçacığı `engine.rs`) ve
+  `kentos_interaction::network`; İşlemler'in Ağ analizi kategorisi iki platformda (`network_processing_cases.py`); Python `kentos.network`;
+  ortak izler `network-*.json`, sahne `networks.kcad`; süreler `network::timing`, `network_timing`. Açık kalanlar TODOS.md `GEO-01`,
+  `GEO-02`. Raster analizi kümesi (`GIS-31`…`GIS-36`) başka bir ajandadır (sahibin kararı, 9 Ekim; onun ADR'leri 0230'dan başlar), bu
+  sırada atlanır; dosyalarına dokunulmaz. Sıradaki `GIS-12`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

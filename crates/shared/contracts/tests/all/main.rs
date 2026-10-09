@@ -8,4 +8,5 @@ mod crs;
 mod document;
 mod fields;
 mod identity;
+mod network_rules;
 mod service_rules;

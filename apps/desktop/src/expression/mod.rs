@@ -77,6 +77,8 @@ pub(crate) enum Target {
     Processing(String),
     /// Öznitelik tablosu's İfade süzgeci (features/, docs/adr/0199 §4).
     FeatureFilter,
+    /// An expression of Ağlar's form (networks/window.rs, docs/adr/0209 §10).
+    Network(crate::networks::window::Field),
 }
 
 /// A field's values listed in the help.
@@ -658,6 +660,47 @@ impl App {
         iced::widget::operation::focus(EDITOR)
     }
 
+    /// Ağlar's ε: the builder on one of the form's expressions, the layer's keys and objects.
+    pub(crate) fn open_builder_for_network(
+        &mut self,
+        field: crate::networks::window::Field,
+    ) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let layer = self.network_field_layer(field);
+        let slots: Vec<Slot> = doc
+            .model
+            .by_layer(&layer)
+            .take(5000)
+            .map(|e| Slot(e.base().id))
+            .collect();
+        let mut counts: Vec<(String, usize)> = Vec::new();
+        for e in doc.model.by_layer(&layer).take(2000) {
+            for k in e.base().attrs.keys() {
+                match counts.iter_mut().find(|(n, _)| n == k) {
+                    Some((_, c)) => *c += 1,
+                    None => counts.push((k.clone(), 1)),
+                }
+            }
+        }
+        counts.sort_by(|a, b| a.0.cmp(&b.0));
+        let value = self.network_field_text(field);
+        let mut builder = Builder::new(
+            Target::Network(field),
+            crate::networks::window::TITLE.to_owned(),
+            &value,
+            attribute_fields(&counts),
+            Objects { slots },
+        );
+        builder.preview_on(Some(&doc.model), self.spatial.store());
+        if self.builder_flow {
+            builder.set_mode(ViewMode::Flow);
+        }
+        self.builder = Some(builder);
+        iced::widget::operation::focus(EDITOR)
+    }
+
     pub(crate) fn builder_event(&mut self, e: Event) -> Task<Message> {
         if let Event::OpenProcessing(name) = &e {
             return self.open_builder_for_processing(name);
@@ -923,6 +966,10 @@ impl App {
             }
             Target::FeatureFilter => {
                 return self.features_event(crate::features::Event::Filter(text));
+            }
+            Target::Network(field) => {
+                return self
+                    .networks_window_event(crate::networks::window::Event::Text(field, text));
             }
         }
         Task::none()

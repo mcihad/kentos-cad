@@ -237,7 +237,8 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'analysis',
     label: 'Analiz',
-    items: ['@tools:map/measure', sec('Arazi analizi'), 'analysis.volume', 'analysis.slope', sec('Karşılaştırma'), 'data.compare'],
+    // Ağ (docs/adr/0209 §10): Ağlar and the network tools, one block.
+    items: ['@tools:map/measure', sec('Arazi analizi'), 'analysis.volume', 'analysis.slope', sec('Ağ'), 'network.manage', '@tools:network', sec('Karşılaştırma'), 'data.compare'],
   },
   {
     id: 'processing',

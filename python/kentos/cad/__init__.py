@@ -27,7 +27,7 @@ from .document import *  # noqa: F403
 from .errors import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import arc, blocks, circle, entities, layers, line, point, polygon, polyline, project  # noqa: E402  isort: skip
+from . import arc, blocks, circle, entities, layers, line, network, point, polygon, polyline, project  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -67,6 +67,7 @@ __all__ = [
     "BlocksEdit",
     "BlocksEditPlan",
     "BlocksEdited",
+    "BothNetworkDirection",
     "Bounds",
     "BoundsLike",
     "Busy",
@@ -114,6 +115,7 @@ __all__ = [
     "DecodeError",
     "DeleteBlockChange",
     "DeleteFeatureChange",
+    "DigitizedNetworkDirection",
     "DimensionArrow",
     "DimensionArrowName",
     "DimensionEntity",
@@ -161,6 +163,7 @@ __all__ = [
     "FeedKind",
     "FeedKindName",
     "FieldChoice",
+    "FieldNetworkDirection",
     "FileCommit",
     "FileCommitted",
     "FileError",
@@ -194,6 +197,9 @@ __all__ = [
     "InvitationRevoke",
     "InvitationState",
     "InvitationStateName",
+    "JunctionLayer",
+    "JunctionRole",
+    "JunctionRoleName",
     "KentosError",
     "LabelInk",
     "LabelInkName",
@@ -234,6 +240,20 @@ __all__ = [
     "MoveTransform",
     "NAMESPACES",
     "NeedsInput",
+    "NetworkConnect",
+    "NetworkConnectName",
+    "NetworkCost",
+    "NetworkCostKind",
+    "NetworkCostKindName",
+    "NetworkDef",
+    "NetworkDefine",
+    "NetworkDefineOperation",
+    "NetworkDefineOperationName",
+    "NetworkDefined",
+    "NetworkDirection",
+    "NetworkKind",
+    "NetworkKindName",
+    "NetworkLayer",
     "NewObject",
     "NotFound",
     "NotRunHere",
@@ -403,6 +423,7 @@ __all__ = [
     "entities",
     "layers",
     "line",
+    "network",
     "point",
     "polygon",
     "polyline",

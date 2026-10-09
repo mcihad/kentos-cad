@@ -18,6 +18,8 @@ pub mod limit;
 #[cfg(test)]
 mod native_tests;
 #[cfg(test)]
+mod networks_tests;
+#[cfg(test)]
 mod people_tests;
 pub mod projects;
 // The map services' proxy (docs/adr/0208 §13).

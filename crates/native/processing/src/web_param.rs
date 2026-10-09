@@ -128,6 +128,12 @@ pub fn param_from_json(v: &Value) -> Option<ParamDef> {
         "file" => ParamKind::File {
             accept: texts(o.get("accept")).unwrap_or_default(),
         },
+        "network" => ParamKind::Network {
+            prefers: match text(o, "prefers").as_deref() {
+                Some("utility") => kentos_contracts::NetworkKind::Utility,
+                _ => kentos_contracts::NetworkKind::Road,
+            },
+        },
         _ => return None,
     };
     let mut def = ParamDef::new(name, label, kind);

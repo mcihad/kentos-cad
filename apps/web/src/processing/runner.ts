@@ -8,7 +8,7 @@ import { resolveFeatures, summarizeFeatures, type FeatureHost, type InputSummary
 import { withObjects } from './geometry';
 import { clientExecutor, type Executor, type FeatureRef, type RunJob } from './job';
 import { fileTable, isVisible, validateValues, type ValidationIssue } from './parameters';
-import type { DefaultsContext, ExecutionTarget, Feedback, FeaturesValue, FileValue, LayerParam, LayerValue, ProcessingTool, ProjectCrs, RunResult, TargetLayer } from './types';
+import type { DefaultsContext, ExecutionTarget, Feedback, FeaturesValue, FileValue, LayerParam, LayerValue, NetworkValue, ProcessingTool, ProjectCrs, RunResult, TargetLayer } from './types';
 import { checkWrites } from './writeCheck';
 
 /**
@@ -132,6 +132,8 @@ export class ProcessingRunner {
       drawingFont: s.drawingFont.value,
       activeLayer: this.host.doc.layers.active.value,
       measureHeightMm: s.annotationMm('measure'),
+      // The project's networks, when it has any (docs/adr/0209): a network parameter's first.
+      ...(s.networks.value.length && { networks: s.networks.value }),
     };
   }
 
@@ -144,7 +146,8 @@ export class ProcessingRunner {
 
   validate(tool: ProcessingTool, values: Record<string, unknown>): ValidationIssue[] {
     const layers = this.host.doc.layers;
-    return validateValues(tool, values, { layerExists: (id) => !!layers.get(id), layerLocked: (id) => layers.isLocked(id) });
+    const networks = this.host.doc.settings.networks.value;
+    return validateValues(tool, values, { layerExists: (id) => !!layers.get(id), layerLocked: (id) => layers.isLocked(id), network: (id) => networks.find((n) => n.id === id) });
   }
 
   /**
@@ -297,6 +300,11 @@ export class ProcessingRunner {
         const t = this.resolveLayer(v as LayerValue);
         if (t.isNew) newLayers.set(t.id, { name: t.name, def: p });
         jobValues[p.name] = t;
+      }
+      // A network goes with its definition as it is now (docs/adr/0209 §10): the run builds it from the objects.
+      if (p.type === 'network') {
+        const n = v as NetworkValue;
+        jobValues[p.name] = { network: n.network, cost: n.cost, def: this.host.doc.settings.networks.value.find((d) => d.id === n.network) } satisfies NetworkValue;
       }
     }
     const executor = this.executorFor(tool, choice, size);

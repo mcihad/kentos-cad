@@ -256,7 +256,10 @@ pub fn input_type_for(p: &ParamDef) -> Option<&'static str> {
         ParamKind::Layer { .. } => Some("layer"),
         ParamKind::Point => Some("point"),
         // A file's rows are not kept in a model (docs/adr/0200 §7).
-        ParamKind::Choice { .. } | ParamKind::File { .. } | ParamKind::SaveFile { .. } => None,
+        ParamKind::Choice { .. }
+        | ParamKind::File { .. }
+        | ParamKind::SaveFile { .. }
+        | ParamKind::Network { .. } => None,
     }
 }
 

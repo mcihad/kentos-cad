@@ -1041,6 +1041,9 @@ export async function play(t, { onShot } = {}) {
       problems.push(`${label}: ${e instanceof Error ? e.message : e}`);
       break;
     }
+    // The network tools ask the network worker (docs/adr/0209 §12): a step waits for its answers, as the desktop's
+    // player runs a step's tasks to their end.
+    await b.waitFor('!window.kentos.networks.busy.value', 8000).catch(() => {});
     if (!step.expect) continue;
     // A window opens once its module has loaded (CLAUDE.md §20) and closes at once: the step waits for it.
     if ('dialog' in step.expect) await b.waitFor(`${TOP_TITLE} === ${JSON.stringify(step.expect.dialog)}`, 8000).catch(() => {});

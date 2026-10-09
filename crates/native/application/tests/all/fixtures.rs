@@ -19,13 +19,13 @@ use kentos_domain::contracts::{
 };
 use kentos_domain::contracts::{
     BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT, CAD_ENTITIES_SET,
-    EntitiesCreate, EntitiesSetProperties, LayersService,
+    EntitiesCreate, EntitiesSetProperties, LayersService, NetworkDefine,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::create;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, arc, array, blocks_define, blocks_edit, circle, delete,
-    edit, layers_service, line, point, polygon, polyline, set, transform,
+    edit, layers_service, line, network_define, point, polygon, polyline, set, transform,
 };
 use serde_json::{Value, json};
 
@@ -301,6 +301,16 @@ impl Input for LayersService {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
             "service.opacity" => self.service.as_mut()?.opacity.as_mut(),
+            _ => None,
+        }
+    }
+}
+
+impl Input for NetworkDefine {
+    /// `network.tolerance` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "network.tolerance" => self.network.as_mut().map(|n| &mut n.tolerance),
             _ => None,
         }
     }
@@ -823,6 +833,7 @@ fn run_op(
         CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),
         CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
         kentos_domain::contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
+        kentos_domain::contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))
@@ -1075,6 +1086,12 @@ fn check(
                 let got = serde_json::to_value(&doc.settings().connections)
                     .map_err(|e| format!("{at}: {e}"))?;
                 expect_same(&got, want, "bağlantılar", at)?;
+            }
+            // The project's networks (docs/adr/0209 §2).
+            "networks" => {
+                let got = serde_json::to_value(&doc.settings().networks)
+                    .map_err(|e| format!("{at}: {e}"))?;
+                expect_same(&got, want, "ağlar", at)?;
             }
             // A misspelt expectation would otherwise pass unchecked.
             other => return Err(format!("{at}: bilinmeyen beklenti “{other}”")),

@@ -119,7 +119,7 @@ export function takesTypedInput(activeId: string, tool: Pick<Tool, 'activeGrip'>
   return activeId !== 'select' || !!tool.activeGrip?.();
 }
 
-export type ToolGroup = 'select' | 'draw' | 'annotate' | 'block' | 'transform' | 'modify' | 'area' | 'map' | 'layer';
+export type ToolGroup = 'select' | 'draw' | 'annotate' | 'block' | 'transform' | 'modify' | 'area' | 'map' | 'network' | 'layer';
 
 /** Short on purpose: the tool groups' names, as menus and the ribbon's panels use them. */
 export const TOOL_GROUP_LABEL: Record<ToolGroup, string> = {
@@ -131,6 +131,8 @@ export const TOOL_GROUP_LABEL: Record<ToolGroup, string> = {
   modify: 'Düzenle',
   area: 'Alan',
   map: 'Harita',
+  // Ağ analizi (docs/adr/0209 §10): Analiz's Ağ panel, beside Ağlar.
+  network: 'Ağ',
   // The layer actions by an object (docs/adr/0177 §1): no menu lists the group; Katmanlar's ▾ does.
   layer: 'Katman',
 };

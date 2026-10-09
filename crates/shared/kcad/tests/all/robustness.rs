@@ -462,6 +462,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             annotation: None,
             text_styles: Vec::new(),
             connections: Vec::new(),
+            networks: Vec::new(),
         },
         origin: point(rng),
         home_view: rng.chance(50).then(|| Bounds {

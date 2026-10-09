@@ -1,0 +1,3007 @@
+{
+  "format": "kentos.network-rules",
+  "lists": [
+    {
+      "name": "hiç ağ",
+      "problem": null,
+      "value": []
+    },
+    {
+      "name": "iki ağ",
+      "problem": null,
+      "value": [
+        {
+          "closed": "durum = 'kapalı'",
+          "connect": "ends",
+          "costs": [
+            {
+              "field": "hiz",
+              "kind": "speed",
+              "name": "Süre",
+              "speed": 50.0
+            },
+            {
+              "field": "ucret",
+              "kind": "field",
+              "name": "Ücret",
+              "unit": "TL"
+            }
+          ],
+          "direction": {
+            "backward": [
+              "TF",
+              "-1"
+            ],
+            "closed": [
+              "N"
+            ],
+            "field": "yon",
+            "forward": [
+              "FT",
+              "1"
+            ],
+            "kind": "field"
+          },
+          "edges": [
+            {
+              "filter": "tur <> 'yaya'",
+              "layer": "yol"
+            }
+          ],
+          "id": "ag-1",
+          "kind": "road",
+          "name": "Yollar",
+          "tolerance": 0.01
+        },
+        {
+          "connect": "vertices",
+          "direction": {
+            "kind": "digitized"
+          },
+          "edges": [
+            {
+              "layer": "su-hatti"
+            }
+          ],
+          "id": "ag-2",
+          "junctions": [
+            {
+              "closed": "durum = 'kapalı'",
+              "layer": "su-vana",
+              "role": "valve"
+            },
+            {
+              "layer": "su-depo",
+              "role": "source"
+            },
+            {
+              "filter": "tur = 'baglanti'",
+              "layer": "su-vana",
+              "role": "junction"
+            }
+          ],
+          "kind": "utility",
+          "name": "İçme suyu",
+          "tolerance": 0.005
+        }
+      ]
+    },
+    {
+      "name": "aynı kimlik",
+      "problem": "“a” kimlikli ağ iki kez var",
+      "value": [
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a",
+          "kind": "road",
+          "name": "A",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a",
+          "kind": "road",
+          "name": "B",
+          "tolerance": 0.0001
+        }
+      ]
+    },
+    {
+      "name": "aynı ad, büyük küçük harf",
+      "problem": "“a” adlı ağ iki kez var",
+      "value": [
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a",
+          "kind": "road",
+          "name": "A",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "b",
+          "kind": "road",
+          "name": "a",
+          "tolerance": 0.0001
+        }
+      ]
+    },
+    {
+      "name": "Türkçe ad: IRMAK ile ırmak aynı",
+      "problem": "“ırmak” adlı ağ iki kez var",
+      "value": [
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a",
+          "kind": "road",
+          "name": "IRMAK",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "b",
+          "kind": "road",
+          "name": "ırmak",
+          "tolerance": 0.0001
+        }
+      ]
+    },
+    {
+      "name": "32 ağ",
+      "problem": null,
+      "value": [
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a0",
+          "kind": "road",
+          "name": "A0",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a1",
+          "kind": "road",
+          "name": "A1",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a2",
+          "kind": "road",
+          "name": "A2",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a3",
+          "kind": "road",
+          "name": "A3",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a4",
+          "kind": "road",
+          "name": "A4",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a5",
+          "kind": "road",
+          "name": "A5",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a6",
+          "kind": "road",
+          "name": "A6",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a7",
+          "kind": "road",
+          "name": "A7",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a8",
+          "kind": "road",
+          "name": "A8",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a9",
+          "kind": "road",
+          "name": "A9",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a10",
+          "kind": "road",
+          "name": "A10",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a11",
+          "kind": "road",
+          "name": "A11",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a12",
+          "kind": "road",
+          "name": "A12",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a13",
+          "kind": "road",
+          "name": "A13",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a14",
+          "kind": "road",
+          "name": "A14",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a15",
+          "kind": "road",
+          "name": "A15",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a16",
+          "kind": "road",
+          "name": "A16",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a17",
+          "kind": "road",
+          "name": "A17",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a18",
+          "kind": "road",
+          "name": "A18",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a19",
+          "kind": "road",
+          "name": "A19",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a20",
+          "kind": "road",
+          "name": "A20",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a21",
+          "kind": "road",
+          "name": "A21",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a22",
+          "kind": "road",
+          "name": "A22",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a23",
+          "kind": "road",
+          "name": "A23",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a24",
+          "kind": "road",
+          "name": "A24",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a25",
+          "kind": "road",
+          "name": "A25",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a26",
+          "kind": "road",
+          "name": "A26",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a27",
+          "kind": "road",
+          "name": "A27",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a28",
+          "kind": "road",
+          "name": "A28",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a29",
+          "kind": "road",
+          "name": "A29",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a30",
+          "kind": "road",
+          "name": "A30",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a31",
+          "kind": "road",
+          "name": "A31",
+          "tolerance": 0.0001
+        }
+      ]
+    },
+    {
+      "name": "33 ağ",
+      "problem": "projede 33 ağ var; en çok 32",
+      "value": [
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a0",
+          "kind": "road",
+          "name": "A0",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a1",
+          "kind": "road",
+          "name": "A1",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a2",
+          "kind": "road",
+          "name": "A2",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a3",
+          "kind": "road",
+          "name": "A3",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a4",
+          "kind": "road",
+          "name": "A4",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a5",
+          "kind": "road",
+          "name": "A5",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a6",
+          "kind": "road",
+          "name": "A6",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a7",
+          "kind": "road",
+          "name": "A7",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a8",
+          "kind": "road",
+          "name": "A8",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a9",
+          "kind": "road",
+          "name": "A9",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a10",
+          "kind": "road",
+          "name": "A10",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a11",
+          "kind": "road",
+          "name": "A11",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a12",
+          "kind": "road",
+          "name": "A12",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a13",
+          "kind": "road",
+          "name": "A13",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a14",
+          "kind": "road",
+          "name": "A14",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a15",
+          "kind": "road",
+          "name": "A15",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a16",
+          "kind": "road",
+          "name": "A16",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a17",
+          "kind": "road",
+          "name": "A17",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a18",
+          "kind": "road",
+          "name": "A18",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a19",
+          "kind": "road",
+          "name": "A19",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a20",
+          "kind": "road",
+          "name": "A20",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a21",
+          "kind": "road",
+          "name": "A21",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a22",
+          "kind": "road",
+          "name": "A22",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a23",
+          "kind": "road",
+          "name": "A23",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a24",
+          "kind": "road",
+          "name": "A24",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a25",
+          "kind": "road",
+          "name": "A25",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a26",
+          "kind": "road",
+          "name": "A26",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a27",
+          "kind": "road",
+          "name": "A27",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a28",
+          "kind": "road",
+          "name": "A28",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a29",
+          "kind": "road",
+          "name": "A29",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a30",
+          "kind": "road",
+          "name": "A30",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a31",
+          "kind": "road",
+          "name": "A31",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a32",
+          "kind": "road",
+          "name": "A32",
+          "tolerance": 0.0001
+        }
+      ]
+    },
+    {
+      "name": "ikincisi kurala uymuyor",
+      "problem": "“B” ağının toleransı 20 m; 0,0001 ile 10 m arasında olmalı",
+      "value": [
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "a",
+          "kind": "road",
+          "name": "A",
+          "tolerance": 0.0001
+        },
+        {
+          "connect": "ends",
+          "direction": {
+            "kind": "both"
+          },
+          "edges": [
+            {
+              "layer": "0"
+            }
+          ],
+          "id": "b",
+          "kind": "road",
+          "name": "B",
+          "tolerance": 20.0
+        }
+      ]
+    }
+  ],
+  "networks": [
+    {
+      "name": "yol ağı",
+      "problem": null,
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "TL"
+          }
+        ],
+        "direction": {
+          "backward": [
+            "TF",
+            "-1"
+          ],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT",
+            "1"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "filter": "tur <> 'yaya'",
+            "layer": "yol"
+          }
+        ],
+        "id": "ag-1",
+        "kind": "road",
+        "name": "Yollar",
+        "tolerance": 0.01
+      }
+    },
+    {
+      "name": "şebeke",
+      "problem": null,
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "en kısa tanım",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kimlik büyük harf",
+      "problem": "ağın kimliği “Ag-1”; 1–40 küçük harf, rakam ya da tire olmalı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "Ag-1",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kimlik boşluklu",
+      "problem": "ağın kimliği “ag 1”; 1–40 küçük harf, rakam ya da tire olmalı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "ag 1",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kimlik Türkçe harf",
+      "problem": "ağın kimliği “ağ-1”; 1–40 küçük harf, rakam ya da tire olmalı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "ağ-1",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kimlik 40 karakter",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kimlik 41 karakter",
+      "problem": "ağın kimliği “aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa”; 1–40 küçük harf, rakam ya da tire olmalı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kimlik boş",
+      "problem": "ağın kimliği “”; 1–40 küçük harf, rakam ya da tire olmalı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "ad boş",
+      "problem": "“a” ağının adı boş, kırpılmamış ya da 80 karakterden uzun",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "ad yalnız boşluk",
+      "problem": "“a” ağının adı boş, kırpılmamış ya da 80 karakterden uzun",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "   ",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "ad kırpılmamış",
+      "problem": "“a” ağının adı boş, kırpılmamış ya da 80 karakterden uzun",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": " Yollar",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "ad 80 karakter",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "ad 81 karakter",
+      "problem": "“a” ağının adı boş, kırpılmamış ya da 80 karakterden uzun",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kenar katmanı yok",
+      "problem": "“A” ağının kenar katmanı yok; en az bir çizgi katmanı olmalı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "16 kenar katmanı",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "k0"
+          },
+          {
+            "layer": "k1"
+          },
+          {
+            "layer": "k2"
+          },
+          {
+            "layer": "k3"
+          },
+          {
+            "layer": "k4"
+          },
+          {
+            "layer": "k5"
+          },
+          {
+            "layer": "k6"
+          },
+          {
+            "layer": "k7"
+          },
+          {
+            "layer": "k8"
+          },
+          {
+            "layer": "k9"
+          },
+          {
+            "layer": "k10"
+          },
+          {
+            "layer": "k11"
+          },
+          {
+            "layer": "k12"
+          },
+          {
+            "layer": "k13"
+          },
+          {
+            "layer": "k14"
+          },
+          {
+            "layer": "k15"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "17 kenar katmanı",
+      "problem": "“A” ağının katmanları çok; en çok 16 kenar ve 16 düğüm katmanı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "k0"
+          },
+          {
+            "layer": "k1"
+          },
+          {
+            "layer": "k2"
+          },
+          {
+            "layer": "k3"
+          },
+          {
+            "layer": "k4"
+          },
+          {
+            "layer": "k5"
+          },
+          {
+            "layer": "k6"
+          },
+          {
+            "layer": "k7"
+          },
+          {
+            "layer": "k8"
+          },
+          {
+            "layer": "k9"
+          },
+          {
+            "layer": "k10"
+          },
+          {
+            "layer": "k11"
+          },
+          {
+            "layer": "k12"
+          },
+          {
+            "layer": "k13"
+          },
+          {
+            "layer": "k14"
+          },
+          {
+            "layer": "k15"
+          },
+          {
+            "layer": "k16"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "17 düğüm katmanı",
+      "problem": "“A” ağının katmanları çok; en çok 16 kenar ve 16 düğüm katmanı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "junctions": [
+          {
+            "layer": "d0",
+            "role": "junction"
+          },
+          {
+            "layer": "d1",
+            "role": "junction"
+          },
+          {
+            "layer": "d2",
+            "role": "junction"
+          },
+          {
+            "layer": "d3",
+            "role": "junction"
+          },
+          {
+            "layer": "d4",
+            "role": "junction"
+          },
+          {
+            "layer": "d5",
+            "role": "junction"
+          },
+          {
+            "layer": "d6",
+            "role": "junction"
+          },
+          {
+            "layer": "d7",
+            "role": "junction"
+          },
+          {
+            "layer": "d8",
+            "role": "junction"
+          },
+          {
+            "layer": "d9",
+            "role": "junction"
+          },
+          {
+            "layer": "d10",
+            "role": "junction"
+          },
+          {
+            "layer": "d11",
+            "role": "junction"
+          },
+          {
+            "layer": "d12",
+            "role": "junction"
+          },
+          {
+            "layer": "d13",
+            "role": "junction"
+          },
+          {
+            "layer": "d14",
+            "role": "junction"
+          },
+          {
+            "layer": "d15",
+            "role": "junction"
+          },
+          {
+            "layer": "d16",
+            "role": "junction"
+          }
+        ],
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kenar katmanının kimliği boş",
+      "problem": "“A” ağının kenar katmanının kimliği boş",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": ""
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kenar süzgeci boşluk",
+      "problem": "“A” ağının kenar süzgeci boş; ifadesi olmayan alan yazılmaz",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "filter": "  ",
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kenar süzgeci 1000 karakter",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "filter": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kenar süzgeci 1001 karakter",
+      "problem": "“A” ağının kenar süzgeci 1000 karakterden uzun",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "filter": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "aynı kenar katmanı aynı süzgeçle",
+      "problem": "“A” ağının aynı kenar katmanı aynı süzgeçle iki kez var",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "filter": "a = 1",
+            "layer": "0"
+          },
+          {
+            "filter": "a = 1",
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "aynı kenar katmanı süzgeçsiz iki kez",
+      "problem": "“A” ağının aynı kenar katmanı aynı süzgeçle iki kez var",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          },
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "aynı katman başka süzgeçlerle",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "filter": "a = 1",
+            "layer": "0"
+          },
+          {
+            "filter": "a = 2",
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "düğüm katmanının kimliği boş",
+      "problem": "“A” ağının düğüm katmanının kimliği boş",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "junctions": [
+          {
+            "layer": "",
+            "role": "valve"
+          }
+        ],
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "düğümlerin kapalı ifadesi boşluk",
+      "problem": "“A” ağının düğümlerin kapalı ifadesi boş; ifadesi olmayan alan yazılmaz",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "junctions": [
+          {
+            "closed": " ",
+            "layer": "v",
+            "role": "valve"
+          }
+        ],
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "aynı düğüm katmanı aynı süzgeçle",
+      "problem": "“A” ağının aynı düğüm katmanı aynı süzgeçle iki kez var",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "junctions": [
+          {
+            "layer": "v",
+            "role": "valve"
+          },
+          {
+            "layer": "v",
+            "role": "source"
+          }
+        ],
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "tolerans en küçük",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "tolerans sıfır",
+      "problem": "“A” ağının toleransı 0 m; 0,0001 ile 10 m arasında olmalı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0
+      }
+    },
+    {
+      "name": "tolerans 10 m",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 10.0
+      }
+    },
+    {
+      "name": "tolerans 10 m'den büyük",
+      "problem": "“A” ağının toleransı 10.0001 m; 0,0001 ile 10 m arasında olmalı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 10.0001
+      }
+    },
+    {
+      "name": "tolerans eksi",
+      "problem": "“A” ağının toleransı -0.01 m; 0,0001 ile 10 m arasında olmalı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": -0.01
+      }
+    },
+    {
+      "name": "yön alanı boş",
+      "problem": "“A” ağının yön alanı boş ya da çok uzun",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "backward": [],
+          "closed": [],
+          "field": "",
+          "forward": [
+            "FT"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "yön alanı 65 karakter",
+      "problem": "“A” ağının yön alanı boş ya da çok uzun",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "backward": [],
+          "closed": [],
+          "field": "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "forward": [
+            "FT"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "yön değeri yok",
+      "problem": "“A” ağının yön alanının değeri yok; ileri, geri ya da kapalı en az bir değer olmalı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "backward": [],
+          "closed": [],
+          "field": "yon",
+          "forward": [],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "yalnız kapalı değeri",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "backward": [],
+          "closed": [
+            "N"
+          ],
+          "field": "yon",
+          "forward": [],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "17 ileri değeri",
+      "problem": "“A” ağının yön değerleri çok; listede en çok 16 değer",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "backward": [],
+          "closed": [],
+          "field": "yon",
+          "forward": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "yön değeri boşluk",
+      "problem": "“A” ağının yön değeri boş ya da 40 karakterden uzun",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "backward": [],
+          "closed": [],
+          "field": "yon",
+          "forward": [
+            " "
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "yön değeri 41 karakter",
+      "problem": "“A” ağının yön değeri boş ya da 40 karakterden uzun",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "backward": [],
+          "closed": [],
+          "field": "yon",
+          "forward": [
+            "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "yön değeri iki listede",
+      "problem": "“A” ağının yön değeri “ft” iki kez var",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "backward": [],
+          "closed": [
+            "ft"
+          ],
+          "field": "yon",
+          "forward": [
+            "FT"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "yön değeri bir listede iki kez",
+      "problem": "“A” ağının yön değeri “TF” iki kez var",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "backward": [
+            "TF",
+            " TF "
+          ],
+          "closed": [],
+          "field": "yon",
+          "forward": [],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "Türkçe I: IŞIK ile ışık aynı",
+      "problem": "“A” ağının yön değeri “ışık” iki kez var",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "backward": [
+            "ışık"
+          ],
+          "closed": [],
+          "field": "yon",
+          "forward": [
+            "IŞIK"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "Türkçe İ: İLERİ ile ileri aynı",
+      "problem": "“A” ağının yön değeri “ileri” iki kez var",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "backward": [
+            "ileri"
+          ],
+          "closed": [],
+          "field": "yon",
+          "forward": [
+            "İLERİ"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "Türkçe I: ILERI ile ileri başka",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "backward": [
+            "ileri"
+          ],
+          "closed": [],
+          "field": "yon",
+          "forward": [
+            "ILERI"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "8 maliyet",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S0",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S1",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S2",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S3",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S4",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S5",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S6",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S7",
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "9 maliyet",
+      "problem": "“A” ağının maliyetleri çok; en çok 8 ek maliyet",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S0",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S1",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S2",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S3",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S4",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S5",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S6",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S7",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "S8",
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "maliyetin adı Uzunluk",
+      "problem": "“A” ağının maliyeti “Uzunluk”: bu ad ağın uzunluğunundur",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Uzunluk"
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "maliyetin adı UZUNLUK",
+      "problem": "“A” ağının maliyeti “UZUNLUK”: bu ad ağın uzunluğunundur",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "UZUNLUK"
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "maliyetin adı kırpılmamış",
+      "problem": "“A” ağının maliyetinin adı boş, kırpılmamış ya da 40 karakterden uzun",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret "
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "maliyetin adı 41 karakter",
+      "problem": "“A” ağının maliyetinin adı boş, kırpılmamış ya da 40 karakterden uzun",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm"
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "maliyet iki kez",
+      "problem": "“A” ağının maliyeti “SÜRE” iki kez var",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0
+          },
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "SÜRE",
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "maliyetin alanı boş",
+      "problem": "“A” ağının “Ücret” maliyetinin alanı boş ya da çok uzun",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": " ",
+            "kind": "field",
+            "name": "Ücret"
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "süre maliyetinin birimi",
+      "problem": "“A” ağının “Süre” maliyeti süredir (dakika); birim yazılmaz",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 50.0,
+            "unit": "dk"
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "süre maliyetinin hızı yok",
+      "problem": "“A” ağının “Süre” maliyetinin varsayılan hızı sıfırdan büyük, en çok 1000 km/sa olmalı",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre"
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "süre maliyetinin hızı sıfır",
+      "problem": "“A” ağının “Süre” maliyetinin varsayılan hızı sıfırdan büyük, en çok 1000 km/sa olmalı",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 0.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "süre maliyetinin hızı 1000",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 1000.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "süre maliyetinin hızı 1000'den büyük",
+      "problem": "“A” ağının “Süre” maliyetinin varsayılan hızı sıfırdan büyük, en çok 1000 km/sa olmalı",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "speed": 1000.5
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "alan maliyetinin hızı",
+      "problem": "“A” ağının “Ücret” maliyeti alandan okunur; hız almaz",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "speed": 5.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "alan maliyetinin birimi 12 karakter",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "bbbbbbbbbbbb"
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "alan maliyetinin birimi 13 karakter",
+      "problem": "“A” ağının “Ücret” maliyetinin birimi kırpılmamış ya da 12 karakterden uzun",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": "bbbbbbbbbbbbb"
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "alan maliyetinin birimi kırpılmamış",
+      "problem": "“A” ağının “Ücret” maliyetinin birimi kırpılmamış ya da 12 karakterden uzun",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "unit": " TL"
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kapalı kenarlar ifadesi boşluk",
+      "problem": "“A” ağının kapalı kenarlar ifadesi boş; ifadesi olmayan alan yazılmaz",
+      "value": {
+        "closed": "  ",
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "kapalı kenarlar ifadesi",
+      "problem": null,
+      "value": {
+        "closed": "durum = 'kapalı'",
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    }
+  ],
+  "note": "The rules of a project's networks (docs/adr/0209 §2), each case with the contract's words; null where the value is one. scripts/fixtures/network_rules_cases.py writes the values from the ADR and checks the verdicts with tools/kcad/kcad.py's own copy of the rules; Rust (crates/shared/contracts/tests/all/network_rules.rs, KENTOS_WRITE_NETWORK_RULES=1 writes the words) and TypeScript (apps/web/src/model/networkRules.test.ts) give the same words.",
+  "version": 1
+}

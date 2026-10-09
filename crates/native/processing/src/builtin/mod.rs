@@ -7,6 +7,7 @@ pub mod info_from_enclosing;
 pub mod info_from_inside;
 pub mod join_by_field;
 pub mod models;
+pub mod network;
 pub mod numbering;
 pub mod pointcloud;
 pub mod queries;
@@ -41,6 +42,10 @@ pub fn tools() -> Vec<Tool> {
         geometry::validity::repair_tool(),
         geometry::simplify::tool(),
         geometry::reproject::tool(),
+        // Ağ analizi (docs/adr/0209 §7, §10).
+        network::closest_facility::tool(),
+        network::od_matrix::tool(),
+        network::service_areas::tool(),
         // Nokta bulutu (docs/adr/0207 §7): the desktop's; the web's side waits.
         pointcloud::area_stats::tool(),
         pointcloud::thin::tool(),

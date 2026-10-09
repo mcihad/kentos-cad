@@ -202,6 +202,10 @@ pub struct ProjectSettings {
         ts(as = "Option<Vec<crate::ServiceConnection>>", optional)
     )]
     pub connections: Vec<crate::ServiceConnection>,
+    /// The project's networks (docs/adr/0209 §2).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::NetworkDef>>", optional))]
+    pub networks: Vec<crate::NetworkDef>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names
@@ -573,7 +577,8 @@ impl ProjectSettings {
     /// when they all hold, the survey settings that hold (docs/adr/0169 §3),
     /// the layer states that hold (docs/adr/0177 §4), the topology rules
     /// and exceptions that hold (docs/adr/0202 §1), the annotation heights
-    /// that hold and are not their kind's default (docs/adr/0205 §1).
+    /// that hold and are not their kind's default (docs/adr/0205 §1), the
+    /// networks that hold (docs/adr/0209 §2).
     pub fn sanitized(mut self) -> Self {
         if self.srid != 0
             || self
@@ -608,6 +613,7 @@ impl ProjectSettings {
         self.annotation = self
             .annotation
             .and_then(crate::AnnotationHeights::sanitized);
+        self.networks = crate::sanitized_networks(std::mem::take(&mut self.networks));
         self
     }
 }

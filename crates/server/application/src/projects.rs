@@ -174,6 +174,19 @@ pub fn check_services(
     }
 }
 
+/// A project's networks by their rules (docs/adr/0209 §2), as the files' readers and
+/// `cad.network.define` check them; a refusal names the field at `path`. The layers a
+/// network names need not exist: a missing one is left out when the network is built.
+pub fn check_networks(networks: &[kentos_contracts::NetworkDef], path: &str) -> AppResult<()> {
+    match kentos_contracts::networks_problem(networks) {
+        Some(problem) => Err(AppError::invalid_at(
+            path,
+            format!("Projenin ağları geçersiz: {problem}."),
+        )),
+        None => Ok(()),
+    }
+}
+
 /// The stored name of a storage mode (`project.storage`, migration 0006).
 pub fn storage_name(storage: ProjectStorage) -> &'static str {
     match storage {
@@ -278,6 +291,7 @@ pub async fn create(
     check_name(&input.name)?;
     check_tree(&input.layers, &input.active_layer)?;
     check_services(&input.layers, &input.settings.connections)?;
+    check_networks(&input.settings.networks, "settings.networks")?;
     let description =
         crate::catalog::check_description(input.description.as_deref().unwrap_or(""))?;
     let tags = crate::catalog::normalize_tags(input.tags.as_deref().unwrap_or(&[]))?;
@@ -698,5 +712,39 @@ mod tests {
         let mut group = with(LayerNodeType::Group, vec![ada()]);
         group.children = vec![node("b", LayerNodeType::Layer, None, Vec::new())];
         assert!(check_tree(&[group], "b").is_err(), "a group keeps none");
+    }
+
+    /// A project's networks are checked as the files' readers check them (docs/adr/0209 §2).
+    #[test]
+    fn a_projects_networks_keep_their_rules() {
+        use kentos_contracts::{
+            NetworkConnect, NetworkDef, NetworkDirection, NetworkKind, NetworkLayer,
+        };
+        let net = |id: &str, name: &str, tolerance: f64| NetworkDef {
+            id: id.to_owned(),
+            name: name.to_owned(),
+            kind: NetworkKind::Road,
+            edges: vec![NetworkLayer {
+                layer: "yol".to_owned(),
+                filter: None,
+            }],
+            junctions: Vec::new(),
+            connect: NetworkConnect::Ends,
+            tolerance,
+            direction: NetworkDirection::Both,
+            costs: Vec::new(),
+            closed: None,
+        };
+        const AT: &str = "settings.networks";
+        assert!(check_networks(&[], AT).is_ok());
+        assert!(
+            check_networks(&[net("ag-1", "Yollar", 0.01), net("ag-2", "Su", 0.01)], AT).is_ok()
+        );
+        let e =
+            check_networks(&[net("ag-1", "Yollar", 11.0)], AT).expect_err("a tolerance over 10 m");
+        assert!(e.to_string().contains("0,0001 ile 10 m"), "{e}");
+        let twice = [net("ag-1", "Yollar", 0.01), net("ag-2", "YOLLAR", 0.01)];
+        let e = check_networks(&twice, AT).expect_err("a name twice");
+        assert!(e.to_string().contains("adlı ağ iki kez var"), "{e}");
     }
 }

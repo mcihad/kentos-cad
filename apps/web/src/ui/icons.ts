@@ -658,6 +658,25 @@ export const ICONS = {
     '<path d="M5 17.5V2.5" stroke-width="1.5"/><path d="M5 3h10.5l-2.4 3.6 2.4 3.6H5z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M5 3h10.5l-2.4 3.6 2.4 3.6H5z" stroke-width="1.3"/>',
   topologyFix:
     '<path d="M2.5 17.5V8.5h6" stroke-width="1.3"/><path d="M2.5 17.5h9" stroke-width="1.3"/><path d="M17.3 5.6a3 3 0 0 1-3.9 3L7 15l-1.6-1.6 6.4-6.4a3 3 0 0 1 3-3.9l-1.8 1.8.4 1.6 1.6.4z" stroke-width="1.2"/>',
+  // Ağ analizi (docs/adr/0209 §10; chosen without asking, as the owner said): Ağlar, a graph of nodes and edges; En kısa
+  // yol, a street grid with the route along it between its two stops; Hizmet alanı, a facility and the two bands it
+  // reaches; Şebeke izleme, a pipe and its branch traced up to a valve. İşlemler's: En yakın tesis, an incident and two
+  // facilities, the nearer one's way bold; Maliyet matrisi, every origin to every destination; Hizmet alanları, two
+  // facilities' overlapping areas.
+  networks:
+    '<path d="M3.5 15.5 8 4.5l8.5 1.5L13 15.5zM8 4.5l5 11" stroke-width="1.2"/><circle cx="3.5" cy="15.5" r="1.9" fill="currentColor" stroke="none"/><circle cx="8" cy="4.5" r="1.9" fill="currentColor" stroke="none"/><circle cx="16.5" cy="6" r="1.9" fill="currentColor" stroke="none"/><circle cx="13" cy="15.5" r="1.9" fill="currentColor" stroke="none"/>',
+  netRoute:
+    '<path d="M2 6h16M2 14h16M6 2v16M14 2v16" stroke-width=".9" stroke-opacity=".5"/><path d="M3.5 14H14V4.5" stroke-width="2.2"/><circle cx="3.5" cy="14" r="2" fill="currentColor" stroke="none"/><path d="M14 4.5V1.8l3.2 1.3L14 4.4" fill="currentColor" stroke-width="1"/>',
+  netServiceArea:
+    '<path d="M10 2.2 15.6 4.8 18 10.4 14.6 16.9 8.2 18 2.6 13.2 2.8 6.6z" fill="currentColor" fill-opacity=".18" stroke-width="1.1"/><path d="M10 6.2 13.5 8.2 14 11.6 11.4 14.1 7.5 13.6 5.9 10.3 7.2 7.3z" fill="currentColor" fill-opacity=".38" stroke-width="1.1"/><circle cx="10" cy="10.2" r="1.7" fill="currentColor" stroke="none"/>',
+  netTrace:
+    '<path d="M15.5 10H18" stroke-width="1.2"/><path d="M2.5 10H12M7 10v7.5" stroke-width="2.4"/><path d="M12 7.8v4.4l3.5-4.4v4.4z" fill="currentColor" fill-opacity=".28" stroke-width="1.1"/><circle cx="2.8" cy="10" r="1.8" fill="currentColor" stroke="none"/>',
+  closestFacility:
+    '<path d="M4 16h5V5h5.5" stroke-width="2.2"/><path d="M9 16h7.5" stroke-width="1" stroke-dasharray="1.8 1.4"/><circle cx="4" cy="16" r="2" fill="currentColor" stroke="none"/><rect x="14.5" y="2.8" width="4" height="4" fill="currentColor" fill-opacity=".28" stroke-width="1.1"/><rect x="16.5" y="14" width="3" height="3.6" fill="currentColor" fill-opacity=".28" stroke-width="1"/>',
+  odMatrix:
+    '<path d="M4 4 16 6M4 4l12 9M4 10l12-4M4 10l12 3M4 16 16 6M4 16l12-3" stroke-width=".9"/><circle cx="4" cy="4" r="1.8" fill="currentColor" stroke="none"/><circle cx="4" cy="10" r="1.8" fill="currentColor" stroke="none"/><circle cx="4" cy="16" r="1.8" fill="currentColor" stroke="none"/><rect x="14.5" y="4.5" width="3.2" height="3.2" fill="currentColor" fill-opacity=".28" stroke-width="1.1"/><rect x="14.5" y="11.4" width="3.2" height="3.2" fill="currentColor" fill-opacity=".28" stroke-width="1.1"/>',
+  serviceAreas:
+    '<path d="M6.8 3.2 11 5.4 12 10.2 9.4 14.4 4.4 14.6 1.8 10.2 3 5.6z" fill="currentColor" fill-opacity=".22" stroke-width="1.1"/><path d="M13.4 6.6 17.6 8.4 18.4 13.4 15.6 17.4 10.6 17 8.4 12.8 10.2 8.2z" fill="currentColor" fill-opacity=".22" stroke-width="1.1"/><circle cx="6.6" cy="9.4" r="1.5" fill="currentColor" stroke="none"/><circle cx="13.6" cy="12.4" r="1.5" fill="currentColor" stroke="none"/>',
   // Öznitelik tablosu (docs/adr/0199 §4): a table and its layer's object (the owner's choice A).
   featureTable:
     '<rect x="2" y="2.5" width="11.5" height="10" rx="1"/><path d="M2 6h11.5M2 9.25h11.5M6 6v6.5"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z"/>',

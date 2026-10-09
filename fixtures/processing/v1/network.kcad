@@ -1,0 +1,419 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: ağ analizi",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow",
+  "networks": [
+   {
+    "id": "yollar",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "field",
+     "field": "yon",
+     "forward": [
+      "FT",
+      "1"
+     ],
+     "backward": [
+      "TF"
+     ],
+     "closed": [
+      "N"
+     ]
+    },
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "speed": 50.0
+     },
+     {
+      "name": "Ücret",
+      "kind": "field",
+      "field": "ucret",
+      "unit": "TL"
+     }
+    ],
+    "closed": "kapali = 'evet'"
+   }
+  ]
+ },
+ "origin": {
+  "x": 500000.0,
+  "y": 4400000.0
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.5
+   },
+   "children": []
+  },
+  {
+   "id": "okul",
+   "name": "Okul",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "triangle",
+     "size": 8
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "adres",
+   "name": "Adres",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E63DD",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "ring",
+     "size": 6
+    }
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "polyline",
+   "id": 1,
+   "layerId": "yol",
+   "attrs": {
+    "hiz": "50",
+    "ucret": "4"
+   },
+   "pts": [
+    {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 500210.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 500400.0,
+     "y": 4400000.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 2,
+   "layerId": "yol",
+   "attrs": {
+    "yon": "FT",
+    "hiz": "30",
+    "ucret": "3"
+   },
+   "pts": [
+    {
+     "x": 500000.0,
+     "y": 4400150.0
+    },
+    {
+     "x": 500400.0,
+     "y": 4400150.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 3,
+   "layerId": "yol",
+   "attrs": {
+    "hiz": "40,5",
+    "ucret": "2"
+   },
+   "pts": [
+    {
+     "x": 500210.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 500210.0,
+     "y": 4400150.0
+    }
+   ],
+   "bulges": [
+    0.35
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 4,
+   "layerId": "yol",
+   "attrs": {
+    "hiz": "hızlı",
+    "ucret": "1"
+   },
+   "pts": [
+    {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 500000.0,
+     "y": 4400150.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 5,
+   "layerId": "yol",
+   "attrs": {
+    "yon": "tf",
+    "hiz": "50"
+   },
+   "pts": [
+    {
+     "x": 500400.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 500400.0,
+     "y": 4400150.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 6,
+   "layerId": "yol",
+   "attrs": {
+    "hiz": "30",
+    "ucret": "1"
+   },
+   "pts": [
+    {
+     "x": 500300.0,
+     "y": 4400260.0
+    },
+    {
+     "x": 500300.0,
+     "y": 4400150.004
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 7,
+   "layerId": "yol",
+   "attrs": {
+    "hiz": "50",
+    "ucret": "1",
+    "kapali": "evet"
+   },
+   "pts": [
+    {
+     "x": 500100.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 500100.0,
+     "y": 4400150.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 8,
+   "layerId": "yol",
+   "attrs": {
+    "hiz": "60",
+    "ucret": "1"
+   },
+   "pts": [
+    {
+     "x": 500250.0,
+     "y": 4399950.0
+    },
+    {
+     "x": 500250.0,
+     "y": 4400200.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 9,
+   "layerId": "yol",
+   "attrs": {
+    "hiz": "50",
+    "ucret": "1"
+   },
+   "pts": [
+    {
+     "x": 500600.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 500650.0,
+     "y": 4400000.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 10,
+   "layerId": "yol",
+   "attrs": {
+    "yon": "N",
+    "hiz": "20",
+    "ucret": "1"
+   },
+   "pts": [
+    {
+     "x": 500452.0,
+     "y": 4400080.0
+    },
+    {
+     "x": 500400.5,
+     "y": 4400080.0
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 11,
+   "layerId": "okul",
+   "attrs": {
+    "Ad": "Okul A"
+   },
+   "p": {
+    "x": 500050.0,
+    "y": 4400001.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 12,
+   "layerId": "okul",
+   "attrs": {
+    "Ad": "Okul B"
+   },
+   "p": {
+    "x": 500300.0,
+    "y": 4400255.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 13,
+   "layerId": "okul",
+   "attrs": {
+    "Ad": "Okul C"
+   },
+   "p": {
+    "x": 500395.0,
+    "y": 4400001.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 21,
+   "layerId": "adres",
+   "attrs": {
+    "Ad": "Adres 1"
+   },
+   "p": {
+    "x": 500020.0,
+    "y": 4400150.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 22,
+   "layerId": "adres",
+   "attrs": {
+    "Ad": "Adres 2"
+   },
+   "p": {
+    "x": 500300.0,
+    "y": 4400000.5
+   }
+  },
+  {
+   "kind": "point",
+   "id": 23,
+   "layerId": "adres",
+   "attrs": {
+    "Ad": "Adres 3"
+   },
+   "p": {
+    "x": 500004.0,
+    "y": 4400075.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 24,
+   "layerId": "adres",
+   "attrs": {
+    "Ad": "Adres 4"
+   },
+   "p": {
+    "x": 501000.0,
+    "y": 4401000.0
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

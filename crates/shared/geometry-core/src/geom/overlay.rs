@@ -9,11 +9,12 @@ use std::collections::HashMap;
 
 use crate::geom::arc::norm_angle;
 use crate::geom::arrangement::{
-    Area, Built, DirPiece, Ring, Rule, Source, TOL, Vertices, build, classify, dir, edge_box,
-    edge_len, reverse_edge, translate_edge, winding,
+    Area, Built, DirPiece, Ring, Rule, Source, TOL, Vertices, build, classify, classify_with, dir,
+    edge_box, edge_len, reverse_edge, translate_edge, winding,
 };
 use crate::geom::bulge::{bulge_of_sweep, bulge_ring_area};
-use crate::geom::intersect::{Edge, point_at};
+use crate::geom::intersect::{Edge, closest_on_edge, point_at};
+use crate::geom::region::{orient_ring, ring_area, ring_edges};
 use crate::geometry::Bounds;
 use crate::jsmath::{
     PI, TAU, atan2, js_cmp, js_hypot, js_max, js_min, js_sign, or, sin, stable_sort,
@@ -482,6 +483,181 @@ fn run(sources: &[Source], rule: Rule) -> (Built, Vec<DirPiece>, Vec2) {
 /// Runs the overlay and returns the areas where `rule` holds.
 pub fn overlay(sources: &[Source], rule: Rule) -> Vec<Area> {
     let (built, dps, o) = run(sources, rule);
+    assemble(rings(&dps, &built.verts, o))
+}
+
+/// Cores in a dense grid of square cells, each core's box grown by the buffers' distance, counted then filled into
+/// one array: a point's cell holds every core within that distance of it.
+struct Cores {
+    edges: Vec<Edge>,
+    boxes: Vec<Bounds>,
+    x0: f64,
+    y0: f64,
+    size: f64,
+    nx: usize,
+    ny: usize,
+    start: Vec<u32>,
+    items: Vec<u32>,
+    r: f64,
+}
+
+impl Cores {
+    fn new(edges: Vec<Edge>, r: f64) -> Cores {
+        let boxes: Vec<Bounds> = edges.iter().map(edge_box).collect();
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
+        let mut sum = 0.0;
+        for b in &boxes {
+            x0 = js_min(x0, b.min_x - r);
+            y0 = js_min(y0, b.min_y - r);
+            x1 = js_max(x1, b.max_x + r);
+            y1 = js_max(y1, b.max_y + r);
+            sum += js_max(b.max_x - b.min_x, b.max_y - b.min_y);
+        }
+        if !x0.is_finite() {
+            (x0, y0, x1, y1) = (0.0, 0.0, 0.0, 0.0);
+        }
+        let n = boxes.len().max(1);
+        let mut size = js_max(js_max(r, sum / n as f64), 1e-9);
+        while ((x1 - x0) / size + 1.0) * ((y1 - y0) / size + 1.0) > (4 * n).max(1024) as f64 {
+            size *= 2.0;
+        }
+        let nx = ((x1 - x0) / size) as usize + 1;
+        let ny = ((y1 - y0) / size) as usize + 1;
+        let cell = |v: f64, v0: f64, count: usize| (((v - v0) / size) as usize).min(count - 1);
+        let span = |b: &Bounds| {
+            (
+                cell(b.min_x - r, x0, nx),
+                cell(b.max_x + r, x0, nx),
+                cell(b.min_y - r, y0, ny),
+                cell(b.max_y + r, y0, ny),
+            )
+        };
+        let mut start = vec![0u32; nx * ny + 1];
+        for b in &boxes {
+            let (a, c, d, e) = span(b);
+            for y in d..=e {
+                for x in a..=c {
+                    start[y * nx + x + 1] += 1;
+                }
+            }
+        }
+        for k in 0..nx * ny {
+            start[k + 1] += start[k];
+        }
+        let mut fill = start.clone();
+        let mut items = vec![0u32; start[nx * ny] as usize];
+        for (i, b) in boxes.iter().enumerate() {
+            let (a, c, d, e) = span(b);
+            for y in d..=e {
+                for x in a..=c {
+                    items[fill[y * nx + x] as usize] = i as u32;
+                    fill[y * nx + x] += 1;
+                }
+            }
+        }
+        Cores {
+            edges,
+            boxes,
+            x0,
+            y0,
+            size,
+            nx,
+            ny,
+            start,
+            items,
+            r,
+        }
+    }
+
+    /// The cores near `p`: every one within the distance, and some more.
+    fn near(&self, p: Vec2) -> &[u32] {
+        let (fx, fy) = ((p.x - self.x0) / self.size, (p.y - self.y0) / self.size);
+        if !(fx >= 0.0 && fy >= 0.0) || fx >= self.nx as f64 || fy >= self.ny as f64 {
+            return &[];
+        }
+        let k = fy as usize * self.nx + fx as usize;
+        &self.items[self.start[k] as usize..self.start[k + 1] as usize]
+    }
+
+    /// Whether `p` is closer than `limit` (at most the distance) to core `i`; its box first.
+    fn close(&self, i: u32, p: Vec2, limit: f64) -> bool {
+        let b = &self.boxes[i as usize];
+        if p.x < b.min_x - limit
+            || p.x > b.max_x + limit
+            || p.y < b.min_y - limit
+            || p.y > b.max_y + limit
+        {
+            return false;
+        }
+        closest_on_edge(&self.edges[i as usize], p).d < limit
+    }
+
+    /// Whether `p` is closer than `limit` to a core.
+    fn within(&self, p: Vec2, limit: f64) -> bool {
+        self.near(p).iter().any(|&i| self.close(i, p, limit))
+    }
+}
+
+/// The union of buffers: `pieces` are each the points within `r` of one of `cores` (as `geoprocess::buffer` makes
+/// them), so the union's inside is “within `r` of a core”, asked of the cores near a point instead of counted along a
+/// ray across the whole layout (n^1.5 on a city's streets). The pieces' edges are taken one by one, and a straight
+/// one within a single other core's distance (by more than TOL at both ends: inside that convex buffer) cannot bound
+/// the union and is left out before the arrangement is built. The areas `overlay(&[area_source(pieces)], Rule::Any)`
+/// gives.
+pub fn overlay_buffers(pieces: &[Area], cores: &[Edge], r: f64) -> Vec<Area> {
+    let Some(o) = pieces.first().and_then(|a| a.outer.pts.first().copied()) else {
+        return Vec::new();
+    };
+    let cores = Cores::new(
+        cores
+            .iter()
+            .map(|e| translate_edge(e, -o.x, -o.y))
+            .collect(),
+        r,
+    );
+    let deep = r - TOL;
+    // The kept edges near the origin (to cut) and true (for the exact corners), in the same order.
+    let (mut local, mut abs) = (Vec::new(), Vec::new());
+    for a in pieces {
+        let ccw = ring_area(&a.outer) > 0.0;
+        let edges = if ccw {
+            ring_edges(&a.outer)
+        } else {
+            ring_edges(&orient_ring(&a.outer, true))
+        };
+        for e in edges {
+            let near = translate_edge(&e, -o.x, -o.y);
+            let inside = match near {
+                Edge::Seg { a, b } => cores
+                    .near(a)
+                    .iter()
+                    .any(|&i| cores.close(i, a, deep) && cores.close(i, b, deep)),
+                Edge::Arc { .. } => false,
+            };
+            if !inside {
+                local.push(near);
+                abs.push(e);
+            }
+        }
+    }
+    let local = [Source {
+        edges: local,
+        points: None,
+        cut: None,
+    }];
+    let abs = [Source {
+        edges: abs,
+        points: None,
+        cut: None,
+    }];
+    let built = build(&local, &abs, o);
+    let inside = |_: usize, p: Vec2| cores.within(p, cores.r);
+    let dps = classify_with(&local, &built, Rule::Any, Some(&inside));
     assemble(rings(&dps, &built.verts, o))
 }
 

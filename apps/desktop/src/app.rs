@@ -176,6 +176,8 @@ pub enum Dialog {
     Feed,
     /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6); the window is `App::topology_rules`.
     TopologyRules,
+    /// Ağlar (networks/window.rs, docs/adr/0209 §10); the window is `App::networks.window`.
+    Networks,
     /// Katman durumları (layer_states.rs, docs/adr/0177 §4); the window is `App::layer_states_window`.
     LayerStates,
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
@@ -324,6 +326,8 @@ pub enum Message {
     Topology(crate::topology::Event),
     /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6).
     TopologyRules(crate::topology::rules::Event),
+    /// Ağ analizi: the networks' answers and Ağlar (networks/, docs/adr/0209).
+    Networks(crate::networks::Event),
     /// Köşe tablosu in the Koordinat listesi tab (vertices/, docs/adr/0172).
     Vertices(crate::vertices::Event),
     /// The bottom panel's top edge dragged: the open history's new height.
@@ -580,6 +584,12 @@ pub struct App {
     pub(crate) rasters: crate::rasters::Windows,
     /// XYZ sor's places and reaches whose clouds are to be read (docs/adr/0207 §7).
     pub(crate) cloud_query_wanted: Vec<(kentos_interaction::Vec2, f64)>,
+    /// The network tools' questions, asked after the update (networks/, docs/adr/0209 §12).
+    pub(crate) network_wanted: Vec<kentos_interaction::network::NetworkAsk>,
+    /// The project's networks as built on the network thread, and Ağlar's window.
+    pub(crate) networks: crate::networks::State,
+    /// Commands a tool asked the host to run (Ağlar from the network tools).
+    pub(crate) command_wanted: Vec<&'static str>,
     /// Nokta bulutu ekle and Nokta bulutu stili (pointclouds/, docs/adr/0207 §9).
     pub(crate) clouds: crate::pointclouds::Windows,
     /// Resim ekle asked for a picture file (docs/adr/0192 §5).
@@ -917,6 +927,9 @@ impl App {
             raster_values_wanted: Vec::new(),
             rasters: crate::rasters::Windows::default(),
             cloud_query_wanted: Vec::new(),
+            network_wanted: Vec::new(),
+            networks: crate::networks::State::default(),
+            command_wanted: Vec::new(),
             clouds: crate::pointclouds::Windows::default(),
             image_file_wanted: false,
             text_field_select: false,
@@ -1235,6 +1248,8 @@ impl App {
             self.raster_values_tasks(),
             self.service_info_tasks(),
             self.cloud_query_tasks(),
+            self.network_tasks(),
+            self.command_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
             // The grids the project's datum choices name, read into the core (grids.rs).
@@ -1373,6 +1388,7 @@ impl App {
             Message::Search(event) => return self.data_event(event),
             Message::Topology(event) => return self.topology_event(event),
             Message::TopologyRules(event) => return self.topology_rules_event(event),
+            Message::Networks(event) => return self.networks_event(event),
             Message::Vertices(event) => return self.vertices_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
@@ -1817,6 +1833,7 @@ impl App {
         self.memory.forget_heights();
         self.isolated_layers.clear();
         self.selected_layer = None;
+        self.networks_reset();
         self.spatial.reload(&doc.model);
         self.viewport.opened(&doc, self.spatial.extent());
         // The views left belong to the drawing they were left on (docs/adr/0141).
@@ -2067,6 +2084,8 @@ impl App {
             // Topoloji kuralları (topology/, docs/adr/0202 §5, §6).
             "topology.check" => return self.open_topology_check(),
             "topology.rules" => return self.open_topology_rules(),
+            // Ağlar (networks/, docs/adr/0209 §10).
+            "network.manage" => return self.open_networks(),
             crate::catalog::PYTHON_CONSOLE => self.toggle_python(),
             // The navigation commands keep the view they leave (navigation.rs, docs/adr/0141).
             "view.zoomIn" => self.navigating(Self::zoom_in),

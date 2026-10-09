@@ -672,7 +672,7 @@ impl App {
                     hot: self.session.active_grip(),
                     marked: self.vertex_marks(),
                     found: self.data_mark_label(),
-                    problem: self.topology_problem(),
+                    problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
                     tracking: self.tracking_marks(&format),
                     crosshair: self.crosshair_mark(),
                     locks: self.lock_marks(&format),
@@ -813,7 +813,9 @@ impl App {
             hot: self.session.active_grip(),
             marked: self.vertex_marks(),
             found: self.data_mark_label(),
-            problem: self.topology_problem(),
+            problem: self
+                .topology_problem()
+                .or_else(|| self.networks.mark.clone()),
             tracking: None,
             crosshair: None,
             locks: None,
@@ -1561,6 +1563,7 @@ impl App {
             Asking::ServiceAdd => self.service_window_view(),
             Asking::Feed => self.feed_window_view(),
             Asking::TopologyRules => self.topology_rules_view(),
+            Asking::Networks => self.networks_view(),
             Asking::LayerStates => self.layer_states_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::LayerPurge => self.layer_purge_view(),

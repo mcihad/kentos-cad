@@ -8,6 +8,7 @@ import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { LayerState } from "./LayerState";
+import type { NetworkDef } from "./NetworkDef";
 import type { ServiceConnection } from "./ServiceConnection";
 import type { SurveySettings } from "./SurveySettings";
 import type { TextStyleDef } from "./TextStyleDef";
@@ -85,4 +86,8 @@ annotation?: AnnotationHeights,
 /**
  * The project's service connections without their secrets (docs/adr/0208 §2).
  */
-connections?: Array<ServiceConnection>, };
+connections?: Array<ServiceConnection>, 
+/**
+ * The project's networks (docs/adr/0209 §2).
+ */
+networks?: Array<NetworkDef>, };

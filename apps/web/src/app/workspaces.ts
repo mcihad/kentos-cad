@@ -53,8 +53,9 @@ export const WORKSPACES: readonly WorkspaceSpec[] = [
     status: 'ready',
     hide: {
       menus: ['map', 'crs', 'processing'],
-      tools: ['map/parcel', 'map/field'],
-      commands: ['analysis.volume', 'analysis.slope'],
+      // Ağ analizi is the CBS's (docs/adr/0209 §10): Komut ara finds it.
+      tools: ['map/parcel', 'map/field', 'network'],
+      commands: ['analysis.volume', 'analysis.slope', 'network.manage'],
     },
   },
   {

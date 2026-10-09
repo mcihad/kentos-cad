@@ -2698,6 +2698,7 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-native-application",
  "kentos-project",
+ "serde",
  "serde_json",
 ]
 
@@ -2838,6 +2839,7 @@ dependencies = [
  "kentos-contracts",
  "kentos-geometry-core",
  "kentos-headless",
+ "kentos-processing",
  "kentos-project",
  "kentos-services",
  "pyo3",

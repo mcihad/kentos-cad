@@ -334,6 +334,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.blocks.edit"
             // Its remove takes a service layer away (docs/adr/0208 §15).
             | "cad.layers.service"
+            // Its remove takes a network's definition away (docs/adr/0209 §11).
+            | "cad.network.define"
     );
     let description = format!(
         "{}\n\nSonuç CommandResult'tır: status completed (output, warnings) ya da failed, needs_input, \

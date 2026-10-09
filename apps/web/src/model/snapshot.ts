@@ -6,6 +6,7 @@ import { rasterProblem, type RasterShape } from './rasterRules';
 import { pointCloudProblem } from './pointCloudRules';
 import { readConnections, readFeed, readService } from './serviceRead';
 import { linkFaultWords, serviceLinks } from './serviceRules';
+import { readNetworks } from './networkRead';
 import type { PointCloudFields } from '../contracts/generated/PointCloudFields';
 import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
@@ -483,6 +484,8 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
         // The project's annotation heights (docs/adr/0205 §1): numbers by kind, kept as a project keeps them.
         ...(settings.annotation === undefined ? {} : { annotation: annotationOf(settings.annotation) }),
         ...(connections === undefined ? {} : { connections }),
+        // The project's networks (docs/adr/0209 §2): checked whole by the contract's rules, kept as they are.
+        ...(settings.networks === undefined ? {} : { networks: readNetworks(settings.networks, 'Proje ayarları › ağlar', fail) }),
       },
       origin: vec(data.origin, 'Yerel orijin'),
       homeView: isObj(hv) ? { minX: num(hv.minX, 'Başlangıç görünümü'), minY: num(hv.minY, 'Başlangıç görünümü'), maxX: num(hv.maxX, 'Başlangıç görünümü'), maxY: num(hv.maxY, 'Başlangıç görünümü') } : null,

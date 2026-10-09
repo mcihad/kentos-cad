@@ -229,6 +229,13 @@ impl Default for GeometryStore {
     }
 }
 
+impl GeometryStore {
+    /// The store itself, for the crate's other classes (a network built from its objects).
+    pub(crate) fn store(&self) -> &Store {
+        &self.inner
+    }
+}
+
 #[wasm_bindgen]
 impl GeometryStore {
     #[wasm_bindgen(constructor)]

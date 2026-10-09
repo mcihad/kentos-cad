@@ -16,6 +16,7 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+mod network;
 mod services;
 
 use std::path::PathBuf;
@@ -244,6 +245,9 @@ fn local_commands() -> Vec<(&'static str, u32)> {
 mod native {
     #[pymodule_export]
     use super::{PySession, catalog, local_commands};
+    // kentos.network (docs/adr/0209 §11).
+    #[pymodule_export]
+    use super::network::PyNetwork;
     // kentos.services (docs/adr/0208 §15).
     #[pymodule_export]
     use super::services::{

@@ -355,6 +355,10 @@ pub const PORTED: &[&str] = &[
     "processing.run.geometry.repair",
     "processing.run.geometry.simplify",
     "processing.run.geometry.reproject",
+    // Ağ analizi (docs/adr/0209 §9).
+    "processing.run.network.closestFacility",
+    "processing.run.network.odMatrix",
+    "processing.run.network.serviceAreas",
     "processing.model.builtin.parcelSheet",
     "processing.newModel",
     "map.edgeLengths",
@@ -550,6 +554,11 @@ pub const PORTED: &[&str] = &[
     "service.add",
     "service.feed",
     "service.info",
+    // docs/adr/0209: Ağlar and the network tools (networks/, kentos_interaction::network).
+    "network.manage",
+    "tool.netRoute",
+    "tool.netServiceArea",
+    "tool.netTrace",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

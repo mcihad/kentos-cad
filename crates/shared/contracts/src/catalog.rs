@@ -1673,6 +1673,73 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // Ağlar (docs/adr/0209 §11), held together by fixtures/commands/v1/cad.network.define.json.
+        CommandDescriptor {
+            id: crate::CAD_NETWORK_DEFINE.into(),
+            version: crate::CAD_NETWORK_DEFINE_VERSION,
+            title: "Ağ tanımı".into(),
+            summary: "Projenin ağlarına bir ağ tanımı yazar (set: aynı kimlikli ağın yerini alır, yoksa sona eklenir) ya da birini siler (remove). \
+                      Ağ, katmanlardan her analizde kurulan grafın tanımıdır: kenar katmanları (çizgi, çoklu çizgi ve yaylar; isteğe bağlı süzgeç ifadesi), düğüm katmanları (bağlantı, kaynak ya da vana; süzgeç ve kapalı ifadesi), bağlanma (ends: uçlarda, bir uç başka kenara değiyorsa orada; vertices: bütün köşelerde de) ve tolerans (m), yön (both, digitized ya da field: alanın ileri, geri ve kapalı değerleri), uzunluktan başka maliyetler (speed: hız alanından dakika, varsayılan hızla; field: kenarın bütününün maliyeti) ve kapalı kenarların ifadesi. \
+                      Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. Çizimde olmayan katmanı adlandıran ağ yazılır, unknown_layer uyarısıyla. \
+                      Analizler (en kısa yol, hizmet alanı, en yakın tesis, maliyet matrisi, şebeke izleme) çizimi değiştirmez; sonuçları cad.entities.create ile yazılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::NetworkDefine>(),
+            output: schema::<crate::NetworkDefined>(),
+            plan: Some(schema::<crate::NetworkDefined>()),
+            examples: vec![
+                CommandExample {
+                    title: "Yol ağı: tek yönlü sokaklar ve hızla süre".into(),
+                    input: json!({
+                        "operation": "set",
+                        "network": {
+                            "id": "ag-1",
+                            "name": "Yollar",
+                            "kind": "road",
+                            "edges": [{ "layer": "yol-ekseni" }],
+                            "connect": "ends",
+                            "tolerance": 0.01,
+                            "direction": { "kind": "field", "field": "yon", "forward": ["FT"], "backward": ["TF"], "closed": ["N"] },
+                            "costs": [{ "name": "Süre", "kind": "speed", "field": "hiz", "speed": 50.0 }]
+                        }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Su şebekesi: akışla çizilmiş borular, vanalar ve depo".into(),
+                    input: json!({
+                        "operation": "set",
+                        "network": {
+                            "id": "ag-2",
+                            "name": "İçme suyu",
+                            "kind": "utility",
+                            "edges": [{ "layer": "su-hatti" }],
+                            "junctions": [
+                                { "layer": "su-vana", "role": "valve", "closed": "durum = 'kapalı'" },
+                                { "layer": "su-depo", "role": "source" }
+                            ],
+                            "connect": "ends",
+                            "tolerance": 0.01,
+                            "direction": { "kind": "digitized" }
+                        }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Ağı sil".into(),
+                    input: json!({ "operation": "remove", "id": "ag-2" }),
+                    output: Some(json!({ "networks": [], "revision": "12" })),
+                },
+            ],
         }],
     }
 }
@@ -1851,6 +1918,9 @@ mod tests {
                     crate::CAD_LAYERS_SERVICE => {
                         serde_json::from_value::<crate::LayersService>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_NETWORK_DEFINE => {
+                        serde_json::from_value::<crate::NetworkDefine>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -1910,6 +1980,10 @@ mod tests {
                         }
                         crate::CAD_LAYERS_SERVICE => {
                             serde_json::from_value::<crate::LayersServiced>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_NETWORK_DEFINE => {
+                            serde_json::from_value::<crate::NetworkDefined>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

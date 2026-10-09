@@ -104,7 +104,7 @@ describe('project types (docs/adr/0165)', () => {
     expect(tabs.filter((t) => !t.contextual).map((t) => t.label)).toEqual(['Dosya', 'Giriş', 'Harita', 'Veri', 'Düzenle', 'Analiz', 'Ölçme', 'Görünüm', 'Çıktı']);
     const panels = (id: string) => tabs.find((t) => t.id === id)!.panels.map((p) => p.label);
     expect(panels('survey')).toEqual(expect.arrayContaining(['Poligon', 'Nokta alımı', 'Kestirme', 'Noktalar']));
-    expect(panels('analysis')).toEqual(expect.arrayContaining(['İşlemler', 'Modeller', 'Arazi analizi']));
+    expect(panels('analysis')).toEqual(expect.arrayContaining(['İşlemler', 'Modeller', 'Arazi', 'Denetim', 'Ağ analizi', 'Komut']));
     expect(panels('map')).toEqual(expect.arrayContaining(['Koordinat sistemi', 'Parsel', 'Ölçme', 'Stil']));
     // Blocks are the drawing's library, on Veri, its pictures beside them (docs/adr/0192 §5): Düzenle keeps to
     // creating and changing objects.

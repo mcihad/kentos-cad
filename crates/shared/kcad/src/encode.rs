@@ -16,6 +16,7 @@
 mod blocks;
 mod crs;
 mod names;
+mod networks;
 mod objects;
 mod services;
 mod styles;
@@ -37,11 +38,11 @@ use crate::{
     SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND,
     SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
-    SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES,
-    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
-    SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_NETWORKS,
+    SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
+    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
+    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS,
+    SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -306,7 +307,8 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.dimension_styles.is_empty())
             + usize::from(s.topology.is_some())
             + usize::from(has_heights(s))
-            + usize::from(!s.connections.is_empty());
+            + usize::from(!s.connections.is_empty())
+            + usize::from(!s.networks.is_empty());
         self.open(n, true)?;
         self.key("srid");
         self.w.uint(u64::from(s.srid));
@@ -316,6 +318,10 @@ impl<'d> Encoder<'d> {
         }
         self.key("areaUnit");
         self.w.text(area_unit(s.area_unit));
+        if !s.networks.is_empty() {
+            self.key("networks");
+            self.at(Seg::Name("networks"), |e| e.networks(&s.networks))?;
+        }
         if let Some(t) = &s.topology {
             self.key("topology");
             self.at(Seg::Name("topology"), |e| e.topology(t))?;
@@ -981,7 +987,8 @@ fn has_heights(s: &ProjectSettings) -> bool {
         .is_some_and(|a| *a != AnnotationHeights::default())
 }
 
-/// The oldest schema that holds the drawing: 32 when a layer is drawn from a
+/// The oldest schema that holds the drawing: 33 when the project has a
+/// network (docs/adr/0209), 32 when a layer is drawn from a
 /// service or has a feed, or the project has connections (docs/adr/0208), 31
 /// when it has a point cloud or a raster read from an address
 /// (docs/adr/0207), 30 when the project has
@@ -1020,6 +1027,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.service.is_some() || n.feed.is_some() || services(&n.children))
+    }
+    // Schema 33 (docs/adr/0209): the project's networks.
+    if !doc.settings.networks.is_empty() {
+        return SCHEMA_WITH_NETWORKS;
     }
     // Schema 32 (docs/adr/0208): a layer drawn from a service, a layer's
     // feed, or the project's connections.

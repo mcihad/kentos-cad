@@ -293,8 +293,14 @@ pub const SCHEMA_WITH_POINT_CLOUDS: u32 = 31;
 /// older, byte for byte; a reader of those refuses them rather than lose them.
 pub const SCHEMA_WITH_SERVICES: u32 = 32;
 
+/// Document schema 33 (docs/specs/kcad-v2.md §6.1, §6.4.8): schema 32 and the
+/// settings' `networks` (docs/adr/0209 §2). A writer writes it only when the
+/// project has a network: any other drawing stays 32 or older, byte for
+/// byte; a reader of those refuses them rather than lose them.
+pub const SCHEMA_WITH_NETWORKS: u32 = 33;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 31] = [
+pub const SCHEMAS: [u32; 32] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -326,6 +332,7 @@ pub const SCHEMAS: [u32; 31] = [
     SCHEMA_WITH_ANNOTATION,
     SCHEMA_WITH_POINT_CLOUDS,
     SCHEMA_WITH_SERVICES,
+    SCHEMA_WITH_NETWORKS,
 ];
 
 /// The file a drawing is saved as.

@@ -173,6 +173,8 @@ pub enum Event {
     PickObjects(String),
     /// Dosya seç…: a file parameter's file asked for (docs/adr/0200 §7).
     ChooseFile(String),
+    /// A command a field's button runs (Ağlar… beside a network field, docs/adr/0209 §10).
+    Command(&'static str),
     /// The file chosen for a parameter: its name, where it is and its bytes; none when given up.
     FileChosen(String, Option<(String, std::path::PathBuf, Vec<u8>)>),
     /// Konum…: where a result is written asked for (docs/adr/0207 §7).
@@ -349,6 +351,7 @@ impl App {
                 return Task::none();
             }
             Event::ChooseFile(name) => return self.processing_choose_file(name),
+            Event::Command(id) => return self.run(id),
             Event::ChooseSave(name) => return self.processing_choose_save(name),
             Event::FileChosen(_, None) | Event::TableSaved(None) => return Task::none(),
             Event::FileChosen(name, Some((file, path, bytes))) => {

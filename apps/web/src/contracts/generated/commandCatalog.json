@@ -2578,6 +2578,55 @@
             ],
             "type": "object"
           },
+          "JunctionLayer": {
+            "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
+            "properties": {
+              "closed": {
+                "description": "An expression: the junctions it holds for (a closed valve) are passed by no analysis.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "role": {
+                "$ref": "#/$defs/JunctionRole"
+              }
+            },
+            "required": [
+              "layer",
+              "role"
+            ],
+            "type": "object"
+          },
+          "JunctionRole": {
+            "description": "What a junction is (docs/adr/0209 §2).",
+            "oneOf": [
+              {
+                "const": "junction",
+                "description": "Bağlantı: splits the edges it lies on.",
+                "type": "string"
+              },
+              {
+                "const": "source",
+                "description": "Kaynak: where the supply comes from (Yalıtım's beslemesiz kalan).",
+                "type": "string"
+              },
+              {
+                "const": "valve",
+                "description": "Vana: where Yalıtım stops.",
+                "type": "string"
+              }
+            ]
+          },
           "LabelInk": {
             "enum": [
               "fg",
@@ -3268,6 +3317,230 @@
             ],
             "type": "object"
           },
+          "NetworkConnect": {
+            "description": "Where edges connect (docs/adr/0209 §3).",
+            "oneOf": [
+              {
+                "const": "ends",
+                "description": "Uçlarda: at their ends, and an end on another edge splits it there.",
+                "type": "string"
+              },
+              {
+                "const": "vertices",
+                "description": "Köşelerde: at every vertex too.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkCost": {
+            "description": "A cost besides the length (docs/adr/0209 §2).",
+            "properties": {
+              "field": {
+                "description": "The attribute it reads: a speed in km/h, or the whole edge's cost.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/NetworkCostKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "speed": {
+                "description": "A speed cost's speed (km/h) where the field gives none it can read.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "unit": {
+                "description": "A field cost's unit (“TL”, “dk”); a speed cost's is minutes and names none.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "kind",
+              "field"
+            ],
+            "type": "object"
+          },
+          "NetworkCostKind": {
+            "oneOf": [
+              {
+                "const": "speed",
+                "description": "Süre, minutes: the length over the speed.",
+                "type": "string"
+              },
+              {
+                "const": "field",
+                "description": "The field's value for the whole edge, shared by its pieces by their lengths.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkDef": {
+            "description": "A network (docs/adr/0209 §2).",
+            "properties": {
+              "closed": {
+                "description": "An expression: the edges it holds for are out of service, travelled by nothing.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "connect": {
+                "$ref": "#/$defs/NetworkConnect"
+              },
+              "costs": {
+                "description": "The costs besides the length, in the order the tools offer them.",
+                "items": {
+                  "$ref": "#/$defs/NetworkCost"
+                },
+                "type": "array"
+              },
+              "direction": {
+                "$ref": "#/$defs/NetworkDirection"
+              },
+              "edges": {
+                "description": "The line layers whose lines, paths and arcs are the edges, in this order.",
+                "items": {
+                  "$ref": "#/$defs/NetworkLayer"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Lower-case letters, digits and hyphens; one of its kind in the project.",
+                "type": "string"
+              },
+              "junctions": {
+                "description": "The point layers whose points are junctions, sources or valves.",
+                "items": {
+                  "$ref": "#/$defs/JunctionLayer"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "$ref": "#/$defs/NetworkKind"
+              },
+              "name": {
+                "description": "Trimmed; one of its kind in the project.",
+                "type": "string"
+              },
+              "tolerance": {
+                "description": "Metres, within [`NETWORK_TOLERANCES`].",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "edges",
+              "connect",
+              "tolerance",
+              "direction"
+            ],
+            "type": "object"
+          },
+          "NetworkDirection": {
+            "description": "Which way the edges go (docs/adr/0209 §2).",
+            "oneOf": [
+              {
+                "description": "Every edge both ways.",
+                "properties": {
+                  "kind": {
+                    "const": "both",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Every edge the way it is drawn (pipes drawn with the flow).",
+                "properties": {
+                  "kind": {
+                    "const": "digitized",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "By an attribute's value: `forward` the way the edge is drawn only, `backward` against it only, `closed`\nneither; any other value, and none, both ways.",
+                "properties": {
+                  "backward": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "closed": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "field": {
+                    "type": "string"
+                  },
+                  "forward": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "field",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "field"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "NetworkKind": {
+            "description": "Yol ağı or Şebeke: what the tools offer first; the graph is the same.",
+            "enum": [
+              "road",
+              "utility"
+            ],
+            "type": "string"
+          },
+          "NetworkLayer": {
+            "description": "An edge layer and, optionally, which of its objects are edges.",
+            "properties": {
+              "filter": {
+                "description": "An expression: only the objects it holds for; absent: all of them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the network is built.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer"
+            ],
+            "type": "object"
+          },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
             "properties": {
@@ -3857,6 +4130,13 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "networks": {
+                "description": "The project's networks (docs/adr/0209 §2).",
+                "items": {
+                  "$ref": "#/$defs/NetworkDef"
+                },
+                "type": "array"
               },
               "plotScale": {
                 "description": "Plot scale denominator (1:1000 → 1000).",
@@ -6998,6 +7278,55 @@
             ],
             "type": "object"
           },
+          "JunctionLayer": {
+            "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
+            "properties": {
+              "closed": {
+                "description": "An expression: the junctions it holds for (a closed valve) are passed by no analysis.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "role": {
+                "$ref": "#/$defs/JunctionRole"
+              }
+            },
+            "required": [
+              "layer",
+              "role"
+            ],
+            "type": "object"
+          },
+          "JunctionRole": {
+            "description": "What a junction is (docs/adr/0209 §2).",
+            "oneOf": [
+              {
+                "const": "junction",
+                "description": "Bağlantı: splits the edges it lies on.",
+                "type": "string"
+              },
+              {
+                "const": "source",
+                "description": "Kaynak: where the supply comes from (Yalıtım's beslemesiz kalan).",
+                "type": "string"
+              },
+              {
+                "const": "valve",
+                "description": "Vana: where Yalıtım stops.",
+                "type": "string"
+              }
+            ]
+          },
           "LabelInk": {
             "enum": [
               "fg",
@@ -7432,6 +7761,230 @@
             ],
             "type": "object"
           },
+          "NetworkConnect": {
+            "description": "Where edges connect (docs/adr/0209 §3).",
+            "oneOf": [
+              {
+                "const": "ends",
+                "description": "Uçlarda: at their ends, and an end on another edge splits it there.",
+                "type": "string"
+              },
+              {
+                "const": "vertices",
+                "description": "Köşelerde: at every vertex too.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkCost": {
+            "description": "A cost besides the length (docs/adr/0209 §2).",
+            "properties": {
+              "field": {
+                "description": "The attribute it reads: a speed in km/h, or the whole edge's cost.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/NetworkCostKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "speed": {
+                "description": "A speed cost's speed (km/h) where the field gives none it can read.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "unit": {
+                "description": "A field cost's unit (“TL”, “dk”); a speed cost's is minutes and names none.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "kind",
+              "field"
+            ],
+            "type": "object"
+          },
+          "NetworkCostKind": {
+            "oneOf": [
+              {
+                "const": "speed",
+                "description": "Süre, minutes: the length over the speed.",
+                "type": "string"
+              },
+              {
+                "const": "field",
+                "description": "The field's value for the whole edge, shared by its pieces by their lengths.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkDef": {
+            "description": "A network (docs/adr/0209 §2).",
+            "properties": {
+              "closed": {
+                "description": "An expression: the edges it holds for are out of service, travelled by nothing.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "connect": {
+                "$ref": "#/$defs/NetworkConnect"
+              },
+              "costs": {
+                "description": "The costs besides the length, in the order the tools offer them.",
+                "items": {
+                  "$ref": "#/$defs/NetworkCost"
+                },
+                "type": "array"
+              },
+              "direction": {
+                "$ref": "#/$defs/NetworkDirection"
+              },
+              "edges": {
+                "description": "The line layers whose lines, paths and arcs are the edges, in this order.",
+                "items": {
+                  "$ref": "#/$defs/NetworkLayer"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Lower-case letters, digits and hyphens; one of its kind in the project.",
+                "type": "string"
+              },
+              "junctions": {
+                "description": "The point layers whose points are junctions, sources or valves.",
+                "items": {
+                  "$ref": "#/$defs/JunctionLayer"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "$ref": "#/$defs/NetworkKind"
+              },
+              "name": {
+                "description": "Trimmed; one of its kind in the project.",
+                "type": "string"
+              },
+              "tolerance": {
+                "description": "Metres, within [`NETWORK_TOLERANCES`].",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "edges",
+              "connect",
+              "tolerance",
+              "direction"
+            ],
+            "type": "object"
+          },
+          "NetworkDirection": {
+            "description": "Which way the edges go (docs/adr/0209 §2).",
+            "oneOf": [
+              {
+                "description": "Every edge both ways.",
+                "properties": {
+                  "kind": {
+                    "const": "both",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Every edge the way it is drawn (pipes drawn with the flow).",
+                "properties": {
+                  "kind": {
+                    "const": "digitized",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "By an attribute's value: `forward` the way the edge is drawn only, `backward` against it only, `closed`\nneither; any other value, and none, both ways.",
+                "properties": {
+                  "backward": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "closed": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "field": {
+                    "type": "string"
+                  },
+                  "forward": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "field",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "field"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "NetworkKind": {
+            "description": "Yol ağı or Şebeke: what the tools offer first; the graph is the same.",
+            "enum": [
+              "road",
+              "utility"
+            ],
+            "type": "string"
+          },
+          "NetworkLayer": {
+            "description": "An edge layer and, optionally, which of its objects are edges.",
+            "properties": {
+              "filter": {
+                "description": "An expression: only the objects it holds for; absent: all of them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the network is built.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer"
+            ],
+            "type": "object"
+          },
           "PointStyle": {
             "properties": {
               "size": {
@@ -7547,6 +8100,13 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "networks": {
+                "description": "The project's networks (docs/adr/0209 §2).",
+                "items": {
+                  "$ref": "#/$defs/NetworkDef"
+                },
+                "type": "array"
               },
               "plotScale": {
                 "description": "Plot scale denominator (1:1000 → 1000).",
@@ -11072,6 +11632,55 @@
             ],
             "type": "object"
           },
+          "JunctionLayer": {
+            "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
+            "properties": {
+              "closed": {
+                "description": "An expression: the junctions it holds for (a closed valve) are passed by no analysis.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "role": {
+                "$ref": "#/$defs/JunctionRole"
+              }
+            },
+            "required": [
+              "layer",
+              "role"
+            ],
+            "type": "object"
+          },
+          "JunctionRole": {
+            "description": "What a junction is (docs/adr/0209 §2).",
+            "oneOf": [
+              {
+                "const": "junction",
+                "description": "Bağlantı: splits the edges it lies on.",
+                "type": "string"
+              },
+              {
+                "const": "source",
+                "description": "Kaynak: where the supply comes from (Yalıtım's beslemesiz kalan).",
+                "type": "string"
+              },
+              {
+                "const": "valve",
+                "description": "Vana: where Yalıtım stops.",
+                "type": "string"
+              }
+            ]
+          },
           "LabelInk": {
             "enum": [
               "fg",
@@ -11762,6 +12371,230 @@
             ],
             "type": "object"
           },
+          "NetworkConnect": {
+            "description": "Where edges connect (docs/adr/0209 §3).",
+            "oneOf": [
+              {
+                "const": "ends",
+                "description": "Uçlarda: at their ends, and an end on another edge splits it there.",
+                "type": "string"
+              },
+              {
+                "const": "vertices",
+                "description": "Köşelerde: at every vertex too.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkCost": {
+            "description": "A cost besides the length (docs/adr/0209 §2).",
+            "properties": {
+              "field": {
+                "description": "The attribute it reads: a speed in km/h, or the whole edge's cost.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/NetworkCostKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "speed": {
+                "description": "A speed cost's speed (km/h) where the field gives none it can read.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "unit": {
+                "description": "A field cost's unit (“TL”, “dk”); a speed cost's is minutes and names none.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "kind",
+              "field"
+            ],
+            "type": "object"
+          },
+          "NetworkCostKind": {
+            "oneOf": [
+              {
+                "const": "speed",
+                "description": "Süre, minutes: the length over the speed.",
+                "type": "string"
+              },
+              {
+                "const": "field",
+                "description": "The field's value for the whole edge, shared by its pieces by their lengths.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkDef": {
+            "description": "A network (docs/adr/0209 §2).",
+            "properties": {
+              "closed": {
+                "description": "An expression: the edges it holds for are out of service, travelled by nothing.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "connect": {
+                "$ref": "#/$defs/NetworkConnect"
+              },
+              "costs": {
+                "description": "The costs besides the length, in the order the tools offer them.",
+                "items": {
+                  "$ref": "#/$defs/NetworkCost"
+                },
+                "type": "array"
+              },
+              "direction": {
+                "$ref": "#/$defs/NetworkDirection"
+              },
+              "edges": {
+                "description": "The line layers whose lines, paths and arcs are the edges, in this order.",
+                "items": {
+                  "$ref": "#/$defs/NetworkLayer"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Lower-case letters, digits and hyphens; one of its kind in the project.",
+                "type": "string"
+              },
+              "junctions": {
+                "description": "The point layers whose points are junctions, sources or valves.",
+                "items": {
+                  "$ref": "#/$defs/JunctionLayer"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "$ref": "#/$defs/NetworkKind"
+              },
+              "name": {
+                "description": "Trimmed; one of its kind in the project.",
+                "type": "string"
+              },
+              "tolerance": {
+                "description": "Metres, within [`NETWORK_TOLERANCES`].",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "edges",
+              "connect",
+              "tolerance",
+              "direction"
+            ],
+            "type": "object"
+          },
+          "NetworkDirection": {
+            "description": "Which way the edges go (docs/adr/0209 §2).",
+            "oneOf": [
+              {
+                "description": "Every edge both ways.",
+                "properties": {
+                  "kind": {
+                    "const": "both",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Every edge the way it is drawn (pipes drawn with the flow).",
+                "properties": {
+                  "kind": {
+                    "const": "digitized",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "By an attribute's value: `forward` the way the edge is drawn only, `backward` against it only, `closed`\nneither; any other value, and none, both ways.",
+                "properties": {
+                  "backward": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "closed": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "field": {
+                    "type": "string"
+                  },
+                  "forward": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "field",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "field"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "NetworkKind": {
+            "description": "Yol ağı or Şebeke: what the tools offer first; the graph is the same.",
+            "enum": [
+              "road",
+              "utility"
+            ],
+            "type": "string"
+          },
+          "NetworkLayer": {
+            "description": "An edge layer and, optionally, which of its objects are edges.",
+            "properties": {
+              "filter": {
+                "description": "An expression: only the objects it holds for; absent: all of them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the network is built.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer"
+            ],
+            "type": "object"
+          },
           "PathEntity": {
             "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
             "properties": {
@@ -12401,6 +13234,13 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "networks": {
+                "description": "The project's networks (docs/adr/0209 §2).",
+                "items": {
+                  "$ref": "#/$defs/NetworkDef"
+                },
+                "type": "array"
               },
               "plotScale": {
                 "description": "Plot scale denominator (1:1000 → 1000).",
@@ -73236,6 +74076,1031 @@
             },
             "name": "Parseller (WFS)",
             "operation": "addFeed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.network.define",
+      "version": 1,
+      "title": "Ağ tanımı",
+      "summary": "Projenin ağlarına bir ağ tanımı yazar (set: aynı kimlikli ağın yerini alır, yoksa sona eklenir) ya da birini siler (remove). Ağ, katmanlardan her analizde kurulan grafın tanımıdır: kenar katmanları (çizgi, çoklu çizgi ve yaylar; isteğe bağlı süzgeç ifadesi), düğüm katmanları (bağlantı, kaynak ya da vana; süzgeç ve kapalı ifadesi), bağlanma (ends: uçlarda, bir uç başka kenara değiyorsa orada; vertices: bütün köşelerde de) ve tolerans (m), yön (both, digitized ya da field: alanın ileri, geri ve kapalı değerleri), uzunluktan başka maliyetler (speed: hız alanından dakika, varsayılan hızla; field: kenarın bütününün maliyeti) ve kapalı kenarların ifadesi. Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. Çizimde olmayan katmanı adlandıran ağ yazılır, unknown_layer uyarısıyla. Analizler (en kısa yol, hizmet alanı, en yakın tesis, maliyet matrisi, şebeke izleme) çizimi değiştirmez; sonuçları cad.entities.create ile yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "JunctionLayer": {
+            "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
+            "properties": {
+              "closed": {
+                "description": "An expression: the junctions it holds for (a closed valve) are passed by no analysis.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "role": {
+                "$ref": "#/$defs/JunctionRole"
+              }
+            },
+            "required": [
+              "layer",
+              "role"
+            ],
+            "type": "object"
+          },
+          "JunctionRole": {
+            "description": "What a junction is (docs/adr/0209 §2).",
+            "oneOf": [
+              {
+                "const": "junction",
+                "description": "Bağlantı: splits the edges it lies on.",
+                "type": "string"
+              },
+              {
+                "const": "source",
+                "description": "Kaynak: where the supply comes from (Yalıtım's beslemesiz kalan).",
+                "type": "string"
+              },
+              {
+                "const": "valve",
+                "description": "Vana: where Yalıtım stops.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkConnect": {
+            "description": "Where edges connect (docs/adr/0209 §3).",
+            "oneOf": [
+              {
+                "const": "ends",
+                "description": "Uçlarda: at their ends, and an end on another edge splits it there.",
+                "type": "string"
+              },
+              {
+                "const": "vertices",
+                "description": "Köşelerde: at every vertex too.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkCost": {
+            "description": "A cost besides the length (docs/adr/0209 §2).",
+            "properties": {
+              "field": {
+                "description": "The attribute it reads: a speed in km/h, or the whole edge's cost.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/NetworkCostKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "speed": {
+                "description": "A speed cost's speed (km/h) where the field gives none it can read.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "unit": {
+                "description": "A field cost's unit (“TL”, “dk”); a speed cost's is minutes and names none.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "kind",
+              "field"
+            ],
+            "type": "object"
+          },
+          "NetworkCostKind": {
+            "oneOf": [
+              {
+                "const": "speed",
+                "description": "Süre, minutes: the length over the speed.",
+                "type": "string"
+              },
+              {
+                "const": "field",
+                "description": "The field's value for the whole edge, shared by its pieces by their lengths.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkDef": {
+            "description": "A network (docs/adr/0209 §2).",
+            "properties": {
+              "closed": {
+                "description": "An expression: the edges it holds for are out of service, travelled by nothing.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "connect": {
+                "$ref": "#/$defs/NetworkConnect"
+              },
+              "costs": {
+                "description": "The costs besides the length, in the order the tools offer them.",
+                "items": {
+                  "$ref": "#/$defs/NetworkCost"
+                },
+                "type": "array"
+              },
+              "direction": {
+                "$ref": "#/$defs/NetworkDirection"
+              },
+              "edges": {
+                "description": "The line layers whose lines, paths and arcs are the edges, in this order.",
+                "items": {
+                  "$ref": "#/$defs/NetworkLayer"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Lower-case letters, digits and hyphens; one of its kind in the project.",
+                "type": "string"
+              },
+              "junctions": {
+                "description": "The point layers whose points are junctions, sources or valves.",
+                "items": {
+                  "$ref": "#/$defs/JunctionLayer"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "$ref": "#/$defs/NetworkKind"
+              },
+              "name": {
+                "description": "Trimmed; one of its kind in the project.",
+                "type": "string"
+              },
+              "tolerance": {
+                "description": "Metres, within [`NETWORK_TOLERANCES`].",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "edges",
+              "connect",
+              "tolerance",
+              "direction"
+            ],
+            "type": "object"
+          },
+          "NetworkDefineOperation": {
+            "description": "What `cad.network.define` does.",
+            "oneOf": [
+              {
+                "const": "set",
+                "description": "The network replaces the project's of its id, or goes last.",
+                "type": "string"
+              },
+              {
+                "const": "remove",
+                "description": "The network of `id` goes.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkDirection": {
+            "description": "Which way the edges go (docs/adr/0209 §2).",
+            "oneOf": [
+              {
+                "description": "Every edge both ways.",
+                "properties": {
+                  "kind": {
+                    "const": "both",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Every edge the way it is drawn (pipes drawn with the flow).",
+                "properties": {
+                  "kind": {
+                    "const": "digitized",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "By an attribute's value: `forward` the way the edge is drawn only, `backward` against it only, `closed`\nneither; any other value, and none, both ways.",
+                "properties": {
+                  "backward": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "closed": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "field": {
+                    "type": "string"
+                  },
+                  "forward": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "field",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "field"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "NetworkKind": {
+            "description": "Yol ağı or Şebeke: what the tools offer first; the graph is the same.",
+            "enum": [
+              "road",
+              "utility"
+            ],
+            "type": "string"
+          },
+          "NetworkLayer": {
+            "description": "An edge layer and, optionally, which of its objects are edges.",
+            "properties": {
+              "filter": {
+                "description": "An expression: only the objects it holds for; absent: all of them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the network is built.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.network.define` v1.\n\n- `set`: `network`, which replaces the project's network of its id or goes\n  last;\n- `remove`: `id`.\n\nRefusals (`CommandError.code`), checked in this order: `no_network` (set\nwithout `network`), `no_id` (remove without `id`), `invalid_network` (the\nnetwork, or the project's networks with it, by `networks_problem`); then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`unknown_network` (remove: the project has no network of the id). A\nnetwork naming a layer the drawing does not have is written, with the\nwarning `unknown_layer`.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "network": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NetworkDef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/NetworkDefineOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "NetworkDefine",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "JunctionLayer": {
+            "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
+            "properties": {
+              "closed": {
+                "description": "An expression: the junctions it holds for (a closed valve) are passed by no analysis.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "role": {
+                "$ref": "#/$defs/JunctionRole"
+              }
+            },
+            "required": [
+              "layer",
+              "role"
+            ],
+            "type": "object"
+          },
+          "JunctionRole": {
+            "description": "What a junction is (docs/adr/0209 §2).",
+            "oneOf": [
+              {
+                "const": "junction",
+                "description": "Bağlantı: splits the edges it lies on.",
+                "type": "string"
+              },
+              {
+                "const": "source",
+                "description": "Kaynak: where the supply comes from (Yalıtım's beslemesiz kalan).",
+                "type": "string"
+              },
+              {
+                "const": "valve",
+                "description": "Vana: where Yalıtım stops.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkConnect": {
+            "description": "Where edges connect (docs/adr/0209 §3).",
+            "oneOf": [
+              {
+                "const": "ends",
+                "description": "Uçlarda: at their ends, and an end on another edge splits it there.",
+                "type": "string"
+              },
+              {
+                "const": "vertices",
+                "description": "Köşelerde: at every vertex too.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkCost": {
+            "description": "A cost besides the length (docs/adr/0209 §2).",
+            "properties": {
+              "field": {
+                "description": "The attribute it reads: a speed in km/h, or the whole edge's cost.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/NetworkCostKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "speed": {
+                "description": "A speed cost's speed (km/h) where the field gives none it can read.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "unit": {
+                "description": "A field cost's unit (“TL”, “dk”); a speed cost's is minutes and names none.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "kind",
+              "field"
+            ],
+            "type": "object"
+          },
+          "NetworkCostKind": {
+            "oneOf": [
+              {
+                "const": "speed",
+                "description": "Süre, minutes: the length over the speed.",
+                "type": "string"
+              },
+              {
+                "const": "field",
+                "description": "The field's value for the whole edge, shared by its pieces by their lengths.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkDef": {
+            "description": "A network (docs/adr/0209 §2).",
+            "properties": {
+              "closed": {
+                "description": "An expression: the edges it holds for are out of service, travelled by nothing.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "connect": {
+                "$ref": "#/$defs/NetworkConnect"
+              },
+              "costs": {
+                "description": "The costs besides the length, in the order the tools offer them.",
+                "items": {
+                  "$ref": "#/$defs/NetworkCost"
+                },
+                "type": "array"
+              },
+              "direction": {
+                "$ref": "#/$defs/NetworkDirection"
+              },
+              "edges": {
+                "description": "The line layers whose lines, paths and arcs are the edges, in this order.",
+                "items": {
+                  "$ref": "#/$defs/NetworkLayer"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Lower-case letters, digits and hyphens; one of its kind in the project.",
+                "type": "string"
+              },
+              "junctions": {
+                "description": "The point layers whose points are junctions, sources or valves.",
+                "items": {
+                  "$ref": "#/$defs/JunctionLayer"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "$ref": "#/$defs/NetworkKind"
+              },
+              "name": {
+                "description": "Trimmed; one of its kind in the project.",
+                "type": "string"
+              },
+              "tolerance": {
+                "description": "Metres, within [`NETWORK_TOLERANCES`].",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "edges",
+              "connect",
+              "tolerance",
+              "direction"
+            ],
+            "type": "object"
+          },
+          "NetworkDirection": {
+            "description": "Which way the edges go (docs/adr/0209 §2).",
+            "oneOf": [
+              {
+                "description": "Every edge both ways.",
+                "properties": {
+                  "kind": {
+                    "const": "both",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Every edge the way it is drawn (pipes drawn with the flow).",
+                "properties": {
+                  "kind": {
+                    "const": "digitized",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "By an attribute's value: `forward` the way the edge is drawn only, `backward` against it only, `closed`\nneither; any other value, and none, both ways.",
+                "properties": {
+                  "backward": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "closed": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "field": {
+                    "type": "string"
+                  },
+                  "forward": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "field",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "field"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "NetworkKind": {
+            "description": "Yol ağı or Şebeke: what the tools offer first; the graph is the same.",
+            "enum": [
+              "road",
+              "utility"
+            ],
+            "type": "string"
+          },
+          "NetworkLayer": {
+            "description": "An edge layer and, optionally, which of its objects are edges.",
+            "properties": {
+              "filter": {
+                "description": "An expression: only the objects it holds for; absent: all of them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the network is built.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.network.define` v1, and its plan: the project's networks as\nthe write leaves them and the revision after it (a plan: before it).",
+        "properties": {
+          "networks": {
+            "items": {
+              "$ref": "#/$defs/NetworkDef"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "networks",
+          "revision"
+        ],
+        "title": "NetworkDefined",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "JunctionLayer": {
+            "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
+            "properties": {
+              "closed": {
+                "description": "An expression: the junctions it holds for (a closed valve) are passed by no analysis.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "role": {
+                "$ref": "#/$defs/JunctionRole"
+              }
+            },
+            "required": [
+              "layer",
+              "role"
+            ],
+            "type": "object"
+          },
+          "JunctionRole": {
+            "description": "What a junction is (docs/adr/0209 §2).",
+            "oneOf": [
+              {
+                "const": "junction",
+                "description": "Bağlantı: splits the edges it lies on.",
+                "type": "string"
+              },
+              {
+                "const": "source",
+                "description": "Kaynak: where the supply comes from (Yalıtım's beslemesiz kalan).",
+                "type": "string"
+              },
+              {
+                "const": "valve",
+                "description": "Vana: where Yalıtım stops.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkConnect": {
+            "description": "Where edges connect (docs/adr/0209 §3).",
+            "oneOf": [
+              {
+                "const": "ends",
+                "description": "Uçlarda: at their ends, and an end on another edge splits it there.",
+                "type": "string"
+              },
+              {
+                "const": "vertices",
+                "description": "Köşelerde: at every vertex too.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkCost": {
+            "description": "A cost besides the length (docs/adr/0209 §2).",
+            "properties": {
+              "field": {
+                "description": "The attribute it reads: a speed in km/h, or the whole edge's cost.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/NetworkCostKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "speed": {
+                "description": "A speed cost's speed (km/h) where the field gives none it can read.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "unit": {
+                "description": "A field cost's unit (“TL”, “dk”); a speed cost's is minutes and names none.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "kind",
+              "field"
+            ],
+            "type": "object"
+          },
+          "NetworkCostKind": {
+            "oneOf": [
+              {
+                "const": "speed",
+                "description": "Süre, minutes: the length over the speed.",
+                "type": "string"
+              },
+              {
+                "const": "field",
+                "description": "The field's value for the whole edge, shared by its pieces by their lengths.",
+                "type": "string"
+              }
+            ]
+          },
+          "NetworkDef": {
+            "description": "A network (docs/adr/0209 §2).",
+            "properties": {
+              "closed": {
+                "description": "An expression: the edges it holds for are out of service, travelled by nothing.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "connect": {
+                "$ref": "#/$defs/NetworkConnect"
+              },
+              "costs": {
+                "description": "The costs besides the length, in the order the tools offer them.",
+                "items": {
+                  "$ref": "#/$defs/NetworkCost"
+                },
+                "type": "array"
+              },
+              "direction": {
+                "$ref": "#/$defs/NetworkDirection"
+              },
+              "edges": {
+                "description": "The line layers whose lines, paths and arcs are the edges, in this order.",
+                "items": {
+                  "$ref": "#/$defs/NetworkLayer"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Lower-case letters, digits and hyphens; one of its kind in the project.",
+                "type": "string"
+              },
+              "junctions": {
+                "description": "The point layers whose points are junctions, sources or valves.",
+                "items": {
+                  "$ref": "#/$defs/JunctionLayer"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "$ref": "#/$defs/NetworkKind"
+              },
+              "name": {
+                "description": "Trimmed; one of its kind in the project.",
+                "type": "string"
+              },
+              "tolerance": {
+                "description": "Metres, within [`NETWORK_TOLERANCES`].",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "edges",
+              "connect",
+              "tolerance",
+              "direction"
+            ],
+            "type": "object"
+          },
+          "NetworkDirection": {
+            "description": "Which way the edges go (docs/adr/0209 §2).",
+            "oneOf": [
+              {
+                "description": "Every edge both ways.",
+                "properties": {
+                  "kind": {
+                    "const": "both",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Every edge the way it is drawn (pipes drawn with the flow).",
+                "properties": {
+                  "kind": {
+                    "const": "digitized",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "By an attribute's value: `forward` the way the edge is drawn only, `backward` against it only, `closed`\nneither; any other value, and none, both ways.",
+                "properties": {
+                  "backward": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "closed": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "field": {
+                    "type": "string"
+                  },
+                  "forward": {
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "field",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "field"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "NetworkKind": {
+            "description": "Yol ağı or Şebeke: what the tools offer first; the graph is the same.",
+            "enum": [
+              "road",
+              "utility"
+            ],
+            "type": "string"
+          },
+          "NetworkLayer": {
+            "description": "An edge layer and, optionally, which of its objects are edges.",
+            "properties": {
+              "filter": {
+                "description": "An expression: only the objects it holds for; absent: all of them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the network is built.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.network.define` v1, and its plan: the project's networks as\nthe write leaves them and the revision after it (a plan: before it).",
+        "properties": {
+          "networks": {
+            "items": {
+              "$ref": "#/$defs/NetworkDef"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "networks",
+          "revision"
+        ],
+        "title": "NetworkDefined",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Yol ağı: tek yönlü sokaklar ve hızla süre",
+          "input": {
+            "network": {
+              "connect": "ends",
+              "costs": [
+                {
+                  "field": "hiz",
+                  "kind": "speed",
+                  "name": "Süre",
+                  "speed": 50.0
+                }
+              ],
+              "direction": {
+                "backward": [
+                  "TF"
+                ],
+                "closed": [
+                  "N"
+                ],
+                "field": "yon",
+                "forward": [
+                  "FT"
+                ],
+                "kind": "field"
+              },
+              "edges": [
+                {
+                  "layer": "yol-ekseni"
+                }
+              ],
+              "id": "ag-1",
+              "kind": "road",
+              "name": "Yollar",
+              "tolerance": 0.01
+            },
+            "operation": "set"
+          }
+        },
+        {
+          "title": "Su şebekesi: akışla çizilmiş borular, vanalar ve depo",
+          "input": {
+            "network": {
+              "connect": "ends",
+              "direction": {
+                "kind": "digitized"
+              },
+              "edges": [
+                {
+                  "layer": "su-hatti"
+                }
+              ],
+              "id": "ag-2",
+              "junctions": [
+                {
+                  "closed": "durum = 'kapalı'",
+                  "layer": "su-vana",
+                  "role": "valve"
+                },
+                {
+                  "layer": "su-depo",
+                  "role": "source"
+                }
+              ],
+              "kind": "utility",
+              "name": "İçme suyu",
+              "tolerance": 0.01
+            },
+            "operation": "set"
+          }
+        },
+        {
+          "title": "Ağı sil",
+          "input": {
+            "id": "ag-2",
+            "operation": "remove"
+          },
+          "output": {
+            "networks": [],
+            "revision": "12"
           }
         }
       ]

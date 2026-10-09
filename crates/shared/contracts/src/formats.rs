@@ -97,7 +97,8 @@ use crate::layer::LineType;
 ///    `pointcloud` kind and a raster's `url`; DXF and GeoJSON leave point clouds out and say so.
 /// 42: map services (docs/adr/0208): `.kcad` document schema 32, a layer's `service` and `feed`
 ///    and the settings' `connections`.
-pub const FORMATS_VERSION: u32 = 42;
+/// 43: networks (docs/adr/0209): `.kcad` document schema 33, the settings' `networks`.
+pub const FORMATS_VERSION: u32 = 43;
 
 // ── Every import ────────────────────────────────────────────────────────
 

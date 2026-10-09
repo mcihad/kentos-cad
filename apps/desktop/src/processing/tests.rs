@@ -596,8 +596,9 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     let _ = app.update(Message::Run("processing.toolbox"));
     assert!(app.docks.is_shown(Panel::Processing));
     assert_eq!(app.processing.panel.tab, Tab::Tools);
-    // The web's 20 and the nine point cloud tools, the desktop's own for now (docs/adr/0207 §7).
-    assert_eq!(app.processing_meta(), "29 araç");
+    // The web's 23 (Ağ analizi's three among them, docs/adr/0209 §9) and the nine point cloud tools, the desktop's
+    // own for now (docs/adr/0207 §7).
+    assert_eq!(app.processing_meta(), "32 araç");
     // Turkish letters folded: “kose numara” finds Köşe noktalarını numarala only (as the web's test).
     event(
         &mut app,

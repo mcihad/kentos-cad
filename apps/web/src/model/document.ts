@@ -915,6 +915,7 @@ export class CadDocument {
           topology: m.settings.topology ?? null,
           annotation: m.settings.annotation ?? null,
           connections: m.settings.connections ?? [],
+          networks: m.settings.networks ?? [],
         });
       if (m?.name !== undefined) this.name.set(m.name);
       if (m?.styles) this.styles.set(m.styles);

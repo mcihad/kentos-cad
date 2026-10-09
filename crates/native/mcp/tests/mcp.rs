@@ -72,15 +72,18 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "cad.polygon.create",
         "cad.entities.set",
         "cad.layers.service",
+        "cad.network.define",
     ] {
         assert!(names.contains(&name), "{name}");
     }
-    // A map service layer's command removes a layer too (docs/adr/0208 §15).
-    let service = tools
-        .iter()
-        .find(|t| t["name"] == "cad.layers.service")
-        .expect("the command");
-    assert_eq!(service["annotations"]["destructiveHint"], true);
+    // A map service layer's command removes a layer too (docs/adr/0208 §15), a network's its definition (0209 §11).
+    for name in ["cad.layers.service", "cad.network.define"] {
+        let tool = tools
+            .iter()
+            .find(|t| t["name"] == name)
+            .expect("the command");
+        assert_eq!(tool["annotations"]["destructiveHint"], true, "{name}");
+    }
     for name in [
         "project.list",
         "project.open",

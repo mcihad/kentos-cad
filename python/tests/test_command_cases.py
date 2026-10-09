@@ -199,6 +199,10 @@ class Case:
                 # The project's connections (docs/adr/0208 §2).
                 settings = json.loads(self.doc._session.summary())["settings"]
                 same(settings.get("connections", []), want, f"{at}: connections")
+            elif key == "networks":
+                # The project's networks (docs/adr/0209 §2).
+                settings = json.loads(self.doc._session.summary())["settings"]
+                same(settings.get("networks", []), want, f"{at}: networks")
             else:
                 raise AssertionError(f"{at}: unknown expectation {key}")
 

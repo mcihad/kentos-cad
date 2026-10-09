@@ -17,6 +17,7 @@ use wasm_bindgen::prelude::*;
 
 pub mod adjoin;
 pub mod faces;
+pub mod network;
 pub mod store;
 pub mod trace;
 

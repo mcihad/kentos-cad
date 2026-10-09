@@ -85,3 +85,38 @@ class FeedTaking:
     @property
     def matched(self) -> int | None: ...
     def skipped(self) -> str: ...
+
+# kentos.network (docs/adr/0209 §11).
+class Network:
+    @staticmethod
+    def build(session: Session, id: str) -> Network: ...
+    def summary(self) -> str: ...
+    def locate(self, x: float, y: float, reach: float) -> str: ...
+    def route(self, stops: str, barriers: str, reach: float, cost: int, reorder: str) -> str: ...
+    def service_area(
+        self,
+        facilities: str,
+        breaks: list[float],
+        reach: float,
+        cost: int,
+        toward: bool,
+        separate: bool,
+        barriers: str,
+        trim: float,
+        rings: bool,
+        areas: bool,
+    ) -> str: ...
+    def nearest(
+        self,
+        origins: str,
+        targets: str,
+        reach: float,
+        cost: int,
+        reverse: bool,
+        barriers: str,
+        paths: bool,
+        k: int | None = None,
+        cutoff: float | None = None,
+    ) -> str: ...
+    def trace(self, starts: str, barriers: str, reach: float, kind: str) -> str: ...
+    def check(self) -> str: ...

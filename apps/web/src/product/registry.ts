@@ -11,6 +11,7 @@ import { entitiesSet } from './entitiesSet';
 import { entitiesTransform } from './entitiesTransform';
 import { layersService } from './layersService';
 import { lineCreate } from './lineCreate';
+import { networkDefine } from './networkDefine';
 import { pointCreate } from './pointCreate';
 import { polygonCreate } from './polygonCreate';
 import { polylineCreate } from './polylineCreate';
@@ -40,6 +41,8 @@ export const WEB_COMMANDS: readonly ProductCommand<never, unknown, unknown>[] = 
   blocksEdit,
   // Harita servisi and the service layers' menus (docs/adr/0208 §15).
   layersService,
+  // Ağlar (docs/adr/0209 §11).
+  networkDefine,
 ];
 
 /** The handler of a command id and version; undefined for one the web does not run (never guessed). */

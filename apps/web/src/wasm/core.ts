@@ -15,6 +15,7 @@ import {
   StyleProgram,
   hatchLinesXY as wasmHatchLinesXY,
   initSync,
+  NetworkGraph,
   offsetPathXY as wasmOffsetPathXY,
   opId,
   rasterLevelCount as wasmRasterLevelCount,
@@ -916,8 +917,84 @@ export class CoreStore {
     return typed(() => this.raw.edgesIn(minX, minY, maxX, maxY, except !== undefined, except ?? 0));
   }
 
+  /**
+   * Ağ analizi (docs/adr/0209 §3): the network of definition `defJson` over this store's objects: the edges (`ids`) with
+   * their values (`[direction | null, [cost values], closed]` each, JSON) and the junctions with theirs (`[role, closed]`
+   * each). The store must outlive nothing: the network keeps its own copy of what it read.
+   */
+  buildNetwork(defJson: string, edges: Float64Array, edgeValues: string, junctions: Float64Array, junctionValues: string): CoreNetwork {
+    return CoreNetwork.wrap(typed(() => NetworkGraph.build(this.raw, defJson, edges, edgeValues, junctions, junctionValues)));
+  }
+
   /** Frees the Rust side; the store must not be used afterwards. */
   dispose(): void {
     this.raw.free();
+  }
+}
+
+/**
+ * A network kept in the core between questions (docs/adr/0209 §10, §12): built once from a store, then asked for
+ * places, routes, the way to the cursor, service areas, closest facilities, traces and its check. Answers come back as
+ * the core writes them (JSON text, parsed by the caller), but the way to the cursor, which is numbers.
+ */
+export class CoreNetwork {
+  private raw: NetworkGraph | null;
+
+  private constructor(raw: NetworkGraph) {
+    this.raw = raw;
+  }
+
+  /** @internal The store's `buildNetwork`. */
+  static wrap(raw: NetworkGraph): CoreNetwork {
+    return new CoreNetwork(raw);
+  }
+
+  summary(): string {
+    return typed(() => this.get().summary());
+  }
+
+  locate(x: number, y: number, reach: number): string {
+    return typed(() => this.get().locate(x, y, reach));
+  }
+
+  route(stops: string, barriers: string, reach: number, cost: number, reorder: string): string {
+    return typed(() => this.get().route(stops, barriers, reach, cost, reorder));
+  }
+
+  treeFrom(x: number, y: number, reach: number, cost: number, barriers: string): boolean {
+    return typed(() => this.get().treeFrom(x, y, reach, cost, barriers));
+  }
+
+  /** `[cost, n, x0, y0, …, bulge0, …]`; empty when there is no way. */
+  pathTo(x: number, y: number, reach: number): Float64Array {
+    return typed(() => this.get().pathTo(x, y, reach));
+  }
+
+  area(facilities: string, breaks: string, reach: number, cost: number, toward: boolean, separate: boolean, barriers: string, trim: number, rings: boolean, areas: boolean): string {
+    return typed(() => this.get().area(facilities, breaks, reach, cost, toward, separate, barriers, trim, rings, areas));
+  }
+
+  /** `k` below 0: every target; `cutoff` NaN: none. */
+  nearest(origins: string, targets: string, reach: number, k: number, cutoff: number, cost: number, reverse: boolean, barriers: string, paths: boolean): string {
+    return typed(() => this.get().nearest(origins, targets, reach, k, cutoff, cost, reverse, barriers, paths));
+  }
+
+  trace(starts: string, barriers: string, reach: number, kind: string): string {
+    return typed(() => this.get().trace(starts, barriers, reach, kind));
+  }
+
+  check(): string {
+    return typed(() => this.get().check());
+  }
+
+  /** Releases the core's copy now instead of when the object is collected. */
+  free(): void {
+    this.raw?.free();
+    this.raw = null;
+  }
+
+  private get(): NetworkGraph {
+    if (!this.raw) throw new Error('Ağ bırakıldı.');
+    return this.raw;
   }
 }

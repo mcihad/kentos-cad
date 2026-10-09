@@ -219,6 +219,10 @@ pub const TOOLS: &[&str] = &[
     // docs/adr/0192: Resim ekle and Resmi kırp.
     crate::image_insert::ID,
     crate::image_clip::ID,
+    // docs/adr/0209: En kısa yol, Hizmet alanı and Şebeke izleme.
+    crate::network::route::ID,
+    crate::network::area::ID,
+    crate::network::trace::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -396,6 +400,9 @@ impl Session {
             angle::ID => Box::new(crate::angle::MeasureAngle::new()),
             coordinate::ID => Box::new(crate::coordinate::CrsQuery::new()),
             cloud_query::ID => Box::new(crate::cloud_query::CloudQuery::new()),
+            crate::network::route::ID => Box::new(crate::network::route::NetRoute::new()),
+            crate::network::area::ID => Box::new(crate::network::area::NetArea::new()),
+            crate::network::trace::ID => Box::new(crate::network::trace::NetTrace::new()),
             dimension_chain::CONTINUE_ID => {
                 Box::new(crate::dimension_chain::DimensionChain::continued())
             }
@@ -1141,6 +1148,14 @@ impl Session {
     pub fn cloud_found(&mut self, found: Option<[f64; 3]>, cx: &mut Context<'_>) {
         if let Some(tool) = self.tool.as_mut() {
             tool.cloud_found(found, cx);
+        }
+        self.settle(cx);
+    }
+
+    /// A network's answer goes to the running tool (Ağ analizi, docs/adr/0209 §12).
+    pub fn network_answered(&mut self, reply: crate::network::NetworkReply, cx: &mut Context<'_>) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.network_answered(reply, cx);
         }
         self.settle(cx);
     }

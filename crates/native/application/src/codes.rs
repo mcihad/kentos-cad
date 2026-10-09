@@ -208,3 +208,16 @@ pub const LAYER_HAS_OBJECTS: &str = "layer_has_objects";
 pub const UNKNOWN_CONNECTION: &str = "unknown_connection";
 /// The document refused the change (a layer that may not be removed).
 pub const LAYER_REFUSED: &str = "layer_refused";
+
+// ── cad.network.define (docs/adr/0209 §11) ──────────────────────────────
+
+/// `set` without a network.
+pub const NO_NETWORK: &str = "no_network";
+/// `remove` without a network's id.
+pub const NO_ID: &str = "no_id";
+/// The network, or the project's networks with it, against their rules (`networks_problem`).
+pub const INVALID_NETWORK: &str = "invalid_network";
+/// `remove` of a network the project does not have.
+pub const UNKNOWN_NETWORK: &str = "unknown_network";
+/// A warning: a network names a layer the drawing does not have.
+pub const UNKNOWN_LAYER: &str = "unknown_layer";

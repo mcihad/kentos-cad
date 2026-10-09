@@ -8,6 +8,7 @@
 
 mod blocks;
 mod crs;
+mod networks;
 mod objects;
 mod services;
 mod styles;
@@ -345,6 +346,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut topology = None;
     let mut annotation = None;
     let mut connections = Vec::new();
+    let mut networks = Vec::new();
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
@@ -415,6 +417,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "topology" if has.topology => topology = Some(topology_settings(r)?),
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "connections" if has.services => connections = services::connections(r)?,
+            "networks" if has.networks => networks = networks::networks(r)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
             "dimensionStyles" if has.styles => {
                 dimension_styles = styles::dimension_styles(r, has.annotation)?
@@ -485,6 +488,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         topology,
         annotation,
         connections,
+        networks,
     })
 }
 

@@ -224,6 +224,9 @@
     "processing.run.geometry.repair",
     "processing.run.geometry.simplify",
     "processing.run.geometry.reproject",
+    "processing.run.network.closestFacility",
+    "processing.run.network.odMatrix",
+    "processing.run.network.serviceAreas",
     "processing.model.builtin.parcelSheet",
     "processing.newModel",
     "map.edgeLengths",
@@ -372,7 +375,11 @@
     "service.connections",
     "service.add",
     "service.feed",
-    "service.info"
+    "service.info",
+    "network.manage",
+    "tool.netRoute",
+    "tool.netServiceArea",
+    "tool.netTrace"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

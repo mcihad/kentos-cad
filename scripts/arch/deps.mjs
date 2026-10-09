@@ -64,7 +64,8 @@ const GROUPS = [
   { name: 'headless', path: 'crates/native/headless/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The Python SDK's extension module (docs/adr/0131): the headless host under CPython. The one
   // native crate that uses pyo3. Listed before `native`.
-  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project', 'headless'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
+  // `processing` for kentos.network (docs/adr/0209 §11): a network built from the drawing as the İşlemler tools build it.
+  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project', 'headless', 'processing'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
   // The MCP server (docs/adr/0133, 0134): the headless host's tools over stdio, JSON-RPC by hand;
   // the server's commands through the desktop's cloud client (`native`). No UI, database or
   // server framework. Listed before `native`.

@@ -20,4 +20,5 @@ kentos-project = { path = "../project" }
 
 # The shared cases' JSON in tests (fixtures/gnss/v1/import.json); not in the library.
 [dev-dependencies]
+serde = { workspace = true }
 serde_json = { workspace = true }

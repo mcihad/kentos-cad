@@ -237,6 +237,17 @@ pub fn upper_tr(text: &str) -> String {
         .collect()
 }
 
+/// `toLocaleLowerCase('tr-TR')`: I is ı and İ is i; everything else as Unicode says.
+pub fn lower_tr(text: &str) -> String {
+    text.chars()
+        .flat_map(|c| match c {
+            'I' => vec!['ı'],
+            'İ' => vec!['i'],
+            c => c.to_lowercase().collect(),
+        })
+        .collect()
+}
+
 /// A text in Turkish upper case, its letters without their Turkish marks
 /// (`eğim` → `EGIM`): a typed name matched with an ASCII one.
 pub fn fold_tr(text: &str) -> String {

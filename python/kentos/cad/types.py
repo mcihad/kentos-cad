@@ -572,6 +572,22 @@ InvitationStateName = Literal["accepted", "revoked", "pending", "expired"]
 """The names of :class:`InvitationState`, for a plain string."""
 
 
+class JunctionRole(_StrEnum):
+    """What a junction is (docs/adr/0209 §2).
+
+    - ``junction``: Bağlantı: splits the edges it lies on.
+    - ``source``: Kaynak: where the supply comes from (Yalıtım's beslemesiz kalan).
+    - ``valve``: Vana: where Yalıtım stops.
+    """
+    JUNCTION = "junction"
+    SOURCE = "source"
+    VALVE = "valve"
+
+
+JunctionRoleName = Literal["junction", "source", "valve"]
+"""The names of :class:`JunctionRole`, for a plain string."""
+
+
 class LabelInk(_StrEnum):
     FG = "fg"
     FG_DIM = "fg-dim"
@@ -682,6 +698,56 @@ class LineType(_StrEnum):
 
 LineTypeName = Literal["continuous", "dashed", "dashdot", "dotted"]
 """The names of :class:`LineType`, for a plain string."""
+
+
+class NetworkConnect(_StrEnum):
+    """Where edges connect (docs/adr/0209 §3).
+
+    - ``ends``: Uçlarda: at their ends, and an end on another edge splits it there.
+    - ``vertices``: Köşelerde: at every vertex too.
+    """
+    ENDS = "ends"
+    VERTICES = "vertices"
+
+
+NetworkConnectName = Literal["ends", "vertices"]
+"""The names of :class:`NetworkConnect`, for a plain string."""
+
+
+class NetworkCostKind(_StrEnum):
+    """- ``speed``: Süre, minutes: the length over the speed.
+    - ``field``: The field's value for the whole edge, shared by its pieces by their lengths.
+    """
+    SPEED = "speed"
+    FIELD = "field"
+
+
+NetworkCostKindName = Literal["speed", "field"]
+"""The names of :class:`NetworkCostKind`, for a plain string."""
+
+
+class NetworkDefineOperation(_StrEnum):
+    """What `cad.network.define` does.
+
+    - ``set``: The network replaces the project's of its id, or goes last.
+    - ``remove``: The network of `id` goes.
+    """
+    SET = "set"
+    REMOVE = "remove"
+
+
+NetworkDefineOperationName = Literal["set", "remove"]
+"""The names of :class:`NetworkDefineOperation`, for a plain string."""
+
+
+class NetworkKind(_StrEnum):
+    """Yol ağı or Şebeke: what the tools offer first; the graph is the same."""
+    ROAD = "road"
+    UTILITY = "utility"
+
+
+NetworkKindName = Literal["road", "utility"]
+"""The names of :class:`NetworkKind`, for a plain string."""
 
 
 class PointShape(_StrEnum):
@@ -1308,6 +1374,28 @@ class FeatureChange(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> FeatureChange:
         return _variant(_FEATURE_CHANGE, "FeatureChange", "op", data).from_json(data)
+
+
+class NetworkDirection(_Union):
+    """Which way the edges go (docs/adr/0209 §2).
+
+    One of:
+
+    - :class:`BothNetworkDirection` (``kind: both``)
+    - :class:`DigitizedNetworkDirection` (``kind: digitized``)
+    - :class:`FieldNetworkDirection` (``kind: field``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkDirection:
+        return _variant(_NETWORK_DIRECTION, "NetworkDirection", "kind", data).from_json(data)
 
 
 class TableSource(_Union):
@@ -4659,6 +4747,37 @@ class InvitationRevoke(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class JunctionLayer(_Model):
+    """A junction layer: its points' role and, optionally, which of them it takes and which are closed.
+    Attributes:
+        closed: An expression: the junctions it holds for (a closed valve) are passed by no analysis.
+    """
+    layer: str
+    role: JunctionRole | JunctionRoleName
+    closed: str | None | Unset = UNSET
+    filter: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["role"] = _enum_out(self.role)
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
+        if self.filter is not UNSET:
+            out["filter"] = self.filter
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionLayer:
+        return cls(
+            layer=data["layer"],
+            role=_enum_in(JunctionRole, data["role"]),
+            closed=data.get("closed", UNSET),
+            filter=data.get("filter", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LabelStyle(_Model):
     """How entity labels on a layer are drawn; sizes in CSS px.
     Attributes:
@@ -5426,6 +5545,189 @@ class LocalDefinition(_Model):
         return cls(
             base=CrsBase.from_json(data["base"]),
             plane=CrsPlane.from_json(data["plane"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkCost(_Model):
+    """A cost besides the length (docs/adr/0209 §2).
+    Attributes:
+        field: The attribute it reads: a speed in km/h, or the whole edge's cost.
+        speed: A speed cost's speed (km/h) where the field gives none it can read.
+        unit: A field cost's unit (“TL”, “dk”); a speed cost's is minutes and names none.
+    """
+    name: str
+    kind: NetworkCostKind | NetworkCostKindName
+    field: str
+    speed: float | None | Unset = UNSET
+    unit: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["field"] = self.field
+        if self.speed is not UNSET:
+            out["speed"] = None if self.speed is None else float(self.speed)
+        if self.unit is not UNSET:
+            out["unit"] = self.unit
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkCost:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(NetworkCostKind, data["kind"]),
+            field=data["field"],
+            speed=UNSET if "speed" not in data else None if data["speed"] is None else float(data["speed"]),
+            unit=data.get("unit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkDef(_Model):
+    """A network (docs/adr/0209 §2).
+    Attributes:
+        id: Lower-case letters, digits and hyphens; one of its kind in the project.
+        name: Trimmed; one of its kind in the project.
+        edges: The line layers whose lines, paths and arcs are the edges, in this order.
+        tolerance: Metres, within [`NETWORK_TOLERANCES`].
+        closed: An expression: the edges it holds for are out of service, travelled by nothing.
+        costs: The costs besides the length, in the order the tools offer them.
+        junctions: The point layers whose points are junctions, sources or valves.
+    """
+    id: str
+    name: str
+    kind: NetworkKind | NetworkKindName
+    edges: list[NetworkLayer]
+    connect: NetworkConnect | NetworkConnectName
+    tolerance: float
+    direction: NetworkDirection
+    closed: str | None | Unset = UNSET
+    costs: list[NetworkCost] | Unset = UNSET
+    junctions: list[JunctionLayer] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["edges"] = [e0.to_json() for e0 in self.edges]
+        out["connect"] = _enum_out(self.connect)
+        out["tolerance"] = float(self.tolerance)
+        out["direction"] = self.direction.to_json()
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
+        if self.costs is not UNSET:
+            out["costs"] = [e0.to_json() for e0 in self.costs]
+        if self.junctions is not UNSET:
+            out["junctions"] = [e0.to_json() for e0 in self.junctions]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            kind=_enum_in(NetworkKind, data["kind"]),
+            edges=[NetworkLayer.from_json(e0) for e0 in data["edges"]],
+            connect=_enum_in(NetworkConnect, data["connect"]),
+            tolerance=float(data["tolerance"]),
+            direction=NetworkDirection.from_json(data["direction"]),
+            closed=data.get("closed", UNSET),
+            costs=[NetworkCost.from_json(e0) for e0 in data["costs"]] if "costs" in data else UNSET,
+            junctions=[JunctionLayer.from_json(e0) for e0 in data["junctions"]] if "junctions" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkDefine(_Model):
+    """Input of `cad.network.define` v1.
+
+    - `set`: `network`, which replaces the project's network of its id or goes
+      last;
+    - `remove`: `id`.
+
+    Refusals (`CommandError.code`), checked in this order: `no_network` (set
+    without `network`), `no_id` (remove without `id`), `invalid_network` (the
+    network, or the project's networks with it, by `networks_problem`); then
+    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `unknown_network` (remove: the project has no network of the id). A
+    network naming a layer the drawing does not have is written, with the
+    warning `unknown_layer`.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    operation: NetworkDefineOperation | NetworkDefineOperationName
+    expected_revision: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    network: NetworkDef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.network is not UNSET:
+            out["network"] = None if self.network is None else self.network.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkDefine:
+        return cls(
+            operation=_enum_in(NetworkDefineOperation, data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            id=data.get("id", UNSET),
+            network=UNSET if "network" not in data else None if data["network"] is None else NetworkDef.from_json(data["network"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkDefined(_Model):
+    """Output of `cad.network.define` v1, and its plan: the project's networks as
+    the write leaves them and the revision after it (a plan: before it).
+    """
+    networks: list[NetworkDef]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["networks"] = [e0.to_json() for e0 in self.networks]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkDefined:
+        return cls(
+            networks=[NetworkDef.from_json(e0) for e0 in data["networks"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkLayer(_Model):
+    """An edge layer and, optionally, which of its objects are edges.
+    Attributes:
+        layer: The layer's id. A layer the project no longer has is said when the network is built.
+        filter: An expression: only the objects it holds for; absent: all of them.
+    """
+    layer: str
+    filter: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.filter is not UNSET:
+            out["filter"] = self.filter
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkLayer:
+        return cls(
+            layer=data["layer"],
+            filter=data.get("filter", UNSET),
         )
 
 
@@ -6998,6 +7300,7 @@ class ProjectSettings(_Model):
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
         layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
+        networks: The project's networks (docs/adr/0209 §2).
         second_custom_crs: The second system when it is a definition (instead of `second_srid`).
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
             coordinates are shown beside the project's own; absent: none. Never
@@ -7024,6 +7327,7 @@ class ProjectSettings(_Model):
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     layer_states: list[LayerState] | Unset = UNSET
+    networks: list[NetworkDef] | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
@@ -7055,6 +7359,8 @@ class ProjectSettings(_Model):
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
         if self.layer_states is not UNSET:
             out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
+        if self.networks is not UNSET:
+            out["networks"] = [e0.to_json() for e0 in self.networks]
         if self.second_custom_crs is not UNSET:
             out["secondCustomCrs"] = None if self.second_custom_crs is None else self.second_custom_crs.to_json()
         if self.second_srid is not UNSET:
@@ -7086,6 +7392,7 @@ class ProjectSettings(_Model):
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
+            networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
@@ -9781,6 +10088,63 @@ class DeleteFeatureChange(FeatureChange):
 
 
 @dataclass(kw_only=True, slots=True)
+class BothNetworkDirection(NetworkDirection):
+    """Every edge both ways."""
+    TAG_VALUE: ClassVar[str] = "both"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "both"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BothNetworkDirection:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class DigitizedNetworkDirection(NetworkDirection):
+    """Every edge the way it is drawn (pipes drawn with the flow)."""
+    TAG_VALUE: ClassVar[str] = "digitized"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "digitized"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DigitizedNetworkDirection:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldNetworkDirection(NetworkDirection):
+    """By an attribute's value: `forward` the way the edge is drawn only, `backward` against it only, `closed`
+    neither; any other value, and none, both ways.
+    """
+    TAG_VALUE: ClassVar[str] = "field"
+    field: str
+    backward: list[str] = field(default_factory=list)
+    closed: list[str] = field(default_factory=list)
+    forward: list[str] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "field"}
+        out["field"] = self.field
+        out["backward"] = list(self.backward)
+        out["closed"] = list(self.closed)
+        out["forward"] = list(self.forward)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldNetworkDirection:
+        return cls(
+            field=data["field"],
+            backward=list(data["backward"]) if "backward" in data else list(),
+            closed=list(data["closed"]) if "closed" in data else list(),
+            forward=list(data["forward"]) if "forward" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CoordinatesTableSource(TableSource):
     """Koordinat çizelgesi: the points and vertices of these objects."""
     TAG_VALUE: ClassVar[str] = "coordinates"
@@ -10151,6 +10515,9 @@ _ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometr
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
 
 
+_NETWORK_DIRECTION: dict[str, type[NetworkDirection]] = {"both": BothNetworkDirection, "digitized": DigitizedNetworkDirection, "field": FieldNetworkDirection}
+
+
 _TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource}
 
 
@@ -10195,6 +10562,7 @@ __all__ = [
     "BlocksEdit",
     "BlocksEditPlan",
     "BlocksEdited",
+    "BothNetworkDirection",
     "Bounds",
     "CellRange",
     "Checkpoint",
@@ -10231,6 +10599,7 @@ __all__ = [
     "DatumTransform",
     "DeleteBlockChange",
     "DeleteFeatureChange",
+    "DigitizedNetworkDirection",
     "DimensionArrow",
     "DimensionArrowName",
     "DimensionEntity",
@@ -10276,6 +10645,7 @@ __all__ = [
     "FeedKind",
     "FeedKindName",
     "FieldChoice",
+    "FieldNetworkDirection",
     "FileCommit",
     "FileCommitted",
     "FileTableSource",
@@ -10304,6 +10674,9 @@ __all__ = [
     "InvitationRevoke",
     "InvitationState",
     "InvitationStateName",
+    "JunctionLayer",
+    "JunctionRole",
+    "JunctionRoleName",
     "LabelInk",
     "LabelInkName",
     "LabelPlacement",
@@ -10339,6 +10712,20 @@ __all__ = [
     "LocalDefinition",
     "MirrorTransform",
     "MoveTransform",
+    "NetworkConnect",
+    "NetworkConnectName",
+    "NetworkCost",
+    "NetworkCostKind",
+    "NetworkCostKindName",
+    "NetworkDef",
+    "NetworkDefine",
+    "NetworkDefineOperation",
+    "NetworkDefineOperationName",
+    "NetworkDefined",
+    "NetworkDirection",
+    "NetworkKind",
+    "NetworkKindName",
+    "NetworkLayer",
     "NewObject",
     "PathArrayLayout",
     "PathEntity",

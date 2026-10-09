@@ -125,6 +125,14 @@ SCHEMA_WITH_POINT_CLOUDS = 31
 # Schema 32: schema 31 and map services (docs/adr/0208 §2): a layer node's `service` and `feed`, the settings'
 # `connections` (without their secrets).
 SCHEMA_WITH_SERVICES = 32
+# Schema 33: schema 32 and the settings' `networks` (docs/adr/0209 §2).
+SCHEMA_WITH_NETWORKS = 33
+# Networks' bounds and names (kentos_contracts::network).
+NETWORK_KINDS = ("road", "utility")
+NETWORK_CONNECTS = ("ends", "vertices")
+JUNCTION_ROLES = ("junction", "source", "valve")
+NETWORK_COST_KINDS = ("speed", "field")
+DIRECTION_KINDS = ("both", "digitized", "field")
 # Map services' bounds and names (kentos_contracts::service).
 SERVICE_KINDS = ("xyz", "wms", "wmts", "ogcTiles", "arcgis", "google", "vector")
 FEED_KINDS = ("wfs", "ogcFeatures", "arcgis", "geojson")
@@ -235,7 +243,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -559,6 +567,108 @@ def connections_problem(list_):
                 return "Kapsam 1 ile 256 harf arasında olmalı."
         if any(o["id"] == cid for o in list_[:i]):
             return f"“{cid}” kimlikli bağlantı iki kez var."
+    return None
+
+
+def caseless(s):
+    """A text as the networks' rules compare it: trimmed, upper and lower case the same in Turkish (I is ı's, İ is i's)."""
+    out = []
+    for ch in s.strip():
+        if ch == "I":
+            out.append("ı")
+        elif ch == "İ":
+            out.append("i")
+        else:
+            low = ch.lower()
+            out.append(low if len(low) == 1 else ch)
+    return "".join(out)
+
+
+def network_problem(n):
+    """A network by the rules of docs/adr/0209 §2 (kentos_contracts::network::NetworkDef::problem)."""
+    nid = n["id"]
+    if not (1 <= len(nid) <= 40 and all(c in "abcdefghijklmnopqrstuvwxyz0123456789-" for c in nid)):
+        return "Ağın kimliği 1–40 küçük harf, rakam ya da tire olmalı."
+    name = n["name"]
+    if not name.strip() or name.strip() != name or len(name) > 80:
+        return "Ağın adı boş, kırpılmamış ya da 80 karakterden uzun."
+
+    def bad_expression(e):
+        return e is not None and (not e.strip() or len(e) > 1000)
+
+    edges, junctions = n["edges"], n.get("junctions", [])
+    if not edges:
+        return "Ağın kenar katmanı yok."
+    if len(edges) > 16 or len(junctions) > 16:
+        return "Ağın en çok 16 kenar ve 16 düğüm katmanı olur."
+    seen = []
+    for e in edges:
+        key = (e["layer"], e.get("filter"))
+        if not e["layer"] or bad_expression(e.get("filter")) or key in seen:
+            return "Kenar katmanı boş, süzgeci boş ya da uzun, ya da aynı süzgeçle iki kez var."
+        seen.append(key)
+    seen = []
+    for j in junctions:
+        key = (j["layer"], j.get("filter"))
+        if not j["layer"] or bad_expression(j.get("filter")) or bad_expression(j.get("closed")) or key in seen:
+            return "Düğüm katmanı boş, ifadesi boş ya da uzun, ya da aynı süzgeçle iki kez var."
+        seen.append(key)
+    tol = n["tolerance"]
+    if not (math.isfinite(tol) and 0.0001 <= tol <= 10.0):
+        return "Ağın toleransı 0,0001 ile 10 m arasında olmalı."
+    d = n["direction"]
+    if d["kind"] == "field":
+        if not d["field"].strip() or len(d["field"]) > 64:
+            return "Yön alanı boş ya da çok uzun."
+        lists = [d.get("forward", []), d.get("backward", []), d.get("closed", [])]
+        if not any(lists):
+            return "Yön alanının en az bir değeri olmalı."
+        values = []
+        for lst in lists:
+            if len(lst) > 16:
+                return "Yön listesinde en çok 16 değer olur."
+            for v in lst:
+                if not v.strip() or len(v) > 40:
+                    return "Yön değeri boş ya da 40 karakterden uzun."
+                if caseless(v) in values:
+                    return "Yön değeri iki kez var."
+                values.append(caseless(v))
+    costs = n.get("costs", [])
+    if len(costs) > 8:
+        return "Ağın en çok 8 ek maliyeti olur."
+    names = []
+    for c in costs:
+        cname = c["name"]
+        if not cname.strip() or cname.strip() != cname or len(cname) > 40:
+            return "Maliyetin adı boş, kırpılmamış ya da uzun."
+        if caseless(cname) == caseless("Uzunluk") or caseless(cname) in names:
+            return "Maliyetin adı Uzunluk ya da iki kez var."
+        names.append(caseless(cname))
+        if not c["field"].strip() or len(c["field"]) > 64:
+            return "Maliyetin alanı boş ya da çok uzun."
+        unit, speed = c.get("unit", ""), c.get("speed")
+        if c["kind"] == "speed":
+            if unit or speed is None or not (math.isfinite(speed) and 0.0 < speed <= 1000.0):
+                return "Süre maliyeti birim almaz; varsayılan hızı 0 ile 1000 km/sa arasında olmalı."
+        elif speed is not None or len(unit) > 12 or unit.strip() != unit:
+            return "Alan maliyeti hız almaz; birimi kırpılmış ve en çok 12 karakter olmalı."
+    if bad_expression(n.get("closed")):
+        return "Kapalı kenarlar ifadesi boş ya da uzun."
+    return None
+
+
+def networks_problem(list_):
+    """A project's networks (kentos_contracts::network::networks_problem): at most 32, each holding, ids and names once."""
+    if len(list_) > 32:
+        return "Projenin en çok 32 ağı olur."
+    for i, n in enumerate(list_):
+        p = network_problem(n)
+        if p:
+            return p
+        if any(o["id"] == n["id"] for o in list_[:i]):
+            return f"“{n['id']}” kimlikli ağ iki kez var."
+        if any(caseless(o["name"]) == caseless(n["name"]) for o in list_[:i]):
+            return f"“{n['name']}” adlı ağ iki kez var."
     return None
 
 
@@ -1102,6 +1212,7 @@ class _Schema:
         self.survey_sigmas = version >= SCHEMA_WITH_SURVEY_SIGMAS
         self.annotation = version >= SCHEMA_WITH_ANNOTATION
         self.services = version >= SCHEMA_WITH_SERVICES
+        self.networks = version >= SCHEMA_WITH_NETWORKS
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -1177,6 +1288,7 @@ class _Schema:
                 **({"topology": (self.topology_, False)} if self.topology else {}),
                 **({"annotation": (self.annotation_, False)} if self.annotation else {}),
                 **({"connections": (self.connections_, False)} if self.services else {}),
+                **({"networks": (self.networks_, False)} if self.networks else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -1653,6 +1765,79 @@ class _Schema:
         if not all_:
             self.fail("bad_value", "boş bağlantı listesi yazılmaz")
         problem = connections_problem(all_)
+        if problem:
+            self.fail("bad_value", problem)
+        return all_
+
+    def networks_(self, v):
+        """The project's networks (schema 33, docs/adr/0209 §2): read field by field, lists only when not empty, a
+        direction's field and values only with a field direction; then checked whole. A field direction's lists come
+        back as the contract's JSON form writes them: all three, an empty one too."""
+
+        def direction(v):
+            d = self.fields(
+                {
+                    "kind": (self.enum(DIRECTION_KINDS), True),
+                    "field": (self.text, False),
+                    "forward": (self.nonempty_texts, False),
+                    "backward": (self.nonempty_texts, False),
+                    "closed": (self.nonempty_texts, False),
+                }
+            )(v)
+            if d["kind"] != "field":
+                if len(d) > 1:
+                    self.fail("bad_value", "yönün alanı ve değerleri yalnız alanla yönde yazılır")
+                return d
+            if "field" not in d:
+                self.fail("missing_field", "alanla yönün alanı yok")
+            return {"kind": "field", "field": d["field"], "forward": d.get("forward", []), "backward": d.get("backward", []), "closed": d.get("closed", [])}
+
+        def nonempty(item, words):
+            def read(v):
+                all_ = self.array(item)(v)
+                if not all_:
+                    self.fail("bad_value", words)
+                return all_
+
+            return read
+
+        def unit(v):
+            u = self.text(v)
+            if not u:
+                self.fail("bad_value", "boş birim yazılmaz")
+            return u
+
+        edge = self.fields({"layer": (self.text, True), "filter": (self.text, False)})
+        junction = self.fields(
+            {"layer": (self.text, True), "role": (self.enum(JUNCTION_ROLES), True), "filter": (self.text, False), "closed": (self.text, False)}
+        )
+        cost = self.fields(
+            {
+                "name": (self.text, True),
+                "kind": (self.enum(NETWORK_COST_KINDS), True),
+                "field": (self.text, True),
+                "unit": (unit, False),
+                "speed": (self.float, False),
+            }
+        )
+        network = self.fields(
+            {
+                "id": (self.text, True),
+                "name": (self.text, True),
+                "kind": (self.enum(NETWORK_KINDS), True),
+                "edges": (self.array(edge), True),
+                "junctions": (nonempty(junction, "boş düğüm katmanı listesi yazılmaz"), False),
+                "connect": (self.enum(NETWORK_CONNECTS), True),
+                "tolerance": (self.float, True),
+                "direction": (direction, True),
+                "costs": (nonempty(cost, "boş maliyet listesi yazılmaz"), False),
+                "closed": (self.text, False),
+            }
+        )
+        all_ = self.array(network)(v)
+        if not all_:
+            self.fail("bad_value", "boş ağ listesi yazılmaz")
+        problem = networks_problem(all_)
         if problem:
             self.fail("bad_value", problem)
         return all_

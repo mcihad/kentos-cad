@@ -461,6 +461,12 @@ impl canvas::Program<Message> for Draft {
                     b.line_to(Point::new(x, y + h));
                 }
                 MarkerShape::Circle(r) => b.circle(at, r),
+                // Filled below; their outline in the halo's colour (docs/adr/0209 §10).
+                MarkerShape::Dot(r) => b.circle(at, r),
+                MarkerShape::Numbered(_) => b.circle(at, 8.0),
+                MarkerShape::Square(h) => {
+                    b.rectangle(Point::new(x - h, y - h), iced::Size::new(2.0 * h, 2.0 * h))
+                }
                 MarkerShape::RightAngle { along, up } => {
                     // The web's `drawRightAngle`: 8 px along each side, on screen.
                     let unit = |to: Vec2| {
@@ -477,6 +483,29 @@ impl canvas::Program<Message> for Draft {
                     }
                 }
             });
+            // A network tool's stop or start: a filled disc, outlined in the halo, a stop's number in it (the web's
+            // `drawPoints`, docs/adr/0209 §10).
+            if let MarkerShape::Dot(_) | MarkerShape::Numbered(_) | MarkerShape::Square(_) = m.shape
+            {
+                frame.fill(&mark, tone(m.tone));
+                frame.stroke(
+                    &mark,
+                    Stroke::default().with_color(self.halo).with_width(1.5),
+                );
+                if let MarkerShape::Numbered(n) = m.shape {
+                    frame.fill_text(canvas::Text {
+                        content: n.to_string(),
+                        position: Point::new(at.x, at.y + 0.5),
+                        color: self.halo,
+                        size: iced::Pixels(11.0),
+                        font: typography::ui_strong(),
+                        align_x: iced::widget::text::Alignment::Center,
+                        align_y: iced::alignment::Vertical::Center,
+                        ..canvas::Text::default()
+                    });
+                }
+                continue;
+            }
             let width = match m.shape {
                 MarkerShape::Circle(_) | MarkerShape::RightAngle { .. } => 1.0,
                 _ => 2.0,

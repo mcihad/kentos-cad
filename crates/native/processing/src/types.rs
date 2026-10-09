@@ -34,6 +34,8 @@ pub struct Defaults {
     /// (docs/adr/0205 §1): an edge length's or corner number's text height
     /// left empty is this one.
     pub measure_height_mm: f64,
+    /// The project's networks (docs/adr/0209): a network parameter takes the first of its kind.
+    pub networks: Vec<kentos_contracts::NetworkDef>,
 }
 
 impl Defaults {
@@ -48,12 +50,13 @@ impl Defaults {
             drawing_font: drawing_font(s.drawing_font).id(),
             active_layer: doc.layers().active().to_owned(),
             measure_height_mm: s.annotation_mm(kentos_contracts::AnnotationKind::Measure),
+            networks: s.networks.clone(),
         }
     }
 
     /// As the shared cases write them (`documents.<file>.defaults`).
     pub fn to_json(&self) -> Value {
-        json!({
+        let mut out = json!({
             "lengthDecimals": self.length_decimals,
             "areaDecimals": self.area_decimals,
             "angleUnit": serde_json::to_value(self.angle_unit).unwrap_or(Value::Null),
@@ -61,7 +64,12 @@ impl Defaults {
             "drawingFont": self.drawing_font,
             "activeLayer": self.active_layer,
             "measureHeightMm": self.measure_height_mm,
-        })
+        });
+        // The project's networks, when it has any (the web's `networks`).
+        if !self.networks.is_empty() {
+            out["networks"] = serde_json::to_value(&self.networks).unwrap_or(Value::Null);
+        }
+        out
     }
 }
 
@@ -225,6 +233,11 @@ pub enum ParamKind {
         accept: Vec<String>,
         suffix: String,
     },
+    /// A network of the project and the cost a tool asks it with (docs/adr/0209 §10): `{ network, cost }`, the
+    /// network's id and the cost's name; `prefers`: the kind offered first.
+    Network {
+        prefers: kentos_contracts::NetworkKind,
+    },
 }
 
 /// When a parameter is shown (the web's `visibleWhen`).
@@ -343,6 +356,7 @@ impl ParamDef {
             ParamKind::Field { .. } => "field",
             ParamKind::File { .. } => "file",
             ParamKind::SaveFile { .. } => "saveFile",
+            ParamKind::Network { .. } => "network",
         }
     }
 }

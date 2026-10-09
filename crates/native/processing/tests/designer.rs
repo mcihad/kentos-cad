@@ -101,6 +101,8 @@ fn defaults(f: &Value) -> Defaults {
         active_layer: d["activeLayer"].as_str().expect("a layer").to_owned(),
         // The kind's default when the case names none (docs/adr/0205 §1).
         measure_height_mm: d["measureHeightMm"].as_f64().unwrap_or(2.0),
+        // The designer's cases have no networks (docs/adr/0209 §9).
+        networks: Vec::new(),
     }
 }
 

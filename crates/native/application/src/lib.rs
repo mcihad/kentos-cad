@@ -46,6 +46,7 @@ pub mod elevation;
 pub mod geometry;
 pub mod layers_service;
 pub mod line;
+pub mod network_define;
 pub mod point;
 pub mod polygon;
 pub mod polyline;
@@ -101,5 +102,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LAYERS_SERVICE,
         kentos_contracts::CAD_LAYERS_SERVICE_VERSION,
+    ),
+    // Ağlar ([`network_define`], docs/adr/0209 §11).
+    (
+        kentos_contracts::CAD_NETWORK_DEFINE,
+        kentos_contracts::CAD_NETWORK_DEFINE_VERSION,
     ),
 ];

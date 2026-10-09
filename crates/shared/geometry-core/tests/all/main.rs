@@ -29,6 +29,7 @@ mod line_parts;
 mod locks;
 mod measure;
 mod navigation;
+mod network;
 mod network_adjust;
 mod numeric;
 mod plan_road;

@@ -185,6 +185,16 @@ const ITEMS = [
     open: async (ui) => (await ui.run('crs.transform'), await ui.clickText('.dialog--calc .seg__opt', 'Liste')),
     close: async (ui) => (await ui.clickText('.dialog--calc .seg__opt', 'Tek nokta'), await ui.escapeAll(2)),
   },
+  // Ağlar (docs/adr/0209 §10): the empty list, and a new network's whole form (Sil takes it back, so closing asks nothing);
+  // an İşlemler network tool in a project without networks (its Ağlar… button).
+  { id: 'networks', open: (ui) => ui.run('network.manage'), ready: '.dialog--networks' },
+  {
+    id: 'networks-new',
+    open: async (ui) => (await ui.run('network.manage'), await ui.clickText('.dialog--networks .net-actions .btn', 'Yeni ağ')),
+    close: async (ui) => (await ui.clickText('.dialog--networks .net-actions .btn', 'Sil'), await ui.escapeAll(2)),
+    must: '.dialog--networks .net-line--edge',
+  },
+  { id: 'processing-network', open: (ui) => ui.run('processing.run.network.closestFacility'), ready: '.dialog--ptool' },
   { id: 'style-manager', open: (ui) => ui.run('style.manager'), ready: '.smgr__grid, .dialog' },
   { id: 'symbol-designer', open: async (ui) => (await ui.run('style.manager'), await ui.clickText('.dialog button', 'Yeni sembol'), await ui.clickText('.menu__item', 'Alan sembolü')) },
   { id: 'layer-style', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('ada')`), await ui.run('style.layerStyle')) },

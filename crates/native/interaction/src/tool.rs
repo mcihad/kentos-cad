@@ -124,6 +124,14 @@ pub enum ViewChange {
     /// shown clouds' nearest point within `reach` (world units) of `at` at
     /// full resolution, says it and gives it back with [`Tool::cloud_found`].
     CloudQuery { at: Vec2, reach: f64 },
+    /// A question to one of the project's networks (Ağ analizi's tools,
+    /// docs/adr/0209 §12): the host's network thread builds the network when
+    /// it must and answers off the interface's thread, with
+    /// [`Tool::network_answered`].
+    Network(Box<crate::network::NetworkAsk>),
+    /// A command the host runs for the tool, as a click on its button would
+    /// (Ağ analizi's tools open Ağlar with G, docs/adr/0209 §10).
+    Command(&'static str),
 }
 
 /// Where a text field opens and how its text will look: its start, height in
@@ -731,6 +739,23 @@ pub struct Memory {
     /// Resim ekle's Bağlı and Resmi kırp's Çokgen (docs/adr/0192 §5).
     pub image_linked: bool,
     pub image_clip_polygon: bool,
+    /// Ağ analizi's tools (docs/adr/0209 §10; the web's `networkOptions`):
+    /// the network last chosen by its id (empty: the first of the tool's
+    /// kind), the cost by its name (empty or one the network lacks:
+    /// Uzunluk), Sıra; Hizmet alanı's breaks for each kind of cost (length,
+    /// speed, field; empty: the kind's own), Yön (toward the facilities),
+    /// Biçim (rings), Birleşik's opposite (one area each), Kenar payı
+    /// (metres) and Çizgiler; Şebeke izleme's Tür.
+    pub network: Name,
+    pub network_cost: Name,
+    pub network_reorder: kentos_geometry_core::ops::network::Reorder,
+    pub network_breaks: [Values; 3],
+    pub network_toward: bool,
+    pub network_rings: bool,
+    pub network_separate: bool,
+    pub network_trim: f64,
+    pub network_lines: bool,
+    pub network_trace: kentos_geometry_core::ops::network::TraceKind,
 }
 
 /// A picture file the host read for Resim ekle (docs/adr/0192 §5): its
@@ -996,6 +1021,16 @@ impl Default for Memory {
             centerline_chain: true,
             image_linked: false,
             image_clip_polygon: false,
+            network: Name::EMPTY,
+            network_cost: Name::EMPTY,
+            network_reorder: kentos_geometry_core::ops::network::Reorder::None,
+            network_breaks: [Values::default(); 3],
+            network_toward: false,
+            network_rings: false,
+            network_separate: false,
+            network_trim: crate::network::FIRST_TRIM,
+            network_lines: false,
+            network_trace: kentos_geometry_core::ops::network::TraceKind::Connected,
         }
     }
 }
@@ -1327,6 +1362,12 @@ pub enum MarkerShape {
     /// The right angle at a perpendicular's foot: an 8 px square corner, 1
     /// px, its sides towards these world points (docs/adr/0057).
     RightAngle { along: Vec2, up: Vec2 },
+    /// A filled disc of this radius (Şebeke izleme's starts, docs/adr/0209 §10).
+    Dot(f32),
+    /// A filled 8 px disc with its number in the background's colour (En kısa yol's stops, docs/adr/0209 §10).
+    Numbered(u32),
+    /// A filled square this far from its centre (Şebeke izleme's valves to close, docs/adr/0209 §10).
+    Square(f32),
 }
 
 /// An interactive tool.
@@ -1425,6 +1466,8 @@ pub trait Tool {
     fn image_given(&mut self, _file: Option<ImageFile>, _cx: &mut Context<'_>) {}
     /// The point XYZ sor's place found ([`ViewChange::CloudQuery`]), or none.
     fn cloud_found(&mut self, _found: Option<[f64; 3]>, _cx: &mut Context<'_>) {}
+    /// A network's answer to a question the tool asked ([`ViewChange::Network`]).
+    fn network_answered(&mut self, _reply: crate::network::NetworkReply, _cx: &mut Context<'_>) {}
     /// The answer of the values it asked for ([`ViewChange::AttributeValues`]):
     /// the attributes to write (Yerleştir), or none (Vazgeç, Esc).
     fn values_given(

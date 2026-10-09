@@ -80,6 +80,15 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
         self
     }
 
+    /// Kutunun kalan yerini alan gövde: kendi kayan bölmeleri olan düzenler
+    /// (solda liste, sağda form) için; kaydırmayı parça kendisi yapar,
+    /// içindekiler yüksekliği `Fill` ile doldurur. Pencere alçaksa kutu
+    /// pencerede durur, bu parça kısalır, eylem düğmeleri görünür kalır.
+    pub fn fill(mut self, content: impl Into<Element<'a, Message>>) -> Self {
+        self.body.push((content.into(), true));
+        self
+    }
+
     pub fn action(mut self, action: impl Into<Element<'a, Message>>) -> Self {
         self.actions.push(action.into());
         self

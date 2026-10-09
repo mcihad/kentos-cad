@@ -5,6 +5,7 @@ import type { DimensionStyleDef } from '../contracts/generated/DimensionStyleDef
 import type { DrawingFont } from '../contracts/generated/DrawingFont';
 import type { DrawingUnit } from '../contracts/generated/DrawingUnit';
 import type { LayerState } from '../contracts/generated/LayerState';
+import type { NetworkDef } from '../contracts/generated/NetworkDef';
 import type { ServiceConnection } from '../contracts/generated/ServiceConnection';
 import type { SurveySettings } from '../contracts/generated/SurveySettings';
 import type { TextStyleDef } from '../contracts/generated/TextStyleDef';
@@ -12,6 +13,7 @@ import type { TopologySettings } from '../contracts/generated/TopologySettings';
 import type { Workspace } from '../contracts/generated/Workspace';
 import { crsBySrid, DEFAULT_SRID, type CrsDef } from '../geo/crs';
 import { sanitizedDimensionStyles, sanitizedTextStyles } from './annotationStyles';
+import { sanitizedNetworks } from './networkRules';
 import { sameJson } from './sameJson';
 import { sameTopology, sanitizeTopology } from './topologyRules';
 import { ANNOTATION_KINDS, annotationMm, paperHeight, sanitizedAnnotationHeights, type AnnotationHeights, type AnnotationKind } from './annotationScale';
@@ -82,6 +84,8 @@ export interface ProjectSettingsData {
   annotation?: AnnotationHeights;
   /** The project's connections to map services, without their secrets (docs/adr/0208 §2); absent: none. */
   connections?: ServiceConnection[];
+  /** The project's networks (docs/adr/0209 §2), in the list's order; absent: none. */
+  networks?: NetworkDef[];
 }
 
 /**
@@ -264,6 +268,8 @@ export class ProjectSettings {
   readonly annotation: Signal<AnnotationHeights | null>;
   /** The project's connections to map services, without their secrets (docs/adr/0208 §2). */
   readonly connections: Signal<readonly ServiceConnection[]>;
+  /** The project's networks, as a project keeps them (docs/adr/0209 §2; `sanitizedNetworks`). */
+  readonly networks: Signal<readonly NetworkDef[]>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
 
@@ -290,6 +296,7 @@ export class ProjectSettings {
     this.topology = new Signal(sanitizeTopology(d.topology), sameTopology);
     this.annotation = new Signal(sanitizedAnnotationHeights(d.annotation) ?? null, sameHeights);
     this.connections = new Signal<readonly ServiceConnection[]>(structuredClone(d.connections ?? []), sameJson);
+    this.networks = new Signal<readonly NetworkDef[]>(sanitizedNetworks(d.networks ?? []), sameJson);
     watchAll(
       [
         this.crs,
@@ -312,6 +319,7 @@ export class ProjectSettings {
         this.topology,
         this.annotation,
         this.connections,
+        this.networks,
       ],
       () => this.changed.update((v) => v + 1),
     );
@@ -349,6 +357,8 @@ export class ProjectSettings {
       ...(this.annotation.value ? { annotation: { ...this.annotation.value } } : {}),
       // Written only when there are (KCAD schema 32).
       ...(this.connections.value.length ? { connections: structuredClone([...this.connections.value]) } : {}),
+      // Written only when there are (KCAD schema 33).
+      ...(this.networks.value.length ? { networks: structuredClone([...this.networks.value]) } : {}),
     };
   }
 
@@ -409,6 +419,7 @@ export class ProjectSettings {
       topology: data.topology ?? null,
       annotation: data.annotation ?? null,
       connections: data.connections ?? [],
+      networks: data.networks ?? [],
     });
     this.workspace.set(typeOf(data.workspace));
     this.drawingUnit.set(data.drawingUnit ?? 'm');
@@ -450,6 +461,7 @@ export class ProjectSettings {
     if (data.topology !== undefined) this.topology.set(sanitizeTopology(data.topology));
     if (data.annotation !== undefined) this.annotation.set(sanitizedAnnotationHeights(data.annotation ?? undefined) ?? null);
     if (data.connections !== undefined) this.connections.set(structuredClone([...data.connections]));
+    if (data.networks !== undefined) this.networks.set(sanitizedNetworks(data.networks));
   }
 
   /** The project's text style `id`, or null (Standart, or one it no longer has). */

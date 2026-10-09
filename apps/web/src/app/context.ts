@@ -13,6 +13,7 @@ import type { GridLibrary } from './gridLibrary';
 import type { ConnectionSecrets } from './connectionSecrets';
 import type { ServerStatus } from './server';
 import type { Formatter } from './format';
+import type { NetworkService } from './networks';
 import type { ProcessingService } from './processing';
 import type { DraftingSettings, MessageLog, Preferences, UiState } from './state';
 import type { SettingsStore } from './settings/store';
@@ -57,6 +58,8 @@ export interface AppContext {
   readonly grids: GridLibrary;
   /** The map services' connections' secrets on this device (app/connectionSecrets.ts, docs/adr/0208 §12). */
   readonly secrets: ConnectionSecrets;
+  /** The project's networks, built and asked in the network worker (app/networks.ts, docs/adr/0209). */
+  readonly networks: NetworkService;
   /** Whether the KentOS API answers (`/v1/health`); the drawing works without it (app/server.ts). */
   readonly server: ServerStatus;
   /** Signing in, the open cloud project, its autosave and live events (app/cloud/session.ts). */

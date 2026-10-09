@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `32`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-33.kcad`) |
+| `version` | tam sayı | `2`'den `33`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-34.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -259,7 +259,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 32**, şema 31'in kendisi ve harita servisleridir (ADR 0208): katmanın `service`'i (katman bir harita servisinden çizilir: XYZ, WMS, WMTS, OGC API Tiles, ArcGIS, Google, vektör karolar) ve `feed`'i (katmanın nesneleri bir servisten ya da adresten alındı: WFS, OGC API Features, ArcGIS, GeoJSON) (§6.5), proje ayarlarının `connections`'ı (servislerin kimlik doğrulaması, sırrı olmadan; §6.4.7). Yazıcı `32`'yi **yalnız servisten çizilen ya da nesneleri bir kaynaktan alınan katman ya da projenin bağlantısı varken** yazar. Başka her çizim şema 2–31'dir ve eskisiyle bayt bayt aynıdır. Şema 2–31 yükünde üçü de bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/service-in-schema-31.kcad`, `feed-in-schema-31.kcad`, `connections-in-schema-31.kcad`): eski okuyucu servis katmanını boş bir katman sanıp bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 32 şema 31'i kapsar. Karolar, servisin cevapları ve sırlar dosyaya yazılmaz (§6.10). Örnek dosya `services.kcad`.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 33**, şema 32'nin kendisi ve projenin ağlarıdır (ADR 0209): proje ayarlarının `networks`'ü (§6.4, §6.4.8): hangi çizgi katmanlarının kenar, hangi nokta katmanlarının düğüm olduğu, bağlanma kuralı ve toleransı, yön, maliyetler ve kısıtlar. Yazıcı `33`'ü **yalnız projenin ağı varken** yazar. Başka her çizim şema 2–32'dir ve eskisiyle bayt bayt aynıdır. Şema 2–32 yükünde `networks` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/networks-in-schema-32.kcad`): eski okuyucu ağ tanımlarını bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 33 şema 32'yi kapsar. Ağın grafı dosyaya yazılmaz: her analiz çizimin nesnelerinden kurar. Örnek dosya `networks.kcad`.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -304,6 +306,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `srid` | u32 | evet | EPSG kodu; 0 yerel sistemdir (koordinat sistemi yok, ADR 0165 §2). Koordinat sistemi tahmin edilmez; SRID yalnız etikettir, dönüşüm değildir |
 | `survey` | harita (§6.4.2) | | şema 14'te: projenin ölçme ayarları (ADR 0169 §3) |
 | `areaUnit` | numaralı metin | evet | `m2`, `donum`, `ha` |
+| `networks` | dizi (§6.4.8) | | şema 33'te: projenin ağları, tanımlandıkları sırayla (ADR 0209 §2); boş dizi yazılmaz |
 | `topology` | harita (§6.4.5) | | şema 27'de: projenin topoloji kuralları, toleransı ve istisnaları (ADR 0202 §7) |
 | `annotation` | harita (§6.4.6) | | şema 30'da: projenin yazı yükseklikleri, kâğıtta mm (ADR 0205 §1) |
 | `connections` | dizi (§6.4.7) | | şema 32'de: projenin harita servislerine bağlantıları, sırları olmadan (ADR 0208 §2); boş dizi yazılmaz |
@@ -474,6 +477,25 @@ Bilinmeyen anahtar `unknown_field`'dır.
 | `tokenUrl` | metin | | `arcgis` ve `oauth2`'de belirtecin alındığı adres; `oauth2`'de zorunlu (`broken/connection-oauth2-no-token-url.kcad`) |
 
 Liste en çok 256 bağlantıdır; boş liste yazılmaz (`broken/connections-empty.kcad`). Kurallar sözleşmenindir (`kentos_contracts::service::connections_problem`); kıran liste `bad_value`'dur.
+
+#### 6.4.8 Ağlar
+
+Şema 33'te (ADR 0209 §2). Bir ağ, çizimin katmanlarından her analizde kurulan grafın tanımıdır; grafın kendisi dosyaya yazılmaz. Harita, anahtarları kodlanmış sırasıyla:
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `id` | metin | evet | 1–40 küçük harf, rakam ya da tire; projede bir kez (`broken/network-duplicate-id.kcad`, `broken/network-bad-id.kcad`) |
+| `kind` | numaralı metin | evet | `road` (Yol ağı), `utility` (Şebeke); bilinmeyen değer `bad_value` (`broken/network-unknown-kind.kcad`) |
+| `name` | metin | evet | kırpılmış, 1–80 karakter, projede bir kez (Türkçe büyük küçük harf ayrımı olmadan; `broken/network-duplicate-name.kcad`, `broken/network-name-untrimmed.kcad`) |
+| `costs` | dizi | | uzunluktan başka maliyetler, en çok 8; boş dizi yazılmaz (`broken/network-costs-empty.kcad`). Her biri `name` (kırpılmış, 1–40 karakter, bir kez, `Uzunluk` olamaz: `broken/network-cost-length-name.kcad`, `broken/network-cost-twice.kcad`), `kind` (`speed`: süre, dakika = uzunluk / hız; `field`: kenarın bütününün maliyeti), `field` (okunan öznitelik), `unit` (yalnız `field`'da, en çok 12 karakter; boş yazılmaz: `broken/network-cost-speed-unit.kcad`), `speed` (yalnız `speed`'de ve zorunlu: alanın okunamadığı yerde km/sa, 0 < h ≤ 1000; `broken/network-cost-speed-zero.kcad`, `broken/network-cost-field-speed.kcad`) |
+| `edges` | dizi | evet | kenar katmanları, 1–16: `layer` (katmanın kimliği) ve isteğe bağlı `filter` (ifade); aynı katman aynı süzgeçle bir kez (`broken/network-no-edges.kcad`, `broken/network-edge-twice.kcad`) |
+| `closed` | metin | | kapalı kenarların ifadesi (ADR 0100), boş olmayan, en çok 1000 karakter (`broken/network-closed-blank.kcad`) |
+| `connect` | numaralı metin | evet | `ends` (uçlarda; bir uç başka bir kenarın içine değiyorsa orada), `vertices` (bütün köşelerde de) |
+| `direction` | harita | evet | `kind`: `both`, `digitized` ya da `field`; yalnız `field`'da `field` (zorunlu) ve `forward`, `backward`, `closed` (metin dizileri; boşu yazılmaz, en az biri bulunur; her biri en çok 16 değer, değer en çok 40 karakter, bir değer listelerde bir kez: `broken/network-direction-no-values.kcad`, `broken/network-direction-value-twice.kcad`, `broken/network-direction-list-empty.kcad`). Başka türde alan ya da değer `bad_value`'dur (`broken/network-direction-field-on-both.kcad`). Sözleşmenin JSON biçimi `field` yönünde üç diziyi de, boşunu da yazar |
+| `junctions` | dizi | | düğüm katmanları, en çok 16; boş dizi yazılmaz (`broken/network-junctions-empty.kcad`). Her biri `layer`, `role` (`junction`, `source`, `valve`; `broken/network-junction-role.kcad`), isteğe bağlı `filter` ve `closed` (ifadeler) |
+| `tolerance` | float | evet | metre, 0,0001 ile 10 arasında (`broken/network-tolerance.kcad`) |
+
+Bilinmeyen anahtar `unknown_field`'dır (`broken/network-unknown-field.kcad`). Liste en çok 32 ağdır; boş liste yazılmaz (`broken/networks-empty.kcad`). Kurallar sözleşmenindir (`kentos_contracts::network::networks_problem`); kıran liste `bad_value`'dur. Ağın adlandırdığı katmanın çizimde olması kural değildir: ağ kurulurken söylenir.
 
 ### 6.5 Katman ağacı
 

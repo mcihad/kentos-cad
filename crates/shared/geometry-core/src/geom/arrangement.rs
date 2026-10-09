@@ -514,39 +514,26 @@ pub fn build(local: &[Source], abs: &[Source], o: Vec2) -> Built {
             cuts[i].push(t);
         }
     };
-    // Sweep over x so only edges with overlapping boxes are tested.
-    let mut order: Vec<usize> = (0..edges.len()).collect();
-    stable_sort(&mut order, &mut |&i, &j| {
-        js_cmp(edges[i].bx.min_x - edges[j].bx.min_x, 0.0)
-    });
-    for oi in 0..order.len() {
-        let i = order[oi];
-        let bi = edges[i].bx;
-        for &j in &order[oi + 1..] {
-            let bj = edges[j].bx;
-            if bj.min_x > bi.max_x + TOL {
-                break;
-            }
-            if bj.min_y > bi.max_y + TOL || bj.max_y < bi.min_y - TOL {
-                continue;
-            }
-            let ei = edges[i].e;
-            let ej = edges[j].e;
-            for h in intersect_edges(&ei, &ej) {
-                add_cut(&mut cuts, i, h.t);
-                add_cut(&mut cuts, j, h.u);
-            }
-            // Touching ends and overlaps (parallel lines, same circle) meet at an end point.
-            for (x, other) in [(i, ej), (j, ei)] {
-                for q in [point_at(&other, 0.0), point_at(&other, 1.0)] {
-                    let c = closest_on_edge(&edges[x].e, q);
-                    if c.d <= TOL {
-                        add_cut(&mut cuts, x, c.t);
-                    }
+    // Only edges whose boxes meet (within TOL) are tested, each pair once: their pairs from a grid of square
+    // cells (a sweep over x alone tried every edge of a column of a two-dimensional layout, n^1.5).
+    let boxes: Vec<Bounds> = edges.iter().map(|p| p.bx).collect();
+    candidate_pairs(&boxes, &mut |i, j| {
+        let ei = edges[i].e;
+        let ej = edges[j].e;
+        for h in intersect_edges(&ei, &ej) {
+            add_cut(&mut cuts, i, h.t);
+            add_cut(&mut cuts, j, h.u);
+        }
+        // Touching ends and overlaps (parallel lines, same circle) meet at an end point.
+        for (x, other) in [(i, ej), (j, ei)] {
+            for q in [point_at(&other, 0.0), point_at(&other, 1.0)] {
+                let c = closest_on_edge(&edges[x].e, q);
+                if c.d <= TOL {
+                    add_cut(&mut cuts, x, c.t);
                 }
             }
         }
-    }
+    });
 
     let nsrc = local.len();
     let mut pieces: Vec<Piece> = Vec::new();
@@ -608,6 +595,81 @@ pub fn build(local: &[Source], abs: &[Source], o: Vec2) -> Built {
         }
     }
     Built { verts, pieces }
+}
+
+/// Whether two boxes meet within TOL.
+fn boxes_meet(a: &Bounds, b: &Bounds) -> bool {
+    a.min_x <= b.max_x + TOL
+        && b.min_x <= a.max_x + TOL
+        && a.min_y <= b.max_y + TOL
+        && b.min_y <= a.max_y + TOL
+}
+
+/// Calls `f(i, j)`, `i < j`, once for every pair of boxes that meet within TOL. The boxes go into square cells about
+/// twice their usual size; a pair is tried in the one cell holding the low corner of the two boxes' meeting, so each
+/// is tried once wherever both lie. A box over more than 256 cells (a big circle) is tried against every box instead.
+fn candidate_pairs(boxes: &[Bounds], f: &mut dyn FnMut(usize, usize)) {
+    let n = boxes.len();
+    if n < 2 {
+        return;
+    }
+    let mut sum = 0.0;
+    for b in boxes {
+        sum += js_max(b.max_x - b.min_x, b.max_y - b.min_y);
+    }
+    let size = js_max((sum / n as f64) * 2.0, 1e-9);
+    let cell = |v: f64| (v / size).floor() as i64;
+    let mut cells: HashMap<(i64, i64), Vec<usize>> = HashMap::new();
+    let mut big: Vec<usize> = Vec::new();
+    let mut is_big = vec![false; n];
+    for (i, b) in boxes.iter().enumerate() {
+        let (x0, x1) = (cell(b.min_x - TOL), cell(b.max_x + TOL));
+        let (y0, y1) = (cell(b.min_y - TOL), cell(b.max_y + TOL));
+        if (x1 - x0 + 1) * (y1 - y0 + 1) > 256 {
+            big.push(i);
+            is_big[i] = true;
+            continue;
+        }
+        for x in x0..=x1 {
+            for y in y0..=y1 {
+                cells.entry((x, y)).or_default().push(i);
+            }
+        }
+    }
+    // The cells in a fixed order, so the meeting points are found in the same order every run.
+    let mut keys: Vec<(i64, i64)> = cells.keys().copied().collect();
+    keys.sort_unstable();
+    for key in keys {
+        let list = &cells[&key];
+        for (k, &i) in list.iter().enumerate() {
+            for &j in &list[k + 1..] {
+                let (a, b) = (&boxes[i], &boxes[j]);
+                if !boxes_meet(a, b) {
+                    continue;
+                }
+                // The low corner of the meeting (within TOL), in both boxes' cells: its cell tries the pair.
+                let corner = (
+                    cell(js_max(a.min_x, b.min_x) - TOL),
+                    cell(js_max(a.min_y, b.min_y) - TOL),
+                );
+                if corner != key {
+                    continue;
+                }
+                if i < j { f(i, j) } else { f(j, i) }
+            }
+        }
+    }
+    for (k, &i) in big.iter().enumerate() {
+        for j in 0..n {
+            // A big box against the others once; two big ones once.
+            if j == i || (is_big[j] && big[..k].contains(&j)) {
+                continue;
+            }
+            if boxes_meet(&boxes[i], &boxes[j]) {
+                if i < j { f(i, j) } else { f(j, i) }
+            }
+        }
+    }
 }
 
 /// Boxes in square cells, for "what is near this point" without looking at every piece.
@@ -699,6 +761,18 @@ pub(crate) fn dir(p: &Piece, index: usize, fwd: bool) -> DirPiece {
 /// with the rule's inside on the left. A cut piece with the inside on both
 /// sides is kept both ways, so it splits the result.
 pub fn classify(sources: &[Source], built: &Built, rule: Rule) -> Vec<DirPiece> {
+    classify_with(sources, built, rule, None)
+}
+
+/// `classify` with each area source's inside answered by `inside(source, point)` (local coordinates) instead of its
+/// winding along a ray across the whole layout: for sources whose inside is known near the point (a union of
+/// buffers: within the distance of a core edge), so a piece costs what is near it.
+pub fn classify_with(
+    sources: &[Source],
+    built: &Built,
+    rule: Rule,
+    inside: Option<&dyn Fn(usize, Vec2) -> bool>,
+) -> Vec<DirPiece> {
     let pieces = &built.pieces;
     let mut out = Vec::new();
     if sources.iter().all(Source::is_cut) {
@@ -716,7 +790,7 @@ pub fn classify(sources: &[Source], built: &Built, rule: Rule) -> Vec<DirPiece> 
     let windings: Vec<Option<WindingIndex>> = sources
         .iter()
         .map(|s| {
-            if s.is_cut() {
+            if s.is_cut() || inside.is_some() {
                 None
             } else {
                 Some(WindingIndex::new(&s.edges))
@@ -758,16 +832,26 @@ pub fn classify(sources: &[Source], built: &Built, rule: Rule) -> Vec<DirPiece> 
         let q = Vec2::new(m.x - ty * eps, m.y + tx * eps);
         left.clear();
         right.clear();
-        for (k, w) in windings.iter().enumerate() {
-            match w {
-                None => {
-                    left.push(false);
-                    right.push(false);
-                }
-                Some(w) => {
-                    let wn = w.winding(q);
-                    left.push(wn != 0.0);
-                    right.push(wn - piece.delta[k] != 0.0);
+        if let Some(f) = inside {
+            // Each side's own point: the inside is asked, not carried across the piece.
+            let q_right = Vec2::new(m.x + ty * eps, m.y - tx * eps);
+            for (k, s) in sources.iter().enumerate() {
+                let area = !s.is_cut();
+                left.push(area && f(k, q));
+                right.push(area && f(k, q_right));
+            }
+        } else {
+            for (k, w) in windings.iter().enumerate() {
+                match w {
+                    None => {
+                        left.push(false);
+                        right.push(false);
+                    }
+                    Some(w) => {
+                        let wn = w.winding(q);
+                        left.push(wn != 0.0);
+                        right.push(wn - piece.delta[k] != 0.0);
+                    }
                 }
             }
         }

@@ -37,6 +37,7 @@ pub mod geometry;
 pub mod model;
 pub mod model_edit;
 pub mod model_runner;
+pub mod network;
 pub mod parameters;
 pub mod registry;
 pub mod runner;

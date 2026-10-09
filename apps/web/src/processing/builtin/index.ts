@@ -11,6 +11,9 @@ import { geometryRepair, geometryValidity } from './geometry/validity';
 import { infoFromEnclosing } from './infoFromEnclosing';
 import { infoFromInside } from './infoFromInside';
 import { joinByField } from './joinByField';
+import { networkClosestFacility } from './network/closestFacility';
+import { networkOdMatrix } from './network/odMatrix';
+import { networkServiceAreas } from './network/serviceAreas';
 import { selectByExpression } from './selectByExpression';
 import { selectByLocation } from './selectByLocation';
 import { summaryStatistics } from './summaryStatistics';
@@ -38,4 +41,7 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   geometryRepair,
   geometrySimplify,
   geometryReproject,
+  networkClosestFacility,
+  networkOdMatrix,
+  networkServiceAreas,
 ];

@@ -61,6 +61,7 @@ interface CaseFile {
 const CASES = JSON.parse(file('cases.json')) as CaseFile;
 const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
+const NETWORK = JSON.parse(file('network.json')) as CaseFile;
 
 interface Formats {
   initSync(o: { module: BufferSource }): unknown;
@@ -287,7 +288,7 @@ describe('processing cases (fixtures/processing/v1)', () => {
   });
 
   // Each drawing's defaults (DefaultsContext) and each tool's default values on it, as the desktop must read them.
-  for (const [name, d] of [...Object.entries(CASES.documents), ...Object.entries(GEOMETRY.documents)]) {
+  for (const [name, d] of [...Object.entries(CASES.documents), ...Object.entries(GEOMETRY.documents), ...Object.entries(NETWORK.documents)]) {
     it(`${name}: the defaults the tools take from the drawing`, () => {
       const runner = new ProcessingRunner({ doc: load(name), selectedIds: () => [], visibleBounds: () => null });
       expect(runner.defaults()).toEqual(d.defaults);
@@ -330,6 +331,19 @@ describe('geometry cases (fixtures/processing/v1/geometry.json, docs/adr/0201)',
     it(`${c.id}: ${c.title}`, async () => {
       check(c, await play(GEOMETRY, c, 'client'), GEOMETRY.tolerance, GEOMETRY.measureTolerance);
       check(c, await play(GEOMETRY, c, 'worker'), GEOMETRY.tolerance, GEOMETRY.measureTolerance);
+    });
+  }
+});
+
+describe('network cases (fixtures/processing/v1/network.json, docs/adr/0209)', () => {
+  it('is a v1 case file', () => {
+    expect([NETWORK.format, NETWORK.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of NETWORK.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      check(c, await play(NETWORK, c, 'client'), NETWORK.tolerance, NETWORK.measureTolerance);
+      check(c, await play(NETWORK, c, 'worker'), NETWORK.tolerance, NETWORK.measureTolerance);
     });
   }
 });
