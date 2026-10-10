@@ -2,14 +2,15 @@ import type { Vec2 } from '../../model/geometry';
 import type { LayerStore } from '../../model/layers';
 import type { InputSummary } from '../../processing/features';
 import { orderSteps, stepName, type ProcessingModel } from '../../processing/model';
-import { defaultValues, fieldSource, isVisible, restoreValues, scopesOf, type ValidationIssue } from '../../processing/parameters';
+import { defaultValues, fieldMapKey, fieldSource, firstShown, isVisible, restoreValues, scopesOf, type ValidationIssue } from '../../processing/parameters';
 import type { ProcessingRunner, RunOutcome, TargetChoice } from '../../processing/runner';
-import type { DefaultsContext, EnumOption, ExecutionTarget, FeaturesValue, FileValue, LayerValue, ParamDef, ParamUnit, ProcessingTool, RasterPairs, RasterValues, TableOutput } from '../../processing/types';
+import type { DefaultsContext, EnumOption, ExecutionTarget, FeaturesValue, FieldMap, FileValue, LayerValue, ParamDef, ParamUnit, ProcessingTool, RasterPairs, RasterValues, TableOutput } from '../../processing/types';
 import { DIALOG_TEXTS as T, SCOPE_SHORT } from './dialogTexts';
 import {
   attrFieldView,
   expressionView,
   featuresView,
+  fieldMapView,
   fileView,
   layerFieldView,
   planLayers,
@@ -19,6 +20,7 @@ import {
   type AttrFieldView,
   type ExpressionView,
   type FeaturesView,
+  type FieldMapView,
   type FileView,
   type LayerFieldView,
   type PlanLayers,
@@ -64,7 +66,9 @@ export type ControlForm =
   /** A value for each raster of `of` (docs/adr/0237 §9): a number or a text a row. */
   | { type: 'rasterValues'; of: string; cell: 'number' | 'text'; min?: number; max?: number; placeholder?: string }
   /** A comparison for each pair of `of`'s rasters. */
-  | { type: 'rasterPairs'; of: string };
+  | { type: 'rasterPairs'; of: string }
+  /** Alan eşleme (docs/adr/0216 §2): rows of a target field, a source column and a default. */
+  | { type: 'fieldMap'; target: string; source: string[] };
 
 export interface RowForm {
   name: string;
@@ -118,6 +122,8 @@ export function controlForm(def: ParamDef): ControlForm {
       };
     case 'rasterPairs':
       return { type: 'rasterPairs', of: def.of };
+    case 'fieldMap':
+      return { type: 'fieldMap', target: def.target, source: [...def.source] };
   }
 }
 
@@ -127,7 +133,7 @@ export function rowForm(def: ParamDef): RowForm {
     label: def.label,
     ...(def.description ? { description: def.description } : {}),
     optional: !!def.optional,
-    stacked: def.type === 'features' || def.type === 'expression' || def.type === 'rasterValues' || def.type === 'rasterPairs',
+    stacked: def.type === 'features' || def.type === 'expression' || def.type === 'rasterValues' || def.type === 'rasterPairs' || def.type === 'fieldMap',
     control: controlForm(def),
   };
 }
@@ -459,8 +465,10 @@ export interface ViewEnv {
   readonly issues: readonly ValidationIssue[];
   /** What each features parameter reads now, and each chosen file's table. */
   readonly inputs: Readonly<Record<string, InputSummary>>;
-  /** What a field parameter's source shown now reads (`fieldSource`): the names it offers. */
+  /** What a field parameter's or a field map's source shown now reads (`fieldSource`, `firstShown`): the names it offers. */
   sourceOf(name: string): InputSummary | undefined;
+  /** A field map's source key (`fieldMapKey`): the column Aynı adlarla doldur leaves out. */
+  mapKey(name: string): string;
   /** An expression parameter's line on its input's objects. */
   previewExpression(name: string): string | null;
   readonly layers: PlanLayers;
@@ -478,8 +486,12 @@ export function hostEnv(runner: ProcessingRunner, tool: ProcessingTool, values: 
     inputs,
     sourceOf: (name) => {
       const def = tool.parameters.find((p) => p.name === name);
-      const src = def?.type === 'field' ? fieldSource(tool, def, values) : undefined;
+      const src = def?.type === 'field' ? fieldSource(tool, def, values) : def?.type === 'fieldMap' ? firstShown(tool, def.source, values) : undefined;
       return src ? inputs[src] : undefined;
+    },
+    mapKey: (name) => {
+      const def = tool.parameters.find((p) => p.name === name);
+      return def?.type === 'fieldMap' ? fieldMapKey(def, values) : '';
     },
     previewExpression: (name) => runner.previewExpression(tool, values, name),
     layers: planLayers(layers),
@@ -493,7 +505,7 @@ export function hostEnv(runner: ProcessingRunner, tool: ProcessingTool, values: 
   };
 }
 
-export type FieldView = FeaturesView | LayerFieldView | PointView | AttrFieldView | ExpressionView | FileView | RasterValuesView | RasterPairsView;
+export type FieldView = FeaturesView | LayerFieldView | PointView | AttrFieldView | ExpressionView | FileView | RasterValuesView | RasterPairsView | FieldMapView;
 
 /** A shown field's changing parts (number, text, switch and choice fields show only their value). */
 export function fieldView(def: ParamDef, value: unknown, env: ViewEnv): FieldView | null {
@@ -514,6 +526,13 @@ export function fieldView(def: ParamDef, value: unknown, env: ViewEnv): FieldVie
       return rasterValuesView(value as RasterValues | null, env.inputs[def.of]?.rasters ?? (env.inputs[def.of] ? [] : undefined));
     case 'rasterPairs':
       return rasterPairsView(value as RasterPairs | null, env.inputs[def.of]?.rasters ?? (env.inputs[def.of] ? [] : undefined));
+    case 'fieldMap':
+      return fieldMapView(
+        value as FieldMap | null,
+        env.inputs[def.target]?.fields.map((f) => f.name),
+        env.sourceOf(def.name)?.fields.map((f) => f.name),
+        env.mapKey(def.name),
+      );
     default:
       return null;
   }

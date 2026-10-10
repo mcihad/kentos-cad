@@ -135,6 +135,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                 attrs: Some(attrs),
                 label: None,
                 zs: None,
+                geometry: None,
             });
         }
     }

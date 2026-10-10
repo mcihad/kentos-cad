@@ -325,13 +325,15 @@ fn field_row<'a>(
             .align_y(Alignment::Start),
         );
     }
-    // Objects, expressions and the rasters' rows take the whole width under their label (the web's `prow--stacked`).
+    // Objects, expressions, the rasters' rows and a field map take the whole width under their label (the web's
+    // `prow--stacked`).
     let stacked = matches!(
         def.kind,
         ParamKind::Features { .. }
             | ParamKind::Expression { .. }
             | ParamKind::RasterValues { .. }
             | ParamKind::RasterPairs { .. }
+            | ParamKind::FieldMap { .. }
     );
     let content: Element<'a, Message> = if stacked {
         column![text, control_col].spacing(8).into()

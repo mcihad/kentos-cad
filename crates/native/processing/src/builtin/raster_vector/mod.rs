@@ -371,6 +371,7 @@ pub fn run_contour_elevations(
                 attrs: None,
                 label: None,
                 zs: Some(paths.iter().map(|p| vec![Some(z); p.pts.len()]).collect()),
+                geometry: None,
             });
         }
         if missed > 0 {

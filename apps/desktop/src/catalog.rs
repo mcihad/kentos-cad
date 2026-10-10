@@ -343,6 +343,8 @@ pub const PORTED: &[&str] = &[
     "processing.run.attributes.fromEnclosing",
     "processing.run.statistics.summary",
     "processing.run.attributes.joinByField",
+    // Veri aktar (docs/adr/0216).
+    "processing.run.attributes.transfer",
     // Yakınlık (docs/adr/0215).
     "processing.run.proximity.nearest",
     "processing.run.proximity.matrix",

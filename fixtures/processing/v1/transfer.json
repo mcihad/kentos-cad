@@ -1,0 +1,1222 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "documents": {},
+ "files": {
+  "tapu.csv": "tapu.csv",
+  "noktalar.csv": "noktalar.csv"
+ },
+ "cases": [
+  {
+   "id": "deed-mapped",
+   "title": "Tapu listesinden alan eşlemesiyle: tipli alanlar (ondalık, tarih), varsayılan, uymayan değerler, yinelenen ve boş anahtar",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "file",
+    "file": "tapu.csv",
+    "sourceKey": "PARSEL",
+    "map": [
+     {
+      "target": "Malik",
+      "source": "MALIK_ADI",
+      "default": ""
+     },
+     {
+      "target": "Hisse",
+      "source": "HISSE",
+      "default": ""
+     },
+     {
+      "target": "Alan",
+      "source": "YUZOLCUM",
+      "default": ""
+     },
+     {
+      "target": "Tescil",
+      "source": "TESCIL_TARIHI",
+      "default": ""
+     },
+     {
+      "target": "Durum",
+      "source": "",
+      "default": "Tescilli"
+     }
+    ],
+    "existing": "overwrite",
+    "geometry": false,
+    "append": false,
+    "east": "",
+    "north": "",
+    "reportOnly": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 nesne güncellendi, 0 eklendi; 2 hedefin eşi yok, 3 kaynak satırı kullanılmadı.",
+    "undo": "Veri aktar",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 anahtar kaynakta birden çok kez var; ilk satırları alındı."
+     },
+     {
+      "level": "warn",
+      "text": "3 değer alanına uymadığı için yazılmadı; nedenleri raporda."
+     }
+    ],
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Parsel": "1",
+       "Ada": "101",
+       "Malik": "Ali Veli",
+       "Hisse": "1",
+       "Mahalle": "Merkez",
+       "Alan": "412.25",
+       "Tescil": "2021-05-03",
+       "Durum": "Tescilli"
+      }
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Parsel": "2",
+       "Ada": "101",
+       "Malik": "Fatma Ak",
+       "Mahalle": "Merkez",
+       "Hisse": "1/2",
+       "Alan": "410.5",
+       "Tescil": "2020-01-15",
+       "Durum": "Tescilli"
+      }
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "101",
+       "Hisse": "1/2",
+       "Alan": "400.00",
+       "Mahalle": "Yeni",
+       "Durum": "Tescilli"
+      }
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "101",
+       "Mahalle": "Merkez",
+       "Malik": "Can Er",
+       "Hisse": "1",
+       "Durum": "Tescilli"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 4,
+     "added": 0,
+     "table": {
+      "columns": [
+       "Anahtar",
+       "Sonuç",
+       "Değişiklikler",
+       "Not"
+      ],
+      "rows": [
+       [
+        "1",
+        "Güncellendi",
+        "Alan: (boş) → 412.25; Tescil: (boş) → 2021-05-03; Durum: (boş) → Tescilli",
+        ""
+       ],
+       [
+        "2",
+        "Güncellendi",
+        "Malik: (boş) → Fatma Ak; Hisse: (boş) → 1/2; Alan: (boş) → 410.5; Tescil: (boş) → 2020-01-15; Durum: (boş) → Tescilli",
+        ""
+       ],
+       [
+        "3",
+        "Güncellendi",
+        "Malik: Ayşe Kaya → (boş); Durum: (boş) → Tescilli",
+        "“Alan” alanı ondalık sayı ister; “12,5x” verildi. Rakamlarla, ondalığı nokta ya da virgülle yazın."
+       ],
+       [
+        "4",
+        "Güncellendi",
+        "Malik: (boş) → Can Er; Hisse: (boş) → 1; Durum: (boş) → Tescilli",
+        "“Alan” alanı en çok 2 ondalık basamak alır; “399,999” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın. “Tescil” alanı tarih ister; “31.02.2020” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın."
+       ],
+       [
+        "5",
+        "Eşleşmedi",
+        "",
+        ""
+       ],
+       [
+        "",
+        "Eşleşmedi",
+        "",
+        "Anahtarı boş."
+       ],
+       [
+        "9",
+        "Kullanılmadı",
+        "",
+        ""
+       ],
+       [
+        "1",
+        "Kullanılmadı",
+        "",
+        "Anahtar kaynakta yineleniyor; ilk satır alındı."
+       ],
+       [
+        "",
+        "Kullanılmadı",
+        "",
+        "Anahtarı boş."
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "deed-empty-only",
+   "title": "Aynı liste, Yalnız boşlara: dolu alanlar kalır",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "file",
+    "file": "tapu.csv",
+    "sourceKey": "PARSEL",
+    "map": [
+     {
+      "target": "Malik",
+      "source": "MALIK_ADI",
+      "default": ""
+     },
+     {
+      "target": "Hisse",
+      "source": "HISSE",
+      "default": ""
+     },
+     {
+      "target": "Alan",
+      "source": "YUZOLCUM",
+      "default": ""
+     },
+     {
+      "target": "Tescil",
+      "source": "TESCIL_TARIHI",
+      "default": ""
+     },
+     {
+      "target": "Durum",
+      "source": "",
+      "default": "Tescilli"
+     }
+    ],
+    "existing": "empty",
+    "geometry": false,
+    "append": false,
+    "east": "",
+    "north": "",
+    "reportOnly": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 nesne güncellendi, 0 eklendi; 2 hedefin eşi yok, 3 kaynak satırı kullanılmadı.",
+    "undo": "Veri aktar",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 anahtar kaynakta birden çok kez var; ilk satırları alındı."
+     },
+     {
+      "level": "warn",
+      "text": "2 değer alanına uymadığı için yazılmadı; nedenleri raporda."
+     }
+    ],
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Parsel": "1",
+       "Ada": "101",
+       "Malik": "Ali Veli",
+       "Hisse": "1",
+       "Mahalle": "Merkez",
+       "Alan": "412.25",
+       "Tescil": "2021-05-03",
+       "Durum": "Tescilli"
+      }
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Parsel": "2",
+       "Ada": "101",
+       "Malik": "Fatma Ak",
+       "Mahalle": "Merkez",
+       "Hisse": "1/2",
+       "Alan": "410.5",
+       "Tescil": "2020-01-15",
+       "Durum": "Tescilli"
+      }
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "101",
+       "Malik": "Ayşe Kaya",
+       "Hisse": "1/2",
+       "Alan": "400.00",
+       "Mahalle": "Yeni",
+       "Durum": "Tescilli"
+      }
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "101",
+       "Mahalle": "Merkez",
+       "Malik": "Can Er",
+       "Hisse": "1",
+       "Durum": "Tescilli"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 4,
+     "added": 0,
+     "table": {
+      "columns": [
+       "Anahtar",
+       "Sonuç",
+       "Değişiklikler",
+       "Not"
+      ],
+      "rows": [
+       [
+        "1",
+        "Güncellendi",
+        "Alan: (boş) → 412.25; Tescil: (boş) → 2021-05-03; Durum: (boş) → Tescilli",
+        ""
+       ],
+       [
+        "2",
+        "Güncellendi",
+        "Malik: (boş) → Fatma Ak; Hisse: (boş) → 1/2; Alan: (boş) → 410.5; Tescil: (boş) → 2020-01-15; Durum: (boş) → Tescilli",
+        ""
+       ],
+       [
+        "3",
+        "Güncellendi",
+        "Durum: (boş) → Tescilli",
+        ""
+       ],
+       [
+        "4",
+        "Güncellendi",
+        "Malik: (boş) → Can Er; Hisse: (boş) → 1; Durum: (boş) → Tescilli",
+        "“Alan” alanı en çok 2 ondalık basamak alır; “399,999” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın. “Tescil” alanı tarih ister; “31.02.2020” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın."
+       ],
+       [
+        "5",
+        "Eşleşmedi",
+        "",
+        ""
+       ],
+       [
+        "",
+        "Eşleşmedi",
+        "",
+        "Anahtarı boş."
+       ],
+       [
+        "9",
+        "Kullanılmadı",
+        "",
+        ""
+       ],
+       [
+        "1",
+        "Kullanılmadı",
+        "",
+        "Anahtar kaynakta yineleniyor; ilk satır alındı."
+       ],
+       [
+        "",
+        "Kullanılmadı",
+        "",
+        "Anahtarı boş."
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "survey-geometry-append",
+   "title": "Yeni ölçüm katmanından: aynı adlarla, geometri güncellenir (türü farklı olan söylenir), eşleşmeyenler eklenir (zorunlu alanı boş olan eklenmez)",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "olcum"
+    },
+    "sourceKey": "",
+    "map": [],
+    "existing": "overwrite",
+    "geometry": true,
+    "append": true,
+    "east": "",
+    "north": "",
+    "reportOnly": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 nesne güncellendi, 1 eklendi; 3 hedefin eşi yok, 2 kaynak satırı kullanılmadı.",
+    "undo": "Veri aktar",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 anahtar kaynakta birden çok kez var; ilk satırları alındı."
+     },
+     {
+      "level": "warn",
+      "text": "1 kaynak satırı eklenemedi; nedenleri raporda."
+     }
+    ],
+    "updated": [
+     {
+      "id": 2,
+      "attrs": {
+       "Parsel": "2",
+       "Ada": "101",
+       "Malik": "Fatma Ak",
+       "Mahalle": "Merkez",
+       "Alan": "410.5"
+      },
+      "geometry": {
+       "pts": [
+        {
+         "x": 487020,
+         "y": 4420000
+        },
+        {
+         "x": 487040.5,
+         "y": 4420000
+        },
+        {
+         "x": 487040.5,
+         "y": 4420020
+        },
+        {
+         "x": 487020,
+         "y": 4420020
+        }
+       ]
+      }
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "101",
+       "Malik": "Ayşe Kaya",
+       "Hisse": "1/2",
+       "Alan": "400",
+       "Mahalle": "Yeni"
+      }
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "101",
+       "Mahalle": "Merkez",
+       "Malik": "Can Er"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "Parsel": "7",
+       "Ada": "102",
+       "Malik": "Zeynep Tan",
+       "Durum": "Beyanlı",
+       "Mahalle": "Merkez"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420050
+       },
+       {
+        "x": 487000,
+        "y": 4420050
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "added": 1,
+     "table": {
+      "columns": [
+       "Anahtar",
+       "Sonuç",
+       "Değişiklikler",
+       "Not"
+      ],
+      "rows": [
+       [
+        "1",
+        "Eşleşmedi",
+        "",
+        ""
+       ],
+       [
+        "2",
+        "Güncellendi",
+        "Alan: (boş) → 410.5; Malik: (boş) → Fatma Ak; geometri",
+        ""
+       ],
+       [
+        "3",
+        "Güncellendi",
+        "Alan: 400.00 → 400",
+        ""
+       ],
+       [
+        "4",
+        "Güncellendi",
+        "Malik: (boş) → Can Er",
+        "Geometrinin türü farklı; geometri güncellenmedi."
+       ],
+       [
+        "5",
+        "Eşleşmedi",
+        "",
+        ""
+       ],
+       [
+        "",
+        "Eşleşmedi",
+        "",
+        "Anahtarı boş."
+       ],
+       [
+        "7",
+        "Eklendi",
+        "Parsel: 7; Ada: 102; Malik: Zeynep Tan; Durum: Beyanlı; Mahalle: Merkez",
+        ""
+       ],
+       [
+        "8",
+        "Eklenmedi",
+        "",
+        "“Ada” alanı zorunlu; boş bırakılamaz."
+       ],
+       [
+        "002",
+        "Kullanılmadı",
+        "",
+        "Anahtar kaynakta yineleniyor; ilk satır alındı."
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "survey-report-only",
+   "title": "Aynı aktarım, Yalnız raporla: tablo aynı, çizim değişmez",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "olcum"
+    },
+    "sourceKey": "",
+    "map": [],
+    "existing": "overwrite",
+    "geometry": true,
+    "append": true,
+    "east": "",
+    "north": "",
+    "reportOnly": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "Yalnız rapor, çizim değişmedi: 3 nesne güncellendi, 1 eklendi; 3 hedefin eşi yok, 2 kaynak satırı kullanılmadı.",
+    "undo": null,
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 anahtar kaynakta birden çok kez var; ilk satırları alındı."
+     },
+     {
+      "level": "warn",
+      "text": "1 kaynak satırı eklenemedi; nedenleri raporda."
+     }
+    ],
+    "outputs": {
+     "count": 0,
+     "added": 0,
+     "table": {
+      "columns": [
+       "Anahtar",
+       "Sonuç",
+       "Değişiklikler",
+       "Not"
+      ],
+      "rows": [
+       [
+        "1",
+        "Eşleşmedi",
+        "",
+        ""
+       ],
+       [
+        "2",
+        "Güncellendi",
+        "Alan: (boş) → 410.5; Malik: (boş) → Fatma Ak; geometri",
+        ""
+       ],
+       [
+        "3",
+        "Güncellendi",
+        "Alan: 400.00 → 400",
+        ""
+       ],
+       [
+        "4",
+        "Güncellendi",
+        "Malik: (boş) → Can Er",
+        "Geometrinin türü farklı; geometri güncellenmedi."
+       ],
+       [
+        "5",
+        "Eşleşmedi",
+        "",
+        ""
+       ],
+       [
+        "",
+        "Eşleşmedi",
+        "",
+        "Anahtarı boş."
+       ],
+       [
+        "7",
+        "Eklendi",
+        "Parsel: 7; Ada: 102; Malik: Zeynep Tan; Durum: Beyanlı; Mahalle: Merkez",
+        ""
+       ],
+       [
+        "8",
+        "Eklenmedi",
+        "",
+        "“Ada” alanı zorunlu; boş bırakılamaz."
+       ],
+       [
+        "002",
+        "Kullanılmadı",
+        "",
+        "Anahtar kaynakta yineleniyor; ilk satır alındı."
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "points-append",
+   "title": "Nokta dosyasından: var olan noktanın kodu güncellenir, yenisi doğu ve kuzeyinden nokta olur, okunamayan koordinat eklenmez",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "nokta"
+    },
+    "targetKey": "Ad",
+    "sourceKind": "file",
+    "file": "noktalar.csv",
+    "sourceKey": "NOKTA",
+    "map": [
+     {
+      "target": "Kod",
+      "source": "KOD",
+      "default": ""
+     }
+    ],
+    "existing": "overwrite",
+    "geometry": false,
+    "append": true,
+    "east": "Y",
+    "north": "X",
+    "reportOnly": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne güncellendi, 1 eklendi; 1 hedefin eşi yok, 1 kaynak satırı kullanılmadı.",
+    "undo": "Veri aktar",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 kaynak satırı eklenemedi; nedenleri raporda."
+     }
+    ],
+    "updated": [
+     {
+      "id": 21,
+      "attrs": {
+       "Ad": "N1",
+       "Kod": "sınır"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "nokta",
+      "attrs": {
+       "Ad": "N3",
+       "Kod": "poligon"
+      },
+      "p": {
+       "x": 487025.5,
+       "y": 4420100.25
+      }
+     }
+    ],
+    "outputs": {
+     "count": 1,
+     "added": 1,
+     "table": {
+      "columns": [
+       "Anahtar",
+       "Sonuç",
+       "Değişiklikler",
+       "Not"
+      ],
+      "rows": [
+       [
+        "N1",
+        "Güncellendi",
+        "Kod: eski → sınır",
+        ""
+       ],
+       [
+        "N2",
+        "Eşleşmedi",
+        "",
+        ""
+       ],
+       [
+        "N3",
+        "Eklendi",
+        "Ad: N3; Kod: poligon",
+        ""
+       ],
+       [
+        "N4",
+        "Eklenmedi",
+        "",
+        "Doğu ya da kuzey okunamadı; nokta eklenmedi."
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "missing-key",
+   "title": "Kaynak anahtar sütunu yok: reddedilir",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "file",
+    "file": "tapu.csv",
+    "sourceKey": "ADA_PARSEL",
+    "map": [
+     {
+      "target": "Malik",
+      "source": "MALIK_ADI",
+      "default": ""
+     },
+     {
+      "target": "Hisse",
+      "source": "HISSE",
+      "default": ""
+     },
+     {
+      "target": "Alan",
+      "source": "YUZOLCUM",
+      "default": ""
+     },
+     {
+      "target": "Tescil",
+      "source": "TESCIL_TARIHI",
+      "default": ""
+     },
+     {
+      "target": "Durum",
+      "source": "",
+      "default": "Tescilli"
+     }
+    ],
+    "existing": "overwrite",
+    "geometry": false,
+    "append": false,
+    "east": "",
+    "north": "",
+    "reportOnly": false
+   },
+   "expect": {
+    "status": "error",
+    "message": "Kaynakta “ADA_PARSEL” alanı yok; alanları: PARSEL, ADA, MALIK_ADI, HISSE, YUZOLCUM, TESCIL_TARIHI."
+   }
+  },
+  {
+   "id": "missing-coordinates",
+   "title": "Dosyadan eklemek için doğu ve kuzey seçilmedi: reddedilir",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "nokta"
+    },
+    "targetKey": "Ad",
+    "sourceKind": "file",
+    "file": "noktalar.csv",
+    "sourceKey": "NOKTA",
+    "map": [
+     {
+      "target": "Kod",
+      "source": "KOD",
+      "default": ""
+     }
+    ],
+    "existing": "overwrite",
+    "geometry": false,
+    "append": true,
+    "east": "",
+    "north": "",
+    "reportOnly": false
+   },
+   "expect": {
+    "status": "error",
+    "message": "Dosyadan nesne eklemek için Doğu ve Kuzey sütunlarını seçin."
+   }
+  },
+  {
+   "id": "empty-target",
+   "title": "Boş hedef katmana: yalnız eklenir (yinelenen anahtar kullanılmaz)",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "yeni"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "olcum"
+    },
+    "sourceKey": "",
+    "map": [],
+    "existing": "overwrite",
+    "geometry": false,
+    "append": true,
+    "east": "",
+    "north": "",
+    "reportOnly": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "0 nesne güncellendi, 5 eklendi; 0 hedefin eşi yok, 1 kaynak satırı kullanılmadı.",
+    "undo": "Veri aktar",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 anahtar kaynakta birden çok kez var; ilk satırları alındı."
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "yeni",
+      "attrs": {
+       "Parsel": "2",
+       "Ada": "101",
+       "Alan": "410.5",
+       "Malik": "Fatma Ak"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040.5,
+        "y": 4420000
+       },
+       {
+        "x": 487040.5,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "yeni",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "101",
+       "Alan": "400",
+       "Malik": "Ayşe Kaya"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420020
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "yeni",
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "101",
+       "Malik": "Can Er"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487080,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "yeni",
+      "attrs": {
+       "Parsel": "7",
+       "Ada": "102",
+       "Malik": "Zeynep Tan"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420050
+       },
+       {
+        "x": 487000,
+        "y": 4420050
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "yeni",
+      "attrs": {
+       "Parsel": "8",
+       "Malik": "Ada yok"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420050
+       },
+       {
+        "x": 487020,
+        "y": 4420050
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 0,
+     "added": 5,
+     "table": {
+      "columns": [
+       "Anahtar",
+       "Sonuç",
+       "Değişiklikler",
+       "Not"
+      ],
+      "rows": [
+       [
+        "2",
+        "Eklendi",
+        "Parsel: 2; Ada: 101; Alan: 410.5; Malik: Fatma Ak",
+        ""
+       ],
+       [
+        "3",
+        "Eklendi",
+        "Parsel: 3; Ada: 101; Alan: 400; Malik: Ayşe Kaya",
+        ""
+       ],
+       [
+        "4",
+        "Eklendi",
+        "Parsel: 4; Ada: 101; Malik: Can Er",
+        ""
+       ],
+       [
+        "7",
+        "Eklendi",
+        "Parsel: 7; Ada: 102; Malik: Zeynep Tan",
+        ""
+       ],
+       [
+        "8",
+        "Eklendi",
+        "Parsel: 8; Malik: Ada yok",
+        ""
+       ],
+       [
+        "002",
+        "Kullanılmadı",
+        "",
+        "Anahtar kaynakta yineleniyor; ilk satır alındı."
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "locked-target",
+   "title": "Kilitli hedef katman: çalıştırma başlamaz",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "arsiv"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "file",
+    "file": "tapu.csv",
+    "sourceKey": "PARSEL",
+    "map": [
+     {
+      "target": "Malik",
+      "source": "MALIK_ADI",
+      "default": ""
+     },
+     {
+      "target": "Hisse",
+      "source": "HISSE",
+      "default": ""
+     },
+     {
+      "target": "Alan",
+      "source": "YUZOLCUM",
+      "default": ""
+     },
+     {
+      "target": "Tescil",
+      "source": "TESCIL_TARIHI",
+      "default": ""
+     },
+     {
+      "target": "Durum",
+      "source": "",
+      "default": "Tescilli"
+     }
+    ],
+    "existing": "overwrite",
+    "geometry": false,
+    "append": false,
+    "east": "",
+    "north": "",
+    "reportOnly": false
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "param": "target",
+      "message": "“Hedef katman”: katman kilitli. Kilidi Katmanlar panelinden açın ya da başka katman seçin."
+     }
+    ]
+   }
+  },
+  {
+   "id": "group-target",
+   "title": "Hedef bir grup: çalıştırma başlamaz",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "paftalar"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "file",
+    "file": "tapu.csv",
+    "sourceKey": "PARSEL",
+    "map": [
+     {
+      "target": "Malik",
+      "source": "MALIK_ADI",
+      "default": ""
+     },
+     {
+      "target": "Hisse",
+      "source": "HISSE",
+      "default": ""
+     },
+     {
+      "target": "Alan",
+      "source": "YUZOLCUM",
+      "default": ""
+     },
+     {
+      "target": "Tescil",
+      "source": "TESCIL_TARIHI",
+      "default": ""
+     },
+     {
+      "target": "Durum",
+      "source": "",
+      "default": "Tescilli"
+     }
+    ],
+    "existing": "overwrite",
+    "geometry": false,
+    "append": false,
+    "east": "",
+    "north": "",
+    "reportOnly": false
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "param": "target",
+      "message": "“Hedef katman”: grup değil, bir katman seçin; eklenen nesneler bu katmana yazılır."
+     }
+    ]
+   }
+  }
+ ]
+}

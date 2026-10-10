@@ -1,7 +1,7 @@
 import { compileExpression, expressionError } from '../model/expression/expression';
 import type { NetworkDef } from '../contracts/generated/NetworkDef';
 import { costNames as networkCostNames, LENGTH_COST } from '../model/networkRules';
-import type { DefaultsContext, FeaturesValue, FieldParam, FileValue, LayerValue, NetworkValue, ParamDef, ProcessingTool, RasterPairs, RasterValues } from './types';
+import type { DefaultsContext, FeaturesValue, FieldMap, FieldMapParam, FieldParam, FileValue, LayerValue, NetworkValue, ParamDef, ProcessingTool, RasterPairs, RasterValues } from './types';
 
 /**
  * Parameter bookkeeping shared by the dialog, the runner and models:
@@ -53,6 +53,8 @@ export function defaultValue(def: ParamDef, ctx: DefaultsContext): unknown {
       return {} satisfies RasterValues;
     case 'rasterPairs':
       return [] satisfies RasterPairs;
+    case 'fieldMap':
+      return [] satisfies FieldMap;
   }
 }
 
@@ -66,13 +68,26 @@ export function defaultValues(tool: ProcessingTool, ctx: DefaultsContext): Value
 /** Whether the parameter is shown (and checked) for these values. */
 export const isVisible = (def: ParamDef, values: Values) => !def.visibleWhen || def.visibleWhen(values);
 
-/** The parameter a field's names come from: the first of `of` that is shown (docs/adr/0200 §6). */
-export function fieldSource(tool: ProcessingTool, def: FieldParam, values: Values): string | undefined {
-  const names = typeof def.of === 'string' ? [def.of] : def.of;
+/** The first of these parameters that is shown: the source a field or a field map reads (docs/adr/0200 §6). */
+export function firstShown(tool: ProcessingTool, names: readonly string[], values: Values): string | undefined {
   return names.find((n) => {
     const p = tool.parameters.find((q) => q.name === n);
     return !!p && isVisible(p, values);
   });
+}
+
+/** The parameter a field's names come from: the first of `of` that is shown (docs/adr/0200 §6). */
+export function fieldSource(tool: ProcessingTool, def: FieldParam, values: Values): string | undefined {
+  return firstShown(tool, typeof def.of === 'string' ? [def.of] : def.of, values);
+}
+
+/** A field map's source key (docs/adr/0216 §2): the first of its `key` parameters that names one, trimmed; else empty. */
+export function fieldMapKey(def: FieldMapParam, values: Values): string {
+  for (const n of def.key ?? []) {
+    const v = values[n];
+    if (typeof v === 'string' && v.trim()) return v.trim();
+  }
+  return '';
 }
 
 /** The names a field parameter holds: one, or several written with commas between them (`multiple`), each trimmed. */
@@ -149,7 +164,31 @@ export function fits(def: ParamDef, v: unknown): boolean {
         Array.isArray(v) &&
         v.every((r) => Array.isArray(r) && r.length === 3 && typeof r[0] === 'string' && typeof r[1] === 'string' && typeof r[2] === 'number' && Number.isFinite(r[2]))
       );
+    case 'fieldMap':
+      return (
+        Array.isArray(v) &&
+        v.every((r) => !!r && typeof r === 'object' && typeof r.target === 'string' && typeof r.source === 'string' && typeof r.default === 'string')
+      );
   }
+}
+
+/**
+ * A field map's first problem (docs/adr/0216 §2), its rows in order: a target field left empty, one named twice, or a
+ * name a field cannot have (as a field parameter's: at most 64 characters, no square brackets).
+ */
+export function fieldMapProblem(name: string, map: FieldMap): string | null {
+  const seen = new Set<string>();
+  for (const [i, r] of map.entries()) {
+    const target = r.target.trim();
+    if (!target) return `${name}: ${i + 1}. satırın hedef alanı boş.`;
+    if (seen.has(target)) return `${name}: “${target}” iki satırda hedef.`;
+    seen.add(target);
+    for (const f of [target, r.source.trim()]) {
+      if (f.length > 64) return `${name}: alan adı en çok 64 karakter olabilir.`;
+      if (/[[\]]/.test(f)) return `${name}: alan adında köşeli parantez kullanılamaz.`;
+    }
+  }
+  return null;
 }
 
 /** Stored values over defaults, keeping only those that still fit. */
@@ -163,6 +202,8 @@ export function restoreValues(tool: ProcessingTool, stored: Values | undefined, 
 export interface ValidationEnv {
   layerExists(id: string): boolean;
   layerLocked(id: string): boolean;
+  /** Whether a layer tree node is a group (a run adds to a layer only, docs/adr/0216 §3); absent: none is. */
+  layerIsGroup?(id: string): boolean;
   /** The project's network of an id (docs/adr/0209); absent: none is known. */
   network?(id: string): NetworkDef | undefined;
 }
@@ -214,6 +255,12 @@ function checkParam(p: ParamDef, v: unknown, env: ValidationEnv): string | null 
     case 'features': {
       const f = v as FeaturesValue;
       if (f.scope === 'layer' && !env.layerExists(f.layerId)) return `${name}: seçilen katman artık yok.`;
+      // An input that may be empty and is written to is where a run adds (docs/adr/0216 §3): a layer, and one that is
+      // not locked (what is added to it would be left out).
+      if (f.scope === 'layer' && p.allowEmpty && p.writes) {
+        if (env.layerIsGroup?.(f.layerId)) return `${name}: grup değil, bir katman seçin; eklenen nesneler bu katmana yazılır.`;
+        if (env.layerLocked(f.layerId)) return `${name}: katman kilitli. Kilidi Katmanlar panelinden açın ya da başka katman seçin.`;
+      }
       if (f.kinds && !f.kinds.length) return `${name}: en az bir nesne türü seçin.`;
       return null;
     }
@@ -257,6 +304,8 @@ function checkParam(p: ParamDef, v: unknown, env: ValidationEnv): string | null 
       const bad = (v as RasterPairs).find((r) => !isComparison(r[2]));
       return bad ? `${name}: ${bad[0]} — ${bad[1]} 1, 2 … 9 ya da −2 … −9 olmalı.` : null;
     }
+    case 'fieldMap':
+      return fieldMapProblem(name, v as FieldMap);
     case 'layer': {
       const l = v as LayerValue;
       if ('newName' in l) return l.newName.trim() ? null : `${name}: yeni katmanın adını yazın.`;

@@ -69,6 +69,7 @@ interface CaseFile {
 const CASES = JSON.parse(file('cases.json')) as CaseFile;
 const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
 const PROXIMITY = JSON.parse(file('proximity.json')) as CaseFile;
+const TRANSFER = JSON.parse(file('transfer.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
 const SPATIAL_STATS = JSON.parse(file('spatial-stats.json')) as CaseFile;
 const NETWORK = JSON.parse(file('network.json')) as CaseFile;
@@ -147,6 +148,12 @@ function load(name: string): CadDocument {
 function plain(e: Entity): Json {
   const { id: _id, uid: _uid, ...rest } = e as Entity & { uid?: string };
   return JSON.parse(JSON.stringify(rest)) as Json;
+}
+
+/** An object's geometry as the cases write it: without its kind and what is not geometry (Veri aktar, docs/adr/0216 §4). */
+function geometryPart(o: Json): Json {
+  const { kind: _k, layerId: _l, attrs: _a, color: _c, label: _t, symbol: _s, lineWeight: _w, labelPins: _p, ...g } = o;
+  return g;
 }
 
 /** The drawing's objects (by id) and layer tree, to compare before and after. */
@@ -253,7 +260,13 @@ function observed(s: Seen): Json {
   for (const e of doc.all()) {
     const old = before.objects.get(e.id);
     if (old === undefined) added.push(plain(e));
-    else if (old !== JSON.stringify(plain(e))) updated.push({ id: e.id, attrs: e.attrs, ...(e.label !== undefined ? { label: e.label } : {}) });
+    else if (old !== JSON.stringify(plain(e))) {
+      // A changed geometry is written too (Veri aktar's Geometriyi güncelle).
+      const was = geometryPart(JSON.parse(old) as Json);
+      const now = geometryPart(plain(e));
+      const moved = JSON.stringify(was) !== JSON.stringify(now);
+      updated.push({ id: e.id, attrs: e.attrs, ...(e.label !== undefined ? { label: e.label } : {}), ...(moved ? { geometry: now } : {}) });
+    }
   }
   const removed = [...before.objects.keys()].filter((id) => !doc.get(id));
   return {
@@ -289,7 +302,12 @@ function check(c: Case, s: Seen, tol: number, measureTol = tol): void {
     expect(added.length, where).toBe(wantAdded.length);
     wantAdded.forEach((w, i) => expect(sameObject(added[i], w, tol), `${c.id}: added[${i}] ${JSON.stringify(added[i])}`).toBe(true));
   }
-  expect(got.updated, where).toEqual(want.updated ?? []);
+  // A changed geometry is compared when the case writes one for an update (Veri aktar's Geometriyi güncelle); the
+  // elevations a run writes are compared below.
+  const wantUpdated = (want.updated ?? []) as Json[];
+  const shapes = wantUpdated.some((u) => 'geometry' in u);
+  const gotUpdated = (got.updated as Json[]).map(({ geometry, ...u }) => (shapes && geometry !== undefined ? { ...u, geometry } : u));
+  expect(gotUpdated, where).toEqual(wantUpdated);
   // The vertices' elevations of the objects a run changed (Eğrilere kot ver), each path's in `elevatedPaths`' order.
   for (const [id, zs] of Object.entries((want.elevations ?? {}) as Record<string, (number | null)[][]>)) {
     const e = s.doc.get(Number(id));
@@ -373,6 +391,19 @@ describe('proximity cases (fixtures/processing/v1/proximity.json, docs/adr/0215)
     it(`${c.id}: ${c.title}`, async () => {
       check(c, await play(PROXIMITY, c, 'client'), PROXIMITY.tolerance);
       check(c, await play(PROXIMITY, c, 'worker'), PROXIMITY.tolerance);
+    });
+  }
+});
+
+describe('data transfer cases (fixtures/processing/v1/transfer.json, docs/adr/0216)', () => {
+  it('is a v1 case file', () => {
+    expect([TRANSFER.format, TRANSFER.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of TRANSFER.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      check(c, await play(TRANSFER, c, 'client'), TRANSFER.tolerance);
+      check(c, await play(TRANSFER, c, 'worker'), TRANSFER.tolerance);
     });
   }
 });

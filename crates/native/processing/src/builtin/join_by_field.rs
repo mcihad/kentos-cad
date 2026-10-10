@@ -1,21 +1,21 @@
 //! Anahtarla birleştir (the web's `builtin/joinByField.ts`; docs/adr/0200 §6;
-//! QGIS "Join attributes by field value", ArcGIS Join Field, Netcad Veri
-//! Aktar): fields of a source (another layer's objects, or a CSV, TXT or
-//! Excel file's rows) are copied into the target objects whose key matches.
+//! QGIS "Join attributes by field value", ArcGIS Join Field; Veri aktar maps,
+//! adds and moves geometry, docs/adr/0216): fields of a source (another
+//! layer's objects, or a CSV, TXT or Excel file's rows) are copied into the
+//! target objects whose key matches.
 //! Keys match trimmed; two numbers as numbers (`007` is `7`), otherwise as
 //! texts exactly (the core's `ops::statistics::join_plan`). A key the source
 //! has more than once takes its first row; unmatched targets and unused rows
 //! are counted and said. One undo step.
-
-use std::collections::BTreeSet;
 
 use kentos_contracts::Entity;
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::statistics::join_plan;
 use serde_json::{Value, json};
 
+use super::join_source::{missing, source_table};
 use super::queries::{attr, with_attr};
-use crate::parameters::{field_names, file_table};
+use crate::parameters::field_names;
 use crate::text::js_trim;
 use crate::types::{
     ChangeSet, EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Patch, Resolved,
@@ -52,7 +52,7 @@ pub fn tool() -> Tool {
         ]
         .map(String::from)
         .to_vec(),
-        aliases: ["ANAHTARBIRLESTIR", "VERIAKTAR"].map(String::from).to_vec(),
+        aliases: vec!["ANAHTARBIRLESTIR".into()],
         icon: Some("joinField".into()),
         parameters: vec![
             ParamDef::new(
@@ -156,53 +156,6 @@ pub fn tool() -> Tool {
     }
 }
 
-/// A source as rows: its column names, then a row per object (its
-/// attributes' names in their code points' order, a missing one empty) or
-/// per line of the file.
-fn source_table(
-    objects: Option<&[&Entity]>,
-    file: Option<&Value>,
-) -> (Vec<String>, Vec<Vec<String>>) {
-    match objects {
-        Some(objects) => {
-            let header: Vec<String> = objects
-                .iter()
-                .flat_map(|e| e.base().attrs.keys().cloned())
-                .collect::<BTreeSet<_>>()
-                .into_iter()
-                .collect();
-            let rows = objects
-                .iter()
-                .map(|e| {
-                    header
-                        .iter()
-                        .map(|h| attr(e, h).unwrap_or("").to_owned())
-                        .collect()
-                })
-                .collect();
-            (header, rows)
-        }
-        None => file.and_then(file_table).unwrap_or_default(),
-    }
-}
-
-/// Why a column cannot be read: the names there are.
-fn missing(name: &str, header: &[String]) -> String {
-    let names: Vec<&str> = header
-        .iter()
-        .map(String::as_str)
-        .filter(|h| !h.is_empty())
-        .collect();
-    if names.is_empty() {
-        format!("Kaynakta “{name}” alanı yok; kaynağın hiç alanı yok.")
-    } else {
-        format!(
-            "Kaynakta “{name}” alanı yok; alanları: {}.",
-            names.join(", ")
-        )
-    }
-}
-
 fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> RunResult {
     let targets = &v.features("target").entities;
     let from_file = v.text("sourceKind") == "file";
@@ -241,8 +194,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     };
     feedback.progress(0.0, "Anahtarlar eşleniyor");
     let target_keys: Vec<Option<&str>> = targets.iter().map(|t| attr(t, target_key)).collect();
-    let source_keys: Vec<Option<&str>> =
-        rows.iter().map(|r| r.get(k).map(String::as_str)).collect();
+    let source_keys: Vec<Option<&str>> = rows.iter().map(|r| r.get(k).copied()).collect();
     let plan = join_plan(&target_keys, &source_keys);
     let prefix = v.text("prefix");
     let only_empty = v.text("existing") == "empty";
@@ -260,7 +212,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             if only_empty && !js_trim(attr(&current, &name).unwrap_or("")).is_empty() {
                 continue;
             }
-            let cell = rows[m].get(i).map_or("", String::as_str);
+            let cell = rows[m].get(i).copied().unwrap_or("");
             let value = (!cell.is_empty()).then_some(cell);
             if let Some(attrs) = with_attr(ctx, &current, &name, value) {
                 current.base_mut().attrs = attrs;
@@ -273,6 +225,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                 attrs: Some(current.base().attrs.clone()),
                 label: None,
                 zs: None,
+                geometry: None,
             });
         }
     }

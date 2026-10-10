@@ -119,7 +119,7 @@ export const vertexNumbering = defineTool({
 
 | Tür | Pencerede değer (`ParamValues`) | `run`'da değer (`ResolvedValues`) | Seçenekler |
 |---|---|---|---|
-| `features` | `{ scope: 'selection' \| 'visible' \| 'all' }`, `{ scope: 'layer', layerId }`, `{ scope: 'ids', ids }` | `FeatureSet { entities, description }` | `kinds` (uygun nesne türleri), `scopes` (sunulan kapsamlar), `writes` (araç bu nesneleri değiştirir) |
+| `features` | `{ scope: 'selection' \| 'visible' \| 'all' }`, `{ scope: 'layer', layerId }`, `{ scope: 'ids', ids }` | `FeatureSet { entities, description, layerId? }` (`layerId`: katman kapsamında seçilen katman) | `kinds` (uygun nesne türleri), `scopes` (sunulan kapsamlar), `writes` (araç bu nesneleri değiştirir), `allowEmpty` (boş girdi reddedilmez; yazılan böyle bir girdi grup ya da kilitli katman olamaz, eklenenler ona yazılır; ADR 0216 §3) |
 | `number` | `number` | aynı | `min`, `max`, `integer`, `unit` |
 | `string` | `string` | aynı | `placeholder`, `maxLength`, `allowEmpty` |
 | `boolean` | `boolean` | aynı | — |
@@ -131,6 +131,7 @@ export const vertexNumbering = defineTool({
 | `file` | `{ name, rows }` (masaüstünde `path` de) ya da `null` | aynı | `accept` (sunulan uzantılar). Dosya seçilince Tablo ekle'nin okuyucusuyla okunur (ilk sayfa, ilk satır sütun adları; ADR 0200 §7); son değerlerde yalnız adı (masaüstünde yolu) kalır, pencere yeniden açılınca dosya yeniden seçilir (masaüstünde yolundan okunur). Model girdisi olamaz, model adımında seçilmez |
 | `rasterValues` | `{ "<raster adı>": sayı ya da metin }` | aynı | `of` (rasterleri satır olan `features` parametresi; adlar Raster hesaplayıcı'nınki), `cell: 'number' \| 'text'`, `min`, `max`, `placeholder`. Pencere girdinin rasterlerini sırasıyla satır satır gösterir; girdide olmayan adlar soluk, × ile silinir; model adımında ad eklenir. Yazılmayan satırın anlamı aracındır (ADR 0237 §9). Model girdisi olamaz |
 | `rasterPairs` | `[[a, b, v]]` (v 9 … 2 a b'den v kat önemli, 1 eşit, −2 … −9 b a'dan) | aynı | `of`. Pencere her raster çiftine 17 seçenekli bir liste gösterir (ADR 0237 §9). Model girdisi olamaz |
+| `fieldMap` | `[{ target, source, default }]` (Alan eşleme; boş liste: anahtardan başka bütün sütunlar kendi adlarıyla) | aynı | `target` (yazılan `features` parametresi: hedef alanların listesi), `source` (sütunları sunan parametreler; görünen ilki), `key` (kaynağın anahtarını adlandıran `field` parametreleri; adı olan ilki, Aynı adlarla doldur onu atlar). Pencere satır satır: Hedef alan (yazılır ya da seçilir), Kaynak alan ya da “(yok)”, Varsayılan, ×; Satır ekle, Aynı adlarla doldur; sorunlu satır uyarı rengiyle (boş ya da yinelenen hedef, kaynakta olmayan sütun). Çalıştırma boş ya da yinelenen hedefle, 64 karakterden uzun ya da köşeli parantezli adla başlamaz (ADR 0216 §2). Model girdisi olamaz |
 
 Ortak alanlar: `name` (değer anahtarı), `label`, `description`, `optional`,
 `advanced` ("Gelişmiş ayarlar" altında), `visibleWhen` (yalnızca koşul
@@ -337,6 +338,7 @@ türünün işaretidir (bkz. §10).
 | `attributes.fromEnclosing` | Çevreleyenden bilgi al | Her nesneye merkezinin içinde kaldığı alanın bir alanını yazar; birden çok alan: çizim sırasıyla ilki, hiçbiri: değişmez; ikisi de söylenir. |
 | `statistics.summary` | Özet istatistik | Bir alanın sayı, toplam, ortalama, en az, en çok ve standart sapmasını, isteğe bağlı bir alana göre gruplayarak tablo olarak verir; çizimi değiştirmez. |
 | `attributes.joinByField` | Anahtarla birleştir | Ortak anahtarla başka katmandan ya da CSV, TXT, XLSX dosyasından alan aktarır (sayı anahtarlar sayı olarak; kaynakta tekrarlanan anahtarın ilk satırı); önek, Üzerine yaz ya da Yalnız boşlara. |
+| `attributes.transfer` | Veri aktar | Ortak anahtarla başka katmandan ya da CSV, TXT, XLSX dosyasından alan eşlemesiyle aktarır (hedef alan, kaynak sütun, varsayılan); tipli alanlar kurallarıyla, Üzerine yaz ya da Yalnız boşlara, Geometriyi güncelle, Eşleşmeyenleri ekle (katmandan geometrisiyle, dosyadan Doğu ve Kuzey'den nokta), Yalnız raporla; rapor tablosu (ADR 0216). |
 | `proximity.nearest` | En yakını bul | Her nesneye en yakın hedefin uzaklığını, seçilen alanlarını ve isterse semtini önekle yazar; kenardan kenara ya da merkezden merkeze, en çok uzaklıkla; hedefi olmayanın alanları boşaltılır (ADR 0215 §3.1). |
 | `proximity.matrix` | Uzaklık matrisi | Her nesneden en yakın `k` (0: bütün) hedefe uzaklıklar: Liste (sırasıyla), Matris (en çok 200 hedef) ya da Özet (sayı, en az, ortalama, en çok); tablo, en çok 1 000 000 satır; çizimi değiştirmez (§3.2). |
 | `proximity.hub` | En yakın merkeze bağla | Her nesnenin merkezinden en yakın merkezinkine yeni katmanda çizgi; çizgi nesnenin özniteliklerini, Merkez'i ve Uzaklık'ı taşır (§3.3). |

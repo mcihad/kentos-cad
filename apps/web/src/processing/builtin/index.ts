@@ -11,6 +11,7 @@ import { geometryRepair, geometryValidity } from './geometry/validity';
 import { infoFromEnclosing } from './infoFromEnclosing';
 import { infoFromInside } from './infoFromInside';
 import { joinByField } from './joinByField';
+import { transfer } from './transfer';
 import { networkClosestFacility } from './network/closestFacility';
 import { networkOdMatrix } from './network/odMatrix';
 import { networkServiceAreas } from './network/serviceAreas';
@@ -41,6 +42,7 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   infoFromEnclosing,
   summaryStatistics,
   joinByField,
+  transfer,
   // Yakınlık (docs/adr/0215): nearest, distance matrix, nearest hub, neighbours, shortest line.
   ...PROXIMITY_TOOLS,
   geometryBuffer,

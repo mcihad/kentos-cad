@@ -2995,6 +2995,70 @@ SCENES.proximity = [
   { id: 'yakinlik-kisa-cizgi-cizim', open: async (ui) => (await openProximity(ui, 'proximity.shortestLine', SHORTEST_ROADS), await proximityDrawing(ui)), close: queryClose },
 ];
 
+// Veri aktar (docs/adr/0216) on fixtures/processing/v1/transfer.kcad, the scenes the desktop's
+// `processing::transfer_tests::screens` draws: the CBS ribbon's Veri with it in its Öznitelik list, the deed list's window
+// with its field map (and a map with problems after Çalıştır), the report under the form after a run, and the new survey
+// moved and added in the drawing.
+const TRANSFER_DRAWING = readFileSync(new URL('../../../../fixtures/processing/v1/transfer.kcad', import.meta.url), 'utf8');
+const TRANSFER_CASES = JSON.parse(readFileSync(new URL('../../../../fixtures/processing/v1/transfer.json', import.meta.url), 'utf8'));
+/** A case file's CSV as the dialog reads it: its lines, cells split at the semicolons. */
+const transferRows = (name) =>
+  readFileSync(new URL(`../../../../fixtures/processing/v1/${name}`, import.meta.url), 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => line.split(';'));
+/** A shared case's values as the window takes them: the file's name with its rows. */
+const transferValues = (id, over = {}) => {
+  const values = { ...TRANSFER_CASES.cases.find((c) => c.id === id).values, ...over };
+  if (typeof values.file === 'string') values.file = { name: values.file, rows: transferRows(values.file) };
+  return values;
+};
+const loadTransfer = async (ui) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(TRANSFER_DRAWING)}, null))) throw new Error('transfer.kcad did not load');
+    k.view.zoomExtents();
+    k.selection.clear();
+  })()`);
+  await ui.sleep(300);
+};
+const openTransfer = async (ui, values, run) => {
+  await loadTransfer(ui);
+  await ui.eval(openTool('attributes.transfer', values));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  if (run) {
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`['ok', 'invalid', 'warn'].includes(document.querySelector('.ptool__status')?.dataset.kind)`, 8000);
+    await ui.sleep(300);
+  }
+};
+/** The form scrolled to the field map, a little of what is above it showing. */
+const toFieldMap = (ui) =>
+  ui.eval(`(() => { const f = document.querySelector('.ptool__main'); const m = f.querySelector('[data-param="map"]'); f.scrollTop = m.offsetTop - f.offsetTop - 120; })()`);
+const MAP_PROBLEMS = [
+  { target: 'Malik', source: 'MALIK_ADI', default: '' },
+  { target: 'Malik', source: 'HISSE', default: '' },
+  { target: '', source: 'YUZOLCUM', default: '' },
+  { target: 'Durum', source: 'DURUMU', default: 'Tescilli' },
+];
+SCENES.transfer = [
+  { id: 'aktar-serit', open: async (ui) => (await loadTransfer(ui), await ribbonOn(ui, { ribbonTab: 'data' }), await ui.sleep(300)), close: ribbonOff },
+  { id: 'aktar-tapu', open: async (ui) => (await openTransfer(ui, transferValues('deed-mapped'), false), await toFieldMap(ui), await ui.sleep(200)), close: queryClose },
+  {
+    id: 'aktar-eslem-sorun',
+    open: async (ui) => (await openTransfer(ui, transferValues('deed-mapped', { map: MAP_PROBLEMS }), true), await toFieldMap(ui), await ui.sleep(200)),
+    close: queryClose,
+  },
+  { id: 'aktar-rapor', open: async (ui) => (await openTransfer(ui, transferValues('deed-mapped'), true), await formEnd(ui), await ui.sleep(200)), close: queryClose },
+  {
+    id: 'aktar-olcum-cizim',
+    open: async (ui) => (await openTransfer(ui, transferValues('survey-geometry-append'), true), await proximityDrawing(ui)),
+    close: queryClose,
+  },
+];
+
 // Ağ analizi (docs/adr/0209) on fixtures/interaction/v1/networks.kcad, the scenes the desktop's
 // `networks::tests::screens` draws: Ağlar with Yollar and with İçme suyu after Denetle (the form scrolled to its answer),
 // En yakın tesis and Maliyet matrisi after a run, En yakın tesis's ways and Hizmet alanları's areas in the drawing, the

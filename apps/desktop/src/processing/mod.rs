@@ -55,6 +55,8 @@ mod suitability_tests;
 pub(crate) mod surface_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod transfer_tests;
 mod window;
 
 use iced::Task;

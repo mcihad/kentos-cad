@@ -3,7 +3,7 @@ import type { Vec2 } from '../../model/geometry';
 import { attributeFields, type BuilderObjects } from '../../model/expression/builderObjects';
 import { exprCatalog } from '../../model/expression/expressionLib';
 import type { InputSummary } from '../../processing/runner';
-import type { FeaturesValue, FileValue, LayerValue, NetworkValue, ParamDef, RasterPairs, RasterValues } from '../../processing/types';
+import type { FeaturesValue, FieldMap, FileValue, LayerValue, NetworkValue, ParamDef, RasterPairs, RasterValues } from '../../processing/types';
 import { costNames, NETWORK_KIND_LABELS } from '../../model/networkRules';
 import { h } from '../dom';
 import { builderButton } from '../expression/builderApi';
@@ -19,7 +19,9 @@ import {
   attrFieldView,
   expressionView,
   featuresView,
+  fieldMapView,
   fileView,
+  filledMap,
   insertText,
   layerFieldView,
   numberOfText,
@@ -33,6 +35,9 @@ import {
   toggleKind,
   toggledName,
   withLayer,
+  withMapRow,
+  withNewMapRow,
+  withoutMapRow,
   withoutRaster,
   withPair,
   withRasterValue,
@@ -50,8 +55,10 @@ export interface FieldEnv {
   readonly ctx: AppContext;
   /** What a features parameter resolves to ("12 kapalı alan; seçili nesneler"). */
   describe(name: string): InputSummary | undefined;
-  /** What a field parameter's source shown now reads: a layer's objects or a file's columns. */
+  /** What a field parameter's or a field map's source shown now reads: a layer's objects or a file's columns. */
   sourceOf(name: string): InputSummary | undefined;
+  /** A field map's source key: the column Aynı adlarla doldur leaves out (docs/adr/0216 §2). */
+  mapKey?(name: string): string;
   /** Asks for a file parameter's file and sets it (docs/adr/0200 §7). */
   chooseFile(name: string): void;
   /** How an expression parameter works out on its objects now; null when it cannot be run. */
@@ -110,6 +117,8 @@ export function paramControl(def: ParamDef, value: unknown, set: Setter, env: Fi
       return rasterValuesField(def, value as RasterValues | null, set, env);
     case 'rasterPairs':
       return rasterPairsField(def, value as RasterPairs | null, set, env);
+    case 'fieldMap':
+      return fieldMapField(def, value as FieldMap | null, set, env);
   }
 }
 
@@ -168,6 +177,77 @@ function rasterValuesField(def: Extract<ParamDef, { type: 'rasterValues' }>, val
     parts.push(h('div', { class: 'pfield__rasterrow' }, name, add));
   }
   return h('div', { class: 'pfield__rastertable' }, ...parts);
+}
+
+/**
+ * Alan eşleme (docs/adr/0216 §2): a row a target field (typed, or chosen from the target's fields), its source column
+ * (chosen, or “(yok)”) and its default, the row's problem under it and its ×; Satır ekle and Aynı adlarla doldur
+ * under the rows, then what an empty map does or that the columns come with the source.
+ */
+function fieldMapField(def: Extract<ParamDef, { type: 'fieldMap' }>, value: FieldMap | null, set: Setter, env: FieldEnv): HTMLElement {
+  let current: FieldMap = value ?? [];
+  const targets = env.describe(def.target)?.fields.map((f) => f.name);
+  const columns = env.sourceOf(def.name)?.fields.map((f) => f.name);
+  const key = env.mapKey?.(def.name) ?? '';
+  const view = fieldMapView(current, targets, columns, key);
+  const head = h(
+    'div',
+    { class: 'pfield__maprow pfield__maphead' },
+    h('span', null, T.fieldMap.target),
+    h('span', null, T.fieldMap.source),
+    h('span', null, T.fieldMap.default),
+    h('span'),
+  );
+  const rows = view.rows.flatMap((r, i) => {
+    const target = h('input', { class: 'field pfield__combo-input', value: r.target, placeholder: T.fieldMap.target, 'aria-label': `${T.fieldMap.target} ${i + 1}`, spellcheck: 'false', autocomplete: 'off' });
+    target.addEventListener('input', () => {
+      current = withMapRow(current, i, { target: target.value });
+      set(current, false);
+    });
+    // Leaving the name shows what it changed (a name given twice).
+    target.addEventListener('change', () => set(current, true));
+    const open = h('button', { class: 'pfield__combo-btn', type: 'button', 'aria-label': `${T.fieldMap.target} ${i + 1}: var olan alanlar`, 'aria-haspopup': 'listbox' }, icon('chevronDown', 14));
+    const combo = h('div', { class: 'pfield__combo' }, target, open);
+    open.addEventListener('click', () => {
+      const items = view.targets.length
+        ? view.targets.map((name): MenuItem => ({ label: name, radio: true, checked: name === r.target.trim(), run: () => set(withMapRow(current, i, { target: name }), true) }))
+        : [{ label: T.field.none, disabled: true } as MenuItem];
+      const box = combo.getBoundingClientRect();
+      PopupMenu.open(items, box, { owner: open, minWidth: box.width });
+    });
+    const source = new Dropdown({
+      ariaLabel: `${T.fieldMap.source} ${i + 1}`,
+      className: 'pfield__dropdown',
+      items: () => [
+        { label: T.fieldMap.none, radio: true, checked: !r.source.trim(), run: () => set(withMapRow(current, i, { source: '' }), true) },
+        ...view.columns.map((c): MenuItem => ({ label: c, radio: true, checked: c === r.source.trim(), run: () => set(withMapRow(current, i, { source: c }), true) })),
+      ],
+    });
+    source.set(h('span', { class: 'dropdown__text' }, r.source.trim() || T.fieldMap.none));
+    const fallback = h('input', { class: 'field pfield__text', value: r.default, 'aria-label': `${T.fieldMap.default} ${i + 1}`, spellcheck: 'false', autocomplete: 'off' });
+    fallback.addEventListener('input', () => {
+      current = withMapRow(current, i, { default: fallback.value });
+      set(current, false);
+    });
+    const remove = h('button', { class: 'btn btn--icon pfield__rowx', type: 'button', 'aria-label': `${T.fieldMap.remove} ${i + 1}` }, icon('close', 12));
+    remove.addEventListener('click', () => set(withoutMapRow(current, i), true));
+    tooltip(remove, () => ({ title: T.fieldMap.remove }), 'top');
+    const row = h('div', { class: 'pfield__maprow', 'data-invalid': r.problem ? '' : null }, combo, source.el, fallback, remove);
+    return r.problem ? [row, h('div', { class: 'pfield__hint pfield__maphint' }, r.problem)] : [row];
+  });
+  const add = h('button', { class: 'btn', type: 'button' }, icon('plus', 14), T.fieldMap.add);
+  add.addEventListener('click', () => set(withNewMapRow(current), true));
+  const fill = h('button', { class: 'btn', type: 'button', disabled: !view.fills }, icon('fieldMapFill', 14), T.fieldMap.fill);
+  fill.addEventListener('click', () => set(filledMap(current, view.columns, key), true));
+  tooltip(fill, () => ({ title: T.fieldMap.fill, description: T.fieldMap.fillHint }), 'top');
+  return h(
+    'div',
+    { class: 'pfield__map' },
+    view.rows.length ? head : null,
+    ...rows,
+    h('div', { class: 'pfield__mapactions' }, add, fill),
+    view.note ? h('div', { class: 'pfield__hint' }, view.note) : null,
+  );
 }
 
 /** A comparison for each pair of rasters (İkili karşılaştırma, docs/adr/0237 §9): a row a pair, its list of 17. */
@@ -307,7 +387,11 @@ function featuresField(def: Extract<ParamDef, { type: 'features' }>, value: Feat
     dd.set(h('span', { class: 'dropdown__text' }, view.layer.text));
     parts.push(dd.el);
   }
-  parts.push(h('div', { class: 'pfield__count', 'data-empty': view.count.empty ? '' : null }, icon(view.count.empty ? 'warning' : 'check', 14), h('span', null, view.count.text)));
+  // Nothing read is a warning, unless the input may be empty (an empty layer a run adds to): then it is only said.
+  const warn = view.count.empty && !view.count.allowed;
+  parts.push(
+    h('div', { class: 'pfield__count', 'data-empty': warn ? '' : null, 'data-allowed': view.count.allowed ? '' : null }, icon(warn ? 'warning' : view.count.empty ? 'info' : 'check', 14), h('span', null, view.count.text)),
+  );
 
   // Kind filter: only when there is a choice (two or more kinds in scope), or to undo one.
   const kinds = view.kinds;

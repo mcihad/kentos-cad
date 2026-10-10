@@ -146,9 +146,17 @@ pub fn param_from_json(v: &Value) -> Option<ParamDef> {
         "rasterPairs" => ParamKind::RasterPairs {
             of: text(o, "of").unwrap_or_default(),
         },
+        "fieldMap" => ParamKind::FieldMap {
+            target: text(o, "target").unwrap_or_default(),
+            source: texts(o.get("source")).unwrap_or_default(),
+            key: texts(o.get("key")).unwrap_or_default(),
+        },
         _ => return None,
     };
+    // A features input that may be empty (docs/adr/0216 §3); a text's `allowEmpty` is its kind's.
+    let allow_empty = matches!(kind, ParamKind::Features { .. }) && flag(o, "allowEmpty");
     let mut def = ParamDef::new(name, label, kind);
+    def.allow_empty = allow_empty;
     def.description = text(o, "description");
     def.optional = flag(o, "optional");
     def.advanced = flag(o, "advanced");

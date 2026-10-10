@@ -1,0 +1,982 @@
+{
+ "format": "kentos.field-map-cases",
+ "version": 1,
+ "views": [
+  {
+   "title": "empty map, source known",
+   "value": [],
+   "targets": [
+    "Parsel",
+    "Ada",
+    "Malik",
+    "Hisse",
+    "Mahalle"
+   ],
+   "columns": [
+    "PARSEL",
+    "ADA",
+    "MALIK_ADI",
+    "HISSE",
+    "YUZOLCUM",
+    "TESCIL_TARIHI"
+   ],
+   "key": "PARSEL",
+   "expect": {
+    "rows": [],
+    "targets": [
+     "Parsel",
+     "Ada",
+     "Malik",
+     "Hisse",
+     "Mahalle"
+    ],
+    "columns": [
+     "PARSEL",
+     "ADA",
+     "MALIK_ADI",
+     "HISSE",
+     "YUZOLCUM",
+     "TESCIL_TARIHI"
+    ],
+    "note": "Boş: anahtardan başka bütün sütunlar kendi adlarıyla aktarılır.",
+    "fills": true
+   }
+  },
+  {
+   "title": "empty map, no source yet",
+   "value": [],
+   "targets": [
+    "Parsel",
+    "Ada",
+    "Malik",
+    "Hisse",
+    "Mahalle"
+   ],
+   "columns": null,
+   "key": "",
+   "expect": {
+    "rows": [],
+    "targets": [
+     "Parsel",
+     "Ada",
+     "Malik",
+     "Hisse",
+     "Mahalle"
+    ],
+    "columns": [],
+    "note": "Kaynağın sütunları kaynak seçilince gelir.",
+    "fills": false
+   }
+  },
+  {
+   "title": "deed map: rows fine, fill adds the unmapped columns",
+   "value": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "Hisse",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "Alan",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "Durum",
+     "source": "",
+     "default": "Tescilli"
+    }
+   ],
+   "targets": [
+    "Parsel",
+    "Ada",
+    "Malik",
+    "Hisse",
+    "Mahalle"
+   ],
+   "columns": [
+    "PARSEL",
+    "ADA",
+    "MALIK_ADI",
+    "HISSE",
+    "YUZOLCUM",
+    "TESCIL_TARIHI"
+   ],
+   "key": "PARSEL",
+   "expect": {
+    "rows": [
+     {
+      "target": "Malik",
+      "source": "MALIK_ADI",
+      "default": "",
+      "problem": null
+     },
+     {
+      "target": "Hisse",
+      "source": "HISSE",
+      "default": "",
+      "problem": null
+     },
+     {
+      "target": "Alan",
+      "source": "YUZOLCUM",
+      "default": "",
+      "problem": null
+     },
+     {
+      "target": "Durum",
+      "source": "",
+      "default": "Tescilli",
+      "problem": null
+     }
+    ],
+    "targets": [
+     "Parsel",
+     "Ada",
+     "Malik",
+     "Hisse",
+     "Mahalle"
+    ],
+    "columns": [
+     "PARSEL",
+     "ADA",
+     "MALIK_ADI",
+     "HISSE",
+     "YUZOLCUM",
+     "TESCIL_TARIHI"
+    ],
+    "note": null,
+    "fills": true
+   }
+  },
+  {
+   "title": "a row's source the source does not have",
+   "value": [
+    {
+     "target": "Malik",
+     "source": "SAHIBI",
+     "default": ""
+    },
+    {
+     "target": "Ada",
+     "source": " ADA ",
+     "default": ""
+    }
+   ],
+   "targets": [
+    "Parsel",
+    "Ada",
+    "Malik",
+    "Hisse",
+    "Mahalle"
+   ],
+   "columns": [
+    "PARSEL",
+    "ADA",
+    "MALIK_ADI",
+    "HISSE",
+    "YUZOLCUM",
+    "TESCIL_TARIHI"
+   ],
+   "key": "PARSEL",
+   "expect": {
+    "rows": [
+     {
+      "target": "Malik",
+      "source": "SAHIBI",
+      "default": "",
+      "problem": "Kaynakta “SAHIBI” yok."
+     },
+     {
+      "target": "Ada",
+      "source": " ADA ",
+      "default": "",
+      "problem": null
+     }
+    ],
+    "targets": [
+     "Parsel",
+     "Ada",
+     "Malik",
+     "Hisse",
+     "Mahalle"
+    ],
+    "columns": [
+     "PARSEL",
+     "ADA",
+     "MALIK_ADI",
+     "HISSE",
+     "YUZOLCUM",
+     "TESCIL_TARIHI"
+    ],
+    "note": null,
+    "fills": true
+   }
+  },
+  {
+   "title": "a target empty or blank, then a target twice (trimmed)",
+   "value": [
+    {
+     "target": "  ",
+     "source": "ADA",
+     "default": ""
+    },
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": " Malik",
+     "source": "HISSE",
+     "default": ""
+    }
+   ],
+   "targets": [],
+   "columns": [
+    "PARSEL",
+    "ADA",
+    "MALIK_ADI",
+    "HISSE",
+    "YUZOLCUM",
+    "TESCIL_TARIHI"
+   ],
+   "key": "PARSEL",
+   "expect": {
+    "rows": [
+     {
+      "target": "  ",
+      "source": "ADA",
+      "default": "",
+      "problem": "Hedef alan boş."
+     },
+     {
+      "target": "Malik",
+      "source": "MALIK_ADI",
+      "default": "",
+      "problem": null
+     },
+     {
+      "target": " Malik",
+      "source": "HISSE",
+      "default": "",
+      "problem": "“Malik” iki satırda hedef."
+     }
+    ],
+    "targets": [],
+    "columns": [
+     "PARSEL",
+     "ADA",
+     "MALIK_ADI",
+     "HISSE",
+     "YUZOLCUM",
+     "TESCIL_TARIHI"
+    ],
+    "note": null,
+    "fills": true
+   }
+  },
+  {
+   "title": "columns not known: sources are not checked",
+   "value": [
+    {
+     "target": "Malik",
+     "source": "SAHIBI",
+     "default": ""
+    }
+   ],
+   "targets": [
+    "Parsel",
+    "Ada",
+    "Malik",
+    "Hisse",
+    "Mahalle"
+   ],
+   "columns": null,
+   "key": "PARSEL",
+   "expect": {
+    "rows": [
+     {
+      "target": "Malik",
+      "source": "SAHIBI",
+      "default": "",
+      "problem": null
+     }
+    ],
+    "targets": [
+     "Parsel",
+     "Ada",
+     "Malik",
+     "Hisse",
+     "Mahalle"
+    ],
+    "columns": [],
+    "note": "Kaynağın sütunları kaynak seçilince gelir.",
+    "fills": false
+   }
+  },
+  {
+   "title": "every column mapped: nothing to fill",
+   "value": [
+    {
+     "target": "ADA",
+     "source": "ADA",
+     "default": ""
+    },
+    {
+     "target": "MALIK_ADI",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "HISSE",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "YUZOLCUM",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "TESCIL_TARIHI",
+     "source": "TESCIL_TARIHI",
+     "default": ""
+    }
+   ],
+   "targets": [],
+   "columns": [
+    "PARSEL",
+    "ADA",
+    "MALIK_ADI",
+    "HISSE",
+    "YUZOLCUM",
+    "TESCIL_TARIHI"
+   ],
+   "key": "PARSEL",
+   "expect": {
+    "rows": [
+     {
+      "target": "ADA",
+      "source": "ADA",
+      "default": "",
+      "problem": null
+     },
+     {
+      "target": "MALIK_ADI",
+      "source": "MALIK_ADI",
+      "default": "",
+      "problem": null
+     },
+     {
+      "target": "HISSE",
+      "source": "HISSE",
+      "default": "",
+      "problem": null
+     },
+     {
+      "target": "YUZOLCUM",
+      "source": "YUZOLCUM",
+      "default": "",
+      "problem": null
+     },
+     {
+      "target": "TESCIL_TARIHI",
+      "source": "TESCIL_TARIHI",
+      "default": "",
+      "problem": null
+     }
+    ],
+    "targets": [],
+    "columns": [
+     "PARSEL",
+     "ADA",
+     "MALIK_ADI",
+     "HISSE",
+     "YUZOLCUM",
+     "TESCIL_TARIHI"
+    ],
+    "note": null,
+    "fills": false
+   }
+  },
+  {
+   "title": "the key mapped too: fill adds the rest only",
+   "value": [
+    {
+     "target": "PARSEL",
+     "source": "PARSEL",
+     "default": ""
+    }
+   ],
+   "targets": [],
+   "columns": [
+    "PARSEL",
+    "ADA"
+   ],
+   "key": "",
+   "expect": {
+    "rows": [
+     {
+      "target": "PARSEL",
+      "source": "PARSEL",
+      "default": "",
+      "problem": null
+     }
+    ],
+    "targets": [],
+    "columns": [
+     "PARSEL",
+     "ADA"
+    ],
+    "note": null,
+    "fills": true
+   }
+  },
+  {
+   "title": "columns known but empty",
+   "value": [],
+   "targets": [],
+   "columns": [],
+   "key": "",
+   "expect": {
+    "rows": [],
+    "targets": [],
+    "columns": [],
+    "note": "Boş: anahtardan başka bütün sütunlar kendi adlarıyla aktarılır.",
+    "fills": false
+   }
+  }
+ ],
+ "fills": [
+  {
+   "title": "an empty map takes every column but the key",
+   "value": [],
+   "columns": [
+    "PARSEL",
+    "ADA",
+    "MALIK_ADI",
+    "HISSE",
+    "YUZOLCUM",
+    "TESCIL_TARIHI"
+   ],
+   "key": "PARSEL",
+   "expect": [
+    {
+     "target": "ADA",
+     "source": "ADA",
+     "default": ""
+    },
+    {
+     "target": "MALIK_ADI",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "HISSE",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "YUZOLCUM",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "TESCIL_TARIHI",
+     "source": "TESCIL_TARIHI",
+     "default": ""
+    }
+   ]
+  },
+  {
+   "title": "rows kept, columns no row takes added in order",
+   "value": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "Hisse",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "Alan",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "Durum",
+     "source": "",
+     "default": "Tescilli"
+    }
+   ],
+   "columns": [
+    "PARSEL",
+    "ADA",
+    "MALIK_ADI",
+    "HISSE",
+    "YUZOLCUM",
+    "TESCIL_TARIHI"
+   ],
+   "key": "PARSEL",
+   "expect": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "Hisse",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "Alan",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "Durum",
+     "source": "",
+     "default": "Tescilli"
+    },
+    {
+     "target": "ADA",
+     "source": "ADA",
+     "default": ""
+    },
+    {
+     "target": "TESCIL_TARIHI",
+     "source": "TESCIL_TARIHI",
+     "default": ""
+    }
+   ]
+  },
+  {
+   "title": "a column named as a target is not added again",
+   "value": [
+    {
+     "target": "ADA",
+     "source": "",
+     "default": "101"
+    }
+   ],
+   "columns": [
+    "PARSEL",
+    "ADA",
+    "MALIK_ADI",
+    "HISSE",
+    "YUZOLCUM",
+    "TESCIL_TARIHI"
+   ],
+   "key": " PARSEL ",
+   "expect": [
+    {
+     "target": "ADA",
+     "source": "",
+     "default": "101"
+    },
+    {
+     "target": "MALIK_ADI",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "HISSE",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "YUZOLCUM",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "TESCIL_TARIHI",
+     "source": "TESCIL_TARIHI",
+     "default": ""
+    }
+   ]
+  },
+  {
+   "title": "blank, repeated and key columns left out",
+   "value": [],
+   "columns": [
+    "",
+    "Ad",
+    "Ad",
+    " Kod ",
+    "Anahtar"
+   ],
+   "key": "Anahtar",
+   "expect": [
+    {
+     "target": "Ad",
+     "source": "Ad",
+     "default": ""
+    },
+    {
+     "target": "Kod",
+     "source": "Kod",
+     "default": ""
+    }
+   ]
+  },
+  {
+   "title": "no key: every column",
+   "value": [],
+   "columns": [
+    "A",
+    "B"
+   ],
+   "key": "",
+   "expect": [
+    {
+     "target": "A",
+     "source": "A",
+     "default": ""
+    },
+    {
+     "target": "B",
+     "source": "B",
+     "default": ""
+    }
+   ]
+  }
+ ],
+ "problems": [
+  {
+   "title": "fine",
+   "name": "“Alan eşleme”",
+   "value": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "Hisse",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "Alan",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "Durum",
+     "source": "",
+     "default": "Tescilli"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "title": "empty",
+   "name": "“Alan eşleme”",
+   "value": [],
+   "expect": null
+  },
+  {
+   "title": "second row's target empty",
+   "name": "“Alan eşleme”",
+   "value": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": " ",
+     "source": "HISSE",
+     "default": ""
+    }
+   ],
+   "expect": "“Alan eşleme”: 2. satırın hedef alanı boş."
+  },
+  {
+   "title": "a target twice, trimmed",
+   "name": "“Alan eşleme”",
+   "value": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "Malik ",
+     "source": "HISSE",
+     "default": ""
+    }
+   ],
+   "expect": "“Alan eşleme”: “Malik” iki satırda hedef."
+  },
+  {
+   "title": "a target 65 characters long",
+   "name": "“Alan eşleme”",
+   "value": [
+    {
+     "target": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "source": "A",
+     "default": ""
+    }
+   ],
+   "expect": "“Alan eşleme”: alan adı en çok 64 karakter olabilir."
+  },
+  {
+   "title": "a source with a bracket",
+   "name": "“Alan eşleme”",
+   "value": [
+    {
+     "target": "Malik",
+     "source": "MALIK[1]",
+     "default": ""
+    }
+   ],
+   "expect": "“Alan eşleme”: alan adında köşeli parantez kullanılamaz."
+  },
+  {
+   "title": "a target of 64 characters is fine",
+   "name": "“Alan eşleme”",
+   "value": [
+    {
+     "target": "şşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşş",
+     "source": "",
+     "default": ""
+    }
+   ],
+   "expect": null
+  },
+  {
+   "title": "an emoji counts two",
+   "name": "“Alan eşleme”",
+   "value": [
+    {
+     "target": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+     "source": "",
+     "default": ""
+    }
+   ],
+   "expect": "“Alan eşleme”: alan adı en çok 64 karakter olabilir."
+  }
+ ],
+ "edits": [
+  {
+   "op": "set",
+   "value": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "Hisse",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "Alan",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "Durum",
+     "source": "",
+     "default": "Tescilli"
+    }
+   ],
+   "index": 3,
+   "patch": {
+    "default": "Beyanlı"
+   },
+   "expect": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "Hisse",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "Alan",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "Durum",
+     "source": "",
+     "default": "Beyanlı"
+    }
+   ]
+  },
+  {
+   "op": "set",
+   "value": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "Hisse",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "Alan",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "Durum",
+     "source": "",
+     "default": "Tescilli"
+    }
+   ],
+   "index": 0,
+   "patch": {
+    "source": ""
+   },
+   "expect": [
+    {
+     "target": "Malik",
+     "source": "",
+     "default": ""
+    },
+    {
+     "target": "Hisse",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "Alan",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "Durum",
+     "source": "",
+     "default": "Tescilli"
+    }
+   ]
+  },
+  {
+   "op": "remove",
+   "value": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "Hisse",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "Alan",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "Durum",
+     "source": "",
+     "default": "Tescilli"
+    }
+   ],
+   "index": 1,
+   "expect": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "Alan",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "Durum",
+     "source": "",
+     "default": "Tescilli"
+    }
+   ]
+  },
+  {
+   "op": "add",
+   "value": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "Hisse",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "Alan",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "Durum",
+     "source": "",
+     "default": "Tescilli"
+    }
+   ],
+   "expect": [
+    {
+     "target": "Malik",
+     "source": "MALIK_ADI",
+     "default": ""
+    },
+    {
+     "target": "Hisse",
+     "source": "HISSE",
+     "default": ""
+    },
+    {
+     "target": "Alan",
+     "source": "YUZOLCUM",
+     "default": ""
+    },
+    {
+     "target": "Durum",
+     "source": "",
+     "default": "Tescilli"
+    },
+    {
+     "target": "",
+     "source": "",
+     "default": ""
+    }
+   ]
+  },
+  {
+   "op": "add",
+   "value": [],
+   "expect": [
+    {
+     "target": "",
+     "source": "",
+     "default": ""
+    }
+   ]
+  }
+ ]
+}

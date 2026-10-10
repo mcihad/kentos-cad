@@ -171,7 +171,12 @@ export class ProcessingRunner {
   validate(tool: ProcessingTool, values: Record<string, unknown>): ValidationIssue[] {
     const layers = this.host.doc.layers;
     const networks = this.host.doc.settings.networks.value;
-    return validateValues(tool, values, { layerExists: (id) => !!layers.get(id), layerLocked: (id) => layers.isLocked(id), network: (id) => networks.find((n) => n.id === id) });
+    return validateValues(tool, values, {
+      layerExists: (id) => !!layers.get(id),
+      layerLocked: (id) => layers.isLocked(id),
+      layerIsGroup: (id) => layers.get(id)?.type === 'group',
+      network: (id) => networks.find((n) => n.id === id),
+    });
   }
 
   /**
@@ -348,11 +353,11 @@ export class ProcessingRunner {
             return { status: 'invalid', issues: [{ param: p.name, message: `“${p.label}”: ${LOCKED_WHERE[fv.scope]} hepsi kilitli katmanda. Kilidi Katmanlar panelinden açın.` }] };
           notes.push(`“${p.label}”: ${locked} nesne kilitli katmanda olduğu için işleme alınmadı.`);
         }
-        // Running on nothing is a mistake worth stopping (usually: nothing selected);
-        // an empty output passed along a model is not.
-        if (!entities.length && !p.optional && fv.scope !== 'ids') return { status: 'invalid', issues: [{ param: p.name, message: emptyInputMessage(p.label, fv) }] };
+        // Running on nothing is a mistake worth stopping (usually: nothing selected); an empty output passed along a
+        // model is not, nor an input that may be empty (a layer a run may only add to, docs/adr/0216 §3).
+        if (!entities.length && !p.optional && !p.allowEmpty && fv.scope !== 'ids') return { status: 'invalid', issues: [{ param: p.name, message: emptyInputMessage(p.label, fv) }] };
         size += entities.length;
-        jobValues[p.name] = { ids: entities.map((e) => e.id), description: set.description } satisfies FeatureRef;
+        jobValues[p.name] = { ids: entities.map((e) => e.id), description: set.description, ...(fv.scope === 'layer' && { layerId: fv.layerId }) } satisfies FeatureRef;
       }
       if (p.type === 'layer') {
         const t = this.resolveLayer(v as LayerValue);

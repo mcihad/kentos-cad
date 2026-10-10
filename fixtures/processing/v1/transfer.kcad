@@ -1,0 +1,546 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: veri aktarma",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "integer",
+     "required": true
+    },
+    {
+     "name": "Ada",
+     "kind": "integer",
+     "required": true
+    },
+    {
+     "name": "Malik",
+     "kind": "text",
+     "length": 40
+    },
+    {
+     "name": "Hisse",
+     "kind": "text"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal",
+     "scale": 2
+    },
+    {
+     "name": "Tescil",
+     "kind": "date"
+    },
+    {
+     "name": "Durum",
+     "kind": "text",
+     "default": "Beyanlı"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text",
+     "required": true,
+     "default": "Merkez"
+    }
+   ]
+  },
+  {
+   "id": "olcum",
+   "name": "Yeni ölçüm",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E63DD",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "nokta",
+   "name": "Nokta",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#30A46C",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yeni",
+   "name": "Yeni parseller",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#F76B15",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "arsiv",
+   "name": "Arşiv",
+   "type": "layer",
+   "visible": true,
+   "locked": true,
+   "expanded": true,
+   "style": {
+    "color": "#8E8C99",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "paftalar",
+   "name": "Paftalar",
+   "type": "group",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [
+    {
+     "id": "pafta1",
+     "name": "Pafta 1",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "#E5484D",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    }
+   ]
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "1",
+    "Ada": "101",
+    "Malik": "Ali Veli",
+    "Hisse": "1",
+    "Mahalle": "Merkez"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420000
+    },
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487020,
+     "y": 4420020
+    },
+    {
+     "x": 487000,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 2,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "2",
+    "Ada": "101",
+    "Malik": "",
+    "Mahalle": "Merkez"
+   },
+   "pts": [
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487040,
+     "y": 4420000
+    },
+    {
+     "x": 487040,
+     "y": 4420020
+    },
+    {
+     "x": 487020,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 3,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "3",
+    "Ada": "101",
+    "Malik": "Ayşe Kaya",
+    "Hisse": "1/2",
+    "Alan": "400.00",
+    "Mahalle": "Yeni"
+   },
+   "pts": [
+    {
+     "x": 487040,
+     "y": 4420000
+    },
+    {
+     "x": 487060,
+     "y": 4420000
+    },
+    {
+     "x": 487060,
+     "y": 4420020
+    },
+    {
+     "x": 487040,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 4,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "4",
+    "Ada": "101",
+    "Mahalle": "Merkez"
+   },
+   "pts": [
+    {
+     "x": 487060,
+     "y": 4420000
+    },
+    {
+     "x": 487080,
+     "y": 4420000
+    },
+    {
+     "x": 487080,
+     "y": 4420020
+    },
+    {
+     "x": 487060,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 5,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "5",
+    "Ada": "101",
+    "Malik": "Veli Can",
+    "Mahalle": "Merkez"
+   },
+   "pts": [
+    {
+     "x": 487080,
+     "y": 4420000
+    },
+    {
+     "x": 487100,
+     "y": 4420000
+    },
+    {
+     "x": 487100,
+     "y": 4420020
+    },
+    {
+     "x": 487080,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 6,
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "101",
+    "Mahalle": "Merkez"
+   },
+   "pts": [
+    {
+     "x": 487100,
+     "y": 4420000
+    },
+    {
+     "x": 487120,
+     "y": 4420000
+    },
+    {
+     "x": 487120,
+     "y": 4420020
+    },
+    {
+     "x": 487100,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 11,
+   "layerId": "olcum",
+   "attrs": {
+    "Parsel": "2",
+    "Ada": "101",
+    "Malik": "Fatma Ak",
+    "Alan": "410.5"
+   },
+   "pts": [
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487040.5,
+     "y": 4420000
+    },
+    {
+     "x": 487040.5,
+     "y": 4420020
+    },
+    {
+     "x": 487020,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 12,
+   "layerId": "olcum",
+   "attrs": {
+    "Parsel": "3",
+    "Ada": "101",
+    "Malik": "Ayşe Kaya",
+    "Alan": "400"
+   },
+   "pts": [
+    {
+     "x": 487040,
+     "y": 4420000
+    },
+    {
+     "x": 487060,
+     "y": 4420000
+    },
+    {
+     "x": 487060,
+     "y": 4420020
+    },
+    {
+     "x": 487040,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 13,
+   "layerId": "olcum",
+   "attrs": {
+    "Parsel": "4",
+    "Ada": "101",
+    "Malik": "Can Er"
+   },
+   "pts": [
+    {
+     "x": 487060,
+     "y": 4420000
+    },
+    {
+     "x": 487080,
+     "y": 4420000
+    },
+    {
+     "x": 487080,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 14,
+   "layerId": "olcum",
+   "attrs": {
+    "Parsel": "7",
+    "Ada": "102",
+    "Malik": "Zeynep Tan"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420030
+    },
+    {
+     "x": 487020,
+     "y": 4420030
+    },
+    {
+     "x": 487020,
+     "y": 4420050
+    },
+    {
+     "x": 487000,
+     "y": 4420050
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 15,
+   "layerId": "olcum",
+   "attrs": {
+    "Parsel": "8",
+    "Malik": "Ada yok"
+   },
+   "pts": [
+    {
+     "x": 487020,
+     "y": 4420030
+    },
+    {
+     "x": 487040,
+     "y": 4420030
+    },
+    {
+     "x": 487040,
+     "y": 4420050
+    },
+    {
+     "x": 487020,
+     "y": 4420050
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 16,
+   "layerId": "olcum",
+   "attrs": {
+    "Parsel": "002",
+    "Ada": "101",
+    "Malik": "Yinelenen"
+   },
+   "pts": [
+    {
+     "x": 487020,
+     "y": 4420060
+    },
+    {
+     "x": 487040,
+     "y": 4420060
+    },
+    {
+     "x": 487040,
+     "y": 4420080
+    },
+    {
+     "x": 487020,
+     "y": 4420080
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 21,
+   "layerId": "nokta",
+   "attrs": {
+    "Ad": "N1",
+    "Kod": "eski"
+   },
+   "p": {
+    "x": 487005,
+    "y": 4420100
+   }
+  },
+  {
+   "kind": "point",
+   "id": 22,
+   "layerId": "nokta",
+   "attrs": {
+    "Ad": "N2"
+   },
+   "p": {
+    "x": 487015,
+    "y": 4420100
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

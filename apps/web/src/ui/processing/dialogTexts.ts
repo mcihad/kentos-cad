@@ -123,6 +123,21 @@ export const DIALOG_TEXTS = {
     even: 'Eşit',
     times: (n: number) => `${n} kat`,
   },
+  fieldMap: {
+    target: 'Hedef alan',
+    source: 'Kaynak alan',
+    default: 'Varsayılan',
+    none: '(yok)',
+    add: 'Satır ekle',
+    fill: 'Aynı adlarla doldur',
+    fillHint: 'Kaynağın anahtar dışındaki, henüz eşlenmemiş her sütunu kendi adıyla bir satır olur.',
+    remove: 'Satırı kaldır',
+    empty: 'Boş: anahtardan başka bütün sütunlar kendi adlarıyla aktarılır.',
+    noSource: 'Kaynağın sütunları kaynak seçilince gelir.',
+    emptyTarget: 'Hedef alan boş.',
+    twice: (name: string) => `“${name}” iki satırda hedef.`,
+    noColumn: (name: string) => `Kaynakta “${name}” yok.`,
+  },
 } as const;
 
 /** The scopes' names on the features field's segmented control. */

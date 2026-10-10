@@ -18,6 +18,8 @@ import type { DefaultsContext, DocumentSnapshot, ExecutionTarget, Feedback, Feat
 export interface FeatureRef {
   readonly ids: readonly number[];
   readonly description: string;
+  /** The layer chosen, when the scope is a layer (`FeatureSet.layerId`, docs/adr/0216 §3). */
+  readonly layerId?: string;
 }
 
 export interface RunJob {
@@ -67,7 +69,7 @@ export function materialize(tool: ProcessingTool, values: RunJob['values'], doc:
     const v = values[p.name];
     if (p.type === 'features' && isFeatureRef(v)) {
       const entities = v.ids.flatMap((id) => doc.get(id) ?? []);
-      out[p.name] = { entities, description: v.description } satisfies FeatureSet;
+      out[p.name] = { entities, description: v.description, ...(v.layerId !== undefined && { layerId: v.layerId }) } satisfies FeatureSet;
     } else if (p.type === 'expression' && typeof v === 'string') {
       const src = v.trim();
       const r = src ? compileExpression(src, { variables, world: true }) : null;
@@ -88,6 +90,7 @@ export function jobContext(job: RunJob, doc: DocumentSnapshot, geometry: RunGeom
     layerName: (id) => names.get(id) ?? id,
     geometry,
     field: (layerId, name) => fields.get(layerId)?.find((f) => f.name === name),
+    fields: (layerId) => fields.get(layerId) ?? [],
     crs: job.crs ?? null,
     project: job.project ?? { srid: 0, type: null },
     layerIndex: (id) => order.get(id) ?? Number.MAX_SAFE_INTEGER,

@@ -621,6 +621,11 @@ export const ICONS = {
     '<path d="M9 3.2H2.8l3.4 4.6-3.4 4.6H9" stroke-width="1.4"/><path d="M11.8 17v-5M14.8 17V8.5M17.8 17v-6.5" stroke-width="2"/><path d="M10.3 17.2h8.5" stroke-width="1.1"/>',
   joinField:
     '<circle cx="5.2" cy="5.2" r="2.7"/><path d="m7.1 7.1 4 4M9.3 9.3l1.3-1.3M10.6 10.6l1.3-1.3" stroke-width="1.3"/><rect x="10.5" y="11" width="7.5" height="6.5" rx=".8"/><path d="M10.5 14.2h7.5M14.2 11v6.5" stroke-width="1.1"/>',
+  // Veri aktar (docs/adr/0216 §6): a table's rows into a layer; Aynı adlarla doldur: each column to the field of its name.
+  dataTransfer:
+    '<rect x="1.8" y="3" width="8" height="9" rx=".9" stroke-width="1.3"/><path d="M1.8 6h8M1.8 9h8M4.8 6v6" stroke-width="1.1"/><path d="M8.6 14.6h3.6M10.9 13.2l1.4 1.4-1.4 1.4" stroke-width="1.2"/><path d="m15.4 9.4 3.2 1.7-3.2 1.7-3.2-1.7z" stroke-width="1.2"/><path d="m12.2 14.1 3.2 1.7 3.2-1.7" stroke-width="1.2"/>',
+  fieldMapFill:
+    '<path d="M2.5 5h4.5M2.5 10h4.5M2.5 15h4.5" stroke-width="1.4"/><path d="M8.6 5h3M8.6 10h3M8.6 15h3" stroke-width="1.1"/><path d="m10.6 3.8 1.2 1.2-1.2 1.2M10.6 8.8l1.2 1.2-1.2 1.2M10.6 13.8l1.2 1.2-1.2 1.2" stroke-width="1.1"/><path d="M13.5 5h4M13.5 10h4M13.5 15h4" stroke-width="1.4"/>',
   // Geometri işlemleri (docs/adr/0201), the owner's choices (7 October): a path and its buffer's band; crop marks
   // about a clipped area; a 2 × 2 block, three of a group joined; Venn circles for Kesişim, Fark, Simetrik fark and
   // Birleşim, the result filled; a ring crossing itself under a magnifier; the ring fallen into its two triangles,

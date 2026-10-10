@@ -333,6 +333,7 @@ class ToolDialog {
       ctx: this.ctx,
       describe: (n) => this.env.inputs[n],
       sourceOf: (n) => this.env.sourceOf(n),
+      mapKey: (n) => this.env.mapKey(n),
       chooseFile: (n) => void this.chooseFile(n),
       previewExpression: (n) => runner.previewExpression(this.tool, this.state.values, n),
       builderObjects: (n) => runner.builderObjects(this.tool, this.state.values, n),

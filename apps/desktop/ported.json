@@ -213,6 +213,7 @@
     "processing.run.attributes.fromEnclosing",
     "processing.run.statistics.summary",
     "processing.run.attributes.joinByField",
+    "processing.run.attributes.transfer",
     "processing.run.proximity.nearest",
     "processing.run.proximity.matrix",
     "processing.run.proximity.hub",

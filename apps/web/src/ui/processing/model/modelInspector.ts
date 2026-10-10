@@ -2,7 +2,7 @@ import type { AppContext } from '../../../app/context';
 import { ENTITY_KIND_LABEL, type EntityKind } from '../../../model/entities';
 import { stepName, type ModelIssue, type ProcessingModel } from '../../../processing/model';
 import { addOutput as addModelOutput, INPUT_TYPES, inputFromParam, inputTypeFor, removeInput, removeStep, setCaption, setSource, sourcesFor } from '../../../processing/modelEdit';
-import { defaultValue, fieldSource, isVisible } from '../../../processing/parameters';
+import { defaultValue, fieldMapKey, fieldSource, firstShown, isVisible } from '../../../processing/parameters';
 import type { FeaturesValue, ParamDef, ProcessingTool } from '../../../processing/types';
 import { h } from '../../dom';
 import { icon } from '../../icons';
@@ -249,8 +249,12 @@ function stepInspector(host: InspectorHost, stepId: string): HTMLElement {
     sourceOf: (name) => {
       const def = tool.parameters.find((p) => p.name === name);
       const values = fixed();
-      const src = def?.type === 'field' ? fieldSource(tool, def, values) : undefined;
+      const src = def?.type === 'field' ? fieldSource(tool, def, values) : def?.type === 'fieldMap' ? firstShown(tool, def.source, values) : undefined;
       return src ? runner.describeInputs(tool, values)[src] : undefined;
+    },
+    mapKey: (name) => {
+      const def = tool.parameters.find((p) => p.name === name);
+      return def?.type === 'fieldMap' ? fieldMapKey(def, fixed()) : '';
     },
     // A file's rows are not kept in a model (docs/adr/0200 §7): a step reads a layer instead.
     chooseFile: () => ctx.log.info(DIALOG_TEXTS.file.inModel),

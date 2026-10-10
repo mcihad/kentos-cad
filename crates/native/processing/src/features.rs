@@ -208,11 +208,16 @@ fn narrow<'d>(
         None => candidates,
     };
     let doc = host.doc();
+    let layer_id = match &value.scope {
+        Scope::Layer(id) => Some(id.clone()),
+        _ => None,
+    };
     if entities.is_empty() {
         let description = format!("{} uygun nesne yok", where_in(&value.scope, doc));
         return FeatureSet {
             entities,
             description,
+            layer_id,
         };
     }
     let place = match &value.scope {
@@ -223,6 +228,7 @@ fn narrow<'d>(
     FeatureSet {
         entities,
         description,
+        layer_id,
     }
 }
 
@@ -244,7 +250,7 @@ pub struct InputSummary {
 
 /// A chosen file's table as a field parameter reads it: its rows, and its
 /// named columns (each once, in the file's order) with how many rows fill each.
-pub fn summarize_file(header: &[String], rows: &[Vec<String>]) -> InputSummary {
+pub fn summarize_file(header: &[String], rows: &[Vec<&str>]) -> InputSummary {
     let mut fields: Vec<(String, usize)> = Vec::new();
     for (i, name) in header.iter().enumerate() {
         if name.is_empty() || fields.iter().any(|(n, _)| n == name) {

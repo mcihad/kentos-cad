@@ -3,7 +3,7 @@
 //! chips; numbers with their unit; texts; switches; choices as buttons or a
 //! list; the target layer, new or existing; a point shown on the drawing;
 //! an attribute name, typed or picked; an expression with its fields,
-//! variables, functions and a live line.
+//! variables, functions and a live line; a field map's rows.
 
 use std::fmt;
 
@@ -134,6 +134,11 @@ pub(super) fn control<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, M
             ..
         } => raster_values(def, of, *number, placeholder.as_deref(), env),
         ParamKind::RasterPairs { of } => raster_pairs(def, of, env),
+        ParamKind::FieldMap {
+            target,
+            source,
+            key,
+        } => field_map(def, target, source, key, env),
         ParamKind::Expression {
             of, placeholder, ..
         } => expression(def, of.as_deref(), placeholder.as_deref(), env),
@@ -218,11 +223,15 @@ fn features<'a>(
     }
     let found = env.window.inputs.get(&def.name);
     let empty = found.is_none_or(|f| f.count == 0);
+    // Nothing read is a warning, unless the input may be empty (an empty layer a run adds to): then it is only said.
+    let (glyph, tone) = match (empty, def.allow_empty) {
+        (false, _) => (Icon::Check, Tone::Success),
+        (true, false) => (Icon::Warning, Tone::Warning),
+        (true, true) => (Icon::Info, Tone::Muted),
+    };
     parts = parts.push(
         row![
-            icon(if empty { Icon::Warning } else { Icon::Check })
-                .size(14.0)
-                .tone(if empty { Tone::Warning } else { Tone::Success }),
+            icon(glyph).size(14.0).tone(tone),
             label::body(found.map(|f| f.description.clone()).unwrap_or_default())
                 .style(style::text::muted),
         ]
@@ -1149,4 +1158,199 @@ fn raster_pairs<'a>(def: &'a ParamDef, of: &str, env: &Env<'a, '_>) -> Element<'
         col = col.push(label::caption(note).style(style::text::muted));
     }
     col.into()
+}
+
+/// The names a summary offers (a layer's objects' fields, or a file's columns), most common first.
+fn names_of(summary: Option<&kentos_processing::InputSummary>) -> Option<Vec<String>> {
+    summary.map(|s| s.fields.iter().map(|(n, _)| n.clone()).collect())
+}
+
+/// Alan eşleme (docs/adr/0216 §2; the web's `fieldMapField`): a row a
+/// target field (typed, or picked from the target's fields), its source
+/// column (or none) and its default, its × last; a row with a problem framed
+/// in the warning colour, its reason under it; Satır ekle and Aynı adlarla
+/// doldur under the rows, the note last.
+fn field_map<'a>(
+    def: &'a ParamDef,
+    target: &str,
+    source: &[String],
+    key: &[String],
+    env: &Env<'a, '_>,
+) -> Element<'a, Message> {
+    use kentos_processing::field_map::{self as fm, Part};
+    use kentos_processing::parameters::{field_map_key, field_source};
+    let ev = env.send;
+    let map = fm::read(env.value(&def.name)).unwrap_or_default();
+    let targets = names_of(env.window.inputs.get(target));
+    let columns = names_of(
+        field_source(&env.window.tool, source, &env.window.values)
+            .and_then(|p| env.window.inputs.get(&p.name)),
+    );
+    let key = field_map_key(key, &env.window.values);
+    let view = fm::view(&map, targets.as_deref(), columns.as_deref(), &key);
+    // The columns' shares (the web's 1.15 : 1 : 0.85) and the ×'s width.
+    let (wide, mid, narrow) = (23, 20, 17);
+    let cross = Length::Fixed(typography::scaled(24.0));
+    let set =
+        move |name: &str, map: &[fm::MapRow]| ev(Event::Value(name.to_owned(), fm::value_of(map)));
+    let mut col = Column::new().spacing(4).width(Fill);
+    if !view.rows.is_empty() {
+        let head = |t: &'static str, share: u16| {
+            container(label::caption(t).style(style::text::muted))
+                .width(Length::FillPortion(share))
+                .clip(true)
+        };
+        col = col.push(
+            row![
+                head(fm::TARGET, wide),
+                head(fm::SOURCE, mid),
+                head(fm::DEFAULT, narrow),
+                Row::new().width(cross)
+            ]
+            .spacing(6),
+        );
+    }
+    for (i, r) in view.rows.iter().enumerate() {
+        let warn = r.problem.is_some();
+        let framed = move |theme: &iced::Theme, status| {
+            let base = style::field::input(theme, status);
+            if warn {
+                iced::widget::text_input::Style {
+                    border: iced::Border {
+                        color: kentos_ui::theme::Tokens::of(theme).warning,
+                        ..base.border
+                    },
+                    ..base
+                }
+            } else {
+                base
+            }
+        };
+        let (name, current) = (def.name.clone(), map.clone());
+        let typed = text_input(fm::TARGET, &r.target)
+            .padding([5, 8])
+            .font(typography::ui())
+            .size(typography::body())
+            .style(framed)
+            .on_input(move |t| set(&name, &fm::with_part(&current, i, Part::Target, &t)))
+            .on_submit(ev(Event::Run));
+        let (name, current, offered, chosen) = (
+            def.name.clone(),
+            map.clone(),
+            view.targets.clone(),
+            js_trim_owned(&r.target),
+        );
+        let menu = move || {
+            if offered.is_empty() {
+                return Menu::new().item("Bu nesnelerde öznitelik alanı yok", None);
+            }
+            offered.iter().fold(Menu::new(), |m, f| {
+                m.radio(
+                    f.clone(),
+                    *f == chosen,
+                    set(&name, &fm::with_part(&current, i, Part::Target, f)),
+                )
+            })
+        };
+        let open = MenuButton::new(
+            container(icon(Icon::ChevronDown).size(14.0).tone(Tone::Muted))
+                .padding([6, 8])
+                .style(style::container::field_box),
+            menu,
+        );
+        let combo = row![focus_ring(typed.width(Fill)), open]
+            .spacing(2)
+            .align_y(Center);
+        let source = js_trim_owned(&r.source);
+        let at = if source.is_empty() {
+            Some(0)
+        } else {
+            view.columns
+                .iter()
+                .position(|c| *c == source)
+                .map(|k| k + 1)
+        };
+        let (name, current, columns) = (def.name.clone(), map.clone(), view.columns.clone());
+        let pick = Select::new(
+            std::iter::once(Choice::new(fm::NONE)).chain(view.columns.iter().map(Choice::new)),
+            at,
+            move |k| {
+                let column = k
+                    .checked_sub(1)
+                    .and_then(|k| columns.get(k))
+                    .map_or("", String::as_str);
+                set(&name, &fm::with_part(&current, i, Part::Source, column))
+            },
+        )
+        .placeholder(if source.is_empty() {
+            fm::NONE.to_owned()
+        } else {
+            source
+        });
+        let (name, current) = (def.name.clone(), map.clone());
+        let fallback = text_input("", &r.default)
+            .padding([5, 8])
+            .font(typography::ui())
+            .size(typography::body())
+            .style(framed)
+            .on_input(move |t| set(&name, &fm::with_part(&current, i, Part::Default, &t)))
+            .on_submit(ev(Event::Run));
+        let remove = tip(
+            button(icon(Icon::Close).size(12.0))
+                .padding(4)
+                .style(style::button::ghost)
+                .on_press(set(&def.name, &fm::without_row(&map, i))),
+            Tip::new(fm::REMOVE),
+            iced::widget::tooltip::Position::Top,
+        );
+        col = col.push(
+            row![
+                container(combo).width(Length::FillPortion(wide)),
+                container(pick).width(Length::FillPortion(mid)),
+                container(focus_ring(fallback.width(Fill))).width(Length::FillPortion(narrow)),
+                container(remove).width(cross).center_x(cross),
+            ]
+            .spacing(6)
+            .align_y(Center),
+        );
+        if let Some(problem) = &r.problem {
+            col = col.push(label::caption(problem.clone()).style(style::text::warning));
+        }
+    }
+    let add = button(
+        row![icon(Icon::Plus).size(14.0), label::body(fm::ADD)]
+            .spacing(6)
+            .align_y(Center),
+    )
+    .padding([5, 10])
+    .style(style::button::secondary)
+    .on_press(set(&def.name, &fm::with_new_row(&map)));
+    let fill = tip(
+        button(
+            row![
+                icon(crate::icons::from_web(Some("fieldMapFill"))).size(14.0),
+                label::body(fm::FILL)
+            ]
+            .spacing(6)
+            .align_y(Center),
+        )
+        .padding([5, 10])
+        .style(style::button::secondary)
+        .on_press_maybe(
+            view.fills
+                .then(|| set(&def.name, &fm::filled(&map, &view.columns, &key))),
+        ),
+        Tip::new(fm::FILL).body(fm::FILL_HINT),
+        iced::widget::tooltip::Position::Top,
+    );
+    col = col.push(row![add, fill].spacing(6).align_y(Center));
+    if let Some(note) = view.note {
+        col = col.push(label::caption(note).style(style::text::muted));
+    }
+    col.into()
+}
+
+/// A name as the run reads it: trimmed (JavaScript's white space).
+fn js_trim_owned(s: &str) -> String {
+    kentos_processing::text::js_trim(s).to_owned()
 }

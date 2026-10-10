@@ -209,6 +209,22 @@ const ITEMS = [
   // Yakınlık (docs/adr/0215): Komşu alanlar's switches and fields, Uzaklık matrisi's three-way choice.
   { id: 'processing-proximity', open: (ui) => ui.run('processing.run.proximity.neighbors'), ready: '.dialog--ptool' },
   { id: 'processing-proximity-matrix', open: (ui) => ui.run('processing.run.proximity.matrix'), ready: '.dialog--ptool' },
+  // Veri aktar (docs/adr/0216 §6): the form as it opens (no file yet: the field map's note), and a map of four rows with
+  // long names, one with a problem (the rows share the width; names are cut, not the buttons).
+  { id: 'processing-transfer', open: (ui) => ui.run('processing.run.attributes.transfer'), ready: '.dialog--ptool' },
+  {
+    id: 'processing-transfer-map',
+    open: (ui) =>
+      ui.eval(
+        `import('/src/ui/processing/ToolDialog.ts').then((m) => m.openToolDialog(window.kentos, 'attributes.transfer', { map: ${JSON.stringify([
+          { target: 'Malik adı ve soyadı (tapu kaydındaki gibi)', source: 'MALIK_ADI_SOYADI_TAPU_KAYDI', default: '' },
+          { target: 'Hisse', source: 'HISSE', default: '1/1' },
+          { target: 'Yüzölçümü', source: 'YUZOLCUM', default: '' },
+          { target: 'Hisse', source: '', default: 'Tescilli ve beyanlı kayıtlarda yazılan uzun bir değer' },
+        ])} }))`,
+      ),
+    ready: '.dialog--ptool .pfield__map',
+  },
   // Zaman ve senaryolar (docs/adr/0210 §10): Zaman ayarları over the parcels, Senaryo oluştur with the tree's layers,
   // and the time slider's bar under the drawing (the parcels given years for it; both steps undone on closing).
   { id: 'time-layer', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('parsel')`), await ui.run('time.layer')), ready: '.dialog--time-layer' },

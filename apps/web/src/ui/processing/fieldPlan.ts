@@ -5,7 +5,7 @@ import type { LayerStore } from '../../model/layers';
 import type { InputSummary } from '../../processing/features';
 import { fieldNames, fileTable, scopesOf } from '../../processing/parameters';
 import { sameNamedLayer } from '../../processing/runner';
-import type { FeaturesValue, FileValue, LayerValue, ParamDef, RasterPairs, RasterValues } from '../../processing/types';
+import type { FeaturesValue, FieldMap, FieldMapRow, FileValue, LayerValue, ParamDef, RasterPairs, RasterValues } from '../../processing/types';
 import { DIALOG_TEXTS as T } from './dialogTexts';
 
 /**
@@ -94,8 +94,11 @@ export interface FeaturesView {
   scope: ListedScope;
   /** The Katman scope's layer list. */
   layer: { text: string; items: { id: string; label: string; checked: boolean }[] } | null;
-  /** What the input reads now; a warning when nothing. */
-  count: { text: string; empty: boolean };
+  /**
+   * What the input reads now; a warning when nothing, unless the input may be empty (`allowed`: Veri aktar's target,
+   * which a run may only add to, docs/adr/0216 §3).
+   */
+  count: { text: string; empty: boolean; allowed?: true };
   kinds: { chips: KindChip[] } | { note: string } | null;
 }
 
@@ -106,7 +109,7 @@ export function featuresView(def: FeaturesParam, value: FeaturesValue, found: In
       value.scope === 'layer'
         ? { text: layers.name(value.layerId) ?? T.features.noLayer, items: layers.leaves.map((l) => ({ id: l.id, label: l.path, checked: l.id === value.layerId })) }
         : null,
-    count: { text: found?.description ?? '', empty: !found?.count },
+    count: { text: found?.description ?? '', empty: !found?.count, ...(def.allowEmpty && !found?.count ? { allowed: true as const } : {}) },
     kinds: kindsView(def, value, found?.byKind ?? []),
   };
 }
@@ -364,4 +367,69 @@ export function rasterPairsView(value: RasterPairs | null | undefined, rasters: 
 export function withPair(value: RasterPairs | null | undefined, a: string, b: string, v: number): RasterPairs {
   const rest = (value ?? []).filter(([x, y]) => !((x === a && y === b) || (x === b && y === a)));
   return v === 1 ? rest : [...rest, [a, b, v] as const];
+}
+
+// ── Alan eşleme (docs/adr/0216 §2) ──────────────────────────────────────
+
+/** A field map's row as the field shows it: what is typed, and why it cannot run (shown on the row), or null. */
+export interface FieldMapRowView {
+  target: string;
+  source: string;
+  default: string;
+  problem: string | null;
+}
+
+export interface FieldMapView {
+  rows: FieldMapRowView[];
+  /** The target's fields, offered in a row's target list. */
+  targets: string[];
+  /** The source's columns, offered in a row's source list; empty while they are not known. */
+  columns: string[];
+  /** Under the rows: what an empty map does, or that the columns come with the source. */
+  note: string | null;
+  /** Aynı adlarla doldur can add a row (the columns are known and one is not mapped yet). */
+  fills: boolean;
+}
+
+/**
+ * The rows with their problems, in order: a target left empty, a target an earlier row has, a source column the
+ * source does not have (only when its columns are known: `columns` undefined while no source is read).
+ */
+export function fieldMapView(value: FieldMap | null | undefined, targets: readonly string[] | undefined, columns: readonly string[] | undefined, key: string): FieldMapView {
+  const map = value ?? [];
+  const seen = new Set<string>();
+  const rows = map.map((r): FieldMapRowView => {
+    const target = r.target.trim();
+    const source = r.source.trim();
+    const problem = !target ? T.fieldMap.emptyTarget : seen.has(target) ? T.fieldMap.twice(target) : columns && source && !columns.includes(source) ? T.fieldMap.noColumn(source) : null;
+    if (target) seen.add(target);
+    return { target: r.target, source: r.source, default: r.default, problem };
+  });
+  const note = columns === undefined ? T.fieldMap.noSource : map.length ? null : T.fieldMap.empty;
+  return { rows, targets: [...(targets ?? [])], columns: [...(columns ?? [])], note, fills: !!columns && filledMap(map, columns, key).length > map.length };
+}
+
+/** A row's part typed or chosen. */
+export const withMapRow = (map: FieldMap | null | undefined, i: number, patch: Partial<FieldMapRow>): FieldMap => (map ?? []).map((r, k) => (k === i ? { ...r, ...patch } : r));
+
+/** A row taken away (×). */
+export const withoutMapRow = (map: FieldMap | null | undefined, i: number): FieldMap => (map ?? []).filter((_, k) => k !== i);
+
+/** Satır ekle: an empty row last. */
+export const withNewMapRow = (map: FieldMap | null | undefined): FieldMap => [...(map ?? []), { target: '', source: '', default: '' }];
+
+/**
+ * Aynı adlarla doldur: the rows as they are, then a row under its own name for each column (in the source's order) but
+ * the key, one no row takes as its source and none has as its target yet.
+ */
+export function filledMap(map: FieldMap | null | undefined, columns: readonly string[], key: string): FieldMap {
+  const out: FieldMapRow[] = [...(map ?? [])];
+  const taken = new Set(out.flatMap((r) => [r.target.trim(), r.source.trim()]));
+  for (const c of columns) {
+    const name = c.trim();
+    if (!name || name === key.trim() || taken.has(name)) continue;
+    taken.add(name);
+    out.push({ target: name, source: name, default: '' });
+  }
+  return out;
 }

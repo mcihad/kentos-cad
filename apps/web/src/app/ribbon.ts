@@ -448,7 +448,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Süzgeç', icon: 'layerFilter', commands: ['layer.filter', 'layer.filterFromSelection', 'layer.filterClear'] },
       { menu: 'file', sections: ['Dosya alışverişi'] },
       { menu: 'crs', sections: ['Koordinatlar'] },
-      { pick: 'Öznitelik', icon: 'fieldCalc', commands: [processingCommandId('attributes.calculate'), processingCommandId('selection.byExpression')] },
+      // Veri aktar (docs/adr/0216 §6): a table's rows into a layer beside the attribute tools.
+      { pick: 'Öznitelik', icon: 'fieldCalc', commands: [processingCommandId('attributes.calculate'), processingCommandId('selection.byExpression'), processingCommandId('attributes.transfer')] },
       // The drawing's block definitions are its library, as its layers and attributes are; its pictures beside them (docs/adr/0192 §5).
       { menu: 'draw', sections: ['Blok', 'Resim'] },
       // Raster katmanları (docs/adr/0204 §8): QGIS's Add Raster Layer and Georeferencer; Mesh ekle (docs/adr/0243 §11), its Add Mesh Layer.

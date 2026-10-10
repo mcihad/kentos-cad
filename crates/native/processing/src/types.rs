@@ -267,6 +267,15 @@ pub enum ParamKind {
     RasterPairs {
         of: String,
     },
+    /// Alan eşleme (docs/adr/0216 §2): `[{ target, source, default }]`, which source column, or which
+    /// default, each target field takes. `target` names the features parameter written to, `source` the
+    /// parameters the columns come from (the first shown is read), `key` the field parameters naming the
+    /// source's key (the first with a name: Aynı adlarla doldur leaves its column out).
+    FieldMap {
+        target: String,
+        source: Vec<String>,
+        key: Vec<String>,
+    },
 }
 
 /// When a parameter is shown (the web's `visibleWhen`).
@@ -307,6 +316,8 @@ pub struct ParamDef {
     /// numbering's start vertex, docs/adr/0088): the option, and the point
     /// parameter the pick fills. The window offers “Sahneden seç” beside it.
     pub picks: Option<(String, String)>,
+    /// A features input that may hold no object (`allow_empty`).
+    pub allow_empty: bool,
 }
 
 impl ParamDef {
@@ -321,7 +332,15 @@ impl ParamDef {
             default: None,
             kind,
             picks: None,
+            allow_empty: false,
         }
+    }
+
+    /// An input that may hold no object (Veri aktar's target layer, which a run may only add to,
+    /// docs/adr/0216 §3): not refused when empty; its layer's id comes with it (`FeatureSet::layer_id`).
+    pub fn allow_empty(mut self) -> Self {
+        self.allow_empty = true;
+        self
     }
 
     /// Picking a point on the drawing chooses `option` and fills `point`.
@@ -388,6 +407,7 @@ impl ParamDef {
             ParamKind::Network { .. } => "network",
             ParamKind::RasterValues { .. } => "rasterValues",
             ParamKind::RasterPairs { .. } => "rasterPairs",
+            ParamKind::FieldMap { .. } => "fieldMap",
         }
     }
 }
@@ -489,6 +509,8 @@ pub struct Tool {
 pub struct FeatureSet<'d> {
     pub entities: Vec<&'d Entity>,
     pub description: String,
+    /// The layer chosen, when the scope is a layer (an empty one too, `ParamDef::allow_empty`).
+    pub layer_id: Option<String>,
 }
 
 /// Where a layer parameter writes: an existing layer, or one the runner creates on apply.
@@ -589,6 +611,14 @@ impl RunContext<'_> {
             .iter()
             .find(|f| f.name == name)
     }
+
+    /// A layer's fields in their order (a new object's defaults and required fields, docs/adr/0216 §4).
+    pub fn fields(&self, layer_id: &str) -> &[LayerField] {
+        self.doc
+            .layers()
+            .get(layer_id)
+            .map_or(&[], |l| l.fields.as_slice())
+    }
 }
 
 /// Progress, messages and cancellation, shared with the dialog.
@@ -606,13 +636,17 @@ pub trait Feedback {
 
 /// A change to one object: its whole attribute table and, when it changes,
 /// its label; or its vertices' elevations (Eğrilere kot ver, docs/adr/0234
-/// §9), each path's in `kentos_native_application::elevation::paths`' order.
+/// §9), each path's in `kentos_native_application::elevation::paths`' order;
+/// or its shape (Veri aktar's Geometriyi güncelle, docs/adr/0216 §4).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Patch {
     pub id: Slot,
     pub attrs: Option<BTreeMap<String, String>>,
     pub label: Option<Option<String>>,
     pub zs: Option<Vec<Vec<Option<f64>>>>,
+    /// An object of its kind whose shape it takes: every field but those every object has
+    /// (`EntityBase`: its id, layer, look, attributes and labels stay its own).
+    pub geometry: Option<Box<Entity>>,
 }
 
 /// The document edits a run asks for, applied by the runner in one transaction.

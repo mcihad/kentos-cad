@@ -80,6 +80,27 @@ fn plain(e: &Entity) -> Value {
     v
 }
 
+/// An object's geometry as the cases write it: without its kind and what is
+/// not geometry (Veri aktar's Geometriyi güncelle, docs/adr/0216 §4).
+fn geometry_part(e: &Value) -> Value {
+    let mut g = e.clone();
+    if let Some(o) = g.as_object_mut() {
+        for k in [
+            "kind",
+            "layerId",
+            "attrs",
+            "color",
+            "label",
+            "symbol",
+            "lineWeight",
+            "labelPins",
+        ] {
+            o.remove(k);
+        }
+    }
+    g
+}
+
 /// The drawing's objects (by id) and layer tree, to compare before and after.
 #[derive(Debug, PartialEq)]
 struct State {
@@ -443,6 +464,11 @@ fn observed(s: &Seen) -> Value {
                         if let Some(label) = e.get("label") {
                             u["label"] = label.clone();
                         }
+                        // A changed geometry is written too (Veri aktar's Geometriyi güncelle).
+                        let now = geometry_part(e);
+                        if geometry_part(old) != now {
+                            u["geometry"] = now;
+                        }
                         updated.push(u);
                     }
                     Some(_) => {}
@@ -573,10 +599,24 @@ fn check_measured(c: &Value, mut s: Seen, tol: f64, measure_tol: f64) -> Vec<Str
             }
         }
     }
+    // A changed geometry is compared when the case writes one for an update (Veri aktar's Geometriyi
+    // güncelle); the elevations a run writes are compared below.
+    let wanted_updates = or_empty(&want["updated"]);
+    let shapes = wanted_updates
+        .as_array()
+        .is_some_and(|u| u.iter().any(|u| u.get("geometry").is_some()));
+    let mut got_updates = got["updated"].clone();
+    if !shapes {
+        for u in got_updates.as_array_mut().into_iter().flatten() {
+            if let Some(o) = u.as_object_mut() {
+                o.remove("geometry");
+            }
+        }
+    }
     expect(
-        same(&got["updated"], &or_empty(&want["updated"])),
+        same(&got_updates, &wanted_updates),
         "değişen",
-        &got["updated"],
+        &got_updates,
         &want["updated"],
     );
     // The vertices' elevations of the objects a run changed (Eğrilere kot ver), each path's in `elevation::paths`' order.
@@ -738,6 +778,189 @@ fn the_proximity_cases_do_what_they_say() {
         report.join("\n"),
         problems.join("\n")
     );
+}
+
+/// Veri aktar's cases (docs/adr/0216): written by the independent reference
+/// (scripts/fixtures/transfer_cases.py); the same run here and on the
+/// drawing's reading copy as the background runs it.
+#[test]
+fn the_transfer_cases_do_what_they_say() {
+    let file = case_file("transfer.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check(c, play(c, &registry, false, &file["files"]), tol);
+        found.extend(check(c, play(c, &registry, true, &file["files"]), tol));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 7, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
+/// The scene of Veri aktar's timing (docs/adr/0216 §7), the web's too
+/// (apps/web/scripts/perf/transfer.test.ts): 10 000 parcels on a layer with
+/// typed fields, and a deed list of 10 000 rows, 9 900 of them the parcels'
+/// and 100 new ones with their east and north.
+pub fn transfer_scene() -> (Document, Values) {
+    let (e0, n0) = (487_000.0, 4_420_000.0);
+    let mut entities = Vec::with_capacity(10_000);
+    for i in 0..10_000usize {
+        let (x, y) = (e0 + (i % 100) as f64 * 20.0, n0 + (i / 100) as f64 * 20.0);
+        entities.push(format!(
+            r#"{{"kind":"polygon","id":{},"layerId":"parsel","attrs":{{"Parsel":"{}","Ada":"101","Mahalle":"Merkez"}},"pts":[{{"x":{x},"y":{y}}},{{"x":{},"y":{y}}},{{"x":{},"y":{}}},{{"x":{x},"y":{}}}]}}"#,
+            i + 1,
+            i + 1,
+            x + 20.0,
+            x + 20.0,
+            y + 20.0,
+            y + 20.0
+        ));
+    }
+    let fields = r#"[{"name":"Parsel","kind":"integer","required":true},{"name":"Ada","kind":"integer","required":true},
+        {"name":"Malik","kind":"text","length":40},{"name":"Hisse","kind":"text"},{"name":"Alan","kind":"decimal","scale":2},
+        {"name":"Tescil","kind":"date"},{"name":"Durum","kind":"text","default":"Beyanlı"},
+        {"name":"Mahalle","kind":"text","required":true,"default":"Merkez"}]"#;
+    let json = format!(
+        r#"{{"format":"kentos.document","version":1,"name":"Tapu","settings":{{"srid":5256,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000,"workspace":"gis","drawingFont":"barlow"}},
+            "origin":{{"x":{e0},"y":{n0}}},"layers":[{{"id":"parsel","name":"Parsel","type":"layer","visible":true,"locked":false,"expanded":true,
+            "style":{{"color":"fg","lineType":"continuous","lineWeight":0.25}},"fields":{fields},"children":[]}}],"activeLayer":"parsel","entities":[{}],"styles":{{"items":[],"categories":[]}}}}"#,
+        entities.join(",")
+    );
+    let doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&json).expect("the drawing reads"))
+            .expect("the drawing opens");
+    let mut rows = vec![json!([
+        "PARSEL",
+        "ADA",
+        "MALIK_ADI",
+        "HISSE",
+        "YUZOLCUM",
+        "TESCIL_TARIHI",
+        "Y",
+        "X"
+    ])];
+    for i in 1..=10_000usize {
+        let key = if i <= 9_900 { i } else { 10_000 + i - 9_900 };
+        rows.push(json!([
+            key.to_string(),
+            "101",
+            format!("Malik {i}"),
+            "1/2",
+            format!("{},25", 400 + i % 100),
+            "03.05.2021",
+            format!("{}", e0 + 2_100.0 + (i % 10) as f64),
+            format!("{}", n0 + (i / 10) as f64)
+        ]));
+    }
+    let values: Values = [
+        ("target", json!({ "scope": "layer", "layerId": "parsel" })),
+        ("targetKey", json!("Parsel")),
+        ("sourceKind", json!("file")),
+        ("file", json!({ "name": "tapu.csv", "rows": rows })),
+        ("sourceKey", json!("PARSEL")),
+        (
+            "map",
+            json!([
+                { "target": "Malik", "source": "MALIK_ADI", "default": "" },
+                { "target": "Hisse", "source": "HISSE", "default": "" },
+                { "target": "Alan", "source": "YUZOLCUM", "default": "" },
+                { "target": "Tescil", "source": "TESCIL_TARIHI", "default": "" },
+                { "target": "Ada", "source": "ADA", "default": "" },
+            ]),
+        ),
+        ("existing", json!("overwrite")),
+        ("geometry", json!(false)),
+        ("append", json!(true)),
+        ("east", json!("Y")),
+        ("north", json!("X")),
+        ("reportOnly", json!(false)),
+    ]
+    .into_iter()
+    .map(|(k, v)| (k.to_owned(), v))
+    .collect();
+    (doc, values)
+}
+
+/// Veri aktar's whole run (docs/adr/0216 §7) on the scene above: the
+/// runner's check, the tool and its one undo step, after a warm-up, each run
+/// undone before the next; p50 and p95 against the ADR's budget. Run on purpose:
+/// `cargo test --release -p kentos-processing --test cases transfer_timing -- --ignored --nocapture`.
+#[test]
+#[ignore = "timing, run by hand in release"]
+fn transfer_timing() {
+    use std::time::Instant;
+    let (doc, values) = transfer_scene();
+    let tool = Registry::builtin()
+        .tool("attributes.transfer")
+        .expect("Veri aktar");
+    let mut host = TestHost {
+        doc,
+        selection: Vec::new(),
+        view: None,
+    };
+    let mut runner = Runner::new();
+    let mut ms = Vec::new();
+    let mut summary = String::new();
+    for run in 0..12 {
+        let mut log = Vec::new();
+        let t = Instant::now();
+        let outcome = runner.run(&mut host, &tool, &values, true, &mut log);
+        let took = t.elapsed().as_secs_f64() * 1e3;
+        let Outcome::Ok { record, .. } = outcome else {
+            panic!("the run: {log:?}");
+        };
+        summary = record.summary;
+        assert!(host.doc.undo().is_some(), "one step");
+        if run >= 2 {
+            ms.push(took);
+        }
+    }
+    ms.sort_by(f64::total_cmp);
+    let (p50, p95) = (
+        ms[ms.len() / 2],
+        ms[(ms.len() * 95 / 100).min(ms.len() - 1)],
+    );
+    println!(
+        "Veri aktar, 10 000 parsel ve 10 000 satır (beş alan, 100 ekleme): p50 {p50:.1} ms, p95 {p95:.1} ms, bütçe 120 ms\n  {summary}"
+    );
+    // Its parts, once: the check and the inputs, the tool, the one undo step.
+    let mut log = Vec::new();
+    let t = Instant::now();
+    let Prepared::Ready(job) = runner.prepare(&host, &tool, &values, true, &mut log) else {
+        panic!("prepared: {log:?}");
+    };
+    let prepared = t.elapsed().as_secs_f64() * 1e3;
+    let t = Instant::now();
+    let result = Runner::compute(
+        &job,
+        &host.doc,
+        &mut Apart {
+            log: &mut log,
+            files: None,
+        },
+    );
+    let computed = t.elapsed().as_secs_f64() * 1e3;
+    let t = Instant::now();
+    runner.finish(&mut host, job, result, false, &mut log);
+    println!(
+        "  hazırlık {prepared:.1} ms, araç {computed:.1} ms, uygulama {:.1} ms",
+        t.elapsed().as_secs_f64() * 1e3
+    );
+    assert!(p50 <= 120.0, "p50 {p50:.1} ms > 120 ms");
 }
 
 /// The geometry tools' cases (docs/adr/0201): the same run here and on the

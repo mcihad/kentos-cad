@@ -9,6 +9,7 @@ pub mod info_from_enclosing;
 pub mod info_from_inside;
 pub mod interpolation;
 pub mod join_by_field;
+pub mod join_source;
 pub mod models;
 pub mod multidim;
 pub mod network;
@@ -25,6 +26,7 @@ pub mod stats;
 pub mod suitability;
 pub mod summary_statistics;
 pub mod surface;
+pub mod transfer;
 pub mod vertex_numbering;
 
 use crate::model::Model;
@@ -42,6 +44,7 @@ pub fn tools() -> Vec<Tool> {
         info_from_enclosing::tool(),
         summary_statistics::tool(),
         join_by_field::tool(),
+        transfer::tool(),
         // Yakınlık (docs/adr/0215): both platforms.
         proximity::nearest::tool(),
         proximity::matrix::tool(),

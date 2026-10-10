@@ -142,6 +142,8 @@ const TEXT_SAMPLES: Record<string, unknown> = {
   lacking: 'Ada',
   size: { rows: 4, columns: 3 },
   times: 3,
+  twice: 'Malik',
+  noColumn: 'SAHIBI',
 };
 
 /** The dialog's texts as the file writes them: a text made from a value as `{ sample, text }`. */

@@ -99,6 +99,11 @@ export interface FeaturesParam<N extends string = string> extends ParamBase<N> {
    * summary, the outputs and a model's next step count only what is written.
    */
   readonly writes?: boolean;
+  /**
+   * An input that may hold no object (Veri aktar's target layer, which a run may only add to, docs/adr/0216 §3): not
+   * refused when empty. Its layer's id comes with it when its scope is a layer (`FeatureSet.layerId`).
+   */
+  readonly allowEmpty?: boolean;
 }
 
 export interface NumberParam<N extends string = string> extends ParamBase<N> {
@@ -254,6 +259,33 @@ export interface RasterValuesParam<N extends string = string> extends ParamBase<
   readonly default?: RasterValues;
 }
 
+/**
+ * A row of a field map (docs/adr/0216 §2): the target's field, the source's column (empty: none) and the value when the
+ * column's cell is blank (empty: none).
+ */
+export interface FieldMapRow {
+  readonly target: string;
+  readonly source: string;
+  readonly default: string;
+}
+
+/** A field map's rows; none: every source column but the key, under its own name. */
+export type FieldMap = readonly FieldMapRow[];
+
+/**
+ * Alan eşleme (docs/adr/0216 §2): which source column, or which default, each target field takes. `target` names the
+ * features parameter written to, `source` the parameters the columns come from (the first shown is read: a layer or a
+ * file, as a field parameter's `of`).
+ */
+export interface FieldMapParam<N extends string = string> extends ParamBase<N> {
+  readonly type: 'fieldMap';
+  readonly target: string;
+  readonly source: readonly string[];
+  /** The field parameters naming the source's key, the first with a name: Aynı adlarla doldur leaves its column out. */
+  readonly key?: readonly string[];
+  readonly default?: FieldMap;
+}
+
 /** A comparison for each pair of the features parameter `of`'s rasters (İkili karşılaştırma, docs/adr/0237 §9). */
 export interface RasterPairsParam<N extends string = string> extends ParamBase<N> {
   readonly type: 'rasterPairs';
@@ -274,7 +306,8 @@ export type ParamDef =
   | FileParam
   | NetworkParam
   | RasterValuesParam
-  | RasterPairsParam;
+  | RasterPairsParam
+  | FieldMapParam;
 export type ParamType = ParamDef['type'];
 
 /** A parameter's value as the dialog and history hold it. */
@@ -302,7 +335,9 @@ export type ValueOf<D> = D extends { type: 'features' }
                       ? RasterValues
                       : D extends { type: 'rasterPairs' }
                         ? RasterPairs
-                        : never;
+                        : D extends { type: 'fieldMap' }
+                          ? FieldMap
+                          : never;
 
 type Maybe<D, T> = D extends { optional: true } ? T | null : T;
 
@@ -313,6 +348,8 @@ export type ParamValues<Ds extends readonly ParamDef[]> = { [D in Ds[number] as 
 export interface FeatureSet {
   readonly entities: readonly Entity[];
   readonly description: string;
+  /** The layer chosen, when the scope is a layer (an empty one too, `allowEmpty`). */
+  readonly layerId?: string;
 }
 
 /** Where a layer parameter writes: an existing layer, or one the runner creates on apply. */
@@ -378,6 +415,8 @@ export interface RunContext {
   readonly geometry: RunGeometry;
   /** A layer's field of that name (docs/adr/0199 §1): what a value written to the attribute becomes. */
   field(layerId: string, name: string): LayerField | undefined;
+  /** A layer's fields in their order (a new object's defaults and required fields, docs/adr/0216 §4). */
+  fields(layerId: string): readonly LayerField[];
   /** The project's coordinate system as the transforms read it (docs/adr/0201 §8); null without one. */
   readonly crs: ProjectCrs | null;
   /** The project's SRID and type (a raster made from points takes them, docs/adr/0232). */

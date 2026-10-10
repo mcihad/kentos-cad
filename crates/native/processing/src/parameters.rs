@@ -3,9 +3,11 @@
 //! messages for the user, and restoring stored values (last run, history)
 //! safely after a tool's parameters changed.
 
+use kentos_contracts::LayerNodeType;
 use kentos_domain::LayerTree;
 use serde_json::{Value, json};
 
+use crate::field_map;
 use crate::text::{js_number, js_trim, utf16_len};
 use crate::types::{DefaultValue, Defaults, ParamDef, ParamKind, ScopeKind, Tool, Values};
 use crate::values::{FeaturesValue, LayerValue, Scope, point};
@@ -50,7 +52,7 @@ pub fn default_value(def: &ParamDef, d: &Defaults) -> Value {
         ParamKind::Layer { .. } => json!({ "layerId": d.active_layer }),
         ParamKind::Point | ParamKind::File { .. } => Value::Null,
         ParamKind::RasterValues { .. } => json!({}),
-        ParamKind::RasterPairs { .. } => json!([]),
+        ParamKind::RasterPairs { .. } | ParamKind::FieldMap { .. } => json!([]),
         ParamKind::Network { prefers } => d
             .networks
             .iter()
@@ -77,8 +79,8 @@ pub fn is_visible(def: &ParamDef, values: &Values) -> bool {
         .is_none_or(|when| when.holds(values))
 }
 
-/// The parameter a field's names come from: the first of `of` that is shown
-/// (docs/adr/0200 §6).
+/// The first of these parameters that is shown: the source a field's names
+/// come from (docs/adr/0200 §6), or a field map's columns (docs/adr/0216 §2).
 pub fn field_source<'t>(tool: &'t Tool, of: &[String], values: &Values) -> Option<&'t ParamDef> {
     of.iter().find_map(|n| {
         tool.parameters
@@ -86,6 +88,16 @@ pub fn field_source<'t>(tool: &'t Tool, of: &[String], values: &Values) -> Optio
             .find(|p| &p.name == n)
             .filter(|p| is_visible(p, values))
     })
+}
+
+/// A field map's source key (docs/adr/0216 §2): the first of its `key`
+/// parameters that names one, trimmed; else empty.
+pub fn field_map_key(key: &[String], values: &Values) -> String {
+    key.iter()
+        .filter_map(|n| values.get(n).and_then(Value::as_str).map(js_trim))
+        .find(|s| !s.is_empty())
+        .unwrap_or_default()
+        .to_owned()
 }
 
 /// The names a field parameter holds: one, or several written with commas
@@ -104,23 +116,37 @@ pub fn field_names(multiple: bool, value: &str) -> Vec<String> {
         .collect()
 }
 
-/// A file value's rows (`{ name, rows }`); none without them.
-pub fn file_rows(v: &Value) -> Option<Vec<Vec<String>>> {
+/// A file value's rows (`{ name, rows }`), their cells read where they
+/// are; none without them.
+pub fn file_rows(v: &Value) -> Option<Vec<Vec<&str>>> {
     v.get("rows")?
         .as_array()?
         .iter()
         .map(|r| {
             r.as_array()?
                 .iter()
-                .map(|c| c.as_str().map(str::to_owned))
+                .map(Value::as_str)
                 .collect::<Option<Vec<_>>>()
         })
         .collect()
 }
 
+/// Whether a file value's rows, when it has them, are rows of texts: what
+/// [`file_rows`] reads, checked without reading it.
+fn rows_fit(v: &Value) -> bool {
+    v.get("rows").is_none_or(|r| {
+        r.as_array().is_some_and(|rows| {
+            rows.iter().all(|row| {
+                row.as_array()
+                    .is_some_and(|cells| cells.iter().all(Value::is_string))
+            })
+        })
+    })
+}
+
 /// A file parameter's table as fields read it: the first row's names
 /// (trimmed), then the rows; none without rows.
-pub fn file_table(v: &Value) -> Option<(Vec<String>, Vec<Vec<String>>)> {
+pub fn file_table(v: &Value) -> Option<(Vec<String>, Vec<Vec<&str>>)> {
     let mut rows = file_rows(v)?;
     if rows.is_empty() {
         return None;
@@ -191,11 +217,7 @@ pub fn fits(def: &ParamDef, v: &Value) -> bool {
         }
         ParamKind::Layer { .. } => LayerValue::read(v).is_some(),
         ParamKind::Point => point(v).is_some(),
-        ParamKind::File { .. } => {
-            v.get("name").is_some_and(Value::is_string)
-                && v.get("rows")
-                    .is_none_or(|r| file_rows(v).is_some() && r.is_array())
-        }
+        ParamKind::File { .. } => v.get("name").is_some_and(Value::is_string) && rows_fit(v),
         ParamKind::SaveFile { .. } => v.is_string(),
         ParamKind::Network { .. } => {
             v.get("network").is_some_and(Value::is_string)
@@ -220,6 +242,7 @@ pub fn fits(def: &ParamDef, v: &Value) -> bool {
                 })
             })
         }),
+        ParamKind::FieldMap { .. } => field_map::read(v).is_some(),
     }
 }
 
@@ -338,12 +361,26 @@ fn check_param(
             }
             None
         }
-        ParamKind::Features { .. } => {
+        ParamKind::Features { writes, .. } => {
             let f = FeaturesValue::read(v)?;
-            if let Scope::Layer(id) = &f.scope
-                && layers.get(id).is_none()
-            {
-                return Some(format!("{name}: seçilen katman artık yok."));
+            if let Scope::Layer(id) = &f.scope {
+                let Some(node) = layers.get(id) else {
+                    return Some(format!("{name}: seçilen katman artık yok."));
+                };
+                // An input that may be empty and is written to is where a run adds (docs/adr/0216 §3): a layer,
+                // and one that is not locked (what is added to it would be left out).
+                if p.allow_empty && *writes {
+                    if node.kind == LayerNodeType::Group {
+                        return Some(format!(
+                            "{name}: grup değil, bir katman seçin; eklenen nesneler bu katmana yazılır."
+                        ));
+                    }
+                    if layers.is_locked(id) {
+                        return Some(format!(
+                            "{name}: katman kilitli. Kilidi Katmanlar panelinden açın ya da başka katman seçin."
+                        ));
+                    }
+                }
             }
             if f.kinds.as_ref().is_some_and(Vec::is_empty) {
                 return Some(format!("{name}: en az bir nesne türü seçin."));
@@ -384,7 +421,8 @@ fn check_param(
         }
         ParamKind::File { .. } => {
             let file = v.get("name").and_then(Value::as_str).unwrap_or("");
-            match file_rows(v) {
+            // Its rows fit (`fits` above); a stored value has none.
+            match v.get("rows").and_then(Value::as_array) {
                 Some(rows) if rows.is_empty() => Some(format!(
                     "{name}: “{file}” boş; başlık satırı olan bir dosya seçin."
                 )),
@@ -409,6 +447,7 @@ fn check_param(
                 }
             })
         }
+        ParamKind::FieldMap { .. } => field_map::problem(&name, &field_map::read(v)?),
         ParamKind::RasterPairs { .. } => v.as_array()?.iter().find_map(|r| {
             let t = r.as_array()?;
             let n = t.get(2)?.as_f64()?;

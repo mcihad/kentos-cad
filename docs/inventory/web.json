@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 547,
-      "implemented": 524,
+      "total": 548,
+      "implemented": 525,
       "partial": 0,
       "pending": 23
     },
@@ -31,8 +31,8 @@
       "pending": 2
     },
     "processing": {
-      "total": 97,
-      "implemented": 97,
+      "total": 98,
+      "implemented": 98,
       "partial": 0,
       "pending": 0
     },
@@ -103,11 +103,11 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 256,
-    "commandsOnDesktop": 477,
+    "commandsOnDesktop": 478,
     "desktop": {
       "commands": {
-        "total": 547,
-        "implemented": 477,
+        "total": 548,
+        "implemented": 478,
         "partial": 0,
         "pending": 10,
         "none": 58,
@@ -122,8 +122,8 @@
         "n/a": 0
       },
       "processing": {
-        "total": 97,
-        "implemented": 97,
+        "total": 98,
+        "implemented": 98,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -5556,8 +5556,7 @@
       "icon": "joinField",
       "description": "Ortak bir anahtar alanla (parsel numarası, kimlik) başka bir katmandan ya da CSV, TXT, Excel dosyasından öznitelik aktarır.",
       "aliases": [
-        "ANAHTARBIRLESTIR",
-        "VERIAKTAR"
+        "ANAHTARBIRLESTIR"
       ],
       "kind": "action",
       "shortcuts": [],
@@ -5576,6 +5575,37 @@
         "desktop": "implemented"
       },
       "tests": []
+    },
+    {
+      "id": "processing.run.attributes.transfer",
+      "title": "Veri aktar…",
+      "category": "İşlemler",
+      "icon": "dataTransfer",
+      "description": "Başka bir katmandan ya da CSV, TXT, Excel dosyasından ortak anahtarla öznitelikleri alan eşlemesiyle aktarır; isterse geometriyi günceller, eşleşmeyenleri ekler.",
+      "aliases": [
+        "VERIAKTAR",
+        "EKLEGUNCELLE"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Öznitelik",
+        "CBS › Analiz › Öznitelik"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
     },
     {
       "id": "processing.run.density.kernel",
@@ -20931,8 +20961,7 @@
       "category": "Öznitelik",
       "description": "Ortak bir anahtar alanla (parsel numarası, kimlik) başka bir katmandan ya da CSV, TXT, Excel dosyasından öznitelik aktarır.",
       "aliases": [
-        "ANAHTARBIRLESTIR",
-        "VERIAKTAR"
+        "ANAHTARBIRLESTIR"
       ],
       "targets": [
         "client",
@@ -21012,6 +21041,127 @@
       },
       "tests": [
         "apps/web/scripts/fixtures/record-processing-dialog.test.ts"
+      ]
+    },
+    {
+      "id": "attributes.transfer",
+      "label": "Veri aktar",
+      "category": "Öznitelik",
+      "description": "Başka bir katmandan ya da CSV, TXT, Excel dosyasından ortak anahtarla öznitelikleri alan eşlemesiyle aktarır; isterse geometriyi günceller, eşleşmeyenleri ekler.",
+      "aliases": [
+        "VERIAKTAR",
+        "EKLEGUNCELLE"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "target",
+          "type": "features",
+          "label": "Hedef katman",
+          "optional": false
+        },
+        {
+          "name": "targetKey",
+          "type": "field",
+          "label": "Hedef anahtar",
+          "optional": false
+        },
+        {
+          "name": "sourceKind",
+          "type": "enum",
+          "label": "Kaynak",
+          "optional": false
+        },
+        {
+          "name": "file",
+          "type": "file",
+          "label": "Dosya",
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": "features",
+          "label": "Kaynak nesneler",
+          "optional": false
+        },
+        {
+          "name": "sourceKey",
+          "type": "field",
+          "label": "Kaynak anahtar",
+          "optional": true
+        },
+        {
+          "name": "map",
+          "type": "fieldMap",
+          "label": "Alan eşleme",
+          "optional": false
+        },
+        {
+          "name": "existing",
+          "type": "enum",
+          "label": "Var olan değerler",
+          "optional": false
+        },
+        {
+          "name": "geometry",
+          "type": "boolean",
+          "label": "Geometriyi güncelle",
+          "optional": false
+        },
+        {
+          "name": "append",
+          "type": "boolean",
+          "label": "Eşleşmeyenleri ekle",
+          "optional": false
+        },
+        {
+          "name": "east",
+          "type": "field",
+          "label": "Doğu sütunu",
+          "optional": true
+        },
+        {
+          "name": "north",
+          "type": "field",
+          "label": "Kuzey sütunu",
+          "optional": true
+        },
+        {
+          "name": "reportOnly",
+          "type": "boolean",
+          "label": "Yalnız raporla",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "table",
+          "type": "table"
+        },
+        {
+          "name": "changed",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        },
+        {
+          "name": "added",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.attributes.transfer",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
       ]
     },
     {
@@ -42727,6 +42877,7 @@
               "processing.run.attributes.fromEnclosing",
               "processing.run.statistics.summary",
               "processing.run.attributes.joinByField",
+              "processing.run.attributes.transfer",
               "processing.run.proximity.nearest",
               "processing.run.proximity.matrix",
               "processing.run.proximity.hub",
@@ -44069,11 +44220,15 @@
             "items": [
               {
                 "command": "processing.run.attributes.calculate",
-                "size": "large"
+                "size": "small"
               },
               {
                 "command": "processing.run.selection.byExpression",
-                "size": "large"
+                "size": "small"
+              },
+              {
+                "command": "processing.run.attributes.transfer",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -44841,6 +44996,10 @@
               },
               {
                 "command": "processing.run.attributes.calculate",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.attributes.transfer",
                 "size": "small"
               }
             ],
@@ -49654,11 +49813,15 @@
               "items": [
                 {
                   "command": "processing.run.attributes.calculate",
-                  "size": "large"
+                  "size": "small"
                 },
                 {
                   "command": "processing.run.selection.byExpression",
-                  "size": "large"
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.attributes.transfer",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -50426,6 +50589,10 @@
                 },
                 {
                   "command": "processing.run.attributes.calculate",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.attributes.transfer",
                   "size": "small"
                 }
               ],
@@ -52038,6 +52205,8 @@
     "infoEnclosing": "<path d=\"M2.5 6.5 9.5 2.8l8 3.6-1.5 11.1H4z\"/><rect x=\"8\" y=\"10.3\" width=\"4.6\" height=\"4.6\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><rect x=\"8\" y=\"10.3\" width=\"4.6\" height=\"4.6\" stroke-width=\"1.2\"/><path d=\"M10.3 4.8v3.8M8.7 7.1l1.6 1.6 1.6-1.6\" stroke-width=\"1.2\"/>",
     "statsSummary": "<path d=\"M9 3.2H2.8l3.4 4.6-3.4 4.6H9\" stroke-width=\"1.4\"/><path d=\"M11.8 17v-5M14.8 17V8.5M17.8 17v-6.5\" stroke-width=\"2\"/><path d=\"M10.3 17.2h8.5\" stroke-width=\"1.1\"/>",
     "joinField": "<circle cx=\"5.2\" cy=\"5.2\" r=\"2.7\"/><path d=\"m7.1 7.1 4 4M9.3 9.3l1.3-1.3M10.6 10.6l1.3-1.3\" stroke-width=\"1.3\"/><rect x=\"10.5\" y=\"11\" width=\"7.5\" height=\"6.5\" rx=\".8\"/><path d=\"M10.5 14.2h7.5M14.2 11v6.5\" stroke-width=\"1.1\"/>",
+    "dataTransfer": "<rect x=\"1.8\" y=\"3\" width=\"8\" height=\"9\" rx=\".9\" stroke-width=\"1.3\"/><path d=\"M1.8 6h8M1.8 9h8M4.8 6v6\" stroke-width=\"1.1\"/><path d=\"M8.6 14.6h3.6M10.9 13.2l1.4 1.4-1.4 1.4\" stroke-width=\"1.2\"/><path d=\"m15.4 9.4 3.2 1.7-3.2 1.7-3.2-1.7z\" stroke-width=\"1.2\"/><path d=\"m12.2 14.1 3.2 1.7 3.2-1.7\" stroke-width=\"1.2\"/>",
+    "fieldMapFill": "<path d=\"M2.5 5h4.5M2.5 10h4.5M2.5 15h4.5\" stroke-width=\"1.4\"/><path d=\"M8.6 5h3M8.6 10h3M8.6 15h3\" stroke-width=\"1.1\"/><path d=\"m10.6 3.8 1.2 1.2-1.2 1.2M10.6 8.8l1.2 1.2-1.2 1.2M10.6 13.8l1.2 1.2-1.2 1.2\" stroke-width=\"1.1\"/><path d=\"M13.5 5h4M13.5 10h4M13.5 15h4\" stroke-width=\"1.4\"/>",
     "geoBuffer": "<path d=\"M4.2 14.6 9 7.6l6.8 3.4\" stroke-width=\"7\" stroke-opacity=\".28\"/><path d=\"M4.2 14.6 9 7.6l6.8 3.4\" stroke-width=\"1.5\"/><circle cx=\"4.2\" cy=\"14.6\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15.8\" cy=\"11\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/>",
     "geoClip": "<path d=\"M5.5 2.5v3h-3M14.5 2.5v3h3M5.5 17.5v-3h-3M14.5 17.5v-3h3\" stroke-width=\"1.3\"/><path d=\"M5.5 9.2 9.5 3.6l7 4.4-2.6 8.6H7.3z\" stroke-width=\"1\" stroke-dasharray=\"1.8 1.4\"/><path d=\"M5.5 9.2 8.6 5.5h5.9v9H5.5z\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><path d=\"M5.5 9.2 8.6 5.5h5.9v9H5.5z\" stroke-width=\"1.3\"/>",
     "geoDissolve": "<path d=\"M2.5 2.5h15v7.5h-7.5v7.5h-7.5z\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><path d=\"M2.5 2.5h15v7.5h-7.5v7.5h-7.5z\"/><path d=\"M10 2.5v7.5M2.5 10H10\" stroke-width=\"1\" stroke-dasharray=\"1.8 1.4\"/><path d=\"M10 10h7.5v7.5H10z\" stroke-width=\"1.1\"/>",

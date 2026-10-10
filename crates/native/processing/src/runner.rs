@@ -116,7 +116,7 @@ pub struct Job {
     values: Values,
     silent: bool,
     started: (u64, Instant),
-    inputs: BTreeMap<String, (Vec<Slot>, String)>,
+    inputs: BTreeMap<String, Input>,
     layers: BTreeMap<String, TargetLayer>,
     /// Layers the run writes to that do not exist yet: their names, looks and
     /// the layer each goes right above (none: last).
@@ -125,6 +125,15 @@ pub struct Job {
     /// The `@` values its expressions read (docs/adr/0214 §2.3), taken when it was prepared.
     variables: Vec<Variable>,
     run: RunFn,
+}
+
+/// A features input as prepared: its objects, its description and, when its scope is a layer, that layer
+/// (`FeatureSet::layer_id`: a run adds to it, docs/adr/0216 §3).
+#[derive(Clone, Debug)]
+struct Input {
+    ids: Vec<Slot>,
+    description: String,
+    layer: Option<String>,
 }
 
 /// A layer the run creates on apply: its name, its look and the layer it goes right above or below.
@@ -140,7 +149,7 @@ impl Job {
     /// Objects the features inputs resolved to: the web's input size, from
     /// which [`WORKER_THRESHOLD`] sends a job to the background.
     pub fn size(&self) -> usize {
-        self.inputs.values().map(|(ids, _)| ids.len()).sum()
+        self.inputs.values().map(|i| i.ids.len()).sum()
     }
 }
 
@@ -500,7 +509,7 @@ impl Runner {
         let started = (now_ms(), Instant::now());
         // Resolve what depends on the host: objects to ids, layers to a
         // target (new layers are made only on apply).
-        let mut inputs: BTreeMap<String, (Vec<Slot>, String)> = BTreeMap::new();
+        let mut inputs: BTreeMap<String, Input> = BTreeMap::new();
         let mut layers: BTreeMap<String, TargetLayer> = BTreeMap::new();
         let mut new_layers: BTreeMap<String, NewLayerPlan> = BTreeMap::new();
         // What resolving the inputs left out, said once the run starts.
@@ -547,9 +556,10 @@ impl Runner {
                                 p.label
                             ));
                         }
-                        // Running on nothing is a mistake worth stopping (usually:
-                        // nothing selected); an empty output passed along a model is not.
-                        if entities.is_empty() && !p.optional && !is_ids {
+                        // Running on nothing is a mistake worth stopping (usually: nothing selected); an
+                        // empty output passed along a model is not, nor an input that may be empty (a
+                        // layer a run may only add to, docs/adr/0216 §3).
+                        if entities.is_empty() && !p.optional && !p.allow_empty && !is_ids {
                             return Prepared::Done(Outcome::Invalid {
                                 issues: vec![Issue {
                                     param: Some(p.name.clone()),
@@ -559,10 +569,11 @@ impl Runner {
                         }
                         inputs.insert(
                             p.name.clone(),
-                            (
-                                entities.iter().map(|e| Slot(e.base().id)).collect(),
-                                set.description,
-                            ),
+                            Input {
+                                ids: entities.iter().map(|e| Slot(e.base().id)).collect(),
+                                description: set.description,
+                                layer: set.layer_id,
+                            },
                         );
                     }
                     ParamKind::Layer {
@@ -624,7 +635,7 @@ impl Runner {
         };
         // A new layer named to go above or below a features input: the layer of that input's first object.
         let layer_of = |param: String| {
-            let first = *inputs.get(&param)?.0.first()?;
+            let first = *inputs.get(&param)?.ids.first()?;
             Some(host.doc().get(first)?.base().layer_id.clone())
         };
         for plan in new_layers.values_mut() {
@@ -667,15 +678,16 @@ impl Runner {
         for p in &job.tool.parameters {
             match &p.kind {
                 ParamKind::Features { .. } => {
-                    if let Some((ids, description)) = job.inputs.get(&p.name) {
+                    if let Some(input) = job.inputs.get(&p.name) {
                         let entities: Vec<&Entity> =
-                            ids.iter().filter_map(|id| doc.get(*id)).collect();
+                            input.ids.iter().filter_map(|id| doc.get(*id)).collect();
                         objects.extend(entities.iter().filter(|e| seen.insert(e.base().id)));
                         resolved.features.insert(
                             p.name.clone(),
                             FeatureSet {
                                 entities,
-                                description: description.clone(),
+                                description: input.description.clone(),
+                                layer_id: input.layer.clone(),
                             },
                         );
                     }
@@ -987,8 +999,9 @@ fn apply(
             }
         }
         doc.remove(&gone);
-        let mut patches = Vec::new();
-        for u in &ch.update {
+        let mut patches = Vec::with_capacity(ch.update.len());
+        // Each patch's parts are moved into the object, not copied: a run updates tens of thousands.
+        for u in ch.update {
             let Some(e) = doc.get(u.id) else {
                 continue;
             };
@@ -996,12 +1009,20 @@ fn apply(
                 skipped += 1;
                 continue;
             }
-            let mut next = e.clone();
-            if let Some(attrs) = &u.attrs {
-                next.base_mut().attrs.clone_from(attrs);
+            let mut next = match u.geometry {
+                // Its shape, of its own kind: the fields every object has stay its own.
+                Some(shape) if shape.kind() == e.kind() => {
+                    let mut shaped = *shape;
+                    *shaped.base_mut() = e.base().clone();
+                    shaped
+                }
+                _ => e.clone(),
+            };
+            if let Some(attrs) = u.attrs {
+                next.base_mut().attrs = attrs;
             }
-            if let Some(label) = &u.label {
-                next.base_mut().label.clone_from(label);
+            if let Some(label) = u.label {
+                next.base_mut().label = label;
             }
             if let Some(zs) = &u.zs {
                 kentos_native_application::elevation::assign(&mut next, zs);

@@ -404,6 +404,7 @@ pub fn run_zonal(r: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feed
                     attrs: Some(attrs),
                     label: None,
                     zs: None,
+                    geometry: None,
                 });
             }
             let m = &f.moments;
