@@ -484,6 +484,9 @@ function expressionField(def: Extract<ParamDef, { type: 'expression' }>, value: 
     fields: () => attributeFields(def.of ? (env.describe(def.of)?.fields ?? []) : []),
     objects: () => env.builderObjects(def.name),
     context: def.label,
+    // İşlemler look at other layers too (docs/adr/0214 §3) and read the project's `@` values.
+    variables: () => env.ctx.processing.runner.variables(),
+    world: true,
     fail: (message) => env.ctx.log.error(message),
   });
   refresh();

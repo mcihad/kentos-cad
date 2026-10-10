@@ -790,9 +790,15 @@ fn sheet_scope(
     notes: &mut Vec<Note>,
 ) -> (Scope, Vec<(Item, bool)>, BTreeMap<ItemId, MapFrame>) {
     let sheet = scene.sheet;
+    // The book's project variables, then the drawing's own (docs/adr/0214 §2.3).
     let mut scope = Scope {
         sheet: sheet.variables.clone(),
-        project: book.variables.clone(),
+        project: book
+            .variables
+            .iter()
+            .chain(&inputs.project.variables)
+            .cloned()
+            .collect(),
         ..Scope::default()
     };
     builtins(book, sheet, inputs, &mut scope);

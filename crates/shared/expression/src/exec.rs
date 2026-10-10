@@ -8,13 +8,15 @@
 //!
 //! The instructions themselves are `kernels`.
 
+use crate::compound::is_empty_compound;
 use crate::kernels::{
     between, binary, bit, call, case, constant, is_null, like, neg, not, round_to, text_constant,
-    within,
+    within, world,
 };
 use crate::library::Func;
 use crate::program::{Const, Ins, Load, Program};
 use crate::scalar::{R, Scratch, V};
+use crate::world::WorldCalls;
 
 /// Objects per batch: enough that an instruction's dispatch is noise, few
 /// enough that a program's registers stay in the cache.
@@ -111,6 +113,12 @@ impl<'a> Slot<'_, 'a> {
 pub trait Source<'a> {
     /// Writes `load` for objects `start .. start + slot.len()` into `slot`.
     fn fill(&self, load: Load, start: usize, slot: Slot<'_, 'a>);
+
+    /// The world the program's calls to other objects are answered from
+    /// (docs/adr/0214 §3); without one they are empty.
+    fn world(&self) -> Option<&dyn WorldCalls> {
+        None
+    }
 }
 
 /// A run's registers: register `r`'s value for object `i` at `r * stride + i`,
@@ -176,10 +184,11 @@ impl<'r, 'a: 'r> Col<'r, 'a> {
     pub(crate) fn truth(&self, i: usize) -> Option<bool> {
         Some(match self.k[i] {
             NUM | BOOL => self.x[i] != 0.0,
-            TEXT => match self.t[i] {
-                Txt::Ref(s) => !s.is_empty(),
-                Txt::Own { len, .. } => len > 0,
-            },
+            // An empty text, array or map is false (docs/adr/0214 §2.1).
+            TEXT => {
+                let s = self.text(i);
+                !s.is_empty() && !is_empty_compound(s)
+            }
             THROWN => return None,
             _ => false,
         })
@@ -376,6 +385,10 @@ pub fn run<'a>(
                 like([col(*x), col(*pattern)], *fold, *negated, &mut out, scratch);
             }
             Ins::IsNull(x, negated) => is_null(col(*x), *negated, &mut out),
+            Ins::World(k, args) => {
+                let cols: Vec<Col> = args.iter().map(|&o| col(o)).collect();
+                world(*k as usize, &cols, src.world(), &mut out);
+            }
         }
     }
 }

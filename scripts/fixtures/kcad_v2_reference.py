@@ -307,6 +307,8 @@ def settings(s):
                 "connections": (connections, False),
                 # Schema 33 (docs/adr/0209 §2): the project's networks.
                 "networks": (networks, False),
+                # Schema 37 (docs/adr/0214 §2.3): the project's variables.
+                "variables": (variables, False),
             },
             "settings",
         )
@@ -855,6 +857,30 @@ def networks(list_):
     return nonempty(network)(list_)
 
 
+# Schema 37 (docs/adr/0214 §2.3): the project's `@` variables; a label only when not empty, a value only when given.
+VARIABLE_KINDS = ("text", "number", "bool", "date")
+
+
+def variable_value(v):
+    if v is None:
+        return b"\xf6"
+    if type(v) is bool:
+        return boolean(v)
+    if type(v) is float:
+        return f64(v)
+    return text(v)
+
+
+def variable(v):
+    assert v.get("label", "x") != "", "boş etiket yazılmaz"
+    table = {"name": (text, True), "label": (text, False), "kind": (enum(VARIABLE_KINDS), True), "value": (variable_value, False)}
+    return cmap(fields(v, table, f"değişken {v.get('name')}"))
+
+
+def variables(list_):
+    return nonempty(variable)(list_)
+
+
 def layer_time(t):
     """A layer's time setting (schema 34, docs/adr/0210 §2): the start's field, the end's and the key's when given,
     Birikimli only when true."""
@@ -1016,7 +1042,7 @@ def raster_style(st):
         "zFactor": (f64, False),
         "nodata": (f64, False),
         "resampling": (enum(("nearest",)), False),
-        # Schema 37 (docs/adr/0243 §5): a mesh's lines.
+        # Schema 38 (docs/adr/0243 §5): a mesh's lines.
         "edges": (text, False),
     }
     out = fields(st, table, "rasterin görünüşü")
@@ -1025,7 +1051,7 @@ def raster_style(st):
 
 
 def raster_dataset(d):
-    """A raster's NetCDF variable and slice (schema 37, docs/adr/0243 §6): `variable`; `vector`, `mesh`, `dims` and
+    """A raster's NetCDF variable and slice (schema 38, docs/adr/0243 §6): `variable`; `vector`, `mesh`, `dims` and
     `followTime` only when given (no empty list, no false)."""
     def dim(x):
         table = {
@@ -1186,7 +1212,7 @@ KINDS = {
         "srid": (uint, True),
         "style": (raster_style, True),
         "opacity": (f64, False),
-        # Schema 37 (docs/adr/0243 §6): a NetCDF variable and its slice.
+        # Schema 38 (docs/adr/0243 §6): a NetCDF variable and its slice.
         "dataset": (raster_dataset, False),
     },
     # Schema 31 (docs/adr/0207 §3): a point cloud's files, their bounds and points together, the files' system, its look
@@ -1417,6 +1443,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
         return any(engine(n["style"]) or labelled(n["children"]) for n in nodes)
 
     if any(e["kind"] == "raster" and ("dataset" in e or "edges" in e["style"]) for e in entities):
+        return 38
+    if settings and "variables" in settings:
         return 37
     if (labelled(layers) or any("labelPins" in e for e in entities)
             or any("style" in n and engine(n["style"]) for st in (settings or {}).get("layerStates", []) for n in st["nodes"])):
@@ -1684,7 +1712,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-38.kcad"] = container(root(cmap(parts), version=uint(38)))
+    files["schema-version-39.kcad"] = container(root(cmap(parts), version=uint(39)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1979,7 +2007,7 @@ def broken(minimal_content, minimal_file):
     files["raster-url-in-schema-30.kcad"] = in_schema(30, raster_of(file=None, url=text("https://ornek.org/orto.tif")))
     files["raster-url-and-file.kcad"] = in_schema(31, raster_of(url=text("https://ornek.org/orto.tif")))
     files["raster-url-ftp.kcad"] = in_schema(31, raster_of(file=None, url=text("ftp://ornek.org/orto.tif")))
-    # A raster's NetCDF variable and its look's mesh lines are schema 37's (docs/adr/0243 §6): in schema 36 unknown
+    # A raster's NetCDF variable and its look's mesh lines are schema 38's (docs/adr/0243 §6): in schema 37 unknown
     # fields; one band; names given; no empty list, no false; an index within its values; one time dimension, its values
     # not falling; following the slider needs it; lines only on a mesh, as #RRGGBB.
     def dim_of(**extra):
@@ -1991,18 +2019,18 @@ def broken(minimal_content, minimal_file):
         return cmap({k: v for k, v in body.items() if v is not None})
 
     one_band = dict(bands=uint(1), style=gray())
-    files["dataset-in-schema-36.kcad"] = in_schema(36, raster_of(dataset=dataset_of(), **one_band))
-    files["dataset-three-bands.kcad"] = in_schema(37, raster_of(dataset=dataset_of()))
-    files["dataset-follow-false.kcad"] = in_schema(37, raster_of(dataset=dataset_of(followTime=boolean(False)), **one_band))
-    files["dataset-dims-empty.kcad"] = in_schema(37, raster_of(dataset=dataset_of(dims=array([])), **one_band))
-    files["dataset-index-out.kcad"] = in_schema(37, raster_of(dataset=dataset_of(dims=array([dim_of(index=uint(2))])), **one_band))
-    files["dataset-two-times.kcad"] = in_schema(37, raster_of(dataset=dataset_of(dims=array([dim_of(), dim_of(name=text("t2"))])), **one_band))
-    files["dataset-time-falling.kcad"] = in_schema(37, raster_of(dataset=dataset_of(dims=array([dim_of(values=floats([3600000.0, 0.0]))])), **one_band))
-    files["dataset-follow-without-time.kcad"] = in_schema(37, raster_of(dataset=dataset_of(dims=array([dim_of(time=None)]), followTime=boolean(True)), **one_band))
-    files["dataset-variable-empty.kcad"] = in_schema(37, raster_of(dataset=dataset_of(variable=text(" ")), **one_band))
-    files["edges-in-schema-36.kcad"] = in_schema(36, raster_of(bands=uint(1), style=gray(edges=text("#203040"))))
-    files["edges-without-mesh.kcad"] = in_schema(37, raster_of(bands=uint(1), style=gray(edges=text("#203040")), dataset=dataset_of(mesh=None)))
-    files["edges-not-a-colour.kcad"] = in_schema(37, raster_of(bands=uint(1), style=gray(edges=text("lacivert")), dataset=dataset_of()))
+    files["dataset-in-schema-37.kcad"] = in_schema(37, raster_of(dataset=dataset_of(), **one_band))
+    files["dataset-three-bands.kcad"] = in_schema(38, raster_of(dataset=dataset_of()))
+    files["dataset-follow-false.kcad"] = in_schema(38, raster_of(dataset=dataset_of(followTime=boolean(False)), **one_band))
+    files["dataset-dims-empty.kcad"] = in_schema(38, raster_of(dataset=dataset_of(dims=array([])), **one_band))
+    files["dataset-index-out.kcad"] = in_schema(38, raster_of(dataset=dataset_of(dims=array([dim_of(index=uint(2))])), **one_band))
+    files["dataset-two-times.kcad"] = in_schema(38, raster_of(dataset=dataset_of(dims=array([dim_of(), dim_of(name=text("t2"))])), **one_band))
+    files["dataset-time-falling.kcad"] = in_schema(38, raster_of(dataset=dataset_of(dims=array([dim_of(values=floats([3600000.0, 0.0]))])), **one_band))
+    files["dataset-follow-without-time.kcad"] = in_schema(38, raster_of(dataset=dataset_of(dims=array([dim_of(time=None)]), followTime=boolean(True)), **one_band))
+    files["dataset-variable-empty.kcad"] = in_schema(38, raster_of(dataset=dataset_of(variable=text(" ")), **one_band))
+    files["edges-in-schema-37.kcad"] = in_schema(37, raster_of(bands=uint(1), style=gray(edges=text("#203040"))))
+    files["edges-without-mesh.kcad"] = in_schema(38, raster_of(bands=uint(1), style=gray(edges=text("#203040")), dataset=dataset_of(mesh=None)))
+    files["edges-not-a-colour.kcad"] = in_schema(38, raster_of(bands=uint(1), style=gray(edges=text("lacivert")), dataset=dataset_of()))
     # A point cloud is schema 31's (docs/adr/0207 §3): in schema 30 an unknown kind; only in the drawing; files each
     # with one source, the points their sum, bounds in order, a look whose range a ramp needs, its defaults left out,
     # a size from 0.5 to 32, an opacity from 0.1 to 1.
@@ -2251,6 +2279,27 @@ def broken(minimal_content, minimal_file):
     files["connection-oauth2-no-token-url.kcad"] = connected([conn(auth="oauth2")])
     files["connection-scope-not-oauth2.kcad"] = connected([conn(auth="bearer", scope=text("read"))])
     files["connection-secret.kcad"] = connected([conn(auth="basic", password=text("gizli"))])
+
+    # The project's variables are schema 37's (docs/adr/0214 §2.3): in schema 36 an unknown field; every rule of the
+    # contract's `variables_problem` broken one at a time; an empty list and an unknown field refused as such.
+    def var(**fields_):
+        base = {"kind": text("text"), "name": text("is_no")}
+        base.update(fields_)
+        return cmap(base)
+
+    def with_variables(list_, schema=37):
+        return on_layer({}, schema=schema, settings_extra={"variables": array(list_)})
+
+    files["variables-in-schema-36.kcad"] = with_variables([var()], schema=36)
+    files["variables-empty.kcad"] = with_variables([])
+    files["variable-duplicate.kcad"] = with_variables([var(), var(name=text("IS_NO"))])
+    files["variable-bad-name.kcad"] = with_variables([var(name=text("1a"))])
+    files["variable-builtin-name.kcad"] = with_variables([var(name=text("Proje_Adı"))])
+    files["variable-number-text.kcad"] = with_variables([var(kind=text("number"), value=text("12"))])
+    files["variable-bad-date.kcad"] = with_variables([var(kind=text("date"), value=text("2026-02-29"))])
+    files["variable-unknown-kind.kcad"] = with_variables([var(kind=text("list"))])
+    files["variable-unknown-field.kcad"] = with_variables([var(note=text("x"))])
+    files["variable-no-kind.kcad"] = with_variables([cmap({"name": text("is_no")})])
 
     # The project's networks are schema 33's (docs/adr/0209 §2): in schema 32 an unknown field; every rule of the
     # contract's `networks_problem` broken one at a time; an empty list and a direction's field or values with another
@@ -2622,6 +2671,7 @@ def build():
     out["scenarios.kcad"] = container(document(load("scenarios.json")))
     out["filters.kcad"] = container(document(load("filters.json")))
     out["labels.kcad"] = container(document(load("labels.json")))
+    out["variables.kcad"] = container(document(load("variables.json")))
     out["multidim.kcad"] = container(document(load("multidim.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)

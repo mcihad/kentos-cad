@@ -1319,6 +1319,24 @@ TopologyRuleKindName = Literal["mustNotOverlap", "mustNotHaveGaps", "mustNotHave
 """The names of :class:`TopologyRuleKind`, for a plain string."""
 
 
+class VariableKind(_StrEnum):
+    """What a variable holds.
+
+    - ``text``
+    - ``number``
+    - ``bool``
+    - ``date``: ISO text (YYYY-AA-GG).
+    """
+    TEXT = "text"
+    NUMBER = "number"
+    BOOL = "bool"
+    DATE = "date"
+
+
+VariableKindName = Literal["text", "number", "bool", "date"]
+"""The names of :class:`VariableKind`, for a plain string."""
+
+
 class Workspace(_StrEnum):
     """A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each
     with its own scene, axes and ribbon; every command still runs in both.
@@ -1333,6 +1351,10 @@ class Workspace(_StrEnum):
 
 WorkspaceName = Literal["cad", "gis", "plan3d", "disaster"]
 """The names of :class:`Workspace`, for a plain string."""
+
+
+#: A variable's value: none yet, true/false, a number or text.
+VariableValue = Union[bool, float, str, None]
 
 
 class ArrayLayout(_Union):
@@ -6240,6 +6262,103 @@ class LayersLabelsPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayersRendered(_Model):
+    """Output of `cad.layers.renderer` v1.
+    Attributes:
+        changed: Whether the renderer differed (an undo step was written).
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersRendered:
+        return cls(
+            layer=data["layer"],
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersRenderer(_Model):
+    """Input of `cad.layers.renderer` v1: a layer's renderer (the style
+    engine's JSON, docs/STYLE.md §4: tek sembol, kategorili, aralıklı,
+    kurallar, and the thematic ones of docs/adr/0213) written, or taken away
+    (`renderer` absent or null: the layer's simple look), as one undo step
+    “Katman stili”. A layer that already has it as given is left as it is
+    (`changed` false, no step). A renderer is the layer's look: a locked
+    layer takes it too.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_renderer`
+    (the style core's rules, `style::rules::renderer_problem`: an unknown
+    kind, a value out of its range, an expression that does not compile;
+    the message says which); then `invalid_revision`, `revision_conflict`
+    (status `conflict`), `layer_not_found`, `not_a_layer` (a group),
+    `service_layer` (a layer drawn from a service: it holds no objects).
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        renderer: Its new renderer; absent or null takes it away.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    renderer: Any | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.renderer is not UNSET:
+            out["renderer"] = self.renderer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersRenderer:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            renderer=data.get("renderer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersRendererPlan(_Model):
+    """What `cad.layers.renderer` would write (plan mode); nothing is written.
+    Attributes:
+        node: The layer as execute would leave it.
+        revision: The document revision the plan was made against.
+    """
+    node: LayerNode
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["node"] = self.node.to_json()
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersRendererPlan:
+        return cls(
+            node=LayerNode.from_json(data["node"]),
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayersService(_Model):
     """Input of `cad.layers.service` v1: one change of the layer tree, as one
     undo step named after the operation.
@@ -8589,6 +8708,7 @@ class ProjectSettings(_Model):
             absent: k = [`REFRACTION`] and no tolerance.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
         topology: The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
+        variables: The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.
         workspace: The project's type; none while it is not asked (files written before
             types). The former Hibrit mode reads as written and means the same
             (see [`ProjectSettings::project_type`]).
@@ -8613,6 +8733,7 @@ class ProjectSettings(_Model):
     survey: SurveySettings | None | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
     topology: TopologySettings | None | Unset = UNSET
+    variables: list[ProjectVariable] | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -8651,6 +8772,8 @@ class ProjectSettings(_Model):
             out["textStyles"] = [e0.to_json() for e0 in self.text_styles]
         if self.topology is not UNSET:
             out["topology"] = None if self.topology is None else self.topology.to_json()
+        if self.variables is not UNSET:
+            out["variables"] = [e0.to_json() for e0 in self.variables]
         if self.workspace is not UNSET:
             out["workspace"] = None if self.workspace is None else _enum_out(self.workspace)
         return out
@@ -8678,6 +8801,7 @@ class ProjectSettings(_Model):
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
+            variables=[ProjectVariable.from_json(e0) for e0 in data["variables"]] if "variables" in data else UNSET,
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
         )
 
@@ -8840,6 +8964,39 @@ class ProjectSummary(_Model):
             purge_after=data.get("purgeAfter", UNSET),
             trashed_at=data.get("trashedAt", UNSET),
             trashed_by_name=data.get("trashedByName", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProjectVariable(_Model):
+    """One of the project's variables.
+    Attributes:
+        name: Without the `@`: a letter or `_`, then letters, digits and `_` (`is_no`).
+        label: What the settings window shows beside it (“İş numarası”).
+        value: None yet: written as no value (an empty `@ad`), as the file keeps it.
+    """
+    name: str
+    kind: VariableKind | VariableKindName = VariableKind.TEXT
+    label: str | Unset = UNSET
+    value: VariableValue | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.value is not UNSET:
+            out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProjectVariable:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(VariableKind, data["kind"]) if "kind" in data else VariableKind.TEXT,
+            label=data.get("label", UNSET),
+            value=data.get("value", UNSET),
         )
 
 
@@ -12280,6 +12437,9 @@ __all__ = [
     "LayersLabelled",
     "LayersLabels",
     "LayersLabelsPlan",
+    "LayersRendered",
+    "LayersRenderer",
+    "LayersRendererPlan",
     "LayersService",
     "LayersServicePlan",
     "LayersServiced",
@@ -12390,6 +12550,7 @@ __all__ = [
     "ProjectSummary",
     "ProjectType",
     "ProjectTypeName",
+    "ProjectVariable",
     "ProjectiveTransform",
     "PropertiesOperation",
     "PropertiesOperationName",
@@ -12467,6 +12628,9 @@ __all__ = [
     "UpdateBlockChange",
     "UpdateEntityEdit",
     "UpdateFeatureChange",
+    "VariableKind",
+    "VariableKindName",
+    "VariableValue",
     "Vec2",
     "Vec2Like",
     "Workspace",

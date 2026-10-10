@@ -1,5 +1,6 @@
 // Records the legend into fixtures/style/v1/legend.json (style/legend.ts): which layers it reads, the rows each
-// gives (the layer's own look, single, categorized, graduated and rule-based renderers, objects' own symbols),
+// gives (the layer's own look, single, categorized, graduated and rule-based renderers, the thematic ones of
+// docs/adr/0213, objects' own symbols),
 // the picture's layout with and without layer headings, and the window's texts. Runs only on purpose:
 //   GOLDEN_WRITE=1 pnpm -C apps/web exec vitest run scripts/fixtures/record-legend.test.ts
 // The answers are the web's and were read when recorded; rewriting them is a deliberate change, to be read in
@@ -100,6 +101,99 @@ const LAYERS: (LayerInit & { visible?: boolean })[] = [
   { id: 'kendi', name: 'Semboller', style: { color: 'fg', lineType: 'dashed', lineWeight: 0.25 } },
   // Hidden: read only when every layer is asked for.
   { id: 'gizli', name: 'Gizli katman', visible: false, style: { color: '#9C755F', lineType: 'dotted', lineWeight: 0.25 } },
+  // The thematic renderers (docs/adr/0213 §4): a ramp's five samples, three sizes on one scale, the grid's cells by both
+  // classes, a dot's worth and its values, a chart's values, a heat map's three, a cluster's mark over its points' rows,
+  // a spread's points' rows, the outside of the areas.
+  {
+    id: 'yogunluk',
+    name: 'Yoğunluk',
+    style: { color: 'fg', lineType: 'continuous', lineWeight: 0.25, renderer: { type: 'unclassed', expr: 'Nüfus', min: 0, max: 200, ramp: ['#FFF5B8', '#E66101', '#A50F15'], symbols: { fill: plainFill('#000000') } } },
+  },
+  {
+    id: 'okul',
+    name: 'Okullar',
+    style: {
+      color: 'fg',
+      lineType: 'continuous',
+      lineWeight: 0.25,
+      renderer: {
+        type: 'proportional',
+        expr: 'Öğrenci',
+        minValue: 100,
+        maxValue: 2000,
+        minSize: 2,
+        maxSize: 9,
+        unit: 'mm',
+        scaling: 'flannery',
+        symbols: { marker: { type: 'marker', layers: [{ id: 'c', type: 'shape', shape: 'circle', size: 4, fill: '#3E63DD', stroke: '#FFFFFF', strokeWidth: 0.2 }] } },
+      },
+    },
+  },
+  {
+    id: 'iki',
+    name: 'Nüfus ve gelir',
+    style: {
+      color: 'fg',
+      lineType: 'continuous',
+      lineWeight: 0.25,
+      renderer: { type: 'bivariate', exprX: 'Nüfus', exprY: 'Gelir', breaksX: [100], breaksY: [30], colors: ['#E8E8E8', '#5AC8C8', '#BE64AC', '#3B4994'], symbols: { fill: plainFill('#000000') } },
+    },
+  },
+  {
+    id: 'nokta',
+    name: 'Nüfus noktaları',
+    style: {
+      color: 'fg',
+      lineType: 'continuous',
+      lineWeight: 0.25,
+      renderer: { type: 'dotDensity', fields: [{ expr: 'Erkek', color: '#4E79A7', label: 'Erkekler' }, { expr: 'Kadın', color: '#E15759' }], dotValue: 250, dotSize: 0.6, unit: 'mm', seed: 1 },
+    },
+  },
+  {
+    id: 'grafik',
+    name: 'Kullanım',
+    style: {
+      color: 'fg',
+      lineType: 'continuous',
+      lineWeight: 0.25,
+      renderer: { type: 'chart', kind: 'pie', fields: [{ expr: 'Konut', color: '#E15759' }, { expr: 'Ticaret', color: '#4E79A7', label: 'Ticaret alanı' }], size: 9, unit: 'mm', symbols: { fill: plainFill('#F2F2F2') } },
+    },
+  },
+  {
+    id: 'olay',
+    name: 'Olaylar',
+    style: { color: 'fg', lineType: 'continuous', lineWeight: 0.25, renderer: { type: 'heatmap', radius: 20, unit: 'px', ramp: ['#2B83BA00', '#2B83BA', '#FFFFBF', '#D7191C'], quality: 2 } },
+  },
+  {
+    id: 'agaclar',
+    name: 'Ağaçlar',
+    style: {
+      color: '#30A46C',
+      lineType: 'continuous',
+      lineWeight: 0.25,
+      renderer: {
+        type: 'cluster',
+        distance: 40,
+        unit: 'px',
+        renderer: { type: 'categorized', expr: 'Tür', categories: [{ value: 'Çam', label: 'Çam', symbols: { marker: { ref: 'agac' } } }, { value: 'Meşe', label: 'Meşe', symbols: { marker: { ref: 'kot' } } }] },
+      },
+    },
+  },
+  {
+    id: 'durak',
+    name: 'Duraklar',
+    style: { color: 'fg', lineType: 'continuous', lineWeight: 0.25, renderer: { type: 'displacement', tolerance: 4, unit: 'px', renderer: { type: 'single', symbols: { marker: { ref: 'kot' } } } } },
+  },
+  {
+    id: 'calisma',
+    name: 'Çalışma alanı',
+    style: {
+      color: 'fg',
+      lineType: 'continuous',
+      lineWeight: 0.25,
+      renderer: { type: 'inverted', symbols: { fill: { type: 'fill', layers: [{ id: 'f', type: 'simpleFill', color: '#FFFFFFB3' }, { id: 'l', type: 'simpleLine', color: '#8E4EC6', width: 0.6 }] } } },
+    },
+  },
 ];
 
 const O = { x: 487000, y: 4420000 };
@@ -120,6 +214,15 @@ const ENTITIES: NewEntity[] = [
   { kind: 'point', layerId: 'kendi', attrs: {}, symbol: 'silinmis', p: P(64, 0) },
   { kind: 'point', layerId: 'kendi', attrs: {}, symbol: 'adsiz', p: P(66, 0) },
   { kind: 'polyline', layerId: 'gizli', attrs: {}, pts: [P(0, 30), P(10, 30)] },
+  { kind: 'polygon', layerId: 'yogunluk', attrs: { Nüfus: '120' }, pts: sq(70) },
+  { kind: 'point', layerId: 'okul', attrs: { Öğrenci: '800' }, p: P(80, 0) },
+  { kind: 'polygon', layerId: 'iki', attrs: { Nüfus: '120', Gelir: '20' }, pts: sq(90) },
+  { kind: 'polygon', layerId: 'nokta', attrs: { Erkek: '600', Kadın: '640' }, pts: sq(100) },
+  { kind: 'polygon', layerId: 'grafik', attrs: { Konut: '70', Ticaret: '30' }, pts: sq(110) },
+  { kind: 'point', layerId: 'olay', attrs: {}, p: P(120, 0) },
+  { kind: 'point', layerId: 'agaclar', attrs: { Tür: 'Çam' }, p: P(130, 0) },
+  { kind: 'point', layerId: 'durak', attrs: {}, p: P(140, 0) },
+  { kind: 'polygon', layerId: 'calisma', attrs: {}, pts: sq(150) },
 ];
 
 it.runIf(!!process.env.GOLDEN_WRITE)('records the legend', () => {
@@ -138,7 +241,7 @@ it.runIf(!!process.env.GOLDEN_WRITE)('records the legend', () => {
   const file = {
     format: 'kentos.style-legend',
     version: 1,
-    note: 'Lejant (style/legend.ts): okuduğu katmanlar (listenin üstü önce; istenirse yalnız görünenler), her katmanın satırları (işleyicisi yoksa kendi görünüşü, tek sembol, kategoriler (kapalı kategori girmez, boş etiket yerine değer, kitaplıkta olmayan sembol girmez, Diğer değerler), aralıklar, kurallar (üst › alt, kapalı kural girmez) ve nesnelerin kendi sembolleri (her sembol bir kez, kitaplıktaki adıyla, adı yoksa kimliğiyle); yalnız katmanda olan geometriler, birden çoksa satır adında (alan), (çizgi), (nokta); satırı olmayan katman girmez), resmin yerleşimi (mantıksal piksel, 2× çizilir; başlıklı ve başlıksız; bir katman bırakılmış) ve pencerenin sözleri. Semboller kitaplıktan çözülmüş hâlleriyle yazılıdır. Yanıtlar web’indir ve kaydedilirken okunmuştur.',
+    note: 'Lejant (style/legend.ts): okuduğu katmanlar (listenin üstü önce; istenirse yalnız görünenler), her katmanın satırları (işleyicisi yoksa kendi görünüşü, tek sembol, kategoriler (kapalı kategori girmez, boş etiket yerine değer, kitaplıkta olmayan sembol girmez, Diğer değerler), aralıklar, kurallar (üst › alt, kapalı kural girmez), tematik işleyiciler (Sürekli renk rampadan beş örnek, Orantılı sembol ortak ölçekte üç boy, İki değişkenli renk ızgaranın hücreleri, Nokta yoğunluğu nokta değeri ve değerleri, Grafik değerleri, Isı haritası üç örnek, Kümeleme işareti ve tek noktaları, Yayma tek noktaları, Ters alan Dışı; docs/adr/0213 §4) ve nesnelerin kendi sembolleri (her sembol bir kez, kitaplıktaki adıyla, adı yoksa kimliğiyle); yalnız katmanda olan geometriler, birden çoksa satır adında (alan), (çizgi), (nokta); satırı olmayan katman girmez), resmin yerleşimi (mantıksal piksel, 2× çizilir; başlıklı ve başlıksız; bir katman bırakılmış) ve pencerenin sözleri. Semboller kitaplıktan çözülmüş hâlleriyle yazılıdır. Yanıtlar web’indir ve kaydedilirken okunmuştur.',
     origin: O,
     layers: LAYERS,
     activeLayer: 'yapi',

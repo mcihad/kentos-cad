@@ -2,7 +2,7 @@ import type { NetworkDef } from '../contracts/generated/NetworkDef';
 import type { NetworkKind } from '../contracts/generated/NetworkKind';
 import type { AngleUnit, DrawingFont } from '../model/projectSettings';
 import type { Entity, EntityKind, NewEntity } from '../model/entities';
-import type { CompiledExpression } from '../model/expression/expression';
+import type { CompiledExpression, ExprLayers } from '../model/expression/expression';
 import type { Vec2 } from '../model/geometry';
 import type { LayerField } from '../model/layerFields';
 import type { LayerStyle } from '../model/layers';
@@ -384,6 +384,8 @@ export interface RunContext {
   readonly project: ProjectInfo;
   /** A layer's place among the layers, the top of the panel first (the raster operations' order, docs/adr/0233 §2). */
   layerIndex(id: string): number;
+  /** The layers the expressions' calls to other objects look at (docs/adr/0214 §3); their objects are in `geometry`. */
+  readonly layers?: ExprLayers;
 }
 
 /** The project's SRID (0: none, or a definition of its own) and its type (null: not asked). */

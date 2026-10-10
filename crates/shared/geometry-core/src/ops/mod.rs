@@ -36,6 +36,7 @@ pub mod parts;
 pub mod path;
 pub mod point_editor;
 pub mod polygonize;
+pub mod proximity;
 pub mod reshape;
 pub mod reshape_by;
 pub mod road;

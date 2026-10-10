@@ -25,6 +25,10 @@ pub(crate) enum Lex {
     Var {
         name: String,
     },
+    /// `@name` (docs/adr/0214 §2.3); a lone `@` is no name.
+    At {
+        name: String,
+    },
     Word {
         name: String,
     },
@@ -117,6 +121,11 @@ pub(crate) fn lex(u: &[u16]) -> Vec<Piece> {
             let name = text(&u[i + 1..i + 1 + n]);
             i += 1 + n;
             Lex::Var { name }
+        } else if c == u16::from(b'@') {
+            let n = word(u, i + 1);
+            let name = text(&u[i + 1..i + 1 + n]);
+            i += 1 + n;
+            Lex::At { name }
         } else if let n @ 1.. = word(u, i) {
             let name = text(&u[i..i + n]);
             i += n;
@@ -176,7 +185,12 @@ fn mark(pieces: &mut [Piece]) {
         let Some(w) = folded(&pieces[i]) else {
             value = matches!(
                 pieces[i].lex,
-                Lex::Num | Lex::Str { .. } | Lex::Field { .. } | Lex::Var { .. } | Lex::Op(")")
+                Lex::Num
+                    | Lex::Str { .. }
+                    | Lex::Field { .. }
+                    | Lex::Var { .. }
+                    | Lex::At { .. }
+                    | Lex::Op(")")
             );
             i += 1;
             continue;
@@ -310,6 +324,9 @@ pub(crate) fn class_of(pieces: &[Piece], i: usize) -> Class {
             Some(_) => Class::Variable,
             None => Class::Unknown,
         },
+        // A name the project lacks is a warning (`check`), not an error: still a variable.
+        Lex::At { name } if !name.is_empty() => Class::Variable,
+        Lex::At { .. } => Class::Unknown,
         Lex::Word { name } => {
             if pieces[i].phrase.is_some() {
                 return Class::Keyword;

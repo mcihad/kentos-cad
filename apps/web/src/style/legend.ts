@@ -1,21 +1,30 @@
 import type { Entity } from '../model/entities';
 import type { LayerStyle } from '../model/layers';
-import type { Rule, Symbol, SymbolRef, SymbolSet } from '../model/style';
+import type { LayerRenderer, Rule, Symbol, SymbolRef, SymbolSet } from '../model/style';
 import { classesPresent } from './classify';
 import { symbolsOfLayerStyle } from './fromLayer';
 import type { GeometryClass } from './geometry';
+import { EXPONENTS, rampAt, shareOf, sizeAt, stepOf, withColor, withSize } from './thematic';
 
 /**
  * The legend of a drawing (plan açıklamaları): for each layer, what its
  * symbols mean. A layer without a renderer shows its own look; single,
  * categorized, graduated and rule-based renderers show one row per class
  * (only for the geometry the layer has); objects with their own symbol add
- * that symbol with its library name. Pure: the legend window draws it.
+ * that symbol with its library name. The thematic renderers (docs/adr/0213
+ * §2): Sürekli renk five samples of its ramp, Orantılı sembol three sizes,
+ * İki değişkenli renk a row per cell of its grid, Nokta yoğunluğu what a dot
+ * stands for and its values' colours, Grafik its values' colours, Isı
+ * haritası three samples, Kümeleme its cluster and its single points' rows,
+ * Yayma its single points' rows, Ters alan its fill. Pure: the legend
+ * window draws it.
  */
 
 export interface LegendEntry {
   label: string;
   symbol: Symbol | null;
+  /** The rows of one Orantılı sembol share a scale (CSS px per paper mm): their sizes compare (docs/adr/0213 §2.2). */
+  pxPerMm?: number;
 }
 
 export interface LegendGroup {
@@ -54,25 +63,94 @@ export function legendOf(layers: readonly LegendLayer[], src: LegendSources): Le
       if (found.length === 1) return [{ label, symbol: found[0].s }];
       return found.map((x) => ({ label: `${label} (${CLASS_NAME[x.c]})`, symbol: x.s }));
     };
+    /** A set's rows with every symbol changed by `f` (a thematic renderer's colour or size). */
+    const changed = (set: SymbolSet | undefined, label: string, f: (s: Symbol) => Symbol): LegendEntry[] =>
+      setEntries(set, label).map((e) => ({ label: e.label, symbol: e.symbol && f(e.symbol) }));
     const entries: LegendEntry[] = [];
-    const r = layer.style.renderer;
-    if (!r) entries.push(...setEntries(symbolsOfLayerStyle(layer.style, layer.style.color), layer.name));
-    else if (r.type === 'single') entries.push(...setEntries(r.symbols, layer.name));
-    else if (r.type === 'categorized') {
-      for (const k of r.categories) if (k.enabled !== false) entries.push(...setEntries(k.symbols, k.label || k.value));
-      if (r.other) entries.push(...setEntries(r.other, 'Diğer değerler'));
-    } else if (r.type === 'graduated') for (const k of r.classes) entries.push(...setEntries(k.symbols, k.label));
-    else {
-      const walk = (rules: readonly Rule[], prefix: string) => {
-        for (const rule of rules) {
-          if (rule.enabled === false) continue;
-          const label = prefix ? `${prefix} › ${rule.label}` : rule.label;
-          entries.push(...setEntries(rule.symbols, label));
-          if (rule.children?.length) walk(rule.children, label);
+    const rows = (r: LayerRenderer | undefined) => {
+      if (!r) return void entries.push(...setEntries(symbolsOfLayerStyle(layer.style, layer.style.color), layer.name));
+      switch (r.type) {
+        case 'single':
+          return void entries.push(...setEntries(r.symbols, layer.name));
+        case 'categorized':
+          for (const k of r.categories) if (k.enabled !== false) entries.push(...setEntries(k.symbols, k.label || k.value));
+          if (r.other) entries.push(...setEntries(r.other, 'Diğer değerler'));
+          return;
+        case 'graduated':
+          for (const k of r.classes) entries.push(...setEntries(k.symbols, k.label));
+          return;
+        case 'rules': {
+          const walk = (rules: readonly Rule[], prefix: string) => {
+            for (const rule of rules) {
+              if (rule.enabled === false) continue;
+              const label = prefix ? `${prefix} › ${rule.label}` : rule.label;
+              entries.push(...setEntries(rule.symbols, label));
+              if (rule.children?.length) walk(rule.children, label);
+            }
+          };
+          return walk(r.rules, '');
         }
-      };
-      walk(r.rules, '');
-    }
+        case 'unclassed':
+          for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+            const c = rampAt(r.ramp, stepOf(t) / 255);
+            entries.push(...changed(r.symbols, legendNumber(r.min + (r.max - r.min) * t), (s) => withColor(s, c.slice(0, 7))));
+          }
+          if (r.other) entries.push(...setEntries(r.other, 'Değeri olmayanlar'));
+          return;
+        case 'proportional': {
+          const unit = r.unit ?? 'mm';
+          const e = EXPONENTS[r.scaling ?? 'area'];
+          // The largest as four fifths of a row's picture (24 px high); paper mm only (px draw as they are).
+          const shared = unit === 'mm' && r.maxSize > 0 ? { pxPerMm: (0.8 * 24) / r.maxSize } : {};
+          for (const v of [r.minValue, (r.minValue + r.maxValue) / 2, r.maxValue]) {
+            const size = sizeAt(stepOf(shareOf(v, r.minValue, r.maxValue)) / 255, r.minSize, r.maxSize, e);
+            // Areas and points by the marker symbol, lines by the line symbol.
+            const set: SymbolSet = { ...(present.fill || present.marker ? { marker: r.symbols.marker } : {}), ...(present.line ? { line: r.symbols.line } : {}) };
+            const shown = (['line', 'marker'] as const).filter((c) => set[c] && resolve(set[c]));
+            for (const c of shown) {
+              const s = resolve(set[c]);
+              if (s) entries.push({ label: shown.length > 1 ? `${legendNumber(v)} (${CLASS_NAME[c]})` : legendNumber(v), symbol: withSize(s, size, unit), ...(c === 'marker' ? shared : {}) });
+            }
+          }
+          if (r.other) entries.push(...setEntries(r.other, 'Değeri olmayanlar'));
+          return;
+        }
+        case 'bivariate': {
+          const n = r.breaksX.length + 1;
+          for (let j = 0; j < n; j++)
+            for (let i = 0; i < n; i++) {
+              const c = r.colors[j * n + i];
+              if (!c) continue;
+              const label = `${r.exprX} ${rangeLabel(r.breaksX, i)}, ${r.exprY} ${rangeLabel(r.breaksY, j)}`;
+              entries.push(...changed(r.symbols, label, (s) => withColor(s, c.slice(0, 7))));
+            }
+          if (r.other) entries.push(...setEntries(r.other, 'Değeri olmayanlar'));
+          return;
+        }
+        case 'dotDensity':
+          entries.push({ label: `1 nokta = ${legendNumber(r.dotValue)}`, symbol: null });
+          for (const f of r.fields)
+            entries.push({ label: f.label || f.expr, symbol: { type: 'marker', layers: [{ id: 'd', type: 'shape', shape: 'circle', size: r.dotSize ?? 1, unit: r.unit ?? 'mm', fill: f.color }] } });
+          return;
+        case 'chart':
+          for (const f of r.fields) entries.push({ label: f.label || f.expr, symbol: { type: 'fill', layers: [{ id: 'f', type: 'simpleFill', color: f.color }] } });
+          return;
+        case 'heatmap':
+          for (const [label, t] of [['Az', 0.25], ['Orta', 0.5], ['Çok', 1]] as const)
+            entries.push({ label, symbol: { type: 'fill', layers: [{ id: 'f', type: 'simpleFill', color: rampAt(r.ramp, t) }] } });
+          return;
+        case 'cluster': {
+          const symbol = resolve(r.symbol) ?? { type: 'marker', layers: [{ id: 'k', type: 'shape', shape: 'circle', size: 24, unit: 'px', fill: layer.style.color, stroke: '#FFFFFF', strokeWidth: 1.5 }] };
+          entries.push({ label: 'Küme', symbol });
+          return rows(r.renderer);
+        }
+        case 'displacement':
+          return rows(r.renderer);
+        case 'inverted':
+          return void entries.push({ label: 'Dışı', symbol: resolve(r.symbols.fill) });
+      }
+    };
+    rows(layer.style.renderer);
     // Objects drawn with their own symbol: each symbol once, under its library name.
     const own = new Set<string>();
     for (const e of entities) if (e.symbol && !own.has(e.symbol)) own.add(e.symbol);
@@ -83,6 +161,18 @@ export function legendOf(layers: readonly LegendLayer[], src: LegendSources): Le
     if (entries.length) out.push({ layerId: layer.id, layerName: layer.name, entries });
   }
   return out;
+}
+
+/** A number on the legend: at most two decimals, as the classes' labels write them. */
+export function legendNumber(x: number): string {
+  return String(Math.round(x * 100) / 100);
+}
+
+/** A class of breaks as the legend says it: `< b₀`, `b₀ – b₁`, `≥ bₙ`. */
+export function rangeLabel(breaks: readonly number[], i: number): string {
+  if (i === 0) return `< ${legendNumber(breaks[0])}`;
+  if (i >= breaks.length) return `≥ ${legendNumber(breaks[breaks.length - 1])}`;
+  return `${legendNumber(breaks[i - 1])} – ${legendNumber(breaks[i])}`;
 }
 
 // ── The legend window and its picture ──────────────────────────────────

@@ -355,7 +355,12 @@ fn check_param(
             if src.is_empty() {
                 return (!p.optional).then(|| format!("{name}: bir ifade yazın."));
             }
-            kentos_style_core::expr::compile(src)
+            // İşlemler give the calls to other layers (docs/adr/0214 §1); the `@` values are read at the run.
+            let schema = kentos_expression::Schema {
+                world: true,
+                ..kentos_expression::Schema::default()
+            };
+            kentos_expression::compile_with(src, &schema)
                 .err()
                 .map(|e| format!("{name}: {}", e.text()))
         }

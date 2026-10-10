@@ -1,0 +1,5148 @@
+{
+ "format": "kentos.expression-extras",
+ "version": 1,
+ "note": "ADR 0214'ün ekleri (tarih ve saat, @ değişkenleri, düzenli ifade, dizi ve eşleme, toplama, mekânsal ilişki, başka katmandan değer), motordan bağımsız hesaplanmış: her kaynağın Parsel katmanının her nesnesindeki değeri ya da derlenmediği. Değer: null boş, [\"n\", x] sayı, [\"t\", s] metin (dizi ve eşleme JSON'u), [\"b\", b] doğru/yanlış. \"near\": sayıları 1e-9 göreli yakınlıkla karşılaştırılır (uzaklık ve örtüşmeler). \"unknown\": değeri olmayan @ adları. Üretici scripts/fixtures/expression_extras.py (--check yalnız karşılaştırır).",
+ "variables": [
+  {
+   "name": "is_no",
+   "value": "2026/41"
+  },
+  {
+   "name": "Katsayı",
+   "value": 1.5
+  },
+  {
+   "name": "onaylı",
+   "value": true
+  },
+  {
+   "name": "proje_adi",
+   "value": "Kızılay Etüdü"
+  },
+  {
+   "name": "koordinat_sistemi",
+   "value": "TUREF / TM33"
+  },
+  {
+   "name": "epsg",
+   "value": 5254.0
+  },
+  {
+   "name": "olcek",
+   "value": 1000.0
+  },
+  {
+   "name": "tarih",
+   "value": "2026-10-10"
+  },
+  {
+   "name": "simdi",
+   "value": "2026-10-10T14:30:00"
+  },
+  {
+   "name": "kullanici",
+   "value": "cihad"
+  }
+ ],
+ "evaluated": "parsel",
+ "layers": [
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "objects": [
+    {
+     "id": 1,
+     "layerId": "parsel",
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 0,
+       "y": 0
+      },
+      {
+       "x": 20,
+       "y": 0
+      },
+      {
+       "x": 20,
+       "y": 30
+      },
+      {
+       "x": 0,
+       "y": 30
+      }
+     ],
+     "attrs": {
+      "Ada": "101",
+      "Parsel": "1",
+      "Mahalle": "K1",
+      "Nitelik": "Arsa",
+      "Tarih": "2024-01-31",
+      "Etiketler": "imar,ifraz",
+      "Kat": "3",
+      "Bilgi": "{\"kat\": 3, \"ad\": \"A\"}"
+     }
+    },
+    {
+     "id": 2,
+     "layerId": "parsel",
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 20,
+       "y": 0
+      },
+      {
+       "x": 40,
+       "y": 0
+      },
+      {
+       "x": 40,
+       "y": 30
+      },
+      {
+       "x": 20,
+       "y": 30
+      }
+     ],
+     "attrs": {
+      "Ada": "101",
+      "Parsel": "2",
+      "Mahalle": "K1",
+      "Nitelik": "Bahçe",
+      "Tarih": "05.03.2021 14:30",
+      "Etiketler": "imar",
+      "Kat": "",
+      "Bilgi": "[1, [2, 3]]"
+     }
+    },
+    {
+     "id": 3,
+     "layerId": "parsel",
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 40,
+       "y": 0
+      },
+      {
+       "x": 60,
+       "y": 0
+      },
+      {
+       "x": 60,
+       "y": 30
+      },
+      {
+       "x": 40,
+       "y": 30
+      }
+     ],
+     "attrs": {
+      "Ada": "102",
+      "Parsel": "3",
+      "Mahalle": "K2",
+      "Nitelik": "Arsa",
+      "Tarih": "2020-02-29T23:59:59.5",
+      "Etiketler": "",
+      "Kat": "5",
+      "Bilgi": "{"
+     }
+    },
+    {
+     "id": 4,
+     "layerId": "parsel",
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 60,
+       "y": 0
+      },
+      {
+       "x": 80,
+       "y": 0
+      },
+      {
+       "x": 80,
+       "y": 40
+      },
+      {
+       "x": 60,
+       "y": 40
+      }
+     ],
+     "attrs": {
+      "Ada": "102",
+      "Parsel": "4",
+      "Mahalle": "K2",
+      "Nitelik": "Tarla",
+      "Tarih": "x",
+      "Etiketler": "a,,b",
+      "Kat": "2,5"
+     }
+    },
+    {
+     "id": 5,
+     "layerId": "parsel",
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 80,
+       "y": 0
+      },
+      {
+       "x": 100,
+       "y": 0
+      },
+      {
+       "x": 100,
+       "y": 30
+      },
+      {
+       "x": 80,
+       "y": 30
+      }
+     ],
+     "attrs": {
+      "Ada": "103",
+      "Parsel": "5",
+      "Mahalle": "K9",
+      "Nitelik": "Arsa",
+      "Tarih": "2026-10-10T09:05:07Z",
+      "Etiketler": "x",
+      "Kat": "4"
+     }
+    },
+    {
+     "id": 6,
+     "layerId": "parsel",
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 130,
+       "y": 0
+      },
+      {
+       "x": 150,
+       "y": 0
+      },
+      {
+       "x": 150,
+       "y": 30
+      },
+      {
+       "x": 130,
+       "y": 30
+      }
+     ],
+     "attrs": {
+      "Ada": "103",
+      "Parsel": "6",
+      "Nitelik": "Yol",
+      "Tarih": "2024-12-31T00:00",
+      "Kat": "1"
+     }
+    }
+   ]
+  },
+  {
+   "id": "sit",
+   "name": "Sit alanı",
+   "objects": [
+    {
+     "id": 11,
+     "layerId": "sit",
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 10,
+       "y": 10
+      },
+      {
+       "x": 50,
+       "y": 10
+      },
+      {
+       "x": 50,
+       "y": 50
+      },
+      {
+       "x": 10,
+       "y": 50
+      }
+     ],
+     "attrs": {
+      "Ad": "Kale",
+      "Derece": "1"
+     }
+    },
+    {
+     "id": 12,
+     "layerId": "sit",
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 55,
+       "y": 20
+      },
+      {
+       "x": 70,
+       "y": 20
+      },
+      {
+       "x": 70,
+       "y": 60
+      },
+      {
+       "x": 55,
+       "y": 60
+      }
+     ],
+     "attrs": {
+      "Ad": "Höyük",
+      "Derece": "2"
+     }
+    }
+   ]
+  },
+  {
+   "id": "durak",
+   "name": "Durak",
+   "objects": [
+    {
+     "id": 21,
+     "layerId": "durak",
+     "kind": "point",
+     "p": {
+      "x": 10,
+      "y": 40
+     },
+     "attrs": {
+      "Ad": "Çarşı"
+     }
+    },
+    {
+     "id": 22,
+     "layerId": "durak",
+     "kind": "point",
+     "p": {
+      "x": 90,
+      "y": 35
+     },
+     "attrs": {
+      "Ad": "Okul"
+     }
+    },
+    {
+     "id": 23,
+     "layerId": "durak",
+     "kind": "point",
+     "p": {
+      "x": 300,
+      "y": 300
+     },
+     "attrs": {
+      "Ad": "Uzak"
+     }
+    },
+    {
+     "id": 24,
+     "layerId": "durak",
+     "kind": "point",
+     "p": {
+      "x": 70,
+      "y": 20
+     },
+     "attrs": {
+      "Ad": "Pazar"
+     }
+    }
+   ]
+  },
+  {
+   "id": "mahalle",
+   "name": "Mahalle",
+   "objects": [
+    {
+     "id": 31,
+     "layerId": "mahalle",
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": -10,
+       "y": -10
+      },
+      {
+       "x": 45,
+       "y": -10
+      },
+      {
+       "x": 45,
+       "y": 60
+      },
+      {
+       "x": -10,
+       "y": 60
+      }
+     ],
+     "attrs": {
+      "Kod": "K1",
+      "Ad": "Kızılay"
+     }
+    },
+    {
+     "id": 32,
+     "layerId": "mahalle",
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 45,
+       "y": -10
+      },
+      {
+       "x": 120,
+       "y": -10
+      },
+      {
+       "x": 120,
+       "y": 60
+      },
+      {
+       "x": 45,
+       "y": 60
+      }
+     ],
+     "attrs": {
+      "Kod": "K2",
+      "Ad": "Bahçelievler"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dere",
+   "name": "Dere",
+   "objects": [
+    {
+     "id": 41,
+     "layerId": "dere",
+     "kind": "polyline",
+     "pts": [
+      {
+       "x": -10,
+       "y": 15
+      },
+      {
+       "x": 160,
+       "y": 15
+      }
+     ],
+     "attrs": {
+      "Ad": "Hatip"
+     }
+    }
+   ]
+  }
+ ],
+ "cases": [
+  {
+   "source": "@proje_adi",
+   "values": [
+    [
+     "t",
+     "Kızılay Etüdü"
+    ],
+    [
+     "t",
+     "Kızılay Etüdü"
+    ],
+    [
+     "t",
+     "Kızılay Etüdü"
+    ],
+    [
+     "t",
+     "Kızılay Etüdü"
+    ],
+    [
+     "t",
+     "Kızılay Etüdü"
+    ],
+    [
+     "t",
+     "Kızılay Etüdü"
+    ]
+   ]
+  },
+  {
+   "source": "@Proje_Adı || ' / ' || @is_no",
+   "values": [
+    [
+     "t",
+     "Kızılay Etüdü / 2026/41"
+    ],
+    [
+     "t",
+     "Kızılay Etüdü / 2026/41"
+    ],
+    [
+     "t",
+     "Kızılay Etüdü / 2026/41"
+    ],
+    [
+     "t",
+     "Kızılay Etüdü / 2026/41"
+    ],
+    [
+     "t",
+     "Kızılay Etüdü / 2026/41"
+    ],
+    [
+     "t",
+     "Kızılay Etüdü / 2026/41"
+    ]
+   ]
+  },
+  {
+   "source": "@KATSAYI * 2",
+   "values": [
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ]
+   ]
+  },
+  {
+   "source": "@onaylı ve Nitelik = 'Arsa'",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "@olcek / 100",
+   "values": [
+    [
+     "n",
+     10.0
+    ],
+    [
+     "n",
+     10.0
+    ],
+    [
+     "n",
+     10.0
+    ],
+    [
+     "n",
+     10.0
+    ],
+    [
+     "n",
+     10.0
+    ],
+    [
+     "n",
+     10.0
+    ]
+   ]
+  },
+  {
+   "source": "@yok",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "unknown": [
+    "yok"
+   ]
+  },
+  {
+   "source": "varsayılan(@yok, 'tanımsız') || @hiç",
+   "values": [
+    [
+     "t",
+     "tanımsız"
+    ],
+    [
+     "t",
+     "tanımsız"
+    ],
+    [
+     "t",
+     "tanımsız"
+    ],
+    [
+     "t",
+     "tanımsız"
+    ],
+    [
+     "t",
+     "tanımsız"
+    ],
+    [
+     "t",
+     "tanımsız"
+    ]
+   ],
+   "unknown": [
+    "yok",
+    "hiç"
+   ]
+  },
+  {
+   "source": "@katman_adi",
+   "values": [
+    [
+     "t",
+     "Parsel"
+    ],
+    [
+     "t",
+     "Parsel"
+    ],
+    [
+     "t",
+     "Parsel"
+    ],
+    [
+     "t",
+     "Parsel"
+    ],
+    [
+     "t",
+     "Parsel"
+    ],
+    [
+     "t",
+     "Parsel"
+    ]
+   ]
+  },
+  {
+   "source": "şimdi()",
+   "values": [
+    [
+     "t",
+     "2026-10-10T14:30:00"
+    ],
+    [
+     "t",
+     "2026-10-10T14:30:00"
+    ],
+    [
+     "t",
+     "2026-10-10T14:30:00"
+    ],
+    [
+     "t",
+     "2026-10-10T14:30:00"
+    ],
+    [
+     "t",
+     "2026-10-10T14:30:00"
+    ],
+    [
+     "t",
+     "2026-10-10T14:30:00"
+    ]
+   ]
+  },
+  {
+   "source": "bugün()",
+   "values": [
+    [
+     "t",
+     "2026-10-10"
+    ],
+    [
+     "t",
+     "2026-10-10"
+    ],
+    [
+     "t",
+     "2026-10-10"
+    ],
+    [
+     "t",
+     "2026-10-10"
+    ],
+    [
+     "t",
+     "2026-10-10"
+    ],
+    [
+     "t",
+     "2026-10-10"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_farkı(Tarih, bugün(), 'gün')",
+   "values": [
+    [
+     "n",
+     983.0
+    ],
+    [
+     "n",
+     2044.3958333333333
+    ],
+    [
+     "n",
+     2414.000005787037
+    ],
+    null,
+    [
+     "n",
+     -0.37855324074074076
+    ],
+    [
+     "n",
+     648.0
+    ]
+   ]
+  },
+  {
+   "source": "tarih(2024, 2, 29)",
+   "values": [
+    [
+     "t",
+     "2024-02-29"
+    ],
+    [
+     "t",
+     "2024-02-29"
+    ],
+    [
+     "t",
+     "2024-02-29"
+    ],
+    [
+     "t",
+     "2024-02-29"
+    ],
+    [
+     "t",
+     "2024-02-29"
+    ],
+    [
+     "t",
+     "2024-02-29"
+    ]
+   ]
+  },
+  {
+   "source": "tarih(2023, 2, 29)",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "tarih(2024, 13, 1)",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "tarih(Tarih)",
+   "values": [
+    [
+     "t",
+     "2024-01-31"
+    ],
+    [
+     "t",
+     "2021-03-05"
+    ],
+    [
+     "t",
+     "2020-02-29"
+    ],
+    null,
+    [
+     "t",
+     "2026-10-10"
+    ],
+    [
+     "t",
+     "2024-12-31"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_saat(Tarih)",
+   "values": [
+    [
+     "t",
+     "2024-01-31"
+    ],
+    [
+     "t",
+     "2021-03-05T14:30:00"
+    ],
+    [
+     "t",
+     "2020-02-29T23:59:59.500"
+    ],
+    null,
+    [
+     "t",
+     "2026-10-10T09:05:07"
+    ],
+    [
+     "t",
+     "2024-12-31"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_saat(2021, 3, 5, 14, 30, 5.5)",
+   "values": [
+    [
+     "t",
+     "2021-03-05T14:30:05.500"
+    ],
+    [
+     "t",
+     "2021-03-05T14:30:05.500"
+    ],
+    [
+     "t",
+     "2021-03-05T14:30:05.500"
+    ],
+    [
+     "t",
+     "2021-03-05T14:30:05.500"
+    ],
+    [
+     "t",
+     "2021-03-05T14:30:05.500"
+    ],
+    [
+     "t",
+     "2021-03-05T14:30:05.500"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_saat(2021, 3, 5)",
+   "values": [
+    [
+     "t",
+     "2021-03-05"
+    ],
+    [
+     "t",
+     "2021-03-05"
+    ],
+    [
+     "t",
+     "2021-03-05"
+    ],
+    [
+     "t",
+     "2021-03-05"
+    ],
+    [
+     "t",
+     "2021-03-05"
+    ],
+    [
+     "t",
+     "2021-03-05"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_saat(2021, 3, 5, 24)",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "yıl(Tarih)",
+   "values": [
+    [
+     "n",
+     2024.0
+    ],
+    [
+     "n",
+     2021.0
+    ],
+    [
+     "n",
+     2020.0
+    ],
+    null,
+    [
+     "n",
+     2026.0
+    ],
+    [
+     "n",
+     2024.0
+    ]
+   ]
+  },
+  {
+   "source": "ay(Tarih) * 100 + gün(Tarih)",
+   "values": [
+    [
+     "n",
+     131.0
+    ],
+    [
+     "n",
+     305.0
+    ],
+    [
+     "n",
+     229.0
+    ],
+    null,
+    [
+     "n",
+     1010.0
+    ],
+    [
+     "n",
+     1231.0
+    ]
+   ]
+  },
+  {
+   "source": "saat(Tarih) || ':' || dakika(Tarih) || ':' || saniye(Tarih)",
+   "values": [
+    [
+     "t",
+     "0:0:0"
+    ],
+    [
+     "t",
+     "14:30:0"
+    ],
+    [
+     "t",
+     "23:59:59.5"
+    ],
+    [
+     "t",
+     "::"
+    ],
+    [
+     "t",
+     "9:5:7"
+    ],
+    [
+     "t",
+     "0:0:0"
+    ]
+   ]
+  },
+  {
+   "source": "hafta(Tarih)",
+   "values": [
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     9.0
+    ],
+    [
+     "n",
+     9.0
+    ],
+    null,
+    [
+     "n",
+     41.0
+    ],
+    [
+     "n",
+     1.0
+    ]
+   ]
+  },
+  {
+   "source": "hafta('2021-01-03') || '/' || hafta('2021-01-04') || '/' || hafta('2020-12-31') || '/' || hafta('2026-12-31')",
+   "values": [
+    [
+     "t",
+     "53/1/53/53"
+    ],
+    [
+     "t",
+     "53/1/53/53"
+    ],
+    [
+     "t",
+     "53/1/53/53"
+    ],
+    [
+     "t",
+     "53/1/53/53"
+    ],
+    [
+     "t",
+     "53/1/53/53"
+    ],
+    [
+     "t",
+     "53/1/53/53"
+    ]
+   ]
+  },
+  {
+   "source": "haftanın_günü(Tarih)",
+   "values": [
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     6.0
+    ],
+    null,
+    [
+     "n",
+     6.0
+    ],
+    [
+     "n",
+     2.0
+    ]
+   ]
+  },
+  {
+   "source": "yılın_günü(Tarih)",
+   "values": [
+    [
+     "n",
+     31.0
+    ],
+    [
+     "n",
+     64.0
+    ],
+    [
+     "n",
+     60.0
+    ],
+    null,
+    [
+     "n",
+     283.0
+    ],
+    [
+     "n",
+     366.0
+    ]
+   ]
+  },
+  {
+   "source": "tarih_ekle(Tarih, 1, 'ay')",
+   "values": [
+    [
+     "t",
+     "2024-02-29"
+    ],
+    [
+     "t",
+     "2021-04-05T14:30:00"
+    ],
+    [
+     "t",
+     "2020-03-29T23:59:59.500"
+    ],
+    null,
+    [
+     "t",
+     "2026-11-10T09:05:07"
+    ],
+    [
+     "t",
+     "2025-01-31"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_ekle(Tarih, -1, 'yıl')",
+   "values": [
+    [
+     "t",
+     "2023-01-31"
+    ],
+    [
+     "t",
+     "2020-03-05T14:30:00"
+    ],
+    [
+     "t",
+     "2019-02-28T23:59:59.500"
+    ],
+    null,
+    [
+     "t",
+     "2025-10-10T09:05:07"
+    ],
+    [
+     "t",
+     "2023-12-31"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_ekle(Tarih, 36, 'saat')",
+   "values": [
+    [
+     "t",
+     "2024-02-01T12:00:00"
+    ],
+    [
+     "t",
+     "2021-03-07T02:30:00"
+    ],
+    [
+     "t",
+     "2020-03-02T11:59:59.500"
+    ],
+    null,
+    [
+     "t",
+     "2026-10-11T21:05:07"
+    ],
+    [
+     "t",
+     "2025-01-01T12:00:00"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_ekle(Tarih, 2, 'hafta')",
+   "values": [
+    [
+     "t",
+     "2024-02-14"
+    ],
+    [
+     "t",
+     "2021-03-19T14:30:00"
+    ],
+    [
+     "t",
+     "2020-03-14T23:59:59.500"
+    ],
+    null,
+    [
+     "t",
+     "2026-10-24T09:05:07"
+    ],
+    [
+     "t",
+     "2025-01-14"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_ekle(Tarih, 0.5, 'gün')",
+   "values": [
+    [
+     "t",
+     "2024-01-31T12:00:00"
+    ],
+    [
+     "t",
+     "2021-03-06T02:30:00"
+    ],
+    [
+     "t",
+     "2020-03-01T11:59:59.500"
+    ],
+    null,
+    [
+     "t",
+     "2026-10-10T21:05:07"
+    ],
+    [
+     "t",
+     "2024-12-31T12:00:00"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_ekle(Tarih, 1, 'months')",
+   "values": [
+    [
+     "t",
+     "2024-02-29"
+    ],
+    [
+     "t",
+     "2021-04-05T14:30:00"
+    ],
+    [
+     "t",
+     "2020-03-29T23:59:59.500"
+    ],
+    null,
+    [
+     "t",
+     "2026-11-10T09:05:07"
+    ],
+    [
+     "t",
+     "2025-01-31"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_ekle(Tarih, 1, 'fortnight')",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "tarih_ekle('9999-12-31', 1, 'gün')",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "tarih_farkı('2024-01-31', Tarih, 'ay')",
+   "values": [
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     -34.0
+    ],
+    [
+     "n",
+     -47.0
+    ],
+    null,
+    [
+     "n",
+     32.0
+    ],
+    [
+     "n",
+     11.0
+    ]
+   ]
+  },
+  {
+   "source": "tarih_farkı('2020-02-29', Tarih, 'yıl')",
+   "values": [
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    null,
+    [
+     "n",
+     6.0
+    ],
+    [
+     "n",
+     4.0
+    ]
+   ]
+  },
+  {
+   "source": "tarih_farkı(Tarih, '2024-01-31', 'yıl')",
+   "values": [
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    null,
+    [
+     "n",
+     -2.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ]
+  },
+  {
+   "source": "tarih_farkı(Tarih, '2026-10-10T12:00', 'saat')",
+   "values": [
+    [
+     "n",
+     23604.0
+    ],
+    [
+     "n",
+     49077.5
+    ],
+    [
+     "n",
+     57948.00013888889
+    ],
+    null,
+    [
+     "n",
+     2.914722222222222
+    ],
+    [
+     "n",
+     15564.0
+    ]
+   ]
+  },
+  {
+   "source": "tarih_farkı(Tarih, '2026-10-10', 'hafta')",
+   "values": [
+    [
+     "n",
+     140.42857142857142
+    ],
+    [
+     "n",
+     292.0565476190476
+    ],
+    [
+     "n",
+     344.85714368386243
+    ],
+    null,
+    [
+     "n",
+     -0.05407903439153439
+    ],
+    [
+     "n",
+     92.57142857142857
+    ]
+   ]
+  },
+  {
+   "source": "tarih_biçimle(Tarih, 'GG.AA.YYYY')",
+   "values": [
+    [
+     "t",
+     "31.01.2024"
+    ],
+    [
+     "t",
+     "05.03.2021"
+    ],
+    [
+     "t",
+     "29.02.2020"
+    ],
+    null,
+    [
+     "t",
+     "10.10.2026"
+    ],
+    [
+     "t",
+     "31.12.2024"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_biçimle(Tarih, 'GGGG, G AAAA YYYY ''saat'' SS:DD:ss')",
+   "values": [
+    [
+     "t",
+     "Çarşamba, 31 Ocak 2024 saat 00:00:00"
+    ],
+    [
+     "t",
+     "Cuma, 5 Mart 2021 saat 14:30:00"
+    ],
+    [
+     "t",
+     "Cumartesi, 29 Şubat 2020 saat 23:59:59"
+    ],
+    null,
+    [
+     "t",
+     "Cumartesi, 10 Ekim 2026 saat 09:05:07"
+    ],
+    [
+     "t",
+     "Salı, 31 Aralık 2024 saat 00:00:00"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_biçimle(Tarih, 'GGG G AAA YY, S.D.s ''''Y''')",
+   "values": [
+    [
+     "t",
+     "Çar 31 Oca 24, 0.0.0 'Y"
+    ],
+    [
+     "t",
+     "Cum 5 Mar 21, 14.30.0 'Y"
+    ],
+    [
+     "t",
+     "Cmt 29 Şub 20, 23.59.59 'Y"
+    ],
+    null,
+    [
+     "t",
+     "Cmt 10 Eki 26, 9.5.7 'Y"
+    ],
+    [
+     "t",
+     "Sal 31 Ara 24, 0.0.0 'Y"
+    ]
+   ]
+  },
+  {
+   "source": "tarih_biçimle(Tarih, boş)",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "Tarih < '2024-06-01'",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "eşleşir(Ada, '^10[12]$')",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "eşleşir(Nitelik, '(?i)^a')",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "eşleşir([Yok], '.')",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "düzenli_bul(Etiketler, ',')",
+   "values": [
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    null
+   ]
+  },
+  {
+   "source": "düzenli_bul('Çağrı 12', '\\d')",
+   "values": [
+    [
+     "n",
+     7.0
+    ],
+    [
+     "n",
+     7.0
+    ],
+    [
+     "n",
+     7.0
+    ],
+    [
+     "n",
+     7.0
+    ],
+    [
+     "n",
+     7.0
+    ],
+    [
+     "n",
+     7.0
+    ]
+   ]
+  },
+  {
+   "source": "düzenli_parça(Etiketler, '([a-z]+)$')",
+   "values": [
+    [
+     "t",
+     "ifraz"
+    ],
+    [
+     "t",
+     "imar"
+    ],
+    null,
+    [
+     "t",
+     "b"
+    ],
+    [
+     "t",
+     "x"
+    ],
+    null
+   ]
+  },
+  {
+   "source": "düzenli_parça(Tarih, '\\d{4}')",
+   "values": [
+    [
+     "t",
+     "2024"
+    ],
+    [
+     "t",
+     "2021"
+    ],
+    [
+     "t",
+     "2020"
+    ],
+    null,
+    [
+     "t",
+     "2026"
+    ],
+    [
+     "t",
+     "2024"
+    ]
+   ]
+  },
+  {
+   "source": "düzenli_parça(Nitelik, 'q')",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "düzenli_gruplar(Tarih, '(\\d+)-(\\d+)(-x)?')",
+   "values": [
+    [
+     "t",
+     "[\"2024\",\"01\",\"\"]"
+    ],
+    null,
+    [
+     "t",
+     "[\"2020\",\"02\",\"\"]"
+    ],
+    null,
+    [
+     "t",
+     "[\"2026\",\"10\",\"\"]"
+    ],
+    [
+     "t",
+     "[\"2024\",\"12\",\"\"]"
+    ]
+   ]
+  },
+  {
+   "source": "düzenli_gruplar(Tarih, '\\d')",
+   "values": [
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ],
+    null,
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ]
+   ]
+  },
+  {
+   "source": "düzenli_değiştir(Tarih, '(\\d+)-(\\d+)-(\\d+)', '$3/$2/$1')",
+   "values": [
+    [
+     "t",
+     "31/01/2024"
+    ],
+    [
+     "t",
+     "05.03.2021 14:30"
+    ],
+    [
+     "t",
+     "29/02/2020T23:59:59.5"
+    ],
+    [
+     "t",
+     "x"
+    ],
+    [
+     "t",
+     "10/10/2026T09:05:07Z"
+    ],
+    [
+     "t",
+     "31/12/2024T00:00"
+    ]
+   ]
+  },
+  {
+   "source": "düzenli_değiştir(Etiketler, ',', ' + ')",
+   "values": [
+    [
+     "t",
+     "imar + ifraz"
+    ],
+    [
+     "t",
+     "imar"
+    ],
+    [
+     "t",
+     ""
+    ],
+    [
+     "t",
+     "a +  + b"
+    ],
+    [
+     "t",
+     "x"
+    ],
+    null
+   ]
+  },
+  {
+   "source": "düzenli_değiştir(Nitelik, '(?P<ilk>.)', '${ilk}$$')",
+   "values": [
+    [
+     "t",
+     "A$r$s$a$"
+    ],
+    [
+     "t",
+     "B$a$h$ç$e$"
+    ],
+    [
+     "t",
+     "A$r$s$a$"
+    ],
+    [
+     "t",
+     "T$a$r$l$a$"
+    ],
+    [
+     "t",
+     "A$r$s$a$"
+    ],
+    [
+     "t",
+     "Y$o$l$"
+    ]
+   ]
+  },
+  {
+   "source": "düzenli_değiştir(Ada, '1', Parsel)",
+   "values": [
+    [
+     "t",
+     "101"
+    ],
+    [
+     "t",
+     "202"
+    ],
+    [
+     "t",
+     "302"
+    ],
+    [
+     "t",
+     "402"
+    ],
+    [
+     "t",
+     "503"
+    ],
+    [
+     "t",
+     "603"
+    ]
+   ]
+  },
+  {
+   "source": "eşleşir('a', Etiketler)",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "eşleşir(Ada, '(')",
+   "compiles": false
+  },
+  {
+   "source": "dizi(1, 'Arsa', doğru, boş, 0.1 + 0.2)",
+   "values": [
+    [
+     "t",
+     "[1,\"Arsa\",true,null,0.30000000000000004]"
+    ],
+    [
+     "t",
+     "[1,\"Arsa\",true,null,0.30000000000000004]"
+    ],
+    [
+     "t",
+     "[1,\"Arsa\",true,null,0.30000000000000004]"
+    ],
+    [
+     "t",
+     "[1,\"Arsa\",true,null,0.30000000000000004]"
+    ],
+    [
+     "t",
+     "[1,\"Arsa\",true,null,0.30000000000000004]"
+    ],
+    [
+     "t",
+     "[1,\"Arsa\",true,null,0.30000000000000004]"
+    ]
+   ]
+  },
+  {
+   "source": "dizi()",
+   "values": [
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ]
+   ]
+  },
+  {
+   "source": "dizi(1e21, 0.0000001, -0, 1 / 3)",
+   "values": [
+    [
+     "t",
+     "[1e+21,1e-7,0,0.3333333333333333]"
+    ],
+    [
+     "t",
+     "[1e+21,1e-7,0,0.3333333333333333]"
+    ],
+    [
+     "t",
+     "[1e+21,1e-7,0,0.3333333333333333]"
+    ],
+    [
+     "t",
+     "[1e+21,1e-7,0,0.3333333333333333]"
+    ],
+    [
+     "t",
+     "[1e+21,1e-7,0,0.3333333333333333]"
+    ],
+    [
+     "t",
+     "[1e+21,1e-7,0,0.3333333333333333]"
+    ]
+   ]
+  },
+  {
+   "source": "dizi(Ada, dizi(Parsel, Kat))",
+   "values": [
+    [
+     "t",
+     "[\"101\",[\"1\",\"3\"]]"
+    ],
+    [
+     "t",
+     "[\"101\",[\"2\",\"\"]]"
+    ],
+    [
+     "t",
+     "[\"102\",[\"3\",\"5\"]]"
+    ],
+    [
+     "t",
+     "[\"102\",[\"4\",\"2,5\"]]"
+    ],
+    [
+     "t",
+     "[\"103\",[\"5\",\"4\"]]"
+    ],
+    [
+     "t",
+     "[\"103\",[\"6\",\"1\"]]"
+    ]
+   ]
+  },
+  {
+   "source": "dizi_uzunluğu(metin_dizi(Etiketler))",
+   "values": [
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    null
+   ]
+  },
+  {
+   "source": "dizi_uzunluğu('a')",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "dizi_öğe(metin_dizi(Etiketler), 0)",
+   "values": [
+    [
+     "t",
+     "imar"
+    ],
+    [
+     "t",
+     "imar"
+    ],
+    [
+     "t",
+     ""
+    ],
+    [
+     "t",
+     "a"
+    ],
+    [
+     "t",
+     "x"
+    ],
+    null
+   ]
+  },
+  {
+   "source": "dizi_öğe(metin_dizi(Etiketler), -1)",
+   "values": [
+    [
+     "t",
+     "ifraz"
+    ],
+    [
+     "t",
+     "imar"
+    ],
+    [
+     "t",
+     ""
+    ],
+    [
+     "t",
+     "b"
+    ],
+    [
+     "t",
+     "x"
+    ],
+    null
+   ]
+  },
+  {
+   "source": "dizi_öğe(metin_dizi(Etiketler), 5)",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "dizi_ilk(dizi(Ada, Parsel)) || dizi_son(dizi(Ada, Parsel))",
+   "values": [
+    [
+     "t",
+     "1011"
+    ],
+    [
+     "t",
+     "1012"
+    ],
+    [
+     "t",
+     "1023"
+    ],
+    [
+     "t",
+     "1024"
+    ],
+    [
+     "t",
+     "1035"
+    ],
+    [
+     "t",
+     "1036"
+    ]
+   ]
+  },
+  {
+   "source": "dizi_içerir(dizi(101, 103), Ada)",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "dizi_bul(dizi('3', 5, 'x'), Kat)",
+   "values": [
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     -1.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     -1.0
+    ],
+    [
+     "n",
+     -1.0
+    ],
+    [
+     "n",
+     -1.0
+    ]
+   ]
+  },
+  {
+   "source": "dizi_ekle(metin_dizi(Etiketler), Parsel)",
+   "values": [
+    [
+     "t",
+     "[\"imar\",\"ifraz\",\"1\"]"
+    ],
+    [
+     "t",
+     "[\"imar\",\"2\"]"
+    ],
+    [
+     "t",
+     "[\"\",\"3\"]"
+    ],
+    [
+     "t",
+     "[\"a\",\"\",\"b\",\"4\"]"
+    ],
+    [
+     "t",
+     "[\"x\",\"5\"]"
+    ],
+    null
+   ]
+  },
+  {
+   "source": "dizi_birleştir(dizi(1), metin_dizi(Etiketler))",
+   "values": [
+    [
+     "t",
+     "[1,\"imar\",\"ifraz\"]"
+    ],
+    [
+     "t",
+     "[1,\"imar\"]"
+    ],
+    [
+     "t",
+     "[1,\"\"]"
+    ],
+    [
+     "t",
+     "[1,\"a\",\"\",\"b\"]"
+    ],
+    [
+     "t",
+     "[1,\"x\"]"
+    ],
+    null
+   ]
+  },
+  {
+   "source": "dizi_birleştir(dizi(1), 'x')",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "dizi_benzersiz(dizi(1, '1', 2, 'a', 'a', boş, boş))",
+   "values": [
+    [
+     "t",
+     "[1,2,\"a\",null]"
+    ],
+    [
+     "t",
+     "[1,2,\"a\",null]"
+    ],
+    [
+     "t",
+     "[1,2,\"a\",null]"
+    ],
+    [
+     "t",
+     "[1,2,\"a\",null]"
+    ],
+    [
+     "t",
+     "[1,2,\"a\",null]"
+    ],
+    [
+     "t",
+     "[1,2,\"a\",null]"
+    ]
+   ]
+  },
+  {
+   "source": "dizi_sırala(dizi(3, 'Çam', '12', boş, 'Ceviz', 1, doğru, yanlış, 'dut'))",
+   "values": [
+    [
+     "t",
+     "[1,3,\"12\",\"Ceviz\",\"Çam\",\"dut\",false,true,null]"
+    ],
+    [
+     "t",
+     "[1,3,\"12\",\"Ceviz\",\"Çam\",\"dut\",false,true,null]"
+    ],
+    [
+     "t",
+     "[1,3,\"12\",\"Ceviz\",\"Çam\",\"dut\",false,true,null]"
+    ],
+    [
+     "t",
+     "[1,3,\"12\",\"Ceviz\",\"Çam\",\"dut\",false,true,null]"
+    ],
+    [
+     "t",
+     "[1,3,\"12\",\"Ceviz\",\"Çam\",\"dut\",false,true,null]"
+    ],
+    [
+     "t",
+     "[1,3,\"12\",\"Ceviz\",\"Çam\",\"dut\",false,true,null]"
+    ]
+   ]
+  },
+  {
+   "source": "dizi_sırala(dizi(3, 'Çam', '12', boş, 'Ceviz', 1), yanlış)",
+   "values": [
+    [
+     "t",
+     "[\"Çam\",\"Ceviz\",\"12\",3,1,null]"
+    ],
+    [
+     "t",
+     "[\"Çam\",\"Ceviz\",\"12\",3,1,null]"
+    ],
+    [
+     "t",
+     "[\"Çam\",\"Ceviz\",\"12\",3,1,null]"
+    ],
+    [
+     "t",
+     "[\"Çam\",\"Ceviz\",\"12\",3,1,null]"
+    ],
+    [
+     "t",
+     "[\"Çam\",\"Ceviz\",\"12\",3,1,null]"
+    ],
+    [
+     "t",
+     "[\"Çam\",\"Ceviz\",\"12\",3,1,null]"
+    ]
+   ]
+  },
+  {
+   "source": "dizi_ters(metin_dizi(Etiketler))",
+   "values": [
+    [
+     "t",
+     "[\"ifraz\",\"imar\"]"
+    ],
+    [
+     "t",
+     "[\"imar\"]"
+    ],
+    [
+     "t",
+     "[\"\"]"
+    ],
+    [
+     "t",
+     "[\"b\",\"\",\"a\"]"
+    ],
+    [
+     "t",
+     "[\"x\"]"
+    ],
+    null
+   ]
+  },
+  {
+   "source": "dizi_dilim(dizi(0, 1, 2, 3, 4), 1, -2)",
+   "values": [
+    [
+     "t",
+     "[1,2,3]"
+    ],
+    [
+     "t",
+     "[1,2,3]"
+    ],
+    [
+     "t",
+     "[1,2,3]"
+    ],
+    [
+     "t",
+     "[1,2,3]"
+    ],
+    [
+     "t",
+     "[1,2,3]"
+    ],
+    [
+     "t",
+     "[1,2,3]"
+    ]
+   ]
+  },
+  {
+   "source": "dizi_dilim(dizi(0, 1, 2, 3, 4), -2, 9)",
+   "values": [
+    [
+     "t",
+     "[3,4]"
+    ],
+    [
+     "t",
+     "[3,4]"
+    ],
+    [
+     "t",
+     "[3,4]"
+    ],
+    [
+     "t",
+     "[3,4]"
+    ],
+    [
+     "t",
+     "[3,4]"
+    ],
+    [
+     "t",
+     "[3,4]"
+    ]
+   ]
+  },
+  {
+   "source": "dizi_dilim(dizi(0, 1, 2), 2, 1)",
+   "values": [
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ]
+   ]
+  },
+  {
+   "source": "dizi_metin(dizi(Ada, boş, Parsel, 2.5, doğru), '/', '?')",
+   "values": [
+    [
+     "t",
+     "101/?/1/2.5/doğru"
+    ],
+    [
+     "t",
+     "101/?/2/2.5/doğru"
+    ],
+    [
+     "t",
+     "102/?/3/2.5/doğru"
+    ],
+    [
+     "t",
+     "102/?/4/2.5/doğru"
+    ],
+    [
+     "t",
+     "103/?/5/2.5/doğru"
+    ],
+    [
+     "t",
+     "103/?/6/2.5/doğru"
+    ]
+   ]
+  },
+  {
+   "source": "dizi_metin(dizi(1, 2))",
+   "values": [
+    [
+     "t",
+     "1,2"
+    ],
+    [
+     "t",
+     "1,2"
+    ],
+    [
+     "t",
+     "1,2"
+    ],
+    [
+     "t",
+     "1,2"
+    ],
+    [
+     "t",
+     "1,2"
+    ],
+    [
+     "t",
+     "1,2"
+    ]
+   ]
+  },
+  {
+   "source": "metin_dizi(Etiketler, ',', '')",
+   "values": [
+    [
+     "t",
+     "[\"imar\",\"ifraz\"]"
+    ],
+    [
+     "t",
+     "[\"imar\"]"
+    ],
+    [
+     "t",
+     "[null]"
+    ],
+    [
+     "t",
+     "[\"a\",null,\"b\"]"
+    ],
+    [
+     "t",
+     "[\"x\"]"
+    ],
+    null
+   ]
+  },
+  {
+   "source": "metin_dizi(Ada, '')",
+   "values": [
+    [
+     "t",
+     "[\"1\",\"0\",\"1\"]"
+    ],
+    [
+     "t",
+     "[\"1\",\"0\",\"1\"]"
+    ],
+    [
+     "t",
+     "[\"1\",\"0\",\"2\"]"
+    ],
+    [
+     "t",
+     "[\"1\",\"0\",\"2\"]"
+    ],
+    [
+     "t",
+     "[\"1\",\"0\",\"3\"]"
+    ],
+    [
+     "t",
+     "[\"1\",\"0\",\"3\"]"
+    ]
+   ]
+  },
+  {
+   "source": "metin_dizi([Yok])",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "dizi_topla(dizi(0.1, 0.2, 'x', '0,5', doğru))",
+   "values": [
+    [
+     "n",
+     0.8
+    ],
+    [
+     "n",
+     0.8
+    ],
+    [
+     "n",
+     0.8
+    ],
+    [
+     "n",
+     0.8
+    ],
+    [
+     "n",
+     0.8
+    ],
+    [
+     "n",
+     0.8
+    ]
+   ]
+  },
+  {
+   "source": "dizi_ortalama(dizi(1, 2, 4))",
+   "values": [
+    [
+     "n",
+     2.3333333333333335
+    ],
+    [
+     "n",
+     2.3333333333333335
+    ],
+    [
+     "n",
+     2.3333333333333335
+    ],
+    [
+     "n",
+     2.3333333333333335
+    ],
+    [
+     "n",
+     2.3333333333333335
+    ],
+    [
+     "n",
+     2.3333333333333335
+    ]
+   ]
+  },
+  {
+   "source": "dizi_en_düşük(dizi(3, '12', 1.5))",
+   "values": [
+    [
+     "n",
+     1.5
+    ],
+    [
+     "n",
+     1.5
+    ],
+    [
+     "n",
+     1.5
+    ],
+    [
+     "n",
+     1.5
+    ],
+    [
+     "n",
+     1.5
+    ],
+    [
+     "n",
+     1.5
+    ]
+   ]
+  },
+  {
+   "source": "dizi_en_yüksek(dizi('Çam', 'Ceviz', 'Dut'))",
+   "values": [
+    [
+     "t",
+     "Dut"
+    ],
+    [
+     "t",
+     "Dut"
+    ],
+    [
+     "t",
+     "Dut"
+    ],
+    [
+     "t",
+     "Dut"
+    ],
+    [
+     "t",
+     "Dut"
+    ],
+    [
+     "t",
+     "Dut"
+    ]
+   ]
+  },
+  {
+   "source": "dizi_topla(dizi('x'))",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "eşleme('ad', Nitelik, 'kat', Kat, 'ad', Ada)",
+   "values": [
+    [
+     "t",
+     "{\"ad\":\"101\",\"kat\":\"3\"}"
+    ],
+    [
+     "t",
+     "{\"ad\":\"101\",\"kat\":\"\"}"
+    ],
+    [
+     "t",
+     "{\"ad\":\"102\",\"kat\":\"5\"}"
+    ],
+    [
+     "t",
+     "{\"ad\":\"102\",\"kat\":\"2,5\"}"
+    ],
+    [
+     "t",
+     "{\"ad\":\"103\",\"kat\":\"4\"}"
+    ],
+    [
+     "t",
+     "{\"ad\":\"103\",\"kat\":\"1\"}"
+    ]
+   ]
+  },
+  {
+   "source": "eşleme()",
+   "values": [
+    [
+     "t",
+     "{}"
+    ],
+    [
+     "t",
+     "{}"
+    ],
+    [
+     "t",
+     "{}"
+    ],
+    [
+     "t",
+     "{}"
+    ],
+    [
+     "t",
+     "{}"
+    ],
+    [
+     "t",
+     "{}"
+    ]
+   ]
+  },
+  {
+   "source": "eşleme_değeri(json_oku(Bilgi), 'kat')",
+   "values": [
+    [
+     "n",
+     3.0
+    ],
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "eşleme_değeri(json_oku(Bilgi), 'yok')",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "eşleme_içerir(eşleme('a', 1), 'a')",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "eşleme_anahtarları(eşleme('b', 1, 'a', 2))",
+   "values": [
+    [
+     "t",
+     "[\"b\",\"a\"]"
+    ],
+    [
+     "t",
+     "[\"b\",\"a\"]"
+    ],
+    [
+     "t",
+     "[\"b\",\"a\"]"
+    ],
+    [
+     "t",
+     "[\"b\",\"a\"]"
+    ],
+    [
+     "t",
+     "[\"b\",\"a\"]"
+    ],
+    [
+     "t",
+     "[\"b\",\"a\"]"
+    ]
+   ]
+  },
+  {
+   "source": "eşleme_değerleri(eşleme('b', 1, 'a', dizi(2)))",
+   "values": [
+    [
+     "t",
+     "[1,[2]]"
+    ],
+    [
+     "t",
+     "[1,[2]]"
+    ],
+    [
+     "t",
+     "[1,[2]]"
+    ],
+    [
+     "t",
+     "[1,[2]]"
+    ],
+    [
+     "t",
+     "[1,[2]]"
+    ],
+    [
+     "t",
+     "[1,[2]]"
+    ]
+   ]
+  },
+  {
+   "source": "eşleme_ekle(eşleme('a', 1), 'b', Parsel)",
+   "values": [
+    [
+     "t",
+     "{\"a\":1,\"b\":\"1\"}"
+    ],
+    [
+     "t",
+     "{\"a\":1,\"b\":\"2\"}"
+    ],
+    [
+     "t",
+     "{\"a\":1,\"b\":\"3\"}"
+    ],
+    [
+     "t",
+     "{\"a\":1,\"b\":\"4\"}"
+    ],
+    [
+     "t",
+     "{\"a\":1,\"b\":\"5\"}"
+    ],
+    [
+     "t",
+     "{\"a\":1,\"b\":\"6\"}"
+    ]
+   ]
+  },
+  {
+   "source": "eşleme_ekle(eşleme('a', 1), 'a', 2)",
+   "values": [
+    [
+     "t",
+     "{\"a\":2}"
+    ],
+    [
+     "t",
+     "{\"a\":2}"
+    ],
+    [
+     "t",
+     "{\"a\":2}"
+    ],
+    [
+     "t",
+     "{\"a\":2}"
+    ],
+    [
+     "t",
+     "{\"a\":2}"
+    ],
+    [
+     "t",
+     "{\"a\":2}"
+    ]
+   ]
+  },
+  {
+   "source": "eşleme_sil(eşleme('a', 1, 'b', 2), 'a')",
+   "values": [
+    [
+     "t",
+     "{\"b\":2}"
+    ],
+    [
+     "t",
+     "{\"b\":2}"
+    ],
+    [
+     "t",
+     "{\"b\":2}"
+    ],
+    [
+     "t",
+     "{\"b\":2}"
+    ],
+    [
+     "t",
+     "{\"b\":2}"
+    ],
+    [
+     "t",
+     "{\"b\":2}"
+    ]
+   ]
+  },
+  {
+   "source": "json_oku(Bilgi)",
+   "values": [
+    [
+     "t",
+     "{\"kat\":3,\"ad\":\"A\"}"
+    ],
+    [
+     "t",
+     "[1,[2,3]]"
+    ],
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "json_oku('\"A\\\\nB\"')",
+   "values": [
+    [
+     "t",
+     "A\\nB"
+    ],
+    [
+     "t",
+     "A\\nB"
+    ],
+    [
+     "t",
+     "A\\nB"
+    ],
+    [
+     "t",
+     "A\\nB"
+    ],
+    [
+     "t",
+     "A\\nB"
+    ],
+    [
+     "t",
+     "A\\nB"
+    ]
+   ]
+  },
+  {
+   "source": "json_oku(' 12.5 ')",
+   "values": [
+    [
+     "n",
+     12.5
+    ],
+    [
+     "n",
+     12.5
+    ],
+    [
+     "n",
+     12.5
+    ],
+    [
+     "n",
+     12.5
+    ],
+    [
+     "n",
+     12.5
+    ],
+    [
+     "n",
+     12.5
+    ]
+   ]
+  },
+  {
+   "source": "json_yaz(Nitelik)",
+   "values": [
+    [
+     "t",
+     "\"Arsa\""
+    ],
+    [
+     "t",
+     "\"Bahçe\""
+    ],
+    [
+     "t",
+     "\"Arsa\""
+    ],
+    [
+     "t",
+     "\"Tarla\""
+    ],
+    [
+     "t",
+     "\"Arsa\""
+    ],
+    [
+     "t",
+     "\"Yol\""
+    ]
+   ]
+  },
+  {
+   "source": "json_yaz(boş) || json_yaz(doğru) || json_yaz(1 / 4)",
+   "values": [
+    [
+     "t",
+     "nulltrue0.25"
+    ],
+    [
+     "t",
+     "nulltrue0.25"
+    ],
+    [
+     "t",
+     "nulltrue0.25"
+    ],
+    [
+     "t",
+     "nulltrue0.25"
+    ],
+    [
+     "t",
+     "nulltrue0.25"
+    ],
+    [
+     "t",
+     "nulltrue0.25"
+    ]
+   ]
+  },
+  {
+   "source": "json_yaz(json_oku(Bilgi))",
+   "values": [
+    [
+     "t",
+     "{\"kat\":3,\"ad\":\"A\"}"
+    ],
+    [
+     "t",
+     "[1,[2,3]]"
+    ],
+    [
+     "t",
+     "null"
+    ],
+    [
+     "t",
+     "null"
+    ],
+    [
+     "t",
+     "null"
+    ],
+    [
+     "t",
+     "null"
+    ]
+   ]
+  },
+  {
+   "source": "dizi(1, 2) = dizi(1, 2)",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "dizi(1, 2) = '[1,2]'",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "dizi() veya 0",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "eğer(metin_dizi(Etiketler), 'dolu', 'boş')",
+   "values": [
+    [
+     "t",
+     "dolu"
+    ],
+    [
+     "t",
+     "dolu"
+    ],
+    [
+     "t",
+     "dolu"
+    ],
+    [
+     "t",
+     "dolu"
+    ],
+    [
+     "t",
+     "dolu"
+    ],
+    [
+     "t",
+     "boş"
+    ]
+   ]
+  },
+  {
+   "source": "uzunluk(dizi(1, 2))",
+   "values": [
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     5.0
+    ]
+   ]
+  },
+  {
+   "source": "dizi(1) || '!'",
+   "values": [
+    [
+     "t",
+     "[1]!"
+    ],
+    [
+     "t",
+     "[1]!"
+    ],
+    [
+     "t",
+     "[1]!"
+    ],
+    [
+     "t",
+     "[1]!"
+    ],
+    [
+     "t",
+     "[1]!"
+    ],
+    [
+     "t",
+     "[1]!"
+    ]
+   ]
+  },
+  {
+   "source": "metin(eşleme('a', 1))",
+   "values": [
+    [
+     "t",
+     "{\"a\":1}"
+    ],
+    [
+     "t",
+     "{\"a\":1}"
+    ],
+    [
+     "t",
+     "{\"a\":1}"
+    ],
+    [
+     "t",
+     "{\"a\":1}"
+    ],
+    [
+     "t",
+     "{\"a\":1}"
+    ],
+    [
+     "t",
+     "{\"a\":1}"
+    ]
+   ]
+  },
+  {
+   "source": "eşleme('a')",
+   "compiles": false
+  },
+  {
+   "source": "topla($alan)",
+   "values": [
+    [
+     "n",
+     3800.0
+    ],
+    [
+     "n",
+     3800.0
+    ],
+    [
+     "n",
+     3800.0
+    ],
+    [
+     "n",
+     3800.0
+    ],
+    [
+     "n",
+     3800.0
+    ],
+    [
+     "n",
+     3800.0
+    ]
+   ]
+  },
+  {
+   "source": "$alan / topla($alan)",
+   "values": [
+    [
+     "n",
+     0.15789473684210525
+    ],
+    [
+     "n",
+     0.15789473684210525
+    ],
+    [
+     "n",
+     0.15789473684210525
+    ],
+    [
+     "n",
+     0.21052631578947367
+    ],
+    [
+     "n",
+     0.15789473684210525
+    ],
+    [
+     "n",
+     0.15789473684210525
+    ]
+   ]
+  },
+  {
+   "source": "topla($alan, Mahalle)",
+   "values": [
+    [
+     "n",
+     1200.0
+    ],
+    [
+     "n",
+     1200.0
+    ],
+    [
+     "n",
+     1400.0
+    ],
+    [
+     "n",
+     1400.0
+    ],
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ]
+   ]
+  },
+  {
+   "source": "topla($alan, Ada, Nitelik = 'Arsa')",
+   "values": [
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ]
+   ]
+  },
+  {
+   "source": "ortalama(Kat)",
+   "values": [
+    [
+     "n",
+     3.1
+    ],
+    [
+     "n",
+     3.1
+    ],
+    [
+     "n",
+     3.1
+    ],
+    [
+     "n",
+     3.1
+    ],
+    [
+     "n",
+     3.1
+    ],
+    [
+     "n",
+     3.1
+    ]
+   ]
+  },
+  {
+   "source": "ortalama(Kat, Ada)",
+   "values": [
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.75
+    ],
+    [
+     "n",
+     3.75
+    ],
+    [
+     "n",
+     2.5
+    ],
+    [
+     "n",
+     2.5
+    ]
+   ]
+  },
+  {
+   "source": "say(Kat)",
+   "values": [
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     5.0
+    ]
+   ]
+  },
+  {
+   "source": "say($id, Ada)",
+   "values": [
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ]
+   ]
+  },
+  {
+   "source": "say(Kat, Ada, Kat > 4)",
+   "values": [
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ]
+  },
+  {
+   "source": "say_benzersiz(Nitelik)",
+   "values": [
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     4.0
+    ]
+   ]
+  },
+  {
+   "source": "say_benzersiz(Nitelik, Mahalle)",
+   "values": [
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ]
+   ]
+  },
+  {
+   "source": "en_düşük($alan)",
+   "values": [
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ]
+   ]
+  },
+  {
+   "source": "en_yüksek(Kat, Ada)",
+   "values": [
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     4.0
+    ]
+   ]
+  },
+  {
+   "source": "en_düşük(Nitelik)",
+   "values": [
+    [
+     "t",
+     "Arsa"
+    ],
+    [
+     "t",
+     "Arsa"
+    ],
+    [
+     "t",
+     "Arsa"
+    ],
+    [
+     "t",
+     "Arsa"
+    ],
+    [
+     "t",
+     "Arsa"
+    ],
+    [
+     "t",
+     "Arsa"
+    ]
+   ]
+  },
+  {
+   "source": "orta_değer(Kat)",
+   "values": [
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ]
+   ]
+  },
+  {
+   "source": "orta_değer($id, Ada)",
+   "values": [
+    [
+     "n",
+     1.5
+    ],
+    [
+     "n",
+     1.5
+    ],
+    [
+     "n",
+     3.5
+    ],
+    [
+     "n",
+     3.5
+    ],
+    [
+     "n",
+     5.5
+    ],
+    [
+     "n",
+     5.5
+    ]
+   ]
+  },
+  {
+   "source": "std_sapma($alan)",
+   "values": [
+    [
+     "n",
+     81.64965809277261
+    ],
+    [
+     "n",
+     81.64965809277261
+    ],
+    [
+     "n",
+     81.64965809277261
+    ],
+    [
+     "n",
+     81.64965809277261
+    ],
+    [
+     "n",
+     81.64965809277261
+    ],
+    [
+     "n",
+     81.64965809277261
+    ]
+   ]
+  },
+  {
+   "source": "std_sapma(Kat, Ada)",
+   "values": [
+    null,
+    null,
+    [
+     "n",
+     1.7677669529663689
+    ],
+    [
+     "n",
+     1.7677669529663689
+    ],
+    [
+     "n",
+     2.1213203435596424
+    ],
+    [
+     "n",
+     2.1213203435596424
+    ]
+   ]
+  },
+  {
+   "source": "değerleri_birleştir(Parsel)",
+   "values": [
+    [
+     "t",
+     "1, 2, 3, 4, 5, 6"
+    ],
+    [
+     "t",
+     "1, 2, 3, 4, 5, 6"
+    ],
+    [
+     "t",
+     "1, 2, 3, 4, 5, 6"
+    ],
+    [
+     "t",
+     "1, 2, 3, 4, 5, 6"
+    ],
+    [
+     "t",
+     "1, 2, 3, 4, 5, 6"
+    ],
+    [
+     "t",
+     "1, 2, 3, 4, 5, 6"
+    ]
+   ]
+  },
+  {
+   "source": "değerleri_birleştir(Parsel, '-', Ada)",
+   "values": [
+    [
+     "t",
+     "1-2"
+    ],
+    [
+     "t",
+     "1-2"
+    ],
+    [
+     "t",
+     "3-4"
+    ],
+    [
+     "t",
+     "3-4"
+    ],
+    [
+     "t",
+     "5-6"
+    ],
+    [
+     "t",
+     "5-6"
+    ]
+   ]
+  },
+  {
+   "source": "değerleri_birleştir(Kat, ';', Mahalle, Kat > 2)",
+   "values": [
+    [
+     "t",
+     "3"
+    ],
+    [
+     "t",
+     "3"
+    ],
+    [
+     "t",
+     "5;2,5"
+    ],
+    [
+     "t",
+     "5;2,5"
+    ],
+    [
+     "t",
+     "4"
+    ],
+    null
+   ]
+  },
+  {
+   "source": "değerleri_dizi(Parsel, Ada)",
+   "values": [
+    [
+     "t",
+     "[\"1\",\"2\"]"
+    ],
+    [
+     "t",
+     "[\"1\",\"2\"]"
+    ],
+    [
+     "t",
+     "[\"3\",\"4\"]"
+    ],
+    [
+     "t",
+     "[\"3\",\"4\"]"
+    ],
+    [
+     "t",
+     "[\"5\",\"6\"]"
+    ],
+    [
+     "t",
+     "[\"5\",\"6\"]"
+    ]
+   ]
+  },
+  {
+   "source": "değerleri_dizi(Kat)",
+   "values": [
+    [
+     "t",
+     "[\"3\",\"\",\"5\",\"2,5\",\"4\",\"1\"]"
+    ],
+    [
+     "t",
+     "[\"3\",\"\",\"5\",\"2,5\",\"4\",\"1\"]"
+    ],
+    [
+     "t",
+     "[\"3\",\"\",\"5\",\"2,5\",\"4\",\"1\"]"
+    ],
+    [
+     "t",
+     "[\"3\",\"\",\"5\",\"2,5\",\"4\",\"1\"]"
+    ],
+    [
+     "t",
+     "[\"3\",\"\",\"5\",\"2,5\",\"4\",\"1\"]"
+    ],
+    [
+     "t",
+     "[\"3\",\"\",\"5\",\"2,5\",\"4\",\"1\"]"
+    ]
+   ]
+  },
+  {
+   "source": "topla(Kat, boş, yanlış)",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "katman_toplamı('Sit alanı', 'topla', Derece)",
+   "values": [
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     3.0
+    ]
+   ]
+  },
+  {
+   "source": "katman_toplamı('SİT ALANI', 'count', Ad)",
+   "values": [
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ]
+   ]
+  },
+  {
+   "source": "katman_toplamı('Durak', 'değerleri_birleştir', Ad, Ad != 'Uzak')",
+   "values": [
+    [
+     "t",
+     "Çarşı, Okul, Pazar"
+    ],
+    [
+     "t",
+     "Çarşı, Okul, Pazar"
+    ],
+    [
+     "t",
+     "Çarşı, Okul, Pazar"
+    ],
+    [
+     "t",
+     "Çarşı, Okul, Pazar"
+    ],
+    [
+     "t",
+     "Çarşı, Okul, Pazar"
+    ],
+    [
+     "t",
+     "Çarşı, Okul, Pazar"
+    ]
+   ]
+  },
+  {
+   "source": "katman_toplamı('Durak', 'değerleri_dizi', Ad)",
+   "values": [
+    [
+     "t",
+     "[\"Çarşı\",\"Okul\",\"Uzak\",\"Pazar\"]"
+    ],
+    [
+     "t",
+     "[\"Çarşı\",\"Okul\",\"Uzak\",\"Pazar\"]"
+    ],
+    [
+     "t",
+     "[\"Çarşı\",\"Okul\",\"Uzak\",\"Pazar\"]"
+    ],
+    [
+     "t",
+     "[\"Çarşı\",\"Okul\",\"Uzak\",\"Pazar\"]"
+    ],
+    [
+     "t",
+     "[\"Çarşı\",\"Okul\",\"Uzak\",\"Pazar\"]"
+    ],
+    [
+     "t",
+     "[\"Çarşı\",\"Okul\",\"Uzak\",\"Pazar\"]"
+    ]
+   ]
+  },
+  {
+   "source": "katman_toplamı('Yok', 'topla', 1)",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "katmandan('Mahalle', Ad, 'Kod', Mahalle)",
+   "values": [
+    [
+     "t",
+     "Kızılay"
+    ],
+    [
+     "t",
+     "Kızılay"
+    ],
+    [
+     "t",
+     "Bahçelievler"
+    ],
+    [
+     "t",
+     "Bahçelievler"
+    ],
+    null,
+    null
+   ]
+  },
+  {
+   "source": "katmandan('Mahalle', $alan, 'Kod', Mahalle)",
+   "values": [
+    [
+     "n",
+     3850.0
+    ],
+    [
+     "n",
+     3850.0
+    ],
+    [
+     "n",
+     5250.0
+    ],
+    [
+     "n",
+     5250.0
+    ],
+    null,
+    null
+   ]
+  },
+  {
+   "source": "katmandan('Sit alanı', Ad, 'Derece', $id)",
+   "values": [
+    [
+     "t",
+     "Kale"
+    ],
+    [
+     "t",
+     "Höyük"
+    ],
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "kesişir('Sit alanı')",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "kesişir('Sit alanı', 0, Derece = 2)",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "kesişir('Durak')",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "kesişir('Durak', 15)",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "kesişir('Dere')",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "kesişir('Parsel')",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "kesişen_sayısı('Parsel')",
+   "values": [
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ]
+  },
+  {
+   "source": "kesişen_sayısı('Durak', 25)",
+   "values": [
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ]
+  },
+  {
+   "source": "kesişenler('Sit alanı', Ad)",
+   "values": [
+    [
+     "t",
+     "[\"Kale\"]"
+    ],
+    [
+     "t",
+     "[\"Kale\"]"
+    ],
+    [
+     "t",
+     "[\"Kale\",\"Höyük\"]"
+    ],
+    [
+     "t",
+     "[\"Höyük\"]"
+    ],
+    [
+     "t",
+     "[]"
+    ],
+    [
+     "t",
+     "[]"
+    ]
+   ]
+  },
+  {
+   "source": "kesişenler('Parsel', Parsel)",
+   "values": [
+    [
+     "t",
+     "[\"2\"]"
+    ],
+    [
+     "t",
+     "[\"1\",\"3\"]"
+    ],
+    [
+     "t",
+     "[\"2\",\"4\"]"
+    ],
+    [
+     "t",
+     "[\"3\",\"5\"]"
+    ],
+    [
+     "t",
+     "[\"4\"]"
+    ],
+    [
+     "t",
+     "[]"
+    ]
+   ]
+  },
+  {
+   "source": "kesişenler('Durak', Ad, 1000, Ad != 'Okul')",
+   "values": [
+    [
+     "t",
+     "[\"Çarşı\",\"Uzak\",\"Pazar\"]"
+    ],
+    [
+     "t",
+     "[\"Çarşı\",\"Uzak\",\"Pazar\"]"
+    ],
+    [
+     "t",
+     "[\"Çarşı\",\"Uzak\",\"Pazar\"]"
+    ],
+    [
+     "t",
+     "[\"Çarşı\",\"Uzak\",\"Pazar\"]"
+    ],
+    [
+     "t",
+     "[\"Çarşı\",\"Uzak\",\"Pazar\"]"
+    ],
+    [
+     "t",
+     "[\"Çarşı\",\"Uzak\",\"Pazar\"]"
+    ]
+   ]
+  },
+  {
+   "source": "kapsar('Durak')",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "içinde_kalır('Mahalle')",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "içinde_kalır('Mahalle', Kod = 'K2')",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "merkezi_içinde('Mahalle', Kod = 'K1')",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "merkezi_içinde('Sit alanı')",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "uzaklık('Durak')",
+   "values": [
+    [
+     "n",
+     10.0
+    ],
+    [
+     "n",
+     14.142135623730951
+    ],
+    [
+     "n",
+     10.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    [
+     "n",
+     40.311288741492746
+    ]
+   ],
+   "near": true
+  },
+  {
+   "source": "uzaklık('Sit alanı')",
+   "values": [
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     10.0
+    ],
+    [
+     "n",
+     60.0
+    ]
+   ],
+   "near": true
+  },
+  {
+   "source": "uzaklık('Durak', Ad = 'Uzak')",
+   "values": [
+    [
+     "n",
+     388.9730067755345
+    ],
+    [
+     "n",
+     374.83329627982624
+    ],
+    [
+     "n",
+     361.24783736376884
+    ],
+    [
+     "n",
+     340.58772731852804
+    ],
+    [
+     "n",
+     336.00595232822883
+    ],
+    [
+     "n",
+     308.86890422961
+    ]
+   ],
+   "near": true
+  },
+  {
+   "source": "uzaklık('Yok')",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "near": true
+  },
+  {
+   "source": "en_yakın('Durak', Ad)",
+   "values": [
+    [
+     "t",
+     "Çarşı"
+    ],
+    [
+     "t",
+     "Çarşı"
+    ],
+    [
+     "t",
+     "Pazar"
+    ],
+    [
+     "t",
+     "Pazar"
+    ],
+    [
+     "t",
+     "Okul"
+    ],
+    [
+     "t",
+     "Okul"
+    ]
+   ]
+  },
+  {
+   "source": "en_yakın('Durak', Ad, Ad != 'Çarşı')",
+   "values": [
+    [
+     "t",
+     "Pazar"
+    ],
+    [
+     "t",
+     "Pazar"
+    ],
+    [
+     "t",
+     "Pazar"
+    ],
+    [
+     "t",
+     "Pazar"
+    ],
+    [
+     "t",
+     "Okul"
+    ],
+    [
+     "t",
+     "Okul"
+    ]
+   ]
+  },
+  {
+   "source": "en_yakın('Parsel', Parsel)",
+   "values": [
+    [
+     "t",
+     "2"
+    ],
+    [
+     "t",
+     "1"
+    ],
+    [
+     "t",
+     "2"
+    ],
+    [
+     "t",
+     "3"
+    ],
+    [
+     "t",
+     "4"
+    ],
+    [
+     "t",
+     "5"
+    ]
+   ]
+  },
+  {
+   "source": "kesişim_alanı('Sit alanı')",
+   "values": [
+    [
+     "n",
+     200.0
+    ],
+    [
+     "n",
+     400.0
+    ],
+    [
+     "n",
+     250.0
+    ],
+    [
+     "n",
+     200.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ],
+   "near": true
+  },
+  {
+   "source": "kesişim_alanı('Sit alanı') / $alan",
+   "values": [
+    [
+     "n",
+     0.3333333333333333
+    ],
+    [
+     "n",
+     0.6666666666666666
+    ],
+    [
+     "n",
+     0.4166666666666667
+    ],
+    [
+     "n",
+     0.25
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ],
+   "near": true
+  },
+  {
+   "source": "kesişim_alanı('Mahalle')",
+   "values": [
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     800.0
+    ],
+    [
+     "n",
+     600.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ],
+   "near": true
+  },
+  {
+   "source": "kesişim_uzunluğu('Sit alanı')",
+   "values": [
+    [
+     "n",
+     30.0
+    ],
+    [
+     "n",
+     60.0
+    ],
+    [
+     "n",
+     45.0
+    ],
+    [
+     "n",
+     30.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ],
+   "near": true
+  },
+  {
+   "source": "kesişim_uzunluğu('Mahalle', Kod = 'K2')",
+   "values": [
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     60.0
+    ],
+    [
+     "n",
+     120.0
+    ],
+    [
+     "n",
+     100.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ],
+   "near": true
+  },
+  {
+   "source": "kesişir('Sit alanı') ve topla($alan, Ada) > 1000",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "eğer(kesişir('Durak', 15), en_yakın('Durak', Ad), '-')",
+   "values": [
+    [
+     "t",
+     "Çarşı"
+    ],
+    [
+     "t",
+     "Çarşı"
+    ],
+    [
+     "t",
+     "Pazar"
+    ],
+    [
+     "t",
+     "Pazar"
+    ],
+    [
+     "t",
+     "Okul"
+    ],
+    [
+     "t",
+     "-"
+    ]
+   ]
+  },
+  {
+   "source": "kesişir(Ad)",
+   "compiles": false
+  },
+  {
+   "source": "katman_toplamı('Durak', 'yuvarla', Ad)",
+   "compiles": false
+  },
+  {
+   "source": "katman_toplamı('Durak', Nitelik, Ad)",
+   "compiles": false
+  },
+  {
+   "source": "katmandan('Mahalle', Ad, Kod, Mahalle)",
+   "compiles": false
+  },
+  {
+   "source": "değerleri_birleştir(Parsel, Ada)",
+   "compiles": false
+  },
+  {
+   "source": "topla(say($id))",
+   "compiles": false
+  },
+  {
+   "source": "topla(kesişir('Durak'))",
+   "compiles": false
+  },
+  {
+   "source": "tarih_ekle(Tarih, 1)",
+   "compiles": false
+  },
+  {
+   "source": "eşleşir(Ada, '(')",
+   "compiles": false
+  },
+  {
+   "source": "eşleme('a', 1, 'b')",
+   "compiles": false
+  },
+  {
+   "source": "@",
+   "compiles": false
+  },
+  {
+   "source": "şimdi(1)",
+   "compiles": false
+  }
+ ]
+}

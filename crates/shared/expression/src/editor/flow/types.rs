@@ -3,8 +3,9 @@
 //! still takes a value; the port says how it will be read.
 
 use super::tree::T;
-use crate::library::{Func, Var};
+use crate::library::{Family, Func, Var};
 use crate::parser::BinOp;
+use crate::world::roles::{Role, roles};
 use crate::{FieldType, Schema};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -73,6 +74,38 @@ pub(crate) fn takes(f: Func, i: usize) -> Type {
         Func::Empty | Func::Coalesce | Func::Concat => Any,
         Func::Left | Func::Right => [Text, N][i.min(1)],
         Func::Pi => Any,
+        // docs/adr/0214.
+        Func::Date | Func::DateTime => Any,
+        Func::Year
+        | Func::Month
+        | Func::Day
+        | Func::Hour
+        | Func::Minute
+        | Func::Second
+        | Func::Week
+        | Func::Weekday
+        | Func::DayOfYear
+        | Func::Matches
+        | Func::RegexFind
+        | Func::RegexPart
+        | Func::RegexGroups
+        | Func::RegexReplace
+        | Func::TextToArray
+        | Func::FromJson => Text,
+        Func::DateAdd | Func::DateDiff => {
+            [Text, if f == Func::DateAdd { N } else { Text }, Text][i.min(2)]
+        }
+        Func::DateFormat => Text,
+        Func::ArrayGet => [Any, N][i.min(1)],
+        Func::ArraySlice => [Any, N, N][i.min(2)],
+        Func::ArraySort => [Any, Bool][i.min(1)],
+        f if f.family() == Family::World => match roles(f).and_then(|r| r.get(i)) {
+            Some(Role::Layer | Role::Text) => Text,
+            Some(Role::Condition) => Bool,
+            Some(Role::Current) if f != Func::FromLayer => N,
+            _ => Any,
+        },
+        _ => Any,
     }
 }
 
@@ -117,6 +150,51 @@ pub(crate) fn gives(f: Func) -> Type {
         | Func::PadEnd => Type::Text,
         Func::Contains | Func::Starts | Func::Ends | Func::Empty => Type::Bool,
         Func::If | Func::Coalesce => Type::Any,
+        // docs/adr/0214.
+        Func::Year
+        | Func::Month
+        | Func::Day
+        | Func::Hour
+        | Func::Minute
+        | Func::Second
+        | Func::Week
+        | Func::Weekday
+        | Func::DayOfYear
+        | Func::DateDiff
+        | Func::RegexFind
+        | Func::ArrayLength
+        | Func::ArrayFind
+        | Func::ArraySum
+        | Func::ArrayMean
+        | Func::Sum
+        | Func::Mean
+        | Func::Count
+        | Func::CountDistinct
+        | Func::Median
+        | Func::StdDev
+        | Func::IntersectCount
+        | Func::Distance
+        | Func::OverlapArea
+        | Func::OverlapLength => Type::Number,
+        Func::Date
+        | Func::DateTime
+        | Func::Now
+        | Func::Today
+        | Func::DateAdd
+        | Func::DateFormat
+        | Func::RegexPart
+        | Func::RegexReplace
+        | Func::ArrayToText
+        | Func::ToJson
+        | Func::ConcatValues => Type::Text,
+        Func::Matches
+        | Func::ArrayContains
+        | Func::MapHas
+        | Func::Intersects
+        | Func::Encloses
+        | Func::Inside
+        | Func::CenterIn => Type::Bool,
+        _ => Type::Any,
     }
 }
 
@@ -144,6 +222,7 @@ pub(crate) fn of(t: &T, schema: &Schema) -> Type {
             _ => Type::Text,
         },
         T::Var(v) => variable(*v),
+        T::At(_) => Type::Any,
         T::Call(f, _) => gives(*f),
         T::Bin(op, ..) => match op {
             BinOp::Sub | BinOp::Mul | BinOp::Div | BinOp::Rem | BinOp::Pow => Type::Number,

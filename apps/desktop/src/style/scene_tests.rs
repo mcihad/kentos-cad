@@ -133,6 +133,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             text_styles: Vec::new(),
             connections: Vec::new(),
             networks: Vec::new(),
+            variables: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,
@@ -185,6 +186,8 @@ fn scene_of(
         library,
         &look(doc),
         &VIEW,
+        1.0,
+        true,
         1,
     )
 }
@@ -336,6 +339,7 @@ fn the_parts_draw_what_the_layer_built_whole_draws() {
         library: &library,
         layer_name: &names,
         view: Default::default(),
+        frame: None,
     };
     let entities: Vec<&Entity> = doc.model.by_layer("parsel").collect();
     let node = doc.model.layers().get("parsel").expect("parsel").clone();

@@ -157,7 +157,7 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
         valid++;
       }
     }
-    expect(valid).toBe(43);
+    expect(valid).toBe(44);
   });
 
   it('packs every file as the Rust codec does: the page and the module lay the columns out the same', async () => {

@@ -7,6 +7,8 @@
 
 use crate::js::text;
 
+mod extras;
+
 /// The expression builder's groups (docs/adr/0100 §5), in the tree's order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Group {
@@ -19,10 +21,17 @@ pub enum Group {
     Conditionals,
     Math,
     Text,
+    // Since docs/adr/0214.
+    Dates,
+    Arrays,
+    /// Over the objects of a layer (`world`).
+    Aggregates,
+    /// Relations to another layer's objects (`world`).
+    Spatial,
 }
 
 impl Group {
-    pub const ALL: [Group; 8] = [
+    pub const ALL: [Group; 12] = [
         Group::Fields,
         Group::Variables,
         Group::Conversions,
@@ -31,6 +40,10 @@ impl Group {
         Group::Conditionals,
         Group::Math,
         Group::Text,
+        Group::Dates,
+        Group::Arrays,
+        Group::Aggregates,
+        Group::Spatial,
     ];
 
     /// The group's heading.
@@ -44,6 +57,10 @@ impl Group {
             Group::Conditionals => "Koşullar",
             Group::Math => "Matematik",
             Group::Text => "Metin",
+            Group::Dates => "Tarih ve saat",
+            Group::Arrays => "Diziler ve eşlemeler",
+            Group::Aggregates => "Toplama",
+            Group::Spatial => "Mekânsal",
         }
     }
 
@@ -58,6 +75,10 @@ impl Group {
             Group::Conditionals => "conditionals",
             Group::Math => "math",
             Group::Text => "text",
+            Group::Dates => "dates",
+            Group::Arrays => "arrays",
+            Group::Aggregates => "aggregates",
+            Group::Spatial => "spatial",
         }
     }
 }
@@ -584,8 +605,125 @@ pub enum Func {
     Atan2,
     Degrees,
     Radians,
+    // Tarih ve saat (docs/adr/0214 §2.2).
+    Date,
+    DateTime,
+    Now,
+    Today,
+    Year,
+    Month,
+    Day,
+    Hour,
+    Minute,
+    Second,
+    Week,
+    Weekday,
+    DayOfYear,
+    DateAdd,
+    DateDiff,
+    DateFormat,
+    // Düzenli ifade (§2.4).
+    Matches,
+    RegexFind,
+    RegexPart,
+    RegexGroups,
+    RegexReplace,
+    // Diziler ve eşlemeler (§2.5).
+    Array,
+    ArrayLength,
+    ArrayGet,
+    ArrayFirst,
+    ArrayLast,
+    ArrayContains,
+    ArrayFind,
+    ArrayAppend,
+    ArrayCat,
+    ArrayDistinct,
+    ArraySort,
+    ArrayReverse,
+    ArraySlice,
+    ArrayToText,
+    TextToArray,
+    ArraySum,
+    ArrayMean,
+    ArrayMin,
+    ArrayMax,
+    Map,
+    MapGet,
+    MapHas,
+    MapKeys,
+    MapValues,
+    MapInsert,
+    MapDelete,
+    FromJson,
+    ToJson,
+    // Toplama (§2.6, §2.8): they look at other objects (`world`).
+    Sum,
+    Mean,
+    Count,
+    CountDistinct,
+    Minimum,
+    Maximum,
+    Median,
+    StdDev,
+    ConcatValues,
+    ArrayAgg,
+    Aggregate,
+    FromLayer,
+    // Mekânsal (§2.7).
+    Intersects,
+    Encloses,
+    Inside,
+    CenterIn,
+    IntersectCount,
+    Intersecting,
+    Distance,
+    Nearest,
+    OverlapArea,
+    OverlapLength,
 }
 
+/// Where a function's work is done.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Family {
+    /// The language's first functions (`functions`).
+    Base,
+    /// `dates`.
+    Dates,
+    /// `patterns`.
+    Patterns,
+    /// `arrays`.
+    Arrays,
+    /// `şimdi()`, `bugün()`: the caller's moment, a constant when compiled.
+    Clock,
+    /// They look at other objects: aggregates, spatial relations, `katmandan` (`world`).
+    World,
+}
+
+impl Func {
+    pub fn family(self) -> Family {
+        use Func::*;
+        match self {
+            Date | DateTime | Year | Month | Day | Hour | Minute | Second | Week | Weekday
+            | DayOfYear | DateAdd | DateDiff | DateFormat => Family::Dates,
+            Now | Today => Family::Clock,
+            Matches | RegexFind | RegexPart | RegexGroups | RegexReplace => Family::Patterns,
+            Array | ArrayLength | ArrayGet | ArrayFirst | ArrayLast | ArrayContains | ArrayFind
+            | ArrayAppend | ArrayCat | ArrayDistinct | ArraySort | ArrayReverse | ArraySlice
+            | ArrayToText | TextToArray | ArraySum | ArrayMean | ArrayMin | ArrayMax | Map
+            | MapGet | MapHas | MapKeys | MapValues | MapInsert | MapDelete | FromJson | ToJson => {
+                Family::Arrays
+            }
+            Sum | Mean | Count | CountDistinct | Minimum | Maximum | Median | StdDev
+            | ConcatValues | ArrayAgg | Aggregate | FromLayer | Intersects | Encloses | Inside
+            | CenterIn | IntersectCount | Intersecting | Distance | Nearest | OverlapArea
+            | OverlapLength => Family::World,
+            _ => Family::Base,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
 pub struct FuncDef {
     pub func: Func,
     pub name: &'static str,
@@ -603,7 +741,28 @@ pub struct FuncDef {
     pub examples: &'static [(&'static str, &'static str)],
 }
 
-pub static FUNCTIONS: &[FuncDef] = &[
+/// Every function: the language's first ones, then docs/adr/0214's.
+pub static FUNCTIONS: &[FuncDef] = &ALL_FUNCTIONS;
+
+const ALL_FUNCTIONS: [FuncDef; BASE.len() + extras::ALL.len()] = join(BASE, extras::ALL);
+
+/// Two tables as one, at compile time.
+const fn join<const N: usize>(a: &[FuncDef], b: &[FuncDef]) -> [FuncDef; N] {
+    assert!(a.len() + b.len() == N);
+    let mut out = [a[0]; N];
+    let mut i = 0;
+    while i < a.len() {
+        out[i] = a[i];
+        i += 1;
+    }
+    while i < N {
+        out[i] = b[i - a.len()];
+        i += 1;
+    }
+    out
+}
+
+const BASE: &[FuncDef] = &[
     FuncDef {
         func: Func::Round,
         name: "yuvarla",

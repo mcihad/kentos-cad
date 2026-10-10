@@ -23,6 +23,7 @@ mod objects;
 mod services;
 mod styles;
 mod temporal;
+mod variables;
 
 use kentos_contracts::{
     AnnotationHeights, AnnotationKind, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
@@ -46,6 +47,7 @@ use crate::{
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
     SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS,
     SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_VARIABLES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, line_type, point_symbol, workspace,
@@ -325,7 +327,8 @@ impl<'d> Encoder<'d> {
             + usize::from(s.topology.is_some())
             + usize::from(has_heights(s))
             + usize::from(!s.connections.is_empty())
-            + usize::from(!s.networks.is_empty());
+            + usize::from(!s.networks.is_empty())
+            + usize::from(!s.variables.is_empty());
         self.open(n, true)?;
         self.key("srid");
         self.w.uint(u64::from(s.srid));
@@ -359,6 +362,10 @@ impl<'d> Encoder<'d> {
         }
         self.key("plotScale");
         self.at(Seg::Name("plotScale"), |e| e.float(s.plot_scale))?;
+        if !s.variables.is_empty() {
+            self.key("variables");
+            self.at(Seg::Name("variables"), |e| e.variables(&s.variables))?;
+        }
         if let Some(w) = s.workspace {
             self.key("workspace");
             self.w.text(workspace(w));
@@ -1041,12 +1048,16 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || labelled(&n.children)
         })
     }
-    // Schema 37 (docs/adr/0243): a raster showing a NetCDF variable, or a mesh's lines.
+    // Schema 38 (docs/adr/0243): a raster showing a NetCDF variable, or a mesh's lines.
     if doc.entities.iter().any(|e| match e {
         Entity::Raster(r) => r.raster.dataset.is_some() || r.raster.style.edges.is_some(),
         _ => false,
     }) {
         return SCHEMA_WITH_MULTIDIM;
+    }
+    // Schema 37 (docs/adr/0214): the project's variables.
+    if !doc.settings.variables.is_empty() {
+        return SCHEMA_WITH_VARIABLES;
     }
     // Schema 36 (docs/adr/0212): the label engine's fields, a layer's labelling, an object's pins (a layer
     // state's style counts too).

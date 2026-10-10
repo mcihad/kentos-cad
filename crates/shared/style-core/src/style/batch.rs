@@ -17,6 +17,7 @@
 use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
+use kentos_geometry_core::geometry::signed_area;
 use kentos_geometry_core::jsmath::{cos, js_cmp, js_hypot, js_max, js_round, sin, stable_sort};
 use kentos_geometry_core::triangulate::triangulate_many;
 
@@ -89,8 +90,8 @@ pub struct BatchSink {
     entries: Vec<Entry>,
     index: HashMap<String, usize>,
     scale: Scale,
-    /// Fills waiting for the triangulation: the entry and the rings.
-    fills: Vec<(usize, Vec<Vec<Vec2>>)>,
+    /// Fills waiting for the triangulation: the entry, the rings and whether a fan (`fan`).
+    fills: Vec<(usize, Vec<Vec<Vec2>>, bool)>,
     /// The latest styles of each kind and their batches: the objects of a
     /// layer mostly share a few styles (markers along a line always share
     /// one, categories take turns), and building a key for each primitive
@@ -102,6 +103,8 @@ pub struct BatchSink {
     /// strokes of the object being drawn are left out.
     hide_fills: bool,
     hide_strokes: bool,
+    pictures: Vec<Picture>,
+    dropped: u64,
 }
 
 /// How many styles of a kind are remembered.
@@ -141,10 +144,24 @@ impl<T: PartialEq + Clone> Recent<T> {
 }
 
 /// The batches of a layer: a JSON array describing them and their numbers
-/// one after another (`from`, `len` in each description).
+/// one after another (`from`, `len` in each description); the pictures the
+/// build made (a heat map's, docs/adr/0213 §2.6), and the dots left out
+/// over the layer's limit (§2.4).
 pub struct Batches {
     pub json: String,
     pub data: Vec<f32>,
+    pub pictures: Vec<Picture>,
+    pub dropped: u64,
+}
+
+/// A picture a build made: the key a batch draws it by, its size, its
+/// pixels (RGBA, straight alpha, rows from the top).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Picture {
+    pub key: String,
+    pub width: u32,
+    pub height: u32,
+    pub rgba: Vec<u8>,
 }
 
 fn scale_key(x: Option<f64>) -> String {
@@ -164,7 +181,19 @@ impl BatchSink {
             recent_markers: Recent::new(),
             hide_fills: false,
             hide_strokes: false,
+            pictures: Vec::new(),
+            dropped: 0,
         }
+    }
+
+    /// A picture the build made, drawn by its key.
+    pub fn picture(&mut self, picture: Picture) {
+        self.pictures.push(picture);
+    }
+
+    /// Dots left out over the layer's limit.
+    pub fn drop_dots(&mut self, n: u64) {
+        self.dropped += n;
     }
 
     /// What of the next object is left out (Görünüm kipleri, docs/adr/0195):
@@ -234,7 +263,9 @@ impl BatchSink {
     }
 
     /// Triangulates the queued fills in one call, appending each fill's
-    /// triangles (x, y relative to its tile) to its batch in queue order.
+    /// triangles (x, y relative to its tile) to its batch in queue order; a
+    /// fan's triangles are its first point's, counter-clockwise as the ear
+    /// clipper's are.
     fn triangulate(&mut self) {
         if self.fills.is_empty() {
             return;
@@ -243,7 +274,10 @@ impl BatchSink {
         let mut ring_sizes = Vec::new();
         let mut poly_rings = Vec::with_capacity(self.fills.len());
         let mut ends = Vec::with_capacity(self.fills.len());
-        for (_, rings) in &self.fills {
+        for (_, rings, fan) in &self.fills {
+            if *fan {
+                continue;
+            }
             poly_rings.push(rings.len());
             for r in rings {
                 ring_sizes.push(r.len());
@@ -251,27 +285,52 @@ impl BatchSink {
             }
             ends.push(pts.len());
         }
-        let idx = triangulate_many(&pts, &ring_sizes, &poly_rings);
-        let mut poly = 0;
-        for t in idx.chunks_exact(3) {
-            let [a, b, c] = [t[0] as usize, t[1] as usize, t[2] as usize];
-            while poly < ends.len() && a >= ends[poly] {
-                poly += 1;
+        let idx = if poly_rings.is_empty() {
+            Vec::new()
+        } else {
+            triangulate_many(&pts, &ring_sizes, &poly_rings)
+        };
+        let fills = std::mem::take(&mut self.fills);
+        let (mut t, mut poly) = (0, 0);
+        for (entry, rings, fan) in &fills {
+            let (ox, oy) = (self.entries[*entry].base.x, self.entries[*entry].base.y);
+            let data = &mut self.entries[*entry].data;
+            if *fan {
+                let r = &rings[0];
+                let ccw = signed_area(r) >= 0.0;
+                for k in 1..r.len() - 1 {
+                    let (b, c) = if ccw {
+                        (r[k], r[k + 1])
+                    } else {
+                        (r[k + 1], r[k])
+                    };
+                    data.extend([
+                        r[0].x - ox,
+                        r[0].y - oy,
+                        b.x - ox,
+                        b.y - oy,
+                        c.x - ox,
+                        c.y - oy,
+                    ]);
+                }
+                continue;
             }
-            let Some(&(entry, _)) = self.fills.get(poly) else {
-                break;
-            };
-            let (ox, oy) = (self.entries[entry].base.x, self.entries[entry].base.y);
-            self.entries[entry].data.extend([
-                pts[a].x - ox,
-                pts[a].y - oy,
-                pts[b].x - ox,
-                pts[b].y - oy,
-                pts[c].x - ox,
-                pts[c].y - oy,
-            ]);
+            // This polygon's triangles: the next ones whose corners are its points.
+            let end = ends.get(poly).copied().unwrap_or(0);
+            poly += 1;
+            while t + 3 <= idx.len() && (idx[t] as usize) < end {
+                let [a, b, c] = [idx[t] as usize, idx[t + 1] as usize, idx[t + 2] as usize];
+                data.extend([
+                    pts[a].x - ox,
+                    pts[a].y - oy,
+                    pts[b].x - ox,
+                    pts[b].y - oy,
+                    pts[c].x - ox,
+                    pts[c].y - oy,
+                ]);
+                t += 3;
+            }
         }
-        self.fills.clear();
     }
 
     /// The batches, in draw order; those without geometry are left out.
@@ -337,7 +396,12 @@ impl BatchSink {
             data.extend(e.data.iter().map(|&x| x as f32));
         }
         json.push(']');
-        Batches { json, data }
+        Batches {
+            json,
+            data,
+            pictures: self.pictures,
+            dropped: self.dropped,
+        }
     }
 }
 
@@ -390,7 +454,28 @@ impl Sink for BatchSink {
     }
 
     fn fill(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
-        if rings.first().is_none_or(|r| r.len() < 3)
+        if let Some(e) = rings.first().and_then(|outer| self.queue(paint, outer)) {
+            self.fills.push((e, rings.to_vec(), false));
+        }
+    }
+
+    fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64) {
+        self.place_marker(style, at, angle);
+    }
+}
+
+impl BatchSink {
+    /// An area whose ring is star-shaped from its first point (a pie's slice, docs/adr/0213 §2.5): its
+    /// triangles are the fan from that point, made without the ear clipper's scans.
+    pub fn fan(&mut self, paint: &FillPaint, ring: &[Vec2]) {
+        if let Some(e) = self.queue(paint, ring) {
+            self.fills.push((e, vec![ring.to_vec()], true));
+        }
+    }
+
+    /// The batch of a fill whose outer ring is `outer`, grown by it; none where nothing is drawn.
+    fn queue(&mut self, paint: &FillPaint, outer: &[Vec2]) -> Option<usize> {
+        if outer.len() < 3
             || (self.hide_fills
                 && !matches!(
                     paint,
@@ -399,7 +484,7 @@ impl Sink for BatchSink {
                         | FillPaint::PointCloud { .. }
                 ))
         {
-            return;
+            return None;
         }
         // A gradient's frame is its area's (docs/adr/0186 §3): from the anchor, as the positions
         // are; the page moves it on to the batch's tile with the positions.
@@ -479,7 +564,7 @@ impl Sink for BatchSink {
             }
             _ => paint,
         };
-        let tile = self.tile_of(rings[0][0]);
+        let tile = self.tile_of(outer[0]);
         let e = match self.recent_fills.find(paint, self.scale, tile) {
             Some(e) => e,
             None => {
@@ -493,13 +578,13 @@ impl Sink for BatchSink {
             }
         };
         let (ox, oy) = (self.origin.x, self.origin.y);
-        for p in &rings[0] {
+        for p in outer {
             self.entries[e].grow(p.x - ox, p.y - oy);
         }
-        self.fills.push((e, rings.to_vec()));
+        Some(e)
     }
 
-    fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64) {
+    fn place_marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64) {
         let tile = self.tile_of(at);
         let e = match self.recent_markers.find(style, self.scale, tile) {
             Some(e) => e,

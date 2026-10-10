@@ -150,6 +150,78 @@ pub fn expr_evaluate(
     Ok(ExprColumn::from(c))
 }
 
+/// `exprEvaluate` in a context (docs/adr/0214): `context` is the schema as
+/// JSON, `{ variables, world }` (the `@` values; whether other layers are
+/// given): the expression compiles with it. Without a geometry store no
+/// call looks at other layers: one that would is refused.
+#[allow(clippy::too_many_arguments)]
+#[wasm_bindgen(js_name = exprEvaluateIn)]
+pub fn expr_evaluate_in(
+    source: &str,
+    context: &str,
+    n: u32,
+    texts: &str,
+    text_lens: &[i32],
+    numbers: &[f64],
+    measures: &[f64],
+    scale: f64,
+    want: u8,
+) -> Result<ExprColumn, JsError> {
+    use kentos_expression::{api::schema_of, compile_with, rows};
+    let mut schema = schema_of(context).map_err(|e| JsError::new(&e))?;
+    schema.world = false;
+    let e = compile_with(source, &schema).map_err(|e| JsError::new(&e.text()))?;
+    let c = rows::evaluate_rows(
+        &e,
+        &rows::RowsInput {
+            n: n as usize,
+            texts,
+            text_lens,
+            numbers,
+            measures,
+            scale,
+        },
+        rows::As::from_code(want),
+    )
+    .map_err(|e| JsError::new(&e))?;
+    Ok(ExprColumn::from(c))
+}
+
+/// The layers an expression looks at (docs/adr/0214 §3), as the page sends
+/// them: every layer's objects one after another in one table of what the
+/// calls read (`exprCompileIn`'s `world`), their ids, each layer's name and count.
+#[wasm_bindgen]
+pub struct ExprWorld {
+    pub(crate) names: Vec<String>,
+    pub(crate) counts: Vec<u32>,
+    pub(crate) ids: Vec<f64>,
+    pub(crate) texts: String,
+    pub(crate) text_lens: Vec<i32>,
+    pub(crate) numbers: Vec<f64>,
+}
+
+#[wasm_bindgen]
+impl ExprWorld {
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        names: Vec<String>,
+        counts: Vec<u32>,
+        ids: Vec<f64>,
+        texts: String,
+        text_lens: Vec<i32>,
+        numbers: Vec<f64>,
+    ) -> ExprWorld {
+        ExprWorld {
+            names,
+            counts,
+            ids,
+            texts,
+            text_lens,
+            numbers,
+        }
+    }
+}
+
 impl From<kentos_expression::rows::Column> for ExprColumn {
     fn from(c: kentos_expression::rows::Column) -> ExprColumn {
         ExprColumn {

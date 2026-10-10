@@ -1,0 +1,947 @@
+{
+  "format": "kentos.variable-form",
+  "version": 1,
+  "source": "scripts/fixtures/variable_form_cases.py (docs/adr/0214 §2.3, §4)",
+  "messages": {
+    "nameEmpty": "Bir ad yazın: harf ya da _ ile başlar, harf, rakam ve _ içerir.",
+    "number": "Sayı yazın (1.5 ya da 1,5); değeri yoksa boş bırakın.",
+    "date": "Tarihi YYYY-AA-GG ya da GG.AA.YYYY yazın; değeri yoksa boş bırakın.",
+    "bool": "Doğru ya da yanlış seçin.",
+    "tooMany": "En çok 200 değişken olabilir."
+  },
+  "reads": [
+    {
+      "case": "geçerli satırlar",
+      "rows": [
+        {
+          "name": "is_no",
+          "label": " İş numarası ",
+          "kind": "text",
+          "value": " 2026/41 "
+        },
+        {
+          "name": "@Katsayı",
+          "label": "",
+          "kind": "number",
+          "value": "1,5"
+        },
+        {
+          "name": "teslim",
+          "label": "",
+          "kind": "date",
+          "value": "28.2.2026"
+        },
+        {
+          "name": "onaylı",
+          "label": "",
+          "kind": "bool",
+          "value": "doğru"
+        },
+        {
+          "name": "boş",
+          "label": "",
+          "kind": "number",
+          "value": "  "
+        }
+      ],
+      "variables": [
+        {
+          "name": "is_no",
+          "label": "İş numarası",
+          "kind": "text",
+          "value": "2026/41"
+        },
+        {
+          "name": "Katsayı",
+          "kind": "number",
+          "value": 1.5
+        },
+        {
+          "name": "teslim",
+          "kind": "date",
+          "value": "2026-02-28"
+        },
+        {
+          "name": "onaylı",
+          "kind": "bool",
+          "value": true
+        },
+        {
+          "name": "boş",
+          "kind": "number"
+        }
+      ],
+      "problems": [
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": null,
+          "value": null
+        }
+      ],
+      "list": null
+    },
+    {
+      "case": "sayılar",
+      "rows": [
+        {
+          "name": "a",
+          "label": "",
+          "kind": "number",
+          "value": "-0.25"
+        },
+        {
+          "name": "b",
+          "label": "",
+          "kind": "number",
+          "value": "1e3"
+        },
+        {
+          "name": "c",
+          "label": "",
+          "kind": "number",
+          "value": ".5"
+        },
+        {
+          "name": "d",
+          "label": "",
+          "kind": "number",
+          "value": "+7"
+        },
+        {
+          "name": "e",
+          "label": "",
+          "kind": "number",
+          "value": "1.000,5"
+        },
+        {
+          "name": "f",
+          "label": "",
+          "kind": "number",
+          "value": "12a"
+        },
+        {
+          "name": "g",
+          "label": "",
+          "kind": "number",
+          "value": "1e400"
+        }
+      ],
+      "variables": [
+        {
+          "name": "a",
+          "kind": "number",
+          "value": -0.25
+        },
+        {
+          "name": "b",
+          "kind": "number",
+          "value": 1000.0
+        },
+        {
+          "name": "c",
+          "kind": "number",
+          "value": 0.5
+        },
+        {
+          "name": "d",
+          "kind": "number",
+          "value": 7.0
+        }
+      ],
+      "problems": [
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": null,
+          "value": "Sayı yazın (1.5 ya da 1,5); değeri yoksa boş bırakın."
+        },
+        {
+          "name": null,
+          "value": "Sayı yazın (1.5 ya da 1,5); değeri yoksa boş bırakın."
+        },
+        {
+          "name": null,
+          "value": "Sayı yazın (1.5 ya da 1,5); değeri yoksa boş bırakın."
+        }
+      ],
+      "list": null
+    },
+    {
+      "case": "tarihler",
+      "rows": [
+        {
+          "name": "t1",
+          "label": "",
+          "kind": "date",
+          "value": "2024-02-29"
+        },
+        {
+          "name": "t2",
+          "label": "",
+          "kind": "date",
+          "value": "2026-02-29"
+        },
+        {
+          "name": "t3",
+          "label": "",
+          "kind": "date",
+          "value": "1.10.2026"
+        },
+        {
+          "name": "t4",
+          "label": "",
+          "kind": "date",
+          "value": "2026/10/01"
+        },
+        {
+          "name": "t5",
+          "label": "",
+          "kind": "date",
+          "value": "31.04.2026"
+        },
+        {
+          "name": "t6",
+          "label": "",
+          "kind": "date",
+          "value": "0000-01-01"
+        }
+      ],
+      "variables": [
+        {
+          "name": "t1",
+          "kind": "date",
+          "value": "2024-02-29"
+        },
+        {
+          "name": "t3",
+          "kind": "date",
+          "value": "2026-10-01"
+        }
+      ],
+      "problems": [
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": null,
+          "value": "Tarihi YYYY-AA-GG ya da GG.AA.YYYY yazın; değeri yoksa boş bırakın."
+        },
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": null,
+          "value": "Tarihi YYYY-AA-GG ya da GG.AA.YYYY yazın; değeri yoksa boş bırakın."
+        },
+        {
+          "name": null,
+          "value": "Tarihi YYYY-AA-GG ya da GG.AA.YYYY yazın; değeri yoksa boş bırakın."
+        },
+        {
+          "name": null,
+          "value": "Tarihi YYYY-AA-GG ya da GG.AA.YYYY yazın; değeri yoksa boş bırakın."
+        }
+      ],
+      "list": null
+    },
+    {
+      "case": "adlar",
+      "rows": [
+        {
+          "name": "",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        },
+        {
+          "name": "1a",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        },
+        {
+          "name": "Proje_Adı",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        },
+        {
+          "name": "ada no",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        },
+        {
+          "name": "_özel",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        },
+        {
+          "name": "ççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççç",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        },
+        {
+          "name": "@@x",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "_özel",
+          "kind": "text"
+        }
+      ],
+      "problems": [
+        {
+          "name": "Bir ad yazın: harf ya da _ ile başlar, harf, rakam ve _ içerir.",
+          "value": null
+        },
+        {
+          "name": "“1a” değişken adı olamaz: bir harf ya da _ ile başlar, harf, rakam ve _ içerir.",
+          "value": null
+        },
+        {
+          "name": "@Proje_Adı yerleşik bir değişkendir; başka ad seçin.",
+          "value": null
+        },
+        {
+          "name": "“ada no” değişken adı olamaz: bir harf ya da _ ile başlar, harf, rakam ve _ içerir.",
+          "value": null
+        },
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": "“ççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççç” değişken adı 64 karakterden uzun.",
+          "value": null
+        },
+        {
+          "name": "“@x” değişken adı olamaz: bir harf ya da _ ile başlar, harf, rakam ve _ içerir.",
+          "value": null
+        }
+      ],
+      "list": null
+    },
+    {
+      "case": "tekrar eden ad",
+      "rows": [
+        {
+          "name": "İş_No",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        },
+        {
+          "name": "is_no",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        },
+        {
+          "name": "IS_NO",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        },
+        {
+          "name": "ada",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "İş_No",
+          "kind": "text"
+        },
+        {
+          "name": "ada",
+          "kind": "text"
+        }
+      ],
+      "problems": [
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": "@is_no adı yukarıda var; başka ad seçin.",
+          "value": null
+        },
+        {
+          "name": "@IS_NO adı yukarıda var; başka ad seçin.",
+          "value": null
+        },
+        {
+          "name": null,
+          "value": null
+        }
+      ],
+      "list": null
+    },
+    {
+      "case": "doğru/yanlış",
+      "rows": [
+        {
+          "name": "x",
+          "label": "",
+          "kind": "bool",
+          "value": "yanlış"
+        },
+        {
+          "name": "y",
+          "label": "",
+          "kind": "bool",
+          "value": ""
+        },
+        {
+          "name": "z",
+          "label": "",
+          "kind": "bool",
+          "value": "evet"
+        }
+      ],
+      "variables": [
+        {
+          "name": "x",
+          "kind": "bool",
+          "value": false
+        },
+        {
+          "name": "y",
+          "kind": "bool"
+        }
+      ],
+      "problems": [
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": null,
+          "value": null
+        },
+        {
+          "name": null,
+          "value": "Doğru ya da yanlış seçin."
+        }
+      ],
+      "list": null
+    },
+    {
+      "case": "uzun metin",
+      "rows": [
+        {
+          "name": "not",
+          "label": "",
+          "kind": "text",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "not2",
+          "label": "",
+          "kind": "text",
+          "value": "ğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğ"
+        }
+      ],
+      "variables": [
+        {
+          "name": "not2",
+          "kind": "text",
+          "value": "ğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğğ"
+        }
+      ],
+      "problems": [
+        {
+          "name": null,
+          "value": "Değer 4000 karakterden uzun."
+        },
+        {
+          "name": null,
+          "value": null
+        }
+      ],
+      "list": null
+    }
+  ],
+  "rows": [
+    {
+      "case": "türler",
+      "variables": [
+        {
+          "name": "is_no",
+          "label": "İş numarası",
+          "kind": "text",
+          "value": "2026/41"
+        },
+        {
+          "name": "Katsayı",
+          "kind": "number",
+          "value": 1.5
+        },
+        {
+          "name": "tam",
+          "kind": "number",
+          "value": 2026.0
+        },
+        {
+          "name": "küçük",
+          "kind": "number",
+          "value": 1e-07
+        },
+        {
+          "name": "büyük",
+          "kind": "number",
+          "value": 1e+21
+        },
+        {
+          "name": "eksi_sıfır",
+          "kind": "number",
+          "value": -0.0
+        },
+        {
+          "name": "teslim",
+          "kind": "date",
+          "value": "2026-02-28"
+        },
+        {
+          "name": "onaylı",
+          "kind": "bool",
+          "value": true
+        },
+        {
+          "name": "ret",
+          "kind": "bool",
+          "value": false
+        },
+        {
+          "name": "boş",
+          "kind": "text"
+        }
+      ],
+      "rows": [
+        {
+          "name": "is_no",
+          "label": "İş numarası",
+          "kind": "text",
+          "value": "2026/41"
+        },
+        {
+          "name": "Katsayı",
+          "label": "",
+          "kind": "number",
+          "value": "1.5"
+        },
+        {
+          "name": "tam",
+          "label": "",
+          "kind": "number",
+          "value": "2026"
+        },
+        {
+          "name": "küçük",
+          "label": "",
+          "kind": "number",
+          "value": "0.0000001"
+        },
+        {
+          "name": "büyük",
+          "label": "",
+          "kind": "number",
+          "value": "1000000000000000000000"
+        },
+        {
+          "name": "eksi_sıfır",
+          "label": "",
+          "kind": "number",
+          "value": "0"
+        },
+        {
+          "name": "teslim",
+          "label": "",
+          "kind": "date",
+          "value": "2026-02-28"
+        },
+        {
+          "name": "onaylı",
+          "label": "",
+          "kind": "bool",
+          "value": "doğru"
+        },
+        {
+          "name": "ret",
+          "label": "",
+          "kind": "bool",
+          "value": "yanlış"
+        },
+        {
+          "name": "boş",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        }
+      ]
+    }
+  ],
+  "newRows": [
+    {
+      "case": "boş liste",
+      "rows": [],
+      "row": {
+        "name": "degisken1",
+        "label": "",
+        "kind": "text",
+        "value": ""
+      }
+    },
+    {
+      "case": "dolu",
+      "rows": [
+        {
+          "name": "degisken1",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        },
+        {
+          "name": "@Degisken2",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        },
+        {
+          "name": "degisken4",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        }
+      ],
+      "row": {
+        "name": "degisken3",
+        "label": "",
+        "kind": "text",
+        "value": ""
+      }
+    },
+    {
+      "case": "Türkçe harfle",
+      "rows": [
+        {
+          "name": "DEĞİŞKEN1",
+          "label": "",
+          "kind": "text",
+          "value": ""
+        }
+      ],
+      "row": {
+        "name": "degisken2",
+        "label": "",
+        "kind": "text",
+        "value": ""
+      }
+    }
+  ],
+  "kinds": [
+    {
+      "case": "metinden sayıya",
+      "row": {
+        "name": "a",
+        "label": "",
+        "kind": "text",
+        "value": "12"
+      },
+      "kind": "number",
+      "result": {
+        "name": "a",
+        "label": "",
+        "kind": "number",
+        "value": "12"
+      }
+    },
+    {
+      "case": "sayıdan tarihe",
+      "row": {
+        "name": "a",
+        "label": "",
+        "kind": "number",
+        "value": "12"
+      },
+      "kind": "date",
+      "result": {
+        "name": "a",
+        "label": "",
+        "kind": "date",
+        "value": "12"
+      }
+    },
+    {
+      "case": "metinden doğru/yanlışa",
+      "row": {
+        "name": "a",
+        "label": "",
+        "kind": "text",
+        "value": "doğru"
+      },
+      "kind": "bool",
+      "result": {
+        "name": "a",
+        "label": "",
+        "kind": "bool",
+        "value": "doğru"
+      }
+    },
+    {
+      "case": "sayıdan doğru/yanlışa",
+      "row": {
+        "name": "a",
+        "label": "",
+        "kind": "number",
+        "value": "1"
+      },
+      "kind": "bool",
+      "result": {
+        "name": "a",
+        "label": "",
+        "kind": "bool",
+        "value": "yanlış"
+      }
+    },
+    {
+      "case": "doğru/yanlıştan metne",
+      "row": {
+        "name": "a",
+        "label": "",
+        "kind": "bool",
+        "value": "doğru"
+      },
+      "kind": "text",
+      "result": {
+        "name": "a",
+        "label": "",
+        "kind": "text",
+        "value": ""
+      }
+    }
+  ],
+  "builtins": [
+    {
+      "case": "kayıttaki sistem",
+      "name": "Kızılay",
+      "user": "Ayşe Yılmaz",
+      "now": "2026-10-10T14:30:05.250",
+      "settings": {
+        "srid": 5254,
+        "plotScale": 500,
+        "variables": [
+          {
+            "name": "is_no",
+            "label": "İş numarası",
+            "kind": "text",
+            "value": "2026/41"
+          },
+          {
+            "name": "katsayı",
+            "kind": "number",
+            "value": 1.5
+          }
+        ]
+      },
+      "variables": [
+        {
+          "name": "is_no",
+          "value": "2026/41",
+          "description": "İş numarası"
+        },
+        {
+          "name": "katsayı",
+          "value": 1.5,
+          "description": "Projenin değişkeni (sayı)"
+        },
+        {
+          "name": "proje_adi",
+          "value": "Kızılay",
+          "description": "Projenin adı"
+        },
+        {
+          "name": "koordinat_sistemi",
+          "value": "TUREF / TM30",
+          "description": "Koordinat sisteminin adı"
+        },
+        {
+          "name": "epsg",
+          "value": 5254.0,
+          "description": "Koordinat sisteminin EPSG kodu"
+        },
+        {
+          "name": "olcek",
+          "value": 500.0,
+          "description": "Çizim ölçeğinin paydası"
+        },
+        {
+          "name": "tarih",
+          "value": "2026-10-10",
+          "description": "Bugünün tarihi"
+        },
+        {
+          "name": "simdi",
+          "value": "2026-10-10T14:30:05",
+          "description": "Şimdiki tarih ve saat"
+        },
+        {
+          "name": "kullanici",
+          "value": "Ayşe Yılmaz",
+          "description": "Oturumdaki kullanıcının adı"
+        }
+      ]
+    },
+    {
+      "case": "yerel proje",
+      "name": "Şantiye",
+      "user": "",
+      "now": "2026-01-01T00:00:00.000",
+      "settings": {
+        "srid": 0,
+        "plotScale": 1000,
+        "variables": []
+      },
+      "variables": [
+        {
+          "name": "proje_adi",
+          "value": "Şantiye",
+          "description": "Projenin adı"
+        },
+        {
+          "name": "koordinat_sistemi",
+          "value": null,
+          "description": "Koordinat sisteminin adı"
+        },
+        {
+          "name": "epsg",
+          "value": null,
+          "description": "Koordinat sisteminin EPSG kodu"
+        },
+        {
+          "name": "olcek",
+          "value": 1000.0,
+          "description": "Çizim ölçeğinin paydası"
+        },
+        {
+          "name": "tarih",
+          "value": "2026-01-01",
+          "description": "Bugünün tarihi"
+        },
+        {
+          "name": "simdi",
+          "value": "2026-01-01",
+          "description": "Şimdiki tarih ve saat"
+        },
+        {
+          "name": "kullanici",
+          "value": null,
+          "description": "Oturumdaki kullanıcının adı"
+        }
+      ]
+    },
+    {
+      "case": "özel sistem",
+      "name": "Ada 101",
+      "user": "M. Demir",
+      "now": "2026-12-31T23:59:59.999",
+      "settings": {
+        "srid": 0,
+        "plotScale": 2000,
+        "customCrs": {
+          "name": "Şantiye sistemi"
+        },
+        "variables": [
+          {
+            "name": "teslim",
+            "kind": "date",
+            "value": "2027-03-01"
+          }
+        ]
+      },
+      "variables": [
+        {
+          "name": "teslim",
+          "value": "2027-03-01",
+          "description": "Projenin değişkeni (tarih)"
+        },
+        {
+          "name": "proje_adi",
+          "value": "Ada 101",
+          "description": "Projenin adı"
+        },
+        {
+          "name": "koordinat_sistemi",
+          "value": "Şantiye sistemi",
+          "description": "Koordinat sisteminin adı"
+        },
+        {
+          "name": "epsg",
+          "value": null,
+          "description": "Koordinat sisteminin EPSG kodu"
+        },
+        {
+          "name": "olcek",
+          "value": 2000.0,
+          "description": "Çizim ölçeğinin paydası"
+        },
+        {
+          "name": "tarih",
+          "value": "2026-12-31",
+          "description": "Bugünün tarihi"
+        },
+        {
+          "name": "simdi",
+          "value": "2026-12-31T23:59:59",
+          "description": "Şimdiki tarih ve saat"
+        },
+        {
+          "name": "kullanici",
+          "value": "M. Demir",
+          "description": "Oturumdaki kullanıcının adı"
+        }
+      ]
+    }
+  ],
+  "tooMany": "En çok 200 değişken olabilir."
+}

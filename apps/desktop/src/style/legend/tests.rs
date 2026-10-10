@@ -74,6 +74,7 @@ fn the_list_is_headings_then_rows() {
             .map(|i| LegendEntry {
                 label: format!("{id}{i}"),
                 symbol: None,
+                px_per_mm: None,
             })
             .collect(),
     };
@@ -101,10 +102,12 @@ fn the_picture_is_the_layout_s_on_white_paper() {
                 symbol: Some(
                     json!({ "type": "fill", "layers": [{ "id": "f", "type": "simpleFill", "color": "#E15759" }] }),
                 ),
+                px_per_mm: None,
             },
             LegendEntry {
                 label: "Resimsiz".into(),
                 symbol: None,
+                px_per_mm: None,
             },
         ],
     }];
@@ -115,6 +118,7 @@ fn the_picture_is_the_layout_s_on_white_paper() {
             .iter()
             .flat_map(|g| g.entries.iter().map(|e| e.symbol.clone()))
             .collect(),
+        scales: vec![None; 2],
         layout,
         library: app.styles.library.clone(),
         images: app.styles.images.clone(),
@@ -142,6 +146,7 @@ fn a_legend_saved_as_png_has_a_limit() {
             .map(|i| LegendEntry {
                 label: i.to_string(),
                 symbol: None,
+                px_per_mm: None,
             })
             .collect(),
     };

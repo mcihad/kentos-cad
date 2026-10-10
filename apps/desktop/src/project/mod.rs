@@ -14,6 +14,7 @@ mod custom_crs;
 mod scale;
 pub(crate) mod settings;
 mod survey;
+mod variables;
 mod wizard;
 
 use iced::widget::{Column, Row, button, column, container, row, text};

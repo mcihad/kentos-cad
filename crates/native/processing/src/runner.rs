@@ -8,9 +8,11 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use kentos_contracts::Entity;
 use kentos_domain::{Document, NewLayer, Slot, default_style};
+use kentos_expression::world::{World, WorldLayer};
+use kentos_expression::{Schema, Variable, compile_with};
 use serde_json::{Value, json};
 
-use crate::expression::{measures_of, preview_expression};
+use crate::expression::{EntityObjects, Evaluation, preview_expression};
 use crate::features::{
     Host, InputSummary, Scene, resolve_features, summarize_features, summarize_file,
 };
@@ -120,6 +122,8 @@ pub struct Job {
     /// the layer each goes right above (none: last).
     new_layers: BTreeMap<String, NewLayerPlan>,
     selection: Vec<Slot>,
+    /// The `@` values its expressions read (docs/adr/0214 §2.3), taken when it was prepared.
+    variables: Vec<Variable>,
     run: RunFn,
 }
 
@@ -331,7 +335,12 @@ impl Runner {
             return None;
         };
         let src = js_trim(values.get(name)?.as_str()?);
-        let expr = kentos_style_core::expr::compile(src).ok()?;
+        let schema = Schema {
+            fields: Vec::new(),
+            variables: scene.variables(),
+            world: true,
+        };
+        let expr = compile_with(src, &schema).ok()?;
         let input = tool
             .parameters
             .iter()
@@ -351,17 +360,38 @@ impl Runner {
                 .get(id)
                 .map_or_else(|| id.to_owned(), |l| l.name.clone())
         };
-        let mut measures = |list: &[&Entity]| match scene.store() {
-            Some(store) => store.measures(
-                &list
+        // The layers it looks at (docs/adr/0214 §3), read through the scene's store when it has one.
+        let looked_at = world_layers([&expr], &set.entities, doc);
+        let own_store = scene.store().is_none().then(|| {
+            RunGeometry::of(
+                set.entities
                     .iter()
-                    .map(|e| f64::from(e.base().id))
-                    .collect::<Vec<_>>(),
-            ),
-            None => measures_of(list),
+                    .copied()
+                    .chain(looked_at.iter().flat_map(|(_, l)| l.iter().copied())),
+            )
+        });
+        let store = scene.store().or(own_store.as_ref().map(RunGeometry::store));
+        let layer_objects: Vec<(String, EntityObjects)> = looked_at
+            .iter()
+            .map(|(name, list)| (name.clone(), EntityObjects::new(list, &layer_name, store)))
+            .collect();
+        let world = World {
+            layers: layer_objects
+                .iter()
+                .map(|(name, o)| WorldLayer {
+                    name: name.clone(),
+                    ids: o.ids(),
+                    objects: o,
+                })
+                .collect(),
+            store,
         };
-        (!src.is_empty())
-            .then(|| preview_expression(&expr, &set.entities, *returns, &layer_name, &mut measures))
+        let how = Evaluation {
+            layer_name: &layer_name,
+            store,
+            world: (!looked_at.is_empty()).then_some(&world),
+        };
+        (!src.is_empty()).then(|| preview_expression(&expr, &set.entities, *returns, &how))
     }
 
     /// Objects the features inputs resolve to now.
@@ -615,6 +645,7 @@ impl Runner {
             layers,
             new_layers,
             selection: host.selected(),
+            variables: host.variables(),
             run,
         })
     }
@@ -625,6 +656,11 @@ impl Runner {
     /// applies the result on the host ([`Runner::finish`]).
     pub fn compute(job: &Job, doc: &Document, feedback: &mut dyn Feedback) -> RunResult {
         let units = Defaults::of(doc);
+        let schema = Schema {
+            fields: Vec::new(),
+            variables: job.variables.clone(),
+            world: true,
+        };
         let mut resolved = Resolved::new(job.values.clone());
         let mut objects: Vec<&Entity> = Vec::new();
         let mut seen = HashSet::new();
@@ -651,7 +687,7 @@ impl Runner {
                             .and_then(Value::as_str)
                             .unwrap_or(""),
                     );
-                    if let Ok(expr) = kentos_style_core::expr::compile(src)
+                    if let Ok(expr) = compile_with(src, &schema)
                         && !src.is_empty()
                     {
                         resolved.exprs.insert(p.name.clone(), expr);
@@ -666,18 +702,57 @@ impl Runner {
             }
         }
         resolved.layers = job.layers.clone();
-        let geometry = RunGeometry::of(objects);
+        let layer_names: BTreeMap<String, String> = doc
+            .layers()
+            .leaves()
+            .into_iter()
+            .map(|l| (l.id.clone(), l.name.clone()))
+            .collect();
+        // The layers the expressions look at (docs/adr/0214 §3): their objects go into the run's store too.
+        let looked_at = world_layers(resolved.exprs.values(), &objects, doc);
+        let geometry = RunGeometry::of(
+            objects
+                .iter()
+                .copied()
+                .chain(looked_at.iter().flat_map(|(_, list)| list.iter().copied()))
+                .filter({
+                    let mut seen = HashSet::new();
+                    move |e| seen.insert(e.base().id)
+                }),
+        );
+        let name_of = |id: &str| {
+            layer_names
+                .get(id)
+                .cloned()
+                .unwrap_or_else(|| id.to_owned())
+        };
+        let layer_objects: Vec<(String, EntityObjects)> = looked_at
+            .iter()
+            .map(|(name, list)| {
+                (
+                    name.clone(),
+                    EntityObjects::new(list, &name_of, Some(geometry.store())),
+                )
+            })
+            .collect();
+        let world = World {
+            layers: layer_objects
+                .iter()
+                .map(|(name, o)| WorldLayer {
+                    name: name.clone(),
+                    ids: o.ids(),
+                    objects: o,
+                })
+                .collect(),
+            store: Some(geometry.store()),
+        };
         let ctx = RunContext {
             doc,
             units: &units,
             selection: &job.selection,
             geometry: &geometry,
-            layer_names: doc
-                .layers()
-                .leaves()
-                .into_iter()
-                .map(|l| (l.id.clone(), l.name.clone()))
-                .collect(),
+            layer_names: layer_names.clone(),
+            world: (!looked_at.is_empty()).then_some(&world),
         };
         (job.run)(&resolved, &ctx, feedback)
     }
@@ -965,4 +1040,64 @@ fn apply(
 /// Rasters only: an expression on them names their bands (docs/adr/0233 §3), not attributes.
 pub fn only_rasters(list: &[&Entity]) -> bool {
     !list.is_empty() && list.iter().all(|e| matches!(e, Entity::Raster(_)))
+}
+
+/// The layers a run's expressions look at (docs/adr/0214 §3), each with its
+/// objects in the document's order: the inputs' own layers for an aggregate,
+/// and the layers they name (the first leaf of that name in the tree, Turkish
+/// letters and case aside). A layer's filter leaves its objects out here as it
+/// does of the inputs (docs/adr/0211 §1).
+pub fn world_layers<'d, 'e>(
+    exprs: impl IntoIterator<Item = &'e kentos_expression::Expr>,
+    inputs: &[&'d Entity],
+    doc: &'d Document,
+) -> Vec<(String, Vec<&'d Entity>)> {
+    let (mut own, mut named) = (false, Vec::new());
+    for e in exprs {
+        let w = e.world_needs();
+        own |= w.own;
+        named.extend(w.layers);
+    }
+    let leaves = doc.layers().leaves();
+    let mut ids: Vec<&str> = Vec::new();
+    if own {
+        for e in inputs {
+            let id = e.base().layer_id.as_str();
+            if !ids.contains(&id) {
+                ids.push(id);
+            }
+        }
+    }
+    for name in &named {
+        let key = kentos_expression::world::layer_key(name);
+        if let Some(l) = leaves
+            .iter()
+            .find(|l| kentos_expression::world::layer_key(&l.name) == key)
+            && !ids.contains(&l.id.as_str())
+        {
+            ids.push(&l.id);
+        }
+    }
+    if ids.is_empty() {
+        return Vec::new();
+    }
+    let out = kentos_native_application::layer_filter::left_out(doc);
+    let mut lists: Vec<Vec<&'d Entity>> = vec![Vec::new(); ids.len()];
+    for e in doc.entities() {
+        if let Some(k) = ids.iter().position(|id| *id == e.base().layer_id)
+            && !out.contains(&kentos_domain::Slot(e.base().id))
+        {
+            lists[k].push(e);
+        }
+    }
+    ids.iter()
+        .zip(lists)
+        .map(|(id, list)| {
+            let name = leaves
+                .iter()
+                .find(|l| l.id == *id)
+                .map_or_else(|| (*id).to_owned(), |l| l.name.clone());
+            (name, list)
+        })
+        .collect()
 }

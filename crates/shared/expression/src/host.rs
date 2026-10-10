@@ -15,8 +15,11 @@
 
 use crate::Expr;
 use crate::exec::{Slot, Source};
+use crate::js::text::fold_turkish;
 use crate::program::Load;
 use crate::rows::{As, Column, column};
+use crate::value::Value;
+use crate::world::{Session, WithWorld, World};
 
 /// A field's type, as the schema declares it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -50,15 +53,39 @@ pub struct FieldDef {
     pub description: String,
 }
 
+/// A `@` value (docs/adr/0214 §2.3): one of the project's own variables or
+/// a built-in one (the project's name, the date …), the same for every
+/// object of an evaluation.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Variable {
+    /// As written after `@`; looked for with Turkish letters and case aside.
+    pub name: String,
+    pub value: Value<'static>,
+    /// One line for the builder.
+    pub description: String,
+}
+
 /// The fields of the objects an expression runs on: user-defined typed
 /// fields, and the attributes the host has seen (for completion; an
-/// attribute it has not listed is still read, as text).
+/// attribute it has not listed is still read, as text); and the `@`
+/// variables, the project's first.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Schema {
     pub fields: Vec<FieldDef>,
+    pub variables: Vec<Variable>,
+    /// Whether the functions that look at other layers can be used here
+    /// (İşlemler and the builder over them, docs/adr/0214 §1); the builder
+    /// refuses and hides them elsewhere.
+    pub world: bool,
 }
 
 impl Schema {
+    /// A `@` variable by name (`@Proje_Adı` is `@proje_adi`): the first of that name.
+    pub fn variable(&self, name: &str) -> Option<&Variable> {
+        let key = fold_turkish(name);
+        self.variables.iter().find(|v| fold_turkish(&v.name) == key)
+    }
+
     /// The field a name in an expression means (names are matched exactly,
     /// as attribute keys are).
     pub fn find(&self, name: &str) -> Option<&FieldDef> {
@@ -203,5 +230,66 @@ impl Expr {
             objects,
         };
         column(self, &source, objects.len(), want)
+    }
+
+    /// `evaluate_objects` with the world its calls to other objects are
+    /// answered from (docs/adr/0214 §3).
+    pub fn evaluate_objects_in<'a, 'o>(
+        &self,
+        objects: &'o (dyn Objects<'a> + 'o),
+        want: As,
+        world: Option<&World<'_>>,
+    ) -> Column {
+        let source = ObjectsSource {
+            expr: self,
+            objects,
+        };
+        match world.filter(|_| self.looks_around()) {
+            Some(world) => {
+                let session = Session::new(self, world);
+                let with = WithWorld {
+                    inner: &source,
+                    world: &session,
+                };
+                column(self, &with, objects.len(), want)
+            }
+            None => column(self, &source, objects.len(), want),
+        }
+    }
+}
+
+/// A host's objects as a source for an expression (a world's layer's, `LayerObjects`).
+pub fn objects_source<'e, 'o, 'a>(
+    expr: &'e Expr,
+    objects: &'o (dyn Objects<'a> + 'o),
+) -> impl Source<'a> + use<'e, 'o, 'a> {
+    ObjectsSource { expr, objects }
+}
+
+/// `objects_source` for objects held by value (a small view of the host's).
+pub fn objects_source_of<'e, 'a: 'e, O: Objects<'a> + 'e>(
+    expr: &'e Expr,
+    objects: O,
+) -> impl Source<'a> + 'e {
+    OwnedSource {
+        expr,
+        objects,
+        _texts: std::marker::PhantomData,
+    }
+}
+
+struct OwnedSource<'e, 'a, O: Objects<'a>> {
+    expr: &'e Expr,
+    objects: O,
+    _texts: std::marker::PhantomData<&'a ()>,
+}
+
+impl<'a, O: Objects<'a>> Source<'a> for OwnedSource<'_, 'a, O> {
+    fn fill(&self, load: Load, start: usize, slot: Slot<'_, 'a>) {
+        ObjectsSource {
+            expr: self.expr,
+            objects: &self.objects,
+        }
+        .fill(load, start, slot);
     }
 }

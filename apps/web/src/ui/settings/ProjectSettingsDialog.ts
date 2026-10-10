@@ -28,6 +28,11 @@ import { group, SettingsShell, type DraftApi, type SectionDef } from './Settings
 import { fixed } from '../../core/displayNumber';
 import { angleMark, readSurvey, SURVEY_FIELDS, surveyPlaceholders, surveyTexts, withReduction, type SurveyField, type SurveyTexts } from '../../model/surveyForm';
 import { whyNotGrid } from '../../model/groundMeasures';
+import type { ProjectVariable } from '../../contracts/generated/ProjectVariable';
+import type { VariableKind } from '../../contracts/generated/VariableKind';
+import { expressionVariables, settingsSource } from '../../model/projectVariables';
+import { FALSE_TEXT, newVariableRow, readVariables, TRUE_TEXT, variableRows, variablesBlocked, withKind, type VariableRow } from '../../model/variableForm';
+import { icon } from '../icons';
 import type { AngleUnit } from '../../model/projectSettings';
 
 /** Project settings: stored in the project file, shared by everyone who opens it. */
@@ -35,7 +40,7 @@ interface ProjectDraft extends ProjectSettingsData {
   name: string;
 }
 
-export type ProjectSettingsSection = 'general' | 'scale' | 'crs' | 'units' | 'survey';
+export type ProjectSettingsSection = 'general' | 'scale' | 'crs' | 'units' | 'survey' | 'variables';
 
 export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSection): void {
   const doc = ctx.doc;
@@ -47,6 +52,8 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
   // stay in the lists until Kaydet, which keeps only the chosen (the desktop's `State.defined`).
   const defined: Defined = { own: initial.srid === LOCAL_SRID ? (initial.customCrs ?? null) : null, second: initial.secondCustomCrs ?? null };
   // Ölçme's texts as typed (docs/adr/0169 §3), in the angle unit they were written for.
+  // Değişkenler's rows as typed (docs/adr/0214 §4).
+  const variableState: VariableState = { rows: variableRows(initial.variables ?? []), read: initial.variables };
   const surveyState: SurveyState = {
     texts: surveyTexts(initial.survey, initial.angleUnit),
     unit: initial.angleUnit,
@@ -145,6 +152,15 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
       keys: ['survey'],
       render: (api) => surveySection(api, surveyState),
     },
+    {
+      id: 'variables',
+      label: 'Değişkenler',
+      icon: 'projectVariables',
+      title: 'Değişkenler',
+      lead: 'Projenin ifadelerde @ad olarak okunan değerleri: iş numarası, idare, katsayı, teslim tarihi … Projeyle saklanır, projeyi açan herkes aynısını okur.',
+      keys: ['variables'],
+      render: (api) => variablesSection(ctx, api, variableState),
+    },
   ];
 
   new SettingsShell<ProjectDraft>({
@@ -155,7 +171,10 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
     defaults: { ...PROJECT_SETTINGS_DEFAULTS, drawingUnit: 'm', srid: initial.srid, name: initial.name },
     section,
     // A datum choice or an Ölçme field with something to put right keeps Kaydet waiting.
-    blocked: () => choiceState.problems.some((p) => Object.keys(p).length > 0) || Object.keys(readSurvey(surveyState.texts, surveyState.unit).problems).length > 0,
+    blocked: () =>
+      choiceState.problems.some((p) => Object.keys(p).length > 0) ||
+      Object.keys(readSurvey(surveyState.texts, surveyState.unit).problems).length > 0 ||
+      variablesBlocked(readVariables(variableState.rows)),
     onSave: (draft, init) => {
       const name = draft.name.trim() || init.name;
       if (name !== init.name) doc.name.set(name);
@@ -172,6 +191,8 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
         datumTransforms: settings.datumTransforms ?? [],
         // The defaults are no heights (docs/adr/0205 §1): a draft without any takes the project's away.
         annotation: settings.annotation ?? null,
+        // A draft without variables takes the project's away (docs/adr/0214 §4).
+        variables: settings.variables ?? [],
         // A reduction to the grid the project cannot take is not kept (docs/adr/0171 §4).
         survey: whyNotGrid({ ...settings, customCrs: ownOf(settings) }, settings.survey?.groundHeight)
           ? sanitizeSurvey(settings.survey ? { ...settings.survey, reduceToGrid: undefined } : null)
@@ -657,6 +678,129 @@ function surveySection(api: DraftApi<ProjectDraft>, state: SurveyState): Child {
   ];
   paint();
   return rows;
+}
+
+/** Değişkenler's rows as typed (docs/adr/0214 §4), and the draft's variables they were last read into. */
+interface VariableState {
+  rows: VariableRow[];
+  /** The draft's list the rows stand for; another one (the section's reset) gives them again. */
+  read: readonly ProjectVariable[] | undefined;
+}
+
+const KIND_OPTIONS: readonly (readonly [VariableKind, string])[] = [
+  ['text', 'Metin'],
+  ['number', 'Sayı'],
+  ['bool', 'Doğru/yanlış'],
+  ['date', 'Tarih'],
+];
+
+const VALUE_HOLDER: Record<VariableKind, string> = { text: 'değeri yok', number: 'ör. 1.5', bool: '', date: 'YYYY-AA-GG' };
+
+/**
+ * Değişkenler (docs/adr/0214 §2.3, §4): the project's own `@` values, a row each (Ad, Etiket, Tür, Değer; up, down,
+ * delete; Değişken ekle), typed as model/variableForm.ts reads them, what does not hold under its row (Kaydet waits);
+ * then the built-in values with what they hold now. The desktop's is `project/variables.rs`.
+ */
+function variablesSection(ctx: AppContext, api: DraftApi<ProjectDraft>, state: VariableState): Child {
+  if (state.read !== api.draft.variables) {
+    state.rows = variableRows(api.draft.variables ?? []);
+    state.read = api.draft.variables;
+  }
+  const table = h('div', { class: 'svars', role: 'table', 'aria-label': 'Projenin değişkenleri' });
+  const problemsOf: HTMLElement[] = [];
+  // The draft takes the rows that hold; an empty list is none (as the project keeps it).
+  const commit = (rerender: boolean) => {
+    const read = readVariables(state.rows);
+    const list = read.variables.length ? read.variables : undefined;
+    state.read = list;
+    read.problems.forEach((p, i) => {
+      const el = problemsOf[i];
+      if (el) el.textContent = [p.name, p.value].filter(Boolean).join(' ');
+    });
+    api.set('variables', list, rerender);
+  };
+  const move = (i: number, by: number) => {
+    const j = i + by;
+    if (j < 0 || j >= state.rows.length) return;
+    [state.rows[i], state.rows[j]] = [state.rows[j], state.rows[i]];
+    commit(true);
+  };
+  const head = h(
+    'div',
+    { class: 'svars__row svars__row--head', role: 'row' },
+    ['Ad', 'Etiket', 'Tür', 'Değer'].map((t) => h('span', { class: 'svars__head', role: 'columnheader' }, t)),
+    h('span', { role: 'columnheader', 'aria-label': 'Sıra ve silme' }),
+  );
+  const rows = state.rows.map((r, i) => {
+    const n = i + 1;
+    const name = h('input', { class: 'field svars__name', value: r.name, placeholder: 'ad', spellcheck: 'false', 'aria-label': `${n}. değişkenin adı` });
+    name.addEventListener('input', () => ((r.name = name.value), commit(false)));
+    const label = h('input', { class: 'field svars__label', value: r.label, placeholder: 'ne olduğu', spellcheck: 'false', 'aria-label': `${n}. değişkenin etiketi` });
+    label.addEventListener('input', () => ((r.label = label.value), commit(false)));
+    const kind = new Dropdown({
+      ariaLabel: `${n}. değişkenin türü`,
+      items: (): MenuItem[] => KIND_OPTIONS.map(([k, text]) => ({ label: text, radio: true, checked: r.kind === k, run: () => ((state.rows[i] = withKind(r, k)), commit(true)) })),
+    });
+    kind.set(KIND_OPTIONS.find(([k]) => k === r.kind)?.[1] ?? 'Metin');
+    let value: HTMLElement;
+    if (r.kind === 'bool') {
+      value = h(
+        'span',
+        { class: 'svars__switch' },
+        toggleSwitch({ label: `${n}. değişkenin değeri`, checked: r.value === TRUE_TEXT, onChange: (on) => ((r.value = on ? TRUE_TEXT : FALSE_TEXT), commit(true)) }),
+        h('span', { class: 'svars__switchtext' }, r.value || 'değeri yok'),
+      );
+    } else {
+      const input = h('input', { class: 'field svars__value', value: r.value, placeholder: VALUE_HOLDER[r.kind], spellcheck: 'false', 'aria-label': `${n}. değişkenin değeri` });
+      input.addEventListener('input', () => ((r.value = input.value), commit(false)));
+      value = input;
+    }
+    const button = (glyph: string, hint: string, disabled: boolean, run: () => void) => {
+      const b = h('button', { class: 'ibtn', type: 'button', title: hint, 'aria-label': `${n}. değişken: ${hint}`, disabled }, icon(glyph, 14));
+      b.addEventListener('click', run);
+      return b;
+    };
+    const actions = h(
+      'span',
+      { class: 'svars__actions' },
+      button('chevronUp', 'Yukarı taşı', i === 0, () => move(i, -1)),
+      button('chevronDown', 'Aşağı taşı', i === state.rows.length - 1, () => move(i, 1)),
+      button('trash', 'Sil', false, () => (state.rows.splice(i, 1), commit(true))),
+    );
+    const problem = h('div', { class: 'svars__problem', role: 'alert' });
+    problemsOf.push(problem);
+    return [h('div', { class: 'svars__row', role: 'row' }, h('span', { class: 'svars__at' }, '@', name), label, kind.el, value, actions), problem];
+  });
+  replaceChildren(table, head, rows);
+  const add = h('button', { class: 'btn btn--small', type: 'button' }, icon('plus', 14), 'Değişken ekle');
+  add.addEventListener('click', () => {
+    state.rows.push(newVariableRow(state.rows));
+    commit(true);
+    // The new row's name, to be typed over.
+    requestAnimationFrame(() => table.querySelector<HTMLInputElement>(`[aria-label="${state.rows.length}. değişkenin adı"]`)?.select());
+  });
+  commit(false);
+  // The built-in values as they are now: the draft's name, system and scale, this device's clock, who is signed in.
+  const now = expressionVariables(settingsSource(api.draft.name, api.draft), new Date(), ctx.cloud.me.value?.user.displayName ?? '');
+  const own = new Set((api.draft.variables ?? []).map((v) => v.name));
+  const shown = (v: string | number | boolean | null) => (v === null ? 'yok' : typeof v === 'boolean' ? (v ? 'doğru' : 'yanlış') : String(v));
+  const builtins = [
+    ...now.filter((v) => !own.has(v.name)).map((v) => settingRow(`@${v.name}`, v.description, h('span', { class: 'srow__value' }, shown(v.value)))),
+    settingRow('@katman_adi, @katman', 'Değerlendirilen nesnenin katmanının adı ($katman ile aynı); her yerde okunur.', h('span', { class: 'srow__value' }, 'nesneye göre')),
+  ];
+  return [
+    group(
+      'Projenin değişkenleri',
+      h(
+        'p',
+        { class: 'sgroup__note' },
+        "İfadelerde @ad olarak okunur: İşlemler'de, İfade oluşturucu'da, Öznitelik tablosunun süzgecinde ve paftada (paftanın kendi değişkenlerinden sonra). Stil, etiket, katman süzgeci ve ağ maliyetleri yalnız @katman_adi'yi okur.",
+      ),
+      state.rows.length ? table : note('info', 'Projenin değişkeni yok. İş numarası, idare, katsayı gibi her ifadede aynı olan değerler için ekleyin.'),
+      h('div', { class: 'svars__actionsrow' }, add),
+    ),
+    group('Hazır değişkenler', h('p', { class: 'sgroup__note' }, 'Kendiliğinden dolar; tarih ve saat bu cihazın saatindendir, ifade boyunca aynıdır.'), builtins),
+  ];
 }
 
 function unitsSection(api: DraftApi<ProjectDraft>): Child {

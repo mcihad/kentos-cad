@@ -5,11 +5,14 @@
 
 use kentos_contracts::Entity;
 use kentos_domain::{Document, Slot};
+use kentos_expression::rows::As;
+use kentos_expression::world::{World, WorldLayer};
 use kentos_expression::{Geometry, Measured, Schema, Scope, Value, geometry};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::store::Store;
-use kentos_processing::expression::vertex_count;
+use kentos_processing::expression::{EntityObjects, Evaluation, evaluate_in, vertex_count};
 use kentos_processing::features::kind_label;
+use kentos_processing::runner::world_layers;
 
 /// The objects an expression runs on, in run order (`$sıra` is the place + 1).
 #[derive(Clone, Debug, Default)]
@@ -104,6 +107,9 @@ impl Objects {
         store: &Store,
     ) -> Result<Value<'static>, String> {
         let expr = kentos_expression::compile_with(source, schema).map_err(|e| e.text())?;
+        if expr.looks_around() {
+            return self.value_in_world(&expr, i, doc, store);
+        }
         let slot = *self.slots.get(i).ok_or_else(String::new)?;
         let e = doc.get(slot).ok_or_else(String::new)?;
         let layer = if expr.needs.layer {
@@ -121,6 +127,61 @@ impl Objects {
             shape: store.get(f64::from(slot.0)).map(|item| &item.shape),
         };
         Ok(expr.evaluate(&one).into_owned())
+    }
+
+    /// The value on object `i` of an expression that looks at other layers (docs/adr/0214 §3):
+    /// as İşlemler run it, the objects up to it in one go, the layers it names from the drawing.
+    fn value_in_world(
+        &self,
+        expr: &kentos_expression::Expr,
+        i: usize,
+        doc: &Document,
+        store: &Store,
+    ) -> Result<Value<'static>, String> {
+        let list: Vec<&Entity> = self
+            .slots
+            .iter()
+            .take(i + 1)
+            .filter_map(|s| doc.get(*s))
+            .collect();
+        if list.len() != i + 1 {
+            return Err(String::new());
+        }
+        let layer_name = |id: &str| {
+            doc.layers()
+                .get(id)
+                .map_or_else(|| id.to_owned(), |l| l.name.clone())
+        };
+        let looked_at = world_layers([expr], &list, doc);
+        let objects: Vec<(String, EntityObjects)> = looked_at
+            .iter()
+            .map(|(name, l)| {
+                (
+                    name.clone(),
+                    EntityObjects::new(l, &layer_name, Some(store)),
+                )
+            })
+            .collect();
+        let world = World {
+            layers: objects
+                .iter()
+                .map(|(name, o)| WorldLayer {
+                    name: name.clone(),
+                    ids: o.ids(),
+                    objects: o,
+                })
+                .collect(),
+            store: Some(store),
+        };
+        let how = Evaluation {
+            layer_name: &layer_name,
+            store: Some(store),
+            world: Some(&world),
+        };
+        evaluate_in(expr, &list, &how, As::Value)
+            .into_iter()
+            .nth(i)
+            .ok_or_else(String::new)
     }
 
     /// A field's distinct values in object order, at most `limit` of them when given.

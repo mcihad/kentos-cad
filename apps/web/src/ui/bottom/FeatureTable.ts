@@ -17,6 +17,7 @@ import type { MenuItem } from '../widgets/PopupMenu';
 import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { clickPick } from './PointTable';
+import { appVariables } from '../../app/expressionVariables';
 
 /**
  * Öznitelik tablosu, the bottom panel's Tablo tab (docs/adr/0199 §4): a layer's objects in a table, their attributes
@@ -133,8 +134,13 @@ export class FeatureTable extends Component {
         this.schedule();
       },
       fields: () => attributeFields(this.model.columns.filter((c) => c.key !== null).map((c) => ({ name: c.key! }))),
-      objects: () => entityObjects(this.model.entities, (id) => ctx.doc.layers.get(id)?.name ?? id, { geometry: { evaluateExpression: (...a) => ctx.view.evaluateExpression(...a) } }),
+      objects: () =>
+        entityObjects(this.model.entities, (id) => ctx.doc.layers.get(id)?.name ?? id, {
+          geometry: { evaluateExpression: (...a) => ctx.view.evaluateExpression(...a), evaluateExpressionIn: (...a) => ctx.view.evaluateExpressionIn(...a) },
+          context: { variables: appVariables(ctx) },
+        }),
       context: `${FEATURE_TEXTS.filter}`,
+      variables: () => appVariables(ctx),
       fail: (m) => ctx.log.error(m),
     });
     const button = (iconName: string, text: string, hint: string, run: () => void) => {
@@ -250,13 +256,15 @@ export class FeatureTable extends Component {
     this.filterError = null;
     const source = kept.filter.trim();
     if (!source) return null;
-    const c = compileExpression(source);
+    const { ctx } = this;
+    // The filter is evaluated when asked: it reads the project's `@` values (docs/adr/0214 §2.3).
+    const c = compileExpression(source, { variables: appVariables(ctx) });
     if (!c.ok) {
       this.filterError = expressionError(c);
       return entities.map(() => false);
     }
-    const { ctx } = this;
-    const col = c.expr.evaluateAll({ entities, layerName: (id) => ctx.doc.layers.get(id)?.name ?? id, geometry: { evaluateExpression: (...a) => ctx.view.evaluateExpression(...a) } }, 'bool');
+    const geometry = { evaluateExpression: ctx.view.evaluateExpression.bind(ctx.view), evaluateExpressionIn: ctx.view.evaluateExpressionIn.bind(ctx.view) };
+    const col = c.expr.evaluateAll({ entities, layerName: (id) => ctx.doc.layers.get(id)?.name ?? id, geometry }, 'bool');
     return entities.map((_, i) => col.value(i) === true);
   }
 

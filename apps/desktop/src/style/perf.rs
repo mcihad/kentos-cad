@@ -173,6 +173,7 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
             text_styles: Vec::new(),
             connections: Vec::new(),
             networks: Vec::new(),
+            variables: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,
@@ -249,6 +250,8 @@ fn perf() {
             &library,
             &look(&doc, 1000.0),
             &view,
+            1.0,
+            true,
             1,
         );
         let full = ms(t);
@@ -272,6 +275,8 @@ fn perf() {
             &library,
             &look(&doc, 1000.0),
             &view,
+            1.0,
+            true,
             1,
         );
         let t = Instant::now();
@@ -282,6 +287,8 @@ fn perf() {
             &library,
             &look(&doc2, 1000.0),
             &view,
+            1.0,
+            true,
             1,
         );
         let one = ms(t);
@@ -294,6 +301,8 @@ fn perf() {
             &library,
             &look(&doc2, 1000.0),
             &view,
+            1.0,
+            true,
             1,
         );
         let unchanged = ms(t);
@@ -335,6 +344,8 @@ fn perf() {
             &library,
             &look(&demo, 1000.0),
             &view,
+            1.0,
+            true,
             1,
         );
         println!(
@@ -449,6 +460,8 @@ fn temporal() {
             &library,
             &look(&doc, 1000.0),
             &view,
+            1.0,
+            true,
             1,
         );
         row("  ilk kurulum, 1990'da", ms(t), None);
@@ -464,6 +477,8 @@ fn temporal() {
                 &library,
                 &look(&doc, 1000.0),
                 &view,
+                1.0,
+                true,
                 1,
             );
             worst = worst.max(ms(t));
@@ -482,6 +497,8 @@ fn temporal() {
             &library,
             &look(&doc, 1000.0),
             &view,
+            1.0,
+            true,
             1,
         );
         row("  sürgü kapanınca (hepsi görünür)", ms(t), None);

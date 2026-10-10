@@ -14,6 +14,8 @@ pub enum Tok {
     Str(String),
     Field(String),
     Var(String),
+    /// `@name`: a variable of the project or a built-in one (docs/adr/0214 §2.3).
+    At(String),
     Word(String),
     Op(&'static str),
     End,
@@ -35,6 +37,7 @@ impl Token {
             Tok::Str(v) | Tok::Field(v) | Tok::Word(v) => format!("“{v}”"),
             Tok::Op(v) => format!("“{v}”"),
             Tok::Var(v) => format!("“${v}”"),
+            Tok::At(v) => format!("“@{v}”"),
         }
     }
 }
@@ -193,6 +196,16 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>, CompileError> {
             }
             out.push(Token {
                 t: Tok::Var(String::from_utf16_lossy(&u[i + 1..i + 1 + n])),
+                at,
+            });
+            i += 1 + n;
+            continue;
+        }
+        // `@name` (docs/adr/0214 §2.3); a lone `@` stays a character the language has no use for.
+        if c == u16::from(b'@') && word(&u, i + 1) > 0 {
+            let n = word(&u, i + 1);
+            out.push(Token {
+                t: Tok::At(String::from_utf16_lossy(&u[i + 1..i + 1 + n])),
                 at,
             });
             i += 1 + n;

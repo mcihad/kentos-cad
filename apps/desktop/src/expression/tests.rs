@@ -487,3 +487,99 @@ fn flow_screens() {
         }
     }
 }
+
+const QUERIES: &str = include_str!("../../../../fixtures/processing/v1/queries.kcad");
+
+/// The query drawing (fixtures/processing/v1/queries.kcad) with the
+/// project's `@is_no`, Öznitelik hesapla on its parcels and the value's
+/// builder open on `expression`.
+fn calculate_on_parcels(expression: &str) -> App {
+    use crate::processing::Event as P;
+    use kentos_contracts::{ProjectVariable, VariableKind, VariableValue};
+
+    let (mut app, _) = App::boot(None);
+    let snapshot =
+        kentos_contracts::DocumentSnapshotV1::from_json(QUERIES).expect("the drawing reads");
+    let doc = Document::new(snapshot, None).expect("the drawing opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.settings().clone();
+    settings.variables = vec![ProjectVariable {
+        name: "is_no".into(),
+        label: "İş numarası".into(),
+        kind: VariableKind::Text,
+        value: VariableValue::Text("2026/41".into()),
+    }];
+    doc.model.set_settings(settings);
+    let _ = app.update(Message::Run("processing.run.attributes.calculate"));
+    let value = |app: &mut App, name: &str, v: Value| {
+        let _ = app.update(Message::Processing(P::Value(name.into(), v)));
+    };
+    value(
+        &mut app,
+        "input",
+        serde_json::json!({ "scope": "layer", "layerId": "parsel" }),
+    );
+    value(&mut app, "value", Value::from(expression));
+    event(&mut app, Event::OpenProcessing("value".into()));
+    assert!(app.builder.is_some(), "the builder opens");
+    app
+}
+
+/// İşlemler give the builder the project's `@` values and the other layers
+/// (docs/adr/0214 §3): the preview reads them as the run will, on the same
+/// objects the web's scene does (`shots.mjs variables`, ifade-degiskenler).
+#[test]
+fn the_preview_reads_the_project_s_values_and_other_layers() {
+    let app = calculate_on_parcels(
+        "@is_no || ' · ' || kesişen_sayısı('Ağaç') || ' ağaç, en yakın yol ' || en_yakın('Yol', Ad)",
+    );
+    let b = app.builder.as_ref().expect("open");
+    assert_eq!(b.check.error, None);
+    let Preview::Value(shown) = &b.preview else {
+        panic!("a value: {:?}", b.preview);
+    };
+    assert!(
+        shown.starts_with("'2026/41 · ") && shown.contains(" ağaç, en yakın yol "),
+        "{shown}"
+    );
+    // The other layer's field is not said to be missing on the parcels.
+    assert!(b.check.warnings.is_empty(), "{:?}", b.check.warnings);
+}
+
+/// The builder over Öznitelik hesapla with the project's `@` values and a
+/// call to other layers, its tree on the `@` values; both themes at
+/// 1440×900 and 1100×650 (`.run/shots/ifade-degiskenler-*`).
+/// `cargo test -p kentos-desktop expression::tests::world_screens -- --ignored --nocapture`
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn world_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            let mut app = calculate_on_parcels(
+                "@is_no || ' · ' || kesişen_sayısı('Ağaç') || ' ağaç, en yakın yol ' || en_yakın('Yol', Ad)",
+            );
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            app.apply_settings();
+            event(&mut app, Event::Query("@".into()));
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("ifade-degiskenler-{width}x{height}{suffix}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}

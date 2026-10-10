@@ -115,6 +115,54 @@ pub struct StyledCache {
     /// (docs/adr/0210 §6): a part whose objects came or went is built again.
     window: Option<kentos_geometry_core::time::Window>,
     time_hidden: SlotSet,
+    /// Layers whose renderer depends on the view (docs/adr/0213 §3): the view's scale and the box they were built for.
+    view_built: HashMap<String, ViewBuilt>,
+    /// A count that keeps every heat map picture's key new.
+    made: u64,
+    /// Layers already said to have dots left out, and those to say (docs/adr/0213 §2.4).
+    dropped_said: HashSet<String>,
+    dropped: Vec<(String, u64)>,
+}
+
+/// What a view-dependent layer was built for.
+#[derive(Clone, Copy, Debug)]
+struct ViewBuilt {
+    needs: kentos_native_style::renderer::ViewNeeds,
+    scale: f64,
+    frame: Option<Bounds>,
+}
+
+/// The view's logical px per metre in quarter octaves: a view-dependent build is made for it (docs/adr/0213 §3).
+pub fn quarter_scale(px_per_m: f64) -> f64 {
+    (kentos_geometry_core::jsmath::js_round(px_per_m.max(1e-12).log2() * 4.0) / 4.0).exp2()
+}
+
+/// A heat map's box: the view and half of it on every side.
+pub fn heat_box(view: &Bounds) -> Bounds {
+    let (w, h) = (
+        (view.max_x - view.min_x) / 2.0,
+        (view.max_y - view.min_y) / 2.0,
+    );
+    Bounds {
+        min_x: view.min_x - w,
+        min_y: view.min_y - h,
+        max_x: view.max_x + w,
+        max_y: view.max_y + h,
+    }
+}
+
+impl ViewBuilt {
+    /// Built for another view: a box the view left now, another scale step once the zoom settled
+    /// (the web's 150 ms).
+    fn stale(&self, view: &Bounds, scale: f64, settled: bool) -> bool {
+        (settled && self.needs.scale && self.scale != scale)
+            || self.frame.is_some_and(|b| {
+                view.min_x < b.min_x
+                    || view.max_x > b.max_x
+                    || view.min_y < b.min_y
+                    || view.max_y > b.max_y
+            })
+    }
 }
 
 /// Slots with the quick hash (a temporal layer's hundred thousand objects are asked each step).
@@ -218,6 +266,7 @@ pub(crate) fn build_whole(
         library,
         layer_name: &|id: &str| names.get(id).cloned().unwrap_or_else(|| id.to_owned()),
         view: look.view_build,
+        frame: sheet_frame(node, look.symbol_scale),
     };
     build_layer(store, &node.style, entities, &opts)
         .and_then(|(_, batches)| {
@@ -234,10 +283,39 @@ pub(crate) fn build_whole(
         .unwrap_or_default()
 }
 
+static SHEET_MADE: AtomicU64 = AtomicU64::new(0);
+
+/// A layer's build on a sheet's map (the web's `layerStyleAt`): a view-dependent renderer's
+/// (docs/adr/0213 §3) at the paper's CSS px per ground metre (96 dpi over the scale), a heat map's
+/// picture under a key of its own.
+fn sheet_frame(node: &LayerNode, scale: f64) -> Option<(f64, String)> {
+    let needs = kentos_native_style::renderer::needs_of(node.style.renderer.as_ref());
+    (needs.scale || needs.frame.is_some()).then(|| {
+        (
+            96_000.0 / (25.4 * scale.max(1.0)),
+            format!(
+                "heat:sheet:{}:{}",
+                node.id,
+                SHEET_MADE.fetch_add(1, Ordering::Relaxed) + 1
+            ),
+        )
+    })
+}
+
 impl StyledCache {
     /// The symbol scale the layers were last built at, and whether on the screen.
     pub fn built_scale(&self) -> Option<(f64, bool)> {
         self.look.as_ref().map(|l| (l.symbol_scale, l.screen))
+    }
+
+    /// A shown layer's renderer is built for the view's scale (docs/adr/0213 §3): the wheel's zoom settles for it.
+    pub fn scales_with_view(&self) -> bool {
+        self.view_built.values().any(|b| b.needs.scale)
+    }
+
+    /// The layers whose dots were left out since last asked, each once (docs/adr/0213 §2.4): name and count.
+    pub fn take_dropped(&mut self) -> Vec<(String, u64)> {
+        std::mem::take(&mut self.dropped)
     }
 
     /// The styled scene of `doc`, from the cache where nothing it depends on changed.
@@ -250,10 +328,13 @@ impl StyledCache {
         library: &StyleLibrary,
         look: &Look,
         view: &Bounds,
+        px_per_m: f64,
+        settled: bool,
         under: usize,
     ) -> StyledScene {
         // Nothing it depends on changed: the frame costs a comparison (a pan, a zoom within a step).
         let generation = doc.generation();
+        let q = quarter_scale(px_per_m);
         if self.drawing == Some(drawing)
             && self.generation == Some(generation)
             && self.look.as_ref() == Some(look)
@@ -261,6 +342,7 @@ impl StyledCache {
             && self.scene.under == under
             && self.clip.is_some_and(|c| !clip_stale(view, &c))
             && self.window == store.time_window()
+            && !self.view_built.values().any(|b| b.stale(view, q, settled))
         {
             return self.scene.clone();
         }
@@ -405,12 +487,24 @@ impl StyledCache {
             let cached = self.layers.get(&node.id);
             let count = doc.count(&node.id);
             let reads_index = cached.is_some_and(|l| l.reads_index && l.style == node.style);
+            // A renderer drawing the layer's objects together builds it whole (docs/adr/0213 §3).
+            let needs = kentos_native_style::renderer::needs_of(node.style.renderer.as_ref());
             let split = !reads_index
+                && !needs.whole
                 && match cached {
                     Some(l) if l.split => count >= PARTS_FROM / 2,
                     _ => count >= PARTS_FROM,
                 };
+            // A view-dependent one built for another view is built again.
+            let for_view = needs.scale
+                || needs.frame == Some(kentos_native_style::renderer::ViewFrameKind::Heat);
+            let view_stale = for_view
+                && self
+                    .view_built
+                    .get(&node.id)
+                    .is_none_or(|b| b.stale(view, q, settled));
             let reset = all
+                || view_stale
                 || cached.is_none_or(|l| {
                     l.stale
                         || l.style != node.style
@@ -480,13 +574,39 @@ impl StyledCache {
                 parts,
             });
         }
+        // The view-dependent layers' builds (docs/adr/0213 §3): the view's scale step, a heat map's box and its
+        // picture's key, made before the builds run side by side.
+        let mut frames: HashMap<String, (Bounds, (f64, String))> = HashMap::new();
+        for plan in &plans {
+            let needs = kentos_native_style::renderer::needs_of(plan.node.style.renderer.as_ref());
+            let heat = needs.frame == Some(kentos_native_style::renderer::ViewFrameKind::Heat);
+            if needs.scale || heat {
+                self.made += 1;
+                let b = if heat { heat_box(view) } else { clip };
+                frames.insert(
+                    plan.node.id.clone(),
+                    (b, (q, format!("heat:{}:{}", plan.node.id, self.made))),
+                );
+                self.view_built.insert(
+                    plan.node.id.clone(),
+                    ViewBuilt {
+                        needs,
+                        scale: q,
+                        frame: heat.then_some(b),
+                    },
+                );
+            } else {
+                self.view_built.remove(&plan.node.id);
+            }
+        }
         let build = |node: &LayerNode, entities: &[&Entity]| -> (StyledLayer, bool) {
+            let framed = frames.get(&node.id);
             let opts = BuildOptions {
                 origin: look.origin,
                 plot_scale: look.symbol_scale,
                 screen: look.screen,
                 hairlines: look.hairlines,
-                clip: Some(clip),
+                clip: Some(framed.map_or(clip, |f| f.0)),
                 library,
                 layer_name: &|id: &str| {
                     layer_names
@@ -495,6 +615,7 @@ impl StyledCache {
                         .unwrap_or_else(|| id.to_owned())
                 },
                 view: look.view_build,
+                frame: framed.map(|f| f.1.clone()),
             };
             build_layer(store, &node.style, entities, &opts)
                 .and_then(|(call, batches)| {
@@ -550,6 +671,10 @@ impl StyledCache {
         let count = jobs.len();
         for (p, plan) in plans.iter().enumerate() {
             let id = &plan.node.id;
+            // Ters alan's frame is the construction lines' box: built again with it.
+            let framed = kentos_native_style::renderer::needs_of(plan.node.style.renderer.as_ref())
+                .frame
+                == Some(kentos_native_style::renderer::ViewFrameKind::Construction);
             let mut results: Vec<(u64, &[&Entity], StyledLayer, bool)> = plan
                 .parts
                 .iter()
@@ -590,7 +715,7 @@ impl StyledCache {
                     filter: plan.node.filter.clone(),
                 });
                 entry.parts.clear();
-                entry.parts.insert(0, new_part(layer, &entities));
+                entry.parts.insert(0, new_part(layer, &entities, framed));
                 entry.reads_index = true;
             }
             let reads_index = results.iter().any(|r| r.3);
@@ -635,13 +760,26 @@ impl StyledCache {
                 if entities.is_empty() && split {
                     entry.parts.remove(&key);
                 } else {
-                    entry.parts.insert(key, new_part(layer, entities));
+                    entry.parts.insert(key, new_part(layer, entities, framed));
                 }
+            }
+        }
+        // Dots a layer left out are said once (docs/adr/0213 §2.4).
+        for plan in &plans {
+            let id = &plan.node.id;
+            let left = self.layers.get(id).map_or(0, |l| {
+                l.parts.values().map(|p| p.part.layer.dropped).sum::<u64>()
+            });
+            if left > 0 && self.dropped_said.insert(id.clone()) {
+                self.dropped.push((plan.node.name.clone(), left));
             }
         }
         // Layers gone from the tree go with their buffers.
         let known: HashSet<&str> = layer_names.keys().map(String::as_str).collect();
         self.layers.retain(|id, _| known.contains(id.as_str()));
+        // A view-dependent layer hidden or gone is built again when it shows.
+        self.view_built
+            .retain(|id, _| shown_ids.contains(id.as_str()));
         // The scene: the shown layers' parts, bottom first, and when a layer
         // comes in parts, the order of the layer built whole.
         let mut parts: Vec<Arc<StyledLayerPart>> = Vec::new();
@@ -754,6 +892,7 @@ impl StyledCache {
                     min_scale: None,
                     max_scale: None,
                 }],
+                ..StyledLayer::default()
             },
         });
         self.services
@@ -779,13 +918,14 @@ fn dirty_part(dirty: &mut HashMap<String, Dirty>, layer: &str, part: u64) {
     }
 }
 
-/// A built part of a layer, under a new id (the GPU uploads what it has not seen).
-fn new_part(layer: StyledLayer, entities: &[&Entity]) -> Part {
+/// A built part of a layer, under a new id (the GPU uploads what it has not seen); `framed`: its
+/// renderer is drawn over the construction lines' box (Ters alan, docs/adr/0213 §3).
+fn new_part(layer: StyledLayer, entities: &[&Entity], framed: bool) -> Part {
     Part {
         part: Arc::new(StyledLayerPart {
             id: NEXT_LAYER.fetch_add(1, Ordering::Relaxed),
             layer,
         }),
-        construction: entities.iter().any(|e| construction(e)),
+        construction: framed || entities.iter().any(|e| construction(e)),
     }
 }

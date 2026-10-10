@@ -311,6 +311,23 @@ export class WebGPUStyledRenderer {
     return data;
   }
 
+  /** Pictures layer builds made (a heat map's, docs/adr/0213 §2.6), by their keys, until forgotten. */
+  private readonly made = new Map<string, HTMLCanvasElement>();
+
+  /** A picture a build made: drawn by the batches that name its key. */
+  putPicture(key: string, canvas: HTMLCanvasElement): void {
+    this.forgetPicture(key);
+    this.made.set(key, canvas);
+  }
+
+  /** A made picture no longer drawn: its texture goes. */
+  forgetPicture(key: string): void {
+    this.made.delete(key);
+    const p = this.pictures.get(key);
+    if (p) p.texture.destroy();
+    this.pictures.delete(key);
+  }
+
   /**
    * A picture's texture and group 0 (docs/adr/0192 §3): made once from its decoded pixels, premultiplied, its mip
    * levels drawn by the canvas; the grey stand-in while the atlas has none (looked for again next frame).
@@ -318,7 +335,7 @@ export class WebGPUStyledRenderer {
   private picture(key: string, url: string | null): GpuPicture {
     const kept = this.pictures.get(key);
     if (kept) return kept;
-    const img = this.atlas?.picture(key, url) ?? null;
+    const img = this.made.get(key) ?? this.atlas?.picture(key, url) ?? null;
     const name = img ? key : '';
     const known = this.pictures.get(name);
     if (known) return known;

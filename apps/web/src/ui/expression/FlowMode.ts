@@ -1,4 +1,4 @@
-import type { ExprField, ExprSection } from '../../model/expression/builder';
+import type { ExprField, ExprSection, Fields } from '../../model/expression/builder';
 import { exprFlow, exprFlowEdit, type Flow, type FlowEdit, type FlowNode, type FlowTree } from '../../model/expression/flow';
 import { FlowInspector } from './FlowInspector';
 import { FlowView } from './FlowView';
@@ -14,6 +14,8 @@ import { FlowView } from './FlowView';
  */
 export interface FlowModeOptions {
   readonly fields: () => readonly ExprField[];
+  /** What the services know of the objects (fields, `@` values, other layers); absent: the fields. */
+  readonly schema?: () => Fields;
   readonly catalog: () => readonly ExprSection[];
   /** The builder's expression. */
   readonly text: () => string;
@@ -72,7 +74,7 @@ export class FlowMode {
 
   /** Reads the text (it changed, or the view is shown) and draws the flow. */
   refresh(): void {
-    this.flow = exprFlow(this.trees(), this.opts.fields());
+    this.flow = exprFlow(this.trees(), (this.opts.schema ?? this.opts.fields)());
     if (this.selected && !this.node(this.selected)) this.selected = null;
     this.view.render(this.flow, this.selected, this.values());
     this.inspector.show(this.selected ? (this.node(this.selected) ?? null) : null);
@@ -146,7 +148,7 @@ export class FlowMode {
   /** Puts a node down and connects it into `to` (or where `target` says). */
   private put(add: FlowEdit, to?: { readonly node: string; readonly port: number }): void {
     const into = to ?? this.target();
-    const fields = this.opts.fields();
+    const fields = (this.opts.schema ?? this.opts.fields)();
     const before = this.trees();
     try {
       const added = exprFlowEdit(before, add, fields);
@@ -166,7 +168,7 @@ export class FlowMode {
   private edit(change: FlowEdit): void {
     const before = this.trees();
     try {
-      const r = exprFlowEdit(before, change, this.opts.fields());
+      const r = exprFlowEdit(before, change, (this.opts.schema ?? this.opts.fields)());
       this.commit(before, r.trees, change.op === 'remove' ? undefined : r.focus);
     } catch (err) {
       this.opts.fail((err as Error).message);

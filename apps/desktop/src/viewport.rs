@@ -502,7 +502,9 @@ impl Viewport {
             styled: styled.unwrap_or_default(),
             images: styling.map(|s| s.styles.images.clone()),
             settle_at: styling
-                .filter(|s| s.screen_symbols)
+                .filter(|s| {
+                    s.screen_symbols || self.styled.try_borrow().is_ok_and(|c| c.scales_with_view())
+                })
                 .and_then(|_| self.settling()),
         })
         .width(Fill)
@@ -547,9 +549,20 @@ impl Viewport {
             &s.styles.library,
             &look,
             &self.camera.visible_bounds(),
+            // A renderer built for the view's scale waits for the wheel to stop (docs/adr/0213 §3).
+            self.camera.scale,
+            self.settling().is_none(),
             // Over the grid, under the highlights.
             1,
         );
+        // The pictures the style engine made (heat maps, docs/adr/0213 §2.6): handed to the atlas by
+        // key, the ones no longer drawn let go.
+        let mut made = std::collections::HashSet::new();
+        for part in &scene.layers {
+            s.styles.images.put_made(&part.layer);
+            made.extend(part.layer.pictures.iter().map(|p| p.key.as_str()));
+        }
+        s.styles.images.keep_made(&made);
         // The pictures the scene draws, decoded once each (docs/adr/0192 §3); its rasters'
         // files for the raster service (docs/adr/0204 §5).
         let folder = doc.path.as_deref().and_then(std::path::Path::parent);
@@ -636,6 +649,15 @@ impl Viewport {
             Some((built, true)) => built,
             _ => now,
         }
+    }
+
+    /// The layers whose Nokta yoğunluğu left dots out since last asked, each once (docs/adr/0213 §2.4):
+    /// name and count.
+    pub fn take_dropped(&self) -> Vec<(String, u64)> {
+        self.styled
+            .try_borrow_mut()
+            .map(|mut c| c.take_dropped())
+            .unwrap_or_default()
     }
 
     /// When the wheel's zoom settles and screen-sized symbols are built again, while it has not.

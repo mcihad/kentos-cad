@@ -9,10 +9,12 @@ use std::collections::BTreeMap;
 use kentos_contracts::fields::LayerField;
 use kentos_contracts::{AngleUnit, Entity, LabelStyle, LayerStyle, PointStyle, Vec2};
 use kentos_domain::{Document, Slot};
+use kentos_expression::world::World;
 use kentos_native_application::geometry::drawing_font;
 use kentos_style_core::expr::Expr;
 use serde_json::{Map, Value, json};
 
+use crate::expression::Evaluation;
 use crate::geometry::RunGeometry;
 
 /// Values keyed by parameter name, as the dialog, history and models hold
@@ -559,12 +561,23 @@ pub struct RunContext<'d> {
     /// The geometry of the run's features inputs, from the shared core.
     pub geometry: &'d RunGeometry,
     pub(crate) layer_names: BTreeMap<String, String>,
+    /// The layers the expressions' calls to other objects look at (docs/adr/0214 §3); none when they make none.
+    pub world: Option<&'d World<'d>>,
 }
 
 impl RunContext<'_> {
     /// A layer's name for an id (expressions, summaries); the id when unknown.
     pub fn layer_name<'a>(&'a self, id: &'a str) -> &'a str {
         self.layer_names.get(id).map_or(id, String::as_str)
+    }
+
+    /// How the run's expressions are evaluated: the run's store, its world.
+    pub fn evaluation<'a>(&'a self, layer_name: &'a dyn Fn(&str) -> String) -> Evaluation<'a> {
+        Evaluation {
+            layer_name,
+            store: Some(self.geometry.store()),
+            world: self.world,
+        }
     }
 
     /// A layer's field of that name (docs/adr/0199 §1): what a value written to the attribute becomes.

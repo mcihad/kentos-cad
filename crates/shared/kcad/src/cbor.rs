@@ -570,6 +570,11 @@ impl<'a> Reader<'a> {
         self.data.get(self.pos) == Some(&0xf6)
     }
 
+    /// The next item's first byte, unread (a value of several types: a variable's, §6.4.9).
+    pub fn peek(&self) -> Option<u8> {
+        self.data.get(self.pos).copied()
+    }
+
     // ── Opaque parts (§6.7) ─────────────────────────────────────────────
 
     /// A JSON-compatible value, integers and floats kept apart.

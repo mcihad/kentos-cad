@@ -194,6 +194,9 @@ impl MeshCalc {
                     description: format!("“{}” veri seti", data[*k].variable),
                 })
                 .collect(),
+            // As Raster hesaplayıcı's: the datasets only, no `@` values, no other layers.
+            variables: Vec::new(),
+            world: false,
         };
         let expr = compile_with(&spec.expression, &schema).map_err(|e| e.text())?;
         let listed = || {

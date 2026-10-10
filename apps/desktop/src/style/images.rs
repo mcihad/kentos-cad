@@ -261,6 +261,31 @@ impl Images {
             .insert(key, bitmap);
     }
 
+    /// Hands in the pictures a layer's build made (heat maps, docs/adr/0213 §2.6), each once.
+    pub fn put_made(&self, layer: &kentos_native_style::batches::StyledLayer) {
+        for p in &layer.pictures {
+            if !self.has_bitmap(&p.key) {
+                self.put_bitmap(
+                    p.key.clone(),
+                    Some(Arc::new(kentos_render_wgpu::styled::Bitmap {
+                        width: p.width,
+                        height: p.height,
+                        rgba: p.rgba.clone(),
+                    })),
+                );
+            }
+        }
+    }
+
+    /// Lets go of the pictures the style engine made (heat maps, `heat:…`, docs/adr/0213 §2.6) that
+    /// the scene no longer draws.
+    pub fn keep_made(&self, keep: &std::collections::HashSet<&str>) {
+        self.bitmaps
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .retain(|key, _| !key.starts_with("heat:") || keep.contains(key.as_str()));
+    }
+
     fn family(&self, stack: Option<&str>) -> &'static str {
         let stack = stack.unwrap_or("Barlow, sans-serif");
         let mut faces = self.faces.lock().unwrap_or_else(PoisonError::into_inner);

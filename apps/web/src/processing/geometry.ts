@@ -1,7 +1,7 @@
 import type { Entity } from '../model/entities';
 import type { ExprGeometry } from '../model/expression/expression';
 import type { Bounds, Vec2 } from '../model/geometry';
-import { CoreStore, cornerTexts, type ExprColumnData } from '../wasm/core';
+import { CoreStore, cornerTexts, type ExprColumnData, type ExprWorldTable } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
 
 /**
@@ -81,6 +81,54 @@ export interface RunGeometry extends ExprGeometry {
    * Kesişen and turned round by the caller.
    */
   relatePairs(inputs: readonly number[], references: readonly number[], relation: Exclude<SpatialRelation, 'disjoint'>, within: number): [number, number][];
+  /**
+   * Each input's nearest targets (docs/adr/0215 §2.1): `k` of them (0: all) within `max` (Infinity: no bound), by
+   * distance then the targets' order; an object is never its own target.
+   */
+  nearest(inputs: readonly number[], targets: readonly number[], k: number, max: number, measure: ProximityMeasure): NearestFound[];
+  /** The areas' neighbours (docs/adr/0215 §2.2), both ways round, in the list's order. */
+  neighbors(ids: readonly number[], tolerance: number, corners: boolean, overlaps: boolean): NeighborFound[];
+}
+
+/** How a distance is measured (docs/adr/0215 §2.1): edge to edge or centre to centre. */
+export type ProximityMeasure = 'edges' | 'centers';
+
+/** A target found for an input: their places in the two lists, the distance, the two nearest points and the bearing from the first to the second (radians, clockwise from north; NaN at 0 apart). */
+export interface NearestFound {
+  readonly input: number;
+  readonly target: number;
+  readonly d: number;
+  readonly a: Vec2;
+  readonly b: Vec2;
+  readonly bearing: number;
+}
+
+/** A neighbour of an area: their places, how they neighbour, the shared boundary (m) and the overlapping area (m²). */
+export interface NeighborFound {
+  readonly area: number;
+  readonly neighbor: number;
+  readonly kind: 'edge' | 'corner' | 'overlap';
+  readonly length: number;
+  readonly overlap: number;
+}
+
+const NEAREST_STRIDE = 8;
+const NEIGHBOR_STRIDE = 5;
+const NEIGHBOR_KIND = ['edge', 'corner', 'overlap'] as const;
+
+/** The core's records read back (`store::proximity`'s strides). */
+export function nearestFound(r: Float64Array): NearestFound[] {
+  const out: NearestFound[] = [];
+  for (let k = 0; k + NEAREST_STRIDE <= r.length; k += NEAREST_STRIDE)
+    out.push({ input: r[k], target: r[k + 1], d: r[k + 2], a: { x: r[k + 3], y: r[k + 4] }, b: { x: r[k + 5], y: r[k + 6] }, bearing: r[k + 7] });
+  return out;
+}
+
+export function neighborFound(r: Float64Array): NeighborFound[] {
+  const out: NeighborFound[] = [];
+  for (let k = 0; k + NEIGHBOR_STRIDE <= r.length; k += NEIGHBOR_STRIDE)
+    out.push({ area: r[k], neighbor: r[k + 1], kind: NEIGHBOR_KIND[r[k + 2]] ?? 'edge', length: r[k + 3], overlap: r[k + 4] });
+  return out;
 }
 
 /** The relations of the queries (docs/adr/0200 §1), as the tools' values and the shared cases write them. */
@@ -128,6 +176,11 @@ export class ObjectStore implements RunGeometry, DocumentGeometry {
     return this.core.evaluateExpression(source, ids, texts, textLens, numbers, scale, want);
   }
 
+  /** The same in a context, with the layers its calls to other objects look at (docs/adr/0214); their objects are here too. */
+  evaluateExpressionIn(source: string, context: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number, world?: ExprWorldTable): ExprColumnData {
+    return this.core.evaluateExpressionIn(source, context, ids, texts, textLens, numbers, scale, want, world);
+  }
+
   numberCorners(ids: readonly number[], walk: CornerWalk, existing: readonly Vec2[]): CoreCorner[] {
     const xy = new Float64Array(existing.length * 2);
     existing.forEach((p, i) => xy.set([p.x, p.y], 2 * i));
@@ -153,6 +206,14 @@ export class ObjectStore implements RunGeometry, DocumentGeometry {
     const out: [number, number][] = [];
     for (let k = 0; k + 1 < r.length; k += 2) out.push([r[k], r[k + 1]]);
     return out;
+  }
+
+  nearest(inputs: readonly number[], targets: readonly number[], k: number, max: number, measure: ProximityMeasure): NearestFound[] {
+    return nearestFound(this.core.nearest(Float64Array.from(inputs), Float64Array.from(targets), k, max, measure === 'centers' ? 1 : 0));
+  }
+
+  neighbors(ids: readonly number[], tolerance: number, corners: boolean, overlaps: boolean): NeighborFound[] {
+    return neighborFound(this.core.neighbors(Float64Array.from(ids), tolerance, corners, overlaps));
   }
 
   /** Frees the Rust side; the store is built again if asked afterwards. */

@@ -72,6 +72,7 @@ pub mod style;
 pub mod table;
 pub mod temporal;
 pub mod topology;
+pub mod variables;
 
 pub use annotation::*;
 pub use annotation_scale::*;
@@ -117,6 +118,7 @@ pub use style::*;
 pub use table::*;
 pub use temporal::*;
 pub use topology::*;
+pub use variables::*;
 
 /// Version of this set of contracts, reported by the API's health endpoint.
 pub const CONTRACTS_VERSION: u32 = 1;

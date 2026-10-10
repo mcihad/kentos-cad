@@ -160,7 +160,7 @@ void main() { outColor = u_color; }`;
     const gl = this.gl;
     const kept = this.pictures.get(key);
     if (kept) return kept;
-    const img = this.atlas?.picture(key, url) ?? null;
+    const img = this.made.get(key) ?? this.atlas?.picture(key, url) ?? null;
     if (!img) {
       let grey = this.pictures.get('');
       if (!grey) {
@@ -186,6 +186,23 @@ void main() { outColor = u_color; }`;
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     this.pictures.set(key, texture);
     return texture;
+  }
+
+  /** Pictures layer builds made (a heat map's, docs/adr/0213 §2.6), by their keys, until forgotten. */
+  private readonly made = new Map<string, HTMLCanvasElement>();
+
+  /** A picture a build made: drawn by the batches that name its key. */
+  putPicture(key: string, canvas: HTMLCanvasElement): void {
+    this.forgetPicture(key);
+    this.made.set(key, canvas);
+  }
+
+  /** A made picture no longer drawn: its texture goes. */
+  forgetPicture(key: string): void {
+    this.made.delete(key);
+    const t = this.pictures.get(key);
+    if (t) this.gl.deleteTexture(t);
+    this.pictures.delete(key);
   }
 
   useAtlas(atlas: AtlasSource): void {

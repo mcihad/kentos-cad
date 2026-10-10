@@ -178,7 +178,7 @@ fn draws_the_web_s_legend() {
 fn a_layer_with_texts_only_or_an_unreadable_renderer_has_no_rows_of_its_own() {
     let style: LayerStyle = serde_json::from_value(json!({
         "color": "#4E79A7", "lineType": "continuous", "lineWeight": 0.25,
-        "renderer": { "type": "heatmap", "radius": 5 },
+        "renderer": { "type": "voronoi", "cells": 5 },
     }))
     .expect("style");
     let entities: Vec<Entity> = [
@@ -205,7 +205,7 @@ fn a_layer_with_texts_only_or_an_unreadable_renderer_has_no_rows_of_its_own() {
         },
     ];
     let groups = legend_of(&layers, &src);
-    // The heatmap draws nothing here; the object's own symbol still has its row; B has only a text.
+    // A kind this version cannot read draws nothing here; the object's own symbol still has its row; B has only a text.
     assert_eq!(groups.len(), 1);
     assert_eq!(groups[0].entries.len(), 1);
     assert_eq!(groups[0].entries[0].label, "Kendi çizgim");

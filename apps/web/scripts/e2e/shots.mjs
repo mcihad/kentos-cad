@@ -32,7 +32,9 @@
 // dönüşümleri: seven parameters with a translation still to type, a grid of the library, EPSG's way); definitions
 // (Özel koordinat sistemi: new, a TM on the project's datum, what is wrong, a local system by an affine; the definition
 // chosen in Proje ayarları, a second definition in its list; a WKT read, a text not read, a trial point; common points);
-// survey (Proje ayarları' Ölçme: empty, k and the tolerances typed, what does not hold); fieldbook (Karne editörü: a GSI
+// survey (Proje ayarları' Ölçme: empty, k and the tolerances typed, what does not hold); variables (Proje ayarları'
+// Değişkenler: none, four with the built-in values, a row typed wrong; the expression builder's `@` values and a call to
+// other layers, docs/adr/0214); fieldbook (Karne editörü: a GSI
 // book with a tolerance exceeded, a text book's columns, Kutupsal alım filled from a station, Poligon hesabı from both);
 // gnss (GNSS içe aktar: a GPX and an NMEA file, the points imported, a project without a coordinate system);
 // fieldsend (Cihaza gönder: Leica GSI-16, Trimble JobXML, Leica GSI-8 over TM coordinates); ground (docs/adr/0171 §4:
@@ -2828,6 +2830,9 @@ const sheetAfterHelmert = async (ui) => {
 // Çevreleyenden bilgi al), Özet istatistik with its table under the form, Anahtarla birleştir with the owners' CSV and
 // its fields' list open.
 const QUERIES = readFileSync(new URL('../../../../fixtures/processing/v1/queries.kcad', import.meta.url), 'utf8');
+function QUERIES_TEXT() {
+  return QUERIES;
+}
 const OWNERS_ROWS = [
   ['Parsel', 'Malik', 'Hisse'],
   ['1', 'Ayşe Yılmaz', '1/2'],
@@ -2934,6 +2939,60 @@ SCENES.geometry = [
   { id: 'geometri-onar', open: async (ui) => (await openGeometry(ui, 'geometry.repair', { input: QUERY_LAYER('hatali') }), await formEnd(ui), await ui.sleep(200)), close: queryClose },
   { id: 'geometri-sadelestir', open: async (ui) => (await openGeometry(ui, 'geometry.simplify', { input: QUERY_LAYER('sinir'), tolerance: 0.05 }), await formEnd(ui), await ui.sleep(200)), close: queryClose },
   { id: 'geometri-donustur', open: (ui) => openGeometry(ui, 'geometry.reproject', { input: QUERY_LAYER('eski'), source: '2320' }), close: queryClose },
+];
+
+// Yakınlık analizi (docs/adr/0215) on fixtures/processing/v1/proximity.kcad, the scenes the desktop's
+// `processing::proximity_tests::screens` draws: the CBS ribbon's Analiz with the five in its Analiz panel, En yakını bul's window
+// after a run, Uzaklık matrisi's matrix and Komşu alanlar's table under the form, the lines En yakın merkeze bağla and
+// En kısa çizgi draw.
+const PROXIMITY_DRAWING = readFileSync(new URL('../../../../fixtures/processing/v1/proximity.kcad', import.meta.url), 'utf8');
+const loadProximity = async (ui, selection = []) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(PROXIMITY_DRAWING)}, null))) throw new Error('proximity.kcad did not load');
+    k.view.zoomExtents();
+    k.selection.set(${JSON.stringify(selection)});
+  })()`);
+  await ui.sleep(300);
+};
+const openProximity = async (ui, tool, values, selection = []) => {
+  await loadProximity(ui, selection);
+  await ui.eval(openTool(tool, values));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  await ui.clickSel('.ptool__run');
+  await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 8000);
+  await ui.sleep(300);
+};
+/** The run's lines in the drawing: the window closed, the view on the whole drawing. */
+const proximityDrawing = async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.view.zoomExtents()`), await ui.move(2, 2), await ui.sleep(400));
+const NEAREST_STOPS = { input: { scope: 'selection' }, targets: QUERY_LAYER('durak'), fields: 'Ad', bearing: true };
+const HUB_SCHOOLS = { input: QUERY_LAYER('parsel'), hubs: QUERY_LAYER('okul'), hubName: 'Ad' };
+const SHORTEST_ROADS = { input: QUERY_LAYER('parsel'), targets: QUERY_LAYER('yol'), name: 'Ad', targetName: 'Ad' };
+SCENES.proximity = [
+  { id: 'yakinlik-serit', open: async (ui) => (await loadProximity(ui), await ribbonOn(ui, { ribbonTab: 'analysis' }), await ui.sleep(300)), close: ribbonOff },
+  { id: 'yakinlik-en-yakin', open: (ui) => openProximity(ui, 'proximity.nearest', NEAREST_STOPS, [1, 2, 3, 4, 5]), close: queryClose },
+  {
+    id: 'yakinlik-matris',
+    open: async (ui) => (
+      await openProximity(ui, 'proximity.matrix', { input: QUERY_LAYER('parsel'), targets: QUERY_LAYER('durak'), k: 0, form: 'matrix', name: 'Ad', targetName: 'Ad' }),
+      await formEnd(ui),
+      await ui.sleep(200)
+    ),
+    close: queryClose,
+  },
+  {
+    id: 'yakinlik-komsular',
+    open: async (ui) => (
+      await openProximity(ui, 'proximity.neighbors', { input: QUERY_LAYER('parsel'), corners: true, name: 'Ad', write: true }),
+      await formEnd(ui),
+      await ui.sleep(200)
+    ),
+    close: queryClose,
+  },
+  { id: 'yakinlik-merkez-cizim', open: async (ui) => (await openProximity(ui, 'proximity.hub', HUB_SCHOOLS), await proximityDrawing(ui)), close: queryClose },
+  { id: 'yakinlik-kisa-cizgi-cizim', open: async (ui) => (await openProximity(ui, 'proximity.shortestLine', SHORTEST_ROADS), await proximityDrawing(ui)), close: queryClose },
 ];
 
 // Ağ analizi (docs/adr/0209) on fixtures/interaction/v1/networks.kcad, the scenes the desktop's
@@ -3068,6 +3127,70 @@ SCENES.labels = [
       await loadLabels(ui, LABELS_CLOSE);
     },
     close: async (ui) => (await ui.eval(`window.kentos.prefs.pinnedLabels.set(false)`), await ribbonOff(ui)),
+  },
+];
+
+// Ek işleyiciler (docs/adr/0213) on fixtures/interaction/v1/renderers.kcad (scripts/fixtures/renderer_scene.py): each
+// renderer's region closer in, Ters alan shown, the Katman stili window of each and its list, the legend. The
+// desktop's are `renderer_scenes` (arac-isleyici-*).
+const RENDERER_DRAWING = readFileSync(new URL('../../../../fixtures/interaction/v1/renderers.kcad', import.meta.url), 'utf8');
+const REGIONS = {
+  sahne: [-40, -140, 3700, 1300],
+  surekli: [-30, 570, 930, 1270],
+  iki: [970, 570, 1930, 1270],
+  nokta: [-30, -130, 930, 570],
+  grafik: [970, -130, 1930, 570],
+  isi: [1970, 570, 2930, 1270],
+  kume: [1970, -130, 2930, 570],
+  yayma: [2970, 620, 3640, 1260],
+  orantili: [2960, -120, 3660, 560],
+};
+const loadRenderers = async (ui, region = 'sahne', after = '') => {
+  const [x0, y0, x1, y1] = REGIONS[region];
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(RENDERER_DRAWING)}, null))) throw new Error('renderers.kcad did not load');
+    ${after}
+    k.view.zoomToBox({ minX: ${487000 + x0}, minY: ${4420000 + y0}, maxX: ${487000 + x1}, maxY: ${4420000 + y1} }, 24);
+    k.selection.clear();
+  })()`);
+  await ui.sleep(700);
+};
+/** Katman stili over a layer (made the active one), its list open when asked. */
+const rendererWindow = (layer, region, list = false) => async (ui) => {
+  await loadRenderers(ui, region, `k.doc.layers.setActive('${layer}');`);
+  await ui.eval(`window.kentos.commands.execute('style.layerStyle')`);
+  await ui.waitFor(`!!document.querySelector('.dialog--lstyle .lsty__panel, .dialog--lstyle .lsty__single')`, 8000);
+  if (list) {
+    await ui.eval(`(() => { const b = document.querySelector('.dialog--lstyle .lsty__kinds'); b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); })()`);
+    await ui.sleep(250);
+  }
+  await ui.sleep(400);
+};
+const rendererClose = async (ui) => ui.escapeAll(3);
+SCENES.renderers = [
+  { id: 'isleyici-sahne', open: (ui) => loadRenderers(ui), close: rendererClose },
+  ...['surekli', 'iki', 'nokta', 'grafik', 'isi', 'kume', 'yayma', 'orantili'].map((r) => ({ id: `isleyici-${r}`, open: (ui) => loadRenderers(ui, r), close: rendererClose })),
+  { id: 'isleyici-ters', open: (ui) => loadRenderers(ui, 'sahne', `k.doc.layers.setVisible('calisma', true);`), close: rendererClose },
+  { id: 'isleyici-pencere-liste', open: rendererWindow('surekli', 'surekli', true), close: rendererClose },
+  { id: 'isleyici-pencere-surekli', open: rendererWindow('surekli', 'surekli'), close: rendererClose },
+  { id: 'isleyici-pencere-orantili', open: rendererWindow('okul', 'orantili'), close: rendererClose },
+  { id: 'isleyici-pencere-iki', open: rendererWindow('iki', 'iki'), close: rendererClose },
+  { id: 'isleyici-pencere-nokta', open: rendererWindow('nokta', 'nokta'), close: rendererClose },
+  { id: 'isleyici-pencere-grafik', open: rendererWindow('grafik', 'grafik'), close: rendererClose },
+  { id: 'isleyici-pencere-isi', open: rendererWindow('olay', 'isi'), close: rendererClose },
+  { id: 'isleyici-pencere-kume', open: rendererWindow('agac', 'kume'), close: rendererClose },
+  { id: 'isleyici-pencere-yayma', open: rendererWindow('durak', 'yayma'), close: rendererClose },
+  { id: 'isleyici-pencere-ters', open: rendererWindow('calisma', 'sahne'), close: rendererClose },
+  {
+    id: 'isleyici-lejant',
+    open: async (ui) => {
+      await loadRenderers(ui);
+      await ui.eval(`window.kentos.commands.execute('style.legend')`);
+      await ui.sleep(600);
+    },
+    close: rendererClose,
   },
 ];
 
@@ -4410,6 +4533,67 @@ SCENES.survey = [
   { id: 'survey-problems', open: (ui) => surveyOpen(ui, SURVEY_WRONG), close: (ui) => ui.escapeAll(3) },
   // The ground height beyond its bounds, the Zemin group in view (docs/adr/0171 §2).
   { id: 'survey-ground', open: (ui) => surveyOpen(ui, [['Ortalama elipsoit yüksekliği', '9500']]), close: (ui) => ui.escapeAll(3) },
+];
+
+/**
+ * Proje ayarları › Değişkenler and the language's `@` values (docs/adr/0214 §4): no variable yet; four of them with the
+ * built-in values under them; a new row typed wrong (a name that is a built-in's, a number that is none), Kaydet
+ * waiting; and the expression builder opened from Öznitelik hesapla on fixtures/processing/v1/queries.kcad, its tree
+ * on Değişkenler and an expression reading `@is_no` and the trees of the Ağaç layer inside each parcel. The desktop's
+ * are `project::variables::tests::screens` (degiskenler-*).
+ */
+const PROJECT_VARIABLES = [
+  { name: 'is_no', label: 'İş numarası', kind: 'text', value: '2026/41' },
+  { name: 'idare', label: 'İdare', kind: 'text', value: 'Çankaya Belediyesi' },
+  { name: 'katsayi', label: 'Emsal katsayısı', kind: 'number', value: 1.5 },
+  { name: 'teslim', label: 'Teslim tarihi', kind: 'date', value: '2026-11-30' },
+  { name: 'onayli', label: 'Onaylı', kind: 'bool', value: true },
+];
+const variablesOpen = async (ui, variables) => {
+  await ui.eval(`window.kentos.doc.settings.assign({ variables: ${JSON.stringify(variables)} })`);
+  await ui.eval(`import('/src/ui/settings/ProjectSettingsDialog.ts').then((m) => m.openProjectSettings(window.kentos, 'variables'))`);
+  await ui.waitFor(`!!document.querySelector('.dialog--settings .settings__title')`);
+  await ui.sleep(250);
+};
+const variablesClose = async (ui) => (await ui.escapeAll(3), await ui.eval(`window.kentos.doc.settings.assign({ variables: [] })`));
+const builderVariables = async (ui) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(QUERIES_TEXT())}, null))) throw new Error('queries.kcad did not load');
+    k.doc.settings.assign({ variables: ${JSON.stringify(PROJECT_VARIABLES)} });
+    k.view.zoomExtents();
+    k.selection.clear();
+  })()`);
+  await ui.sleep(300);
+  await ui.eval(openTool('attributes.calculate', { input: { scope: 'layer', layerId: 'parsel' }, field: 'Ağaç', value: "@is_no || ' · ' || kesişen_sayısı('Ağaç') || ' ağaç, en yakın yol ' || en_yakın('Yol', Ad)" }));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  await ui.clickSel('.dialog--ptool .exprb-open');
+  await ui.waitFor(`!!document.querySelector('.exprb')`, 8000);
+  await ui.sleep(300);
+  // The tree on Değişkenler (the `@` values with theirs) and the help of the first `@`.
+  await ui.eval(`(() => { const s = document.querySelector('.exprb input[aria-label="İfade öğesi ara"]'); if (s) { s.value = '@'; s.dispatchEvent(new Event('input', { bubbles: true })); } })()`);
+  await ui.sleep(300);
+};
+SCENES.variables = [
+  { id: 'degiskenler-bos', open: (ui) => variablesOpen(ui, []), close: variablesClose },
+  { id: 'degiskenler-dolu', open: (ui) => variablesOpen(ui, PROJECT_VARIABLES), close: variablesClose },
+  {
+    id: 'degiskenler-sorun',
+    open: async (ui) => {
+      await variablesOpen(ui, PROJECT_VARIABLES.slice(0, 3));
+      await ui.clickText('.dialog--settings .btn', 'Değişken ekle');
+      await ui.sleep(150);
+      await ui.clickSel('[aria-label="4. değişkenin adı"]');
+      await ui.eval(`(() => { const i = document.querySelector('[aria-label="4. değişkenin adı"]'); i.value = 'proje_adı'; i.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+      await ui.clickSel('[aria-label="3. değişkenin değeri"]');
+      await ui.eval(`(() => { const i = document.querySelector('[aria-label="3. değişkenin değeri"]'); i.value = 'bir buçuk'; i.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+      await ui.sleep(250);
+    },
+    close: variablesClose,
+  },
+  { id: 'ifade-degiskenler', open: builderVariables, close: async (ui) => (await ui.escapeAll(4), await ui.eval(`window.kentos.doc.settings.assign({ variables: [] })`)) },
 ];
 
 /**

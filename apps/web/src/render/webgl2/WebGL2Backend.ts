@@ -1,4 +1,5 @@
 import { supportedSamples, type AtlasSource, type FrameState, type LineBatch, type RenderBackend, type RGBA, type SceneLayer } from '../types';
+import { madeCanvas } from '../pictures';
 import type { ServiceSource } from '../servicePass';
 import { FILL_FS, FILL_VS, LINE_FS, LINE_VS, POINT_FS, POINT_VS } from './shaders';
 import { StyledRenderer, type GpuStyled } from './styledRenderer';
@@ -145,6 +146,9 @@ export class WebGL2Backend implements RenderBackend {
     this.remove(layer.id);
     if (!this.overlayIds.has(layer.id)) this.baseKey = '';
     const gl = this.gl;
+    // The pictures the build made (a heat map's, docs/adr/0213 §2.6), forgotten with the layer.
+    for (const p of layer.pictures ?? []) this.styled.putPicture(p.key, madeCanvas(p));
+    if (layer.pictures?.length) this.pictureKeys.set(layer.id, layer.pictures.map((p) => p.key));
     const g: GpuLayer = { lines: [], fills: [], points: [], styled: layer.styled?.length ? this.styled.upload(layer.styled) : [] };
     for (const b of layer.lines) {
       if (!b.positions.length) continue;
@@ -165,7 +169,12 @@ export class WebGL2Backend implements RenderBackend {
     this.layers.set(layer.id, g);
   }
 
+  /** The keys of the pictures each layer's build made. */
+  private readonly pictureKeys = new Map<string, string[]>();
+
   remove(id: string): void {
+    for (const k of this.pictureKeys.get(id) ?? []) this.styled.forgetPicture(k);
+    this.pictureKeys.delete(id);
     const g = this.layers.get(id);
     if (!g) return;
     if (!this.overlayIds.has(id)) this.baseKey = '';

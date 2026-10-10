@@ -38,6 +38,7 @@ mod point_calc;
 mod point_editor;
 mod point_text;
 mod polygonize;
+mod proximity;
 mod reshape;
 mod selection;
 mod snap;

@@ -9,7 +9,7 @@ use ts_rs::TS;
 
 use crate::geodesy::TmParams;
 use crate::kinds::GroundPoint;
-use crate::model::{ItemId, VarValue, yes};
+use crate::model::{ItemId, VarValue, Variable, yes};
 use crate::profile::Capabilities;
 use crate::style::Stroke;
 use crate::units::{Mdeg, Um};
@@ -25,7 +25,7 @@ pub enum RenderMode {
     Export,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
@@ -42,6 +42,11 @@ pub struct ProjectInfo {
     /// `@koordinat_sistemi` when `crs` is not given.
     #[serde(default)]
     pub crs_name: String,
+    /// The drawing's own variables (Proje ayarları › Değişkenler, docs/adr/0214
+    /// §2.3): `@name` answered after the book's variables of the same name.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<Variable>>"))]
+    pub variables: Vec<Variable>,
 }
 
 /// The project's coordinate system.

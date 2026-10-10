@@ -1,6 +1,8 @@
 import type { Entity } from '../model/entities';
 import type { LayerField } from '../model/layerFields';
-import { compileExpression } from '../model/expression/expression';
+import { compileExpression, type CompiledExpression, type ExprLayers } from '../model/expression/expression';
+import { exprLayers, worldObjects } from '../model/expression/layers';
+import type { ExpressionVariable } from '../model/projectVariables';
 import { ObjectStore, type RunGeometry } from './geometry';
 import type { DefaultsContext, DocumentSnapshot, ExecutionTarget, Feedback, FeatureSet, ProcessingTool, ProjectCrs, ProjectInfo, RunContext, RunResult } from './types';
 
@@ -32,6 +34,16 @@ export interface RunJob {
   readonly crs?: ProjectCrs | null;
   /** The project's SRID (0: none or a definition of its own) and type (docs/adr/0232 §12: the table's axes); absent: 0, none. */
   readonly project?: ProjectInfo;
+  /** The `@` values its expressions read (docs/adr/0214 §2.3), taken when the run started; absent: none. */
+  readonly variables?: readonly ExpressionVariable[];
+  /** The objects the layers' filters leave out (docs/adr/0211 §1): the calls to other layers do not read them; absent: none. */
+  readonly leftOut?: readonly number[];
+}
+
+/** The layers a job's calls to other objects read (docs/adr/0214 §3): their objects, but those the filters leave out. */
+function jobLayers(job: RunJob, doc: DocumentSnapshot): ExprLayers {
+  const out = job.leftOut?.length ? new Set(job.leftOut) : null;
+  return exprLayers(job.layers, (id) => (out ? doc.byLayer(id).filter((e) => !out.has(e.id)) : doc.byLayer(id)));
 }
 
 /** Where a tool runs. `execute` gets the job and the document the page has; a remote one copies it. */
@@ -45,8 +57,11 @@ export interface Executor {
 
 const isFeatureRef = (v: unknown): v is FeatureRef => !!v && typeof v === 'object' && Array.isArray((v as FeatureRef).ids) && typeof (v as FeatureRef).description === 'string';
 
-/** The values `run` receives: features as objects of this document, expressions compiled. */
-export function materialize(tool: ProcessingTool, values: RunJob['values'], doc: DocumentSnapshot): Record<string, unknown> {
+/**
+ * The values `run` receives: features as objects of this document, expressions compiled with the run's `@` values
+ * and with the calls that look at other layers (docs/adr/0214).
+ */
+export function materialize(tool: ProcessingTool, values: RunJob['values'], doc: DocumentSnapshot, variables: readonly ExpressionVariable[] = []): Record<string, unknown> {
   const out: Record<string, unknown> = { ...values };
   for (const p of tool.parameters) {
     const v = values[p.name];
@@ -55,14 +70,14 @@ export function materialize(tool: ProcessingTool, values: RunJob['values'], doc:
       out[p.name] = { entities, description: v.description } satisfies FeatureSet;
     } else if (p.type === 'expression' && typeof v === 'string') {
       const src = v.trim();
-      const r = src ? compileExpression(src) : null;
+      const r = src ? compileExpression(src, { variables, world: true }) : null;
       out[p.name] = r?.ok ? r.expr : null;
     } else if (p.type === 'field' && typeof v === 'string') out[p.name] = v.trim();
   }
   return out;
 }
 
-export function jobContext(job: RunJob, doc: DocumentSnapshot, geometry: RunGeometry): RunContext {
+export function jobContext(job: RunJob, doc: DocumentSnapshot, geometry: RunGeometry, layers = jobLayers(job, doc)): RunContext {
   const names = new Map(job.layers);
   const order = new Map(job.layers.map(([id], k) => [id, k]));
   const fields = new Map(job.fields);
@@ -76,6 +91,7 @@ export function jobContext(job: RunJob, doc: DocumentSnapshot, geometry: RunGeom
     crs: job.crs ?? null,
     project: job.project ?? { srid: 0, type: null },
     layerIndex: (id) => order.get(id) ?? Number.MAX_SAFE_INTEGER,
+    layers,
   };
 }
 
@@ -96,10 +112,19 @@ function inputObjects(tool: ProcessingTool, values: Record<string, unknown>): En
  * worker run the same code; the store is freed when the run ends.
  */
 export async function runJob(tool: ProcessingTool, job: RunJob, doc: DocumentSnapshot, feedback: Feedback): Promise<RunResult> {
-  const values = materialize(tool, job.values, doc);
-  const geometry = new ObjectStore(inputObjects(tool, values));
+  const values = materialize(tool, job.values, doc, job.variables);
+  // The layers the expressions look at (docs/adr/0214 §3): their objects go into the run's store too.
+  const layers = jobLayers(job, doc);
+  const inputs = inputObjects(tool, values);
+  const looked = tool.parameters.flatMap((p) => {
+    const e = p.type === 'expression' ? (values[p.name] as CompiledExpression | null | undefined) : null;
+    return e?.world ? worldObjects(e.world, inputs, layers) : [];
+  });
+  const byId = new Map<number, Entity>();
+  for (const e of [...inputs, ...looked]) if (!byId.has(e.id)) byId.set(e.id, e);
+  const geometry = new ObjectStore(byId.values());
   try {
-    return await tool.run(values as never, jobContext(job, doc, geometry), feedback);
+    return await tool.run(values as never, jobContext(job, doc, geometry, layers), feedback);
   } finally {
     geometry.dispose();
   }

@@ -1156,6 +1156,7 @@ mod tests {
                 },
                 0..12,
             )],
+            ..StyledLayer::default()
         };
         let img = shot(&layer);
         assert_eq!(px(&img, 20, 20), [51, 102, 204, 255]);
@@ -1197,6 +1198,7 @@ mod tests {
                 },
                 0..12,
             )],
+            ..StyledLayer::default()
         };
         let img = shot(&layer);
         // Cells of 5 m from the batch's origin: one centred at (12.5, 12.5), row 40 − 12.5.
@@ -1210,6 +1212,7 @@ mod tests {
                 },
                 0..12,
             )],
+            ..StyledLayer::default()
         };
         let img = shot(&layer);
         let tint = px(&img, 20, 20);
@@ -1240,6 +1243,7 @@ mod tests {
                 },
                 0..12,
             )],
+            ..StyledLayer::default()
         };
         let img = shot(&layer);
         // Lines along x where y is a whole number of 4 m: y = 12, 16, 20 … (rows 28, 24, 20 …).
@@ -1272,6 +1276,7 @@ mod tests {
                 },
                 0..12,
             )],
+            ..StyledLayer::default()
         };
         let img = shot(&hatch(vec![2.0, 6.0]));
         // Line y = 16 (row 4) draws x 16…18, 24…26 (the 4th line, 16 m along); line y = 20 (row 5) 20…22, 28…30.
@@ -1306,6 +1311,7 @@ mod tests {
                 },
                 0..12,
             )],
+            ..StyledLayer::default()
         };
         let img = shot(&gradient(0));
         let (west, middle, east) = (
@@ -1339,6 +1345,7 @@ mod tests {
                 },
                 0..6,
             )],
+            ..StyledLayer::default()
         };
         let hard = shot(&line(0.0));
         let soft = shot(&line(6.0));
@@ -1374,6 +1381,7 @@ mod tests {
                 },
                 0..5,
             )],
+            ..StyledLayer::default()
         };
         let img = shot(&layer);
         assert_eq!(px(&img, 20, 20), [255, 128, 0, 255]);
@@ -1418,6 +1426,7 @@ mod tests {
                 },
                 0..5,
             )],
+            ..StyledLayer::default()
         };
         let img = paint(40, 40, &view(), &[&layer], &TwoColours).unwrap();
         let (left, right) = (px(&img, 13, 20), px(&img, 27, 20));
@@ -1462,6 +1471,7 @@ mod tests {
                 },
                 0..12,
             )],
+            ..StyledLayer::default()
         };
         let img = shot(&layer);
         // Tiles of 8 m from the origin: one centred at (12, 12) → row 28; its corner clear.
@@ -1485,6 +1495,7 @@ mod tests {
         let layer = StyledLayer {
             data: SQUARE.to_vec(),
             batches: vec![b],
+            ..StyledLayer::default()
         };
         assert_eq!(px(&shot(&layer), 20, 20)[3], 0, "only up to 1:500");
     }

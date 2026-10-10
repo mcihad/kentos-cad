@@ -6,7 +6,7 @@
 
 use std::cmp::Ordering;
 
-use super::catalog::{field_item, function_item, operator_item, variable_item};
+use super::catalog::{at_items, field_item, function_item, offered, operator_item, variable_item};
 use super::lex::{Lex, Piece, called, lex};
 use super::{Item, Kind};
 use crate::Schema;
@@ -30,6 +30,8 @@ enum Want {
     Field,
     /// A variable, after `$`.
     Variable,
+    /// A `@` value, after `@` (docs/adr/0214 §2.3).
+    At,
 }
 
 fn text(u: &[u16]) -> String {
@@ -65,6 +67,13 @@ pub fn complete(src: &str, cursor: usize, schema: &Schema, explicit: bool) -> Op
                 ),
                 Lex::Var { .. } => (
                     Want::Variable,
+                    text(&u[p.start + 1..cursor]),
+                    p.start,
+                    p.end,
+                    false,
+                ),
+                Lex::At { .. } => (
+                    Want::At,
                     text(&u[p.start + 1..cursor]),
                     p.start,
                     p.end,
@@ -120,8 +129,14 @@ pub fn complete(src: &str, cursor: usize, schema: &Schema, explicit: bool) -> Op
             add(&names, variable_item(v));
         }
     }
+    if matches!(want, Want::At) || (matches!(want, Want::Any) && key.is_empty()) {
+        for item in at_items(schema) {
+            let name = item.label.trim_start_matches('@').to_string();
+            add(&[&name], item);
+        }
+    }
     if matches!(want, Want::Any) {
-        for f in FUNCTIONS {
+        for f in FUNCTIONS.iter().filter(|f| offered(f, schema)) {
             let names: Vec<&str> = std::iter::once(f.name)
                 .chain(f.aliases.iter().copied())
                 .collect();
@@ -389,12 +404,14 @@ mod tests {
             description: String::new(),
         };
         Schema {
+            variables: Vec::new(),
             fields: vec![
                 f("Ada", FieldType::Text, FieldSource::Attribute),
                 f("Parsel", FieldType::Text, FieldSource::Attribute),
                 f("Tapu alanı", FieldType::Number, FieldSource::User),
                 f("Kat", FieldType::Number, FieldSource::User),
             ],
+            world: false,
         }
     }
 
@@ -408,7 +425,18 @@ mod tests {
     fn a_word_finds_fields_functions_variables_and_words() {
         assert_eq!(
             labels("ta", 2, false),
-            ["Tapu alanı", "taban", "tamsayı", "tan", "tavan"]
+            [
+                "Tapu alanı",
+                "taban",
+                "tamsayı",
+                "tan",
+                "tarih",
+                "tarih_biçimle",
+                "tarih_ekle",
+                "tarih_farkı",
+                "tarih_saat",
+                "tavan"
+            ]
         );
         let c = complete("yuv", 3, &schema(), false).expect("yuvarla");
         assert_eq!((c.start, c.end), (0, 3));
@@ -453,7 +481,11 @@ mod tests {
         let c = complete("Ada + ", 6, &schema(), true).expect("everything");
         assert_eq!((c.start, c.end), (6, 6));
         assert_eq!(c.items[0].label, "Ada");
-        assert!(c.items.len() > FUNCTIONS.len() + VARIABLES.len());
+        let offered_here = FUNCTIONS
+            .iter()
+            .filter(|f| super::super::catalog::offered(f, &schema()))
+            .count();
+        assert!(c.items.len() > offered_here + VARIABLES.len());
     }
 
     #[test]

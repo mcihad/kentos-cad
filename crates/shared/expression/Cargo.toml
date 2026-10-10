@@ -12,6 +12,8 @@ publish.workspace = true
 # geometry (docs/adr/0008, docs/adr/0100).
 [dependencies]
 kentos-geometry-core = { path = "../geometry-core" }
+# The regular expression functions (docs/adr/0214 §2.4): rust-lang's small engine.
+regex-lite = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }

@@ -92,7 +92,7 @@ pub struct Geometry {
 }
 
 impl Geometry {
-    fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         self.edges.is_empty() && self.points.is_empty()
     }
 }
@@ -191,14 +191,14 @@ pub fn geometry_of(s: &Shape) -> Option<Geometry> {
     Some(g)
 }
 
-fn boxes_meet(a: &Bounds, b: &Bounds, pad: f64) -> bool {
+pub(crate) fn boxes_meet(a: &Bounds, b: &Bounds, pad: f64) -> bool {
     a.min_x - pad <= b.max_x
         && b.min_x - pad <= a.max_x
         && a.min_y - pad <= b.max_y
         && b.min_y - pad <= a.max_y
 }
 
-fn inside(areas: &[Area], p: Vec2) -> bool {
+pub(crate) fn inside(areas: &[Area], p: Vec2) -> bool {
     areas.iter().any(|a| inside_area(a, p))
 }
 
@@ -207,28 +207,28 @@ fn on_edges(edges: &[Edge], p: Vec2) -> bool {
 }
 
 /// In the object's areas or on their boundaries.
-fn in_or_on(g: &Geometry, p: Vec2) -> bool {
+pub(crate) fn in_or_on(g: &Geometry, p: Vec2) -> bool {
     inside(&g.areas, p) || on_edges(&g.area_edges, p)
 }
 
 /// Inside the object's areas and away from their boundaries.
-fn strictly_inside(g: &Geometry, p: Vec2) -> bool {
+pub(crate) fn strictly_inside(g: &Geometry, p: Vec2) -> bool {
     inside(&g.areas, p) && !on_edges(&g.area_edges, p)
 }
 
 /// A point of `g` at `p`: on its edges or points, or in its areas.
-fn meets_point(g: &Geometry, p: Vec2) -> bool {
+pub(crate) fn meets_point(g: &Geometry, p: Vec2) -> bool {
     inside(&g.areas, p)
         || on_edges(&g.edges, p)
         || g.points.iter().any(|q| dist(p, *q) <= TOLERANCE)
 }
 
-fn ends(e: &Edge) -> [Vec2; 2] {
+pub(crate) fn ends(e: &Edge) -> [Vec2; 2] {
     [point_at(e, 0.0), point_at(e, 1.0)]
 }
 
 /// The point of an arc toward `q` from its centre, when that direction is on the arc.
-fn arc_toward(e: &Edge, q: Vec2) -> Option<Vec2> {
+pub(crate) fn arc_toward(e: &Edge, q: Vec2) -> Option<Vec2> {
     let Edge::Arc { c, r, a0, sweep } = *e else {
         return None;
     };
@@ -239,7 +239,7 @@ fn arc_toward(e: &Edge, q: Vec2) -> Option<Vec2> {
 /// The gap between two edges that do not cross: the least of their ends'
 /// distances to the other and, for an arc, of its point toward the other
 /// edge's point nearest its centre.
-fn edge_gap(e1: &Edge, e2: &Edge) -> f64 {
+pub(crate) fn edge_gap(e1: &Edge, e2: &Edge) -> f64 {
     let mut best = f64::INFINITY;
     for p in ends(e1) {
         best = js_min(best, closest_on_edge(e2, p).d);

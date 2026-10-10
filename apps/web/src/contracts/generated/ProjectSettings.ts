@@ -9,6 +9,7 @@ import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { LayerState } from "./LayerState";
 import type { NetworkDef } from "./NetworkDef";
+import type { ProjectVariable } from "./ProjectVariable";
 import type { ServiceConnection } from "./ServiceConnection";
 import type { SurveySettings } from "./SurveySettings";
 import type { TextStyleDef } from "./TextStyleDef";
@@ -90,4 +91,8 @@ connections?: Array<ServiceConnection>,
 /**
  * The project's networks (docs/adr/0209 §2).
  */
-networks?: Array<NetworkDef>, };
+networks?: Array<NetworkDef>, 
+/**
+ * The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.
+ */
+variables?: Array<ProjectVariable>, };

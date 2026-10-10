@@ -96,6 +96,9 @@ pub enum Ins {
     Like([Operand; 2], bool, bool),
     /// `boş`, `boş değil`: negated.
     IsNull(Operand, bool),
+    /// A call that looks at other objects (docs/adr/0214 §3): its place in
+    /// `Expr::world`; the object's id, then its own arguments.
+    World(u32, Box<[Operand]>),
 }
 
 impl Ins {
@@ -105,13 +108,15 @@ impl Ins {
             Ins::Not(a) | Ins::Neg(a) | Ins::IsNull(a, _) => std::slice::from_ref(a),
             Ins::Bin(_, ab) | Ins::Like(ab, ..) => ab,
             Ins::Between(abc, _) => abc,
-            Ins::Call(_, args) | Ins::Case(args, _) | Ins::In(args, _) => args,
+            Ins::Call(_, args) | Ins::Case(args, _) | Ins::In(args, _) | Ins::World(_, args) => {
+                args
+            }
         }
     }
 
     /// Whether every operand is a constant (loads have none and are never constant).
     fn constant(&self) -> bool {
-        !matches!(self, Ins::Load(_))
+        !matches!(self, Ins::Load(_) | Ins::World(..))
             && self
                 .operands()
                 .iter()
@@ -226,9 +231,10 @@ impl Program {
                 Ins::Not(a) | Ins::Neg(a) | Ins::IsNull(a, _) => renumber(a),
                 Ins::Bin(_, ab) | Ins::Like(ab, ..) => ab.iter_mut().for_each(renumber),
                 Ins::Between(abc, _) => abc.iter_mut().for_each(renumber),
-                Ins::Call(_, args) | Ins::Case(args, _) | Ins::In(args, _) => {
-                    args.iter_mut().for_each(renumber)
-                }
+                Ins::Call(_, args)
+                | Ins::Case(args, _)
+                | Ins::In(args, _)
+                | Ins::World(_, args) => args.iter_mut().for_each(renumber),
             }
         }
         self.result.iter_mut().for_each(renumber);
@@ -310,6 +316,18 @@ impl Builder {
                 let x = self.node(x);
                 self.op(Ins::IsNull(x, *negated))
             }
+            Node::World(k, own) => {
+                let mut args = vec![self.emit(Ins::Load(Load::Id))];
+                args.extend(own.iter().map(|a| self.node(a)));
+                // Never folded: it reads the object; one that threw empties it.
+                let thrown = |o: &Operand| matches!(o, Operand::Const(c) if self.consts[*c as usize] == Const::Thrown);
+                if args.iter().any(thrown) {
+                    return self.constant(Const::Thrown);
+                }
+                self.emit(Ins::World(*k, args.into()))
+            }
+            // Resolved before the program is made (`resolve`).
+            Node::At(_) => self.constant(Const::Null),
         }
     }
 
@@ -367,7 +385,7 @@ impl Builder {
                 truth(scalar::like(get(x), get(pattern), *fold, &mut self.scratch) != *negated)
             }
             Ins::IsNull(x, negated) => truth(scalar::is_empty(get(x)) != *negated),
-            Ins::Load(_) => R::V(V::Null),
+            Ins::Load(_) | Ins::World(..) => R::V(V::Null),
             Ins::Not(a) => R::V(scalar::not(get(a))),
             Ins::Neg(a) => R::V(scalar::neg(get(a))),
             Ins::Bin(op, [a, b]) => {

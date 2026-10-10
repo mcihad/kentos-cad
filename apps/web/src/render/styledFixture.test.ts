@@ -24,6 +24,8 @@ interface Case {
   style: LayerStyle;
   entities: Entity[];
   plotScale: number;
+  /** The box construction lines and Ters alan are drawn to (docs/adr/0213 §3), where a case gives one. */
+  clip?: { minX: number; minY: number; maxX: number; maxY: number };
   view: { symbolSize: 'plot' | 'screen'; pxPerM: number; lineWeights: boolean; colorMode?: 'color' | 'mono' | 'gray'; fills?: boolean; areaEdges?: boolean; transparency?: boolean };
   expect: { symbolScale: number; decisions: unknown[]; program: unknown; objects: number[]; table: unknown; batches: unknown[] };
 }
@@ -57,6 +59,7 @@ describe('styled layers’ way to the GPU (fixtures/style/v1/batches.json)', () 
         screen: c.view.symbolSize === 'screen',
         hairlines: !c.view.lineWeights,
         view: viewModesOf(c.view),
+        ...(c.clip && { clip: c.clip }),
         library: { symbol: (id) => F.library[id], asset: (id) => F.assets.find((a) => a.id === id) },
         layerName: (id) => doc.layers.get(id)?.name ?? id,
         geometry: captureStyled(new PickIndex(doc), (x) => (call = x)),

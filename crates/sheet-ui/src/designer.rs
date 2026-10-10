@@ -90,7 +90,7 @@ pub enum Say {
 }
 
 /// What the host knows of the project: its mode, type and capabilities (design §11a), its data for the sheets' values.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Context {
     pub workspace: Option<Workspace>,
     pub project_type: Option<ProjectType>,
@@ -105,26 +105,6 @@ pub struct Context {
     /// The drawing's layers (id, name), for a coordinate list's source
     /// (docs/adr/0206 §2).
     pub layers: Vec<(String, String)>,
-}
-
-impl Default for Context {
-    fn default() -> Self {
-        Context {
-            workspace: None,
-            project_type: None,
-            capabilities: Capabilities::default(),
-            project: ProjectInfo {
-                name: String::new(),
-                user: String::new(),
-                date: String::new(),
-                crs_name: String::new(),
-            },
-            crs: None,
-            center: None,
-            view_size: None,
-            layers: Vec::new(),
-        }
-    }
 }
 
 /// One step of the undo or redo stack: its name and the operations that
@@ -825,12 +805,7 @@ impl Designer {
 pub fn empty_inputs() -> RenderInputs {
     RenderInputs {
         mode: RenderMode::Design,
-        project: ProjectInfo {
-            name: String::new(),
-            user: String::new(),
-            date: String::new(),
-            crs_name: String::new(),
-        },
+        project: ProjectInfo::default(),
         capabilities: Capabilities::default(),
         crs: None,
         maps: Vec::new(),

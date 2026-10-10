@@ -1,6 +1,7 @@
 import type { CadDocument } from '../model/document';
 import { ENTITY_KIND_LABEL, type Entity, type EntityKind, type RasterEntity } from '../model/entities';
 import type { Bounds } from '../model/geometry';
+import type { ExpressionVariable } from '../model/projectVariables';
 import { leftOut } from '../model/layerFilter';
 import { withObjects, type DocumentGeometry } from './geometry';
 import type { FeatureSet, FeaturesParam, FeaturesValue } from './types';
@@ -26,6 +27,11 @@ export interface FeatureHost {
   readonly geometry?: DocumentGeometry;
   /** Replaces the selection (tools that select); absent where there is none. */
   select?(ids: readonly number[]): void;
+  /**
+   * The `@` values the expressions read (docs/adr/0214 §2.3): the project's variables, then the built-in ones; absent:
+   * from the drawing with this page's clock and no user.
+   */
+  variables?(): readonly ExpressionVariable[];
 }
 
 export const SCOPE_LABEL: Record<FeaturesValue['scope'], string> = {

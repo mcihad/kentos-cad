@@ -10,10 +10,11 @@
 
 use kentos_geometry_core::jsmath::{js_max, pow};
 
+use crate::compound::{is_compound, is_empty_compound, shown};
 use crate::js::collate;
 use crate::js::text::{self, MAX_STRING_UNITS, utf16_len};
 use crate::parser::BinOp;
-use crate::read;
+use crate::{patterns, read};
 
 /// A value as an operation reads it: text borrowed from the object, the
 /// source or the batch's buffer.
@@ -23,6 +24,16 @@ pub enum V<'a> {
     Num(f64),
     Text(&'a str),
     Bool(bool),
+}
+
+impl<'a> V<'a> {
+    /// The value as it shows: an array's or a map's JSON as plain text (any other value as it is).
+    pub fn shown(self) -> V<'a> {
+        match self {
+            V::Text(s) => V::Text(shown(s)),
+            v => v,
+        }
+    }
 }
 
 /// An operation's result: a value (text in it borrowed from an argument),
@@ -36,12 +47,14 @@ pub enum R<'a> {
     Thrown,
 }
 
-/// Buffers an operation may write text into while it reads its arguments.
+/// Buffers an operation may write text into while it reads its arguments,
+/// and the regular expressions read last (docs/adr/0214 §2.4).
 #[derive(Debug, Default)]
 pub struct Scratch {
     pub a: String,
     pub b: String,
     pub c: String,
+    pub patterns: patterns::Kept,
 }
 
 impl Scratch {
@@ -69,30 +82,34 @@ pub fn is_empty(v: V) -> bool {
     matches!(v, V::Null | V::Text(""))
 }
 
+/// Whether a value counts as true: an empty text, array or map does not
+/// (docs/adr/0214 §2.1).
 pub fn truthy(v: V) -> bool {
     match v {
         V::Null => false,
         V::Bool(b) => b,
         // NaN is not 0.
         V::Num(x) => x != 0.0,
-        V::Text(s) => !s.is_empty(),
+        V::Text(s) => !s.is_empty() && !is_empty_compound(s),
     }
 }
 
-/// The value's text at the end of `out`: "" for empty, doğru/yanlış.
+/// The value's text at the end of `out`: "" for empty, doğru/yanlış, an
+/// array's or a map's JSON.
 pub fn push_text(out: &mut String, v: V) {
     match v {
         V::Null => {}
         V::Bool(b) => out.push_str(if b { "doğru" } else { "yanlış" }),
         V::Num(x) => read::push_number_text(out, x),
-        V::Text(s) => out.push_str(s),
+        V::Text(s) => out.push_str(shown(s)),
     }
 }
 
-/// The value's text: a text value's own, anything else written into `buf`.
+/// The value's text: a text value's own (an array's or a map's JSON),
+/// anything else written into `buf`.
 pub fn as_text<'x>(v: V<'x>, buf: &'x mut String) -> &'x str {
     match v {
-        V::Text(s) => s,
+        V::Text(s) => shown(s),
         V::Bool(b) => {
             if b {
                 "doğru"
@@ -117,6 +134,13 @@ pub fn equals(a: V, b: V, s: &mut Scratch) -> bool {
     }
     if matches!(a, V::Bool(_)) || matches!(b, V::Bool(_)) {
         return truthy(a) == truthy(b);
+    }
+    // An array or a map equals only the same array or map (its text with its
+    // mark: never a text that shows the same JSON; docs/adr/0214 §2.1).
+    match (a, b) {
+        (V::Text(x), V::Text(y)) if is_compound(x) || is_compound(y) => return x == y,
+        (V::Text(x), _) | (_, V::Text(x)) if is_compound(x) => return false,
+        _ => {}
     }
     if let (Some(na), Some(nb)) = (to_number(a), to_number(b)) {
         return (na - nb).abs() <= 1e-9 * js_max(js_max(1.0, na.abs()), nb.abs());
@@ -323,7 +347,7 @@ pub fn like(x: V, p: V, fold: bool, s: &mut Scratch) -> bool {
     if is_empty(x) || p == V::Null {
         return false;
     }
-    let Scratch { a, b, c } = s;
+    let Scratch { a, b, c, .. } = s;
     if fold {
         let (mut fx, mut fp) = (std::mem::take(a), std::mem::take(b));
         fx.clear();

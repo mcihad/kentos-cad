@@ -68,6 +68,7 @@ interface CaseFile {
 
 const CASES = JSON.parse(file('cases.json')) as CaseFile;
 const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
+const PROXIMITY = JSON.parse(file('proximity.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
 const SPATIAL_STATS = JSON.parse(file('spatial-stats.json')) as CaseFile;
 const NETWORK = JSON.parse(file('network.json')) as CaseFile;
@@ -359,6 +360,19 @@ describe.skipIf(!loader)('query cases (fixtures/processing/v1/queries.json, docs
     it(`${c.id}: ${c.title}`, async () => {
       check(c, await play(QUERIES, c, 'client'), QUERIES.tolerance);
       check(c, await play(QUERIES, c, 'worker'), QUERIES.tolerance);
+    });
+  }
+});
+
+describe('proximity cases (fixtures/processing/v1/proximity.json, docs/adr/0215)', () => {
+  it('is a v1 case file', () => {
+    expect([PROXIMITY.format, PROXIMITY.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of PROXIMITY.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      check(c, await play(PROXIMITY, c, 'client'), PROXIMITY.tolerance);
+      check(c, await play(PROXIMITY, c, 'worker'), PROXIMITY.tolerance);
     });
   }
 });
@@ -851,4 +865,24 @@ describe.skipIf(!surfaceModulesBuilt)('multidimensional data cases (fixtures/pro
       }
     });
   }
+});
+
+describe('the calls to other layers and a layer filter (docs/adr/0214 §3)', () => {
+  // The desktop's `a_layer_filter_leaves_its_objects_out_of_the_calls_to_other_layers` (crates/native/processing/tests/cases.rs).
+  it('leave out the objects a layer filter leaves out, as the inputs do', async () => {
+    const counts = async (pinesOnly: boolean) => {
+      const doc = load('queries.kcad');
+      if (pinesOnly) expect(doc.setLayerFilter('agac', { expression: "Tür = 'Çam'" }, 'Süzgeç')).toBe(true);
+      const runner = new ProcessingRunner({ doc, selectedIds: () => [], visibleBounds: () => null }, [clientExecutor]);
+      const tool = TOOLS.get('attributes.calculate')!;
+      const values = { ...defaultValues(tool, runner.defaults()), input: { scope: 'layer', layerId: 'parsel' }, field: 'Ağaç sayısı', value: "kesişen_sayısı('Ağaç')", label: false };
+      const outcome = await runner.run(tool, values, { log: () => {} });
+      expect(outcome.status).toBe('ok');
+      return [...doc.byLayer('parsel')].map((e) => e.attrs['Ağaç sayısı']);
+    };
+    // As queries.json's `expr-tree-count`: the tree on the boundary in two parcels, the one in the hole in none.
+    expect(await counts(false)).toEqual(['2', '2', '1', '1']);
+    // The pines: 10 in the first parcel, 12 in the second, 14 in the fourth's hole.
+    expect(await counts(true)).toEqual(['1', '1', '0', '0']);
+  });
 });

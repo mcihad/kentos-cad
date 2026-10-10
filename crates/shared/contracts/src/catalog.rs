@@ -1969,6 +1969,67 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // Katman stili (docs/adr/0213 §5), held together by fixtures/commands/v1/cad.layers.renderer.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_RENDERER.into(),
+            version: crate::CAD_LAYERS_RENDERER_VERSION,
+            title: "Katman stili".into(),
+            summary: "Katmanın işleyicisini yazar ya da kaldırır (renderer verilmezse ya da null ise katmanın basit görünüşü): single (tek sembol), categorized, graduated, rules ve tematik işleyiciler: \
+                      unclassed (sürekli renk: değerin [min, max]'taki payı rampada bir renk, sembolün ana rengi), proportional (orantılı sembol: değer sembolün boyu; Alan, Yarıçap ya da Flannery), \
+                      bivariate (iki değişkenli renk: iki değerin sınıfları n × n ızgarada bir renk), dotDensity (nokta yoğunluğu: alanın içinde değer / dotValue kadar nokta), chart (pasta, çubuk ya da yığılmış çubuk), \
+                      heatmap (ısı haritası: noktaların dördüncü dereceden (quartic) çekirdekle yoğunluğu, rampa; en büyük değer sabit ya da dinamik), cluster (kümeleme: yakın noktalar tek işaret ve sayısı), \
+                      displacement (yayma: üst üste binen noktalar halka, iç içe halkalar ya da ızgarada) ve inverted (ters alan: alanların dışı boyanır). \
+                      Semboller kitaplıktan { ref } ya da yerinde yazılır; ifadeler İfadeyle seç'in dilidir. Katmanın görünüşüdür: kilitli katman da alır; tek geri alma adımı “Katman stili”; aynıysa hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersRenderer>(),
+            output: schema::<crate::LayersRendered>(),
+            plan: Some(schema::<crate::LayersRendererPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Mahalleler nüfusa göre sürekli renk".into(),
+                    input: json!({
+                        "layer": "mahalle",
+                        "renderer": {
+                            "type": "unclassed", "expr": "Nüfus", "min": 0, "max": 40000,
+                            "ramp": ["#FFF5B8", "#FDB863", "#E66101", "#A50F15"],
+                            "symbols": { "fill": { "type": "fill", "layers": [
+                                { "type": "simpleFill", "color": "#000000" },
+                                { "type": "simpleLine", "color": "#FFFFFF", "width": 0.2 }
+                            ] } }
+                        }
+                    }),
+                    output: Some(json!({ "layer": "mahalle", "changed": true, "revision": "30" })),
+                },
+                CommandExample {
+                    title: "Olayların ısı haritası".into(),
+                    input: json!({
+                        "layer": "olay",
+                        "renderer": { "type": "heatmap", "radius": 24, "unit": "px", "quality": 2,
+                                      "ramp": ["#2B83BA00", "#2B83BA", "#ABDDA4", "#FFFFBF", "#FDAE61", "#D7191C"] }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yakın noktaları kümele".into(),
+                    input: json!({ "layer": "olay", "renderer": { "type": "cluster", "distance": 40, "unit": "px", "grow": true } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Basit görünüşe dön".into(),
+                    input: json!({ "layer": "mahalle", "renderer": null }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -2165,6 +2226,9 @@ mod tests {
                     crate::CAD_LABELS_PIN => {
                         serde_json::from_value::<crate::LabelsPin>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_RENDERER => {
+                        serde_json::from_value::<crate::LayersRenderer>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -2247,6 +2311,10 @@ mod tests {
                         }
                         crate::CAD_LABELS_PIN => {
                             serde_json::from_value::<crate::LabelsPinned>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_RENDERER => {
+                            serde_json::from_value::<crate::LayersRendered>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

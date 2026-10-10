@@ -529,6 +529,40 @@ pub struct Class {
     pub symbols: SymbolSet,
 }
 
+/// A value of a thematic renderer's list (Nokta yoğunluğu, Grafik): its
+/// expression and colour (docs/adr/0213 §2.4, §2.5).
+#[derive(Clone, Debug)]
+pub struct Field {
+    pub expr: Option<usize>,
+    pub color: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ChartKind {
+    Pie,
+    Bar,
+    Stacked,
+}
+
+/// A pie's diameter from its total (docs/adr/0213 §2.5).
+#[derive(Clone, Copy, Debug)]
+pub struct SizeBy {
+    pub min_value: f64,
+    pub max_value: f64,
+    pub min_size: f64,
+    pub max_size: f64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Placement {
+    Ring,
+    Rings,
+    Grid,
+}
+
+/// A colour of a ramp, a grid or a list: red, green, blue, alpha.
+pub type Rgba = [u8; 4];
+
 #[derive(Clone, Debug)]
 pub enum Renderer {
     Single(SymbolSet),
@@ -542,6 +576,149 @@ pub enum Renderer {
         classes: Vec<Class>,
     },
     Rules(Vec<Rule>),
+    /// Sürekli renk (docs/adr/0213 §2.1).
+    Unclassed {
+        expr: Option<usize>,
+        min: f64,
+        max: f64,
+        ramp: Vec<Rgba>,
+        symbols: SymbolSet,
+        other: Option<SymbolSet>,
+    },
+    /// Orantılı sembol (§2.2): `exponent` 0.5 (Alan), 1 (Yarıçap), 0.57 (Flannery).
+    Proportional {
+        expr: Option<usize>,
+        min_value: f64,
+        max_value: f64,
+        min_size: f64,
+        max_size: f64,
+        unit: Unit,
+        exponent: f64,
+        symbols: SymbolSet,
+        other: Option<SymbolSet>,
+    },
+    /// İki değişkenli renk (§2.3): `colors[j · n + i]`.
+    Bivariate {
+        expr_x: Option<usize>,
+        expr_y: Option<usize>,
+        breaks_x: Vec<f64>,
+        breaks_y: Vec<f64>,
+        colors: Vec<Option<Rgba>>,
+        symbols: SymbolSet,
+        other: Option<SymbolSet>,
+    },
+    /// Nokta yoğunluğu (§2.4).
+    DotDensity {
+        fields: Vec<Field>,
+        dot_value: f64,
+        dot_size: f64,
+        unit: Unit,
+        seed: u64,
+        symbols: Option<SymbolSet>,
+    },
+    /// Grafik (§2.5); `max_value` NaN when not given.
+    Chart {
+        kind: ChartKind,
+        fields: Vec<Field>,
+        size: f64,
+        unit: Unit,
+        size_by: Option<SizeBy>,
+        max_value: f64,
+        bar_width: Option<f64>,
+        outline: Option<(String, f64)>,
+        symbols: Option<SymbolSet>,
+    },
+    /// Isı haritası (§2.6); `max` None: dynamic.
+    Heatmap {
+        radius: f64,
+        unit: Unit,
+        weight: Option<usize>,
+        max: Option<f64>,
+        ramp: Vec<Rgba>,
+        quality: u32,
+        opacity: f64,
+    },
+    /// Kümeleme (§2.7); `inner` draws single points and the other objects.
+    Cluster {
+        distance: f64,
+        unit: Unit,
+        symbol: Option<SymbolRef>,
+        count: bool,
+        grow: bool,
+        inner: Option<Box<Renderer>>,
+    },
+    /// Yayma (§2.8).
+    Displacement {
+        tolerance: f64,
+        unit: Unit,
+        placement: Placement,
+        spacing: f64,
+        center: Option<SymbolRef>,
+        circle: Option<(String, f64)>,
+        inner: Option<Box<Renderer>>,
+    },
+    /// Ters alan (§2.9); `merge`: overlaps stay empty (non-zero winding).
+    Inverted {
+        symbols: SymbolSet,
+        merge: bool,
+    },
+}
+
+impl Renderer {
+    /// What its build depends on beyond the objects (docs/adr/0213 §3): the
+    /// view's scale, and a box around the view.
+    pub fn view_needs(&self) -> ViewNeeds {
+        match self {
+            Renderer::Heatmap { .. } => ViewNeeds {
+                scale: true,
+                frame: Some(Frame::Heat),
+            },
+            Renderer::Cluster { unit, .. } => ViewNeeds {
+                scale: *unit != Unit::M,
+                frame: None,
+            },
+            Renderer::Displacement { unit, .. } => ViewNeeds {
+                scale: *unit != Unit::M,
+                frame: None,
+            },
+            Renderer::Chart { unit, .. } => ViewNeeds {
+                scale: *unit == Unit::Px,
+                frame: None,
+            },
+            Renderer::Inverted { .. } => ViewNeeds {
+                scale: false,
+                frame: Some(Frame::Construction),
+            },
+            _ => ViewNeeds::default(),
+        }
+    }
+
+    /// Whether its objects are drawn together (a layer built whole, never in parts).
+    pub fn whole(&self) -> bool {
+        matches!(
+            self,
+            Renderer::Heatmap { .. }
+                | Renderer::Cluster { .. }
+                | Renderer::Displacement { .. }
+                | Renderer::Inverted { .. }
+        )
+    }
+}
+
+/// The box a view-dependent build takes (docs/adr/0213 §3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Frame {
+    /// The view and half of it on every side.
+    Heat,
+    /// The construction lines' box: the view and three times its size.
+    Construction,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct ViewNeeds {
+    /// The view's scale, rounded to quarter octaves.
+    pub scale: bool,
+    pub frame: Option<Frame>,
 }
 
 /// The symbols of a program: library symbols by id, and those written in place.
@@ -677,7 +854,187 @@ impl Reader<'_> {
                 Json::Arr(items) => items.iter().map(|r| self.rule(r)).collect(),
                 _ => Vec::new(),
             }),
+            "unclassed" => Renderer::Unclassed {
+                expr: self.expr(v.get("expr")),
+                min: num(v.get("min")),
+                max: num(v.get("max")),
+                ramp: ramp(v.get("ramp")),
+                symbols: self.set(v.get("symbols")),
+                other: self.opt_set(v.get("other")),
+            },
+            "proportional" => Renderer::Proportional {
+                expr: self.expr(v.get("expr")),
+                min_value: num(v.get("minValue")),
+                max_value: num(v.get("maxValue")),
+                min_size: num(v.get("minSize")),
+                max_size: num(v.get("maxSize")),
+                unit: size_unit(v.get("unit")),
+                exponent: match v.get("scaling") {
+                    Json::Str(s) if s == "radius" => 1.0,
+                    Json::Str(s) if s == "flannery" => 0.57,
+                    _ => 0.5,
+                },
+                symbols: self.set(v.get("symbols")),
+                other: self.opt_set(v.get("other")),
+            },
+            "bivariate" => Renderer::Bivariate {
+                expr_x: self.expr(v.get("exprX")),
+                expr_y: self.expr(v.get("exprY")),
+                breaks_x: numbers(v.get("breaksX")).unwrap_or_default(),
+                breaks_y: numbers(v.get("breaksY")).unwrap_or_default(),
+                colors: match v.get("colors") {
+                    Json::Arr(items) => items
+                        .iter()
+                        .map(|c| match c {
+                            Json::Str(s) => super::thematic::parse_rgba(s),
+                            _ => None,
+                        })
+                        .collect(),
+                    _ => Vec::new(),
+                },
+                symbols: self.set(v.get("symbols")),
+                other: self.opt_set(v.get("other")),
+            },
+            "dotDensity" => Renderer::DotDensity {
+                fields: self.fields(v.get("fields")),
+                dot_value: num(v.get("dotValue")),
+                dot_size: opt_num(v.get("dotSize")).unwrap_or(1.0),
+                unit: size_unit(v.get("unit")),
+                seed: match v.get("seed") {
+                    Json::Num(x) if x.is_finite() && *x >= 0.0 => *x as u64,
+                    _ => 0,
+                },
+                symbols: self.opt_set(v.get("symbols")),
+            },
+            "chart" => Renderer::Chart {
+                kind: match v.get("kind") {
+                    Json::Str(s) if s == "bar" => ChartKind::Bar,
+                    Json::Str(s) if s == "stacked" => ChartKind::Stacked,
+                    _ => ChartKind::Pie,
+                },
+                fields: self.fields(v.get("fields")),
+                size: num(v.get("size")),
+                unit: size_unit(v.get("unit")),
+                size_by: match v.get("sizeBy") {
+                    s @ Json::Obj(_) => Some(SizeBy {
+                        min_value: num(s.get("minValue")),
+                        max_value: num(s.get("maxValue")),
+                        min_size: num(s.get("minSize")),
+                        max_size: num(s.get("maxSize")),
+                    }),
+                    _ => None,
+                },
+                max_value: num(v.get("maxValue")),
+                bar_width: opt_num(v.get("barWidth")),
+                outline: stroke_of(v.get("outline")),
+                symbols: self.opt_set(v.get("symbols")),
+            },
+            "heatmap" => Renderer::Heatmap {
+                radius: num(v.get("radius")),
+                unit: distance_unit(v.get("unit")),
+                weight: match v.get("weight") {
+                    Json::Str(s) if !s.trim().is_empty() => Some(self.exprs.intern(s)),
+                    _ => None,
+                },
+                max: opt_num(v.get("max")).filter(|m| *m > 0.0),
+                ramp: ramp(v.get("ramp")),
+                quality: match v.get("quality") {
+                    Json::Num(q) if q.is_finite() => {
+                        kentos_geometry_core::jsmath::js_round(*q).clamp(1.0, 5.0) as u32
+                    }
+                    _ => 2,
+                },
+                opacity: opt_num(v.get("opacity")).unwrap_or(1.0),
+            },
+            "cluster" => Renderer::Cluster {
+                distance: num(v.get("distance")),
+                unit: distance_unit(v.get("unit")),
+                symbol: self.symbol_ref(v.get("symbol")),
+                count: opt_bool(v.get("count")) != Some(false),
+                grow: opt_bool(v.get("grow")) == Some(true),
+                inner: self.inner(v.get("renderer")),
+            },
+            "displacement" => Renderer::Displacement {
+                tolerance: num(v.get("tolerance")),
+                unit: distance_unit(v.get("unit")),
+                placement: match v.get("placement") {
+                    Json::Str(s) if s == "rings" => Placement::Rings,
+                    Json::Str(s) if s == "grid" => Placement::Grid,
+                    _ => Placement::Ring,
+                },
+                spacing: opt_num(v.get("spacing")).unwrap_or(0.0),
+                center: self.symbol_ref(v.get("center")),
+                circle: stroke_of(v.get("circle")),
+                inner: self.inner(v.get("renderer")),
+            },
+            "inverted" => Renderer::Inverted {
+                symbols: self.set(v.get("symbols")),
+                merge: opt_bool(v.get("merge")) == Some(true),
+            },
             _ => return None,
         })
+    }
+
+    /// The list of a dot density or a chart.
+    fn fields(&mut self, v: &Json) -> Vec<Field> {
+        match v {
+            Json::Arr(items) => items
+                .iter()
+                .map(|f| Field {
+                    expr: self.expr(f.get("expr")),
+                    color: opt_str(f.get("color")).unwrap_or_default(),
+                })
+                .collect(),
+            _ => Vec::new(),
+        }
+    }
+
+    /// A cluster's or a displacement's renderer of single points: one that
+    /// draws objects one by one (the wrappers do not nest).
+    fn inner(&mut self, v: &Json) -> Option<Box<Renderer>> {
+        let r = self.renderer(v)?;
+        (!r.whole() && !matches!(r, Renderer::DotDensity { .. } | Renderer::Chart { .. }))
+            .then(|| Box::new(r))
+    }
+}
+
+/// A ramp's colours (unreadable ones left out).
+fn ramp(v: &Json) -> Vec<Rgba> {
+    match v {
+        Json::Arr(items) => items
+            .iter()
+            .filter_map(|c| match c {
+                Json::Str(s) => super::thematic::parse_rgba(s),
+                _ => None,
+            })
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
+/// A size's unit: paper mm (the default) or screen px.
+fn size_unit(v: &Json) -> Unit {
+    match v {
+        Json::Str(s) if s == "px" => Unit::Px,
+        _ => Unit::Mm,
+    }
+}
+
+/// A distance's unit: screen px (the default) or metres.
+fn distance_unit(v: &Json) -> Unit {
+    match v {
+        Json::Str(s) if s == "m" => Unit::M,
+        _ => Unit::Px,
+    }
+}
+
+/// `{ color, width }`.
+fn stroke_of(v: &Json) -> Option<(String, f64)> {
+    match v {
+        Json::Obj(_) => Some((
+            opt_str(v.get("color")).unwrap_or_default(),
+            opt_num(v.get("width")).unwrap_or(0.0),
+        )),
+        _ => None,
     }
 }

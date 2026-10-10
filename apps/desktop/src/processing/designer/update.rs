@@ -167,6 +167,7 @@ impl App {
     /// The selected step's fixed values as the tool window's controls hold
     /// them; `keep`: the same step's controls stay (a number being typed).
     fn designer_fields(&mut self, keep: bool) {
+        let variables = self.expression_variables();
         let Some(doc) = &self.document else {
             if let Some(d) = self.processing.designer.as_deref_mut() {
                 d.fields = None;
@@ -214,6 +215,7 @@ impl App {
             selection: &self.selection,
             store: self.spatial.store(),
             view: Some(self.viewport.camera.visible_bounds()),
+            variables,
         };
         if let Some(fields) = d.fields.as_mut() {
             fields.refresh(&self.processing.runner, &look);

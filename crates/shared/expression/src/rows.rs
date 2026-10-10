@@ -92,6 +92,39 @@ pub struct Column {
     pub text_lens: Vec<u32>,
 }
 
+impl Column {
+    /// The values one by one (texts copied out): for a host that holds them
+    /// as values, not columns.
+    pub fn values(&self) -> Vec<Value<'static>> {
+        let mut texts = self.text_lens.iter();
+        let mut rest = self.texts.as_str();
+        self.kinds
+            .iter()
+            .zip(&self.numbers)
+            .map(|(&k, &x)| match k {
+                NUMBER => Value::Num(x),
+                BOOL => Value::Bool(x != 0.0),
+                TEXT => {
+                    let units = texts.next().copied().unwrap_or(0) as usize;
+                    // The length is in UTF-16 units: walk the characters until it is reached.
+                    let (mut seen, mut bytes) = (0, 0);
+                    for c in rest.chars() {
+                        if seen >= units {
+                            break;
+                        }
+                        seen += c.len_utf16();
+                        bytes += c.len_utf8();
+                    }
+                    let (t, after) = rest.split_at(bytes.min(rest.len()));
+                    rest = after;
+                    Value::text(t.to_owned())
+                }
+                _ => Value::Null,
+            })
+            .collect()
+    }
+}
+
 pub const EMPTY: u8 = 0;
 pub const NUMBER: u8 = 1;
 pub const TEXT: u8 = 2;
@@ -357,7 +390,12 @@ impl<'a> Source<'a> for TableSource<'_, 'a> {
         match load {
             Load::Field(f) => {
                 let f = f as usize;
-                text(self.slots.map_or(Some(f), |s| s.get(f).copied()), &mut slot);
+                // A slot past the table's fields (a field the table does not hold) reads none.
+                let at = self
+                    .slots
+                    .map_or(Some(f), |s| s.get(f).copied())
+                    .filter(|&s| s < l.text_slots);
+                text(at, &mut slot);
             }
             Load::Label => text(l.label, &mut slot),
             Load::Layer | Load::Kind => {
@@ -578,10 +616,209 @@ pub fn put(out: &mut Column, v: Option<V>, want: As, tmp: &mut String) {
             out.numbers.push(if b { 1.0 } else { 0.0 });
         }
         V::Text(s) => {
+            // An array or a map shows as its JSON (docs/adr/0214 §2.1).
+            let s = crate::compound::shown(s);
             out.kinds.push(TEXT);
             out.numbers.push(f64::NAN);
             out.text_lens.push(utf16_len(s) as u32);
             out.texts.push_str(s);
         }
     }
+}
+
+// ── docs/adr/0214 §3: the world at the browser's boundary ─────────────────
+
+/// The layers an expression's calls look at, as the page sends them: every
+/// layer's objects one after another in one table (the layout `Layout`
+/// gives the union of what the calls read, `Expr::world_needs`), their ids
+/// in the geometry store, and each layer's name and count.
+pub struct WorldTable<'a> {
+    table: Table<'a>,
+    fields: Vec<String>,
+    ids: &'a [f64],
+    layers: Vec<(String, usize, usize)>,
+}
+
+impl<'a> WorldTable<'a> {
+    /// Refuses a table whose sizes do not match the counts and the layout.
+    pub fn new(
+        needs: &crate::WorldNeeds,
+        names: Vec<String>,
+        counts: &[u32],
+        ids: &'a [f64],
+        texts: &'a str,
+        text_lens: &'a [i32],
+        numbers: &'a [f64],
+    ) -> Result<WorldTable<'a>, String> {
+        if names.len() != counts.len() {
+            return Err("Katman tablosunun adları sayılarıyla uyuşmuyor.".into());
+        }
+        let n: usize = counts.iter().map(|&c| c as usize).sum();
+        if ids.len() != n {
+            return Err(format!(
+                "Katman tablosunda {n} nesne sayıldı, {} kimlik geldi.",
+                ids.len()
+            ));
+        }
+        let layout = Layout::new(
+            needs.fields.len(),
+            Needs {
+                measured: false,
+                ..needs.needs
+            },
+        );
+        let table = Table::new(
+            RowsInput {
+                n,
+                texts,
+                text_lens,
+                numbers,
+                measures: &[],
+                scale: f64::NAN,
+            },
+            layout,
+        )?;
+        let mut first = 0;
+        let layers = names
+            .into_iter()
+            .zip(counts)
+            .map(|(name, &c)| {
+                let l = (name, first, c as usize);
+                first += c as usize;
+                l
+            })
+            .collect();
+        Ok(WorldTable {
+            table,
+            fields: needs.fields.clone(),
+            ids,
+            layers,
+        })
+    }
+
+    /// Its layers as the world reads them, their shapes from `store`.
+    pub fn layers<'w>(
+        &'w self,
+        store: Option<&'w kentos_geometry_core::store::Store>,
+    ) -> Vec<(String, Vec<f64>, TableLayer<'w, 'a>)> {
+        self.layers
+            .iter()
+            .map(|(name, first, n)| {
+                (
+                    name.clone(),
+                    self.ids[*first..first + n].to_vec(),
+                    TableLayer {
+                        world: self,
+                        first: *first,
+                        n: *n,
+                        store,
+                    },
+                )
+            })
+            .collect()
+    }
+}
+
+/// One layer of a `WorldTable`.
+pub struct TableLayer<'w, 'a> {
+    world: &'w WorldTable<'a>,
+    first: usize,
+    n: usize,
+    store: Option<&'w kentos_geometry_core::store::Store>,
+}
+
+impl crate::world::LayerObjects for TableLayer<'_, '_> {
+    fn source<'s>(&'s self, e: &'s Expr) -> Box<dyn Source<'s> + 's> {
+        // The expression's fields among the table's (an inner expression reads some of them).
+        let slots = e
+            .fields
+            .iter()
+            .map(|f| {
+                self.world
+                    .fields
+                    .iter()
+                    .position(|t| t == f)
+                    .unwrap_or(usize::MAX)
+            })
+            .collect();
+        Box::new(LayerSource { layer: self, slots })
+    }
+}
+
+struct LayerSource<'l, 'w, 'a> {
+    layer: &'l TableLayer<'w, 'a>,
+    slots: Vec<usize>,
+}
+
+impl<'s, 'l: 's, 'w: 's, 'a: 's> Source<'s> for LayerSource<'l, 'w, 'a> {
+    fn fill(&self, load: Load, start: usize, mut slot: Slot<'_, 's>) {
+        let l = self.layer;
+        let geometry = match load {
+            Load::Length => Some(Geometry::Length),
+            Load::Area => Some(Geometry::Area),
+            Load::Y => Some(Geometry::AnchorY),
+            Load::X => Some(Geometry::AnchorX),
+            Load::CentroidY => Some(Geometry::CentroidY),
+            Load::CentroidX => Some(Geometry::CentroidX),
+            Load::MinY => Some(Geometry::MinY),
+            Load::MaxY => Some(Geometry::MaxY),
+            Load::MinX => Some(Geometry::MinX),
+            Load::MaxX => Some(Geometry::MaxX),
+            Load::Width => Some(Geometry::Width),
+            Load::Height => Some(Geometry::Height),
+            _ => None,
+        };
+        if let Some(what) = geometry {
+            let ids = &l.world.ids[l.first..l.first + l.n];
+            let store = l.store;
+            Shapes::new(|i| store.and_then(|s| s.get(*ids.get(i)?)).map(|it| &it.shape))
+                .fill(what, start, slot);
+            return;
+        }
+        if load == Load::Index {
+            // The position in the layer, not in the whole table.
+            slot.numbers(|i| (true, (start + i + 1) as f64));
+            return;
+        }
+        TableSource {
+            table: &l.world.table,
+            slots: Some(&self.slots),
+        }
+        .fill(load, l.first + start, slot);
+    }
+}
+
+/// `evaluate_rows_on` with the world the expression's calls to other
+/// objects are answered from (docs/adr/0214 §3).
+pub fn evaluate_rows_on_in<'s>(
+    e: &Expr,
+    input: &RowsInput,
+    want: As,
+    shape: impl Fn(usize) -> Option<&'s Shape>,
+    world: Option<&crate::world::World<'_>>,
+) -> Result<Column, String> {
+    let Some(world) = world.filter(|_| e.looks_around()) else {
+        return evaluate_rows_on(e, input, want, shape);
+    };
+    let layout = Layout::new(
+        e.fields.len(),
+        Needs {
+            measured: false,
+            ..e.needs
+        },
+    );
+    let table = Table::new(copy(input), layout)?;
+    let source = TableShapes {
+        table: TableSource {
+            table: &table,
+            slots: None,
+        },
+        shapes: Shapes::new(shape),
+    };
+    let session = crate::world::Session::new(e, world);
+    let with = crate::world::WithWorld {
+        inner: &source,
+        world: &session,
+    };
+    Ok(column(e, &with, input.n, want))
 }

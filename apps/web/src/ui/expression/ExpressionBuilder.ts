@@ -1,5 +1,5 @@
 import '../../styles/expression.css';
-import { exprBuilderCatalog, exprHelp, exprHelpAt, exprPlace, exprPreview, type ExprCheck, type ExprItem, type ExprItemKind, type ExprSection } from '../../model/expression/builder';
+import { exprBuilderCatalog, exprHelp, exprHelpAt, exprPlace, exprPreview, type ExprCheck, type ExprItem, type ExprItemKind, type ExprSchema, type ExprSection } from '../../model/expression/builder';
 import { h } from '../dom';
 import { icon } from '../icons';
 import { Dialog } from '../widgets/Dialog';
@@ -84,29 +84,34 @@ class ExpressionBuilder {
   constructor(opts: ExpressionBuilderOptions) {
     this.opts = opts;
     const fields = () => opts.fields;
+    // The services' view: the fields, the `@` values, whether other layers are given (docs/adr/0214).
+    const schema = (): ExprSchema => ({ fields: opts.fields, variables: opts.variables ?? [], world: opts.world === true });
     this.editor = new CodeEditor({
       value: opts.value,
       label: 'İfade',
       fields,
+      schema,
       onChange: (_, check) => this.changed(check),
       onCursor: (at) => this.cursor(at),
       onSubmit: () => this.accept(),
-      onActive: (item) => (item ? this.help.show(exprHelp(item.key, fields())) : this.cursor(this.editor.cursor)),
+      onActive: (item) => (item ? this.help.show(exprHelp(item.key, schema())) : this.cursor(this.editor.cursor)),
     });
     this.tree = new BuilderTree({
       fields,
-      onSelect: (item) => this.help.show(exprHelp(item.key, fields())),
+      schema,
+      onSelect: (item) => this.help.show(exprHelp(item.key, schema())),
       onInsert: (item) => (this.mode === 'flow' ? this.flow.add(item.key) : this.insert(item)),
       extra: () => (this.mode === 'flow' ? [VALUES] : []),
     });
     this.help = new HelpPane({ objects: opts.objects, onInsert: (text) => (this.mode === 'flow' ? this.flow.addText(text) : this.put(text, 'field', text.length)) });
     this.flow = new FlowMode({
       fields,
-      catalog: () => exprBuilderCatalog(fields(), ''),
+      schema,
+      catalog: () => exprBuilderCatalog(schema(), ''),
       text: () => this.editor.value,
       setText: (text) => this.editor.setValue(text),
       value: (text) => this.previewOf(text),
-      showHelp: (key) => this.help.show(key ? exprHelp(key, fields()) : null),
+      showHelp: (key) => this.help.show(key ? exprHelp(key, schema()) : null),
       fail: (message) => this.fail(message),
     });
     this.status = h('div', { class: 'exprb__status', role: 'status' });
@@ -249,7 +254,7 @@ class ExpressionBuilder {
   private cursor(at: number): void {
     // The help follows the cursor while one writes; the tree's choice stays until then.
     if (document.activeElement !== this.editor.input) return;
-    const help = exprHelpAt(this.editor.value, at, this.opts.fields);
+    const help = exprHelpAt(this.editor.value, at, { fields: this.opts.fields, variables: this.opts.variables ?? [], world: this.opts.world === true });
     if (help) this.help.show(help);
   }
 

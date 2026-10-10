@@ -63,7 +63,7 @@ export const calculateField = defineTool({
     const list = v.input.entities;
     feedback.progress(0, 'Değerler hesaplanıyor');
     // One call to the run's geometry store per expression: the geometry values ($alan, $merkez_y, $genişlik …) are read there.
-    const objects = { entities: list, layerName: ctx.layerName, geometry: ctx.geometry };
+    const objects = { entities: list, layerName: ctx.layerName, geometry: ctx.geometry, layers: ctx.layers };
     const where = v.where?.evaluateAll(objects, 'bool');
     const values = v.value.evaluateAll(objects, 'text');
     for (let i = 0; i < list.length; i++) {

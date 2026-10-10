@@ -7,6 +7,7 @@ mod designer;
 mod kstil;
 mod legend;
 mod object_templates;
+mod renderer_timing;
 mod table_lines;
 mod tally;
 mod template_form;

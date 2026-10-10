@@ -46,6 +46,7 @@ fn batches(e: &Entity) -> (usize, usize) {
         library: &library,
         layer_name: &names,
         view: Default::default(),
+        frame: None,
     };
     let (_, batches) = build_layer(&store, &style, &[e], &opts).expect("a build");
     // The batches' JSON names each batch's kind.

@@ -1,0 +1,859 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "documents": {},
+ "cases": [
+  {
+   "id": "nearest-stops",
+   "title": "En yakını bul: beş parselin en yakın durağı, uzaklığı, adı ve semti (grad); eşitsiz en yakın noktalar",
+   "document": "proximity.kcad",
+   "selection": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "run": {
+    "tool": "proximity.nearest"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "durak"
+    },
+    "measure": "edges",
+    "max": 0,
+    "fields": "Ad",
+    "prefix": "Yakın ",
+    "bearing": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "5 nesneye en yakın hedef yazıldı (“Yakın uzaklık”).",
+    "undo": "En yakını bul",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ad": "P1",
+       "Yakın uzaklık": "5.000",
+       "Yakın Ad": "Çarşı",
+       "Yakın semt": "200.0000"
+      }
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ad": "P2",
+       "Yakın uzaklık": "3.000",
+       "Yakın Ad": "Pazar",
+       "Yakın semt": "0.0000"
+      }
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ad": "P3",
+       "Yakın uzaklık": "15.000",
+       "Yakın Ad": "Okul önü",
+       "Yakın semt": "0.0000"
+      }
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Ad": "P4",
+       "Yakın uzaklık": "10.000",
+       "Yakın Ad": "Okul önü",
+       "Yakın semt": "300.0000"
+      }
+     },
+     {
+      "id": 5,
+      "attrs": {
+       "Ad": "P5",
+       "Yakın uzaklık": "20.616",
+       "Yakın Ad": "Sanayi",
+       "Yakın semt": "184.4042"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 5,
+     "changed": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ]
+    }
+   }
+  },
+  {
+   "id": "nearest-stops-within",
+   "title": "En yakını bul, en çok 12 m: iki parselin hedefi yok, alanları boşaltılır ve sayısı söylenir",
+   "document": "proximity.kcad",
+   "selection": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "run": {
+    "tool": "proximity.nearest"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "durak"
+    },
+    "measure": "edges",
+    "max": 12,
+    "fields": "Ad",
+    "prefix": "Yakın ",
+    "bearing": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 nesneye en yakın hedef yazıldı (“Yakın uzaklık”).",
+    "undo": "En yakını bul",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ad": "P1",
+       "Yakın uzaklık": "5.000",
+       "Yakın Ad": "Çarşı",
+       "Yakın semt": "200.0000"
+      }
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ad": "P2",
+       "Yakın uzaklık": "3.000",
+       "Yakın Ad": "Pazar",
+       "Yakın semt": "0.0000"
+      }
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Ad": "P4",
+       "Yakın uzaklık": "10.000",
+       "Yakın Ad": "Okul önü",
+       "Yakın semt": "300.0000"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "changed": [
+      1,
+      2,
+      4
+     ]
+    },
+    "log": [
+     {
+      "level": "info",
+      "text": "2 nesnenin en çok uzaklık içinde hedefi yok; alanları boşaltıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "matrix-list",
+   "title": "Uzaklık matrisi, Liste: üç parselden en yakın iki durağa, sıralarıyla",
+   "document": "proximity.kcad",
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "run": {
+    "tool": "proximity.matrix"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "durak"
+    },
+    "measure": "edges",
+    "k": 2,
+    "max": 0,
+    "form": "list",
+    "name": "Ad",
+    "targetName": "Ad"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 kaynaktan 6 uzaklık ölçüldü.",
+    "undo": null,
+    "outputs": {
+     "count": 6,
+     "table": {
+      "columns": [
+       "Kaynak",
+       "Hedef",
+       "Sıra",
+       "Uzaklık"
+      ],
+      "rows": [
+       [
+        "P1",
+        "Çarşı",
+        "1",
+        "5.000"
+       ],
+       [
+        "P1",
+        "Pazar",
+        "2",
+        "10.440"
+       ],
+       [
+        "P2",
+        "Pazar",
+        "1",
+        "3.000"
+       ],
+       [
+        "P2",
+        "Okul önü",
+        "2",
+        "7.071"
+       ],
+       [
+        "P3",
+        "Okul önü",
+        "1",
+        "15.000"
+       ],
+       [
+        "P3",
+        "Pazar",
+        "2",
+        "19.849"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "matrix-matrix",
+   "title": "Uzaklık matrisi, Matris: üç parsel × dört durak",
+   "document": "proximity.kcad",
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "run": {
+    "tool": "proximity.matrix"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "durak"
+    },
+    "measure": "edges",
+    "k": 0,
+    "max": 0,
+    "form": "matrix",
+    "name": "Ad",
+    "targetName": "Ad"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 kaynaktan 12 uzaklık ölçüldü.",
+    "undo": null,
+    "outputs": {
+     "count": 12,
+     "table": {
+      "columns": [
+       "Kaynak",
+       "Çarşı",
+       "Okul önü",
+       "Sanayi",
+       "Pazar"
+      ],
+      "rows": [
+       [
+        "P1",
+        "5.000",
+        "30.414",
+        "80.000",
+        "10.440"
+       ],
+       [
+        "P2",
+        "11.180",
+        "7.071",
+        "55.000",
+        "3.000"
+       ],
+       [
+        "P3",
+        "35.355",
+        "15.000",
+        "40.000",
+        "19.849"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "matrix-summary",
+   "title": "Uzaklık matrisi, Özet: her parselin dört durağa en az, ortalama ve en çok uzaklığı",
+   "document": "proximity.kcad",
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "run": {
+    "tool": "proximity.matrix"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "durak"
+    },
+    "measure": "edges",
+    "k": 0,
+    "max": 0,
+    "form": "summary",
+    "name": "Ad",
+    "targetName": "Ad"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 kaynaktan 12 uzaklık ölçüldü.",
+    "undo": null,
+    "outputs": {
+     "count": 12,
+     "table": {
+      "columns": [
+       "Kaynak",
+       "Hedef sayısı",
+       "En az",
+       "Ortalama",
+       "En çok"
+      ],
+      "rows": [
+       [
+        "P1",
+        "4",
+        "5.000",
+        "31.464",
+        "80.000"
+       ],
+       [
+        "P2",
+        "4",
+        "3.000",
+        "19.063",
+        "55.000"
+       ],
+       [
+        "P3",
+        "4",
+        "15.000",
+        "27.551",
+        "40.000"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "matrix-centres",
+   "title": "Uzaklık matrisi, merkezden merkeze: bir parselin ağırlık merkezinden iki okula (hepsi), sırasıyla",
+   "document": "proximity.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "proximity.matrix"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "okul"
+    },
+    "measure": "centers",
+    "k": 0,
+    "max": 0,
+    "form": "list",
+    "name": "Ad",
+    "targetName": "Ad"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 kaynaktan 2 uzaklık ölçüldü.",
+    "undo": null,
+    "outputs": {
+     "count": 2,
+     "table": {
+      "columns": [
+       "Kaynak",
+       "Hedef",
+       "Sıra",
+       "Uzaklık"
+      ],
+      "rows": [
+       [
+        "P1",
+        "Atatürk",
+        "1",
+        "35.000"
+       ],
+       [
+        "P1",
+        "Cumhuriyet",
+        "2",
+        "60.208"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "hub-stops-schools",
+   "title": "En yakın merkeze bağla: her durak en yakın okula, merkezden merkeze; çizgiler durağın özniteliklerini, Merkez'i ve Uzaklık'ı taşır",
+   "document": "proximity.kcad",
+   "run": {
+    "tool": "proximity.hub"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "durak"
+    },
+    "hubs": {
+     "scope": "layer",
+     "layerId": "okul"
+    },
+    "hubName": "Ad",
+    "max": 0,
+    "layer": {
+     "newName": "Merkeze bağlantılar"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 nesne en yakın merkeze bağlandı.",
+    "undo": "En yakın merkeze bağla",
+    "layers": [
+     {
+      "id": "islem-merkeze-baglantilar",
+      "name": "Merkeze bağlantılar",
+      "style": {
+       "color": "#E5732E",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5732E26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "line",
+      "layerId": "islem-merkeze-baglantilar",
+      "attrs": {
+       "Ad": "Çarşı",
+       "Merkez": "Atatürk",
+       "Uzaklık": "55.000"
+      },
+      "a": {
+       "x": 487010,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487010,
+       "y": 4420050
+      }
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-merkeze-baglantilar",
+      "attrs": {
+       "Ad": "Okul önü",
+       "Merkez": "Cumhuriyet",
+       "Uzaklık": "32.016"
+      },
+      "a": {
+       "x": 487050,
+       "y": 4420035
+      },
+      "b": {
+       "x": 487070,
+       "y": 4420010
+      }
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-merkeze-baglantilar",
+      "attrs": {
+       "Ad": "Sanayi",
+       "Merkez": "Cumhuriyet",
+       "Uzaklık": "30.000"
+      },
+      "a": {
+       "x": 487100,
+       "y": 4420010
+      },
+      "b": {
+       "x": 487070,
+       "y": 4420010
+      }
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-merkeze-baglantilar",
+      "attrs": {
+       "Ad": "Pazar",
+       "Merkez": "Atatürk",
+       "Uzaklık": "26.249"
+      },
+      "a": {
+       "x": 487030,
+       "y": 4420033
+      },
+      "b": {
+       "x": 487010,
+       "y": 4420050
+      }
+     }
+    ],
+    "outputs": {
+     "count": 4
+    }
+   }
+  },
+  {
+   "id": "neighbours-parcels",
+   "title": "Komşu alanlar: ortak kenarlar (biri yaylı), köşeden değen ve örtüşen parseller; komşu sayısı ve adları yazılır",
+   "document": "proximity.kcad",
+   "run": {
+    "tool": "proximity.neighbors"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "tolerance": 0.001,
+    "corners": true,
+    "overlaps": true,
+    "name": "Ad",
+    "write": true,
+    "countField": "Komşu sayısı",
+    "listField": "Komşular"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "7 alanda 5 komşuluk bulundu.",
+    "undo": "Komşu alanlar",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 alan çiftinin içleri örtüşüyor."
+     }
+    ],
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ad": "P1",
+       "Komşu sayısı": "1",
+       "Komşular": "P2"
+      }
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ad": "P2",
+       "Komşu sayısı": "2",
+       "Komşular": "P1, P3"
+      }
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ad": "P3",
+       "Komşu sayısı": "2",
+       "Komşular": "P2, P4"
+      }
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Ad": "P4",
+       "Komşu sayısı": "2",
+       "Komşular": "P3, P5"
+      }
+     },
+     {
+      "id": 5,
+      "attrs": {
+       "Ad": "P5",
+       "Komşu sayısı": "1",
+       "Komşular": "P4"
+      }
+     },
+     {
+      "id": 6,
+      "attrs": {
+       "Ad": "P6",
+       "Komşu sayısı": "1",
+       "Komşular": "P7"
+      }
+     },
+     {
+      "id": 7,
+      "attrs": {
+       "Ad": "P7",
+       "Komşu sayısı": "1",
+       "Komşular": "P6"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 10,
+     "table": {
+      "columns": [
+       "Alan",
+       "Komşu",
+       "Komşuluk",
+       "Ortak kenar",
+       "Örtüşen alan"
+      ],
+      "rows": [
+       [
+        "P1",
+        "P2",
+        "Kenar",
+        "30.000",
+        ""
+       ],
+       [
+        "P2",
+        "P1",
+        "Kenar",
+        "30.000",
+        ""
+       ],
+       [
+        "P2",
+        "P3",
+        "Kenar",
+        "20.000",
+        ""
+       ],
+       [
+        "P3",
+        "P2",
+        "Kenar",
+        "20.000",
+        ""
+       ],
+       [
+        "P3",
+        "P4",
+        "Köşe",
+        "0.000",
+        ""
+       ],
+       [
+        "P4",
+        "P3",
+        "Köşe",
+        "0.000",
+        ""
+       ],
+       [
+        "P4",
+        "P5",
+        "Örtüşme",
+        "0.000",
+        "50.00"
+       ],
+       [
+        "P5",
+        "P4",
+        "Örtüşme",
+        "0.000",
+        "50.00"
+       ],
+       [
+        "P6",
+        "P7",
+        "Kenar",
+        "23.182",
+        ""
+       ],
+       [
+        "P7",
+        "P6",
+        "Kenar",
+        "23.182",
+        ""
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "shortest-lines-roads",
+   "title": "En kısa çizgi: iki parselden en yakın iki yola, en yakın noktalar arası; Kaynak, Hedef, Sıra, Uzaklık",
+   "document": "proximity.kcad",
+   "selection": [
+    1,
+    2
+   ],
+   "run": {
+    "tool": "proximity.shortestLine"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "k": 2,
+    "max": 0,
+    "name": "Ad",
+    "targetName": "Ad",
+    "layer": {
+     "newName": "En kısa çizgiler"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 en kısa çizgi yazıldı.",
+    "undo": "En kısa çizgi",
+    "layers": [
+     {
+      "id": "islem-en-kisa-cizgiler",
+      "name": "En kısa çizgiler",
+      "style": {
+       "color": "#8A3FFC",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#8A3FFC26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "line",
+      "layerId": "islem-en-kisa-cizgiler",
+      "attrs": {
+       "Kaynak": "P1",
+       "Hedef": "Ana cadde",
+       "Sıra": "1",
+       "Uzaklık": "10.000"
+      },
+      "a": {
+       "x": 487000,
+       "y": 4420000
+      },
+      "b": {
+       "x": 487000.0,
+       "y": 4419990.0
+      }
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-en-kisa-cizgiler",
+      "attrs": {
+       "Kaynak": "P1",
+       "Hedef": "Dere yolu",
+       "Sıra": "2",
+       "Uzaklık": "80.000"
+      },
+      "a": {
+       "x": 487020,
+       "y": 4420000
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-en-kisa-cizgiler",
+      "attrs": {
+       "Kaynak": "P2",
+       "Hedef": "Ana cadde",
+       "Sıra": "1",
+       "Uzaklık": "10.000"
+      },
+      "a": {
+       "x": 487020,
+       "y": 4420000
+      },
+      "b": {
+       "x": 487020.0,
+       "y": 4419990.0
+      }
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-en-kisa-cizgiler",
+      "attrs": {
+       "Kaynak": "P2",
+       "Hedef": "Dere yolu",
+       "Sıra": "2",
+       "Uzaklık": "55.000"
+      },
+      "a": {
+       "x": 487045,
+       "y": 4420000
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4420000.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 4
+    }
+   }
+  }
+ ]
+}

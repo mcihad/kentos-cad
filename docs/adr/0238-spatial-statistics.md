@@ -250,3 +250,11 @@ uzay-zaman küpleri, HDBSCAN ve OPTICS, Ripley'in K'si, üç boyutlu merkezler, 
 | k-ortalamalar, k = 10 (81 yineleme) | 0,071 s | 0,323 s |
 
 - **Resimler:** masaüstünde `tools_screens`'in `ist-*`'ı, web'de `shots.mjs stats`; iki tema, iki boy.
+
+## Ek (10 Ekim): şeritteki yeri
+
+`main`'le birleşimde (GIS-19'un Yakınlık'ı da Analiz sekmesindeydi) düzen denetimi Analiz sekmesinin 1100 px'te taştığını gösterdi;
+taşma bu maddenin ayrı panelinden geliyordu. Mekânsal istatistik'in araçları Yakınlık'ınkilerle Analiz paneline katıldı (ADR 0215 §5'in
+yolu): Moran I ve Sıcak nokta panelde; Ortalama ve Ortanca merkez, Standart uzaklık, Yön dağılımı, En yakın komşu, DBSCAN ve
+k-ortalamalar panelin ▾'inde (`SPATIAL_STATS_COMMANDS`, `SPATIAL_STATS_UNDER`, `app/ribbon.ts`): sekme 1100 px'e sığar, geniş pencerede
+3200 px'in altında kalır (üç araçla 3208 px'ti). İşlemler'deki kategori değişmedi.

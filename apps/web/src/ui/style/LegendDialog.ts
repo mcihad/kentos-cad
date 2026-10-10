@@ -73,7 +73,7 @@ class LegendDialog {
         { class: `leg__group${this.left.has(g.layerId) ? ' leg__group--off' : ''}` },
         h('label', { class: 'leg__head' }, on, h('span', null, g.layerName), h('span', { class: 'smgr__count' }, String(g.entries.length))),
         g.entries.map((e) => {
-          const c = e.symbol ? this.thumbs.canvas(e.symbol, 56, 32) : h('canvas', { width: '56', height: '32', style: 'width:56px;height:32px' });
+          const c = e.symbol ? this.thumbs.canvas(e.symbol, 56, 32, undefined, e.pxPerMm) : h('canvas', { width: '56', height: '32', style: 'width:56px;height:32px' });
           c.classList.add('leg__pic');
           return h('div', { class: 'leg__row' }, c, h('span', null, e.label));
         }),
@@ -134,14 +134,15 @@ export function legendPicture(ctx: AppContext, groups: readonly LegendGroup[], l
   const entries = groups.flatMap((grp) => grp.entries);
   let entry = 0;
   for (const row of layout.rows) {
-    const symbol = row.kind === 'entry' ? entries[entry++].symbol : null;
+    const e = row.kind === 'entry' ? entries[entry++] : null;
+    const symbol = e?.symbol ?? null;
     const p = row.picture;
     if (symbol && p) {
       // A fresh canvas each time: the preview sets its size from the width attribute.
       const pic = document.createElement('canvas');
       pic.width = p.w;
       pic.height = p.h;
-      drawSymbolPreview(pic, symbol, { palette: paper, library: ctx.styles.library, background: layout.background, pixelRatio: S });
+      drawSymbolPreview(pic, symbol, { palette: paper, library: ctx.styles.library, background: layout.background, pixelRatio: S, ...(e?.pxPerMm && { pxPerMm: e.pxPerMm }) });
       g.drawImage(pic, p.x, p.y, p.w, p.h);
       g.strokeStyle = p.frame;
       g.lineWidth = p.frameWidth;

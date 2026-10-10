@@ -151,6 +151,21 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   döndürülen, gizlenen etiket); Etiketler penceresi (beş sekme, sınıflar, Engel, ε) ve Katmanlar'ın sağ tıkı, Etiketi taşı, döndür,
   sabitle (Çöz) ve gizle (Göster), Sabit etiketleri vurgula, Yerleşmeyen etiketleri göster; CBS'de Harita › Etiket;
   `cad.layers.labels` ve `cad.labels.pin`; paftanın PDF'ine zeminler ve çağrı çizgileri vektör olarak (ADR 0212);
+  ek işleyiciler: Sürekli renk (rampadan ana renk), Orantılı sembol (Alan, Yarıçap, Flannery), İki değişkenli renk (n × n ızgara), Nokta
+  yoğunluğu (alanın içinde tohumlu noktalar, katmanda en çok 1 000 000), Grafik (pasta, çubuk, yığılmış çubuk), Isı haritası (QGIS'in
+  dördüncü dereceden çekirdeği, dinamik ya da sabit en büyük, görünümün resmi), Kümeleme ve Yayma (QGIS'in nokta uzaklığı kuralı; halka,
+  iç içe halkalar, ızgara; tek noktalar bir iç işleyiciyle), Ters alan (alanların dışı; çift-tek ya da sarım); görünüme bağlı olanlar
+  yakınlaştırma durunca ya da kutudan çıkınca yeniden kurulur; Katman stili'nde gruplu, ikonlu tür listesi ve formlar, lejant satırları,
+  pafta; `cad.layers.renderer` (ADR 0213);
+  ifade dili ekleri: tarih ve saat (yap, oku, parçalar, ekle, fark, biçimle, şimdi), `@` değerleri (projenin değişkenleri ve yerleşikler:
+  proje adı, sistem, EPSG, ölçek, tarih, şimdi, kullanıcı, katman; `.kcad` şema 37), düzenli ifade (`regex-lite`), dizi ve eşleme (JSON),
+  aynı ve başka katman üstünden toplama, Konuma göre seç'in ilişkileri, en yakının değeri, örtüşen alan ve uzunluk, başka katmandan değer;
+  başka katmana bakanlar yalnız İşlemler'de (`compile_with` başka yerde reddeder), katman süzgecinin dışarıda bıraktıklarını okumaz;
+  `@` değerleri İşlemler'de, İfade oluşturucu'da, Öznitelik tablosunun süzgecinde ve paftada; Proje ayarları › Değişkenler (ADR 0214);
+  yakınlık analizi: İşlemler'in Yakınlık kategorisinde En yakını bul (uzaklık, hedefin alanları ve semt önekle; kenardan kenara ya da
+  merkezden merkeze, en çok uzaklıkla), Uzaklık matrisi (en yakın k ya da hepsi; Liste, Matris, Özet), En yakın merkeze bağla ve En kısa
+  çizgi (yeni katmanda çizgiler), Komşu alanlar (aynı doğrudaki düz ve aynı dairedeki yaylı ortak kenarlar toleransla, köşe ve örtüşme;
+  tablo, komşu sayısı ve adları); hedefler kendi R-ağaçlarında en iyi önce aranır (`PackedTree::nearest`); CBS'de Analiz sekmesinin Analiz panelinde (ADR 0215);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -198,7 +213,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   okuyucusunda ExtraSamples'ın 0'ı veri, alfa değil; CBS'de Raster › Uzaktan algılama (ADR 0242);
   mesh ve çok boyutlu veri: kendi NetCDF klasik okuyucu ve yazıcımız (CDF-1, 2, 5; dosyanın gereken parçaları; `vsize` işaretsiz), CF
   düzenli ızgaranın değişkeni ve dilimi Raster ekle'den, UGRID 1.0 ve 2DM ile ASCII DAT (tek UGRID dosyasına çevrilir) Mesh ekle'den
-  (`mesh.add`); mesh sanal ızgarada, karoları ağdan rasterleştirilir, ağ çizgileri (`edges`); rasterin `dataset`'i (`.kcad` şema 37),
+  (`mesh.add`); mesh sanal ızgarada, karoları ağdan rasterleştirilir, ağ çizgileri (`edges`); rasterin `dataset`'i (`.kcad` şema 38),
   Zaman sürgüsünü izleyen rasterler, Raster stili'nde Veri seti, Öznitelikler'de boyutlar ve Ağ; İşlemler'in Çok boyutlu veri kategorisi
   (Kesit, Zaman serisi, Mesh hesaplayıcı), raster çözümleme araçları gösterilen dilimde; çekirdek `kentos_formats::multidim` ve
   `kentos_raster::multidim`; CBS'de Raster › Raster ▾ (ADR 0243);
@@ -557,8 +572,19 @@ python3 scripts/fixtures/label_engine_cases.py --check   # etiket motorunun yerl
 python3 scripts/fixtures/label_command_cases.py --check; python3 scripts/fixtures/label_engine_scene.py --check   # cad.layers.labels ve cad.labels.pin durumlarını sözleşmenin kurallarından, etiket motorunun sahnesini (fixtures/interaction/v1/label-engine.kcad) denetle (ADR 0212)
 KENTOS_SHOTS_ONLY=etiket-sahne,etiket-yakin,etiket-pencere,etiket-pencere-yerlesim,etiket-pencere-bicim,etiket-pencere-sigdirma,etiket-pencere-oncelik,etiket-pencere-engel,etiket-tasi,etiket-dondur,etiket-gizle,etiket-yerlesmeyen,etiket-sabit cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # etiket motorunun masaüstü resimleri, .run/shots/arac-etiket-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs labels); ADR 0212)
 cargo test --release -p kentos-geometry-core --test all label_engine::timing -- --ignored --nocapture   # etiket motorunun süreleri: 2 000 nokta adı (40 px ve yoğun), 10 000 parsel, 25 tepenin 500 eş yükseltisi, 100 000 parsellik genel bakış (ADR 0212 §6)
+python3 scripts/fixtures/renderer_cases.py --check   # ek işleyicilerin kurallarını (rampa, pay ve 256 basamak, boy, sınıf, nokta yoğunluğunun noktaları, grafik, gruplar, yayma, ısı haritası, ters alanın bölgesi) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; noktalar, gruplar ve ısı değerleri bit bit, ters alan shapely'yle; durumlar fixtures/renderers/v1/cases.json (ADR 0213)
+python3 scripts/fixtures/renderer_command_cases.py --check; python3 scripts/fixtures/renderer_scene.py --check   # cad.layers.renderer durumlarını sözleşmenin kurallarından, ek işleyicilerin sahnesini (fixtures/interaction/v1/renderers.kcad) denetle (ADR 0213)
+KENTOS_SHOTS_ONLY=isleyici-sahne,isleyici-isi,isleyici-pencere-liste,isleyici-lejant cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # ek işleyicilerin masaüstü resimleri, .run/shots/arac-isleyici-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs renderers); ADR 0213)
+cargo test --release -p kentos-native-style --test all renderer_timing -- --ignored --nocapture --test-threads=1   # ek işleyicilerin kurulum süreleri bütçeleriyle (ADR 0213 §6); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; RENDERER_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/renderers.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-interaction --test perf label_texts -- --ignored --nocapture   # 100 000 parselin iki ifadeli sınıfının etiket metinleri (ADR 0212 §6)
 KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; LABEL_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/labels.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp   # aynı süreler web'de, gönderilen WASM'la (ADR 0212 §6)
+python3 scripts/fixtures/expression_extras.py --check   # ifade dili eklerinin değerlerini (tarih ve saat, `@` değerleri, düzenli ifade, dizi ve eşleme, toplama, mekânsal ilişki, başka katmandan değer) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/expression/v2/extras.json (ADR 0214)
+python3 scripts/fixtures/variable_form_cases.py --check   # Proje ayarları › Değişkenler'in form kurallarını (adlar, türlere göre değerler, yeni satır, tür değişimi) ve yerleşik `@` değerlerini kurallardan denetle; durumlar fixtures/project/v1/variable-form.json (ADR 0214 §4)
+cargo test -p kentos-desktop project::variables::tests::screens -- --ignored --nocapture; cargo test -p kentos-desktop expression::tests::world_screens -- --ignored --nocapture --test-threads=1   # Değişkenler ve İfade oluşturucu'nun `@` değerleriyle başka katmana bakan önizlemesi, .run/shots/degiskenler-*, ifade-degiskenler-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs variables); ADR 0214)
+python3 scripts/fixtures/proximity_cases.py --check   # yakınlık araçlarının durumlarını (en yakın hedef, alanları ve semti, uzaklık matrisinin üç biçimi, en yakın merkez, komşular ve ortak düz ve yaylı kenarlar, köşe, örtüşme, en kısa çizgi) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/processing/v1/proximity.json ve proximity.kcad (ADR 0215)
+cargo test -p kentos-desktop processing::proximity_tests::screens -- --ignored --nocapture --test-threads=1   # yakınlık araçlarının şeridi, pencereleri ve çizgileri, .run/shots/islem-yakinlik-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs proximity); ADR 0215)
+cargo test --release -p kentos-geometry-core --test all proximity::timing -- --ignored --nocapture   # beş aracın aramaları 10 000 parselde bütçeleriyle (ADR 0215 §6); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; PROXIMITY_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/proximity.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
+cargo test --release -p kentos-expression --test perf measures_the_additions -- --ignored --nocapture   # ifade dili eklerinin süreleri bütçeleriyle (ADR 0214 §5); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; EXTRAS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/expressionExtras.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 python3 scripts/fixtures/data_search_cases.py --check   # Veride ara'nın eşleşmesini (Türkçe katlama, `*`, Tam sözcük), alan seçimini, “+n” sayısını, sıralamayı, sınırı, nesneden kaydı ve öznitelik adlarını KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/search/v1/cases.json (ADR 0178)
 python3 scripts/fixtures/template_layer_cases.py --check   # nesne şablonunun katmanını bulma ve açma kuralını (yol tercihi, kilitli grup, açılacak gruplar) kurallardan denetle; durumlar fixtures/style/v1/template-layers.json (ADR 0176 §3)
 python3 scripts/fixtures/template_from_object_cases.py --check   # Seçili nesneden şablon'u (araç, katman yolu ve görünüşü, noktanın adı ve kodu, yazının kâğıttaki yüksekliği, bloğun adı, retler) kesirle kurallardan denetle; durumlar fixtures/style/v1/template-from-object.json (ADR 0176 §4)
@@ -1460,7 +1486,28 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `model/labelTexts.ts`; Etiketleri yazıya çevir motorun yerleşimiyle (`ops::label_text`, ADR 0175'in eki); web'de `app/labelCommands.ts`,
   `ui/labels/`, `tools/labelTools.ts`, `viewport/placedLabels.ts`; masaüstünde `labelling/`, `kentos_interaction::label_tools`; pafta PDF'ine
   zeminler ve çağrı çizgileri; sunucuda `label_pins` sütunu ve göç 0015 (tür denetimi kılavuz, tablo, resim, raster ve nokta bulutunu da
-  alır); Python ve MCP; ortak iz `label-tools.json` (yeni beklenti `labelPins`); süreler ADR'nin Doğrulama'sında. Sıradaki `GIS-17`.
+  alır); Python ve MCP; ortak iz `label-tools.json` (yeni beklenti `labelPins`); süreler ADR'nin Doğrulama'sında. `GIS-17` ek işleyiciler
+  ([ADR 0213](docs/adr/0213-additional-renderers.md); kapsamı ben belirledim) tek parçada bitti (10 Ekim): stil çekirdeğinde dokuz tür
+  (`model.rs`, `rules.rs`, `thematic.rs`, `dots.rs`, `charts.rs`, `groups.rs`, `heat.rs`, `inverted.rs`; kurulumun `build_layer_in`'i ve
+  `ViewFrame`'i, `BatchSink::fan`; bağımsız başvuru `renderer_cases.py`, 124 durum); işleyici KCAD'de opak, şema değişmez; komut
+  `cad.layers.renderer` iki platformda, başsız sunucuda, Python'da ve MCP'de (`renderer_command_cases.py`, 45 durum); masaüstünde stilli
+  sahnenin `ViewBuilt`'i, resim kaynağının `put_made` ve `keep_made`'i, Katman stili'nin `thematic.rs`'i; web'de `ui/style/thematicPanels.ts`,
+  `style/thematic.ts`; KentOS UI'da açıklamalı radyo satırlarının ikonları; ortak `legend.json` ve `batches.json`; resimlerin sahnesi
+  `renderers.kcad` (`renderer_scene.py`); süreler `renderer_timing` ve `scripts/perf/renderers.test.ts`. `GIS-18` ifade dili ekleri
+  ([ADR 0214](docs/adr/0214-expression-extras.md); kapsamı ben belirledim, `regex-lite` sahibin onayıyla) tek parçada bitti (10 Ekim):
+  çekirdekte `dates`, `patterns`, `arrays`, `compound`, `resolve` ve `world` (`roles`, `aggregate`, `spatial`, `Session`), `library/extras.rs`'in
+  71 işlevi; `compile_with` başka katmana bakanı şema izin vermedikçe reddeder (`WORLD_REFUSED`); sözleşmenin `variables`'ı, `.kcad` şema 37
+  (`FORMATS_VERSION` 47); `kentos_project::variables` ve `variable_form`, web `model/projectVariables.ts` ve `model/variableForm.ts`; masaüstünün
+  İşlemler'i sütun motorunda (`EntityObjects`, `evaluate_in`, `runner::world_layers`); web'de `exprCompileIn`, `evaluateExpressionIn`,
+  `ExprWorld`, `RunJob.variables` ve `leftOut`; Proje ayarları › Değişkenler iki platformda (`project/variables.rs`, `variablesSection`);
+  pafta `ProjectInfo.variables`; Python `ProjectVariable`; bağımsız başvurular `expression_extras.py` (190 kaynak), `variable_form_cases.py`,
+  `spatial_query_cases.py`'nin ifade durumları; süreler `measures_the_additions` ve `scripts/perf/expressionExtras.test.ts`. `GIS-19`
+  yakınlık analizi ([ADR 0215](docs/adr/0215-proximity-analysis.md); kapsamı ben belirledim) tek parçada bitti (10 Ekim): çekirdek
+  `ops::proximity` (en yakın noktalar, ortak kenar, içlerin örtüşmesi kutularla daraltılarak) ve `store::proximity` (`nearest`, `neighbors`),
+  `store::rtree`'nin en iyi önce araması (`PackedTree::nearest`, `Nearer`); İşlemler'in Yakınlık kategorisi iki platformda (web
+  `processing/builtin/proximity/`, masaüstü `kentos-processing`'in `builtin/proximity/`); bağımsız başvuru `proximity_cases.py` (9 durum);
+  pencereler `processing::proximity_tests`, `shots.mjs proximity`; süreler `proximity::timing` ve `scripts/perf/proximity.test.ts`. Sıradaki
+  `GIS-20`.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM
@@ -1474,7 +1521,8 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `model/ops/spatialStats.ts`'i; İşlemler'in `builtin/stats/`'u iki platformda; yeni katmanın görünüşünde kategorili görünüş
   (`NewLayerStyle.renderer`); ortak durumlar `fixtures/processing/v1/spatial-stats.json` (`spatial_stats_processing_cases.py`; yeni
   katmanın yeri `layerAbove`, karşılaştırıcılarda `r`, `major`, `ratio` geometri alanı), resimlerin sahnesi `spatial-stats.kcad`
-  (`spatial_stats_scene.py`); CBS'nin Analiz sekmesinde Mekânsal istatistik paneli. `GIS-42` uzaktan algılama
+  (`spatial_stats_scene.py`); CBS'nin Analiz sekmesinde (birleşimde Yakınlık'la Analiz paneline katıldı: ayrı panel 1100 px'te
+  sığmıyordu). `GIS-42` uzaktan algılama
   ([ADR 0242](docs/adr/0242-remote-sensing.md)) tek parçada bitti (10 Ekim): raster çekirdeğinde `remote` (`spectral`, `classify`,
   `cluster`, `accuracy`, `work`; işin okuma geçişleri, `OpsFinished::Report`, notlarda `remote`, sonuca göre görünüş); bağımsız başvuru
   `remote_cases.py` (46 durum, Brovey GDAL'la bire bir); raster okuyucusunda ExtraSamples'ın 0'ı artık alfa değil (`raster_cases.py`'ye
@@ -1482,7 +1530,7 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   (`remote_processing_cases.py`, `remoteOf`), resimlerin sahnesi `remote.kcad` (`remote_scene.py`); CBS'nin Raster sekmesinde Uzaktan
   algılama paneli (altı araç, ikisi ▾'de), sekme 1100 px'e sığsın diye Raster ve vektör ile Taranmış harita tek panelde. `GIS-43` mesh ve
   çok boyutlu veri ([ADR 0243](docs/adr/0243-mesh-and-multidimensional-data.md); sahibin sözü “o tamamen bitecek”) tek parçada bitti
-  (10 Ekim): sözleşmenin `RasterDataset`'i ve görünüşün `edges`'i, `.kcad` şema 37 (`FORMATS_VERSION` 47); biçim çekirdeğinde
+  (10 Ekim): sözleşmenin `RasterDataset`'i ve görünüşün `edges`'i, `.kcad` şema 38 (`FORMATS_VERSION` 48; `main`'in şema 37'si proje değişkenlerinindir); biçim çekirdeğinde
   `multidim` (`netcdf`, `cf`, `ugrid`, `sms`, `mesh`, `cube`, `series`, `write`; bağımsız başvuru `multidim_cases.py` kendi NetCDF yazıcısı
   `netcdf_classic.py`'yle, GDAL ve QGIS'in MDAL'ıyla çapraz denetim), raster çekirdeğinde `multidim` (`points`, `profile`, `series`,
   `calc`); WASM `NetcdfFile`, `smsToUgrid`, `CubeOpening`, `MultidimAnalysis`; İşlemler'in `builtin/multidim/`'i iki platformda,

@@ -22,9 +22,9 @@ export interface Fitted {
 }
 
 /** The picture fitted to `most` pixels a side (the device's limit and `MAX_SIDE`). */
-export function fitted(img: HTMLImageElement, most: number): Fitted {
-  const w = Math.max(1, img.naturalWidth);
-  const h = Math.max(1, img.naturalHeight);
+export function fitted(img: HTMLImageElement | HTMLCanvasElement, most: number): Fitted {
+  const w = Math.max(1, img instanceof HTMLImageElement ? img.naturalWidth : img.width);
+  const h = Math.max(1, img instanceof HTMLImageElement ? img.naturalHeight : img.height);
   const limit = Math.min(MAX_SIDE, most);
   if (w <= limit && h <= limit) return { source: img, width: w, height: h };
   const k = limit / Math.max(w, h);
@@ -60,5 +60,20 @@ export function levelCanvas(p: Fitted, i: number): HTMLCanvasElement {
   const g = c.getContext('2d')!;
   g.imageSmoothingQuality = 'high';
   g.drawImage(p.source as CanvasImageSource, 0, 0, w, h);
+  return c;
+}
+
+/**
+ * A picture a layer build made (a heat map's, docs/adr/0213 §2.6) as a canvas the GPU takes like a decoded image:
+ * its RGBA (straight alpha, rows from the top), premultiplied on upload as an image's is.
+ */
+export function madeCanvas(p: { width: number; height: number; rgba: Uint8Array }): HTMLCanvasElement {
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, p.width);
+  c.height = Math.max(1, p.height);
+  const px = new Uint8ClampedArray(p.width * p.height * 4);
+  px.set(p.rgba.subarray(0, px.length));
+  const data = new ImageData(px, p.width, p.height);
+  c.getContext('2d')!.putImageData(data, 0, 0);
   return c;
 }

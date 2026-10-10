@@ -117,7 +117,7 @@ Araştırmada bulunanlar (10 Ekim):
   kenar o düzeyde dört pikselden kısaysa çizilmez (çizgiler birbirine karışır, karo pahalanır).
 - **Koordinat oku** ve rasterin değerleri pikselin değeridir (ADR 0204). Raster çözümleme araçları gösterilen dilimde çalışır.
 
-### 6. Sözleşme ve `.kcad` şema 37
+### 6. Sözleşme ve `.kcad` şema 38
 
 `RasterFields`'e `dataset` (yoksa düz raster):
 
@@ -131,7 +131,7 @@ Araştırmada bulunanlar (10 Ekim):
 
 `RasterStyle`'a `edges` (ağ çizgilerinin rengi). Kurallar: değişken adı 1–256 harf, denetim karakteri yok; en çok 8 boyut, her birinde
 1–100 000 sonlu değer, `index` değerlerin içinde; en çok bir zaman boyutu, değerleri azalmayan; `followTime` zaman boyutu ister; dataset'li
-rasterin bandı 1'dir; `edges` mesh ister ve `#RRGGBB` olur. `FORMATS_VERSION` 47; bağımsız Python okuyucusu ve yazıcısı, örnek dosya.
+rasterin bandı 1'dir; `edges` mesh ister ve `#RRGGBB` olur. `FORMATS_VERSION` 48; bağımsız Python okuyucusu ve yazıcısı, örnek dosya.
 
 ### 7. Zaman
 
@@ -207,11 +207,11 @@ Bütçeler (release, geliştirme makinesi; web tek iş parçacıklı işçide):
 
 Tek parçada, iki platformda (10 Ekim).
 
-- **Sözleşme ve şema 37:** rasterin `dataset`'i (`RasterDataset`: `variable`, `vector`, `mesh`, `dims` (`DatasetDim`: ad, gösterilen
+- **Sözleşme ve şema 38:** rasterin `dataset`'i (`RasterDataset`: `variable`, `vector`, `mesh`, `dims` (`DatasetDim`: ad, gösterilen
   `index`, değerler, `time`, `units`), `followTime`) ve görünüşün `edges`'i; kurallar `RasterDataset::problem` ve rasterin `problem`'inde
   (adlar 1–256 harf, en çok 8 boyut, boyut başına 1–100 000 sonlu değer, `index` değerlerin içinde, zaman değerleri azalmaz, en çok bir zaman
-  boyutu, `followTime` zaman boyutu ister, `edges` `#RRGGBB` ve yalnız mesh'te); komutların reddi `invalid_raster`. `.kcad` şema 37,
-  `FORMATS_VERSION` 47; kodek, sütunlar, bağımsız Python okuyucu ve yazıcısı, `fixtures/kcad/v2/multidim.kcad` ve on üç bozuk dosya.
+  boyutu, `followTime` zaman boyutu ister, `edges` `#RRGGBB` ve yalnız mesh'te); komutların reddi `invalid_raster`. `.kcad` şema 38,
+  `FORMATS_VERSION` 48 (`main`'de GIS-18 şema 37'yi ve 47'yi proje değişkenlerine almıştı); kodek, sütunlar, bağımsız Python okuyucu ve yazıcısı, `fixtures/kcad/v2/multidim.kcad` ve on üç bozuk dosya.
   Kitaplığın gömülü NetCDF'i `format: "netcdf"`, `data:application/x-netcdf` (iki platformda kabul, `.kstil` denetimi de).
 - **Biçim çekirdeği** `kentos_formats::multidim`: `netcdf` (CDF-1, 2, 5 okuma, baytları isteyerek; §2'nin sınırları; `vsize` işaretsiz),
   `cf` (eksenler, düzenli adım, paketleme, dolgu, CF zamanı), `ugrid` (topolojiler, veri setleri, maske), `sms` (2DM, ASCII DAT), `mesh`

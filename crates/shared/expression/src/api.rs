@@ -6,7 +6,7 @@
 //! (`exprFlow`, `exprFlowEdit`; docs/adr/0101).
 
 use kentos_geometry_core::api::Op;
-use kentos_geometry_core::api::json::Json;
+use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::{json_struct, op};
 
 use crate::editor::flow::{self, Edit, Flow, FlowNode, Port, Tree};
@@ -53,7 +53,76 @@ pub fn source_id(source: FieldSource) -> &'static str {
     }
 }
 
-fn schema(fields: Vec<FieldJson>) -> Result<Schema, String> {
+/// A `@` value as the page gives it: `{ name, value, description? }` (docs/adr/0214 §2.3).
+struct VariableJson {
+    name: String,
+    value: Value<'static>,
+    description: String,
+}
+
+impl FromJson for VariableJson {
+    fn from_json(v: &Json) -> Result<Self, String> {
+        let Json::Obj(entries) = v else {
+            return Err("değişken bir nesne olmalı.".into());
+        };
+        let get = |k: &str| entries.iter().find(|(key, _)| key == k).map(|(_, v)| v);
+        let name = match get("name") {
+            Some(Json::Str(s)) => s.clone(),
+            _ => return Err("değişkenin adı (name) metin olmalı.".into()),
+        };
+        Ok(VariableJson {
+            name,
+            value: get("value").map_or(Value::Null, |v| value_of(v).into_owned()),
+            description: match get("description") {
+                Some(Json::Str(s)) => s.clone(),
+                _ => String::new(),
+            },
+        })
+    }
+}
+
+/// What the page says of the objects: their fields as a list (the builder's
+/// first form), or `{ fields, variables, world }` with the `@` values and
+/// whether the functions that look at other layers are given (docs/adr/0214).
+struct SchemaArg {
+    fields: Vec<FieldJson>,
+    variables: Vec<VariableJson>,
+    world: bool,
+}
+
+impl FromJson for SchemaArg {
+    fn from_json(v: &Json) -> Result<Self, String> {
+        match v {
+            Json::Arr(_) => Ok(SchemaArg {
+                fields: Vec::<FieldJson>::from_json(v)?,
+                variables: Vec::new(),
+                world: false,
+            }),
+            Json::Obj(entries) => {
+                let get = |k: &str| entries.iter().find(|(key, _)| key == k).map(|(_, v)| v);
+                Ok(SchemaArg {
+                    fields: match get("fields") {
+                        Some(f) => Vec::<FieldJson>::from_json(f)?,
+                        None => Vec::new(),
+                    },
+                    variables: match get("variables") {
+                        Some(f) => Vec::<VariableJson>::from_json(f)?,
+                        None => Vec::new(),
+                    },
+                    world: matches!(get("world"), Some(Json::Bool(true))),
+                })
+            }
+            _ => Err("alanlar bir dizi ya da { fields, variables, world } olmalı.".into()),
+        }
+    }
+}
+
+fn schema(arg: SchemaArg) -> Result<Schema, String> {
+    let SchemaArg {
+        fields,
+        variables,
+        world,
+    } = arg;
     let fields = fields
         .into_iter()
         .map(|f| {
@@ -74,7 +143,18 @@ fn schema(fields: Vec<FieldJson>) -> Result<Schema, String> {
             })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    Ok(Schema { fields })
+    Ok(Schema {
+        fields,
+        variables: variables
+            .into_iter()
+            .map(|v| crate::Variable {
+                name: v.name,
+                value: v.value,
+                description: v.description,
+            })
+            .collect(),
+        world,
+    })
 }
 
 struct SpanJson {
@@ -281,7 +361,7 @@ fn tokens(source: &str) -> Vec<SpanJson> {
         .collect()
 }
 
-fn check(source: &str, fields: Vec<FieldJson>) -> Result<CheckJson, String> {
+fn check(source: &str, fields: SchemaArg) -> Result<CheckJson, String> {
     let c = editor::check(source, &schema(fields)?);
     Ok(CheckJson {
         error: c.error.map(DiagnosticJson::from),
@@ -292,7 +372,7 @@ fn check(source: &str, fields: Vec<FieldJson>) -> Result<CheckJson, String> {
 fn complete(
     source: &str,
     cursor: usize,
-    fields: Vec<FieldJson>,
+    fields: SchemaArg,
     explicit: bool,
 ) -> Result<Option<CompletionJson>, String> {
     Ok(
@@ -582,14 +662,115 @@ fn value_of(v: &Json) -> Value<'_> {
     }
 }
 
+/// A schema as the page gives it (JSON: a field list, or `{ fields,
+/// variables, world }`): the browser's evaluations take it with the source.
+pub fn schema_of(json: &str) -> Result<Schema, String> {
+    if json.is_empty() {
+        return Ok(Schema::default());
+    }
+    schema(SchemaArg::from_json(&Json::parse(json)?)?)
+}
+
+struct NeedsJson {
+    measured: bool,
+    vertices: bool,
+    kind: bool,
+    layer: bool,
+    label: bool,
+    index: bool,
+    id: bool,
+    scale: bool,
+    centroid: bool,
+    bounds: bool,
+}
+json_struct!(out NeedsJson { measured, vertices, kind, layer, label, index, id, scale, centroid, bounds });
+
+impl From<crate::Needs> for NeedsJson {
+    fn from(n: crate::Needs) -> NeedsJson {
+        NeedsJson {
+            measured: n.measured,
+            vertices: n.vertices,
+            kind: n.kind,
+            layer: n.layer,
+            label: n.label,
+            index: n.index,
+            id: n.id,
+            scale: n.scale,
+            centroid: n.centroid,
+            bounds: n.bounds,
+        }
+    }
+}
+
+/// What the layers an expression looks at must give (docs/adr/0214 §3).
+struct WorldJson {
+    own: bool,
+    layers: Vec<String>,
+    fields: Vec<String>,
+    needs: NeedsJson,
+}
+json_struct!(out WorldJson { own, layers, fields, needs });
+
+/// `exprCompileIn`: the fields and values an expression reads in a
+/// context, what its calls to other layers read, the `@` names it did not
+/// know; or why it does not compile.
+struct CompiledJson {
+    ok: bool,
+    fields: Option<Vec<String>>,
+    needs: Option<NeedsJson>,
+    world: Option<WorldJson>,
+    unknown: Option<Vec<String>>,
+    error: Option<String>,
+    at: Option<f64>,
+}
+json_struct!(out CompiledJson { ok, fields, needs, world, unknown, error, at });
+
+fn compiled_in(source: &str, arg: SchemaArg) -> Result<CompiledJson, String> {
+    let s = schema(arg)?;
+    Ok(match crate::compile_with(source, &s) {
+        Ok(e) => {
+            let world = e.looks_around().then(|| {
+                let w = e.world_needs();
+                WorldJson {
+                    own: w.own,
+                    layers: w.layers,
+                    fields: w.fields,
+                    needs: w.needs.into(),
+                }
+            });
+            CompiledJson {
+                ok: true,
+                fields: Some(e.fields.clone()),
+                needs: Some(e.needs.into()),
+                world,
+                unknown: Some(e.unknown_variables.clone()),
+                error: None,
+                at: None,
+            }
+        }
+        Err(e) => CompiledJson {
+            ok: false,
+            fields: None,
+            needs: None,
+            world: None,
+            unknown: None,
+            error: Some(e.message),
+            at: Some(e.at as f64),
+        },
+    })
+}
+
 pub static OPS: &[Op] = &[
+    op!("exprCompileIn", |source: String, context: SchemaArg| {
+        compiled_in(&source, context)
+    }),
     op!("exprTokens", |source: String| tokens(&source)),
-    op!("exprCheck", |source: String, fields: Vec<FieldJson>| check(
+    op!("exprCheck", |source: String, fields: SchemaArg| check(
         &source, fields
     )),
     op!("exprComplete", |source: String,
                          cursor: usize,
-                         fields: Vec<FieldJson>,
+                         fields: SchemaArg,
                          explicit: bool| {
         complete(&source, cursor, fields, explicit)
     }),
@@ -602,26 +783,22 @@ pub static OPS: &[Op] = &[
             partner: b.partner,
         })
     }),
-    op!("exprHelp", |key: String, fields: Vec<FieldJson>| {
+    op!("exprHelp", |key: String, fields: SchemaArg| {
         schema(fields).map(|s| editor::help(&key, &s).map(HelpJson::from))
     }),
-    op!(
-        "exprHelpAt",
-        |source: String, cursor: usize, fields: Vec<FieldJson>| {
-            schema(fields).map(|s| editor::help_at(&source, cursor, &s).map(HelpJson::from))
-        }
-    ),
-    op!(
-        "exprBuilderCatalog",
-        |fields: Vec<FieldJson>, query: String| {
-            schema(fields).map(|s| {
-                editor::catalog(&s, &query)
-                    .into_iter()
-                    .map(SectionJson::from)
-                    .collect::<Vec<_>>()
-            })
-        }
-    ),
+    op!("exprHelpAt", |source: String,
+                       cursor: usize,
+                       fields: SchemaArg| {
+        schema(fields).map(|s| editor::help_at(&source, cursor, &s).map(HelpJson::from))
+    }),
+    op!("exprBuilderCatalog", |fields: SchemaArg, query: String| {
+        schema(fields).map(|s| {
+            editor::catalog(&s, &query)
+                .into_iter()
+                .map(SectionJson::from)
+                .collect::<Vec<_>>()
+        })
+    }),
     op!("exprPlace", |source: String,
                       start: usize,
                       end: usize,
@@ -643,25 +820,23 @@ pub static OPS: &[Op] = &[
                 .collect::<Vec<_>>()
         })
     }),
-    op!("exprFlow", |trees: Vec<TreeJson>,
-                     fields: Vec<FieldJson>| {
+    op!("exprFlow", |trees: Vec<TreeJson>, fields: SchemaArg| {
         schema(fields).map(|s| {
             let trees: Vec<Tree> = trees.into_iter().map(Tree::from).collect();
             FlowJson::from(flow::flow(&trees, &s))
         })
     }),
-    op!(
-        "exprFlowEdit",
-        |trees: Vec<TreeJson>, change: EditJson, fields: Vec<FieldJson>| {
-            schema(fields).and_then(|s| {
-                let trees: Vec<Tree> = trees.into_iter().map(Tree::from).collect();
-                flow::edit(&trees, &Edit::from(change), &s).map(|(trees, focus)| EditedJson {
-                    trees: trees.into_iter().map(TreeJson::from).collect(),
-                    focus,
-                })
+    op!("exprFlowEdit", |trees: Vec<TreeJson>,
+                         change: EditJson,
+                         fields: SchemaArg| {
+        schema(fields).and_then(|s| {
+            let trees: Vec<Tree> = trees.into_iter().map(Tree::from).collect();
+            flow::edit(&trees, &Edit::from(change), &s).map(|(trees, focus)| EditedJson {
+                trees: trees.into_iter().map(TreeJson::from).collect(),
+                focus,
             })
-        }
-    ),
+        })
+    }),
     // Any JSON value: written out, as op! reads typed arguments.
     Op {
         name: "exprPreview",

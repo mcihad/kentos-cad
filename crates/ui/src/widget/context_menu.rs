@@ -609,7 +609,14 @@ impl<Message> Menu<Message> {
                 })
                 .map(|shortcut| typography::measured_width(shortcut, caption, false) + 16.0)
                 .fold(0.0, f32::max);
-            return DETAIL_ICON_SLOT
+            // Radios with icons: the dot's column before the icons'.
+            let dots = if self.has_radio_icons() {
+                ICON_SLOT + 8.0
+            } else {
+                0.0
+            };
+            return dots
+                + DETAIL_ICON_SLOT
                 + 8.0
                 + typography::scaled(DETAIL_WIDTH)
                 + shortcut
@@ -1783,6 +1790,7 @@ fn panel<'a, Message: 'a>(
         swatches: menu.has_swatches(),
         radio_icons: menu.has_radio_icons(),
         previews: menu.has_previews(),
+        details: menu.has_details(),
     };
     let rows = menu
         .items
@@ -1804,6 +1812,8 @@ struct Columns {
     swatches: bool,
     radio_icons: bool,
     previews: bool,
+    /// Two-line rows (a description under each label): their icons are larger.
+    details: bool,
 }
 
 fn item_row<'a, Message: 'a>(
@@ -1815,6 +1825,7 @@ fn item_row<'a, Message: 'a>(
         swatches,
         radio_icons,
         previews,
+        details,
     } = columns;
     let detail = match item {
         Item::Command(command) => command.detail.clone(),
@@ -1862,8 +1873,13 @@ fn item_row<'a, Message: 'a>(
                 .align_y(Center)
                 .into();
         }
-        // Over the labels, quiet and strong (the web's `.menu__header`).
+        // Over the labels, quiet and strong (the web's `.menu__header`), where the labels start.
         Item::Header(title) => {
+            let lead = match (details, radio_icons) {
+                (true, true) => ICON_SLOT + 8.0 + DETAIL_ICON_SLOT + 8.0,
+                (true, false) => DETAIL_ICON_SLOT + 8.0,
+                _ => ICON_SLOT + 8.0,
+            };
             return container(
                 label::caption(title.clone())
                     .font(typography::ui_strong())
@@ -1873,7 +1889,7 @@ fn item_row<'a, Message: 'a>(
                 top: 3.0,
                 right: 8.0,
                 bottom: 0.0,
-                left: 8.0 + ICON_SLOT + 8.0,
+                left: 8.0 + lead,
             })
             .height(header_height())
             .align_y(Center)
@@ -1882,7 +1898,21 @@ fn item_row<'a, Message: 'a>(
     };
 
     if let Some(detail) = detail {
-        return detail_row(mark, text, detail, shortcut, highlighted, enabled, danger);
+        // A radio's own icon in a column of its own, after its dot (the web's `menu__check`, `menu__icon`).
+        let glyph = match item {
+            Item::Command(command) if radio_icons => Some(command.icon),
+            _ => None,
+        };
+        return detail_row(
+            mark,
+            glyph,
+            text,
+            detail,
+            shortcut,
+            highlighted,
+            enabled,
+            danger,
+        );
     }
 
     let slot: Element<'a, Message> = match mark {
@@ -1970,8 +2000,10 @@ fn dot<'a, Message: 'a>() -> Element<'a, Message> {
 
 /// A command with a detail line (the web's `menu__label--2`): a larger icon,
 /// the label over the detail in a fixed column, the shortcut at the right.
+#[allow(clippy::too_many_arguments)]
 fn detail_row<'a, Message: 'a>(
     mark: Mark,
+    glyph: Option<Option<Icon>>,
     text: String,
     detail: String,
     shortcut: Option<String>,
@@ -1979,15 +2011,23 @@ fn detail_row<'a, Message: 'a>(
     enabled: bool,
     danger: bool,
 ) -> Element<'a, Message> {
+    // With radios' icons the mark is the dot's narrow column, the icon the wide one.
+    let mark_width = if glyph.is_some() {
+        ICON_SLOT
+    } else {
+        DETAIL_ICON_SLOT
+    };
     let slot: Element<'a, Message> = match mark {
         Mark::Icon(glyph) => icon(glyph).size(DETAIL_ICON).into(),
         // A chosen radio's dot, beside the first line (the web's).
         Mark::Dot => container(dot())
-            .center_x(DETAIL_ICON)
+            .center_x(mark_width.min(DETAIL_ICON))
             .height(typography::body() * 1.3)
             .align_y(Center)
             .into(),
-        Mark::None => space::horizontal().width(DETAIL_ICON).into(),
+        Mark::None => space::horizontal()
+            .width(mark_width.min(DETAIL_ICON))
+            .into(),
     };
     let quiet = style::text::muted;
     let words = Column::new()
@@ -2007,12 +2047,22 @@ fn detail_row<'a, Message: 'a>(
         .spacing(2);
     let mut content = row![
         container(slot)
-            .width(DETAIL_ICON_SLOT)
-            .padding(iced::Padding::default().top(1.0)),
-        words,
+            .width(mark_width)
+            .padding(iced::Padding::default().top(1.0))
     ]
     .spacing(8)
     .align_y(iced::alignment::Vertical::Top);
+    if let Some(glyph) = glyph {
+        content = content.push(
+            container(match glyph {
+                Some(g) => Element::from(icon(g).size(DETAIL_ICON)),
+                None => space::horizontal().width(DETAIL_ICON).into(),
+            })
+            .width(DETAIL_ICON_SLOT)
+            .padding(iced::Padding::default().top(1.0)),
+        );
+    }
+    let mut content = content.push(words);
     if let Some(shortcut) = shortcut {
         content = content.push(space::horizontal().width(Fill));
         content = content.push(label::caption(shortcut).style(quiet));

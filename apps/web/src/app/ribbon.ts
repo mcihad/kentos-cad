@@ -271,6 +271,17 @@ const RASTER_PANEL = {
   commands: ['raster.add', 'mesh.add', 'raster.style'],
   under: ['raster.georef', 'processing.run.multidim.profile', 'processing.run.multidim.series', 'processing.run.multidim.meshCalculator'],
 } as const;
+/** Yakınlık analizi's tools (docs/adr/0215 §5), in the toolbox's order. */
+const PROXIMITY_COMMANDS = ['nearest', 'matrix', 'hub', 'neighbors', 'shortestLine'].map((t) => `processing.run.proximity.${t}`);
+/**
+ * Mekânsal istatistik's tools (docs/adr/0238 §11) in the Analiz panel beside Yakınlık's: Moran I and Sıcak nokta on it,
+ * the centres, the spread, the nearest neighbour and the two clusterings under its ▾, so that Analiz fits 1100 px and
+ * keeps under 3200 px when wide.
+ */
+const SPATIAL_STATS_COMMANDS = ['moransI', 'hotSpot'].map((t) => `processing.run.stats.${t}`);
+const SPATIAL_STATS_UNDER = ['meanCenter', 'medianCenter', 'standardDistance', 'directionalDistribution', 'nearestNeighbor', 'dbscan', 'kMeans'].map(
+  (t) => `processing.run.stats.${t}`,
+);
 /** Nokta bulutu (docs/adr/0207 §9), the desktop's for now: CAD's Ekle and CBS's Veri, İşlemler's tools under ▾. */
 const POINT_CLOUD_PANEL = { pick: 'Nokta bulutu', icon: 'pointCloudAdd', commands: POINT_CLOUDS, under: POINT_CLOUD_TOOLS } as const;
 
@@ -463,7 +474,10 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     sources: [
       // Ağ analizi's İşlemler tools sit in the Ağ analizi panel (docs/adr/0209 §10), the raster analysis's in the Raster
       // tab (docs/adr/0231 §10).
-      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network', 'spatialStats'] },
+      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network', 'proximity', 'spatialStats'] },
+      // Yakınlık's five (docs/adr/0215 §5) and Mekânsal istatistik's (docs/adr/0238 §11) join Özet istatistik in the Analiz
+      // panel: panels of their own made the tab wider than 1100 pixels.
+      { pick: 'Analiz', icon: 'measure', commands: [...PROXIMITY_COMMANDS, ...SPATIAL_STATS_COMMANDS], under: SPATIAL_STATS_UNDER },
       // The terrain's work in one panel: Aplikasyon and Kot noktası, profiles and the volume (Arazi and Arazi analizi were
       // two; docs/adr/0209 §10 made room for Ağ analizi at 1100 pixels). The contours and the slope are Yüzey analizi's
       // tools in the Raster tab (docs/adr/0231 §10).
@@ -484,21 +498,6 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
           'processing.run.network.odMatrix',
           'processing.run.network.serviceAreas',
         ],
-      },
-      // Mekânsal istatistik (docs/adr/0238 §11): six tools on the panel, the centre's other two and k-means under ▾, so
-      // Analiz keeps under 3200 px when wide.
-      {
-        pick: 'Mekânsal istatistik',
-        icon: 'statsHotSpot',
-        commands: [
-          'processing.run.stats.meanCenter',
-          'processing.run.stats.directionalDistribution',
-          'processing.run.stats.nearestNeighbor',
-          'processing.run.stats.moransI',
-          'processing.run.stats.hotSpot',
-          'processing.run.stats.dbscan',
-        ],
-        under: ['processing.run.stats.medianCenter', 'processing.run.stats.standardDistance', 'processing.run.stats.kMeans'],
       },
       { menu: 'tools', sections: ['Komut'] },
     ],

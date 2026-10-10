@@ -1,5 +1,5 @@
 import { DisposableStore, listen } from '../../core/disposable';
-import { exprBuilderCatalog, type ExprField, type ExprItem, type ExprSection } from '../../model/expression/builder';
+import { exprBuilderCatalog, type ExprField, type ExprItem, type ExprSection, type Fields } from '../../model/expression/builder';
 import { h } from '../dom';
 import { icon } from '../icons';
 import { FLOW_DRAG_TYPE } from './FlowView';
@@ -13,6 +13,8 @@ import { KIND_STYLE } from './highlight';
  */
 export interface BuilderTreeOptions {
   readonly fields: () => readonly ExprField[];
+  /** What the services know of the objects (fields, `@` values, other layers); absent: the fields. */
+  readonly schema?: () => Fields;
   readonly onSelect: (item: ExprItem) => void;
   readonly onInsert: (item: ExprItem) => void;
   /** Groups before the core's (the flow's values to write). */
@@ -68,7 +70,7 @@ export class BuilderTree {
       .map((s) => ({ ...s, items: s.items.filter((i) => !q || i.label.toLocaleLowerCase('tr').includes(q)) }))
       .filter((s) => s.items.length);
     for (const s of extra) this.open.add(s.group);
-    this.sections = [...extra, ...exprBuilderCatalog(this.opts.fields(), this.search.value.trim())];
+    this.sections = [...extra, ...exprBuilderCatalog((this.opts.schema ?? this.opts.fields)(), this.search.value.trim())];
     this.render();
   }
 

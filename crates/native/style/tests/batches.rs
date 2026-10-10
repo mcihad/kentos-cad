@@ -41,6 +41,17 @@ fn num(v: &Value) -> Option<f64> {
     }
 }
 
+/// The box a case draws construction lines and Ters alan to (absolute), if it gives one.
+fn clip_of(c: &Value) -> Option<kentos_geometry_core::geometry::Bounds> {
+    let b = c.get("clip")?;
+    Some(kentos_geometry_core::geometry::Bounds {
+        min_x: b["minX"].as_f64()?,
+        min_y: b["minY"].as_f64()?,
+        max_x: b["maxX"].as_f64()?,
+        max_y: b["maxY"].as_f64()?,
+    })
+}
+
 /// Keys whose numbers are float32 on the GPU (written in the fewest digits that read back).
 const FLOAT32: [&str; 3] = ["positions", "segments", "instances"];
 
@@ -172,7 +183,7 @@ fn builds_the_web_s_batches() {
             plot_scale: scale,
             screen,
             hairlines: view["lineWeights"] == false,
-            clip: None,
+            clip: clip_of(c),
             library: &library,
             layer_name: &names,
             // Görünüm kipleri where the case gives them (docs/adr/0195).
@@ -180,6 +191,7 @@ fn builds_the_web_s_batches() {
                 fills: view["fills"] != false,
                 area_edges: view["areaEdges"] != false,
             },
+            frame: None,
         };
         let (call, batches) = build_layer(&store, &style, &list, &opts).expect("build");
         let decisions: Vec<Value> = list
@@ -273,6 +285,10 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
     for c in f["cases"].as_array().unwrap() {
         let id = c["id"].as_str().unwrap();
         let style: LayerStyle = serde_json::from_value(c["style"].clone()).expect("style");
+        // A renderer drawing the layer's objects together is never built in parts (docs/adr/0213 §3).
+        if kentos_native_style::renderer::needs_of(style.renderer.as_ref()).whole {
+            continue;
+        }
         let entities: Vec<Entity> = c["entities"]
             .as_array()
             .unwrap()
@@ -307,10 +323,11 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
             plot_scale: scale,
             screen,
             hairlines: view["lineWeights"] == false,
-            clip: None,
+            clip: clip_of(c),
             library: &library,
             layer_name: &names,
             view: Default::default(),
+            frame: None,
         };
         let build = |list: &[&Entity]| -> StyledLayer {
             let (call, batches) = build_layer(&store, &style, list, &opts).expect("build");
@@ -363,5 +380,8 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
             checked += 1;
         }
     }
-    assert_eq!(checked, 51, "seventeen cases, three part sizes");
+    assert_eq!(
+        checked, 66,
+        "twenty-two cases built in parts (four thematic ones never are), three part sizes"
+    );
 }

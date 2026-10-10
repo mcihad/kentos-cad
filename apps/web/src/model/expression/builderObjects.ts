@@ -1,6 +1,6 @@
 import { ENTITY_KIND_LABEL, type Entity } from '../entities';
 import type { ExprField } from './builder';
-import { compileExpression, expressionError, type CompileResult, type ExprGeometry, type ExprObjects } from './expression';
+import { compileExpression, expressionError, type CompileResult, type ExprContext, type ExprGeometry, type ExprLayers, type ExprObjects } from './expression';
 import type { ExprValue } from './expressionLib';
 
 /** Today's text attributes as the builder's fields, with how many objects have each. */
@@ -32,6 +32,10 @@ export interface BuilderGeometry {
   readonly measures?: (list: readonly Entity[]) => Float64Array;
   /** Denominator of the plot scale ($ölçek), where there is one. */
   readonly plotScale?: number;
+  /** Where the expression compiles: its `@` values, and whether calls to other layers can be used (docs/adr/0214). */
+  readonly context?: ExprContext;
+  /** The layers those calls look at; their objects are in `geometry`. */
+  readonly layers?: ExprLayers;
 }
 
 /**
@@ -42,7 +46,7 @@ export interface BuilderGeometry {
 export function entityObjects(entities: readonly Entity[], layerName: (id: string) => string, g: BuilderGeometry = {}): BuilderObjects {
   let last: { source: string; result: CompileResult } | null = null;
   const compiled = (source: string) => {
-    if (last?.source !== source) last = { source, result: compileExpression(source) };
+    if (last?.source !== source) last = { source, result: compileExpression(source, g.context) };
     return last.result;
   };
   return {
@@ -52,7 +56,7 @@ export function entityObjects(entities: readonly Entity[], layerName: (id: strin
       if (!r.ok) return { error: expressionError(r) };
       const list = entities.slice(0, i + 1);
       const m = g.measures;
-      const objects: ExprObjects = { entities: list, layerName, plotScale: g.plotScale, geometry: g.geometry, measures: m && (() => m(list)) };
+      const objects: ExprObjects = { entities: list, layerName, plotScale: g.plotScale, geometry: g.geometry, measures: m && (() => m(list)), layers: g.layers };
       return { value: r.expr.evaluateAll(objects).value(i) };
     },
     values(field, limit) {

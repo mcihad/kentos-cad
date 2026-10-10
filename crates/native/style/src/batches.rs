@@ -388,6 +388,11 @@ pub struct StyledBatch {
 pub struct StyledLayer {
     pub data: Vec<f32>,
     pub batches: Vec<StyledBatch>,
+    /// Pictures the build made (a heat map's, docs/adr/0213 §2.6): RGBA,
+    /// straight alpha, rows from the top, drawn by the batches naming them.
+    pub pictures: Vec<kentos_style_core::style::batch::Picture>,
+    /// Dots of Nokta yoğunluğu left out over the layer's limit (docs/adr/0213 §2.4).
+    pub dropped: u64,
 }
 
 /// What the colours and images come from.
@@ -1173,6 +1178,8 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
     Ok(StyledLayer {
         data: out.data,
         batches,
+        pictures: out.pictures,
+        dropped: out.dropped,
     })
 }
 

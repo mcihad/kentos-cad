@@ -8,11 +8,13 @@ use kentos_geometry_core::jsmath::{
     js_sign, log, log2, log10, sin, tan,
 };
 
+use crate::compound::shown;
 use crate::js::number;
 use crate::js::text::{self, MAX_STRING_UNITS, utf16_len};
-use crate::library::Func;
+use crate::library::{Family, Func};
 use crate::read::push_number_text;
 use crate::scalar::{R, Scratch, V, as_text, is_empty, push_text, to_number, truthy};
+use crate::{arrays, dates, patterns};
 
 const POW10: [f64; 13] = [
     1.0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12,
@@ -111,6 +113,15 @@ fn fold_into(dst: &mut String, v: V, tmp: &mut String) {
 /// Calls a function on its arguments (`args.len()` is within its arity).
 /// A result that is one of the arguments, or a part of one, borrows it.
 pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R<'a> {
+    match f.family() {
+        Family::Base => {}
+        Family::Dates => return dates::call(f, args, out, s),
+        Family::Patterns => return patterns::call(f, args, out, s),
+        Family::Arrays => return arrays::call(f, args, out, s),
+        // `şimdi()` and `bugün()` are the caller's moment, read when the
+        // expression compiles; the others look at other objects (`world`).
+        Family::Clock | Family::World => return R::V(V::Null),
+    }
     let arg = |i: usize| args.get(i).copied().unwrap_or(V::Null);
     let num = |i: usize| args.get(i).and_then(|&a| to_number(a));
     let first = arg(0);
@@ -129,7 +140,7 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
                         push_number_text(out, x);
                         R::Made
                     }
-                    V::Text(t) => R::V(V::Text(t)),
+                    V::Text(t) => R::V(V::Text(shown(t))),
                     V::Bool(b) => R::V(V::Text(if b { "doğru" } else { "yanlış" })),
                     V::Null => R::V(V::Text("")),
                 };
@@ -247,7 +258,7 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
             return R::Made;
         }
         Func::Trim => match first {
-            V::Text(t) => V::Text(text::trim(t)),
+            V::Text(t) => V::Text(text::trim(shown(t))),
             v => {
                 out.push_str(text::trim(as_text(v, &mut s.a)));
                 return R::Made;
@@ -289,7 +300,7 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
                 Some(&c) => text::first_unit(as_text(c, &mut s.b)).unwrap_or(u16::from(b'0')),
             };
             let target = js_max(0.0, js_round(len));
-            let V::Text(t) = first else {
+            let V::Text(t) = first.shown() else {
                 // A number's (or true/false's) text is written, then filled in front of.
                 let mark = out.len();
                 push_text(out, first);
@@ -321,6 +332,7 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
                 a: sa,
                 b: sb,
                 c: sc,
+                ..
             } = s;
             let (t, from, to) = (as_text(first, sa), as_text(arg(1), sb), as_text(arg(2), sc));
             return if text::push_split_join(out, t, from, to) {
@@ -335,6 +347,7 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
                 a: sa,
                 b: sb,
                 c: sc,
+                ..
             } = s;
             fold_into(sa, first, sc);
             fold_into(sb, arg(1), sc);
@@ -357,5 +370,7 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
             .copied()
             .find(|&a| !is_empty(a))
             .unwrap_or(V::Null),
+        // The other families are answered above.
+        _ => V::Null,
     })
 }

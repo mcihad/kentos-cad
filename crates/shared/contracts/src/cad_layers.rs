@@ -270,3 +270,70 @@ pub struct LayersFilterPlan {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
+
+/// Writes or takes away a layer's renderer (docs/adr/0213 §5).
+pub const CAD_LAYERS_RENDERER: &str = "cad.layers.renderer";
+pub const CAD_LAYERS_RENDERER_VERSION: u32 = 1;
+
+/// Input of `cad.layers.renderer` v1: a layer's renderer (the style
+/// engine's JSON, docs/STYLE.md §4: tek sembol, kategorili, aralıklı,
+/// kurallar, and the thematic ones of docs/adr/0213) written, or taken away
+/// (`renderer` absent or null: the layer's simple look), as one undo step
+/// “Katman stili”. A layer that already has it as given is left as it is
+/// (`changed` false, no step). A renderer is the layer's look: a locked
+/// layer takes it too.
+///
+/// Refusals (`CommandError.code`), checked in this order: `invalid_renderer`
+/// (the style core's rules, `style::rules::renderer_problem`: an unknown
+/// kind, a value out of its range, an expression that does not compile;
+/// the message says which); then `invalid_revision`, `revision_conflict`
+/// (status `conflict`), `layer_not_found`, `not_a_layer` (a group),
+/// `service_layer` (a layer drawn from a service: it holds no objects).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersRenderer {
+    /// The layer's id.
+    pub layer: String,
+    /// Its new renderer; absent or null takes it away.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
+    pub renderer: Option<serde_json::Value>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.layers.renderer` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersRendered {
+    pub layer: String,
+    /// Whether the renderer differed (an undo step was written).
+    pub changed: bool,
+    /// The document's revision after the write, as decimal text.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.layers.renderer` would write (plan mode); nothing is written.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersRendererPlan {
+    /// The layer as execute would leave it.
+    pub node: LayerNode,
+    pub changed: bool,
+    /// The document revision the plan was made against.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}

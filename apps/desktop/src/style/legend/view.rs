@@ -118,7 +118,9 @@ impl App {
                         let group = &groups[g];
                         let entry = &group.entries[e];
                         let picture: Element<'_, Message> = match &entry.symbol {
-                            Some(symbol) => thumbs.picture(symbol, None, PICTURE, None, &look),
+                            Some(symbol) => {
+                                thumbs.picture(symbol, None, PICTURE, entry.px_per_mm, &look)
+                            }
                             None => space().width(PICTURE.0).height(PICTURE.1).into(),
                         };
                         let framed = container(picture)

@@ -246,6 +246,7 @@ mod tests {
             text_styles: Vec::new(),
             connections: Vec::new(),
             networks: Vec::new(),
+            variables: Vec::new(),
         })
     }
 

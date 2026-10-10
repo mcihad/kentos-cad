@@ -159,6 +159,17 @@ const ITEMS = [
   { id: 'project-settings-general', open: (ui) => ui.run('file.settings') },
   { id: 'project-settings-crs', open: (ui) => ui.run('crs.set') },
   { id: 'project-settings-units', open: async (ui) => (await ui.run('file.settings'), await ui.clickText('.settings__navitem', 'Birimler')) },
+  // Değişkenler (docs/adr/0214 §4): five of every kind, a long text value, the built-in values under them.
+  {
+    id: 'project-settings-variables',
+    open: async (ui) => (
+      await ui.eval(
+        `window.kentos.doc.settings.assign({ variables: [{ name: 'is_no', label: 'İş numarası', kind: 'text', value: '2026/41' }, { name: 'idare_adi_uzun_bir_degisken', label: 'Uygulamayı yapan idarenin tam adı', kind: 'text', value: 'Ankara Büyükşehir Belediyesi İmar ve Şehircilik Dairesi Başkanlığı' }, { name: 'katsayi', kind: 'number', value: 1.5 }, { name: 'teslim', kind: 'date', value: '2026-11-30' }, { name: 'onayli', kind: 'bool', value: true }] })`,
+      ),
+      await ui.run('file.settings'),
+      await ui.clickText('.settings__navitem', 'Değişkenler')
+    ),
+  },
   { id: 'new-project', open: (ui) => ui.run('file.new') },
   // The wizard's other steps (docs/adr/0165 §3): a CBS project's lists and zone strip, a CAD project's units, the summary.
   { id: 'new-project-coords', open: async (ui) => (await ui.run('file.new'), await ui.click('.dialog--wizard .wspick__card[data-mode="gis"]'), await ui.clickText('.dialog__foot .btn--primary', 'İleri')) },
@@ -195,6 +206,9 @@ const ITEMS = [
     must: '.dialog--networks .net-line--edge',
   },
   { id: 'processing-network', open: (ui) => ui.run('processing.run.network.closestFacility'), ready: '.dialog--ptool' },
+  // Yakınlık (docs/adr/0215): Komşu alanlar's switches and fields, Uzaklık matrisi's three-way choice.
+  { id: 'processing-proximity', open: (ui) => ui.run('processing.run.proximity.neighbors'), ready: '.dialog--ptool' },
+  { id: 'processing-proximity-matrix', open: (ui) => ui.run('processing.run.proximity.matrix'), ready: '.dialog--ptool' },
   // Zaman ve senaryolar (docs/adr/0210 §10): Zaman ayarları over the parcels, Senaryo oluştur with the tree's layers,
   // and the time slider's bar under the drawing (the parcels given years for it; both steps undone on closing).
   { id: 'time-layer', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('parsel')`), await ui.run('time.layer')), ready: '.dialog--time-layer' },
@@ -267,6 +281,27 @@ const ITEMS = [
   { id: 'style-manager', open: (ui) => ui.run('style.manager'), ready: '.smgr__grid, .dialog' },
   { id: 'symbol-designer', open: async (ui) => (await ui.run('style.manager'), await ui.clickText('.dialog button', 'Yeni sembol'), await ui.clickText('.menu__item', 'Alan sembolü')) },
   { id: 'layer-style', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('ada')`), await ui.run('style.layerStyle')) },
+  // Katman stili's thematic kinds (docs/adr/0213 §4): the grouped list, and the widest forms.
+  {
+    id: 'layer-style-kinds',
+    open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('ada')`), await ui.run('style.layerStyle'), await ui.click('.lsty__kinds')),
+    must: '.menu .menu__item',
+  },
+  ...[
+    ['layer-style-chart', 'Grafik', '.lsty__fields'],
+    ['layer-style-heatmap', 'Isı haritası', '.lsty__ramp'],
+    ['layer-style-bivariate', 'İki değişkenli renk', '.lsty__grid'],
+    ['layer-style-displacement', 'Yayma', '.lsty__panel'],
+  ].map(([id, kind, ready]) => ({
+    id,
+    open: async (ui) => {
+      await ui.eval(`window.kentos.doc.layers.setActive('ada')`);
+      await ui.run('style.layerStyle');
+      await ui.click('.lsty__kinds');
+      await ui.clickText('.menu__item', kind);
+    },
+    ready,
+  })),
   { id: 'legend', open: (ui) => ui.run('style.legend') },
   { id: 'svg-editor', open: (ui) => ui.run('style.svgEditor') },
   { id: 'processing-tool', open: (ui) => ui.run('map.edgeLengths') },

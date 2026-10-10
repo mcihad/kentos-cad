@@ -537,6 +537,10 @@ impl SheetPainter<'_> {
             .filter(|(id, ..)| only.is_none_or(|l| l.contains(id)))
             .map(|(_, _, layer)| layer)
             .collect();
+        // The pictures its builds made (heat maps, docs/adr/0213 §2.6).
+        for layer in &layers {
+            self.images.put_made(layer);
+        }
         let Some(rgba) = paint(pw, ph, &view, &layers, self.images) else {
             return false;
         };
@@ -914,6 +918,13 @@ impl App {
                     .unwrap_or_default(),
                 date: kentos_sheet_ui::text::today(),
                 crs_name: crs.clone().unwrap_or_default(),
+                // The drawing's own variables, read after the book's (docs/adr/0214 §2.3).
+                variables: settings.map_or_else(Vec::new, |s| {
+                    s.variables
+                        .iter()
+                        .map(crate::sheet_inputs::sheet_variable)
+                        .collect()
+                }),
             },
             // With its transverse Mercator parameters: the core works out the meridian convergence.
             crs: crs.map(|name| {

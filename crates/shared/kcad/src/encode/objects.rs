@@ -771,7 +771,7 @@ impl<'d> Encoder<'d> {
                 if let Some(o) = r.opacity {
                     f.push(("opacity", Val::Float(o)));
                 }
-                // Schema 37 (docs/adr/0243 §6).
+                // Schema 38 (docs/adr/0243 §6).
                 if let Some(d) = &r.dataset {
                     f.push(("dataset", Val::Dataset(d)));
                 }

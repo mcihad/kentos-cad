@@ -21,7 +21,7 @@ use kentos_geometry_core::store::Store;
 use kentos_style_core::style::batch::Batches;
 use kentos_style_core::style::build::{
     LayerObjects, MODE_DIMENSION, MODE_IMAGE, MODE_OWN, MODE_POINTCLOUD, MODE_RASTER,
-    MODE_RENDERER, MODE_SET, MODE_SKIP, Program, View, build_layer_with as core_build,
+    MODE_RENDERER, MODE_SET, MODE_SKIP, Program, View, ViewFrame, build_layer_in as core_build,
 };
 use serde_json::{Map, Value, json};
 
@@ -64,6 +64,9 @@ pub struct BuildOptions<'a> {
     pub layer_name: &'a dyn Fn(&str) -> String,
     /// What Görünüm kipleri leave out (docs/adr/0195): fills, areas' edges.
     pub view: View,
+    /// A view-dependent renderer's view (docs/adr/0213 §3): the view's logical
+    /// px per metre in quarter octaves, and the key of a heat map's picture.
+    pub frame: Option<(f64, String)>,
 }
 
 /// What the page gives the core for a layer: the program's JSON, the
@@ -127,6 +130,36 @@ fn renderer_refs(r: &Value, out: &mut Vec<String>) {
         Some("rules") => {
             if let Some(list) = r.get("rules") {
                 rules(list, out);
+            }
+        }
+        // The thematic renderers (docs/adr/0213): their sets, a cluster's and a displacement's own symbol and inner renderer.
+        Some("unclassed" | "proportional" | "bivariate") => {
+            for k in ["symbols", "other"] {
+                if let Some(s) = r.get(k) {
+                    set(s, out);
+                }
+            }
+        }
+        Some("dotDensity" | "chart" | "inverted") => {
+            if let Some(s) = r.get("symbols") {
+                set(s, out);
+            }
+        }
+        Some(kind @ ("cluster" | "displacement")) => {
+            let own = if kind == "cluster" {
+                "symbol"
+            } else {
+                "center"
+            };
+            if let Some(id) = r
+                .get(own)
+                .and_then(|v| v.get("ref"))
+                .and_then(Value::as_str)
+            {
+                out.push(id.to_owned());
+            }
+            if let Some(inner) = r.get("renderer") {
+                renderer_refs(inner, out);
             }
         }
         _ => {}
@@ -219,13 +252,22 @@ pub fn layer_call(
     let mut it = Interned::default();
     let mut objects = Vec::with_capacity(4 * entities.len());
     let mut pieces = Vec::new();
+    // Most objects take the layer's colour and weight: the last ones' indices are kept, not looked up again.
+    let mut last: Option<(&str, u64, i32, i32)> = None;
     for e in entities {
         let base = e.base();
         let color = base.color.as_deref().unwrap_or(&style.color);
-        let c = it.color(color);
         // The object's own weight, else its layer's (docs/adr/0139).
         let weight = base.line_weight.unwrap_or(style.line_weight);
-        let s = it.simple(style, color, weight, opts.hairlines);
+        let (c, s) = match last {
+            Some((lc, lw, c, s)) if lc == color && lw == weight.to_bits() => (c, s),
+            _ => {
+                let c = it.color(color);
+                let s = it.simple(style, color, weight, opts.hairlines);
+                last = Some((color, weight.to_bits(), c, s));
+                (c, s)
+            }
+        };
         // A block's insert: each piece's own look (docs/adr/0144).
         if let Entity::Insert(_) = e
             && let Some(x) = store
@@ -353,6 +395,10 @@ pub fn build_layer(
         text_lens: &call.table.lens,
         numbers: &call.table.numbers,
     };
+    let frame = opts.frame.as_ref().map(|(px_per_m, picture)| ViewFrame {
+        px_per_m: *px_per_m,
+        picture,
+    });
     let batches = core_build(
         store,
         &program,
@@ -362,6 +408,7 @@ pub fn build_layer(
         opts.plot_scale,
         opts.screen,
         opts.view,
+        frame,
     )?;
     Ok((call, batches))
 }

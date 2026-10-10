@@ -1490,7 +1490,9 @@ try {
     await b.eval(`window.kentos.doc.layers.setActive('parsel')`);
     await b.eval(`window.kentos.commands.execute('style.layerStyle')`);
     await sleep(500);
-    await press('.seg__opt', 'Kategorili');
+    // The kinds are a grouped list (docs/adr/0213 §4).
+    await press('.lsty__kinds', '');
+    await press('.menu__item', 'Kategorili');
     await press('.lsty__panel .btn', 'Değerlerden sınıfla');
     await press('.dialog--lstyle .btn--primary', 'Tamam');
     const r = await b.eval(`window.kentos.doc.layers.get('parsel').style.renderer`);

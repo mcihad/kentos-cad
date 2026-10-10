@@ -119,6 +119,79 @@
   margin-top: 10px;
 }
 
+/* Değişkenler (docs/adr/0214 §4): the project's `@` values, a row each, what does not hold under its row. */
+.svars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+}
+.svars__row {
+  display: grid;
+  /* Every row is its own grid: the columns are the same only when none sizes to its content. */
+  grid-template-columns: minmax(118px, 1.1fr) minmax(96px, 1fr) calc(118px * var(--ui-scale)) minmax(118px, 1.1fr) 74px;
+  gap: 6px;
+  align-items: center;
+}
+.svars__row--head {
+  padding-bottom: 2px;
+}
+.svars__head {
+  justify-self: start;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  text-align: left;
+}
+/* Ad's caption over the name, past the `@`. */
+.svars__head:first-child {
+  padding-left: calc(14px * var(--ui-scale));
+}
+.svars__at {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  color: var(--c-text-3);
+  font-family: var(--font-mono);
+}
+.svars__name,
+.svars__value {
+  font-family: var(--font-mono);
+}
+.svars__row .dropdown {
+  width: 100%;
+  min-width: 0;
+}
+.svars__switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.svars__switchtext {
+  overflow: hidden;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.svars__actions {
+  display: flex;
+  gap: 1px;
+}
+.svars__problem {
+  margin: -1px 0 4px;
+  color: var(--c-danger);
+  font-size: var(--fs-xs);
+  line-height: 1.35;
+}
+.svars__problem:empty {
+  display: none;
+}
+.svars__actionsrow {
+  margin-top: 10px;
+}
+
 /* ── CRS picker ──────────────────────────────────────────────────── */
 .crs-current {
   display: flex;

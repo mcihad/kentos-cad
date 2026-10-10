@@ -197,6 +197,8 @@ class Model:
         self.enums: dict[str, Enum] = {}
         self.structs: dict[str, Struct] = {}
         self.unions: dict[str, Union] = {}
+        # A value of one of a few JSON kinds (a project variable's: none, true/false, a number, text): name → (description, hint).
+        self.aliases: dict[str, tuple[str, str]] = {}
         for name in sorted(schemas):
             self.classify(name, schemas[name])
         self.mark_variants()
@@ -210,9 +212,18 @@ class Model:
             return "union"
         if name in self.structs:
             return "struct"
+        if name in self.aliases:
+            return "alias"
         raise Fail(f"unknown type {name}")
 
     def classify(self, name: str, s: dict) -> None:
+        # Any of a few JSON kinds, none of them made of others: the value as it is.
+        scalar = {"null": "None", "boolean": "bool", "number": "float", "integer": "int", "string": "str"}
+        if "anyOf" in s and all(set(a) <= {"type", "format", "description"} and a.get("type") in scalar for a in s["anyOf"]):
+            kinds = [scalar[a["type"]] for a in s["anyOf"]]
+            hint = " | ".join([k for k in kinds if k != "None"] + (["None"] if "None" in kinds else []))
+            self.aliases[name] = (s.get("description", ""), hint)
+            return
         if s.get("type") == "string" and "enum" in s:
             self.enums[name] = Enum(name, s.get("description", ""), [(v, "") for v in s["enum"]])
             return
@@ -336,7 +347,8 @@ def struct_refs_outside_unions(schemas: dict[str, dict]) -> set[str]:
 
 
 def parse_type(s, where: str):
-    if s is True or s == {}:
+    # Any JSON: a schema that says nothing of its type (only what it is for, a renderer's JSON).
+    if s is True or (isinstance(s, dict) and set(s) <= {"description", "title"}):
         return AnyT()
     if not isinstance(s, dict):
         raise Fail(f"{where}: unsupported schema {s!r}")
@@ -421,6 +433,8 @@ class Emit:
                 return f"_enum_out({v})"
             if k == "vec2":
                 return f"_vec2_out({v})"
+            if k == "alias":
+                return v
             return f"{v}.to_json()"
         if isinstance(t, ListT):
             inner = self.enc(t.item, e, depth + 1)
@@ -444,6 +458,8 @@ class Emit:
             k = self.m.kind(t.name)
             if k == "enum":
                 return f"_enum_in({t.name}, {v})"
+            if k == "alias":
+                return v
             return f"{t.name}.from_json({v})"
         if isinstance(t, ListT):
             inner = self.dec(t.item, e, depth + 1)
@@ -639,9 +655,13 @@ def emit_union_base(u: Union, common: list[tuple[str, str]]) -> str:
 def emit_types(model: Model) -> str:
     em = Emit(model)
     parts = [HEADER, TYPES_PRELUDE]
-    # Enums first, then union bases, then structs, then the variants.
+    # Enums first, then the plain values' names, then union bases, then structs, then the variants.
     for name in sorted(model.enums):
         parts.append("\n\n" + emit_enum(model.enums[name]))
+    for name in sorted(model.aliases):
+        description, hint = model.aliases[name]
+        doc = f"#: {description}\n" if description else ""
+        parts.append(f"\n\n{doc}{name} = Union[{', '.join(h.strip() for h in hint.split('|'))}]\n")
     for name in sorted(model.unions):
         u = model.unions[name]
         parts.append("\n\n" + emit_union_base(u, common_fields(em, model, u)))
@@ -1100,6 +1120,7 @@ def type_names(model: Model) -> list[str]:
         + [f"{n}Name" for n in model.enums]
         + list(model.unions)
         + list(model.structs)
+        + list(model.aliases)
         + [v.cls for u in model.unions.values() for v in u.variants if v.cls != v.base_struct]
         + ["Vec2Like"]
     )

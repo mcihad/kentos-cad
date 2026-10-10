@@ -15,16 +15,27 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::{Shape, is_closed_outline};
 use kentos_geometry_core::geometry::Bounds;
+use kentos_geometry_core::jsmath::js_max;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::draw::{
     FILL, FILLS, LINE, MARKER, MARKERS, MIXED, REVERSED, SOURCE, drawn, measure_record,
 };
 
-use super::batch::{BatchSink, Batches};
-use super::compile::{Env, Geom, Values, compile_symbol, read_number, read_text, read_truth};
-use super::model::{Exprs, Reader, Renderer, Symbol, SymbolRef, SymbolSet, SymbolType, Symbols};
-use super::prim::{FillPaint, PrimUnit, PrimitiveList, Sink, StrokeStyle};
-use super::resolve::{Resolved, Scale, resolve_renderer};
+use super::batch::{BatchSink, Batches, Picture};
+use super::compile::{
+    Env, Geom, MM_PER_PX, Values, compile_symbol, read_number, read_text, read_truth, to_drawn,
+    to_world,
+};
+use super::model::{
+    ChartKind, Dd, Exprs, Field, Layer, Placement, Reader, Renderer, Symbol, SymbolRef, SymbolSet,
+    SymbolType, Symbols, Unit, ViewNeeds,
+};
+use super::place::{interior_point, line_middle};
+use super::prim::{
+    Common, FillPaint, Look, MarkerStyle, PrimUnit, PrimitiveList, Sink, StrokeStyle,
+};
+use super::resolve::{Patch, Resolved, Scale, resolve_renderer};
+use super::{charts, dots, groups, heat, inverted, thematic};
 use crate::expr::rows::{Layout, RowsInput, Table};
 use crate::expr::{Expr, Measured, Needs, Scope, Value};
 
@@ -346,6 +357,18 @@ impl Program {
     fn symbol(&self, r: Option<&SymbolRef>) -> Option<&Symbol> {
         self.symbols.get(r?)
     }
+
+    /// What a build of it depends on beyond the objects (docs/adr/0213 §3).
+    pub fn view_needs(&self) -> ViewNeeds {
+        self.renderer
+            .as_ref()
+            .map_or_else(ViewNeeds::default, Renderer::view_needs)
+    }
+
+    /// Whether its layer is built whole (its objects drawn together).
+    pub fn whole(&self) -> bool {
+        self.renderer.as_ref().is_some_and(Renderer::whole)
+    }
 }
 
 /// An object's values from the page's table.
@@ -459,6 +482,76 @@ pub fn build_layer_with(
     screen: bool,
     view: View,
 ) -> Result<Batches, String> {
+    build_layer_in(
+        store, program, o, clip, origin, plot_scale, screen, view, None,
+    )
+}
+
+/// A view-dependent build's view (docs/adr/0213 §3): the view's pixels per
+/// metre (rounded to quarter octaves by the page), and the key the page
+/// keeps a heat map's picture by.
+#[derive(Clone, Copy, Debug)]
+pub struct ViewFrame<'a> {
+    pub px_per_m: f64,
+    pub picture: &'a str,
+}
+
+/// The most dots a layer draws (docs/adr/0213 §2.4).
+pub const MOST_DOTS: u64 = 1_000_000;
+
+/// The thematic renderers' changed symbols (docs/adr/0213 §2.10), each made once a build.
+#[derive(Default)]
+struct Patches {
+    made: HashMap<(usize, u64), Symbol>,
+}
+
+impl Patches {
+    fn of<'s>(&'s mut self, symbol: &'s Symbol, patch: Patch) -> &'s Symbol {
+        let key = match patch {
+            Patch::None => return symbol,
+            Patch::Color(c) => (1u64 << 40) | u64::from(c),
+            Patch::Size { step, unit, .. } => (2u64 << 40) | ((unit as u64) << 8) | u64::from(step),
+        };
+        let id = std::ptr::from_ref(symbol) as usize;
+        self.made.entry((id, key)).or_insert_with(|| match patch {
+            Patch::Color(c) => thematic::with_color(symbol, &format!("#{c:06X}")),
+            Patch::Size { size, unit, .. } => thematic::with_size(symbol, size, unit),
+            Patch::None => symbol.clone(),
+        })
+    }
+}
+
+/// A build's own state: the changed symbols, the dots still allowed, the view's scale.
+struct Cx {
+    patches: Patches,
+    dots_left: u64,
+    px_per_m: Option<f64>,
+}
+
+impl Cx {
+    /// A screen length as metres: by the view's scale, else as paper at the plot scale.
+    fn px_world(&self, v: f64, env: &Env<'_>) -> f64 {
+        match self.px_per_m {
+            Some(p) if p > 0.0 => v / p,
+            _ => to_world(v, Unit::Px, env),
+        }
+    }
+}
+
+/// [`build_layer_with`] for a view (docs/adr/0213 §3): a heat map's, a
+/// cluster's or a displacement's scale and the heat map's picture.
+#[allow(clippy::too_many_arguments)]
+pub fn build_layer_in(
+    store: &Store,
+    program: &Program,
+    o: &LayerObjects,
+    clip: Option<&Bounds>,
+    origin: Vec2,
+    plot_scale: f64,
+    screen: bool,
+    view: View,
+    frame: Option<ViewFrame<'_>>,
+) -> Result<Batches, String> {
     let n = o.ids.len();
     if o.objects.len() != 4 * n {
         return Err(format!(
@@ -495,6 +588,13 @@ pub fn build_layer_with(
     let mut sink = BatchSink::new(origin);
     let mut buf = Vec::new();
     let mut piece_at = 0usize;
+    let mut cx = Cx {
+        patches: Patches::default(),
+        dots_left: MOST_DOTS,
+        px_per_m: frame.map(|f| f.px_per_m),
+    };
+    let whole = program.renderer.as_ref().filter(|r| r.whole());
+    let mut taken = Taken::default();
     for (i, &id) in o.ids.iter().enumerate() {
         let [mode, a, simple, color] = [
             o.objects[4 * i],
@@ -519,6 +619,29 @@ pub fn build_layer_with(
             table: &table,
             i,
         };
+        // A whole-layer renderer takes the objects it draws together; the rest are drawn as they are.
+        if let Some(r) = whole
+            && mode == MODE_RENDERER
+            && pieces.is_none()
+        {
+            let (fills, strokes) = view.hides(&item.shape);
+            sink.hide(fills, strokes);
+            take(
+                r,
+                &item.shape,
+                [a, simple, color],
+                i,
+                program,
+                &values,
+                &env,
+                clip,
+                &mut buf,
+                &mut sink,
+                &mut cx,
+                &mut taken,
+            );
+            continue;
+        }
         let mut one = |shape: &Shape, a: i32, simple: i32, sink: &mut BatchSink| {
             let (fills, strokes) = view.hides(shape);
             sink.hide(fills, strokes);
@@ -531,6 +654,7 @@ pub fn build_layer_with(
                 clip,
                 &mut buf,
                 sink,
+                &mut cx,
             );
         };
         match pieces {
@@ -548,6 +672,12 @@ pub fn build_layer_with(
             None => one(&item.shape, a, simple, &mut sink),
         }
     }
+    if let Some(r) = whole {
+        sink.hide(false, false);
+        draw_whole(
+            r, &taken, program, &table, &env, clip, frame, &mut sink, &mut cx,
+        );
+    }
     Ok(sink.finish())
 }
 
@@ -563,6 +693,7 @@ fn draw_object(
     clip: Option<&Bounds>,
     buf: &mut Vec<f64>,
     sink: &mut BatchSink,
+    cx: &mut Cx,
 ) {
     let parts = styled_parts(shape, clip, buf);
     if mode == MODE_IMAGE {
@@ -635,7 +766,46 @@ fn draw_object(
     }
     // A leader's lines through the line symbol, its arrowhead through the fill symbol (docs/adr/0146 §5).
     for geom in &parts {
-        draw_part(geom, [mode, a, simple], program, values, env, sink);
+        draw_part(geom, [mode, a, simple], program, values, env, sink, cx);
+    }
+    // Nokta yoğunluğu's dots and Grafik's chart over what the object draws (docs/adr/0213 §2.4, §2.5).
+    if mode == MODE_RENDERER {
+        match program.renderer.as_ref() {
+            Some(Renderer::DotDensity {
+                fields,
+                dot_value,
+                dot_size,
+                unit,
+                seed,
+                ..
+            }) => draw_dots(
+                &parts, fields, *dot_value, *dot_size, *unit, *seed, values, env, sink, cx,
+            ),
+            Some(Renderer::Chart {
+                kind,
+                fields,
+                size,
+                unit,
+                size_by,
+                max_value,
+                bar_width,
+                outline,
+                ..
+            }) => {
+                let chart = Chart {
+                    kind: *kind,
+                    fields,
+                    size: *size,
+                    unit: *unit,
+                    size_by: *size_by,
+                    max_value: *max_value,
+                    bar_width: *bar_width,
+                    outline: outline.as_ref(),
+                };
+                draw_chart(&parts, &chart, values, env, sink, cx);
+            }
+            _ => {}
+        }
     }
 }
 
@@ -991,18 +1161,18 @@ fn draw_part(
     values: &RowValues<'_, '_>,
     env: &Env<'_>,
     sink: &mut BatchSink,
+    cx: &mut Cx,
 ) {
     let cls = class_of(geom);
     let set_at = |k: i32| usize::try_from(k).ok().and_then(|k| program.sets.get(k));
     let own;
+    let plain = |symbols| Resolved {
+        symbols,
+        scale: Scale::default(),
+        patch: Patch::None,
+    };
     let sets: Vec<Resolved> = match mode {
-        MODE_SET => set_at(a)
-            .map(|symbols| Resolved {
-                symbols,
-                scale: Scale::default(),
-            })
-            .into_iter()
-            .collect(),
+        MODE_SET => set_at(a).map(plain).into_iter().collect(),
         MODE_OWN => {
             let r = usize::try_from(a)
                 .ok()
@@ -1022,22 +1192,37 @@ fn draw_part(
                     ..SymbolSet::default()
                 },
             };
-            vec![Resolved {
-                symbols: &own,
-                scale: Scale::default(),
-            }]
+            vec![plain(&own)]
         }
-        MODE_RENDERER => program
-            .renderer
-            .as_ref()
-            .map_or_else(Vec::new, |r| resolve_renderer(r, values)),
+        MODE_RENDERER => match program.renderer.as_ref() {
+            // A cluster or a displacement without a renderer of its own: the layer's simple look.
+            Some(
+                Renderer::Cluster { inner: None, .. } | Renderer::Displacement { inner: None, .. },
+            ) => set_at(simple).map(plain).into_iter().collect(),
+            Some(r) => resolve_renderer(r, values),
+            None => Vec::new(),
+        },
         _ => Vec::new(),
     };
     // No matching rule or category: the renderer leaves the object out (as in QGIS).
     let mut drew = false;
     for r in &sets {
         sink.set_scale(r.scale);
+        // Orantılı sembol on an area: its fill as it is, its marker symbol sized at its inside point (docs/adr/0213 §2.2).
+        if matches!(r.patch, Patch::Size { .. }) && cls == SymbolType::Fill {
+            if let Some(fill) = program.symbol(r.symbols.fill.as_ref()) {
+                compile_symbol(fill, geom, values, env, sink, LEVEL_FILL);
+                drew = true;
+            }
+            if let Some(mark) = program.symbol(r.symbols.marker.as_ref()) {
+                let mark = cx.patches.of(mark, r.patch);
+                compile_symbol(mark, geom, values, env, sink, LEVEL_MARKER);
+                drew = true;
+            }
+            continue;
+        }
         if let Some(symbol) = program.symbol(slot(r.symbols, cls)) {
+            let symbol = cx.patches.of(symbol, r.patch);
             compile_symbol(symbol, geom, values, env, sink, level_base(symbol.kind));
             drew = true;
         } else if cls == SymbolType::Fill {
@@ -1045,6 +1230,7 @@ fn draw_part(
             let Some(edge) = program.symbol(r.symbols.line.as_ref()) else {
                 continue;
             };
+            let edge = cx.patches.of(edge, r.patch);
             compile_symbol(edge, geom, values, env, sink, LEVEL_LINE);
             drew = true;
         }
@@ -1057,6 +1243,785 @@ fn draw_part(
         if let Some(fallback) = set_at(simple).and_then(|s| program.symbol(slot(s, cls))) {
             compile_symbol(fallback, geom, values, env, sink, level_base(cls));
         }
+    }
+}
+
+// ── Thematic renderers (docs/adr/0213) ─────────────────────────────────
+
+/// A colour as the batches take it: `#RRGGBB` (or with alpha), a theme name, else the drawing's ink.
+fn color_of(c: &str) -> String {
+    match thematic::parse_rgba(c) {
+        Some(rgba) => thematic::hex(rgba),
+        None if ["ink", "paper", "fg", "fg-dim"]
+            .iter()
+            .any(|t| c.eq_ignore_ascii_case(t)) =>
+        {
+            c.to_ascii_lowercase()
+        }
+        None => "ink".to_owned(),
+    }
+}
+
+/// A filled, unframed circle (a dot, the default cluster).
+fn disc(
+    color: String,
+    size: f64,
+    unit: PrimUnit,
+    level: f64,
+    stroke: Option<(String, f64)>,
+) -> MarkerStyle {
+    let (stroke, stroke_width) = match stroke {
+        Some((c, w)) => (Some(c), w),
+        None => (None, 0.0),
+    };
+    MarkerStyle {
+        look: Look::Shape {
+            shape: "circle".into(),
+            size,
+            height: size,
+            fill: Some(color),
+            stroke,
+            stroke_width,
+            params: [0.0, 12.0, std::f64::consts::PI, 0.2],
+        },
+        common: Common {
+            unit,
+            opacity: 1.0,
+            offset: [0.0, 0.0],
+            anchor: "center".into(),
+            rotation: 0.0,
+            level,
+        },
+    }
+}
+
+/// An object's areas, each its rings.
+fn areas_of(parts: &[Geom]) -> Vec<&[Vec<Vec2>]> {
+    let mut out = Vec::new();
+    for g in parts {
+        match g {
+            Geom::Fill(rings) => out.push(rings.as_slice()),
+            Geom::Fills(list) => out.extend(list.iter().map(Vec::as_slice)),
+            _ => {}
+        }
+    }
+    out
+}
+
+/// Nokta yoğunluğu (§2.4): every value's dots inside the object's areas.
+#[allow(clippy::too_many_arguments)]
+fn draw_dots(
+    parts: &[Geom],
+    fields: &[Field],
+    dot_value: f64,
+    dot_size: f64,
+    unit: Unit,
+    seed: u64,
+    values: &RowValues<'_, '_>,
+    env: &Env<'_>,
+    sink: &mut BatchSink,
+    cx: &mut Cx,
+) {
+    let areas = areas_of(parts);
+    if areas.is_empty() {
+        return;
+    }
+    let Some(inside) = dots::Inside::new(&areas) else {
+        return;
+    };
+    let area = dots::rings_hash(&areas);
+    let (size, size_unit) = to_drawn(dot_size, unit, env);
+    sink.set_scale(Scale::default());
+    let mut pts = Vec::new();
+    for (k, f) in fields.iter().enumerate() {
+        let n = dots::count_of(f.expr.and_then(|e| values.number(e)), dot_value) as u64;
+        if n == 0 {
+            continue;
+        }
+        let take = n.min(cx.dots_left);
+        if take < n {
+            sink.drop_dots(n - take);
+        }
+        if take == 0 {
+            continue;
+        }
+        cx.dots_left -= take;
+        pts.clear();
+        dots::dots(
+            &inside,
+            take as usize,
+            dots::seed_of(seed, area, k),
+            &mut pts,
+        );
+        let style = disc(
+            color_of(&f.color),
+            size,
+            size_unit,
+            LEVEL_MARKER + 600.0 + k as f64 / 64.0,
+            None,
+        );
+        for p in &pts {
+            sink.marker(&style, *p, 0.0);
+        }
+    }
+}
+
+/// A chart renderer's settings (§2.5).
+struct Chart<'a> {
+    kind: ChartKind,
+    fields: &'a [Field],
+    size: f64,
+    unit: Unit,
+    size_by: Option<super::model::SizeBy>,
+    max_value: f64,
+    bar_width: Option<f64>,
+    outline: Option<&'a (String, f64)>,
+}
+
+/// Where a chart sits: a point, an area's inside point (its largest part's), a line's middle.
+fn chart_place(parts: &[Geom]) -> Option<Vec2> {
+    match parts.first()? {
+        Geom::Marker(p) => Some(*p),
+        Geom::Fill(rings) => interior_point(rings),
+        Geom::Fills(list) => {
+            let largest = list.iter().max_by(|a, b| {
+                let area = |r: &Vec<Vec<Vec2>>| {
+                    r.first().map_or(0.0, |o| {
+                        kentos_geometry_core::geometry::signed_area(o).abs()
+                    })
+                };
+                area(a).total_cmp(&area(b))
+            })?;
+            interior_point(largest)
+        }
+        Geom::Line(paths) => line_middle(paths),
+    }
+}
+
+/// Grafik (§2.5): the object's pie or bars at its place, over its background.
+fn draw_chart(
+    parts: &[Geom],
+    chart: &Chart<'_>,
+    values: &RowValues<'_, '_>,
+    env: &Env<'_>,
+    sink: &mut BatchSink,
+    cx: &mut Cx,
+) {
+    let Some(place) = chart_place(parts) else {
+        return;
+    };
+    let vals: Vec<f64> = chart
+        .fields
+        .iter()
+        .map(|f| {
+            f.expr
+                .and_then(|e| values.number(e))
+                .filter(|v| v.is_finite())
+                .unwrap_or(0.0)
+        })
+        .collect();
+    let world = |v: f64| match chart.unit {
+        Unit::Px => cx.px_world(v, env),
+        _ => to_world(v, chart.unit, env),
+    };
+    let pieces = match chart.kind {
+        ChartKind::Pie => {
+            let total: f64 = vals.iter().filter(|v| **v > 0.0).sum();
+            let d = match chart.size_by {
+                Some(b) => thematic::size_at(
+                    thematic::share(total, b.min_value, b.max_value),
+                    b.min_size,
+                    b.max_size,
+                    0.5,
+                ),
+                None => chart.size,
+            };
+            charts::pie(place, world(d), &vals)
+        }
+        ChartKind::Bar | ChartKind::Stacked => {
+            let width = chart.bar_width.unwrap_or(chart.size / 4.0);
+            let vals: Vec<f64> = if chart.kind == ChartKind::Stacked {
+                vals.iter().map(|v| js_max(*v, 0.0)).collect()
+            } else {
+                vals
+            };
+            charts::bars(
+                chart.kind,
+                place,
+                world(chart.size),
+                world(width),
+                chart.max_value,
+                &vals,
+            )
+        }
+    };
+    if pieces.is_empty() {
+        return;
+    }
+    sink.set_scale(Scale::default());
+    for p in &pieces {
+        let color = chart
+            .fields
+            .get(p.field)
+            .map_or_else(|| "ink".to_owned(), |f| color_of(&f.color));
+        let paint = FillPaint::Solid {
+            color,
+            opacity: 1.0,
+            level: LEVEL_MARKER + 800.0 + p.field as f64 / 64.0,
+        };
+        // A pie's slice (or its whole circle) is star-shaped from its first point: fanned from it.
+        if chart.kind == ChartKind::Pie {
+            sink.fan(&paint, &p.ring);
+        } else {
+            sink.fill(&paint, std::slice::from_ref(&p.ring));
+        }
+    }
+    if let Some((color, width)) = chart.outline
+        && *width > 0.0
+    {
+        let (w, unit) = to_drawn(*width, chart.unit, env);
+        let style = StrokeStyle {
+            color: color_of(color),
+            opacity: 1.0,
+            width: w,
+            unit,
+            dash: None,
+            dash_offset: 0.0,
+            cap: "butt".into(),
+            join: "round".into(),
+            blur: 0.0,
+            level: LEVEL_MARKER + 900.0,
+        };
+        for p in &pieces {
+            sink.stroke(&style, &p.ring, true);
+        }
+    }
+}
+
+/// A point a cluster or a displacement takes: where, which object, its set and its colour.
+#[derive(Clone, Copy)]
+struct Taken1 {
+    at: Vec2,
+    i: usize,
+    a: i32,
+    simple: i32,
+    color: i32,
+}
+
+/// What a whole-layer renderer took from the objects.
+#[derive(Default)]
+struct Taken {
+    points: Vec<Taken1>,
+    weights: Vec<f64>,
+    areas: Vec<(Vec<Vec<Vec2>>, usize)>,
+}
+
+/// An object a whole-layer renderer draws together with the others: its
+/// points (a heat map, a cluster, a displacement) or its areas (Ters alan);
+/// the rest of it is drawn by the renderer of single objects.
+#[allow(clippy::too_many_arguments)]
+fn take(
+    r: &Renderer,
+    shape: &Shape,
+    [a, simple, color]: [i32; 3],
+    i: usize,
+    program: &Program,
+    values: &RowValues<'_, '_>,
+    env: &Env<'_>,
+    clip: Option<&Bounds>,
+    buf: &mut Vec<f64>,
+    sink: &mut BatchSink,
+    cx: &mut Cx,
+    taken: &mut Taken,
+) {
+    let mut one = |g: Geom| {
+        match (r, g) {
+            (Renderer::Heatmap { weight, .. }, Geom::Marker(at)) => {
+                // A weight that is no number counts once; one below zero not at all (§2.6).
+                let w = match weight.and_then(|e| values.number(e)) {
+                    Some(v) if v >= 0.0 => v,
+                    Some(_) => 0.0,
+                    None => 1.0,
+                };
+                taken.points.push(Taken1 {
+                    at,
+                    i,
+                    a,
+                    simple,
+                    color,
+                });
+                taken.weights.push(w);
+            }
+            (Renderer::Cluster { .. } | Renderer::Displacement { .. }, Geom::Marker(at)) => {
+                taken.points.push(Taken1 {
+                    at,
+                    i,
+                    a,
+                    simple,
+                    color,
+                });
+            }
+            (Renderer::Cluster { .. } | Renderer::Displacement { .. }, g) => {
+                draw_part(
+                    &g,
+                    [MODE_RENDERER, a, simple],
+                    program,
+                    values,
+                    env,
+                    sink,
+                    cx,
+                );
+            }
+            (Renderer::Inverted { .. }, Geom::Fill(rings)) => taken.areas.push((rings, i)),
+            (Renderer::Inverted { .. }, Geom::Fills(list)) => {
+                taken.areas.extend(list.into_iter().map(|rings| (rings, i)));
+            }
+            _ => {}
+        }
+    };
+    // A single point (a heat map's, a cluster's, a spread's usual object): its place as its record
+    // gives it (`drawn` never clips a point), without writing one.
+    if let Shape::Point { p, parts: None, .. } = shape {
+        one(Geom::Marker(*p));
+        return;
+    }
+    for g in styled_parts(shape, clip, buf) {
+        one(g);
+    }
+}
+
+/// A marker symbol's size on the screen, px: its largest layer's (paper mm
+/// at the plot scale through the view's scale, or screen mm when symbols
+/// keep their size on the screen; metres through the view's scale).
+fn marker_px(symbol: &Symbol, env: &Env<'_>, cx: &Cx) -> f64 {
+    let ppm = cx.px_per_m;
+    symbol
+        .layers
+        .iter()
+        .filter_map(|l| match l {
+            Layer::Marker(m) => {
+                let v = match &m.size {
+                    Some(Dd::Fixed(x)) => *x,
+                    Some(Dd::Expr { fallback, .. }) => fallback.unwrap_or(2.0),
+                    None => 2.0,
+                };
+                Some(match m.base.unit {
+                    Unit::Px => v,
+                    Unit::Mm if env.screen || ppm.is_none() => v / MM_PER_PX,
+                    Unit::Mm => v / 1000.0 * env.plot_scale * ppm.unwrap_or(0.0),
+                    Unit::M => v * ppm.unwrap_or(0.0),
+                })
+            }
+            _ => None,
+        })
+        .fold(0.0, js_max)
+}
+
+/// The marker symbol an object's point draws with: its renderer's (or a
+/// wrapper's inner one), else the layer's simple look.
+fn marker_of<'p>(
+    program: &'p Program,
+    values: &RowValues<'_, '_>,
+    simple: i32,
+) -> Option<&'p Symbol> {
+    let from_renderer = match program.renderer.as_ref() {
+        Some(
+            Renderer::Cluster { inner: Some(r), .. }
+            | Renderer::Displacement { inner: Some(r), .. },
+        ) => resolve_renderer(r, values)
+            .into_iter()
+            .find_map(|x| program.symbol(x.symbols.marker.as_ref())),
+        _ => None,
+    };
+    from_renderer.or_else(|| {
+        usize::try_from(simple)
+            .ok()
+            .and_then(|k| program.sets.get(k))
+            .and_then(|s| program.symbol(s.marker.as_ref()))
+    })
+}
+
+/// A circle of `r` metres round `c`, as a closed path of 72 points.
+fn circle_path(c: Vec2, r: f64) -> Vec<Vec2> {
+    (0..72)
+        .map(|k| {
+            let a = std::f64::consts::TAU * k as f64 / 72.0;
+            Vec2::new(
+                c.x + r * kentos_geometry_core::jsmath::cos(a),
+                c.y + r * kentos_geometry_core::jsmath::sin(a),
+            )
+        })
+        .collect()
+}
+
+/// The whole-layer renderers' drawing once every object was seen (§2.6–§2.9).
+#[allow(clippy::too_many_arguments)]
+fn draw_whole(
+    r: &Renderer,
+    taken: &Taken,
+    program: &Program,
+    table: &Table<'_>,
+    env: &Env<'_>,
+    clip: Option<&Bounds>,
+    frame: Option<ViewFrame<'_>>,
+    sink: &mut BatchSink,
+    cx: &mut Cx,
+) {
+    let values_of = |i: usize| RowValues { program, table, i };
+    let distance = |v: f64, unit: Unit, cx: &Cx| match unit {
+        Unit::M => v,
+        _ => cx.px_world(v, env),
+    };
+    match r {
+        Renderer::Heatmap {
+            radius,
+            unit,
+            max,
+            ramp,
+            quality,
+            opacity,
+            ..
+        } => {
+            let (Some(f), Some(b)) = (frame, clip) else {
+                return;
+            };
+            let Some(grid) = heat::Grid::over(b, f.px_per_m, *quality) else {
+                return;
+            };
+            let radius_px = match unit {
+                Unit::M => radius * f.px_per_m,
+                _ => *radius,
+            };
+            let cells = kentos_geometry_core::jsmath::js_round(radius_px / f64::from(*quality));
+            let r_cells = if cells.is_finite() {
+                js_max(cells, 1.0) as i64
+            } else {
+                1
+            };
+            let points: Vec<(Vec2, f64)> = taken
+                .points
+                .iter()
+                .zip(&taken.weights)
+                .map(|(p, w)| (p.at, *w))
+                .collect();
+            let v = heat::values(&grid, &points, r_cells);
+            let top = max.unwrap_or_else(|| heat::largest(&v));
+            let rgba = heat::colors(&v, top, &heat::table(ramp, *opacity));
+            let (w, h) = (
+                grid.width as f64 * grid.cell,
+                grid.height as f64 * grid.cell,
+            );
+            let (x0, y0) = (grid.min_x, grid.max_y - h);
+            sink.picture(Picture {
+                key: f.picture.to_owned(),
+                width: grid.width as u32,
+                height: grid.height as u32,
+                rgba,
+            });
+            sink.set_scale(Scale::default());
+            sink.fill(
+                &FillPaint::Image {
+                    image: f.picture.to_owned(),
+                    corner: [x0, y0],
+                    size: [w, h],
+                    angle: 0.0,
+                    mirror: false,
+                    opacity: 1.0,
+                    level: LEVEL_FILL,
+                },
+                &[vec![
+                    Vec2::new(x0, y0),
+                    Vec2::new(x0 + w, y0),
+                    Vec2::new(x0 + w, y0 + h),
+                    Vec2::new(x0, y0 + h),
+                ]],
+            );
+        }
+        Renderer::Cluster {
+            distance: d,
+            unit,
+            symbol,
+            count,
+            grow,
+            ..
+        } => {
+            let at: Vec<Vec2> = taken.points.iter().map(|p| p.at).collect();
+            for g in groups::group(&at, distance(*d, *unit, cx)) {
+                let first = taken.points[g.members[0]];
+                let values = values_of(first.i);
+                if g.members.len() == 1 {
+                    draw_part(
+                        &Geom::Marker(first.at),
+                        [MODE_RENDERER, first.a, first.simple],
+                        program,
+                        &values,
+                        env,
+                        sink,
+                        cx,
+                    );
+                    continue;
+                }
+                let n = g.members.len();
+                let c = g.centre();
+                let k = if *grow { groups::growth(n) } else { 1.0 };
+                sink.set_scale(Scale::default());
+                // The count's height: 0.45 of the symbol's size, in its unit.
+                let (text_size, text_unit) = match program.symbol(symbol.as_ref()) {
+                    Some(sym) => {
+                        let px = marker_px(sym, env, cx);
+                        let sym = if k == 1.0 {
+                            sym
+                        } else {
+                            cx.patches.of(
+                                sym,
+                                Patch::Size {
+                                    size: px * k,
+                                    unit: Unit::Px,
+                                    step: kentos_geometry_core::jsmath::js_round(k * 100.0) as u8,
+                                },
+                            )
+                        };
+                        compile_symbol(
+                            sym,
+                            &Geom::Marker(c),
+                            &values,
+                            env,
+                            sink,
+                            LEVEL_MARKER + 700.0,
+                        );
+                        (0.45 * px * k, PrimUnit::Px)
+                    }
+                    None => {
+                        let ink = usize::try_from(first.color)
+                            .ok()
+                            .and_then(|k| program.colors.get(k))
+                            .cloned()
+                            .unwrap_or_else(|| "ink".to_owned());
+                        let size = 24.0 * k;
+                        sink.marker(
+                            &disc(
+                                ink,
+                                size,
+                                PrimUnit::Px,
+                                LEVEL_MARKER + 700.0,
+                                Some(("#FFFFFF".to_owned(), 1.5)),
+                            ),
+                            c,
+                            0.0,
+                        );
+                        (0.45 * size, PrimUnit::Px)
+                    }
+                };
+                if *count {
+                    sink.marker(
+                        &MarkerStyle {
+                            look: Look::Text {
+                                text: n.to_string(),
+                                size: text_size,
+                                font: "ui".into(),
+                                weight: 700.0,
+                                italic: false,
+                                color: "#FFFFFF".into(),
+                                halo: None,
+                            },
+                            common: Common {
+                                unit: text_unit,
+                                opacity: 1.0,
+                                offset: [0.0, 0.0],
+                                anchor: "center".into(),
+                                rotation: 0.0,
+                                level: LEVEL_MARKER + 701.0,
+                            },
+                        },
+                        c,
+                        0.0,
+                    );
+                }
+            }
+        }
+        Renderer::Displacement {
+            tolerance,
+            unit,
+            placement,
+            spacing,
+            center,
+            circle,
+            ..
+        } => {
+            let at: Vec<Vec2> = taken.points.iter().map(|p| p.at).collect();
+            let centre_symbol = program.symbol(center.as_ref());
+            for g in groups::group(&at, distance(*tolerance, *unit, cx)) {
+                if g.members.len() == 1 {
+                    let p = taken.points[g.members[0]];
+                    draw_part(
+                        &Geom::Marker(p.at),
+                        [MODE_RENDERER, p.a, p.simple],
+                        program,
+                        &values_of(p.i),
+                        env,
+                        sink,
+                        cx,
+                    );
+                    continue;
+                }
+                let c = g.centre();
+                // The largest symbol's diagonal (at least 4 px) and the centre symbol's.
+                let s = g
+                    .members
+                    .iter()
+                    .map(|&m| {
+                        let p = taken.points[m];
+                        marker_of(program, &values_of(p.i), p.simple)
+                            .map_or(0.0, |sym| marker_px(sym, env, cx))
+                    })
+                    .fold(0.0, js_max)
+                    * std::f64::consts::SQRT_2;
+                let s = js_max(s, 4.0);
+                let csize = centre_symbol.map_or(0.0, |sym| {
+                    marker_px(sym, env, cx) * std::f64::consts::SQRT_2
+                });
+                let (offsets, rings) =
+                    groups::displaced(*placement, g.members.len(), s, csize, *spacing);
+                sink.set_scale(Scale::default());
+                if let Some((color, width)) = circle
+                    && *placement != Placement::Grid
+                    && *width > 0.0
+                {
+                    let style = StrokeStyle {
+                        color: color_of(color),
+                        opacity: 1.0,
+                        width: *width,
+                        unit: PrimUnit::Px,
+                        dash: None,
+                        dash_offset: 0.0,
+                        cap: "butt".into(),
+                        join: "round".into(),
+                        blur: 0.0,
+                        level: LEVEL_MARKER - 10.0,
+                    };
+                    for r in rings {
+                        sink.stroke(&style, &circle_path(c, cx.px_world(r, env)), true);
+                    }
+                }
+                let first = taken.points[g.members[0]];
+                if let Some(sym) = centre_symbol {
+                    compile_symbol(
+                        sym,
+                        &Geom::Marker(c),
+                        &values_of(first.i),
+                        env,
+                        sink,
+                        LEVEL_MARKER,
+                    );
+                }
+                for (k, &m) in g.members.iter().enumerate() {
+                    let p = taken.points[m];
+                    let off = offsets.get(k).copied().unwrap_or(Vec2::new(0.0, 0.0));
+                    let at =
+                        Vec2::new(c.x + cx.px_world(off.x, env), c.y + cx.px_world(off.y, env));
+                    draw_part(
+                        &Geom::Marker(at),
+                        [MODE_RENDERER, p.a, p.simple],
+                        program,
+                        &values_of(p.i),
+                        env,
+                        sink,
+                        cx,
+                    );
+                }
+            }
+        }
+        Renderer::Inverted { symbols, merge } => {
+            let Some(fill) = program.symbol(symbols.fill.as_ref()) else {
+                return;
+            };
+            let areas: Vec<&[Vec<Vec2>]> = taken.areas.iter().map(|(r, _)| r.as_slice()).collect();
+            // The box: the build's, else the areas' own and a tenth round it (previews).
+            let b = match clip {
+                Some(b) => *b,
+                None => {
+                    let mut b = kentos_geometry_core::geometry::empty_bounds();
+                    for rings in &areas {
+                        for ring in rings.iter() {
+                            for p in ring {
+                                kentos_geometry_core::geometry::extend_bounds(&mut b, *p, 0.0);
+                            }
+                        }
+                    }
+                    if !(b.max_x > b.min_x && b.max_y > b.min_y) {
+                        return;
+                    }
+                    let m = 0.1 * js_max(b.max_x - b.min_x, b.max_y - b.min_y);
+                    Bounds {
+                        min_x: b.min_x - m,
+                        min_y: b.min_y - m,
+                        max_x: b.max_x + m,
+                        max_y: b.max_y + m,
+                    }
+                }
+            };
+            let rule = if *merge {
+                inverted::Rule::NonZero
+            } else {
+                inverted::Rule::EvenOdd
+            };
+            // The fill's paints on the region (a gradient as its first colour: each piece would
+            // have its own), its lines on the areas' rings only.
+            let fills = Symbol {
+                kind: SymbolType::Fill,
+                layers: fill
+                    .layers
+                    .iter()
+                    .filter_map(|l| match l {
+                        Layer::SimpleFill { .. }
+                        | Layer::HatchFill(_)
+                        | Layer::PatternFill(_)
+                        | Layer::ImageFill { .. } => Some(l.clone()),
+                        Layer::GradientFill(g) => Some(Layer::SimpleFill {
+                            base: g.base.clone(),
+                            color: g.color.clone(),
+                        }),
+                        _ => None,
+                    })
+                    .collect(),
+            };
+            let edges = Symbol {
+                kind: SymbolType::Fill,
+                layers: fill
+                    .layers
+                    .iter()
+                    .filter(|l| matches!(l, Layer::SimpleLine(_) | Layer::MarkerLine(_)))
+                    .cloned()
+                    .collect(),
+            };
+            let values = values_of(taken.areas.first().map_or(0, |(_, i)| *i));
+            sink.set_scale(Scale::default());
+            if !fills.layers.is_empty() {
+                for t in inverted::region(&b, &areas, rule) {
+                    compile_symbol(
+                        &fills,
+                        &Geom::Fill(vec![t.to_vec()]),
+                        &values,
+                        env,
+                        sink,
+                        LEVEL_FILL,
+                    );
+                }
+            }
+            if !edges.layers.is_empty() {
+                for (rings, i) in &taken.areas {
+                    compile_symbol(
+                        &edges,
+                        &Geom::Fill(rings.clone()),
+                        &values_of(*i),
+                        env,
+                        sink,
+                        LEVEL_FILL,
+                    );
+                }
+            }
+        }
+        _ => {}
     }
 }
 

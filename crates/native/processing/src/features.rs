@@ -8,6 +8,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use kentos_contracts::{Entity, RasterEntity};
 use kentos_domain::{Document, Slot};
+use kentos_expression::Variable;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::Store;
 use kentos_style_core::js::collate::compare_tr;
@@ -31,6 +32,16 @@ pub trait Scene {
     /// Without one the objects asked about get a store of their own.
     fn store(&self) -> Option<&Store> {
         None
+    }
+    /// The `@` values the expressions read (docs/adr/0214 §2.3): the
+    /// project's variables, then the built-in ones; by default with the UTC
+    /// clock and no user (the desktop gives its zone's and its user).
+    fn variables(&self) -> Vec<Variable> {
+        let doc = self.doc();
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0.0, |d| d.as_millis() as f64);
+        kentos_project::variables::expression_variables(doc.name(), doc.settings(), now, "")
     }
 }
 

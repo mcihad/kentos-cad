@@ -709,6 +709,37 @@ fn the_query_cases_do_what_they_say() {
     );
 }
 
+/// The proximity tools' cases (docs/adr/0215): written by the independent
+/// reference (scripts/fixtures/proximity_cases.py); the same run here and on
+/// the drawing's reading copy as the background runs it.
+#[test]
+fn the_proximity_cases_do_what_they_say() {
+    let file = case_file("proximity.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check(c, play(c, &registry, false, &file["files"]), tol);
+        found.extend(check(c, play(c, &registry, true, &file["files"]), tol));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 9, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
 /// The geometry tools' cases (docs/adr/0201): the same run here and on the
 /// drawing's reading copy as the background runs it; new objects measured.
 #[test]
@@ -1060,4 +1091,83 @@ fn network_timing() {
         built.session.graph.pieces.len(),
         t.elapsed().as_secs_f64() * 1e3
     );
+}
+
+/// A layer's filter leaves its objects out of the calls to other layers
+/// (docs/adr/0214 §3, docs/adr/0211 §1) as it does of the inputs: the trees
+/// inside each parcel of the query drawing, all of them and then the pines only.
+#[test]
+fn a_layer_filter_leaves_its_objects_out_of_the_calls_to_other_layers() {
+    use kentos_expression::rows::As;
+    use kentos_expression::world::{World, WorldLayer};
+    use kentos_expression::{Schema, Value as V};
+    use kentos_processing::expression::{EntityObjects, Evaluation, evaluate_in};
+    use kentos_processing::runner::world_layers;
+
+    let counts = |doc: &Document| -> Vec<V<'static>> {
+        let schema = Schema {
+            world: true,
+            ..Schema::default()
+        };
+        let expr = kentos_expression::compile_with("kesişen_sayısı('Ağaç')", &schema)
+            .expect("the expression compiles");
+        let parcels: Vec<&Entity> = doc.by_layer("parsel").collect();
+        let layer_name = |id: &str| {
+            doc.layers()
+                .get(id)
+                .map_or_else(|| id.to_owned(), |l| l.name.clone())
+        };
+        let store = kentos_processing::geometry::RunGeometry::of(doc.entities());
+        let looked_at = world_layers([&expr], &parcels, doc);
+        let objects: Vec<(String, EntityObjects)> = looked_at
+            .iter()
+            .map(|(name, l)| {
+                (
+                    name.clone(),
+                    EntityObjects::new(l, &layer_name, Some(store.store())),
+                )
+            })
+            .collect();
+        let world = World {
+            layers: objects
+                .iter()
+                .map(|(name, o)| WorldLayer {
+                    name: name.clone(),
+                    ids: o.ids(),
+                    objects: o,
+                })
+                .collect(),
+            store: Some(store.store()),
+        };
+        let how = Evaluation {
+            layer_name: &layer_name,
+            store: Some(store.store()),
+            world: Some(&world),
+        };
+        evaluate_in(&expr, &parcels, &how, As::Value)
+    };
+    let mut doc = load("queries.kcad");
+    let all = counts(&doc);
+    doc.set_layer_filter(
+        "agac",
+        Some(kentos_contracts::LayerFilter {
+            expression: Some("Tür = 'Çam'".into()),
+            objects: Vec::new(),
+        }),
+        "Süzgeç",
+    )
+    .expect("the filter is set");
+    let pines = counts(&doc);
+    let n = |v: &[V<'static>]| -> Vec<f64> {
+        v.iter()
+            .map(|x| match x {
+                V::Num(n) => *n,
+                _ => f64::NAN,
+            })
+            .collect()
+    };
+    // As queries.json's `expr-tree-count` says: the tree on the boundary in two parcels, the one in the hole in none.
+    assert_eq!(n(&all), [2.0, 2.0, 1.0, 1.0]);
+    // The pines: 10 in the first parcel, 12 in the second, 14 in the fourth's hole.
+    assert_eq!(n(&pines), [1.0, 1.0, 0.0, 0.0]);
 }

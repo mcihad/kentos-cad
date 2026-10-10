@@ -49,6 +49,7 @@ pub mod system;
 pub mod table;
 pub mod tally;
 pub mod template_form;
+pub mod thematic;
 
 pub use batches::{
     AtlasImage, Cap, FillPaintBatch, MarkerLook, StyledBatch, StyledLayer, TileMark, Unit,

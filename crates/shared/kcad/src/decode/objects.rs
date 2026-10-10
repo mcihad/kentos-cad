@@ -45,6 +45,7 @@ use crate::{
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
     SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS,
     SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_VARIABLES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -169,7 +170,9 @@ pub(super) struct Features {
     pub(super) filters: bool,
     /// Schema 36: the label engine's fields, a layer style's `labels`, an object's `labelPins` (docs/adr/0212 §2).
     pub(super) labels: bool,
-    /// Schema 37: a raster's `dataset` and its look's `edges` (docs/adr/0243 §6).
+    /// Schema 37: the settings' `variables` (docs/adr/0214 §2.3).
+    pub(super) variables: bool,
+    /// Schema 38: a raster's `dataset` and its look's `edges` (docs/adr/0243 §6).
     multidim: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
@@ -217,6 +220,7 @@ impl Features {
             filters: schema >= SCHEMA_WITH_FILTERS,
             multidim: schema >= SCHEMA_WITH_MULTIDIM,
             labels: schema >= SCHEMA_WITH_LABELS,
+            variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
             uids: true,
         }
@@ -1658,7 +1662,7 @@ fn raster_style(r: &mut Reader<'_>, multidim: bool) -> Result<RasterStyle, KcadE
             "altitude" => st.altitude = Some(r.float()?),
             "zFactor" => st.z_factor = Some(r.float()?),
             "nodata" => st.nodata = Some(r.float()?),
-            // Schema 37: a mesh's lines (docs/adr/0243 §5).
+            // Schema 38: a mesh's lines (docs/adr/0243 §5).
             "edges" if multidim => st.edges = Some(text(r)?),
             _ => return Err(unknown(r)),
         }

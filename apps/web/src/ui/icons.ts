@@ -671,6 +671,14 @@ export const ICONS = {
     '<path d="M10 2.2 15.6 4.8 18 10.4 14.6 16.9 8.2 18 2.6 13.2 2.8 6.6z" fill="currentColor" fill-opacity=".18" stroke-width="1.1"/><path d="M10 6.2 13.5 8.2 14 11.6 11.4 14.1 7.5 13.6 5.9 10.3 7.2 7.3z" fill="currentColor" fill-opacity=".38" stroke-width="1.1"/><circle cx="10" cy="10.2" r="1.7" fill="currentColor" stroke="none"/>',
   netTrace:
     '<path d="M15.5 10H18" stroke-width="1.2"/><path d="M2.5 10H12M7 10v7.5" stroke-width="2.4"/><path d="M12 7.8v4.4l3.5-4.4v4.4z" fill="currentColor" fill-opacity=".28" stroke-width="1.1"/><circle cx="2.8" cy="10" r="1.8" fill="currentColor" stroke="none"/>',
+  // Yakınlık (docs/adr/0215): the nearest of two targets joined to a point; a table of distances with its corner
+  // diagonal; a hub's spokes to the objects round it; two parcels with their shared side heavy; the short segment
+  // between a square and a circle, its ends gripped.
+  nearestFeature: `<circle cx="14.6" cy="6" r="2.4"/><circle cx="15.6" cy="15.6" r="1.7" stroke-dasharray="1.5 1.3"/><path d="M5.4 11.3 12.6 7.1"/>${grip(4, 12)}`,
+  distanceMatrix: '<rect x="2.5" y="3.5" width="15" height="13" rx="1"/><path d="M2.5 8h15M2.5 12.3h15M7.5 3.5v13M12.5 3.5v13" stroke-width="1.1"/><path d="M2.5 3.5 7.5 8" stroke-width="1.1"/>',
+  nearestHub: `<circle cx="14.5" cy="10" r="3"/><circle cx="14.5" cy="10" r=".9" fill="currentColor" stroke="none"/><path d="M4.4 4.4 11.9 8.6M3.8 10.4h7.6M4.6 15.8l7.3-4.4"/>${grip(4.2, 4.3)}${grip(3.6, 10.4)}${grip(4.4, 15.9)}`,
+  polygonNeighbors: '<path d="M10 4.5H3v11h7M10 4.5h7v11h-7" stroke-width="1.2"/><path d="M10 4.5v11" stroke-width="2.6"/>',
+  shortestLine: `<rect x="2.5" y="2.5" width="6.5" height="6.5" rx=".6"/><circle cx="15" cy="14.6" r="3"/><path d="M9 9 12.9 12.5" stroke-dasharray="1.6 1.2"/>${grip(9, 9)}${grip(12.9, 12.5)}`,
   closestFacility:
     '<path d="M4 16h5V5h5.5" stroke-width="2.2"/><path d="M9 16h7.5" stroke-width="1" stroke-dasharray="1.8 1.4"/><circle cx="4" cy="16" r="2" fill="currentColor" stroke="none"/><rect x="14.5" y="2.8" width="4" height="4" fill="currentColor" fill-opacity=".28" stroke-width="1.1"/><rect x="16.5" y="14" width="3" height="3.6" fill="currentColor" fill-opacity=".28" stroke-width="1"/>',
   odMatrix:
@@ -698,6 +706,9 @@ export const ICONS = {
   history: '<path d="M3.5 10a6.5 6.5 0 1 0 2-4.7"/><path d="M3 3.3v3h3M10 6.5V10l2.5 1.8"/>',
   clear: '<path d="M4 6h12M8 6V4h4v2M5.5 6l.8 10.5h7.4L14.5 6"/>',
   settings: '<path d="M3.5 6h8M15.5 6h1M3.5 14h1M8.5 14h8"/><circle cx="13.5" cy="6" r="2"/><circle cx="6.5" cy="14" r="2"/>',
+  // Proje ayarları › Değişkenler (docs/adr/0214 §4): an `@` between braces, the values expressions read by name.
+  projectVariables:
+    '<path d="M5 3.5h-.4c-1.2 0-1.6.6-1.6 1.8v2.6c0 1-.5 1.6-1.4 2.1.9.5 1.4 1.1 1.4 2.1v2.6c0 1.2.4 1.8 1.6 1.8H5M15 3.5h.4c1.2 0 1.6.6 1.6 1.8v2.6c0 1 .5 1.6 1.4 2.1-.9.5-1.4 1.1-1.4 2.1v2.6c0 1.2-.4 1.8-1.6 1.8H15"/><circle cx="10" cy="10" r="1.7"/><path d="M11.7 10v.9a1.2 1.2 0 0 0 2.4 0V10a4.1 4.1 0 1 0-1.6 3.25"/>',
   units: '<path d="M3.5 16.5v-13l13 13z"/><path d="M3.5 12.5h2M3.5 9h2M7.5 16.5v-2M11 16.5v-2"/><path d="M6.5 13.5v-3l3 3z"/>',
   chip: '<rect x="5" y="5" width="10" height="10" rx="1.5"/><rect x="8" y="8" width="4" height="4"/><path d="M8 2.5V5M12 2.5V5M8 15v2.5M12 15v2.5M2.5 8H5M2.5 12H5M15 8h2.5M15 12h2.5"/>',
   appearance: '<circle cx="10" cy="10" r="6.5"/><path d="M10 3.5a6.5 6.5 0 0 1 0 13z" fill="currentColor" stroke="none"/>',
@@ -973,6 +984,28 @@ export const ICONS = {
     '<rect x="2" y="5" width="14.5" height="10" rx="1" stroke-dasharray="2.2 1.6"/><path d="M4.5 7.9h6.3l2.2 2.1-2.2 2.1H4.5z"/><circle cx="16.6" cy="4.9" r="1.7" fill="currentColor" stroke="none"/>',
   labelsUnplaced:
     '<path d="M2.5 4h6.6l2.5 2.6-2.5 2.6H2.5z"/><path d="M7.5 10.8h6.6l2.5 2.6-2.5 2.6H7.5z" stroke-dasharray="2 1.5"/><circle cx="4.6" cy="6.6" r=".85" fill="currentColor" stroke="none"/>',
+  // Katman stili's renderers (docs/adr/0213 §4): one glyph each, the list and the legend's window alike.
+  rendererSimple: '<rect x="3.5" y="3.5" width="13" height="13" rx="1.5"/><path d="M3.5 16.5 16.5 3.5"/>',
+  rendererSingle: '<circle cx="10" cy="10" r="5.5" fill="currentColor" fill-opacity=".3"/>',
+  rendererCategorized: '<circle cx="4.8" cy="10" r="2.3"/><rect x="8" y="7.7" width="4.6" height="4.6"/><path d="m15.4 7.4 2.7 4.8h-5.4z"/>',
+  rendererGraduated: '<path d="M3.5 16.5h3v-4h-3zM8.5 16.5h3v-8h-3zM13.5 16.5h3v-12h-3z"/>',
+  rendererUnclassed:
+    '<rect x="2.5" y="6.5" width="15" height="7" rx="1"/><path d="M6.25 6.5v7M10 6.5v7M13.75 6.5v7"/><path d="M6.25 7.2h3.75v5.6H6.25z" fill="currentColor" fill-opacity=".25" stroke="none"/><path d="M10 7.2h3.75v5.6H10z" fill="currentColor" fill-opacity=".55" stroke="none"/><path d="M13.75 7.2h3.05v5.6h-3.05z" fill="currentColor" fill-opacity=".9" stroke="none"/>',
+  rendererProportional: '<circle cx="4.3" cy="14.2" r="1.6"/><circle cx="8.9" cy="12.8" r="3"/><circle cx="14.6" cy="11" r="4.6"/>',
+  rendererBivariate:
+    '<rect x="3" y="3" width="14" height="14" rx="1"/><path d="M10 3v14M3 10h14"/><path d="M3.6 3.6H9.4V9.4H3.6z" fill="currentColor" fill-opacity=".45" stroke="none"/><path d="M10.6 3.6h5.8v5.8h-5.8z" fill="currentColor" fill-opacity=".9" stroke="none"/><path d="M10.6 10.6h5.8v5.8h-5.8z" fill="currentColor" fill-opacity=".45" stroke="none"/>',
+  rendererRules: '<path d="M3 5h14M5.5 10h9M8 15h4"/>',
+  rendererDotDensity:
+    '<path d="M3 15.8 4.6 4.4l12.2 1.8.7 9.8z"/><g fill="currentColor" stroke="none"><circle cx="7" cy="7.8" r=".9"/><circle cx="11.5" cy="8.6" r=".9"/><circle cx="8.8" cy="11.6" r=".9"/><circle cx="13.6" cy="12.6" r=".9"/><circle cx="6.4" cy="13.2" r=".9"/></g>',
+  rendererChart: '<circle cx="10" cy="10" r="6.5"/><path d="M10 3.5V10l5.6 3.3"/><path d="M10 3.5V10l5.6 3.3A6.5 6.5 0 0 0 10 3.5z" fill="currentColor" fill-opacity=".35" stroke="none"/>',
+  rendererHeatmap:
+    '<circle cx="10" cy="10" r="7" fill="currentColor" fill-opacity=".12" stroke="none"/><circle cx="10" cy="10" r="4.4" fill="currentColor" fill-opacity=".3" stroke="none"/><circle cx="10" cy="10" r="1.9" fill="currentColor" stroke="none"/><circle cx="10" cy="10" r="7"/>',
+  rendererCluster:
+    '<circle cx="10" cy="10" r="6.5"/><g fill="currentColor" stroke="none"><circle cx="8" cy="8.4" r="1.1"/><circle cx="12.2" cy="9.2" r="1.1"/><circle cx="9.6" cy="12.3" r="1.1"/></g><circle cx="3" cy="16.5" r="1" fill="currentColor" stroke="none"/>',
+  rendererDisplacement:
+    '<circle cx="10" cy="10" r="6" stroke-dasharray="1.6 1.9"/><circle cx="10" cy="10" r="1.2" fill="currentColor" stroke="none"/><g fill="currentColor" stroke="none"><circle cx="10" cy="4" r="1.4"/><circle cx="15.7" cy="11.9" r="1.4"/><circle cx="4.3" cy="11.9" r="1.4"/></g>',
+  rendererInverted:
+    '<path d="M2.5 2.5h15v15h-15zM7 6.5l6.5 1.2-1.2 6-5.8-1.4z" fill="currentColor" fill-opacity=".3" fill-rule="evenodd" stroke="none"/><path d="M2.5 2.5h15v15h-15z"/><path d="M7 6.5l6.5 1.2-1.2 6-5.8-1.4z"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

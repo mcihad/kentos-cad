@@ -494,3 +494,30 @@ fn a_sheet_s_export_name_is_written_in_its_scope() {
         "unknown_sheet"
     );
 }
+
+/// The drawing's own variables (Proje ayarları › Değişkenler, docs/adr/0214 §2.3) are read
+/// after the book's: a name the book has keeps the book's value, one only the drawing has
+/// is the drawing's, looked for with Turkish letters and case aside.
+#[test]
+fn the_drawing_s_variables_are_read_after_the_book_s() {
+    use kentos_sheet::display::export_name;
+    use kentos_sheet::model::{VarKind, VarValue, Variable};
+    let mut book = ifraz();
+    let mut inputs = sample_inputs(&book, "s1", true);
+    let var = |name: &str, value: &str| Variable {
+        name: name.into(),
+        label: String::new(),
+        kind: VarKind::Text,
+        value: VarValue::Text(value.into()),
+    };
+    book.sheets[0].export.file_name = "[% @İs_No %] Ada [% @ada %]".into();
+    assert_eq!(
+        export_name(&book, "s1", &inputs).unwrap(),
+        "‹İs_No?› Ada 1234"
+    );
+    inputs.project.variables = vec![var("is_no", "2026/41"), var("ada", "9999")];
+    assert_eq!(
+        export_name(&book, "s1", &inputs).unwrap(),
+        "2026/41 Ada 1234"
+    );
+}

@@ -37,7 +37,7 @@ use kentos_domain::Slot;
 use kentos_expression::editor::{
     self as core, Bracket, Check, Completion, Help, Item, Kind, Signature, ValueItem, units,
 };
-use kentos_expression::{FieldDef, FieldSource, FieldType, Schema};
+use kentos_expression::{FieldDef, FieldSource, FieldType, Schema, Variable};
 use kentos_interaction::Level;
 use kentos_processing::ParamKind;
 use kentos_processing::features;
@@ -209,8 +209,9 @@ fn ev(e: Event) -> Message {
     Message::Builder(e)
 }
 
-/// Today's text attributes as the builder's fields, with how many objects have each.
-fn attribute_fields(fields: &[(String, usize)]) -> Schema {
+/// Today's text attributes as the builder's fields, with how many objects
+/// have each; and the `@` values (docs/adr/0214 §2.3).
+fn attribute_fields(fields: &[(String, usize)], variables: Vec<Variable>, world: bool) -> Schema {
     Schema {
         fields: fields
             .iter()
@@ -221,6 +222,41 @@ fn attribute_fields(fields: &[(String, usize)]) -> Schema {
                 description: format!("{count} nesnede var."),
             })
             .collect(),
+        variables,
+        world,
+    }
+}
+
+impl App {
+    /// The `@` values the drawing's expressions read (docs/adr/0214 §2.3):
+    /// the project's variables, then the built-in ones with this device's
+    /// clock in its zone and the signed-in person; none without a drawing.
+    pub(crate) fn expression_variables(&self) -> Vec<Variable> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        self.variables_of(doc.model.name(), doc.model.settings())
+    }
+
+    /// The `@` values of a project named `name` with these settings (a
+    /// settings window's draft too), with this device's clock in its zone
+    /// and the signed-in person.
+    pub(crate) fn variables_of(
+        &self,
+        name: &str,
+        settings: &kentos_contracts::ProjectSettings,
+    ) -> Vec<Variable> {
+        let utc = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_millis() as i64);
+        let offset = crate::cloud::local_time::Zone::system().offset_at(utc.div_euclid(1000));
+        let now = (utc + i64::from(offset) * 1000) as f64;
+        let user = self
+            .cloud
+            .me
+            .as_ref()
+            .map_or("", |m| m.user.display_name.as_str());
+        kentos_project::variables::expression_variables(name, settings, now, user)
     }
 }
 
@@ -566,6 +602,7 @@ impl App {
     /// The processing window's ε beside an expression field: the builder on
     /// that field's text, fields and objects.
     pub(crate) fn open_builder_for_processing(&mut self, name: &str) -> Task<Message> {
+        let variables = self.expression_variables();
         let (Some(doc), Some(window)) = (&self.document, &self.processing.dialog) else {
             return Task::none();
         };
@@ -586,6 +623,7 @@ impl App {
             selection: &self.selection,
             store: self.spatial.store(),
             view: Some(self.viewport.camera.visible_bounds()),
+            variables: variables.clone(),
         };
         let input = of
             .as_ref()
@@ -614,7 +652,7 @@ impl App {
             Target::Processing(name.to_owned()),
             def.label.clone(),
             value,
-            attribute_fields(&fields),
+            attribute_fields(&fields, variables, true),
             Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());
@@ -628,6 +666,7 @@ impl App {
 
     /// Öznitelik tablosu's ε: the builder on its filter, the layer's keys and objects.
     pub(crate) fn open_builder_for_features(&mut self) -> Task<Message> {
+        let variables = self.expression_variables();
         let Some(doc) = &self.document else {
             return Task::none();
         };
@@ -654,7 +693,7 @@ impl App {
             Target::FeatureFilter,
             crate::features::texts::FILTER.to_owned(),
             &self.features.filter,
-            attribute_fields(&fields),
+            attribute_fields(&fields, variables, false),
             Objects {
                 slots: rows.slots.clone(),
             },
@@ -668,6 +707,8 @@ impl App {
     }
 
     /// Ağlar's ε: the builder on one of the form's expressions, the layer's keys and objects.
+    /// A network's costs are the drawing's, read at each analysis: no `@` value but the
+    /// layer's (docs/adr/0214 §1).
     pub(crate) fn open_builder_for_network(
         &mut self,
         field: crate::networks::window::Field,
@@ -697,7 +738,7 @@ impl App {
             Target::Network(field),
             crate::networks::window::TITLE.to_owned(),
             &value,
-            attribute_fields(&counts),
+            attribute_fields(&counts, Vec::new(), false),
             Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());
@@ -730,7 +771,8 @@ impl App {
     }
 
     /// The builder on an expression over a layer: the layer's fields first, then its objects'
-    /// other keys; its objects to preview on.
+    /// other keys; its objects to preview on. A layer's filter and its labels are kept with
+    /// the drawing: no `@` value but the layer's (docs/adr/0214 §1).
     fn open_builder_on_layer(
         &mut self,
         target: Target,
@@ -765,7 +807,7 @@ impl App {
             target,
             context,
             value,
-            attribute_fields(&counts),
+            attribute_fields(&counts, Vec::new(), false),
             Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());

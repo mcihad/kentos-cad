@@ -3,9 +3,9 @@ import type { Entity, HatchEntity } from '../model/entities';
 import { exprTable, type ExprNeeds, type ExprTable } from '../model/expression/expression';
 import type { Bounds, Vec2 } from '../model/geometry';
 import type { LayerStyle } from '../model/layers';
-import type { LayerRenderer, LibraryAsset, Rule, Symbol, SymbolSet } from '../model/style';
+import type { LayerRenderer, LibraryAsset, Rule, Symbol, SymbolRef, SymbolSet } from '../model/style';
 import { hatchSymbolOf, leaderSymbolsOf, symbolsOfLayerStyle } from '../style/fromLayer';
-import { CoreStyleProgram } from '../wasm/core';
+import { CoreStyleProgram, type StyledOut } from '../wasm/core';
 import type { CanvasPalette, ViewModes } from './color';
 import { styledBatches } from './styledBatches';
 import type { SceneLayer } from './types';
@@ -31,8 +31,11 @@ export interface StyleSources {
 export interface GeometrySource {
   /** What these objects draw, one record each (style/geometry.ts `DrawnReader`); `oriented`: rings turned for the style engine; `clip`: the box construction lines are clipped to. */
   drawn(ids: readonly number[], oriented: boolean, clip?: Bounds): Float64Array;
-  /** A styled layer's batches (`CoreStore.buildStyled`); `pieces`: every insert's pieces' sets in turn; `view`: what Görünüm kipleri leave out. */
-  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, pieces: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number, screen?: boolean, view?: { fills: boolean; areaEdges: boolean }): { json: string; data: Float32Array };
+  /**
+   * A styled layer's batches (`CoreStore.buildStyled`); `pieces`: every insert's pieces' sets in turn; `view`: what Görünüm
+   * kipleri leave out; `frame`: a view-dependent renderer's view (docs/adr/0213 §3).
+   */
+  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, pieces: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number, screen?: boolean, view?: { fills: boolean; areaEdges: boolean }, frame?: { pxPerM: number; picture: string } | null): StyledOut;
   /** A block's pieces, as `GROUP` records number them (docs/adr/0144); null for an unknown block. */
   blockPieces(block: string): readonly BlockPiece[] | null;
   /** An insert's pieces as placed; null for any other object. */
@@ -50,8 +53,10 @@ export interface StyledBuildOptions {
   library: StyleSources;
   layerName(id: string): string;
   geometry: GeometrySource;
-  /** Box construction lines are clipped to (see ViewportController). */
+  /** Box construction lines are clipped to (see ViewportController); a heat map's box, a Ters alan's frame (docs/adr/0213 §3). */
   clip?: Bounds;
+  /** A view-dependent renderer's view: the view's px per metre in quarter octaves, and the key of a heat map's picture. */
+  frame?: { pxPerM: number; picture: string };
   /** Görünüm kipleri (docs/adr/0195): none shows everything in colour, with fills, edges and transparency. */
   view?: ViewModes;
 }
@@ -78,6 +83,9 @@ function rendererRefs(r: LayerRenderer, out: Set<string>): void {
       if (r.children) rules(r.children);
     }
   };
+  const one = (s: SymbolRef | undefined) => {
+    if (s && 'ref' in s) out.add(s.ref);
+  };
   switch (r.type) {
     case 'single':
       return set(r.symbols);
@@ -88,6 +96,25 @@ function rendererRefs(r: LayerRenderer, out: Set<string>): void {
       return r.classes.forEach((c) => set(c.symbols));
     case 'rules':
       return rules(r.rules);
+    case 'unclassed':
+    case 'proportional':
+    case 'bivariate':
+      set(r.symbols);
+      return set(r.other);
+    case 'dotDensity':
+    case 'chart':
+    case 'inverted':
+      return set(r.symbols);
+    case 'heatmap':
+      return;
+    case 'cluster':
+      one(r.symbol);
+      if (r.renderer) rendererRefs(r.renderer, out);
+      return;
+    case 'displacement':
+      one(r.center);
+      if (r.renderer) rendererRefs(r.renderer, out);
+      return;
   }
 }
 
@@ -207,13 +234,15 @@ export function buildStyledLayer(id: string, entities: readonly Entity[], style:
     const needs = Object.fromEntries(NEEDS.map((k, i) => [k, !!(program.needs & (1 << i))])) as unknown as ExprNeeds;
     const table = exprTable(program.fields, needs, entities, opts.layerName);
     const v = opts.view;
-    const out = opts.geometry.styled(program, entities.map((e) => e.id), objects, Int32Array.from(pieces), table, opts.clip ?? null, opts.origin, opts.plotScale, opts.screen, v && { fills: v.fills, areaEdges: v.areaEdges });
+    const out = opts.geometry.styled(program, entities.map((e) => e.id), objects, Int32Array.from(pieces), table, opts.clip ?? null, opts.origin, opts.plotScale, opts.screen, v && { fills: v.fills, areaEdges: v.areaEdges }, opts.frame ?? null);
     return {
       id,
       lines: [],
       fills: [],
       points: [],
       styled: styledBatches(out.json, out.data, { palette: opts.palette, plotScale: opts.plotScale, asset: (a) => opts.library.asset(a), ...(v && { view: { mode: v.colorMode, opaque: !v.transparency } }) }),
+      ...(out.pictures.length && { pictures: out.pictures }),
+      ...(out.dropped && { dropped: out.dropped }),
     };
   } finally {
     program.free();

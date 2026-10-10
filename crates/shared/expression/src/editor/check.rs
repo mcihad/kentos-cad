@@ -53,11 +53,49 @@ pub fn check(src: &str, schema: &Schema) -> Check {
             message,
         }
     });
+    // A `@` name the project lacks reads as empty (docs/adr/0214 §2.3); where
+    // no `@` values are given at all (a style, a label, a layer's filter) say so.
+    let unknown_at = (0..pieces.len()).filter_map(|i| match &pieces[i].lex {
+        super::lex::Lex::At { name }
+            if !name.is_empty()
+                && schema.variable(name).is_none()
+                && !super::catalog::LAYER_AT
+                    .iter()
+                    .any(|(n, _)| fold_turkish(n) == fold_turkish(name)) =>
+        {
+            let near = schema
+                .variables
+                .iter()
+                .map(|v| v.name.as_str())
+                .find(|n| distance(&fold_turkish(n).chars().collect::<Vec<_>>(), &fold_turkish(name).chars().collect::<Vec<_>>()) <= 2);
+            let message = match near {
+                _ if schema.variables.is_empty() => format!(
+                    "Bu alanda yalnız @katman_adi ve @katman okunur; “@{name}” boş olur."
+                ),
+                Some(n) => format!("“@{name}” değişkeni yok, boş okunur. “@{n}” mi yazılacaktı?"),
+                None => format!(
+                    "“@{name}” değişkeni yok, boş okunur. Projenin değişkenleri Proje ayarları › Değişkenler'dedir."
+                ),
+            };
+            Some(Diagnostic {
+                start: pieces[i].start,
+                end: pieces[i].end,
+                message,
+            })
+        }
+        _ => None,
+    });
+    let unknown_at: Vec<Diagnostic> = unknown_at.collect();
     let warnings = if schema.fields.is_empty() {
-        Vec::new()
+        unknown_at
     } else {
+        let elsewhere = other_layers(&pieces);
         (0..pieces.len())
             .filter_map(|i| {
+                // A name inside a call's expression over another layer's objects is theirs.
+                if elsewhere[i] {
+                    return None;
+                }
                 let name = field_name(&pieces, i)?;
                 if schema.find(name).is_some() {
                     return None;
@@ -74,9 +112,49 @@ pub fn check(src: &str, schema: &Schema) -> Check {
                     message,
                 })
             })
+            .chain(unknown_at)
             .collect()
     };
     Check { error, warnings }
+}
+
+/// Which pieces are inside an argument computed on another layer's objects
+/// (docs/adr/0214 §3): `en_yakın('Yol', Ad)`'s `Ad` is a field of the Yol
+/// layer's objects, not of the objects the expression runs on. An
+/// aggregate over the objects' own layer (`topla($alan, Ada)`) reads theirs.
+fn other_layers(pieces: &[Piece]) -> Vec<bool> {
+    use crate::world::roles::{Role, is_inner, roles};
+    // Open parentheses: a call's roles (None for a group or a call that
+    // looks at no other layer) and the commas seen at its level.
+    let mut open: Vec<(Option<&'static [Role]>, usize)> = Vec::new();
+    let mut out = vec![false; pieces.len()];
+    for (i, p) in pieces.iter().enumerate() {
+        match p.lex {
+            super::lex::Lex::Op("(") => {
+                let roles = match i.checked_sub(1).map(|j| &pieces[j].lex) {
+                    Some(super::lex::Lex::Word { name }) => crate::library::find_function(name)
+                        .and_then(|f| roles(f.func))
+                        .filter(|r| r.contains(&Role::Layer)),
+                    _ => None,
+                };
+                open.push((roles, 0));
+            }
+            super::lex::Lex::Op(")") => {
+                open.pop();
+            }
+            super::lex::Lex::Op(",") => {
+                if let Some(top) = open.last_mut() {
+                    top.1 += 1;
+                }
+            }
+            _ => {
+                out[i] = open.iter().any(|(roles, arg)| {
+                    roles.is_some_and(|r| r.get(*arg).is_some_and(|role| is_inner(*role)))
+                });
+            }
+        }
+    }
+    out
 }
 
 /// The error of a `?`: an input of the flow with nothing connected.
@@ -142,6 +220,7 @@ mod tests {
 
     fn schema(names: &[&str]) -> Schema {
         Schema {
+            variables: Vec::new(),
             fields: names
                 .iter()
                 .map(|n| FieldDef {
@@ -151,6 +230,7 @@ mod tests {
                     description: String::new(),
                 })
                 .collect(),
+            world: false,
         }
     }
 

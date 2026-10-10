@@ -28,6 +28,8 @@ pub enum T {
     Null,
     Field(String),
     Var(Var),
+    /// `@name` (docs/adr/0214 §2.3).
+    At(String),
     Call(Func, Vec<T>),
     Not(Box<T>),
     Neg(Box<T>),
@@ -129,6 +131,8 @@ pub fn read(src: &str) -> Result<T, CompileError> {
     with.push_str(&String::from_utf16_lossy(&u[last..]));
     let parsed = tokenize(&with).and_then(|toks| {
         let mut parser = Parser::new(toks);
+        // Empty inputs stand where a layer's name must be a constant text.
+        parser.lenient = true;
         let root = parser.parse()?;
         Ok((root, parser.fields))
     });
@@ -161,6 +165,9 @@ fn from_node(n: &Node, fields: &[String]) -> T {
             None => T::Hole,
         },
         Node::Var(v) => T::Var(*v),
+        Node::At(name) => T::At(name.clone()),
+        // Only a compiled tree holds these (`resolve`).
+        Node::World(..) => T::Hole,
         Node::Call(f, args) => T::Call(*f, args.iter().map(|a| from_node(a, fields)).collect()),
         Node::Not(a) => T::Not(b(a)),
         // A number with a minus before it is one number (`-5`), as it reads.
@@ -363,6 +370,10 @@ impl Writer {
             T::Var(v) => {
                 self.put("$");
                 self.put(var_def(*v).name);
+            }
+            T::At(name) => {
+                self.put("@");
+                self.put(name);
             }
             T::Call(f, args) => {
                 self.put(func_def(*f).name);

@@ -1,0 +1,401 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: yakınlık",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.35,
+    "fill": "#E5484D1F"
+   },
+   "children": []
+  },
+  {
+   "id": "durak",
+   "name": "Durak",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E63DD",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "okul",
+   "name": "Okul",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#30A46C",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8E8C99",
+    "lineType": "continuous",
+    "lineWeight": 0.5
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "parsel",
+   "attrs": {
+    "Ad": "P1"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420000
+    },
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487020,
+     "y": 4420030
+    },
+    {
+     "x": 487000,
+     "y": 4420030
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 2,
+   "layerId": "parsel",
+   "attrs": {
+    "Ad": "P2"
+   },
+   "pts": [
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487045,
+     "y": 4420000
+    },
+    {
+     "x": 487045,
+     "y": 4420030
+    },
+    {
+     "x": 487020,
+     "y": 4420030
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 3,
+   "layerId": "parsel",
+   "attrs": {
+    "Ad": "P3"
+   },
+   "pts": [
+    {
+     "x": 487045,
+     "y": 4420000
+    },
+    {
+     "x": 487060,
+     "y": 4420000
+    },
+    {
+     "x": 487060,
+     "y": 4420020
+    },
+    {
+     "x": 487045,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 4,
+   "layerId": "parsel",
+   "attrs": {
+    "Ad": "P4"
+   },
+   "pts": [
+    {
+     "x": 487060,
+     "y": 4420020
+    },
+    {
+     "x": 487080,
+     "y": 4420020
+    },
+    {
+     "x": 487080,
+     "y": 4420040
+    },
+    {
+     "x": 487060,
+     "y": 4420040
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 5,
+   "layerId": "parsel",
+   "attrs": {
+    "Ad": "P5"
+   },
+   "pts": [
+    {
+     "x": 487075,
+     "y": 4420030
+    },
+    {
+     "x": 487095,
+     "y": 4420030
+    },
+    {
+     "x": 487095,
+     "y": 4420050
+    },
+    {
+     "x": 487075,
+     "y": 4420050
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 6,
+   "layerId": "parsel",
+   "attrs": {
+    "Ad": "P6"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420040
+    },
+    {
+     "x": 487020,
+     "y": 4420040
+    },
+    {
+     "x": 487020,
+     "y": 4420060
+    },
+    {
+     "x": 487000,
+     "y": 4420060
+    }
+   ],
+   "bulges": [
+    0,
+    -0.5,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 7,
+   "layerId": "parsel",
+   "attrs": {
+    "Ad": "P7"
+   },
+   "pts": [
+    {
+     "x": 487020,
+     "y": 4420040
+    },
+    {
+     "x": 487040,
+     "y": 4420040
+    },
+    {
+     "x": 487040,
+     "y": 4420060
+    },
+    {
+     "x": 487020,
+     "y": 4420060
+    }
+   ],
+   "bulges": [
+    0,
+    0,
+    0,
+    0.5
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 11,
+   "layerId": "durak",
+   "attrs": {
+    "Ad": "Çarşı"
+   },
+   "p": {
+    "x": 487010,
+    "y": 4419995
+   }
+  },
+  {
+   "kind": "point",
+   "id": 12,
+   "layerId": "durak",
+   "attrs": {
+    "Ad": "Okul önü"
+   },
+   "p": {
+    "x": 487050,
+    "y": 4420035
+   }
+  },
+  {
+   "kind": "point",
+   "id": 13,
+   "layerId": "durak",
+   "attrs": {
+    "Ad": "Sanayi"
+   },
+   "p": {
+    "x": 487100,
+    "y": 4420010
+   }
+  },
+  {
+   "kind": "point",
+   "id": 14,
+   "layerId": "durak",
+   "attrs": {
+    "Ad": "Pazar"
+   },
+   "p": {
+    "x": 487030,
+    "y": 4420033
+   }
+  },
+  {
+   "kind": "point",
+   "id": 21,
+   "layerId": "okul",
+   "attrs": {
+    "Ad": "Atatürk"
+   },
+   "p": {
+    "x": 487010,
+    "y": 4420050
+   }
+  },
+  {
+   "kind": "point",
+   "id": 22,
+   "layerId": "okul",
+   "attrs": {
+    "Ad": "Cumhuriyet"
+   },
+   "p": {
+    "x": 487070,
+    "y": 4420010
+   }
+  },
+  {
+   "kind": "polyline",
+   "id": 31,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Ana cadde"
+   },
+   "pts": [
+    {
+     "x": 486990,
+     "y": 4419990
+    },
+    {
+     "x": 487110,
+     "y": 4419990
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 32,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Dere yolu"
+   },
+   "pts": [
+    {
+     "x": 487100,
+     "y": 4419990
+    },
+    {
+     "x": 487100,
+     "y": 4420060
+    }
+   ]
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

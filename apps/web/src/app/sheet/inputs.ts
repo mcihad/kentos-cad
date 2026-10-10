@@ -136,9 +136,17 @@ export function renderInputs(ctx: AppContext, book: SheetBook, sheet: Sheet, o: 
       legends.push({ item: it.id, entries: legendEntries(ctx, layers, inside(k.map ?? undefined), k.symbol, o) });
     }
   }
+  const variables = doc.settings.variables.value.map((v) => ({ name: v.name, label: v.label ?? '', kind: v.kind ?? 'text', value: v.value ?? null }));
   return {
     mode: o.mode,
-    project: { name: doc.name.value, user: ctx.cloud.me.value?.user.displayName ?? '', date: today(), crsName: projectCrsName(doc.settings) },
+    project: {
+      name: doc.name.value,
+      user: ctx.cloud.me.value?.user.displayName ?? '',
+      date: today(),
+      crsName: projectCrsName(doc.settings),
+      // The drawing's own variables, read after the book's (docs/adr/0214 §2.3).
+      ...(variables.length ? { variables } : {}),
+    },
     capabilities: o.capabilities,
     // The project's own definition without the registry's transverse Mercator values (docs/adr/0168 §1).
     crs: doc.settings.customCrs.value ? { name: projectCrsName(doc.settings) } : crsInfo(crs),

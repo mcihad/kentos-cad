@@ -10,6 +10,8 @@ import {
   dist as wasmDist,
   distToSegment as wasmDistToSegment,
   exprEvaluate as wasmExprEvaluate,
+  exprEvaluateIn as wasmExprEvaluateIn,
+  ExprWorld as WasmExprWorld,
   FaceIndex,
   GeometryStore,
   StyleProgram,
@@ -21,6 +23,7 @@ import {
   rasterLevelCount as wasmRasterLevelCount,
   rasterTiles as wasmRasterTiles,
   rasterTilesAt as wasmRasterTilesAt,
+  rendererProblem as wasmRendererProblem,
   scratch as wasmScratch,
   scratchCentroid as wasmScratchCentroid,
   scratchPathLength as wasmScratchPathLength,
@@ -520,6 +523,36 @@ export function exprEvaluate(source: string, n: number, texts: string, textLens:
 }
 
 /**
+ * `exprEvaluate` in a context (docs/adr/0214): `context` is the schema as JSON,
+ * `{ variables, world }` (the `@` values; whether other layers are given). Without
+ * a geometry store no call looks at other layers: one that would is refused.
+ */
+export function exprEvaluateIn(source: string, context: string, n: number, texts: string, textLens: Int32Array, numbers: Float64Array, measures: Float64Array, scale: number, want: number): ExprColumnData {
+  return typed(() => {
+    const c = wasmExprEvaluateIn(source, context, n, texts, textLens, numbers, measures, scale, want);
+    try {
+      return { kinds: c.kinds, numbers: c.numbers, texts: c.texts, textLengths: c.textLengths };
+    } finally {
+      c.free();
+    }
+  });
+}
+
+/**
+ * The layers an expression's calls to other objects look at (docs/adr/0214 §3), as one table: every layer's
+ * objects one after another (`exprTable` of the fields and values the calls read), their ids, each layer's name
+ * and count. Their objects are in the store the expression is evaluated in.
+ */
+export interface ExprWorldTable {
+  readonly names: readonly string[];
+  readonly counts: Uint32Array;
+  readonly ids: Float64Array;
+  readonly texts: string;
+  readonly lens: Int32Array;
+  readonly numbers: Float64Array;
+}
+
+/**
  * Where the texts beside numbered corners go (processing, docs/adr/0008 S4):
  * four numbers per corner in `corners` (x, y, outward x and y), its text in
  * `texts`, measured in the drawing typeface `font`; x, y per corner come back.
@@ -556,16 +589,42 @@ export class CoreStyleProgram {
   /** The variables read, as bits: 1 geometry values, 2 corners, 4 kind, 8 layer, 16 label, 32 position, 64 id, 128 scale. */
   readonly needs: number;
 
+  /** What a build depends on beyond its objects (docs/adr/0213 §3), as bits: 1 the view's scale, 2 the heat map's box, 4 the construction lines' box, 8 built whole. */
+  readonly viewNeeds: number;
+
   constructor(json: string) {
     this.json = json;
     this.raw = typed(() => new StyleProgram(json));
     this.fields = JSON.parse(typed(() => this.raw.fields)) as string[];
     this.needs = typed(() => this.raw.needs);
+    this.viewNeeds = typed(() => this.raw.viewNeeds);
   }
 
   free(): void {
     this.raw.free();
   }
+}
+
+/** Why a renderer cannot be a layer's (docs/adr/0213 §5; the style core's `renderer_problem`), or null. */
+export function rendererProblem(renderer: unknown): string | null {
+  const why = typed(() => wasmRendererProblem(JSON.stringify(renderer)));
+  return why === '' ? null : why;
+}
+
+/** A picture a layer build made (a heat map's, docs/adr/0213 §2.6): RGBA, straight alpha, rows from the top. */
+export interface MadePicture {
+  readonly key: string;
+  readonly width: number;
+  readonly height: number;
+  readonly rgba: Uint8Array;
+}
+
+/** A layer build's answer: its batches, the pictures it made and the dots it left out (docs/adr/0213 §2.4). */
+export interface StyledOut {
+  json: string;
+  data: Float32Array;
+  pictures: MadePicture[];
+  dropped: number;
 }
 
 /**
@@ -874,6 +933,23 @@ export class CoreStore {
   }
 
   /**
+   * `evaluateExpression` in a context (docs/adr/0214): the schema as JSON (`{ variables, world }`), and the layers
+   * its calls to other objects look at, whose objects are in this store too.
+   */
+  evaluateExpressionIn(source: string, context: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number, world?: ExprWorldTable): ExprColumnData {
+    return typed(() => {
+      // Handed over to the core, which frees it.
+      const w = world ? new WasmExprWorld([...world.names], world.counts, world.ids, world.texts, world.lens, world.numbers) : undefined;
+      const c = this.raw.evaluateExpressionIn(source, context, ids, texts, textLens, numbers, scale, want, w);
+      try {
+        return { kinds: c.kinds, numbers: c.numbers, texts: c.texts, textLengths: c.textLengths };
+      } finally {
+        c.free();
+      }
+    });
+  }
+
+  /**
    * A layer through the style engine (crates/shared/style-core/src/style/build.rs):
    * `objects` four numbers per id (how it is drawn, its set or symbol, the set
    * of its simple look, its colour), `pieces` the sets of every insert's pieces
@@ -893,11 +969,15 @@ export class CoreStore {
     plotScale: number,
     screen = false,
     view = { fills: true, areaEdges: true },
-  ): { json: string; data: Float32Array } {
+    frame: { pxPerM: number; picture: string } | null = null,
+  ): StyledOut {
     return typed(() => {
-      const r = this.raw.buildStyled(program.raw, ids, objects, pieces, table.texts, table.lens, table.numbers, clip !== null, clip?.minX ?? 0, clip?.minY ?? 0, clip?.maxX ?? 0, clip?.maxY ?? 0, origin.x, origin.y, plotScale, screen, view.fills, view.areaEdges);
+      const r = this.raw.buildStyled(program.raw, ids, objects, pieces, table.texts, table.lens, table.numbers, clip !== null, clip?.minX ?? 0, clip?.minY ?? 0, clip?.maxX ?? 0, clip?.maxY ?? 0, origin.x, origin.y, plotScale, screen, view.fills, view.areaEdges, frame?.pxPerM ?? 0, frame?.picture ?? '');
       const json = r.json;
-      return { json, data: r.intoData() };
+      const sizes = JSON.parse(r.pictures) as { key: string; width: number; height: number }[];
+      const pictures = sizes.map((p, i) => ({ ...p, rgba: r.pictureData(i) }));
+      const dropped = r.dropped;
+      return { json, data: r.intoData(), pictures, dropped };
     });
   }
 
@@ -928,6 +1008,20 @@ export class CoreStore {
    */
   relatePairs(inputs: Float64Array, references: Float64Array, relation: number, within: number): Float64Array {
     return typed(() => this.raw.relatePairs(inputs, references, relation, within));
+  }
+
+  /**
+   * Each input's nearest targets (docs/adr/0215 §2.1): `k` of them (0: all) within `max` (Infinity: no bound), edge to
+   * edge (0) or centre to centre (1); eight numbers each: input place, target place, distance, the input's nearest
+   * point (x, y), the target's (x, y) and the bearing between them (radians, clockwise from north; NaN at 0 apart).
+   */
+  nearest(inputs: Float64Array, targets: Float64Array, k: number, max: number, measure: number): Float64Array {
+    return typed(() => this.raw.nearest(inputs, targets, k, max, measure));
+  }
+
+  /** The areas' neighbours (docs/adr/0215 §2.2): five numbers each: place, neighbour's place, kind (0 edge, 1 corner, 2 overlap), shared length, overlapping area. */
+  neighbors(ids: Float64Array, tolerance: number, corners: boolean, overlaps: boolean): Float64Array {
+    return typed(() => this.raw.neighbors(ids, tolerance, corners, overlaps));
   }
 
   /** Ids in the document's order. */

@@ -1,7 +1,7 @@
 {
  "format": "kentos.style-legend",
  "version": 1,
- "note": "Lejant (style/legend.ts): okuduğu katmanlar (listenin üstü önce; istenirse yalnız görünenler), her katmanın satırları (işleyicisi yoksa kendi görünüşü, tek sembol, kategoriler (kapalı kategori girmez, boş etiket yerine değer, kitaplıkta olmayan sembol girmez, Diğer değerler), aralıklar, kurallar (üst › alt, kapalı kural girmez) ve nesnelerin kendi sembolleri (her sembol bir kez, kitaplıktaki adıyla, adı yoksa kimliğiyle); yalnız katmanda olan geometriler, birden çoksa satır adında (alan), (çizgi), (nokta); satırı olmayan katman girmez), resmin yerleşimi (mantıksal piksel, 2× çizilir; başlıklı ve başlıksız; bir katman bırakılmış) ve pencerenin sözleri. Semboller kitaplıktan çözülmüş hâlleriyle yazılıdır. Yanıtlar web’indir ve kaydedilirken okunmuştur.",
+ "note": "Lejant (style/legend.ts): okuduğu katmanlar (listenin üstü önce; istenirse yalnız görünenler), her katmanın satırları (işleyicisi yoksa kendi görünüşü, tek sembol, kategoriler (kapalı kategori girmez, boş etiket yerine değer, kitaplıkta olmayan sembol girmez, Diğer değerler), aralıklar, kurallar (üst › alt, kapalı kural girmez), tematik işleyiciler (Sürekli renk rampadan beş örnek, Orantılı sembol ortak ölçekte üç boy, İki değişkenli renk ızgaranın hücreleri, Nokta yoğunluğu nokta değeri ve değerleri, Grafik değerleri, Isı haritası üç örnek, Kümeleme işareti ve tek noktaları, Yayma tek noktaları, Ters alan Dışı; docs/adr/0213 §4) ve nesnelerin kendi sembolleri (her sembol bir kez, kitaplıktaki adıyla, adı yoksa kimliğiyle); yalnız katmanda olan geometriler, birden çoksa satır adında (alan), (çizgi), (nokta); satırı olmayan katman girmez), resmin yerleşimi (mantıksal piksel, 2× çizilir; başlıklı ve başlıksız; bir katman bırakılmış) ve pencerenin sözleri. Semboller kitaplıktan çözülmüş hâlleriyle yazılıdır. Yanıtlar web’indir ve kaydedilirken okunmuştur.",
  "origin": {
   "x": 487000,
   "y": 4420000
@@ -276,6 +276,287 @@
     "lineType": "dotted",
     "lineWeight": 0.25
    }
+  },
+  {
+   "id": "yogunluk",
+   "name": "Yoğunluk",
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "renderer": {
+     "type": "unclassed",
+     "expr": "Nüfus",
+     "min": 0,
+     "max": 200,
+     "ramp": [
+      "#FFF5B8",
+      "#E66101",
+      "#A50F15"
+     ],
+     "symbols": {
+      "fill": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "f",
+         "type": "simpleFill",
+         "color": "#000000"
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "okul",
+   "name": "Okullar",
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "renderer": {
+     "type": "proportional",
+     "expr": "Öğrenci",
+     "minValue": 100,
+     "maxValue": 2000,
+     "minSize": 2,
+     "maxSize": 9,
+     "unit": "mm",
+     "scaling": "flannery",
+     "symbols": {
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "c",
+         "type": "shape",
+         "shape": "circle",
+         "size": 4,
+         "fill": "#3E63DD",
+         "stroke": "#FFFFFF",
+         "strokeWidth": 0.2
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "iki",
+   "name": "Nüfus ve gelir",
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "renderer": {
+     "type": "bivariate",
+     "exprX": "Nüfus",
+     "exprY": "Gelir",
+     "breaksX": [
+      100
+     ],
+     "breaksY": [
+      30
+     ],
+     "colors": [
+      "#E8E8E8",
+      "#5AC8C8",
+      "#BE64AC",
+      "#3B4994"
+     ],
+     "symbols": {
+      "fill": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "f",
+         "type": "simpleFill",
+         "color": "#000000"
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "nokta",
+   "name": "Nüfus noktaları",
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "renderer": {
+     "type": "dotDensity",
+     "fields": [
+      {
+       "expr": "Erkek",
+       "color": "#4E79A7",
+       "label": "Erkekler"
+      },
+      {
+       "expr": "Kadın",
+       "color": "#E15759"
+      }
+     ],
+     "dotValue": 250,
+     "dotSize": 0.6,
+     "unit": "mm",
+     "seed": 1
+    }
+   }
+  },
+  {
+   "id": "grafik",
+   "name": "Kullanım",
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "renderer": {
+     "type": "chart",
+     "kind": "pie",
+     "fields": [
+      {
+       "expr": "Konut",
+       "color": "#E15759"
+      },
+      {
+       "expr": "Ticaret",
+       "color": "#4E79A7",
+       "label": "Ticaret alanı"
+      }
+     ],
+     "size": 9,
+     "unit": "mm",
+     "symbols": {
+      "fill": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "f",
+         "type": "simpleFill",
+         "color": "#F2F2F2"
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "olay",
+   "name": "Olaylar",
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "renderer": {
+     "type": "heatmap",
+     "radius": 20,
+     "unit": "px",
+     "ramp": [
+      "#2B83BA00",
+      "#2B83BA",
+      "#FFFFBF",
+      "#D7191C"
+     ],
+     "quality": 2
+    }
+   }
+  },
+  {
+   "id": "agaclar",
+   "name": "Ağaçlar",
+   "style": {
+    "color": "#30A46C",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "renderer": {
+     "type": "cluster",
+     "distance": 40,
+     "unit": "px",
+     "renderer": {
+      "type": "categorized",
+      "expr": "Tür",
+      "categories": [
+       {
+        "value": "Çam",
+        "label": "Çam",
+        "symbols": {
+         "marker": {
+          "ref": "agac"
+         }
+        }
+       },
+       {
+        "value": "Meşe",
+        "label": "Meşe",
+        "symbols": {
+         "marker": {
+          "ref": "kot"
+         }
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "durak",
+   "name": "Duraklar",
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "renderer": {
+     "type": "displacement",
+     "tolerance": 4,
+     "unit": "px",
+     "renderer": {
+      "type": "single",
+      "symbols": {
+       "marker": {
+        "ref": "kot"
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "calisma",
+   "name": "Çalışma alanı",
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "renderer": {
+     "type": "inverted",
+     "symbols": {
+      "fill": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "f",
+         "type": "simpleFill",
+         "color": "#FFFFFFB3"
+        },
+        {
+         "id": "l",
+         "type": "simpleLine",
+         "color": "#8E4EC6",
+         "width": 0.6
+        }
+       ]
+      }
+     }
+    }
+   }
   }
  ],
  "activeLayer": "yapi",
@@ -389,7 +670,7 @@
     }
    ],
    "id": 1,
-   "uid": "01a0e1ce-adb0-7047-91d1-6c7bb0df4d22"
+   "uid": "01a12450-0e09-7378-b5cc-11779eb48948"
   },
   {
    "kind": "point",
@@ -400,7 +681,7 @@
     "y": 4420008
    },
    "id": 2,
-   "uid": "01a0e1ce-adb2-74fa-854e-0f8b6f00e161"
+   "uid": "01a12450-0e0c-74c6-b2fa-f42593beb05c"
   },
   {
    "kind": "polyline",
@@ -417,7 +698,7 @@
     }
    ],
    "id": 3,
-   "uid": "01a0e1ce-adb2-74fb-9a5f-e1a28cd66111"
+   "uid": "01a12450-0e0c-74c7-9635-e8a979a3f82b"
   },
   {
    "kind": "polygon",
@@ -444,7 +725,7 @@
     }
    ],
    "id": 4,
-   "uid": "01a0e1ce-adb2-74fc-8ac9-5a9f0dfd3648"
+   "uid": "01a12450-0e0c-74c8-8569-6360f5f64cdc"
   },
   {
    "kind": "polygon",
@@ -471,7 +752,7 @@
     }
    ],
    "id": 5,
-   "uid": "01a0e1ce-adb2-74fd-8f5e-4e56c302f051"
+   "uid": "01a12450-0e0c-74c9-996c-912490e80ec4"
   },
   {
    "kind": "point",
@@ -484,7 +765,7 @@
     "y": 4420008
    },
    "id": 6,
-   "uid": "01a0e1ce-adb2-74fe-b0bc-39d9ae1d787c"
+   "uid": "01a12450-0e0c-74ca-9503-b221ef3923f6"
   },
   {
    "kind": "polygon",
@@ -512,7 +793,7 @@
     }
    ],
    "id": 7,
-   "uid": "01a0e1ce-adb2-74ff-880f-e7b339b117d5"
+   "uid": "01a12450-0e0c-74cb-91e7-bf4ef1393b4a"
   },
   {
    "kind": "polyline",
@@ -529,7 +810,7 @@
     }
    ],
    "id": 8,
-   "uid": "01a0e1ce-adb2-7500-b02e-2ebe56fbb4f0"
+   "uid": "01a12450-0e0c-74cc-a85c-cdf883aaf9e9"
   },
   {
    "kind": "text",
@@ -543,7 +824,7 @@
    "height": 2,
    "rotation": 0,
    "id": 9,
-   "uid": "01a0e1ce-adb2-7501-bb3e-85448b1ae0d3"
+   "uid": "01a12450-0e0c-74cd-a9e3-a8f7c65de71b"
   },
   {
    "kind": "point",
@@ -555,7 +836,7 @@
     "y": 4420000
    },
    "id": 10,
-   "uid": "01a0e1ce-adb2-7502-8aa3-1372e226e718"
+   "uid": "01a12450-0e0c-74ce-af83-95e608ef4120"
   },
   {
    "kind": "point",
@@ -567,7 +848,7 @@
     "y": 4420000
    },
    "id": 11,
-   "uid": "01a0e1ce-adb2-7503-ae32-ff367706a2cd"
+   "uid": "01a12450-0e0c-74cf-9e87-87b88d8bd198"
   },
   {
    "kind": "point",
@@ -579,7 +860,7 @@
     "y": 4420000
    },
    "id": 12,
-   "uid": "01a0e1ce-adb2-7504-ab28-91774eef45be"
+   "uid": "01a12450-0e0c-74d0-a77b-f98e7f7c8386"
   },
   {
    "kind": "point",
@@ -591,7 +872,7 @@
     "y": 4420000
    },
    "id": 13,
-   "uid": "01a0e1ce-adb2-7505-b245-766d12364c8d"
+   "uid": "01a12450-0e0c-74d1-a986-121c29077bfe"
   },
   {
    "kind": "polyline",
@@ -608,7 +889,191 @@
     }
    ],
    "id": 14,
-   "uid": "01a0e1ce-adb2-7506-a486-4de4f0e901f1"
+   "uid": "01a12450-0e0c-74d2-a096-bd770f5a7790"
+  },
+  {
+   "kind": "polygon",
+   "layerId": "yogunluk",
+   "attrs": {
+    "Nüfus": "120"
+   },
+   "pts": [
+    {
+     "x": 487070,
+     "y": 4420000
+    },
+    {
+     "x": 487075,
+     "y": 4420000
+    },
+    {
+     "x": 487075,
+     "y": 4420005
+    },
+    {
+     "x": 487070,
+     "y": 4420005
+    }
+   ],
+   "id": 15,
+   "uid": "01a12450-0e0c-74d3-a615-9dfd99302342"
+  },
+  {
+   "kind": "point",
+   "layerId": "okul",
+   "attrs": {
+    "Öğrenci": "800"
+   },
+   "p": {
+    "x": 487080,
+    "y": 4420000
+   },
+   "id": 16,
+   "uid": "01a12450-0e0c-74d4-b161-7f06ced87588"
+  },
+  {
+   "kind": "polygon",
+   "layerId": "iki",
+   "attrs": {
+    "Nüfus": "120",
+    "Gelir": "20"
+   },
+   "pts": [
+    {
+     "x": 487090,
+     "y": 4420000
+    },
+    {
+     "x": 487095,
+     "y": 4420000
+    },
+    {
+     "x": 487095,
+     "y": 4420005
+    },
+    {
+     "x": 487090,
+     "y": 4420005
+    }
+   ],
+   "id": 17,
+   "uid": "01a12450-0e0c-74d5-87c1-0c6f9ba7c0eb"
+  },
+  {
+   "kind": "polygon",
+   "layerId": "nokta",
+   "attrs": {
+    "Erkek": "600",
+    "Kadın": "640"
+   },
+   "pts": [
+    {
+     "x": 487100,
+     "y": 4420000
+    },
+    {
+     "x": 487105,
+     "y": 4420000
+    },
+    {
+     "x": 487105,
+     "y": 4420005
+    },
+    {
+     "x": 487100,
+     "y": 4420005
+    }
+   ],
+   "id": 18,
+   "uid": "01a12450-0e0c-74d6-8678-6fd62d3fb301"
+  },
+  {
+   "kind": "polygon",
+   "layerId": "grafik",
+   "attrs": {
+    "Konut": "70",
+    "Ticaret": "30"
+   },
+   "pts": [
+    {
+     "x": 487110,
+     "y": 4420000
+    },
+    {
+     "x": 487115,
+     "y": 4420000
+    },
+    {
+     "x": 487115,
+     "y": 4420005
+    },
+    {
+     "x": 487110,
+     "y": 4420005
+    }
+   ],
+   "id": 19,
+   "uid": "01a12450-0e0c-74d7-896a-66ee8b2b762d"
+  },
+  {
+   "kind": "point",
+   "layerId": "olay",
+   "attrs": {},
+   "p": {
+    "x": 487120,
+    "y": 4420000
+   },
+   "id": 20,
+   "uid": "01a12450-0e0c-74d8-a1a8-c2acb17dfadf"
+  },
+  {
+   "kind": "point",
+   "layerId": "agaclar",
+   "attrs": {
+    "Tür": "Çam"
+   },
+   "p": {
+    "x": 487130,
+    "y": 4420000
+   },
+   "id": 21,
+   "uid": "01a12450-0e0c-74d9-9346-bd4f22c6cd98"
+  },
+  {
+   "kind": "point",
+   "layerId": "durak",
+   "attrs": {},
+   "p": {
+    "x": 487140,
+    "y": 4420000
+   },
+   "id": 22,
+   "uid": "01a12450-0e0c-74da-b692-0c05be7f5475"
+  },
+  {
+   "kind": "polygon",
+   "layerId": "calisma",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 487150,
+     "y": 4420000
+    },
+    {
+     "x": 487155,
+     "y": 4420000
+    },
+    {
+     "x": 487155,
+     "y": 4420005
+    },
+    {
+     "x": 487150,
+     "y": 4420005
+    }
+   ],
+   "id": 23,
+   "uid": "01a12450-0e0c-74db-ad4b-24ce5283a21a"
   }
  ],
  "drawingName": "Ada 101 uygulama",
@@ -622,7 +1087,16 @@
     "kotlar",
     "plan",
     "yazi",
-    "kendi"
+    "kendi",
+    "yogunluk",
+    "okul",
+    "iki",
+    "nokta",
+    "grafik",
+    "olay",
+    "agaclar",
+    "durak",
+    "calisma"
    ],
    "groups": [
     {
@@ -886,6 +1360,414 @@
        }
       }
      ]
+    },
+    {
+     "layerId": "yogunluk",
+     "layerName": "Yoğunluk",
+     "entries": [
+      {
+       "label": "0",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#FFF5B8"
+         }
+        ]
+       }
+      },
+      {
+       "label": "50",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#F2AB5C"
+         }
+        ]
+       }
+      },
+      {
+       "label": "100",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E66101"
+         }
+        ]
+       }
+      },
+      {
+       "label": "150",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#C6380B"
+         }
+        ]
+       }
+      },
+      {
+       "label": "200",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#A50F15"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "okul",
+     "layerName": "Okullar",
+     "entries": [
+      {
+       "label": "100",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "c",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2,
+          "fill": "#3E63DD",
+          "stroke": "#FFFFFF",
+          "strokeWidth": 0.2
+         }
+        ]
+       },
+       "pxPerMm": 2.1333333333333337
+      },
+      {
+       "label": "1050",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "c",
+          "type": "shape",
+          "shape": "circle",
+          "size": 6.725848770346323,
+          "fill": "#3E63DD",
+          "stroke": "#FFFFFF",
+          "strokeWidth": 0.2
+         }
+        ]
+       },
+       "pxPerMm": 2.1333333333333337
+      },
+      {
+       "label": "2000",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "c",
+          "type": "shape",
+          "shape": "circle",
+          "size": 9,
+          "fill": "#3E63DD",
+          "stroke": "#FFFFFF",
+          "strokeWidth": 0.2
+         }
+        ]
+       },
+       "pxPerMm": 2.1333333333333337
+      }
+     ]
+    },
+    {
+     "layerId": "iki",
+     "layerName": "Nüfus ve gelir",
+     "entries": [
+      {
+       "label": "Nüfus < 100, Gelir < 30",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E8E8E8"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Nüfus ≥ 100, Gelir < 30",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#5AC8C8"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Nüfus < 100, Gelir ≥ 30",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#BE64AC"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Nüfus ≥ 100, Gelir ≥ 30",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#3B4994"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "nokta",
+     "layerName": "Nüfus noktaları",
+     "entries": [
+      {
+       "label": "1 nokta = 250",
+       "symbol": null
+      },
+      {
+       "label": "Erkekler",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "d",
+          "type": "shape",
+          "shape": "circle",
+          "size": 0.6,
+          "unit": "mm",
+          "fill": "#4E79A7"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Kadın",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "d",
+          "type": "shape",
+          "shape": "circle",
+          "size": 0.6,
+          "unit": "mm",
+          "fill": "#E15759"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "grafik",
+     "layerName": "Kullanım",
+     "entries": [
+      {
+       "label": "Konut",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E15759"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Ticaret alanı",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#4E79A7"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "olay",
+     "layerName": "Olaylar",
+     "entries": [
+      {
+       "label": "Az",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#2B83BABF"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Orta",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#95C1BD"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Çok",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#D7191C"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "agaclar",
+     "layerName": "Ağaçlar",
+     "entries": [
+      {
+       "label": "Küme",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "k",
+          "type": "shape",
+          "shape": "circle",
+          "size": 24,
+          "unit": "px",
+          "fill": "#30A46C",
+          "stroke": "#FFFFFF",
+          "strokeWidth": 1.5
+         }
+        ]
+       }
+      },
+      {
+       "label": "Çam",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "t",
+          "type": "shape",
+          "shape": "triangle",
+          "size": 2,
+          "fill": "#59A14F"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Meşe",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "c",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1.5,
+          "fill": "#4E79A7"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "durak",
+     "layerName": "Duraklar",
+     "entries": [
+      {
+       "label": "Duraklar",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "c",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1.5,
+          "fill": "#4E79A7"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "calisma",
+     "layerName": "Çalışma alanı",
+     "entries": [
+      {
+       "label": "Dışı",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#FFFFFFB3"
+         },
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "#8E4EC6",
+          "width": 0.6
+         }
+        ]
+       }
+      }
+     ]
     }
    ]
   },
@@ -899,7 +1781,16 @@
     "plan",
     "yazi",
     "kendi",
-    "gizli"
+    "gizli",
+    "yogunluk",
+    "okul",
+    "iki",
+    "nokta",
+    "grafik",
+    "olay",
+    "agaclar",
+    "durak",
+    "calisma"
    ],
    "groups": [
     {
@@ -1190,6 +2081,414 @@
        }
       }
      ]
+    },
+    {
+     "layerId": "yogunluk",
+     "layerName": "Yoğunluk",
+     "entries": [
+      {
+       "label": "0",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#FFF5B8"
+         }
+        ]
+       }
+      },
+      {
+       "label": "50",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#F2AB5C"
+         }
+        ]
+       }
+      },
+      {
+       "label": "100",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E66101"
+         }
+        ]
+       }
+      },
+      {
+       "label": "150",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#C6380B"
+         }
+        ]
+       }
+      },
+      {
+       "label": "200",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#A50F15"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "okul",
+     "layerName": "Okullar",
+     "entries": [
+      {
+       "label": "100",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "c",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2,
+          "fill": "#3E63DD",
+          "stroke": "#FFFFFF",
+          "strokeWidth": 0.2
+         }
+        ]
+       },
+       "pxPerMm": 2.1333333333333337
+      },
+      {
+       "label": "1050",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "c",
+          "type": "shape",
+          "shape": "circle",
+          "size": 6.725848770346323,
+          "fill": "#3E63DD",
+          "stroke": "#FFFFFF",
+          "strokeWidth": 0.2
+         }
+        ]
+       },
+       "pxPerMm": 2.1333333333333337
+      },
+      {
+       "label": "2000",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "c",
+          "type": "shape",
+          "shape": "circle",
+          "size": 9,
+          "fill": "#3E63DD",
+          "stroke": "#FFFFFF",
+          "strokeWidth": 0.2
+         }
+        ]
+       },
+       "pxPerMm": 2.1333333333333337
+      }
+     ]
+    },
+    {
+     "layerId": "iki",
+     "layerName": "Nüfus ve gelir",
+     "entries": [
+      {
+       "label": "Nüfus < 100, Gelir < 30",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E8E8E8"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Nüfus ≥ 100, Gelir < 30",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#5AC8C8"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Nüfus < 100, Gelir ≥ 30",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#BE64AC"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Nüfus ≥ 100, Gelir ≥ 30",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#3B4994"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "nokta",
+     "layerName": "Nüfus noktaları",
+     "entries": [
+      {
+       "label": "1 nokta = 250",
+       "symbol": null
+      },
+      {
+       "label": "Erkekler",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "d",
+          "type": "shape",
+          "shape": "circle",
+          "size": 0.6,
+          "unit": "mm",
+          "fill": "#4E79A7"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Kadın",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "d",
+          "type": "shape",
+          "shape": "circle",
+          "size": 0.6,
+          "unit": "mm",
+          "fill": "#E15759"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "grafik",
+     "layerName": "Kullanım",
+     "entries": [
+      {
+       "label": "Konut",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#E15759"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Ticaret alanı",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#4E79A7"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "olay",
+     "layerName": "Olaylar",
+     "entries": [
+      {
+       "label": "Az",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#2B83BABF"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Orta",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#95C1BD"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Çok",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#D7191C"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "agaclar",
+     "layerName": "Ağaçlar",
+     "entries": [
+      {
+       "label": "Küme",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "k",
+          "type": "shape",
+          "shape": "circle",
+          "size": 24,
+          "unit": "px",
+          "fill": "#30A46C",
+          "stroke": "#FFFFFF",
+          "strokeWidth": 1.5
+         }
+        ]
+       }
+      },
+      {
+       "label": "Çam",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "t",
+          "type": "shape",
+          "shape": "triangle",
+          "size": 2,
+          "fill": "#59A14F"
+         }
+        ]
+       }
+      },
+      {
+       "label": "Meşe",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "c",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1.5,
+          "fill": "#4E79A7"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "durak",
+     "layerName": "Duraklar",
+     "entries": [
+      {
+       "label": "Duraklar",
+       "symbol": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "c",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1.5,
+          "fill": "#4E79A7"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "layerId": "calisma",
+     "layerName": "Çalışma alanı",
+     "entries": [
+      {
+       "label": "Dışı",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#FFFFFFB3"
+         },
+         {
+          "id": "l",
+          "type": "simpleLine",
+          "color": "#8E4EC6",
+          "width": 0.6
+         }
+        ]
+       }
+      }
+     ]
     }
    ]
   }
@@ -1201,7 +2500,7 @@
    "layout": {
     "scale": 2,
     "width": 520,
-    "height": 702,
+    "height": 1722,
     "background": "#FFFFFF",
     "heading": {
      "text": "LEJANT",
@@ -1576,6 +2875,582 @@
        "frame": "#BBBBBB",
        "frameWidth": 0.5
       }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Yoğunluk",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 705,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "0",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 735,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 719,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "50",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 765,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 749,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "100",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 795,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 779,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "150",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 825,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 809,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "200",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 855,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 839,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Okullar",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 885,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "100",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 915,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 899,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "1050",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 945,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 929,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "2000",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 975,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 959,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Nüfus ve gelir",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1005,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Nüfus < 100, Gelir < 30",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1035,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1019,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Nüfus ≥ 100, Gelir < 30",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1065,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1049,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Nüfus < 100, Gelir ≥ 30",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1095,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1079,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Nüfus ≥ 100, Gelir ≥ 30",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1125,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1109,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Nüfus noktaları",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1155,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "1 nokta = 250",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1185,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Erkekler",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1215,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1199,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Kadın",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1245,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1229,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Kullanım",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1275,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Konut",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1305,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1289,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Ticaret alanı",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1335,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1319,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Olaylar",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1365,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Az",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1395,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1379,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Orta",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1425,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1409,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Çok",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1455,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1439,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Ağaçlar",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1485,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Küme",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1515,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1499,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Çam",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1545,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1529,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Meşe",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1575,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1559,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Duraklar",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1605,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Duraklar",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1635,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1619,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Çalışma alanı",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1665,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Dışı",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1695,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1679,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
      }
     ]
    }
@@ -1586,7 +3461,7 @@
    "layout": {
     "scale": 2,
     "width": 520,
-    "height": 522,
+    "height": 1272,
     "background": "#FFFFFF",
     "heading": {
      "text": "LEJANT",
@@ -1889,6 +3764,474 @@
        "frame": "#BBBBBB",
        "frameWidth": 0.5
       }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "0",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 525,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 509,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "50",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 555,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 539,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "100",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 585,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 569,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "150",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 615,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 599,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "200",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 645,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 629,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "100",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 675,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 659,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "1050",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 705,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 689,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "2000",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 735,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 719,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Nüfus < 100, Gelir < 30",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 765,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 749,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Nüfus ≥ 100, Gelir < 30",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 795,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 779,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Nüfus < 100, Gelir ≥ 30",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 825,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 809,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Nüfus ≥ 100, Gelir ≥ 30",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 855,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 839,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "1 nokta = 250",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 885,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Erkekler",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 915,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 899,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Kadın",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 945,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 929,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Konut",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 975,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 959,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Ticaret alanı",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1005,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 989,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Az",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1035,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1019,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Orta",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1065,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1049,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Çok",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1095,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1079,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Küme",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1125,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1109,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Çam",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1155,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1139,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Meşe",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1185,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1169,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Duraklar",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1215,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1199,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Dışı",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1245,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1229,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
      }
     ]
    }
@@ -1898,11 +4241,11 @@
    "left": [
     "kotlar"
    ],
-   "rows": 13,
+   "rows": 38,
    "layout": {
     "scale": 2,
     "width": 520,
-    "height": 612,
+    "height": 1632,
     "background": "#FFFFFF",
     "heading": {
      "text": "LEJANT",
@@ -2222,6 +4565,582 @@
       "picture": {
        "x": 20,
        "y": 569,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Yoğunluk",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 615,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "0",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 645,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 629,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "50",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 675,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 659,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "100",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 705,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 689,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "150",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 735,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 719,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "200",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 765,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 749,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Okullar",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 795,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "100",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 825,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 809,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "1050",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 855,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 839,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "2000",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 885,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 869,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Nüfus ve gelir",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 915,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Nüfus < 100, Gelir < 30",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 945,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 929,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Nüfus ≥ 100, Gelir < 30",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 975,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 959,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Nüfus < 100, Gelir ≥ 30",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1005,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 989,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Nüfus ≥ 100, Gelir ≥ 30",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1035,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1019,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Nüfus noktaları",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1065,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "1 nokta = 250",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1095,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Erkekler",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1125,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1109,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Kadın",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1155,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1139,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Kullanım",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1185,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Konut",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1215,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1199,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Ticaret alanı",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1245,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1229,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Olaylar",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1275,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Az",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1305,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1289,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Orta",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1335,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1319,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Çok",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1365,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1349,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Ağaçlar",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1395,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Küme",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1425,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1409,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Çam",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1455,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1439,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Meşe",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1485,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1469,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Duraklar",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1515,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Duraklar",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1545,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1529,
+       "w": 56,
+       "h": 24,
+       "frame": "#BBBBBB",
+       "frameWidth": 0.5
+      }
+     },
+     {
+      "kind": "heading",
+      "label": {
+       "text": "Çalışma alanı",
+       "font": "700 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 20,
+       "y": 1575,
+       "align": "left"
+      },
+      "picture": null
+     },
+     {
+      "kind": "entry",
+      "label": {
+       "text": "Dışı",
+       "font": "400 12px Arial, \"Liberation Sans\", sans-serif",
+       "color": "#000000",
+       "x": 90,
+       "y": 1605,
+       "align": "left"
+      },
+      "picture": {
+       "x": 20,
+       "y": 1589,
        "w": 56,
        "h": 24,
        "frame": "#BBBBBB",

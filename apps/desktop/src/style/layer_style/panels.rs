@@ -17,7 +17,7 @@ use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog, Segmented, Tip, horizontal_divider, overlay, tip};
+use kentos_ui::widget::{Dialog, Menu, MenuButton, Tip, horizontal_divider, overlay, tip};
 
 use super::widgets::{Env, check, ev, expression, help, input, number, problem, slots, tool};
 use super::{Event, Field, KINDS, Kind, LayerStyleWindow, SetAt, Source, bound_key};
@@ -71,7 +71,7 @@ impl App {
         };
         let fields = window.fields(model);
         let top = row![
-            Segmented::new(KINDS, window.kind, |k| ev(Event::Kind(k))),
+            kind_picker(window.kind),
             label::caption(objects_text(model.count(&window.layer), window))
                 .style(style::text::muted),
         ]
@@ -89,6 +89,9 @@ impl App {
             Kind::Graduated => graduated_panel(window, &env, &src, &fields),
             Kind::Rules => super::rules::rules_panel(window, &env, &src, &fields),
             Kind::Unknown => unknown_panel(window),
+            // The thematic kinds (docs/adr/0213 §4).
+            _ => super::thematic::panel_of(window, &env, &src, &fields)
+                .unwrap_or_else(|| space().into()),
         };
         let title = format!("Katman stili: {}", node.map_or("", |n| n.name.as_str()));
         let name = node.map_or(String::new(), |n| n.name.clone());
@@ -121,6 +124,41 @@ impl App {
             paper: hex(p.background),
         }
     }
+}
+
+/// The renderer kinds in a list by group, each with its icon and what it does (the web's
+/// `Dropdown`, docs/adr/0213 §4); the field shows the chosen one.
+fn kind_picker<'a>(kind: Kind) -> Element<'a, Message> {
+    let face = container(
+        row![
+            icon(crate::icons::from_web(Some(kind.icon()))).size(16.0),
+            container(label::body(kind.to_string())).width(Fill),
+            icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
+        ]
+        .spacing(8)
+        .align_y(Center),
+    )
+    .padding([5, 8])
+    .width(Length::Fixed(typography::scaled(300.0)))
+    .style(style::container::field_box);
+    let menu = move || {
+        let mut m = Menu::new();
+        for k in KINDS {
+            if let Some(g) = k.group() {
+                m = m.header(g);
+            }
+            m = m
+                .radio(k.to_string(), k == kind, ev(Event::Kind(k)))
+                .icon(crate::icons::from_web(Some(k.icon())))
+                .detail(k.detail());
+        }
+        m
+    };
+    tip(
+        MenuButton::new(face, menu),
+        Tip::new("İşleyici: nesnelerin nasıl çizileceği"),
+        Position::Bottom,
+    )
 }
 
 /// “6 nesne: 6 alan”, or that nothing of the layer is drawn by a style.

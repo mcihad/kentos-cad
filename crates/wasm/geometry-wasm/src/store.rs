@@ -15,11 +15,12 @@ use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::spatial_query::Relation;
 use kentos_geometry_core::processing::numbering::{CornerWalk, StartCorner};
 use kentos_geometry_core::store::overview::OverviewRequest;
+use kentos_geometry_core::store::proximity::Measure;
 use kentos_geometry_core::store::snap::{Extension, SnapExtras};
 use kentos_geometry_core::store::{Store, array_packed_objects, transform_packed_objects};
 use kentos_geometry_core::text::Font;
 use kentos_geometry_core::tools::editing::array_transforms;
-use kentos_style_core::style::build::{LayerObjects, Program, View, build_layer_with};
+use kentos_style_core::style::build::{LayerObjects, Program, View, ViewFrame, build_layer_in};
 use wasm_bindgen::prelude::*;
 
 fn read_entity(text: &str) -> Result<Entity, JsError> {
@@ -193,14 +194,40 @@ impl StyleProgram {
         .enumerate()
         .fold(0, |bits, (i, &on)| bits | (u32::from(on) << i))
     }
+
+    /// What a build of it depends on beyond its objects (docs/adr/0213 §3),
+    /// as bits: 1 the view's scale, 2 the heat map's box, 4 the construction
+    /// lines' box, 8 built whole.
+    #[wasm_bindgen(getter, js_name = viewNeeds)]
+    pub fn view_needs(&self) -> u32 {
+        use kentos_style_core::style::model::Frame;
+        let n = self.inner.view_needs();
+        u32::from(n.scale)
+            | match n.frame {
+                Some(Frame::Heat) => 2,
+                Some(Frame::Construction) => 4,
+                None => 0,
+            }
+            | if self.inner.whole() { 8 } else { 0 }
+    }
+}
+
+/// Why a renderer (its JSON) cannot be a layer's (docs/adr/0213 §5), or
+/// an empty text.
+#[wasm_bindgen(js_name = rendererProblem)]
+pub fn renderer_problem(json: &str) -> String {
+    kentos_style_core::style::rules::renderer_problem_text(json).unwrap_or_default()
 }
 
 /// A styled layer's batches (`style::batch`): their descriptions as JSON and
-/// their numbers one after another (float32, origin-relative).
+/// their numbers one after another (float32, origin-relative); the
+/// pictures the build made (a heat map's) and the dots left out.
 #[wasm_bindgen]
 pub struct StyledBatches {
     json: String,
     data: Vec<f32>,
+    pictures: Vec<kentos_style_core::style::batch::Picture>,
+    dropped: u64,
 }
 
 #[wasm_bindgen]
@@ -208,6 +235,40 @@ impl StyledBatches {
     #[wasm_bindgen(getter)]
     pub fn json(&self) -> String {
         self.json.clone()
+    }
+
+    /// The pictures' keys and sizes, `[{key, width, height}]`.
+    #[wasm_bindgen(getter)]
+    pub fn pictures(&self) -> String {
+        let mut out = String::from("[");
+        for (i, p) in self.pictures.iter().enumerate() {
+            if i > 0 {
+                out.push(',');
+            }
+            out.push_str(&format!(
+                "{{\"key\":{},\"width\":{},\"height\":{}}}",
+                json::to_string(&Json::Str(p.key.clone())),
+                p.width,
+                p.height
+            ));
+        }
+        out.push(']');
+        out
+    }
+
+    /// A picture's pixels (RGBA, straight alpha, rows from the top).
+    #[wasm_bindgen(js_name = pictureData)]
+    pub fn picture_data(&self, i: usize) -> Vec<u8> {
+        self.pictures
+            .get(i)
+            .map(|p| p.rgba.clone())
+            .unwrap_or_default()
+    }
+
+    /// Dots left out over the layer's limit (docs/adr/0213 §2.4).
+    #[wasm_bindgen(getter)]
+    pub fn dropped(&self) -> f64 {
+        self.dropped as f64
     }
 
     /// The numbers; the object is used up.
@@ -1097,6 +1158,74 @@ impl GeometryStore {
         Ok(crate::ExprColumn::from(c))
     }
 
+    /// `evaluateExpression` in a context (docs/adr/0214): the schema as JSON
+    /// (`{ variables, world }`), and the layers its calls to other objects
+    /// look at, whose objects are in this store too.
+    #[wasm_bindgen(js_name = evaluateExpressionIn)]
+    #[allow(clippy::too_many_arguments)]
+    pub fn evaluate_expression_in(
+        &self,
+        source: &str,
+        context: &str,
+        ids: &[f64],
+        texts: &str,
+        text_lens: &[i32],
+        numbers: &[f64],
+        scale: f64,
+        want: u8,
+        world: Option<crate::ExprWorld>,
+    ) -> Result<crate::ExprColumn, JsError> {
+        use kentos_expression::world::{World, WorldLayer};
+        use kentos_expression::{api::schema_of, compile_with, rows};
+        let schema = schema_of(context).map_err(|e| JsError::new(&e))?;
+        let e = compile_with(source, &schema).map_err(|e| JsError::new(&e.text()))?;
+        let input = rows::RowsInput {
+            n: ids.len(),
+            texts,
+            text_lens,
+            numbers,
+            measures: &[],
+            scale,
+        };
+        let shape = |i: usize| {
+            ids.get(i)
+                .and_then(|&id| self.inner.get(id))
+                .map(|it| &it.shape)
+        };
+        let want = rows::As::from_code(want);
+        let c = match world.filter(|_| e.looks_around()) {
+            Some(w) => {
+                let needs = e.world_needs();
+                let table = rows::WorldTable::new(
+                    &needs,
+                    w.names,
+                    &w.counts,
+                    &w.ids,
+                    &w.texts,
+                    &w.text_lens,
+                    &w.numbers,
+                )
+                .map_err(|e| JsError::new(&e))?;
+                let layers = table.layers(Some(&self.inner));
+                let world = World {
+                    layers: layers
+                        .iter()
+                        .map(|(name, ids, objects)| WorldLayer {
+                            name: name.clone(),
+                            ids: ids.clone(),
+                            objects,
+                        })
+                        .collect(),
+                    store: Some(&self.inner),
+                };
+                rows::evaluate_rows_on_in(&e, &input, want, shape, Some(&world))
+            }
+            None => rows::evaluate_rows_on(&e, &input, want, shape),
+        }
+        .map_err(|e| JsError::new(&e))?;
+        Ok(crate::ExprColumn::from(c))
+    }
+
     /// A layer through the style engine (`kentos_style_core::style::build`):
     /// `objects` four numbers per id (how it is drawn, its set or symbol, the
     /// set of its simple look, its colour), `pieces` the sets of every
@@ -1127,9 +1256,13 @@ impl GeometryStore {
         screen: bool,
         fills: bool,
         area_edges: bool,
+        px_per_m: f64,
+        picture: &str,
     ) -> Result<StyledBatches, JsError> {
         let clip = has_clip.then(|| rect(min_x, min_y, max_x, max_y));
-        let b = build_layer_with(
+        // A view-dependent renderer's view (docs/adr/0213 §3): its scale (0: none) and the key of its picture.
+        let frame = (px_per_m > 0.0).then_some(ViewFrame { px_per_m, picture });
+        let b = build_layer_in(
             &self.inner,
             &program.inner,
             &LayerObjects {
@@ -1145,11 +1278,14 @@ impl GeometryStore {
             plot_scale,
             screen,
             View { fills, area_edges },
+            frame,
         )
         .map_err(|e| JsError::new(&e))?;
         Ok(StyledBatches {
             json: b.json,
             data: b.data,
+            pictures: b.pictures,
+            dropped: b.dropped,
         })
     }
 
@@ -1223,6 +1359,37 @@ impl GeometryStore {
             Some(r) => self.inner.relate_pairs(inputs, references, r, within),
             None => Vec::new(),
         }
+    }
+
+    /// Each input's nearest targets (docs/adr/0215 §2.1; `Store::nearest`):
+    /// `k` of them (0: all) within `max` (infinite: no bound), measured edge to
+    /// edge (0) or centre to centre (1); eight numbers each: the input's place,
+    /// the target's, the distance, the two nearest points and the bearing.
+    pub fn nearest(
+        &self,
+        inputs: &[f64],
+        targets: &[f64],
+        k: u32,
+        max: f64,
+        measure: u32,
+    ) -> Vec<f64> {
+        match Measure::from_code(measure) {
+            Some(m) => self.inner.nearest(inputs, targets, k as usize, max, m),
+            None => Vec::new(),
+        }
+    }
+
+    /// The areas' neighbours (docs/adr/0215 §2.2; `Store::neighbors`): five
+    /// numbers each: the area's place, its neighbour's, the kind (0 edge,
+    /// 1 corner, 2 overlap), the shared length and the overlapping area.
+    pub fn neighbors(
+        &self,
+        ids: &[f64],
+        tolerance: f64,
+        corners: bool,
+        overlaps: bool,
+    ) -> Vec<f64> {
+        self.inner.neighbors(ids, tolerance, corners, overlaps)
     }
 
     /// Edges of visible objects overlapping the rectangle (see `pack_edges`).

@@ -38,11 +38,11 @@ export class Thumbs {
   }
 
   /** A canvas of `w` × `h` CSS px showing `symbol`, drawn when it becomes visible. */
-  canvas(symbol: Symbol, w: number, height: number, geometry?: PreviewGeometry): HTMLCanvasElement {
+  canvas(symbol: Symbol, w: number, height: number, geometry?: PreviewGeometry, pxPerMm?: number): HTMLCanvasElement {
     const c = h('canvas', { class: 'sthumb', width: String(w), height: String(height), style: `width:${w}px;height:${height}px`, 'aria-hidden': 'true' });
     const draw = () => {
       if (!c.isConnected) return;
-      drawSymbolPreview(c, symbol, { palette: this.ctx.view.palette, library: this.ctx.styles.library, geometry, background: 'paper', onLoad: draw });
+      drawSymbolPreview(c, symbol, { palette: this.ctx.view.palette, library: this.ctx.styles.library, geometry, background: 'paper', pxPerMm, onLoad: draw });
     };
     this.draws.set(c, draw);
     this.io.observe(c);

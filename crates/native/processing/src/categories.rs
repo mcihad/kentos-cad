@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 23] = [
+pub const CATEGORIES: [Category; 24] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -63,6 +63,13 @@ pub const CATEGORIES: [Category; 23] = [
         "Analiz",
         "measure",
         "Ölçüm, istatistik ve raporlar",
+    ),
+    // docs/adr/0215: how near objects are to one another.
+    category(
+        "proximity",
+        "Yakınlık",
+        "nearestFeature",
+        "En yakın nesne, uzaklık matrisi, en yakın merkez, komşu alanlar, en kısa çizgi",
     ),
     // docs/adr/0238: where objects lie and how their values sit among their neighbours.
     category(

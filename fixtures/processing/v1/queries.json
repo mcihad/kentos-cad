@@ -1037,6 +1037,398 @@
    }
   },
   {
+   "id": "expr-intersects",
+   "title": "İfadeyle seç, başka katmanla: Yol'la kesişen parseller (Konuma göre seç'in Kesişen'i gibi)",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byExpression"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "condition": "kesişir('Yol')"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 / 4 nesne koşulu sağladı; seçimde 1 nesne var.",
+    "undo": null,
+    "selection": [
+     3
+    ],
+    "outputs": {
+     "count": 1,
+     "matched": [
+      3
+     ]
+    }
+   }
+  },
+  {
+   "id": "expr-tree-count",
+   "title": "Öznitelik hesapla, kesişen sayısı: parseldeki ağaçlar; sınırdaki ağaç iki parselde, delikteki hiçbirinde; tam sayı alanına",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.calculate"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "field": "Ağaç sayısı",
+    "value": "kesişen_sayısı('Ağaç')",
+    "where": "",
+    "empty": "keep",
+    "label": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 nesnede “Ağaç sayısı” yazıldı.",
+    "undo": "Öznitelik hesapla",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "Ağaç sayısı": "2"
+      },
+      "label": "1"
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00",
+       "Ağaç sayısı": "2"
+      },
+      "label": "2"
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25",
+       "Ağaç sayısı": "1"
+      },
+      "label": "3"
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Tapu alanı": "1100",
+       "Ağaç sayısı": "1"
+      },
+      "label": "4"
+     }
+    ],
+    "outputs": {
+     "count": 4,
+     "changed": [
+      1,
+      2,
+      3,
+      4
+     ]
+    }
+   }
+  },
+  {
+   "id": "expr-nearest-road",
+   "title": "Öznitelik hesapla, en yakın: her ağaca en yakın yolun adı",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.calculate"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "agac"
+    },
+    "field": "Yol",
+    "value": "en_yakın('Yol', Ad)",
+    "where": "",
+    "empty": "keep",
+    "label": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesnede “Yol” yazıldı.",
+    "undo": "Öznitelik hesapla",
+    "updated": [
+     {
+      "id": 10,
+      "attrs": {
+       "Tür": "Çam",
+       "Yol": "Cumhuriyet Caddesi"
+      }
+     },
+     {
+      "id": 11,
+      "attrs": {
+       "Tür": "Meşe",
+       "Yol": "Cumhuriyet Caddesi"
+      }
+     },
+     {
+      "id": 12,
+      "attrs": {
+       "Tür": "Çam",
+       "Yol": "Okul Sokağı"
+      }
+     },
+     {
+      "id": 13,
+      "attrs": {
+       "Tür": "Ihlamur",
+       "Yol": "Okul Sokağı"
+      }
+     },
+     {
+      "id": 14,
+      "attrs": {
+       "Tür": "Çam",
+       "Yol": "Cumhuriyet Caddesi"
+      }
+     },
+     {
+      "id": 15,
+      "attrs": {
+       "Tür": "Meşe",
+       "Yol": "Cumhuriyet Caddesi"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 6,
+     "changed": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+     ]
+    }
+   }
+  },
+  {
+   "id": "expr-group-count",
+   "title": "Öznitelik hesapla, katmanın toplaması: aynı kattaki yapı sayısı; boş kat kendi grubu",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.calculate"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yapi"
+    },
+    "field": "Aynı kattaki",
+    "value": "say($id, Kat)",
+    "where": "",
+    "empty": "keep",
+    "label": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "5 nesnede “Aynı kattaki” yazıldı.",
+    "undo": "Öznitelik hesapla",
+    "updated": [
+     {
+      "id": 5,
+      "attrs": {
+       "Taban alanı": "70",
+       "Kat": "2",
+       "Aynı kattaki": "2"
+      }
+     },
+     {
+      "id": 6,
+      "attrs": {
+       "Taban alanı": "100",
+       "Kat": "1",
+       "Aynı kattaki": "2"
+      }
+     },
+     {
+      "id": 7,
+      "attrs": {
+       "Taban alanı": "25,5",
+       "Kat": "2",
+       "Aynı kattaki": "2"
+      }
+     },
+     {
+      "id": 8,
+      "attrs": {
+       "Taban alanı": "36",
+       "Kat": "",
+       "Aynı kattaki": "1"
+      }
+     },
+     {
+      "id": 9,
+      "attrs": {
+       "Taban alanı": "bilinmiyor",
+       "Kat": "1",
+       "Aynı kattaki": "2"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 5,
+     "changed": [
+      5,
+      6,
+      7,
+      8,
+      9
+     ]
+    }
+   }
+  },
+  {
+   "id": "expr-from-layer",
+   "title": "Öznitelik hesapla, başka katmandan: tapu kaydının parselinin adası; 002 ile 2 aynı anahtar, eşi olmayana dokunulmaz",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.calculate"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kayit"
+    },
+    "field": "Ada",
+    "value": "katmandan('Parsel', Ada, 'Parsel', Parsel)",
+    "where": "",
+    "empty": "keep",
+    "label": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 nesnede “Ada” yazıldı; 1 nesnede sonuç boş olduğu için dokunulmadı.",
+    "undo": "Öznitelik hesapla",
+    "updated": [
+     {
+      "id": 18,
+      "attrs": {
+       "Parsel": "1",
+       "Malik": "Ayşe Yılmaz",
+       "Ada": "101"
+      }
+     },
+     {
+      "id": 19,
+      "attrs": {
+       "Parsel": "2",
+       "Malik": "Hasan Demir",
+       "Ada": "101"
+      }
+     },
+     {
+      "id": 20,
+      "attrs": {
+       "Parsel": "002",
+       "Malik": "Tekrar Kayıt",
+       "Ada": "101"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "changed": [
+      18,
+      19,
+      20
+     ]
+    }
+   }
+  },
+  {
+   "id": "expr-variable",
+   "title": "Öznitelik hesapla, projenin değişkeniyle: @proje_adi çizimin adıdır",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.calculate"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "field": "Proje",
+    "value": "@proje_adi || ' / ' || Parsel",
+    "where": "",
+    "empty": "keep",
+    "label": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 nesnede “Proje” yazıldı.",
+    "undo": "Öznitelik hesapla",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "Proje": "İşlem durumları: sorgular / 1"
+      },
+      "label": "1"
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00",
+       "Proje": "İşlem durumları: sorgular / 2"
+      },
+      "label": "2"
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25",
+       "Proje": "İşlem durumları: sorgular / 3"
+      },
+      "label": "3"
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Tapu alanı": "1100",
+       "Proje": "İşlem durumları: sorgular / 4"
+      },
+      "label": "4"
+     }
+    ],
+    "outputs": {
+     "count": 4,
+     "changed": [
+      1,
+      2,
+      3,
+      4
+     ]
+    }
+   }
+  },
+  {
    "id": "refuse-field-rule",
    "title": "Öznitelik hesapla, katmanın tam sayı alanına sayı olmayan değer: çalıştırma reddedilir, hiçbir şey değişmez",
    "document": "queries.kcad",
