@@ -44,6 +44,8 @@ mod raster_ops_tests;
 #[cfg(test)]
 mod raster_vector_tests;
 #[cfg(test)]
+mod suitability_tests;
+#[cfg(test)]
 pub(crate) mod surface_tests;
 #[cfg(test)]
 mod tests;
@@ -170,6 +172,8 @@ pub enum Event {
     Number(String, String),
     /// A text, field or expression field's text as typed.
     Text(String, String),
+    /// A name typed before it is added (Rasterlere değer's Ekle in a model's step, docs/adr/0237 §9).
+    Draft(String, String),
     /// A new layer's name as typed.
     LayerName(String, String),
     /// A features parameter's scope chosen: the parameter and the scope's id.
@@ -366,7 +370,7 @@ impl App {
             }
             Event::Background(id, reply) => {
                 self.processing_background(id, reply);
-                return Task::none();
+                return self.result_shown();
             }
             Event::Results => {
                 self.processing_results();
@@ -520,7 +524,7 @@ impl App {
                 let lookup = |id: &str| registry.tool(id);
                 let outcome = run_model(model, &values, runner, &mut stage, &lookup, &mut log);
                 self.processing_ran(&tool.label, None, log, outcome);
-                return Task::none();
+                return self.result_shown();
             }
             let run = background::ModelRun {
                 model: model.clone(),
@@ -548,13 +552,13 @@ impl App {
                 Prepared::Ready(job) => job,
                 Prepared::Done(outcome) => {
                     self.processing_ran(&tool.label, None, log, outcome);
-                    return Task::none();
+                    return self.result_shown();
                 }
             };
             if !background(plan::auto_target(&targets.available, job.size())) {
                 let outcome = runner.complete(&mut stage, job, &mut log);
                 self.processing_ran(&tool.label, None, log, outcome);
-                return Task::none();
+                return self.result_shown();
             }
             job.target = Target::Worker;
             self.processing.runs += 1;
@@ -577,6 +581,16 @@ impl App {
             window.started(id);
         }
         task
+    }
+
+    /// After a run that gave a table, the form scrolled to its end so the table under it is seen (the web's).
+    fn result_shown(&self) -> Task<Message> {
+        match self.processing.dialog.as_ref().map(|w| &w.status) {
+            Some(RunStatus::Ok { table: Some(_), .. }) => {
+                iced::widget::operation::snap_to_end(window::FORM)
+            }
+            _ => Task::none(),
+        }
     }
 
     /// A message of a tool's, in the command history.

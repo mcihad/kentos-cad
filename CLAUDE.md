@@ -178,6 +178,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   geçilmez; Yükseklik modeliyle yüzey uzunluğu ve en büyük boyuna eğim; maliyet ya da en ucuz kaynak), En düşük maliyetli yol (Yol,
   Kaynak, Maliyet, Uzunluk) ve Maliyet koridoru (yüzde ya da değer eşiği); bütün raster bellekte; nesnelerden uzaklık kaynakların
   katmanının, öbürleri maliyet rasterinin yanında (ADR 0236);
+  çok ölçütlü uygunluk: İşlemler'in Uygunluk analizi kategorisinde Bulanık üyelik (Doğrusal, Üslü, Gauss, Büyük, Küçük, Yakın),
+  Bulanık çakıştırma (Ve, Veya, Çarpım, Toplam, Gamma), Ağırlıklı toplam, Ağırlıklı çakıştırma (ortak ölçek, yüzde etkiler, sınıf
+  tabloları ve kısıt; tam sayılarla kesin), İkili karşılaştırma (AHP: ağırlıklar ve tutarlılık oranı tablosu, isteğe bağlı ağırlıklı
+  toplam) ve ROC ile doğrulama (AUC, eğrinin tablosu, en iyi eşik); çok rasterli araçlar girdilerin kesişiminde; İşlemler'in iki yeni
+  parametre türü: rasterlere değer ve raster çiftleri, girdinin rasterlerinden tablolar; tablo veren çalıştırmadan sonra tablo görünür
+  olur (ADR 0237);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -485,6 +491,11 @@ python3 scripts/fixtures/distance_processing_cases.py --check   # uzaklık ve ma
 python3 scripts/fixtures/distance_scene.py --check   # uzaklık ve maliyet resimlerinin çizimini ve maliyet rasterini (fixtures/interaction/v1/distance.kcad, distance/maliyet.tif: vadinin DEM'i, eğimden maliyet, göl, köyler, yol) denetle (ADR 0236)
 cargo test --release -p kentos-raster --test all distance_timing -- --ignored --nocapture --test-threads=1   # 4096² maliyet rasterinde dört aracın dokuz işinin süreleri; KENTOS_PHASES=1 aşamaları da yazar (ADR 0236 §8; web'inkiler: (cd apps/web && node scripts/perf/raster.mjs --only distance))
 KENTOS_SHOTS_ONLY=uzk-serit,uzk-yol-cizim,uzk-koridor-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # uzaklık ve maliyetin resimleri, .run/shots/arac-uzk-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs distance); ADR 0236)
+python3 scripts/fixtures/suitability_cases.py --check   # uygunluk analizinin altı aracını (üyelik işlevleri, bulanık işleçler, ağırlıklı toplam, tam sayılı ağırlıklı çakıştırma ve sınıf tabloları, AHP'nin özvektörü 50 basamakta, ROC'un AUC'si her çiftle kaba kuvvetle) ADR'den, KentOS kodu olmadan mpmath ve kesirlerle denetle; durumlar fixtures/suitability/v1/cases.json (ADR 0237)
+python3 scripts/fixtures/suitability_processing_cases.py --check   # uygunluk araçlarının İşlemler durumlarını denetle; rasterleri GDAL yazar, yazılan dosyalar başvuruya bağlı; durumlar fixtures/processing/v1/suitability.json, suitability.kcad ve suitability/ (ADR 0237)
+python3 scripts/fixtures/suitability_scene.py --check   # uygunluk resimlerinin çizimini ve ölçütlerini (fixtures/interaction/v1/suitability.kcad, suitability/: vadinin eğimi, yola uzaklık, arazi örtüsü, heyelan noktaları) denetle (ADR 0237)
+cargo test --release -p kentos-raster --test all suitability_timing -- --ignored --nocapture --test-threads=1   # 4096² dört ölçütte altı aracın süreleri ve 15 ölçütlü AHP (ADR 0237 §11; web'inkiler: (cd apps/web && node scripts/perf/raster.mjs --only suitability))
+KENTOS_SHOTS_ONLY=uyg-serit,uyg-cakistirma,uyg-cakistirma-cizim,uyg-ahp,uyg-roc cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # uygunluk analizinin resimleri, .run/shots/arac-uyg-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs suitability); ADR 0237)
 KENTOS_SHOTS_ONLY=hid-serit,hid-dere-cizim,hid-havza-cizim,hid-guzergah-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # hidrolojinin resimleri, .run/shots/arac-hid-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hydrology); ADR 0235)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
@@ -1420,6 +1431,14 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `ui/labels/`, `tools/labelTools.ts`, `viewport/placedLabels.ts`; masaüstünde `labelling/`, `kentos_interaction::label_tools`; pafta PDF'ine
   zeminler ve çağrı çizgileri; sunucuda `label_pins` sütunu ve göç 0015 (tür denetimi kılavuz, tablo, resim, raster ve nokta bulutunu da
   alır); Python ve MCP; ortak iz `label-tools.json` (yeni beklenti `labelPins`); süreler ADR'nin Doğrulama'sında. Sıradaki `GIS-17`.
+  Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
+  ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
+  parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM
+  notlarında `suit`, `roc()`; İşlemler'in `builtin/suitability/`'ı iki platformda; İşlemler'in iki yeni parametre türü (`rasterValues`,
+  `rasterPairs`; masaüstünde `raster_rows`, web'de `fieldPlan.ts`'in satırları), tablo veren çalıştırmadan sonra tablo görünür olur;
+  bağımsız başvuru `suitability_cases.py` (50 durum), ortak durumlar `fixtures/processing/v1/suitability.json`
+  (`suitability_processing_cases.py`), resimlerin sahnesi `suitability.kcad` (`suitability_scene.py`); CBS'nin Raster sekmesinde Uygunluk
+  analizi paneli, sekme 1100 px'e sığsın diye İnterpolasyon ve Yoğunluk tek panelde. Dalda sıradaki `GIS-38`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

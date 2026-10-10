@@ -234,7 +234,47 @@ export interface NetworkParam<N extends string = string> extends ParamBase<N> {
   readonly prefers?: NetworkKind;
 }
 
-export type ParamDef = FeaturesParam | NumberParam | StringParam | BooleanParam | EnumParam | LayerParam | PointParam | ExpressionParam | FieldParam | FileParam | NetworkParam;
+/** A value for each raster of a features parameter (docs/adr/0237 §9): the rasters by their names in an expression. */
+export type RasterValues = Readonly<Record<string, number | string>>;
+
+/** A comparison for each pair of rasters (docs/adr/0237 §9): [a, b, v], v 9 … 2 a over b, 1 even, −2 … −9 b over a. */
+export type RasterPairs = readonly (readonly [string, string, number])[];
+
+/**
+ * A value for each raster of the features parameter `of` (docs/adr/0237 §9): a number (`min`, `max`) or a text a row,
+ * `placeholder` in an empty row. What a row left empty means is the tool's.
+ */
+export interface RasterValuesParam<N extends string = string> extends ParamBase<N> {
+  readonly type: 'rasterValues';
+  readonly of: string;
+  readonly cell: 'number' | 'text';
+  readonly min?: number;
+  readonly max?: number;
+  readonly placeholder?: string;
+  readonly default?: RasterValues;
+}
+
+/** A comparison for each pair of the features parameter `of`'s rasters (İkili karşılaştırma, docs/adr/0237 §9). */
+export interface RasterPairsParam<N extends string = string> extends ParamBase<N> {
+  readonly type: 'rasterPairs';
+  readonly of: string;
+  readonly default?: RasterPairs;
+}
+
+export type ParamDef =
+  | FeaturesParam
+  | NumberParam
+  | StringParam
+  | BooleanParam
+  | EnumParam
+  | LayerParam
+  | PointParam
+  | ExpressionParam
+  | FieldParam
+  | FileParam
+  | NetworkParam
+  | RasterValuesParam
+  | RasterPairsParam;
 export type ParamType = ParamDef['type'];
 
 /** A parameter's value as the dialog and history hold it. */
@@ -258,7 +298,11 @@ export type ValueOf<D> = D extends { type: 'features' }
                   ? FileValue | null
                   : D extends { type: 'network' }
                     ? NetworkValue
-                    : never;
+                    : D extends { type: 'rasterValues' }
+                      ? RasterValues
+                      : D extends { type: 'rasterPairs' }
+                        ? RasterPairs
+                        : never;
 
 type Maybe<D, T> = D extends { optional: true } ? T | null : T;
 

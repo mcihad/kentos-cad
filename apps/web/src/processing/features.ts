@@ -114,6 +114,8 @@ export interface InputSummary {
   fields: { name: string; count: number }[];
   /** A chosen file's table (docs/adr/0200 §7): the counts are its rows, not objects. */
   rows?: true;
+  /** The rasters' names in the run's order (docs/adr/0233 §2, §3): a value or a comparison a raster's rows (docs/adr/0237 §9). */
+  rasters?: string[];
 }
 
 export function summarizeFeatures(value: FeaturesValue, def: Pick<FeaturesParam, 'kinds'>, host: FeatureHost): InputSummary {
@@ -131,7 +133,8 @@ export function summarizeFeatures(value: FeaturesValue, def: Pick<FeaturesParam,
     byLayer: (id) => host.doc.byLayer(id),
     layerName: (id) => host.doc.layers.get(id)?.name ?? id,
   };
-  for (const { raster, name } of rasterRun(rasters, doc)) {
+  const run = rasterRun(rasters, doc);
+  for (const { raster, name } of run) {
     fields.set(name, 1);
     for (let b = 2; b <= raster.bands; b++) fields.set(`${name}@${b}`, 1);
   }
@@ -140,6 +143,7 @@ export function summarizeFeatures(value: FeaturesValue, def: Pick<FeaturesParam,
     description: set.description,
     byKind: [...kinds].map(([kind, count]) => ({ kind, count })).sort((a, b) => b.count - a.count),
     fields: [...fields].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'tr')),
+    ...(run.length ? { rasters: run.map((r) => r.name) } : {}),
   };
 }
 

@@ -10,12 +10,13 @@
 // yakala and Alan kapat on an 8192² scanned sheet, Eğrilere kot ver over 10 000 curves (in the page); then hydrology
 // (docs/adr/0235 §12, hydro_timing.rs's work): every tool over its 4096² DEM with pits and flats; then distance and cost
 // (docs/adr/0236 §8, distance_timing.rs's work): each tool over its 4096² cost raster with lakes, the sources' raster and
-// hydrology's DEM as the surface, Uzaklık yüzeyi from 2000 points and 100 lines. Starts its own Vite dev
+// hydrology's DEM as the surface, Uzaklık yüzeyi from 2000 points and 100 lines; then suitability (docs/adr/0237 §11,
+// suitability_timing.rs's work): four 4096² criteria, each tool's run and ROC with 10 000 presence cells. Starts its own Vite dev
 // server and one headless Chrome; the DEMs are written once by GDAL into .run/perf (python3 with numpy and osgeo) and
 // fetched by the page as a file the user gave. The worker's whole run is timed: its start, the module, reading the
 // file's blocks, the job and the result's coding. Nothing else heavy may run meanwhile (docs/adr/0005).
 //
-//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector|hydro|distance]
+//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector|hydro|distance|suitability]
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { cpus } from 'node:os';
@@ -114,6 +115,42 @@ for path, z in ((${JSON.stringify(cost)}, cost), (${JSON.stringify(wells)}, well
 `;
   execFileSync('python3', ['-c', script], { stdio: 'inherit' });
   return { cost, wells };
+}
+
+/** suitability_timing.rs's criteria of n × n cells of 5 m: a slope with holes, a distance, classes and a membership. */
+function suitabilityRasters(n) {
+  const names = ['egim', 'uzaklik', 'ortu', 'uyelik'].map((k) => `${dir}olcut-${k}-${n}.tif`);
+  if (names.every((f) => existsSync(f))) return names;
+  const script = `
+import numpy as np
+from osgeo import gdal, osr
+gdal.UseExceptions()
+n = ${n}
+def hash(i, j):
+    h = (i * np.uint32(0x9e3779b9)) ^ (j * np.uint32(0x85ebca6b))
+    h ^= h >> np.uint32(15)
+    h = h * np.uint32(0x2c1b3c6d)
+    return h ^ (h >> np.uint32(12))
+i = np.arange(n, dtype=np.uint32)[None, :]
+j = np.arange(n, dtype=np.uint32)[:, None]
+x = np.arange(n, dtype=np.float64)[None, :]
+y = np.arange(n, dtype=np.float64)[:, None]
+hole = np.sin(x / 97.0) * np.cos(y / 131.0) + 0.3 * np.sin((x + y) / 41.0) > 1.15
+slope = 40.0 * np.abs(np.sin(x / 230.0) * np.cos(y / 310.0)) + (hash(i, j) % np.uint32(100)).astype(np.float64) / 20.0
+slope = np.where(hole, np.nan, slope)
+dist = 5.0 * (np.hypot(x - 1800.0, y - 2300.0) % 900.0)
+cls = (1 + (i // np.uint32(37) + j // np.uint32(53) + hash(i // np.uint32(37), j // np.uint32(53))) % np.uint32(5)).astype(np.float64)
+mem = (hash(j, i) % np.uint32(1001)).astype(np.float64) / 1000.0
+for path, z in zip(${JSON.stringify(names)}, (slope, dist + 0 * y, cls, mem)):
+    d = gdal.GetDriverByName('GTiff').Create(path, n, n, 1, gdal.GDT_Float32, ['TILED=YES', 'BLOCKXSIZE=256', 'BLOCKYSIZE=256', 'COMPRESS=DEFLATE', 'ZLEVEL=1'])
+    d.SetGeoTransform([500000.0, 5.0, 0.0, 4420000.0, 0.0, -5.0])
+    s = osr.SpatialReference(); s.ImportFromEPSG(5254); d.SetProjection(s.ExportToWkt())
+    d.GetRasterBand(1).SetNoDataValue(float('nan'))
+    d.GetRasterBand(1).WriteArray(z.astype(np.float32))
+    d = None
+`;
+  execFileSync('python3', ['-c', script], { stdio: 'inherit' });
+  return names;
 }
 
 /** A raster of n × n cells of 2 m written by `body` (numpy: `img`, uint8, `n`), tiled 256, Deflate, at `path`, unless it is there. */
@@ -438,6 +475,59 @@ img[np.broadcast_to(contour, (n, n))] = (150, 80, 30)`);
     }
     times.sort((a, c) => a - c);
     console.log(`${'Uzaklık yüzeyi, 2000 nokta, 100 çizgi'.padEnd(34)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe 4 s`);
+  }
+  // Uygunluk analizi (docs/adr/0237 §11): suitability_timing.rs's jobs, the whole worker run each.
+  if (part('suitability')) {
+    const [slope, dist, cls, mem] = suitabilityRasters(4096);
+    const names = ['Eğim', 'Uzaklık', 'Örtü', 'Üyelik'];
+    const square = [{ kind: 'polygon', pts: [[505000.1, 4413500.2], [505499.9, 4413500.2], [505499.9, 4413999.9], [505000.1, 4413999.9]].map(([x, y]) => ({ x, y })) }];
+    const suitJobs = [
+      { name: 'Bulanık üyelik, Gauss', budget: 3, files: [slope], names: ['Eğim'], tool: { kind: 'fuzzyMembership', band: 1, function: 'gaussian', midpoint: 10, spread: 0.01, sample: 'f32' } },
+      { name: 'Bulanık çakıştırma, dört raster, Gamma', budget: 6, files: [mem, mem, mem, mem], names: ['A', 'B', 'C', 'D'], tool: { kind: 'fuzzyOverlay', band: 1, op: 'gamma', gamma: 0.9, sample: 'f32' } },
+      {
+        name: 'Ağırlıklı toplam, dört raster',
+        budget: 6,
+        files: [slope, dist, cls, mem],
+        names,
+        tool: { kind: 'weightedSum', band: 1, weights: { Eğim: -0.4, Uzaklık: 0.001, Örtü: 0.5, Üyelik: 2 }, sample: 'f32' },
+      },
+      {
+        name: 'Ağırlıklı çakıştırma, sınıf tablolarıyla',
+        budget: 6,
+        files: [slope, dist, cls, mem],
+        names,
+        tool: {
+          kind: 'weightedOverlay',
+          band: 1,
+          low: 1,
+          high: 9,
+          influence: { Eğim: 40, Uzaklık: 25, Örtü: 20, Üyelik: 15 },
+          classes: { Eğim: '* 5 9; 5 15 6; 15 30 3; 30 * kısıt', Uzaklık: '* 500 9; 500 1500 5; 1500 * 1', Örtü: '1 9; 2 7; 3 5; 4 3; 5 kısıt', Üyelik: '* 0,25 1; 0,25 0,5 4; 0,5 0,75 7; 0,75 * 9' },
+          bounds: 'upperClosed',
+        },
+      },
+      { name: 'ROC, bütün hücreler, 10 000 varlık', budget: 6, files: [slope], names: ['Eğim'], tool: { kind: 'roc', band: 1, first: 1, absence: false, higher: true }, shapes: square },
+    ];
+    for (const job of suitJobs) {
+      const times = [];
+      for (let r = 0; r < runs; r++) {
+        const ms = await b.eval(`(async () => {
+          const { analyzeOps } = await import('/src/io/rasterAnalysis.ts');
+          const files = ${JSON.stringify(job.files)};
+          const names = ${JSON.stringify(job.names)};
+          const blobs = await Promise.all(files.map(async (f) => (await fetch('/@fs' + f)).blob()));
+          const spec = JSON.stringify({ tool: ${JSON.stringify(job.tool)}, inputs: files.map((_, k) => ({ affine: [500000, 5, 0, 4420000, 0, -5], name: names[k] })), epsg: 5254 });
+          const t0 = performance.now();
+          const out = await analyzeOps(blobs, spec, ${JSON.stringify(JSON.stringify(job.shapes ?? []))}, { progress() {}, canceled: false });
+          const ms = performance.now() - t0;
+          if (!out.bytes && !out.roc) throw new Error('no result');
+          return ms;
+        })()`);
+        times.push(ms / 1000);
+      }
+      times.sort((a, c) => a - c);
+      console.log(`${job.name.padEnd(40)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
+    }
   }
 } finally {
   b.close();

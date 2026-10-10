@@ -75,6 +75,7 @@ const INTERPOLATION = JSON.parse(file('interpolation.json')) as CaseFile;
 const RASTER_VECTOR = JSON.parse(file('raster-vector.json')) as CaseFile & { rasters: Record<string, string> };
 const HYDROLOGY = JSON.parse(file('hydrology.json')) as CaseFile & { rasters: Record<string, string> };
 const DISTANCE = JSON.parse(file('distance.json')) as CaseFile & { rasters: Record<string, string> };
+const SUITABILITY = JSON.parse(file('suitability.json')) as CaseFile & { rasters: Record<string, string> };
 const RASTER_OPS = JSON.parse(file('raster-ops.json')) as CaseFile & {
   rasters: Record<string, string>;
   /** The names an expression field offers on an input (docs/adr/0233 §3). */
@@ -321,6 +322,7 @@ describe('processing cases (fixtures/processing/v1)', () => {
     ...Object.entries(RASTER_VECTOR.documents),
     ...Object.entries(HYDROLOGY.documents),
     ...Object.entries(DISTANCE.documents),
+    ...Object.entries(SUITABILITY.documents),
   ]) {
     it(`${name}: the defaults the tools take from the drawing`, () => {
       const runner = new ProcessingRunner({ doc: load(name), selectedIds: () => [], visibleBounds: () => null });
@@ -658,6 +660,56 @@ describe.skipIf(!surfaceModulesBuilt)('distance and cost cases (fixtures/process
         for (const [name, caseName] of Object.entries(of)) {
           const ref = reference.cases.find((t) => t.name === caseName)!.expect.raster!;
           const got = await level0(written.get(name)!);
+          expect(got.length, `${c.id}: ${name}`).toBe(ref.values.length);
+          const off = got.findIndex((g, k) => {
+            const w = ref.values[k] ?? NaN;
+            if (Number.isNaN(g) || Number.isNaN(w)) return !(Number.isNaN(g) && Number.isNaN(w));
+            return ref.rule === 'exact' ? g !== w : ulps(g, w) > 1;
+          });
+          expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${ref.values[off]}`).toBe(-1);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
+    });
+  }
+});
+
+describe.skipIf(!surfaceModulesBuilt)('suitability cases (fixtures/processing/v1/suitability.json, docs/adr/0237)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const rasters = new Map(Object.entries(SUITABILITY.rasters).map(([name, rel]) => [name, read(rel)]));
+  const reference = JSON.parse(new TextDecoder().decode(read('../../suitability/v1/cases.json'))) as {
+    cases: { name: string; expect: { raster?: { rule: string; values: (number | null)[] } } }[];
+  };
+
+  it('is a v1 case file', () => {
+    expect([SUITABILITY.format, SUITABILITY.version]).toEqual(['kentos.processing-cases', 1]);
+    expect(SUITABILITY.cases.length).toBeGreaterThanOrEqual(21);
+  });
+
+  for (const c of SUITABILITY.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(rasters);
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { suitabilityOf?: Record<string, string>; layerAbove?: Record<string, string> };
+        const seen = await play(SUITABILITY, c, 'client');
+        // Each new layer right above the layer it names: its group, the place before it.
+        const layers = seen.doc.layers;
+        const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+        const at = (id: string) => siblings(id).findIndex((n) => n.id === id);
+        for (const [id, over] of Object.entries(want.layerAbove ?? {})) {
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(over)?.id ?? null);
+          expect(at(id) + 1, `${c.id}: ${id} above ${over}`).toBe(at(over));
+        }
+        check(c, seen, SUITABILITY.tolerance);
+        // Each written raster's level 0 is the suitability reference's case of that name, by its rule; Ağırlıklı
+        // çakıştırma's 32-bit integer nodata is no value.
+        const of = want.suitabilityOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, caseName] of Object.entries(of)) {
+          const ref = reference.cases.find((t) => t.name === caseName)!.expect.raster!;
+          const got = (await level0(written.get(name)!)).map((v) => (v === -2147483648 ? NaN : v));
           expect(got.length, `${c.id}: ${name}`).toBe(ref.values.length);
           const off = got.findIndex((g, k) => {
             const w = ref.values[k] ?? NaN;

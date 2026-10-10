@@ -1,0 +1,780 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: uygunluk analizi",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 1000,
+  "y": 2000
+ },
+ "layers": [
+  {
+   "id": "heyelan",
+   "name": "Heyelan",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "heyelan-bes",
+   "name": "Heyelan (beş)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yokluk",
+   "name": "Yokluk",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#2E7D32",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "uzak",
+   "name": "Uzak",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#6A1B9A",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "egim",
+   "name": "Eğim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "toprak",
+   "name": "Toprak",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "sinif",
+   "name": "Sınıf",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "egim-sinifi",
+   "name": "Eğim sınıfı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "ortu",
+   "name": "Örtü",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "deger",
+   "name": "Değer",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "uyelik-a",
+   "name": "Üyelik A",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "uyelik-b",
+   "name": "Üyelik B",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "uyelik-c",
+   "name": "Üyelik C",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "duyarlilik",
+   "name": "Duyarlılık",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "heyelan",
+ "entities": [
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 6,
+   "height": 5,
+   "bands": 1,
+   "sample": "f32",
+   "file": "egim.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 1,
+   "layerId": "egim",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 6,
+   "height": 5,
+   "bands": 1,
+   "sample": "f32",
+   "file": "yol.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 2,
+   "layerId": "yol",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 6,
+   "height": 5,
+   "bands": 1,
+   "sample": "f32",
+   "file": "toprak.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 3,
+   "layerId": "toprak",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 6,
+   "height": 5,
+   "bands": 1,
+   "sample": "f32",
+   "file": "sinif.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 4,
+   "layerId": "sinif",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 6,
+   "height": 5,
+   "bands": 1,
+   "sample": "f32",
+   "file": "egim-sinifi.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 5,
+   "layerId": "egim-sinifi",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 6,
+   "height": 5,
+   "bands": 1,
+   "sample": "f32",
+   "file": "ortu.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 6,
+   "layerId": "ortu",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 6,
+   "height": 5,
+   "bands": 1,
+   "sample": "f32",
+   "file": "deger.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 7,
+   "layerId": "deger",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 6,
+   "height": 5,
+   "bands": 1,
+   "sample": "f32",
+   "file": "uyelik-a.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 8,
+   "layerId": "uyelik-a",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 6,
+   "height": 5,
+   "bands": 1,
+   "sample": "f32",
+   "file": "uyelik-b.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 9,
+   "layerId": "uyelik-b",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 6,
+   "height": 5,
+   "bands": 1,
+   "sample": "f32",
+   "file": "uyelik-c.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 10,
+   "layerId": "uyelik-c",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 10,
+   "height": 8,
+   "bands": 1,
+   "sample": "f32",
+   "file": "duyarlilik.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 11,
+   "layerId": "duyarlilik",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500025.0,
+    "y": 4419985.0
+   },
+   "id": 12,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "Heyelan 1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500075.0,
+    "y": 4419965.0
+   },
+   "id": 13,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "Heyelan 2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500015.0,
+    "y": 4419985.0
+   },
+   "id": 14,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "Heyelan 3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500021.0,
+    "y": 4419985.0
+   },
+   "id": 15,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "Heyelan 4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500015.0,
+    "y": 4419955.0
+   },
+   "parts": [
+    {
+     "p": {
+      "x": 500085.0,
+      "y": 4419935.0
+     }
+    },
+    {
+     "p": {
+      "x": 500055.0,
+      "y": 4419995.0
+     }
+    }
+   ],
+   "id": 16,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "Heyelan 5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 499990.0,
+    "y": 4420005.0
+   },
+   "id": 17,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "Heyelan 6"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500005.0,
+    "y": 4419955.0
+   },
+   "id": 18,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "Heyelan 7"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500025.0,
+    "y": 4419985.0
+   },
+   "id": 19,
+   "layerId": "heyelan-bes",
+   "attrs": {
+    "Ad": "Heyelan (beş) 1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500075.0,
+    "y": 4419965.0
+   },
+   "id": 20,
+   "layerId": "heyelan-bes",
+   "attrs": {
+    "Ad": "Heyelan (beş) 2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500015.0,
+    "y": 4419985.0
+   },
+   "id": 21,
+   "layerId": "heyelan-bes",
+   "attrs": {
+    "Ad": "Heyelan (beş) 3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500021.0,
+    "y": 4419985.0
+   },
+   "id": 22,
+   "layerId": "heyelan-bes",
+   "attrs": {
+    "Ad": "Heyelan (beş) 4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500015.0,
+    "y": 4419955.0
+   },
+   "parts": [
+    {
+     "p": {
+      "x": 500085.0,
+      "y": 4419935.0
+     }
+    },
+    {
+     "p": {
+      "x": 500055.0,
+      "y": 4419995.0
+     }
+    }
+   ],
+   "id": 23,
+   "layerId": "heyelan-bes",
+   "attrs": {
+    "Ad": "Heyelan (beş) 5"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500061.0,
+     "y": 4419951.0
+    },
+    {
+     "x": 500089.0,
+     "y": 4419951.0
+    },
+    {
+     "x": 500089.0,
+     "y": 4419979.0
+    },
+    {
+     "x": 500061.0,
+     "y": 4419979.0
+    }
+   ],
+   "id": 24,
+   "layerId": "yokluk",
+   "attrs": {
+    "Ad": "Yokluk 1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500005.0,
+    "y": 4419995.0
+   },
+   "id": 25,
+   "layerId": "yokluk",
+   "attrs": {
+    "Ad": "Yokluk 2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500015.0,
+    "y": 4419955.0
+   },
+   "id": 26,
+   "layerId": "yokluk",
+   "attrs": {
+    "Ad": "Yokluk 3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 400000.0,
+    "y": 4000000.0
+   },
+   "id": 27,
+   "layerId": "uzak",
+   "attrs": {
+    "Ad": "Uzak 1"
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

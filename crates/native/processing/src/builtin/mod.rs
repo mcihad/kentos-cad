@@ -18,6 +18,7 @@ pub mod raster_ops;
 pub mod raster_vector;
 pub mod select_by_expression;
 pub mod select_by_location;
+pub mod suitability;
 pub mod summary_statistics;
 pub mod surface;
 pub mod vertex_numbering;
@@ -111,6 +112,13 @@ pub fn tools() -> Vec<Tool> {
         distance::cost(),
         distance::path(),
         distance::corridor(),
+        // Uygunluk analizi (docs/adr/0237): both platforms.
+        suitability::fuzzy_membership(),
+        suitability::fuzzy_overlay(),
+        suitability::weighted_sum(),
+        suitability::weighted_overlay(),
+        suitability::pairwise(),
+        suitability::roc(),
     ]
 }
 

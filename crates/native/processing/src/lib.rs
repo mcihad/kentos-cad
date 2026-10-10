@@ -39,6 +39,7 @@ pub mod model_edit;
 pub mod model_runner;
 pub mod network;
 pub mod parameters;
+pub mod raster_rows;
 pub mod registry;
 pub mod runner;
 pub mod text;

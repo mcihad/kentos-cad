@@ -141,6 +141,7 @@ const TEXT_SAMPLES: Record<string, unknown> = {
   picked: 2,
   lacking: 'Ada',
   size: { rows: 4, columns: 3 },
+  times: 3,
 };
 
 /** The dialog's texts as the file writes them: a text made from a value as `{ sample, text }`. */

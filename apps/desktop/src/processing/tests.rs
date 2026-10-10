@@ -600,7 +600,7 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     // Yoğunluk's seven, docs/adr/0232, the raster operations' nine, docs/adr/0233, Raster ve vektör and Taranmış
     // harita's seven, docs/adr/0234, Hidroloji's eight, docs/adr/0235, Uzaklık ve maliyet's four, docs/adr/0236, among
     // them) and the nine point cloud tools, the desktop's own for now (docs/adr/0207 §7).
-    assert_eq!(app.processing_meta(), "75 araç");
+    assert_eq!(app.processing_meta(), "81 araç");
     // Turkish letters folded: “kose numara” finds Köşe noktalarını numarala only (as the web's test).
     event(
         &mut app,

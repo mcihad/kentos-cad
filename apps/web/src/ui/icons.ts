@@ -813,6 +813,20 @@ export const ICONS = {
     '<path d="M6.6 5.4c2.6-.6 5 .9 5.2 3.3.2 2.2-1.6 3.8-4 3.9-2.5.1-4-1.4-4-3.4 0-1.8 1-3.4 2.8-3.8z" fill="currentColor" fill-opacity=".2" stroke="none"/><path d="M3.6 16.4 9.4 15.8 13.6 13 15 8.2 16.4 3.6" stroke-width="1.6"/><circle cx="3.6" cy="16.4" r="1.6" fill="currentColor" stroke="none"/><circle cx="16.4" cy="3.6" r="1.7" stroke-width="1.3"/>',
   costCorridor:
     '<path d="M4.2 15.8C4.2 8.6 15.8 11.4 15.8 4.2" stroke-width="6.2" stroke-opacity=".24"/><path d="M4.2 15.8C4.2 8.6 15.8 11.4 15.8 4.2" stroke-width="1.2"/><circle cx="4.2" cy="16.6" r="1.8" fill="currentColor" stroke="none"/><circle cx="15.8" cy="3.4" r="1.8" fill="currentColor" stroke="none"/>',
+  // Uygunluk analizi (docs/adr/0237): a membership's S rising to 1; two memberships' common part; a sum and its weights;
+  // sheets weighed in per cent; the scales of a pairwise comparison; the ROC curve above chance with its area.
+  fuzzyMembership:
+    '<path d="M3 16.5h14" stroke-width=".9" stroke-opacity=".5"/><path d="M3 4h14" stroke-width=".8" stroke-dasharray="1.5 1.5" stroke-opacity=".55"/><path d="M3 16C8.5 16 11.5 4 17 4" stroke-width="1.6"/>',
+  fuzzyOverlay:
+    '<circle cx="7.5" cy="10" r="5"/><circle cx="12.5" cy="10" r="5"/><path d="M10 5.67A5 5 0 0 1 10 14.33 5 5 0 0 1 10 5.67z" fill="currentColor" fill-opacity=".4" stroke="none"/>',
+  weightedSum:
+    '<path d="M10 4H3l3.6 6L3 16h7" stroke-width="1.5"/><path d="M13 16v-3.5M15.5 16V7M18 16v-5.5" stroke-width="1.7"/>',
+  weightedOverlay:
+    '<path d="m7.5 2.6 5.5 2.8-5.5 2.8L2 5.4z" fill="currentColor" fill-opacity=".2"/><path d="m2 8.6 5.5 2.8 5.5-2.8M2 11.8l5.5 2.8 5.5-2.8"/><circle cx="14.6" cy="12.4" r="1.2" stroke-width="1.1"/><circle cx="17.4" cy="16.8" r="1.2" stroke-width="1.1"/><path d="m17.8 11.6-3.6 6" stroke-width="1.1"/>',
+  pairwise:
+    '<path d="M10 6.7v9.8M7 16.5h6"/><path d="m3 8 14-2.5" stroke-width="1.5"/><path d="m3 8-1.3 4M3 8l1.3 4M17 5.5l-1.3 4M17 5.5l1.3 4" stroke-width=".9"/><path d="M1.2 12h3.6a1.8 1.8 0 0 1-3.6 0zM15.2 9.5h3.6a1.8 1.8 0 0 1-3.6 0z" fill="currentColor" fill-opacity=".3" stroke-width="1"/>',
+  rocCurve:
+    '<path d="M3 17V3M3 17h14" stroke-width=".9" stroke-opacity=".5"/><path d="M3 17 17 3" stroke-width=".9" stroke-dasharray="1.4 1.4" stroke-opacity=".6"/><path d="M3 17C3.6 9 8 4.2 17 3.2V17z" fill="currentColor" fill-opacity=".16" stroke="none"/><path d="M3 17C3.6 9 8 4.2 17 3.2" stroke-width="1.6"/>',
   server: '<rect x="3" y="3" width="14" height="5.5" rx="1"/><rect x="3" y="11.5" width="14" height="5.5" rx="1"/><path d="M6 5.75h.01M6 14.25h.01" stroke-width="2"/><path d="M9.5 5.75h4.5M9.5 14.25h4.5"/>',
   cloud: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 9v4.6M7.9 11.6 10 13.7l2.1-2.1"/>',
   cloudUpload: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 13.8V9.2M7.9 11.1 10 9l2.1 2.1"/>',

@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 515,
-      "implemented": 492,
+      "total": 521,
+      "implemented": 498,
       "partial": 0,
       "pending": 23
     },
@@ -31,8 +31,8 @@
       "pending": 2
     },
     "processing": {
-      "total": 66,
-      "implemented": 66,
+      "total": 72,
+      "implemented": 72,
       "partial": 0,
       "pending": 0
     },
@@ -102,12 +102,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 226,
-    "commandsOnDesktop": 445,
+    "commandsWithoutTests": 232,
+    "commandsOnDesktop": 451,
     "desktop": {
       "commands": {
-        "total": 515,
-        "implemented": 445,
+        "total": 521,
+        "implemented": 451,
         "partial": 0,
         "pending": 10,
         "none": 58,
@@ -122,8 +122,8 @@
         "n/a": 0
       },
       "processing": {
-        "total": 66,
-        "implemented": 66,
+        "total": 72,
+        "implemented": 72,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -5562,7 +5562,7 @@
         "İşlemler › Modeller"
       ],
       "ribbon": [
-        "CBS › Raster › Yoğunluk"
+        "CBS › Raster › İnterpolasyon"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5589,7 +5589,7 @@
         "İşlemler › Modeller"
       ],
       "ribbon": [
-        "CBS › Raster › Yoğunluk"
+        "CBS › Raster › İnterpolasyon"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7283,6 +7283,174 @@
       ],
       "ribbon": [
         "CBS › Analiz › Analiz"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.suitability.fuzzyMembership",
+      "title": "Bulanık üyelik…",
+      "category": "İşlemler",
+      "icon": "fuzzyMembership",
+      "description": "Rasterin değerlerini bir işlevle 0–1 arası üyeliğe çevirir: ölçütü ortak ölçeğe getirmenin bulanık yolu.",
+      "aliases": [
+        "BULANIKUYELIK",
+        "FUZZYMEMBERSHIP"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Uygunluk analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.suitability.fuzzyOverlay",
+      "title": "Bulanık çakıştırma…",
+      "category": "İşlemler",
+      "icon": "fuzzyOverlay",
+      "description": "Üyelik rasterlerini bulanık mantığın işleciyle birleştirir: Ve, Veya, Çarpım, Toplam, Gamma.",
+      "aliases": [
+        "BULANIKCAKISTIR",
+        "FUZZYOVERLAY"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Uygunluk analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.suitability.pairwise",
+      "title": "İkili karşılaştırma (AHP)…",
+      "category": "İşlemler",
+      "icon": "pairwise",
+      "description": "Ölçütleri ikişer ikişer karşılaştırıp ağırlıklarını ve tutarlılığını bulur (Saaty'nin AHP'si); isterseniz ağırlıklı toplamı yazar.",
+      "aliases": [
+        "AHP",
+        "IKILIKARSILASTIRMA"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Uygunluk analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.suitability.roc",
+      "title": "ROC ile doğrulama…",
+      "category": "İşlemler",
+      "icon": "rocCurve",
+      "description": "Rasterin bilinen olayları ne kadar iyi ayırdığını ölçer: ROC eğrisinin tablosu, eğrinin altındaki alan (AUC) ve en iyi eşik.",
+      "aliases": [
+        "ROC",
+        "AUC"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Uygunluk analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.suitability.weightedOverlay",
+      "title": "Ağırlıklı çakıştırma…",
+      "category": "İşlemler",
+      "icon": "weightedOverlay",
+      "description": "Rasterleri ortak bir ölçeğe sınıflayıp etkileriyle birleştirir; sonuç ölçeğin tam sayı sınıfıdır.",
+      "aliases": [
+        "AGIRLIKLICAKISTIR",
+        "WEIGHTEDOVERLAY"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Uygunluk analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.suitability.weightedSum",
+      "title": "Ağırlıklı toplam…",
+      "category": "İşlemler",
+      "icon": "weightedSum",
+      "description": "Rasterleri ağırlıklarıyla çarpıp toplar: Σ ağırlık · değer, ondalık sonuç.",
+      "aliases": [
+        "AGIRLIKLITOPLAM",
+        "WEIGHTEDSUM"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Raster › Uygunluk analizi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -24240,6 +24408,494 @@
       ]
     },
     {
+      "id": "suitability.fuzzyMembership",
+      "label": "Bulanık üyelik",
+      "category": "Uygunluk analizi",
+      "description": "Rasterin değerlerini bir işlevle 0–1 arası üyeliğe çevirir: ölçütü ortak ölçeğe getirmenin bulanık yolu.",
+      "aliases": [
+        "BULANIKUYELIK",
+        "FUZZYMEMBERSHIP"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "function",
+          "type": "enum",
+          "label": "İşlev",
+          "optional": false
+        },
+        {
+          "name": "low",
+          "type": "number",
+          "label": "Alt değer",
+          "optional": false
+        },
+        {
+          "name": "high",
+          "type": "number",
+          "label": "Üst değer",
+          "optional": false
+        },
+        {
+          "name": "exponent",
+          "type": "number",
+          "label": "Üs",
+          "optional": false
+        },
+        {
+          "name": "midpoint",
+          "type": "number",
+          "label": "Orta nokta",
+          "optional": false
+        },
+        {
+          "name": "spread",
+          "type": "number",
+          "label": "Yayılım",
+          "optional": false
+        },
+        {
+          "name": "steep",
+          "type": "number",
+          "label": "Diklik",
+          "optional": false
+        },
+        {
+          "name": "sample",
+          "type": "enum",
+          "label": "Sonuç türü",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.suitability.fuzzyMembership",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "suitability.fuzzyOverlay",
+      "label": "Bulanık çakıştırma",
+      "category": "Uygunluk analizi",
+      "description": "Üyelik rasterlerini bulanık mantığın işleciyle birleştirir: Ve, Veya, Çarpım, Toplam, Gamma.",
+      "aliases": [
+        "BULANIKCAKISTIR",
+        "FUZZYOVERLAY"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Rasterler",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "op",
+          "type": "enum",
+          "label": "İşleç",
+          "optional": false
+        },
+        {
+          "name": "gamma",
+          "type": "number",
+          "label": "Gamma",
+          "optional": false
+        },
+        {
+          "name": "sample",
+          "type": "enum",
+          "label": "Sonuç türü",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.suitability.fuzzyOverlay",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "suitability.pairwise",
+      "label": "İkili karşılaştırma (AHP)",
+      "category": "Uygunluk analizi",
+      "description": "Ölçütleri ikişer ikişer karşılaştırıp ağırlıklarını ve tutarlılığını bulur (Saaty'nin AHP'si); isterseniz ağırlıklı toplamı yazar.",
+      "aliases": [
+        "AHP",
+        "IKILIKARSILASTIRMA"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Ölçütler",
+          "optional": false
+        },
+        {
+          "name": "comparisons",
+          "type": "rasterPairs",
+          "label": "Karşılaştırmalar",
+          "optional": false
+        },
+        {
+          "name": "write",
+          "type": "boolean",
+          "label": "Ağırlıklı toplamı yaz",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "sample",
+          "type": "enum",
+          "label": "Sonuç türü",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "table",
+          "type": "table"
+        },
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.suitability.pairwise",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "suitability.roc",
+      "label": "ROC ile doğrulama",
+      "category": "Uygunluk analizi",
+      "description": "Rasterin bilinen olayları ne kadar iyi ayırdığını ölçer: ROC eğrisinin tablosu, eğrinin altındaki alan (AUC) ve en iyi eşik.",
+      "aliases": [
+        "ROC",
+        "AUC"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Raster",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "presence",
+          "type": "features",
+          "label": "Varlık",
+          "optional": false
+        },
+        {
+          "name": "background",
+          "type": "enum",
+          "label": "Karşılaştırma",
+          "optional": false
+        },
+        {
+          "name": "absence",
+          "type": "features",
+          "label": "Yokluk",
+          "optional": false
+        },
+        {
+          "name": "higher",
+          "type": "boolean",
+          "label": "Yüksek değer daha olası",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "table",
+          "type": "table"
+        },
+        {
+          "name": "auc",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.suitability.roc",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "suitability.weightedOverlay",
+      "label": "Ağırlıklı çakıştırma",
+      "category": "Uygunluk analizi",
+      "description": "Rasterleri ortak bir ölçeğe sınıflayıp etkileriyle birleştirir; sonuç ölçeğin tam sayı sınıfıdır.",
+      "aliases": [
+        "AGIRLIKLICAKISTIR",
+        "WEIGHTEDOVERLAY"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Rasterler",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "low",
+          "type": "number",
+          "label": "Ölçeğin alt ucu",
+          "optional": false
+        },
+        {
+          "name": "high",
+          "type": "number",
+          "label": "Ölçeğin üst ucu",
+          "optional": false
+        },
+        {
+          "name": "influence",
+          "type": "rasterValues",
+          "label": "Etki (%)",
+          "optional": false
+        },
+        {
+          "name": "classes",
+          "type": "rasterValues",
+          "label": "Sınıflar",
+          "optional": true
+        },
+        {
+          "name": "bounds",
+          "type": "enum",
+          "label": "Sınırlar",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.suitability.weightedOverlay",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "suitability.weightedSum",
+      "label": "Ağırlıklı toplam",
+      "category": "Uygunluk analizi",
+      "description": "Rasterleri ağırlıklarıyla çarpıp toplar: Σ ağırlık · değer, ondalık sonuç.",
+      "aliases": [
+        "AGIRLIKLITOPLAM",
+        "WEIGHTEDSUM"
+      ],
+      "targets": [
+        "client"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Rasterler",
+          "optional": false
+        },
+        {
+          "name": "band",
+          "type": "number",
+          "label": "Bant",
+          "optional": false
+        },
+        {
+          "name": "weights",
+          "type": "rasterValues",
+          "label": "Ağırlıklar",
+          "optional": false
+        },
+        {
+          "name": "sample",
+          "type": "enum",
+          "label": "Sonuç türü",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "string",
+          "label": "Çıktı dosyası",
+          "optional": true
+        },
+        {
+          "name": "add",
+          "type": "boolean",
+          "label": "Çizime ekle",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file",
+          "type": "string"
+        }
+      ],
+      "command": "processing.run.suitability.weightedSum",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "surface.aspect",
       "label": "Bakı",
       "category": "Yüzey analizi",
@@ -39363,7 +40019,13 @@
               "processing.run.distance.euclidean",
               "processing.run.distance.cost",
               "processing.run.distance.path",
-              "processing.run.distance.corridor"
+              "processing.run.distance.corridor",
+              "processing.run.suitability.fuzzyMembership",
+              "processing.run.suitability.fuzzyOverlay",
+              "processing.run.suitability.weightedSum",
+              "processing.run.suitability.weightedOverlay",
+              "processing.run.suitability.pairwise",
+              "processing.run.suitability.roc"
             ]
           }
         ]
@@ -41646,14 +42308,14 @@
           },
           {
             "label": "İnterpolasyon",
-            "icon": "naturalNeighbor",
+            "icon": "idw",
             "items": [
               {
-                "command": "processing.run.interpolation.naturalNeighbor",
+                "command": "processing.run.interpolation.idw",
                 "size": "small"
               },
               {
-                "command": "processing.run.interpolation.kriging",
+                "command": "processing.run.interpolation.naturalNeighbor",
                 "size": "small"
               },
               {
@@ -41661,28 +42323,20 @@
                 "size": "small"
               },
               {
-                "command": "processing.run.interpolation.idw",
+                "command": "processing.run.interpolation.kriging",
                 "size": "small"
               },
               {
                 "command": "processing.run.interpolation.tin",
                 "size": "small"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          },
-          {
-            "label": "Yoğunluk",
-            "icon": "kernelDensity",
-            "items": [
+              },
               {
                 "command": "processing.run.density.kernel",
-                "size": "large"
+                "size": "small"
               },
               {
                 "command": "processing.run.density.line",
-                "size": "large"
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -41842,6 +42496,38 @@
               },
               {
                 "command": "processing.run.distance.euclidean",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Uygunluk analizi",
+            "icon": "weightedOverlay",
+            "items": [
+              {
+                "command": "processing.run.suitability.weightedOverlay",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.suitability.weightedSum",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.suitability.fuzzyOverlay",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.suitability.fuzzyMembership",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.suitability.pairwise",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.suitability.roc",
                 "size": "small"
               }
             ],
@@ -47135,14 +47821,14 @@
             },
             {
               "label": "İnterpolasyon",
-              "icon": "naturalNeighbor",
+              "icon": "idw",
               "items": [
                 {
-                  "command": "processing.run.interpolation.naturalNeighbor",
+                  "command": "processing.run.interpolation.idw",
                   "size": "small"
                 },
                 {
-                  "command": "processing.run.interpolation.kriging",
+                  "command": "processing.run.interpolation.naturalNeighbor",
                   "size": "small"
                 },
                 {
@@ -47150,28 +47836,20 @@
                   "size": "small"
                 },
                 {
-                  "command": "processing.run.interpolation.idw",
+                  "command": "processing.run.interpolation.kriging",
                   "size": "small"
                 },
                 {
                   "command": "processing.run.interpolation.tin",
                   "size": "small"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Yoğunluk",
-              "icon": "kernelDensity",
-              "items": [
+                },
                 {
                   "command": "processing.run.density.kernel",
-                  "size": "large"
+                  "size": "small"
                 },
                 {
                   "command": "processing.run.density.line",
-                  "size": "large"
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -47331,6 +48009,38 @@
                 },
                 {
                   "command": "processing.run.distance.euclidean",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Uygunluk analizi",
+              "icon": "weightedOverlay",
+              "items": [
+                {
+                  "command": "processing.run.suitability.weightedOverlay",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.suitability.weightedSum",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.suitability.fuzzyOverlay",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.suitability.fuzzyMembership",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.suitability.pairwise",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.suitability.roc",
                   "size": "small"
                 }
               ],
@@ -48491,6 +49201,12 @@
     "costDistance": "<path d=\"M2 7.3h16M2 12.7h16M7.3 2v16M12.7 2v16\" stroke-width=\".7\" stroke-opacity=\".35\"/><rect x=\"7.9\" y=\"2.6\" width=\"4.2\" height=\"4.1\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><rect x=\"2.6\" y=\"7.9\" width=\"4.1\" height=\"4.2\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><rect x=\"7.9\" y=\"7.9\" width=\"4.2\" height=\"4.2\" fill=\"currentColor\" fill-opacity=\".38\" stroke=\"none\"/><rect x=\"13.3\" y=\"2.6\" width=\"4.1\" height=\"4.1\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><rect x=\"2.6\" y=\"13.3\" width=\"4.1\" height=\"4.1\" fill=\"currentColor\" fill-opacity=\".5\" stroke=\"none\"/><rect x=\"13.3\" y=\"7.9\" width=\"4.1\" height=\"4.2\" fill=\"currentColor\" fill-opacity=\".66\" stroke=\"none\"/><rect x=\"7.9\" y=\"13.3\" width=\"4.2\" height=\"4.1\" fill=\"currentColor\" fill-opacity=\".66\" stroke=\"none\"/><rect x=\"13.3\" y=\"13.3\" width=\"4.1\" height=\"4.1\" fill=\"currentColor\" fill-opacity=\".9\" stroke=\"none\"/><circle cx=\"4.65\" cy=\"4.65\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/>",
     "costPath": "<path d=\"M6.6 5.4c2.6-.6 5 .9 5.2 3.3.2 2.2-1.6 3.8-4 3.9-2.5.1-4-1.4-4-3.4 0-1.8 1-3.4 2.8-3.8z\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><path d=\"M3.6 16.4 9.4 15.8 13.6 13 15 8.2 16.4 3.6\" stroke-width=\"1.6\"/><circle cx=\"3.6\" cy=\"16.4\" r=\"1.6\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"16.4\" cy=\"3.6\" r=\"1.7\" stroke-width=\"1.3\"/>",
     "costCorridor": "<path d=\"M4.2 15.8C4.2 8.6 15.8 11.4 15.8 4.2\" stroke-width=\"6.2\" stroke-opacity=\".24\"/><path d=\"M4.2 15.8C4.2 8.6 15.8 11.4 15.8 4.2\" stroke-width=\"1.2\"/><circle cx=\"4.2\" cy=\"16.6\" r=\"1.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15.8\" cy=\"3.4\" r=\"1.8\" fill=\"currentColor\" stroke=\"none\"/>",
+    "fuzzyMembership": "<path d=\"M3 16.5h14\" stroke-width=\".9\" stroke-opacity=\".5\"/><path d=\"M3 4h14\" stroke-width=\".8\" stroke-dasharray=\"1.5 1.5\" stroke-opacity=\".55\"/><path d=\"M3 16C8.5 16 11.5 4 17 4\" stroke-width=\"1.6\"/>",
+    "fuzzyOverlay": "<circle cx=\"7.5\" cy=\"10\" r=\"5\"/><circle cx=\"12.5\" cy=\"10\" r=\"5\"/><path d=\"M10 5.67A5 5 0 0 1 10 14.33 5 5 0 0 1 10 5.67z\" fill=\"currentColor\" fill-opacity=\".4\" stroke=\"none\"/>",
+    "weightedSum": "<path d=\"M10 4H3l3.6 6L3 16h7\" stroke-width=\"1.5\"/><path d=\"M13 16v-3.5M15.5 16V7M18 16v-5.5\" stroke-width=\"1.7\"/>",
+    "weightedOverlay": "<path d=\"m7.5 2.6 5.5 2.8-5.5 2.8L2 5.4z\" fill=\"currentColor\" fill-opacity=\".2\"/><path d=\"m2 8.6 5.5 2.8 5.5-2.8M2 11.8l5.5 2.8 5.5-2.8\"/><circle cx=\"14.6\" cy=\"12.4\" r=\"1.2\" stroke-width=\"1.1\"/><circle cx=\"17.4\" cy=\"16.8\" r=\"1.2\" stroke-width=\"1.1\"/><path d=\"m17.8 11.6-3.6 6\" stroke-width=\"1.1\"/>",
+    "pairwise": "<path d=\"M10 6.7v9.8M7 16.5h6\"/><path d=\"m3 8 14-2.5\" stroke-width=\"1.5\"/><path d=\"m3 8-1.3 4M3 8l1.3 4M17 5.5l-1.3 4M17 5.5l1.3 4\" stroke-width=\".9\"/><path d=\"M1.2 12h3.6a1.8 1.8 0 0 1-3.6 0zM15.2 9.5h3.6a1.8 1.8 0 0 1-3.6 0z\" fill=\"currentColor\" fill-opacity=\".3\" stroke-width=\"1\"/>",
+    "rocCurve": "<path d=\"M3 17V3M3 17h14\" stroke-width=\".9\" stroke-opacity=\".5\"/><path d=\"M3 17 17 3\" stroke-width=\".9\" stroke-dasharray=\"1.4 1.4\" stroke-opacity=\".6\"/><path d=\"M3 17C3.6 9 8 4.2 17 3.2V17z\" fill=\"currentColor\" fill-opacity=\".16\" stroke=\"none\"/><path d=\"M3 17C3.6 9 8 4.2 17 3.2\" stroke-width=\"1.6\"/>",
     "server": "<rect x=\"3\" y=\"3\" width=\"14\" height=\"5.5\" rx=\"1\"/><rect x=\"3\" y=\"11.5\" width=\"14\" height=\"5.5\" rx=\"1\"/><path d=\"M6 5.75h.01M6 14.25h.01\" stroke-width=\"2\"/><path d=\"M9.5 5.75h4.5M9.5 14.25h4.5\"/>",
     "cloud": "<path d=\"M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z\"/><path d=\"M10 9v4.6M7.9 11.6 10 13.7l2.1-2.1\"/>",
     "cloudUpload": "<path d=\"M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z\"/><path d=\"M10 13.8V9.2M7.9 11.1 10 9l2.1 2.1\"/>",

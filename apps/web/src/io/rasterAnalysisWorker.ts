@@ -237,7 +237,8 @@ async function ops(job: OpsRequest): Promise<void> {
     }
     const zones = a.zones();
     const histogram = a.histogram();
-    scope.postMessage({ type: 'done', ops: { ...result, zones, histogram } }, [zones.buffer]);
+    const roc = a.roc();
+    scope.postMessage({ type: 'done', ops: { ...result, zones, histogram, roc } }, [zones.buffer]);
   } finally {
     a.free();
   }

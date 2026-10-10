@@ -22,6 +22,7 @@ import { RASTER_OPS_TOOLS } from './rasterOps/tools';
 import { RASTER_VECTOR_TOOLS } from './rasterVector/tools';
 import { HYDROLOGY_TOOLS } from './hydrology/tools';
 import { DISTANCE_TOOLS } from './distance/tools';
+import { SUITABILITY_TOOLS } from './suitability/tools';
 import { SURFACE_TOOLS } from './surface/tools';
 import { vertexNumbering } from './vertexNumbering';
 
@@ -62,4 +63,6 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   ...HYDROLOGY_TOOLS,
   // Uzaklık ve maliyet (docs/adr/0236): the point job from objects, the operation job over the cost raster.
   ...DISTANCE_TOOLS,
+  // Uygunluk analizi (docs/adr/0237): the operation job over the criteria, AHP's weights and ROC's counts with it.
+  ...SUITABILITY_TOOLS,
 ];

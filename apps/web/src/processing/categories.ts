@@ -37,4 +37,6 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   { id: 'hydrology', label: 'Hidroloji', icon: 'streams', description: 'Çukur doldurma, akış yönü ve birikimi, havzalar, dere ağı, nemlilik indisi' },
   // docs/adr/0236: how far, and how dear, every cell is from the sources.
   { id: 'distance', label: 'Uzaklık ve maliyet', icon: 'costPath', description: 'Uzaklık yüzeyi, birikimli maliyet, en düşük maliyetli yol, maliyet koridoru' },
+  // docs/adr/0237: criteria brought to one scale, weighed together, checked against known events.
+  { id: 'suitability', label: 'Uygunluk analizi', icon: 'weightedOverlay', description: 'Bulanık üyelik ve çakıştırma, ağırlıklı toplam ve çakıştırma, AHP, ROC' },
 ];

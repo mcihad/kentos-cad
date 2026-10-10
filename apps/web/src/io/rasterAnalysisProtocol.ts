@@ -91,6 +91,8 @@ export interface OpsResult {
   zones?: Float64Array;
   histogram?: string;
   features?: AnalysisFeatures;
+  /** ROC ile doğrulama's figures (docs/adr/0237 §8; JSON: presence, background, allCells, auc, rows, best, skipped, outside, both). */
+  roc?: string;
 }
 
 /**

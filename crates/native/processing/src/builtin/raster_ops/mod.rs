@@ -71,6 +71,8 @@ pub struct Ran {
     pub histogram: Option<Histogram>,
     /// A vectorizing run's features (docs/adr/0234).
     pub features: Option<kentos_raster::vector::Features>,
+    /// ROC ile doğrulama's figures (docs/adr/0237 §8).
+    pub roc: Option<kentos_raster::suitability::roc::Roc>,
     pub notes: Notes,
 }
 
@@ -159,6 +161,7 @@ pub fn drive(
         zones: Vec::new(),
         histogram: None,
         features: None,
+        roc: None,
         notes,
     };
     match (job.finish()?, sink) {
@@ -170,6 +173,8 @@ pub fn drive(
         (OpsFinished::Zones(z), _) => ran.zones = z,
         (OpsFinished::Histogram(h), _) => ran.histogram = Some(h),
         (OpsFinished::Features(f), _) => ran.features = Some(f),
+        (OpsFinished::Roc(r), _) => ran.roc = Some(r),
+        (OpsFinished::Weights, _) => {}
         _ => return Err("Çözümlemenin sonucu beklenen türde değil.".into()),
     }
     Ok(ran)
@@ -325,6 +330,12 @@ fn spec_kind(spec: &OpsSpec) -> &'static str {
         OpsTool::CostDistance { .. } => "costDistance",
         OpsTool::CostPath { .. } => "costPath",
         OpsTool::CostCorridor { .. } => "costCorridor",
+        OpsTool::FuzzyMembership { .. } => "fuzzyMembership",
+        OpsTool::FuzzyOverlay { .. } => "fuzzyOverlay",
+        OpsTool::WeightedSum { .. } => "weightedSum",
+        OpsTool::WeightedOverlay { .. } => "weightedOverlay",
+        OpsTool::Pairwise { .. } => "pairwise",
+        OpsTool::Roc { .. } => "roc",
     }
 }
 

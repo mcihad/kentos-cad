@@ -61,6 +61,7 @@ interface OpsApi {
   notes(): string;
   zones(): Float64Array;
   histogram(): string;
+  roc(): string;
   featureKind(): string;
   featureValues(): Float64Array;
   featureTexts(): string[];
@@ -244,7 +245,7 @@ export async function analyzeOpsHere(sources: (Uint8Array | string)[], spec: str
         },
       };
     }
-    return { ...result, zones: a.zones(), histogram: a.histogram() };
+    return { ...result, zones: a.zones(), histogram: a.histogram(), roc: a.roc() };
   } finally {
     a.free();
   }

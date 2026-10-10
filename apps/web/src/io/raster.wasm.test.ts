@@ -13,8 +13,9 @@ import { analyzeHere, analyzeOpsHere, analyzePointsHere, level0, surfaceModulesB
  * (scripts/fixtures/raster_vector_cases.py, docs/adr/0234: the features bit for bit, Rasterleştir's every sample and its
  * notes, the refusals), and hydrology's (scripts/fixtures/hydrology_cases.py, docs/adr/0235: each sample by its case's
  * rule, the objects and their numbers, the notes, the refusals), and distance and cost's (scripts/fixtures/distance_cases.py,
- * docs/adr/0236: each sample by its case's rule, the paths and their numbers, the notes, the refusals). Skipped only when
- * the packages have not been built.
+ * docs/adr/0236: each sample by its case's rule, the paths and their numbers, the notes, the refusals), and suitability's
+ * (scripts/fixtures/suitability_cases.py, docs/adr/0237: each sample by its case's rule, the weights within their bounds,
+ * ROC's figures exactly, the notes, the refusals). Skipped only when the packages have not been built.
  */
 
 type Bytes = Uint8Array<ArrayBuffer>;
@@ -506,6 +507,64 @@ describe.skipIf(!surfaceModulesBuilt)('distance and cost in the module (crates/w
         const got = notes[key];
         if (r?.rule === 'f32ulp' && typeof value === 'number' && typeof got === 'number') expect(ulps(got, value), `note ${key}`).toBeLessThanOrEqual(1);
         else expect(got, `note ${key}`).toEqual(value);
+      }
+    });
+  }
+});
+
+interface SuitCase {
+  name: string;
+  tool: { kind: string };
+  inputs: OpsInput[];
+  names: string[];
+  shapes: unknown[];
+  expect: {
+    refused?: string;
+    raster?: { width: number; height: number; rule: string; values: (number | null)[] };
+    notes?: Record<string, number>;
+    pairwise?: { weights: number[]; lambda: number; ci: number; ri: number; cr: number };
+    roc?: Record<string, unknown>;
+  };
+}
+
+/** A sample against the reference's by its rule: also `f64ulp`, one unit in float64 (libm's exp and pow). */
+const suitMeets = (got: number, want: number | null, rule: string) =>
+  want === null ? Number.isNaN(got) : rule === 'f64ulp' ? ulps64(got, want) <= 1 : hydroMeets(got, want, rule);
+
+describe.skipIf(!surfaceModulesBuilt)('suitability in the module (crates/wasm/raster-wasm, docs/adr/0237)', () => {
+  const suit = json<{ cases: SuitCase[] }>('suitability/v1/cases.json');
+
+  it('reads every case', () => {
+    expect(suit.cases.length).toBeGreaterThanOrEqual(50);
+  });
+
+  for (const c of suit.cases) {
+    it(`suitability: ${c.name}`, async () => {
+      const spec = JSON.stringify({ tool: c.tool, inputs: c.inputs.map((r, k) => ({ affine: r.affine, name: c.names[k] })) });
+      const run = analyzeOpsHere(c.inputs.map(tiffOf), spec, JSON.stringify(c.shapes));
+      if (c.expect.refused) {
+        await expect(run).rejects.toThrow(c.expect.refused);
+        return;
+      }
+      const out = await run;
+      const notes = (JSON.parse(out.notes) as { suit: Record<string, unknown> & { pairwise: SuitCase['expect']['pairwise'] | null } }).suit;
+      const r = c.expect.raster;
+      if (r) {
+        expect([out.grid[6], out.grid[7]]).toEqual([r.width, r.height]);
+        // Ağırlıklı çakıştırma's 32-bit integer nodata is no value.
+        const got = (await level0(out.bytes!)).map((v) => (v === -2147483648 ? NaN : v));
+        expect(got.length).toBe(r.values.length);
+        const off = got.findIndex((g, k) => !suitMeets(g, r.values[k], r.rule));
+        expect(off, `sample ${off}: ${got[off]} for ${r.values[off]}`).toBe(-1);
+      }
+      if (c.expect.roc) expect(JSON.parse(out.roc!)).toEqual(c.expect.roc);
+      for (const [key, value] of Object.entries(c.expect.notes ?? {})) expect(notes[key], `note ${key}`).toBe(value);
+      const p = c.expect.pairwise;
+      if (p) {
+        const got = notes.pairwise!;
+        expect(got.weights.length).toBe(p.weights.length);
+        got.weights.forEach((w, k) => expect(Math.abs(w - p.weights[k]), `weight ${k}`).toBeLessThanOrEqual(1e-12));
+        for (const k of ['lambda', 'ci', 'ri', 'cr'] as const) expect(Math.abs(got[k] - p[k]), k).toBeLessThanOrEqual(1e-10);
       }
     });
   }

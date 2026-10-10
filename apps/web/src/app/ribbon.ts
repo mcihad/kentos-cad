@@ -191,9 +191,26 @@ const SELECTION_TAB: RibbonTabSpec = RIBBON_TABS.find((t) => t.contextual === 's
 const RASTERS = ['raster.add', 'raster.style', 'raster.georef'];
 /**
  * İşlemler's categories of raster analysis (docs/adr/0231 §10): CBS's Raster tab rather than Analiz, which they would
- * crowd past 1100 px; GIS-32 to GIS-36 add theirs here.
+ * crowd past 1100 px; GIS-32 to GIS-37 add theirs here.
  */
-const RASTER_ANALYSIS = ['Yüzey analizi', 'İnterpolasyon', 'Yoğunluk', 'Raster işlemleri', 'Raster istatistiği', 'Raster ve vektör', 'Taranmış harita', 'Hidroloji', 'Uzaklık ve maliyet'];
+const RASTER_ANALYSIS = ['Yüzey analizi', 'İnterpolasyon', 'Yoğunluk', 'Raster işlemleri', 'Raster istatistiği', 'Raster ve vektör', 'Taranmış harita', 'Hidroloji', 'Uzaklık ve maliyet', 'Uygunluk analizi'];
+/**
+ * İnterpolasyon's and Yoğunluk's tools (docs/adr/0232) in one panel of the Raster tab: surfaces from points both, and
+ * Uygunluk analizi's panel (docs/adr/0237 §10) then fits at 1100 px.
+ */
+const POINT_SURFACES = {
+  pick: 'İnterpolasyon',
+  icon: 'idw',
+  commands: [
+    'processing.run.interpolation.idw',
+    'processing.run.interpolation.naturalNeighbor',
+    'processing.run.interpolation.spline',
+    'processing.run.interpolation.kriging',
+    'processing.run.interpolation.tin',
+    'processing.run.density.kernel',
+    'processing.run.density.line',
+  ],
+} as const;
 /** Nokta bulutu (docs/adr/0207 §9), the desktop's for now: CAD's Ekle and CBS's Veri, İşlemler's tools under ▾. */
 const POINT_CLOUD_PANEL = { pick: 'Nokta bulutu', icon: 'pointCloudAdd', commands: POINT_CLOUDS, under: POINT_CLOUD_TOOLS } as const;
 
@@ -416,7 +433,12 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     // Eşyükselti üret and Eğim analizi open two of Yüzey analizi's tools.
     id: 'raster',
     label: 'Raster',
-    sources: [{ pick: 'Raster', icon: 'rasterAdd', commands: RASTERS }, { menu: 'processing', sections: RASTER_ANALYSIS }],
+    sources: [
+      { pick: 'Raster', icon: 'rasterAdd', commands: RASTERS },
+      { menu: 'processing', sections: ['Yüzey analizi'] },
+      POINT_SURFACES,
+      { menu: 'processing', sections: RASTER_ANALYSIS.filter((s) => s !== 'Yüzey analizi' && s !== 'İnterpolasyon' && s !== 'Yoğunluk') },
+    ],
   },
   {
     id: 'survey',

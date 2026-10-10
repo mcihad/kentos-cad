@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 19] = [
+pub const CATEGORIES: [Category; 20] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -148,5 +148,12 @@ pub const CATEGORIES: [Category; 19] = [
         "Uzaklık ve maliyet",
         "costPath",
         "Uzaklık yüzeyi, birikimli maliyet, en düşük maliyetli yol, maliyet koridoru",
+    ),
+    // docs/adr/0237: criteria brought to one scale, weighed together, checked against known events.
+    category(
+        "suitability",
+        "Uygunluk analizi",
+        "weightedOverlay",
+        "Bulanık üyelik ve çakıştırma, ağırlıklı toplam ve çakıştırma, AHP, ROC",
     ),
 ];

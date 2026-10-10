@@ -245,6 +245,21 @@ pub enum ParamKind {
     Network {
         prefers: kentos_contracts::NetworkKind,
     },
+    /// A value for each raster of the features parameter `of` (docs/adr/0237 §9): `{ name: value }`, the
+    /// rasters by their names in an expression; a number (`min`, `max`) or a text a row; `placeholder` in an
+    /// empty row. What a row left empty means is the tool's.
+    RasterValues {
+        of: String,
+        number: bool,
+        min: Option<f64>,
+        max: Option<f64>,
+        placeholder: Option<String>,
+    },
+    /// A comparison for each pair of the features parameter `of`'s rasters (docs/adr/0237 §9): `[[a, b, v]]`,
+    /// v 9 … 2 a over b, 1 even, −2 … −9 b over a.
+    RasterPairs {
+        of: String,
+    },
 }
 
 /// When a parameter is shown (the web's `visibleWhen`).
@@ -364,6 +379,8 @@ impl ParamDef {
             ParamKind::File { .. } => "file",
             ParamKind::SaveFile { .. } => "saveFile",
             ParamKind::Network { .. } => "network",
+            ParamKind::RasterValues { .. } => "rasterValues",
+            ParamKind::RasterPairs { .. } => "rasterPairs",
         }
     }
 }

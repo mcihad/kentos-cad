@@ -4,7 +4,7 @@ import type { InputSummary } from '../../processing/features';
 import { orderSteps, stepName, type ProcessingModel } from '../../processing/model';
 import { defaultValues, fieldSource, isVisible, restoreValues, scopesOf, type ValidationIssue } from '../../processing/parameters';
 import type { ProcessingRunner, RunOutcome, TargetChoice } from '../../processing/runner';
-import type { DefaultsContext, EnumOption, ExecutionTarget, FeaturesValue, FileValue, LayerValue, ParamDef, ParamUnit, ProcessingTool, TableOutput } from '../../processing/types';
+import type { DefaultsContext, EnumOption, ExecutionTarget, FeaturesValue, FileValue, LayerValue, ParamDef, ParamUnit, ProcessingTool, RasterPairs, RasterValues, TableOutput } from '../../processing/types';
 import { DIALOG_TEXTS as T, SCOPE_SHORT } from './dialogTexts';
 import {
   attrFieldView,
@@ -14,6 +14,8 @@ import {
   layerFieldView,
   planLayers,
   pointView,
+  rasterPairsView,
+  rasterValuesView,
   type AttrFieldView,
   type ExpressionView,
   type FeaturesView,
@@ -21,6 +23,8 @@ import {
   type LayerFieldView,
   type PlanLayers,
   type PointView,
+  type RasterPairsView,
+  type RasterValuesView,
 } from './fieldPlan';
 import { TARGET_LABEL } from './targets';
 
@@ -56,7 +60,11 @@ export type ControlForm =
   | { type: 'file'; accept: string[] }
   | { type: 'expression'; returns: 'condition' | 'value'; placeholder?: string }
   /** A network and its cost, two choices beside Ağlar… (docs/adr/0209 §10). */
-  | { type: 'network' };
+  | { type: 'network' }
+  /** A value for each raster of `of` (docs/adr/0237 §9): a number or a text a row. */
+  | { type: 'rasterValues'; of: string; cell: 'number' | 'text'; min?: number; max?: number; placeholder?: string }
+  /** A comparison for each pair of `of`'s rasters. */
+  | { type: 'rasterPairs'; of: string };
 
 export interface RowForm {
   name: string;
@@ -99,6 +107,17 @@ export function controlForm(def: ParamDef): ControlForm {
       return { type: 'file', accept: [...def.accept] };
     case 'network':
       return { type: 'network' };
+    case 'rasterValues':
+      return {
+        type: 'rasterValues',
+        of: def.of,
+        cell: def.cell,
+        ...(def.min !== undefined ? { min: def.min } : {}),
+        ...(def.max !== undefined ? { max: def.max } : {}),
+        ...(def.placeholder ? { placeholder: def.placeholder } : {}),
+      };
+    case 'rasterPairs':
+      return { type: 'rasterPairs', of: def.of };
   }
 }
 
@@ -108,7 +127,7 @@ export function rowForm(def: ParamDef): RowForm {
     label: def.label,
     ...(def.description ? { description: def.description } : {}),
     optional: !!def.optional,
-    stacked: def.type === 'features' || def.type === 'expression',
+    stacked: def.type === 'features' || def.type === 'expression' || def.type === 'rasterValues' || def.type === 'rasterPairs',
     control: controlForm(def),
   };
 }
@@ -474,7 +493,7 @@ export function hostEnv(runner: ProcessingRunner, tool: ProcessingTool, values: 
   };
 }
 
-export type FieldView = FeaturesView | LayerFieldView | PointView | AttrFieldView | ExpressionView | FileView;
+export type FieldView = FeaturesView | LayerFieldView | PointView | AttrFieldView | ExpressionView | FileView | RasterValuesView | RasterPairsView;
 
 /** A shown field's changing parts (number, text, switch and choice fields show only their value). */
 export function fieldView(def: ParamDef, value: unknown, env: ViewEnv): FieldView | null {
@@ -491,6 +510,10 @@ export function fieldView(def: ParamDef, value: unknown, env: ViewEnv): FieldVie
       return expressionView(def.of ? (env.inputs[def.of]?.fields ?? []) : [], env.previewExpression(def.name));
     case 'file':
       return fileView(value as FileValue | null);
+    case 'rasterValues':
+      return rasterValuesView(value as RasterValues | null, env.inputs[def.of]?.rasters ?? (env.inputs[def.of] ? [] : undefined));
+    case 'rasterPairs':
+      return rasterPairsView(value as RasterPairs | null, env.inputs[def.of]?.rasters ?? (env.inputs[def.of] ? [] : undefined));
     default:
       return null;
   }

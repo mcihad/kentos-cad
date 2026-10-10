@@ -6442,6 +6442,100 @@ function distanceScenes() {
   ];
 }
 
+// Uygunluk analizi (docs/adr/0237) over the shared valley's elevation model, three criteria made from it (the slope, the
+// distance from the road, the land cover), the road and the landslides on the steep sides
+// (fixtures/interaction/v1/suitability.kcad, scripts/fixtures/suitability_scene.py): Bulanık üyelik's window, Ağırlıklı
+// çakıştırma's window with its influences and class tables and its result, İkili karşılaştırma's weights and ROC's curve
+// after their runs. The desktop's are `tools_screens`' uyg-* (apps/desktop/src/suitability_scenes.rs), at the same
+// places with the same values.
+const SUITABILITY_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/suitability.kcad', import.meta.url), 'utf8');
+const SUITABILITY_FILES = Object.fromEntries(
+  ['egim.tif', 'yol.tif', 'ortu.tif'].map((f) => [f, readFileSync(new URL(`../../../../fixtures/interaction/v1/suitability/${f}`, import.meta.url)).toString('base64')]),
+);
+SCENES.suitability = suitabilityScenes();
+
+function suitabilityScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const VALLEY = [X0, Y0 - 518.4, X0 + 768, Y0];
+  /** The valley with the criteria, the road and the landslides open, the criteria selected, the CBS ribbon's Raster on. */
+  const opened = async (ui) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const file = (b64, name) => new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], name);
+      rasterService().setFile('rasters/dem.tif', file(${JSON.stringify(RASTER_FILES['dem.tif'])}, 'dem.tif'));
+      const files = ${JSON.stringify(SUITABILITY_FILES)};
+      for (const [name, b64] of Object.entries(files)) rasterService().setFile('suitability/' + name, file(b64, name));
+      if (!(await k.files.load(${JSON.stringify(SUITABILITY_SCENE)}, null))) throw new Error('suitability.kcad did not load');
+      k.selection.set([26, 27, 28]);
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    const b = VALLEY;
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** `tool`'s window with `values`; `end`: its form scrolled to its end (the tables). */
+  const windowOf = (tool, values, end) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    if (end) await ui.eval(`(() => { const m = document.querySelector('.dialog--ptool .ptool__main'); m.scrollTop = m.scrollHeight; })()`);
+    await tiles(ui);
+  };
+  /** Runs `tool` with `values` to its end; its window closed unless `keep`. */
+  const ranIn = (tool, values, keep) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    if (!keep) await ui.escapeAll(2);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const L = QUERY_LAYER;
+  const SELECTED = { scope: 'selection' };
+  const OVERLAY = {
+    input: SELECTED,
+    influence: { Eğim: 45, 'Yola uzaklık': 30, 'Arazi örtüsü': 25 },
+    classes: {
+      Eğim: '* 10 9; 10 20 7; 20 35 4; 35 60 2; 60 * kısıt',
+      'Yola uzaklık': '* 50 9; 50 150 6; 150 300 3; 300 * 1',
+      'Arazi örtüsü': '1 2; 2 6; 3 9; 4 kısıt; 5 kısıt',
+    },
+  };
+  const PAIRWISE = {
+    input: SELECTED,
+    comparisons: [
+      ['Eğim', 'Yola uzaklık', 3],
+      ['Eğim', 'Arazi örtüsü', 5],
+      ['Yola uzaklık', 'Arazi örtüsü', 2],
+    ],
+    write: false,
+  };
+  return [
+    { id: 'uyg-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'uyg-uyelik', open: windowOf('suitability.fuzzyMembership', { input: L('egim'), low: 30, high: 5 }), close },
+    { id: 'uyg-cakistirma', open: windowOf('suitability.weightedOverlay', OVERLAY, true), close },
+    { id: 'uyg-cakistirma-cizim', open: ranIn('suitability.weightedOverlay', OVERLAY, false), close },
+    { id: 'uyg-ahp', open: ranIn('suitability.pairwise', PAIRWISE, true), close },
+    { id: 'uyg-roc', open: ranIn('suitability.roc', { input: L('egim'), presence: L('heyelan') }, true), close },
+  ];
+}
+
 // Harita servisleri (docs/adr/0208) over a CBS project in TUREF / TM33 at Ankara's Kızılay: parcels and a building over
 // a ready basemap, its tiles from the service itself (the network is needed), in the project's system. The desktop's
 // are `tools_screens`' servis-* (apps/desktop/src/service_scenes.rs), the same drawing.

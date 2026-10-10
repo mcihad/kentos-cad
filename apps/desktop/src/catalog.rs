@@ -604,6 +604,12 @@ pub const PORTED: &[&str] = &[
     "processing.run.distance.cost",
     "processing.run.distance.path",
     "processing.run.distance.corridor",
+    "processing.run.suitability.fuzzyMembership",
+    "processing.run.suitability.fuzzyOverlay",
+    "processing.run.suitability.weightedSum",
+    "processing.run.suitability.weightedOverlay",
+    "processing.run.suitability.pairwise",
+    "processing.run.suitability.roc",
     // docs/adr/0209: Ağlar and the network tools (networks/, kentos_interaction::network).
     "network.manage",
     "tool.netRoute",

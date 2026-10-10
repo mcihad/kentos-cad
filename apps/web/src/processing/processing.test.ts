@@ -148,7 +148,7 @@ describe('registry', () => {
     expect(() => r.register(vertexNumbering)).toThrow();
     expect(() => r.register({ ...edgeLengths, id: 'x.y', category: 'nope' })).toThrow();
     const tree = r.tree();
-    expect(tree.map((n) => n.category.id)).toEqual(['points', 'annotation', 'attributes', 'geometry', 'analysis', 'network', 'selection', 'surface', 'interpolation', 'density', 'rasterOps', 'rasterStats', 'rasterVector', 'scannedMap', 'hydrology', 'distance']);
+    expect(tree.map((n) => n.category.id)).toEqual(['points', 'annotation', 'attributes', 'geometry', 'analysis', 'network', 'selection', 'surface', 'interpolation', 'density', 'rasterOps', 'rasterStats', 'rasterVector', 'scannedMap', 'hydrology', 'distance', 'suitability']);
     expect(r.search('kose numara').map((t) => t.id)).toEqual(['points.numberVertices']);
     expect(r.search('KENAR').map((t) => t.id)).toEqual(['annotation.edgeLengths']);
     expect(r.categoryPath('points')).toBe('Nokta işlemleri');

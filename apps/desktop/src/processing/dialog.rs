@@ -107,6 +107,8 @@ pub struct ToolDialog {
     pub values: Values,
     /// Number fields' text as typed, so “12.” stays while typing.
     pub(super) numbers: BTreeMap<String, String>,
+    /// A raster's name typed before Ekle adds its row (docs/adr/0237 §9), by parameter.
+    pub(super) drafts: BTreeMap<String, String>,
     touched: BTreeSet<String>,
     /// After Çalıştır every problem shows, not only those of touched fields.
     attempted: bool,
@@ -142,6 +144,7 @@ impl ToolDialog {
             tool,
             values,
             numbers: BTreeMap::new(),
+            drafts: BTreeMap::new(),
             touched: BTreeSet::new(),
             attempted: false,
             advanced_open,
@@ -256,7 +259,13 @@ impl ToolDialog {
     /// An edit of the form; `active`: the active layer, a new layer scope's first.
     pub fn edit(&mut self, e: Event, active: &str) {
         match e {
-            Event::Value(name, value) => self.set(name, value),
+            Event::Value(name, value) => {
+                self.drafts.remove(&name);
+                self.set(name, value)
+            }
+            Event::Draft(name, text) => {
+                self.drafts.insert(name, text);
+            }
             Event::Number(name, text) => {
                 let read = text.trim().replace(',', ".");
                 // An optional field left empty is no value (docs/adr/0205 §2: the project's height).

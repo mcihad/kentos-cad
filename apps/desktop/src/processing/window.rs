@@ -30,6 +30,8 @@ fn ev(e: Event) -> Message {
     Message::Processing(e)
 }
 
+/// The form's scrollable: scrolled to its end after a run that gave a table.
+pub(super) const FORM: &str = "islem-formu";
 /// The window's size (the web's: 940 px wide, at most 660 tall).
 const WIDTH: f32 = 940.0;
 const HEIGHT: f32 = 660.0;
@@ -62,6 +64,7 @@ impl App {
         };
         let body = row![
             scrollable(form(window, &env))
+                .id(FORM)
                 .direction(style::field::body_scrollbar())
                 .width(Fill)
                 .height(Fill),
@@ -322,10 +325,13 @@ fn field_row<'a>(
             .align_y(Alignment::Start),
         );
     }
-    // Objects and expressions take the whole width under their label (the web's `prow--stacked`).
+    // Objects, expressions and the rasters' rows take the whole width under their label (the web's `prow--stacked`).
     let stacked = matches!(
         def.kind,
-        ParamKind::Features { .. } | ParamKind::Expression { .. }
+        ParamKind::Features { .. }
+            | ParamKind::Expression { .. }
+            | ParamKind::RasterValues { .. }
+            | ParamKind::RasterPairs { .. }
     );
     let content: Element<'a, Message> = if stacked {
         column![text, control_col].spacing(8).into()

@@ -3,7 +3,7 @@ import type { Vec2 } from '../../model/geometry';
 import { attributeFields, type BuilderObjects } from '../../model/expression/builderObjects';
 import { exprCatalog } from '../../model/expression/expressionLib';
 import type { InputSummary } from '../../processing/runner';
-import type { FeaturesValue, FileValue, LayerValue, NetworkValue, ParamDef } from '../../processing/types';
+import type { FeaturesValue, FileValue, LayerValue, NetworkValue, ParamDef, RasterPairs, RasterValues } from '../../processing/types';
 import { costNames, NETWORK_KIND_LABELS } from '../../model/networkRules';
 import { h } from '../dom';
 import { builderButton } from '../expression/builderApi';
@@ -23,12 +23,19 @@ import {
   insertText,
   layerFieldView,
   numberOfText,
+  PAIR_VALUES,
+  pairLabel,
   planLayers,
   pointView,
   previewIcon,
+  rasterPairsView,
+  rasterValuesView,
   toggleKind,
   toggledName,
   withLayer,
+  withoutRaster,
+  withPair,
+  withRasterValue,
   withScope,
 } from './fieldPlan';
 
@@ -99,7 +106,89 @@ export function paramControl(def: ParamDef, value: unknown, set: Setter, env: Fi
       return fileField(def, value as FileValue | null, env);
     case 'network':
       return networkField(def, value as NetworkValue | null, set, env);
+    case 'rasterValues':
+      return rasterValuesField(def, value as RasterValues | null, set, env);
+    case 'rasterPairs':
+      return rasterPairsField(def, value as RasterPairs | null, set, env);
   }
+}
+
+/** The input's raster names, none when it is not known (a model's step). */
+function rastersOf(env: FieldEnv, of: string): readonly string[] | undefined {
+  const found = env.describe(of);
+  return found ? (found.rasters ?? []) : undefined;
+}
+
+/** A row's × for a name the input does not hold. */
+function removeButton(name: string, run: () => void): HTMLButtonElement {
+  const b = h('button', { class: 'btn btn--icon pfield__rowx', type: 'button', 'aria-label': `${T.rasters.remove}: ${name}` }, icon('close', 12));
+  b.addEventListener('click', run);
+  tooltip(b, () => ({ title: T.rasters.remove, description: T.rasters.missing }), 'top');
+  return b;
+}
+
+/**
+ * A value for each raster (docs/adr/0237 §9): a row a raster, its name and its field; the names the input does not hold
+ * faint with ×; in a model's step, whose rasters are known only when it runs, a name can be added.
+ */
+function rasterValuesField(def: Extract<ParamDef, { type: 'rasterValues' }>, value: RasterValues | null, set: Setter, env: FieldEnv): HTMLElement {
+  let current: RasterValues = value ?? {};
+  const view = rasterValuesView(current, rastersOf(env, def.of));
+  const rows = view.rows.map((r) => {
+    const input = h('input', {
+      class: def.cell === 'number' ? 'field pfield__num num' : 'field pfield__text',
+      value: r.text,
+      'aria-label': `${def.label}: ${r.name}`,
+      spellcheck: 'false',
+      ...(def.cell === 'number' ? { inputmode: 'decimal' } : {}),
+      ...(def.placeholder ? { placeholder: def.placeholder } : {}),
+    });
+    input.addEventListener('input', () => {
+      current = withRasterValue(def, current, r.name, input.value);
+      input.toggleAttribute('data-invalid', def.cell === 'number' && !!input.value.trim() && Number.isNaN(numberOfText(input.value)));
+      set(current, false);
+    });
+    return h(
+      'div',
+      { class: 'pfield__rasterrow', 'data-missing': r.listed ? null : '' },
+      h('span', { class: 'pfield__rastername', title: r.name }, r.name),
+      input,
+      r.listed ? null : removeButton(r.name, () => set(withoutRaster(current, r.name), true)),
+    );
+  });
+  const parts: (HTMLElement | null)[] = [...rows];
+  if (view.note) parts.push(h('div', { class: 'pfield__hint' }, view.note));
+  if (view.adds) {
+    const name = h('input', { class: 'field pfield__text', placeholder: T.rasters.add, 'aria-label': T.rasters.add, spellcheck: 'false' });
+    const add = h('button', { class: 'btn', type: 'button' }, T.rasters.addButton);
+    add.addEventListener('click', () => {
+      const n = name.value.trim();
+      if (n && !(n in current)) set({ ...current, [n]: def.cell === 'number' ? 1 : '' }, true);
+    });
+    parts.push(h('div', { class: 'pfield__rasterrow' }, name, add));
+  }
+  return h('div', { class: 'pfield__rastertable' }, ...parts);
+}
+
+/** A comparison for each pair of rasters (İkili karşılaştırma, docs/adr/0237 §9): a row a pair, its list of 17. */
+function rasterPairsField(def: Extract<ParamDef, { type: 'rasterPairs' }>, value: RasterPairs | null, set: Setter, env: FieldEnv): HTMLElement {
+  const view = rasterPairsView(value, rastersOf(env, def.of));
+  const rows = view.rows.map((r) => {
+    const pick = new Dropdown({
+      ariaLabel: `${r.a} — ${r.b}`,
+      className: 'pfield__dropdown',
+      items: () => PAIR_VALUES.map((v): MenuItem => ({ label: pairLabel(r.a, r.b, v), radio: true, checked: v === r.value, run: () => set(withPair(value, r.a, r.b, v), true) })),
+    });
+    pick.set(h('span', { class: 'dropdown__text' }, r.text));
+    return h(
+      'div',
+      { class: 'pfield__rasterrow pfield__pairrow', 'data-missing': r.listed ? null : '' },
+      h('span', { class: 'pfield__rastername', title: `${r.a} — ${r.b}` }, `${r.a} — ${r.b}`),
+      pick.el,
+      r.listed ? null : removeButton(`${r.a} — ${r.b}`, () => set(withPair(value, r.a, r.b, 1), true)),
+    );
+  });
+  return h('div', { class: 'pfield__rastertable' }, ...rows, view.note ? h('div', { class: 'pfield__hint' }, view.note) : null);
 }
 
 /**

@@ -173,7 +173,8 @@ fn contour_objects(k: usize, layer: &str) -> Vec<Value> {
 /// second band its `error`; `rasterOpsOf`: the raster operations' reference,
 /// by its case's rule; `rasterVectorOf`: Rasterleştir's reference, exact;
 /// `hydrologyOf`: the hydrology reference, `distanceOf`: the distance and
-/// cost reference, by their case's rule).
+/// cost reference, `suitabilityOf`: the suitability reference (an integer
+/// result's nodata empty), by their case's rule).
 fn raster_cases(name: &str, least: usize) {
     let file = case_file(name);
     let tol = file["tolerance"].as_f64().expect("a tolerance");
@@ -193,6 +194,9 @@ fn raster_cases(name: &str, least: usize) {
             .expect("the hydrology reference reads");
     let distance: Value = serde_json::from_slice(&surface_fixture("../../distance/v1/cases.json"))
         .expect("the distance reference reads");
+    let suitability: Value =
+        serde_json::from_slice(&surface_fixture("../../suitability/v1/cases.json"))
+            .expect("the suitability reference reads");
     let rasters: BTreeMap<String, Vec<u8>> = file["rasters"]
         .as_object()
         .map(|m| {
@@ -248,6 +252,7 @@ fn raster_cases(name: &str, least: usize) {
             ("rasterVectorOf", "vector"),
             ("hydrologyOf", "hydrology"),
             ("distanceOf", "distance"),
+            ("suitabilityOf", "suitability"),
         ] {
             for (name, of) in c["expect"][key].as_object().cloned().unwrap_or_default() {
                 wanted.push((name, of, kind));
@@ -298,12 +303,21 @@ fn raster_cases(name: &str, least: usize) {
                 }
                 continue;
             }
-            if matches!(*kind, "ops" | "hydrology" | "distance") {
-                // The raster operations', the hydrology or the distance reference: its samples by its case's rule.
+            if matches!(*kind, "ops" | "hydrology" | "distance" | "suitability") {
+                // The raster operations', the hydrology, the distance or the suitability reference: its samples by its
+                // case's rule (Ağırlıklı çakıştırma's 32-bit integer nodata is no value).
                 let file = match *kind {
                     "ops" => &raster_ops,
                     "hydrology" => &hydrology,
+                    "suitability" => &suitability,
                     _ => &distance,
+                };
+                let got: Vec<f64> = if *kind == "suitability" {
+                    got.iter()
+                        .map(|v| if *v == -2_147_483_648.0 { f64::NAN } else { *v })
+                        .collect()
+                } else {
+                    got
                 };
                 let reference = file["cases"]
                     .as_array()
@@ -442,6 +456,13 @@ fn the_hydrology_cases_do_what_they_say() {
 #[test]
 fn the_distance_cases_do_what_they_say() {
     raster_cases("distance.json", 18);
+}
+
+/// Uygunluk analizi's shared cases (fixtures/processing/v1/suitability.json,
+/// scripts/fixtures/suitability_processing_cases.py; docs/adr/0237).
+#[test]
+fn the_suitability_cases_do_what_they_say() {
+    raster_cases("suitability.json", 21);
 }
 
 /// The names an expression field offers on rasters (docs/adr/0233 §3): the

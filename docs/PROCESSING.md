@@ -129,6 +129,8 @@ export const vertexNumbering = defineTool({
 | `expression` | ifade metni | `CompiledExpression` (isteğe bağlı ve boşsa `null`) | `returns: 'condition' \| 'value'`, `of` (okuduğu `features` parametresi), `placeholder` |
 | `field` | alan adı (`multiple`: virgülle ayrılmış adlar) | aynı (kırpılmış) | `of` (alanları sunulan `features` ya da `file` parametresi; bir liste ise görünen ilki), `allowNew` (yeni alan adı yazılabilir), `multiple` (liste adları işaretler) |
 | `file` | `{ name, rows }` (masaüstünde `path` de) ya da `null` | aynı | `accept` (sunulan uzantılar). Dosya seçilince Tablo ekle'nin okuyucusuyla okunur (ilk sayfa, ilk satır sütun adları; ADR 0200 §7); son değerlerde yalnız adı (masaüstünde yolu) kalır, pencere yeniden açılınca dosya yeniden seçilir (masaüstünde yolundan okunur). Model girdisi olamaz, model adımında seçilmez |
+| `rasterValues` | `{ "<raster adı>": sayı ya da metin }` | aynı | `of` (rasterleri satır olan `features` parametresi; adlar Raster hesaplayıcı'nınki), `cell: 'number' \| 'text'`, `min`, `max`, `placeholder`. Pencere girdinin rasterlerini sırasıyla satır satır gösterir; girdide olmayan adlar soluk, × ile silinir; model adımında ad eklenir. Yazılmayan satırın anlamı aracındır (ADR 0237 §9). Model girdisi olamaz |
+| `rasterPairs` | `[[a, b, v]]` (v 9 … 2 a b'den v kat önemli, 1 eşit, −2 … −9 b a'dan) | aynı | `of`. Pencere her raster çiftine 17 seçenekli bir liste gösterir (ADR 0237 §9). Model girdisi olamaz |
 
 Ortak alanlar: `name` (değer anahtarı), `label`, `description`, `optional`,
 `advanced` ("Gelişmiş ayarlar" altında), `visibleWhen` (yalnızca koşul

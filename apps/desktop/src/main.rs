@@ -154,6 +154,8 @@ mod networks;
 #[cfg(test)]
 mod distance_scenes;
 #[cfg(test)]
+mod suitability_scenes;
+#[cfg(test)]
 mod hydrology_scenes;
 #[cfg(test)]
 mod interpolation_scenes;
