@@ -343,6 +343,12 @@ pub const PORTED: &[&str] = &[
     "processing.run.attributes.fromEnclosing",
     "processing.run.statistics.summary",
     "processing.run.attributes.joinByField",
+    // Yakınlık (docs/adr/0215).
+    "processing.run.proximity.nearest",
+    "processing.run.proximity.matrix",
+    "processing.run.proximity.hub",
+    "processing.run.proximity.neighbors",
+    "processing.run.proximity.shortestLine",
     // Geometri işlemleri (docs/adr/0201).
     "processing.run.geometry.buffer",
     "processing.run.geometry.clip",

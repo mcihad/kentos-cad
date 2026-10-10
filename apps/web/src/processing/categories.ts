@@ -19,6 +19,8 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   { id: 'cadastre', label: 'Kadastro', icon: 'parcel', description: 'Parsel, ada ve tapu işlemleri' },
   { id: 'geometry', label: 'Geometri', icon: 'polygon', description: 'Sadeleştirme, tampon, onarım ve dönüşümler' },
   { id: 'analysis', label: 'Analiz', icon: 'measure', description: 'Ölçüm, istatistik ve raporlar' },
+  // docs/adr/0215: how near objects are to one another.
+  { id: 'proximity', label: 'Yakınlık', icon: 'nearestFeature', description: 'En yakın nesne, uzaklık matrisi, en yakın merkez, komşu alanlar, en kısa çizgi' },
   { id: 'network', label: 'Ağ analizi', icon: 'networks', description: 'En yakın tesis, maliyet matrisi ve hizmet alanları' },
   { id: 'conversion', label: 'Dönüştürme', icon: 'explode', description: 'Nesne türleri arasında dönüşüm' },
   { id: 'selection', label: 'Seçim', icon: 'select', description: 'Özniteliğe ve konuma göre seçim' },

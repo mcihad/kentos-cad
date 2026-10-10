@@ -1509,6 +1509,709 @@
     ]
    }
   },
+  "proximity.nearest": {
+   "title": "En yakını bul",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Yakınlık bilgisinin yazılacağı nesneler; kilitli katmandakiler alınmaz.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "targets",
+     "label": "Hedefler",
+     "description": "En yakını aranan nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "measure",
+     "label": "Ölçü",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "edges",
+        "label": "Kenardan kenara",
+        "hint": "En kısa uzaklık; değen, kesişen ya da içinde kalan 0"
+       },
+       {
+        "value": "centers",
+        "label": "Merkezden merkeze",
+        "hint": "Ağırlık merkezleri (alan) ya da yer noktaları arası"
+       }
+      ]
+     }
+    },
+    {
+     "name": "max",
+     "label": "En çok uzaklık",
+     "description": "0: sınırsız. Daha uzaktaki hedef alınmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "fields",
+     "label": "Alınacak alanlar",
+     "description": "Hedefin bu alanları önekle yazılır; boşsa yalnız uzaklık.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin",
+      "multiple": true
+     }
+    },
+    {
+     "name": "prefix",
+     "label": "Önek",
+     "description": "Yazılan alanların adlarının başı: “Yakın uzaklık”, “Yakın Ad”.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "maxLength": 24
+     }
+    },
+    {
+     "name": "bearing",
+     "label": "Semt de yaz",
+     "description": "En yakın noktalar (merkezden merkeze ölçüde merkezler) arası semt.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "nearestFeature",
+     "text": "Yakınlık"
+    },
+    "icon": "nearestFeature",
+    "about": "Her nesneye en yakın hedefin uzaklığını, istenen alanlarını ve semtini yazar.",
+    "help": [
+     "Örnekler: her parsele en yakın durağın adı ve uzaklığı; her yapıya en yakın yangın musluğu; her kuyuya en yakın derenin uzaklığı.",
+     "Kenardan kenara ölçü en kısa uzaklıktır: değen, kesişen ya da hedefin içinde kalan nesne için 0. Merkezden merkeze ölçü alanların ağırlık merkezleri, öbür nesnelerin yer noktaları arasıdır. Eşit uzaklıkta çizimde önce gelen hedef alınır; nesne kendisinin hedefi olmaz.",
+     "Yazılan alanlar önekle adlanır: “<önek>uzaklık”, alınan her alan için “<önek><alan>”, istenirse “<önek>semt” (projenin açı biriminde, kuzeyden saat yönünde). En çok uzaklık içinde hedefi olmayan nesnenin bu alanları boşaltılır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": true,
+    "aliases": [
+     "ENYAKIN",
+     "YAKINBUL",
+     "NEAR"
+    ]
+   }
+  },
+  "proximity.matrix": {
+   "title": "Uzaklık matrisi",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Kaynaklar",
+     "description": "Uzaklıkları ölçülen nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "targets",
+     "label": "Hedefler",
+     "description": "Uzaklığı ölçülen hedefler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "measure",
+     "label": "Ölçü",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "edges",
+        "label": "Kenardan kenara",
+        "hint": "En kısa uzaklık; değen, kesişen ya da içinde kalan 0"
+       },
+       {
+        "value": "centers",
+        "label": "Merkezden merkeze",
+        "hint": "Ağırlık merkezleri (alan) ya da yer noktaları arası"
+       }
+      ]
+     }
+    },
+    {
+     "name": "k",
+     "label": "En yakın k",
+     "description": "0: bütün hedefler.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "max",
+     "label": "En çok uzaklık",
+     "description": "0: sınırsız.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "form",
+     "label": "Biçim",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "list",
+        "label": "Liste",
+        "hint": "Her çift bir satır: Kaynak, Hedef, Sıra, Uzaklık"
+       },
+       {
+        "value": "matrix",
+        "label": "Matris",
+        "hint": "Kaynaklar satır, hedefler sütun"
+       },
+       {
+        "value": "summary",
+        "label": "Özet",
+        "hint": "Her kaynağın hedef sayısı, en az, ortalama ve en çok uzaklığı"
+       }
+      ]
+     }
+    },
+    {
+     "name": "name",
+     "label": "Ad alanı",
+     "description": "Kaynakların tablodaki adı; boşsa etiket, o da yoksa sıra.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "targetName",
+     "label": "Hedef ad alanı",
+     "description": "Hedeflerin tablodaki adı.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "nearestFeature",
+     "text": "Yakınlık"
+    },
+    "icon": "distanceMatrix",
+    "about": "Her nesneden hedeflere uzaklıkları tablo olarak verir: en yakın k hedef ya da hepsi; liste, matris ya da özet.",
+    "help": [
+     "Örnekler: her mahalleden en yakın üç sağlık ocağına uzaklıklar; okullar arası uzaklık matrisi; her parselin yollara en kısa uzaklıklarının özeti.",
+     "Liste her çifti bir satıra yazar (Kaynak, Hedef, Sıra, Uzaklık); Matris kaynakları satır, hedefleri sütun yapar (en çok 200 hedef); Özet her kaynağın hedef sayısını, en az, ortalama ve en çok uzaklığını verir. En yakın k 0 ise bütün hedefler alınır.",
+     "Adlar Ad alanından; boşsa nesnenin etiketi, o da yoksa listedeki sırası. Tablo pencerede Panoya kopyala ve CSV olarak kaydet ile alınır. Çizim değişmez."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "UZAKLIKMATRISI",
+     "MESAFETABLOSU"
+    ]
+   }
+  },
+  "proximity.hub": {
+   "title": "En yakın merkeze bağla",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Merkeze bağlanacak nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "hubs",
+     "label": "Merkezler",
+     "description": "Okullar, sağlık ocakları, depolar …",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "hubName",
+     "label": "Merkez ad alanı",
+     "description": "Çizgilere “Merkez” olarak yazılır; boşsa etiket, o da yoksa sıra.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "max",
+     "label": "En çok uzaklık",
+     "description": "0: sınırsız.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "nearestFeature",
+     "text": "Yakınlık"
+    },
+    "icon": "nearestHub",
+    "about": "Her nesnenin merkezini en yakın merkezin merkezine bir çizgiyle bağlar; çizgi merkezin adını ve uzaklığı taşır.",
+    "help": [
+     "Örnekler: her mahalleyi en yakın sağlık ocağına bağlayan çizgiler; her kuyudan en yakın depoya; her parselden en yakın okula.",
+     "Uzaklık merkezden merkezedir: alanın ağırlık merkezi, öbür nesnelerin yer noktası. Eşit uzaklıkta çizimde önce gelen merkez alınır. Çizgi nesnenin özniteliklerini, “Merkez”i (merkezin Ad alanındaki değeri; boşsa etiketi, o da yoksa sırası) ve “Uzaklık”ı taşır.",
+     "En çok uzaklık içinde merkezi olmayan nesne bağlanmaz ve sayısı söylenir; merkezi merkezle aynı yerde olan nesneye çizgi çizilmez."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "MERKEZEBAGLA",
+     "ENYAKINMERKEZ"
+    ]
+   }
+  },
+  "proximity.neighbors": {
+   "title": "Komşu alanlar",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Alanlar",
+     "description": "Komşulukları aranan alanlar; kilitli katmandakiler alınmaz.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "tolerance",
+     "label": "Tolerans",
+     "description": "Bu kadar yakın sınırlar ortak sayılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "corners",
+     "label": "Köşe komşuları da",
+     "description": "Yalnız köşeden değenler de yazılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "overlaps",
+     "label": "Örtüşenler de",
+     "description": "İçleri örtüşen alanlar örtüşen alanlarıyla yazılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "name",
+     "label": "Ad alanı",
+     "description": "Alanların tablodaki adı; boşsa etiket, o da yoksa sıra.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "write",
+     "label": "Özniteliğe de yaz",
+     "description": "Her alana komşu sayısı ve komşularının adları.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "countField",
+     "label": "Komşu sayısı alanı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "combo",
+      "placeholder": "Alan adı"
+     }
+    },
+    {
+     "name": "listField",
+     "label": "Komşular alanı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "combo",
+      "placeholder": "Alan adı"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "nearestFeature",
+     "text": "Yakınlık"
+    },
+    "icon": "polygonNeighbors",
+    "about": "Alanların komşularını, ortak kenar uzunluklarını, köşeden değenleri ve örtüşenleri tablo olarak verir; isterseniz komşu sayısını ve adlarını yazar.",
+    "help": [
+     "Örnekler: bir adanın parsellerinin komşuları ve ortak sınır uzunlukları; ifraz öncesi komşu parsellerin listesi; örtüşen parsellerin bulunması.",
+     "İki alanın ortak kenarı sınırlarının birbirinin üstünde kalan parçalarının uzunluğudur: aynı doğrudaki düz kenarlar ve aynı dairedeki yaylar, toleransla. Ortak kenarı toleranstan kısa olup değenler köşe komşusudur; içleri örtüşenler Örtüşme olarak örtüşen alanlarıyla yazılır.",
+     "Satırlar iki yönlüdür (A–B ve B–A), girdinin sırasıyla. Adlar Ad alanından; boşsa etiket, o da yoksa sıra. Özniteliğe de yaz açıkken her alana komşu sayısı ve komşularının adları yazılır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KOMSU",
+     "KOMSUPARSEL"
+    ]
+   }
+  },
+  "proximity.shortestLine": {
+   "title": "En kısa çizgi",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Çizgilerin başladığı nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "targets",
+     "label": "Hedefler",
+     "description": "Çizgilerin vardığı nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "k",
+     "label": "En yakın k",
+     "description": "Her nesneden kaç hedefe.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "max",
+     "label": "En çok uzaklık",
+     "description": "0: sınırsız.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "name",
+     "label": "Ad alanı",
+     "description": "Çizgilere “Kaynak” olarak yazılır.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "targetName",
+     "label": "Hedef ad alanı",
+     "description": "Çizgilere “Hedef” olarak yazılır.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "nearestFeature",
+     "text": "Yakınlık"
+    },
+    "icon": "shortestLine",
+    "about": "Her nesneden en yakın k hedefe en yakın noktalar arası doğru parçaları çizer.",
+    "help": [
+     "Örnekler: her yapıdan en yakın yola bağlantı çizgisi; her kuyudan en yakın iki dereye; iki katman arası en kısa bağlantılar.",
+     "Çizgi iki nesnenin en yakın noktaları arasındadır (kenardan kenara); eşit uzaklıkta çizimde önce gelen hedef alınır. Çizgiye “Kaynak”, “Hedef” (Ad alanlarından; boşsa etiket, o da yoksa sıra), “Sıra” ve “Uzaklık” yazılır.",
+     "Değen ya da kesişen çiftler (uzaklık 0) çizgi vermez; sayıları söylenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ENKISACIZGI",
+     "KISACIZGI"
+    ]
+   }
+  },
   "geometry.buffer": {
    "title": "Tampon",
    "rows": [

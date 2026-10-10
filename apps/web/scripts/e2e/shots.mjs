@@ -2941,6 +2941,60 @@ SCENES.geometry = [
   { id: 'geometri-donustur', open: (ui) => openGeometry(ui, 'geometry.reproject', { input: QUERY_LAYER('eski'), source: '2320' }), close: queryClose },
 ];
 
+// Yakınlık analizi (docs/adr/0215) on fixtures/processing/v1/proximity.kcad, the scenes the desktop's
+// `processing::proximity_tests::screens` draws: the CBS ribbon's Analiz with the five in its Analiz panel, En yakını bul's window
+// after a run, Uzaklık matrisi's matrix and Komşu alanlar's table under the form, the lines En yakın merkeze bağla and
+// En kısa çizgi draw.
+const PROXIMITY_DRAWING = readFileSync(new URL('../../../../fixtures/processing/v1/proximity.kcad', import.meta.url), 'utf8');
+const loadProximity = async (ui, selection = []) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(PROXIMITY_DRAWING)}, null))) throw new Error('proximity.kcad did not load');
+    k.view.zoomExtents();
+    k.selection.set(${JSON.stringify(selection)});
+  })()`);
+  await ui.sleep(300);
+};
+const openProximity = async (ui, tool, values, selection = []) => {
+  await loadProximity(ui, selection);
+  await ui.eval(openTool(tool, values));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  await ui.clickSel('.ptool__run');
+  await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 8000);
+  await ui.sleep(300);
+};
+/** The run's lines in the drawing: the window closed, the view on the whole drawing. */
+const proximityDrawing = async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.view.zoomExtents()`), await ui.move(2, 2), await ui.sleep(400));
+const NEAREST_STOPS = { input: { scope: 'selection' }, targets: QUERY_LAYER('durak'), fields: 'Ad', bearing: true };
+const HUB_SCHOOLS = { input: QUERY_LAYER('parsel'), hubs: QUERY_LAYER('okul'), hubName: 'Ad' };
+const SHORTEST_ROADS = { input: QUERY_LAYER('parsel'), targets: QUERY_LAYER('yol'), name: 'Ad', targetName: 'Ad' };
+SCENES.proximity = [
+  { id: 'yakinlik-serit', open: async (ui) => (await loadProximity(ui), await ribbonOn(ui, { ribbonTab: 'analysis' }), await ui.sleep(300)), close: ribbonOff },
+  { id: 'yakinlik-en-yakin', open: (ui) => openProximity(ui, 'proximity.nearest', NEAREST_STOPS, [1, 2, 3, 4, 5]), close: queryClose },
+  {
+    id: 'yakinlik-matris',
+    open: async (ui) => (
+      await openProximity(ui, 'proximity.matrix', { input: QUERY_LAYER('parsel'), targets: QUERY_LAYER('durak'), k: 0, form: 'matrix', name: 'Ad', targetName: 'Ad' }),
+      await formEnd(ui),
+      await ui.sleep(200)
+    ),
+    close: queryClose,
+  },
+  {
+    id: 'yakinlik-komsular',
+    open: async (ui) => (
+      await openProximity(ui, 'proximity.neighbors', { input: QUERY_LAYER('parsel'), corners: true, name: 'Ad', write: true }),
+      await formEnd(ui),
+      await ui.sleep(200)
+    ),
+    close: queryClose,
+  },
+  { id: 'yakinlik-merkez-cizim', open: async (ui) => (await openProximity(ui, 'proximity.hub', HUB_SCHOOLS), await proximityDrawing(ui)), close: queryClose },
+  { id: 'yakinlik-kisa-cizgi-cizim', open: async (ui) => (await openProximity(ui, 'proximity.shortestLine', SHORTEST_ROADS), await proximityDrawing(ui)), close: queryClose },
+];
+
 // Ağ analizi (docs/adr/0209) on fixtures/interaction/v1/networks.kcad, the scenes the desktop's
 // `networks::tests::screens` draws: Ağlar with Yollar and with İçme suyu after Denetle (the form scrolled to its answer),
 // En yakın tesis and Maliyet matrisi after a run, En yakın tesis's ways and Hizmet alanları's areas in the drawing, the

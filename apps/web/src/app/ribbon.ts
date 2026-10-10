@@ -194,6 +194,8 @@ const RASTERS = ['raster.add', 'raster.style', 'raster.georef'];
  * crowd past 1100 px; GIS-32 to GIS-36 add theirs here.
  */
 const RASTER_ANALYSIS = ['Yüzey analizi', 'İnterpolasyon', 'Yoğunluk', 'Raster işlemleri', 'Raster istatistiği', 'Raster ve vektör', 'Taranmış harita', 'Hidroloji', 'Uzaklık ve maliyet'];
+/** Yakınlık analizi's tools (docs/adr/0215 §5), in the toolbox's order. */
+const PROXIMITY_COMMANDS = ['nearest', 'matrix', 'hub', 'neighbors', 'shortestLine'].map((t) => `processing.run.proximity.${t}`);
 /** Nokta bulutu (docs/adr/0207 §9), the desktop's for now: CAD's Ekle and CBS's Veri, İşlemler's tools under ▾. */
 const POINT_CLOUD_PANEL = { pick: 'Nokta bulutu', icon: 'pointCloudAdd', commands: POINT_CLOUDS, under: POINT_CLOUD_TOOLS } as const;
 
@@ -386,7 +388,10 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     sources: [
       // Ağ analizi's İşlemler tools sit in the Ağ analizi panel (docs/adr/0209 §10), the raster analysis's in the Raster
       // tab (docs/adr/0231 §10).
-      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network'] },
+      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network', 'proximity'] },
+      // Yakınlık's five join Özet istatistik in the Analiz panel (docs/adr/0215 §5): a panel of their own made the tab
+      // wider than 1100 pixels.
+      { pick: 'Analiz', icon: 'measure', commands: PROXIMITY_COMMANDS },
       // The terrain's work in one panel: Aplikasyon and Kot noktası, profiles and the volume (Arazi and Arazi analizi were
       // two; docs/adr/0209 §10 made room for Ağ analizi at 1100 pixels). The contours and the slope are Yüzey analizi's
       // tools in the Raster tab (docs/adr/0231 §10).

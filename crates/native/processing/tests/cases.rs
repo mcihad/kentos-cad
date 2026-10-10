@@ -709,6 +709,37 @@ fn the_query_cases_do_what_they_say() {
     );
 }
 
+/// The proximity tools' cases (docs/adr/0215): written by the independent
+/// reference (scripts/fixtures/proximity_cases.py); the same run here and on
+/// the drawing's reading copy as the background runs it.
+#[test]
+fn the_proximity_cases_do_what_they_say() {
+    let file = case_file("proximity.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check(c, play(c, &registry, false, &file["files"]), tol);
+        found.extend(check(c, play(c, &registry, true, &file["files"]), tol));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 9, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
 /// The geometry tools' cases (docs/adr/0201): the same run here and on the
 /// drawing's reading copy as the background runs it; new objects measured.
 #[test]
@@ -981,10 +1012,7 @@ fn network_timing() {
         t.elapsed().as_secs_f64() * 1e3
     );
     let mut store = kentos_geometry_core::store::Store::new();
-    store.put_many(
-        doc.by_layer("yol")
-            .map(kentos_processing::geometry::record),
-    );
+    store.put_many(doc.by_layer("yol").map(kentos_processing::geometry::record));
     let t = Instant::now();
     let (edges, _, _) = kentos_geometry_core::ops::network::input::from_store(
         &store,
@@ -1033,7 +1061,12 @@ fn a_layer_filter_leaves_its_objects_out_of_the_calls_to_other_layers() {
         let looked_at = world_layers([&expr], &parcels, doc);
         let objects: Vec<(String, EntityObjects)> = looked_at
             .iter()
-            .map(|(name, l)| (name.clone(), EntityObjects::new(l, &layer_name, Some(store.store()))))
+            .map(|(name, l)| {
+                (
+                    name.clone(),
+                    EntityObjects::new(l, &layer_name, Some(store.store())),
+                )
+            })
             .collect();
         let world = World {
             layers: objects

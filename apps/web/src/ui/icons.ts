@@ -671,6 +671,14 @@ export const ICONS = {
     '<path d="M10 2.2 15.6 4.8 18 10.4 14.6 16.9 8.2 18 2.6 13.2 2.8 6.6z" fill="currentColor" fill-opacity=".18" stroke-width="1.1"/><path d="M10 6.2 13.5 8.2 14 11.6 11.4 14.1 7.5 13.6 5.9 10.3 7.2 7.3z" fill="currentColor" fill-opacity=".38" stroke-width="1.1"/><circle cx="10" cy="10.2" r="1.7" fill="currentColor" stroke="none"/>',
   netTrace:
     '<path d="M15.5 10H18" stroke-width="1.2"/><path d="M2.5 10H12M7 10v7.5" stroke-width="2.4"/><path d="M12 7.8v4.4l3.5-4.4v4.4z" fill="currentColor" fill-opacity=".28" stroke-width="1.1"/><circle cx="2.8" cy="10" r="1.8" fill="currentColor" stroke="none"/>',
+  // Yakınlık (docs/adr/0215): the nearest of two targets joined to a point; a table of distances with its corner
+  // diagonal; a hub's spokes to the objects round it; two parcels with their shared side heavy; the short segment
+  // between a square and a circle, its ends gripped.
+  nearestFeature: `<circle cx="14.6" cy="6" r="2.4"/><circle cx="15.6" cy="15.6" r="1.7" stroke-dasharray="1.5 1.3"/><path d="M5.4 11.3 12.6 7.1"/>${grip(4, 12)}`,
+  distanceMatrix: '<rect x="2.5" y="3.5" width="15" height="13" rx="1"/><path d="M2.5 8h15M2.5 12.3h15M7.5 3.5v13M12.5 3.5v13" stroke-width="1.1"/><path d="M2.5 3.5 7.5 8" stroke-width="1.1"/>',
+  nearestHub: `<circle cx="14.5" cy="10" r="3"/><circle cx="14.5" cy="10" r=".9" fill="currentColor" stroke="none"/><path d="M4.4 4.4 11.9 8.6M3.8 10.4h7.6M4.6 15.8l7.3-4.4"/>${grip(4.2, 4.3)}${grip(3.6, 10.4)}${grip(4.4, 15.9)}`,
+  polygonNeighbors: '<path d="M10 4.5H3v11h7M10 4.5h7v11h-7" stroke-width="1.2"/><path d="M10 4.5v11" stroke-width="2.6"/>',
+  shortestLine: `<rect x="2.5" y="2.5" width="6.5" height="6.5" rx=".6"/><circle cx="15" cy="14.6" r="3"/><path d="M9 9 12.9 12.5" stroke-dasharray="1.6 1.2"/>${grip(9, 9)}${grip(12.9, 12.5)}`,
   closestFacility:
     '<path d="M4 16h5V5h5.5" stroke-width="2.2"/><path d="M9 16h7.5" stroke-width="1" stroke-dasharray="1.8 1.4"/><circle cx="4" cy="16" r="2" fill="currentColor" stroke="none"/><rect x="14.5" y="2.8" width="4" height="4" fill="currentColor" fill-opacity=".28" stroke-width="1.1"/><rect x="16.5" y="14" width="3" height="3.6" fill="currentColor" fill-opacity=".28" stroke-width="1"/>',
   odMatrix:

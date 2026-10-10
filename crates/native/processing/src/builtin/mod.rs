@@ -13,6 +13,7 @@ pub mod models;
 pub mod network;
 pub mod numbering;
 pub mod pointcloud;
+pub mod proximity;
 pub mod queries;
 pub mod raster_ops;
 pub mod raster_vector;
@@ -37,6 +38,12 @@ pub fn tools() -> Vec<Tool> {
         info_from_enclosing::tool(),
         summary_statistics::tool(),
         join_by_field::tool(),
+        // Yakınlık (docs/adr/0215): both platforms.
+        proximity::nearest::tool(),
+        proximity::matrix::tool(),
+        proximity::hub::tool(),
+        proximity::neighbors::tool(),
+        proximity::shortest_line::tool(),
         geometry::buffer::tool(),
         geometry::clip::tool(),
         geometry::dissolve::tool(),

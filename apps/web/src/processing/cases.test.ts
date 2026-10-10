@@ -68,6 +68,7 @@ interface CaseFile {
 
 const CASES = JSON.parse(file('cases.json')) as CaseFile;
 const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
+const PROXIMITY = JSON.parse(file('proximity.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
 const NETWORK = JSON.parse(file('network.json')) as CaseFile;
 const SURFACE = JSON.parse(file('surface.json')) as CaseFile & { rasters: Record<string, string> };
@@ -351,6 +352,19 @@ describe.skipIf(!loader)('query cases (fixtures/processing/v1/queries.json, docs
     it(`${c.id}: ${c.title}`, async () => {
       check(c, await play(QUERIES, c, 'client'), QUERIES.tolerance);
       check(c, await play(QUERIES, c, 'worker'), QUERIES.tolerance);
+    });
+  }
+});
+
+describe('proximity cases (fixtures/processing/v1/proximity.json, docs/adr/0215)', () => {
+  it('is a v1 case file', () => {
+    expect([PROXIMITY.format, PROXIMITY.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of PROXIMITY.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      check(c, await play(PROXIMITY, c, 'client'), PROXIMITY.tolerance);
+      check(c, await play(PROXIMITY, c, 'worker'), PROXIMITY.tolerance);
     });
   }
 });

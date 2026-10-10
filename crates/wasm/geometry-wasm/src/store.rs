@@ -15,6 +15,7 @@ use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::spatial_query::Relation;
 use kentos_geometry_core::processing::numbering::{CornerWalk, StartCorner};
 use kentos_geometry_core::store::overview::OverviewRequest;
+use kentos_geometry_core::store::proximity::Measure;
 use kentos_geometry_core::store::snap::{Extension, SnapExtras};
 use kentos_geometry_core::store::{Store, array_packed_objects, transform_packed_objects};
 use kentos_geometry_core::text::Font;
@@ -1358,6 +1359,37 @@ impl GeometryStore {
             Some(r) => self.inner.relate_pairs(inputs, references, r, within),
             None => Vec::new(),
         }
+    }
+
+    /// Each input's nearest targets (docs/adr/0215 §2.1; `Store::nearest`):
+    /// `k` of them (0: all) within `max` (infinite: no bound), measured edge to
+    /// edge (0) or centre to centre (1); eight numbers each: the input's place,
+    /// the target's, the distance, the two nearest points and the bearing.
+    pub fn nearest(
+        &self,
+        inputs: &[f64],
+        targets: &[f64],
+        k: u32,
+        max: f64,
+        measure: u32,
+    ) -> Vec<f64> {
+        match Measure::from_code(measure) {
+            Some(m) => self.inner.nearest(inputs, targets, k as usize, max, m),
+            None => Vec::new(),
+        }
+    }
+
+    /// The areas' neighbours (docs/adr/0215 §2.2; `Store::neighbors`): five
+    /// numbers each: the area's place, its neighbour's, the kind (0 edge,
+    /// 1 corner, 2 overlap), the shared length and the overlapping area.
+    pub fn neighbors(
+        &self,
+        ids: &[f64],
+        tolerance: f64,
+        corners: bool,
+        overlaps: bool,
+    ) -> Vec<f64> {
+        self.inner.neighbors(ids, tolerance, corners, overlaps)
     }
 
     /// Edges of visible objects overlapping the rectangle (see `pack_edges`).

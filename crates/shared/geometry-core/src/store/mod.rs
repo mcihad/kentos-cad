@@ -29,6 +29,7 @@ pub mod pick;
 pub mod placing;
 pub mod polygon;
 pub mod processing;
+pub mod proximity;
 pub(crate) mod rtree;
 mod select;
 pub mod snap;

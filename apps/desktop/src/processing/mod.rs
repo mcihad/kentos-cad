@@ -38,6 +38,8 @@ mod hydrology_tests;
 #[cfg(test)]
 mod interpolation_tests;
 #[cfg(test)]
+mod proximity_tests;
+#[cfg(test)]
 mod query_tests;
 #[cfg(test)]
 mod raster_ops_tests;

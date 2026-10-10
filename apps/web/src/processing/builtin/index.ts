@@ -14,6 +14,7 @@ import { joinByField } from './joinByField';
 import { networkClosestFacility } from './network/closestFacility';
 import { networkOdMatrix } from './network/odMatrix';
 import { networkServiceAreas } from './network/serviceAreas';
+import { PROXIMITY_TOOLS } from './proximity/tools';
 import { selectByExpression } from './selectByExpression';
 import { selectByLocation } from './selectByLocation';
 import { summaryStatistics } from './summaryStatistics';
@@ -36,6 +37,8 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   infoFromEnclosing,
   summaryStatistics,
   joinByField,
+  // Yakınlık (docs/adr/0215): nearest, distance matrix, nearest hub, neighbours, shortest line.
+  ...PROXIMITY_TOOLS,
   geometryBuffer,
   geometryClip,
   geometryDissolve,

@@ -12,6 +12,10 @@ use kentos_geometry_core::ops::spatial_query::Relation;
 use kentos_geometry_core::processing::numbering::{CornerWalk, corner_text_at};
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::processing::{CORNER_STRIDE, EDGE_LABEL_STRIDE};
+pub use kentos_geometry_core::store::proximity::Measure;
+use kentos_geometry_core::store::proximity::{
+    NEAREST_STRIDE, NEIGHBOR_CORNER, NEIGHBOR_OVERLAP, NEIGHBOR_STRIDE,
+};
 use kentos_geometry_core::text::Font;
 use kentos_geometry_core::vec2::Vec2 as CoreVec2;
 use kentos_native_application::geometry::shape;
@@ -62,6 +66,38 @@ pub struct EdgeLabel {
     pub rotation: f64,
     /// The edge's length (an arc's length for an arc edge).
     pub length: f64,
+}
+
+/// A target found for an input (docs/adr/0215 §2.1): their places in the two
+/// lists, the distance, the two nearest points and the bearing from the first
+/// to the second (radians, clockwise from north; NaN when 0 apart).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct NearestFound {
+    pub input: usize,
+    pub target: usize,
+    pub d: f64,
+    pub a: Vec2,
+    pub b: Vec2,
+    pub bearing: f64,
+}
+
+/// How two areas neighbour (docs/adr/0215 §2.2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NeighborKind {
+    Edge,
+    Corner,
+    Overlap,
+}
+
+/// A neighbour of an area: their places, how they neighbour, the shared
+/// boundary (m) and the overlapping area (m²).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct NeighborFound {
+    pub area: usize,
+    pub neighbor: usize,
+    pub kind: NeighborKind,
+    pub length: f64,
+    pub overlap: f64,
 }
 
 /// The geometry of a run's inputs: a store of their objects, by id.
@@ -139,6 +175,58 @@ impl RunGeometry {
             .relate_pairs(&ids(inputs), &ids(references), relation, within)
             .chunks_exact(2)
             .map(|p| (p[0] as usize, p[1] as usize))
+            .collect()
+    }
+
+    /// Each input's nearest targets (docs/adr/0215 §2.1): `k` of them (0:
+    /// all) within `max` (infinite: no bound), by distance then the targets'
+    /// order; an object is never its own target.
+    pub fn nearest(
+        &self,
+        inputs: &[Slot],
+        targets: &[Slot],
+        k: usize,
+        max: f64,
+        measure: Measure,
+    ) -> Vec<NearestFound> {
+        self.store
+            .nearest(&ids(inputs), &ids(targets), k, max, measure)
+            .chunks_exact(NEAREST_STRIDE)
+            .map(|r| NearestFound {
+                input: r[0] as usize,
+                target: r[1] as usize,
+                d: r[2],
+                a: Vec2 { x: r[3], y: r[4] },
+                b: Vec2 { x: r[5], y: r[6] },
+                bearing: r[7],
+            })
+            .collect()
+    }
+
+    /// The areas' neighbours (docs/adr/0215 §2.2), both ways round, in the list's order.
+    pub fn neighbors(
+        &self,
+        slots: &[Slot],
+        tolerance: f64,
+        corners: bool,
+        overlaps: bool,
+    ) -> Vec<NeighborFound> {
+        self.store
+            .neighbors(&ids(slots), tolerance, corners, overlaps)
+            .chunks_exact(NEIGHBOR_STRIDE)
+            .map(|r| NeighborFound {
+                area: r[0] as usize,
+                neighbor: r[1] as usize,
+                kind: if r[2] == NEIGHBOR_OVERLAP {
+                    NeighborKind::Overlap
+                } else if r[2] == NEIGHBOR_CORNER {
+                    NeighborKind::Corner
+                } else {
+                    NeighborKind::Edge
+                },
+                length: r[3],
+                overlap: r[4],
+            })
             .collect()
     }
 

@@ -206,6 +206,9 @@ const ITEMS = [
     must: '.dialog--networks .net-line--edge',
   },
   { id: 'processing-network', open: (ui) => ui.run('processing.run.network.closestFacility'), ready: '.dialog--ptool' },
+  // Yakınlık (docs/adr/0215): Komşu alanlar's switches and fields, Uzaklık matrisi's three-way choice.
+  { id: 'processing-proximity', open: (ui) => ui.run('processing.run.proximity.neighbors'), ready: '.dialog--ptool' },
+  { id: 'processing-proximity-matrix', open: (ui) => ui.run('processing.run.proximity.matrix'), ready: '.dialog--ptool' },
   // Zaman ve senaryolar (docs/adr/0210 §10): Zaman ayarları over the parcels, Senaryo oluştur with the tree's layers,
   // and the time slider's bar under the drawing (the parcels given years for it; both steps undone on closing).
   { id: 'time-layer', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('parsel')`), await ui.run('time.layer')), ready: '.dialog--time-layer' },

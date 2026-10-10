@@ -162,6 +162,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   aynı ve başka katman üstünden toplama, Konuma göre seç'in ilişkileri, en yakının değeri, örtüşen alan ve uzunluk, başka katmandan değer;
   başka katmana bakanlar yalnız İşlemler'de (`compile_with` başka yerde reddeder), katman süzgecinin dışarıda bıraktıklarını okumaz;
   `@` değerleri İşlemler'de, İfade oluşturucu'da, Öznitelik tablosunun süzgecinde ve paftada; Proje ayarları › Değişkenler (ADR 0214);
+  yakınlık analizi: İşlemler'in Yakınlık kategorisinde En yakını bul (uzaklık, hedefin alanları ve semt önekle; kenardan kenara ya da
+  merkezden merkeze, en çok uzaklıkla), Uzaklık matrisi (en yakın k ya da hepsi; Liste, Matris, Özet), En yakın merkeze bağla ve En kısa
+  çizgi (yeni katmanda çizgiler), Komşu alanlar (aynı doğrudaki düz ve aynı dairedeki yaylı ortak kenarlar toleransla, köşe ve örtüşme;
+  tablo, komşu sayısı ve adları); hedefler kendi R-ağaçlarında en iyi önce aranır (`PackedTree::nearest`); CBS'de Analiz sekmesinin Analiz panelinde (ADR 0215);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -536,6 +540,9 @@ KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; LABEL_BENCH=1 pnpm -C apps/web exec 
 python3 scripts/fixtures/expression_extras.py --check   # ifade dili eklerinin değerlerini (tarih ve saat, `@` değerleri, düzenli ifade, dizi ve eşleme, toplama, mekânsal ilişki, başka katmandan değer) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/expression/v2/extras.json (ADR 0214)
 python3 scripts/fixtures/variable_form_cases.py --check   # Proje ayarları › Değişkenler'in form kurallarını (adlar, türlere göre değerler, yeni satır, tür değişimi) ve yerleşik `@` değerlerini kurallardan denetle; durumlar fixtures/project/v1/variable-form.json (ADR 0214 §4)
 cargo test -p kentos-desktop project::variables::tests::screens -- --ignored --nocapture; cargo test -p kentos-desktop expression::tests::world_screens -- --ignored --nocapture --test-threads=1   # Değişkenler ve İfade oluşturucu'nun `@` değerleriyle başka katmana bakan önizlemesi, .run/shots/degiskenler-*, ifade-degiskenler-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs variables); ADR 0214)
+python3 scripts/fixtures/proximity_cases.py --check   # yakınlık araçlarının durumlarını (en yakın hedef, alanları ve semti, uzaklık matrisinin üç biçimi, en yakın merkez, komşular ve ortak düz ve yaylı kenarlar, köşe, örtüşme, en kısa çizgi) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/processing/v1/proximity.json ve proximity.kcad (ADR 0215)
+cargo test -p kentos-desktop processing::proximity_tests::screens -- --ignored --nocapture --test-threads=1   # yakınlık araçlarının şeridi, pencereleri ve çizgileri, .run/shots/islem-yakinlik-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs proximity); ADR 0215)
+cargo test --release -p kentos-geometry-core --test all proximity::timing -- --ignored --nocapture   # beş aracın aramaları 10 000 parselde bütçeleriyle (ADR 0215 §6); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; PROXIMITY_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/proximity.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-expression --test perf measures_the_additions -- --ignored --nocapture   # ifade dili eklerinin süreleri bütçeleriyle (ADR 0214 §5); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; EXTRAS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/expressionExtras.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 python3 scripts/fixtures/data_search_cases.py --check   # Veride ara'nın eşleşmesini (Türkçe katlama, `*`, Tam sözcük), alan seçimini, “+n” sayısını, sıralamayı, sınırı, nesneden kaydı ve öznitelik adlarını KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/search/v1/cases.json (ADR 0178)
 python3 scripts/fixtures/template_layer_cases.py --check   # nesne şablonunun katmanını bulma ve açma kuralını (yol tercihi, kilitli grup, açılacak gruplar) kurallardan denetle; durumlar fixtures/style/v1/template-layers.json (ADR 0176 §3)
@@ -1453,7 +1460,13 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   İşlemler'i sütun motorunda (`EntityObjects`, `evaluate_in`, `runner::world_layers`); web'de `exprCompileIn`, `evaluateExpressionIn`,
   `ExprWorld`, `RunJob.variables` ve `leftOut`; Proje ayarları › Değişkenler iki platformda (`project/variables.rs`, `variablesSection`);
   pafta `ProjectInfo.variables`; Python `ProjectVariable`; bağımsız başvurular `expression_extras.py` (190 kaynak), `variable_form_cases.py`,
-  `spatial_query_cases.py`'nin ifade durumları; süreler `measures_the_additions` ve `scripts/perf/expressionExtras.test.ts`. Sıradaki `GIS-19`.
+  `spatial_query_cases.py`'nin ifade durumları; süreler `measures_the_additions` ve `scripts/perf/expressionExtras.test.ts`. `GIS-19`
+  yakınlık analizi ([ADR 0215](docs/adr/0215-proximity-analysis.md); kapsamı ben belirledim) tek parçada bitti (10 Ekim): çekirdek
+  `ops::proximity` (en yakın noktalar, ortak kenar, içlerin örtüşmesi kutularla daraltılarak) ve `store::proximity` (`nearest`, `neighbors`),
+  `store::rtree`'nin en iyi önce araması (`PackedTree::nearest`, `Nearer`); İşlemler'in Yakınlık kategorisi iki platformda (web
+  `processing/builtin/proximity/`, masaüstü `kentos-processing`'in `builtin/proximity/`); bağımsız başvuru `proximity_cases.py` (9 durum);
+  pencereler `processing::proximity_tests`, `shots.mjs proximity`; süreler `proximity::timing` ve `scripts/perf/proximity.test.ts`. Sıradaki
+  `GIS-20`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

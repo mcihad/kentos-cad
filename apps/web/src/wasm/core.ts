@@ -1010,6 +1010,20 @@ export class CoreStore {
     return typed(() => this.raw.relatePairs(inputs, references, relation, within));
   }
 
+  /**
+   * Each input's nearest targets (docs/adr/0215 §2.1): `k` of them (0: all) within `max` (Infinity: no bound), edge to
+   * edge (0) or centre to centre (1); eight numbers each: input place, target place, distance, the input's nearest
+   * point (x, y), the target's (x, y) and the bearing between them (radians, clockwise from north; NaN at 0 apart).
+   */
+  nearest(inputs: Float64Array, targets: Float64Array, k: number, max: number, measure: number): Float64Array {
+    return typed(() => this.raw.nearest(inputs, targets, k, max, measure));
+  }
+
+  /** The areas' neighbours (docs/adr/0215 §2.2): five numbers each: place, neighbour's place, kind (0 edge, 1 corner, 2 overlap), shared length, overlapping area. */
+  neighbors(ids: Float64Array, tolerance: number, corners: boolean, overlaps: boolean): Float64Array {
+    return typed(() => this.raw.neighbors(ids, tolerance, corners, overlaps));
+  }
+
   /** Ids in the document's order. */
   ids(): Float64Array {
     return typed(() => this.raw.ids());

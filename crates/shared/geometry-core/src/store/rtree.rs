@@ -4,10 +4,71 @@
 //! The tree only narrows the candidates: every query applies its exact test
 //! afterwards, so its order and its boxes never decide a result.
 
+use std::cmp::Ordering;
+use std::collections::BinaryHeap;
+
 use crate::geometry::{Bounds, empty_bounds};
 use crate::jsmath::{js_max, js_min};
 
 const NODE: usize = 16;
+
+/// A step of a best-first search (`PackedTree::nearest`): a node's box or an
+/// item's not yet measured (rank 0), or a measured item (rank 1).
+#[derive(Clone, Copy, Debug)]
+struct Step {
+    /// The least distance a box's contents can have; a measured item's own.
+    key: f64,
+    rank: u8,
+    /// A measured item's tie-breaker; 0 for a box.
+    tie: u32,
+    level: u32,
+    /// A box's place in its level; a measured item's token.
+    at: u32,
+}
+
+impl Ord for Step {
+    /// The heap pops the greatest: here the least key, at equal keys a box
+    /// before a measured item, measured items by their tie-breakers.
+    fn cmp(&self, o: &Self) -> Ordering {
+        o.key
+            .total_cmp(&self.key)
+            .then(o.rank.cmp(&self.rank))
+            .then(o.tie.cmp(&self.tie))
+            .then(o.level.cmp(&self.level))
+            .then(o.at.cmp(&self.at))
+    }
+}
+
+impl PartialOrd for Step {
+    fn partial_cmp(&self, o: &Self) -> Option<Ordering> {
+        Some(self.cmp(o))
+    }
+}
+
+impl PartialEq for Step {
+    fn eq(&self, o: &Self) -> bool {
+        self.cmp(o) == Ordering::Equal
+    }
+}
+
+impl Eq for Step {}
+
+/// The queue of a best-first search, kept between searches for its memory.
+#[derive(Default)]
+pub struct NearestQueue(BinaryHeap<Step>);
+
+/// What a best-first search (`PackedTree::nearest`) asks of its caller.
+pub trait Nearer {
+    /// The least distance a box's contents can have; never more than
+    /// `measure` gives for an item in the box, so the order is exact.
+    fn gap(&self, b: &Bounds) -> f64;
+    /// An item's own distance, its tie-breaker and a token for it; none:
+    /// the item takes no part.
+    fn measure(&mut self, item: u32) -> Option<(f64, u32, u32)>;
+    /// A measured item's token, by distance, equal ones by tie-breaker;
+    /// false: stop.
+    fn take(&mut self, token: u32) -> bool;
+}
 
 pub struct PackedTree {
     /// Level 0 holds the boxes in Hilbert order; each next level one box per sixteen below.
@@ -84,6 +145,72 @@ impl PackedTree {
     /// The box around every item (`None` for an empty tree).
     pub fn bounds(&self) -> Option<&Bounds> {
         self.levels.last().and_then(|top| top.first())
+    }
+
+    /// The items nearest something, best first (docs/adr/0215 §4): the
+    /// caller's `gap`s order the boxes, its `measure`s the items, and `take`
+    /// is given the measured items in order until it says stop or none is
+    /// left within `max` (inclusive). A box comes off the queue before any
+    /// measured item no nearer than it; equal measures by tie-breaker.
+    pub fn nearest(&self, queue: &mut NearestQueue, max: f64, search: &mut impl Nearer) {
+        let heap = &mut queue.0;
+        heap.clear();
+        let Some(top) = self.levels.len().checked_sub(1) else {
+            return;
+        };
+        self.push_boxes(heap, search, max, top, 0..self.levels[top].len());
+        while let Some(s) = heap.pop() {
+            if s.key > max {
+                break;
+            }
+            if s.rank == 1 {
+                if search.take(s.at) {
+                    continue;
+                }
+                break;
+            }
+            if s.level == 0 {
+                if let Some((key, tie, at)) = search.measure(self.items[s.at as usize])
+                    && key <= max
+                {
+                    heap.push(Step {
+                        key,
+                        rank: 1,
+                        tie,
+                        level: 0,
+                        at,
+                    });
+                }
+                continue;
+            }
+            let level = s.level as usize - 1;
+            let start = s.at as usize * NODE;
+            let end = (start + NODE).min(self.levels[level].len());
+            self.push_boxes(heap, search, max, level, start..end);
+        }
+    }
+
+    /// Queues a level's boxes in `range` by their gaps, those within `max`.
+    fn push_boxes(
+        &self,
+        heap: &mut BinaryHeap<Step>,
+        search: &impl Nearer,
+        max: f64,
+        level: usize,
+        range: std::ops::Range<usize>,
+    ) {
+        for at in range {
+            let key = search.gap(&self.levels[level][at]);
+            if key <= max {
+                heap.push(Step {
+                    key,
+                    rank: 0,
+                    tie: 0,
+                    level: level as u32,
+                    at: at as u32,
+                });
+            }
+        }
     }
 
     /// Appends the items whose boxes overlap `q` (touching counts), in no particular order.
@@ -209,6 +336,97 @@ mod tests {
             want.sort_unstable();
             assert_eq!(got, want, "{q:?}");
         }
+    }
+
+    /// Measures a box's distance from a point; ties by the item.
+    struct FromPoint {
+        x: f64,
+        y: f64,
+        boxes: Vec<Bounds>,
+        k: usize,
+        got: Vec<(f64, u32)>,
+    }
+
+    impl FromPoint {
+        fn distance(&self, b: &Bounds) -> f64 {
+            let dx = js_max(0.0, js_max(b.min_x - self.x, self.x - b.max_x));
+            let dy = js_max(0.0, js_max(b.min_y - self.y, self.y - b.max_y));
+            (dx * dx + dy * dy).sqrt()
+        }
+    }
+
+    impl Nearer for FromPoint {
+        fn gap(&self, b: &Bounds) -> f64 {
+            self.distance(b)
+        }
+        fn measure(&mut self, item: u32) -> Option<(f64, u32, u32)> {
+            // Every seventh item takes no part.
+            (item % 7 != 3).then(|| (self.distance(&self.boxes[item as usize]), item, item))
+        }
+        fn take(&mut self, token: u32) -> bool {
+            let d = self.distance(&self.boxes[token as usize]);
+            self.got.push((d, token));
+            self.k == 0 || self.got.len() < self.k
+        }
+    }
+
+    #[test]
+    fn the_nearest_come_by_distance_then_tie_breaker() {
+        // Boxes on a coarse grid (many equal distances) of varied sizes.
+        let mut seed = 12_345u32;
+        let mut next = || {
+            seed = seed.wrapping_mul(1_103_515_245).wrapping_add(12_345);
+            f64::from((seed >> 16) % 50)
+        };
+        let boxes: Vec<Bounds> = (0..600)
+            .map(|_| {
+                let (x, y, w) = (next(), next(), next() / 10.0);
+                b(x, y, x + w, y + w / 2.0)
+            })
+            .collect();
+        let entries: Vec<(u32, Bounds)> = boxes
+            .iter()
+            .enumerate()
+            .map(|(i, b)| (i as u32, *b))
+            .collect();
+        let tree = PackedTree::build(&entries);
+        let mut queue = NearestQueue::default();
+        for (x, y, k, max) in [
+            (25.0, 25.0, 1, f64::INFINITY),
+            (0.0, 0.0, 10, f64::INFINITY),
+            (60.0, -5.0, 40, f64::INFINITY),
+            (12.5, 30.0, 0, 6.0),
+            (12.5, 30.0, 0, f64::INFINITY),
+        ] {
+            let mut search = FromPoint {
+                x,
+                y,
+                boxes: boxes.clone(),
+                k,
+                got: Vec::new(),
+            };
+            tree.nearest(&mut queue, max, &mut search);
+            let mut want: Vec<(f64, u32)> = (0..boxes.len() as u32)
+                .filter(|i| i % 7 != 3)
+                .map(|i| (search.distance(&boxes[i as usize]), i))
+                .filter(|(d, _)| *d <= max)
+                .collect();
+            want.sort_by(|p, q| p.0.total_cmp(&q.0).then(p.1.cmp(&q.1)));
+            if k > 0 {
+                want.truncate(k);
+            }
+            assert_eq!(search.got, want, "({x}, {y}) k {k} max {max}");
+        }
+        // An empty tree gives nothing.
+        let mut none = FromPoint {
+            x: 0.0,
+            y: 0.0,
+            boxes: Vec::new(),
+            k: 0,
+            got: Vec::new(),
+        };
+        PackedTree::empty().nearest(&mut queue, f64::INFINITY, &mut none);
+        assert!(none.got.is_empty());
     }
 
     #[test]
